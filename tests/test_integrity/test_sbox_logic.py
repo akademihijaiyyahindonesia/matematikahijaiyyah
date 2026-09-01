@@ -412,3 +412,47 @@ def test_the_rotating_core_reports_that_it_fits_and_how_that_was_measured() -> N
     assert "6,229 LUT4" in source and "72%" in source
     assert "not a vendor fitting report" in source
     assert "Fmax has no value until the board arrives" in source
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_standby_holds_the_core_at_both_moments_it_can_be_asserted() -> None:
+    """
+    Two holds, because the two mechanisms cover disjoint cases and one
+    position proves half.
+
+    Inside a substitution the core's own standby branch holds it, and routing
+    standby into `stall` is redundant there — `substituting` already stalls the
+    generator. Outside a substitution nothing else holds the generator, so
+    `stall` must carry standby, and the core branch alone is not enough. Each
+    sabotage passes at one position and fails at the other, which is why both
+    are tested: 79 mismatches without the core branch, 1 without the stall path.
+
+    The first version of this test captured the frozen state *after* the first
+    edge under standby, which hid a one-clock leak, and gated the generator's
+    enable as well, which meant the core had nothing to do while held. Both
+    sabotages passed against it. A sabotage that passes is a test proving
+    nothing.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-o", "/tmp/tb_standby",
+         "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_ramal_impulse.v",
+         "rtl/hijaiyyah_linear.v", "rtl/hijaiyyah_sbox.v",
+         "rtl/hijaiyyah_round_constants.v", "rtl/tb/tb_hijaiyyah_standby.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_standby"], cwd=ROOT, capture_output=True, text=True)
+    assert "PASS: two holds" in run.stdout, run.stdout
+
+
+def test_the_throughput_figures_name_the_clock_they_assume() -> None:
+    """
+    27 MHz is what the board's crystal offers, not what this design has been
+    shown to close timing at. Fmax is unmeasured — that is E1, and it still has
+    no value — so every per-second figure has to carry the assumption.
+    """
+    raw = (ROOT / "rtl" / "hijaiyyah_rotate_core.v").read_text(encoding="utf-8")
+    source = " ".join(raw.replace("//", " ").split())
+    assert "AT AN ASSUMED CLOCK" in source
+    assert "achievable Fmax is unmeasured" in source
+    assert "11.15 MB/s" in source

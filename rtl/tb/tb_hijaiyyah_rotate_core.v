@@ -42,9 +42,9 @@ module tb_hijaiyyah_rotate_core;
     );
 
     hijaiyyah_rotate_core #(.SLICE_BYTES(SLICE_BYTES)) u_core (
-        .clk(clk), .rst_n(rst_n), .load(load), .in_state(in_state),
+        .clk(clk), .rst_n(rst_n), .standby(1'b0), .load(load), .in_state(in_state),
         .lin_pulse(lin_pulse), .sub_pulse(sub_pulse), .round_index(round_index),
-        .stall(stall), .out_state(out_state)
+        .stall(stall), .idle(), .out_state(out_state)
     );
 
     always @(posedge clk) if (rst_n && sub_pulse) subs = subs + 1;

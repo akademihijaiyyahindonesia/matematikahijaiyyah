@@ -49,6 +49,28 @@
 // complete here and nextpnr is not installed, so this is a strong indication
 // that it fits and not a placed-and-routed proof. Fmax has no value until the
 // board arrives.
+//
+// THROUGHPUT PER SECOND -- AT AN ASSUMED CLOCK, WHICH IS THE WHOLE CAVEAT.
+// The Tang Nano 9K carries a 27 MHz crystal, so 27 MHz is what the board
+// offers, NOT what this design has been shown to close timing at. The
+// achievable Fmax is unmeasured -- that is E1, and it still has no value.
+// Every figure below therefore reads "if it closes at 27 MHz":
+//
+//     SLICE   clocks   permutations/s   sponge throughput
+//         8      786           34,351       4.40 MB/s
+//        25      310           87,097      11.15 MB/s
+//        50      198          136,364      17.45 MB/s
+//
+// at the sponge's 128-byte rate. Turned around, against the security levels
+// the construction claims, one board at 87,097 attempts per second:
+//
+//     2^288  the sponge's capacity      1.8e74 years
+//     2^256  layer 3's HMAC-SHA256      4.2e64 years
+//
+// Those numbers are arithmetic on an exponent, not a security argument. What
+// they show is only that throughput is nowhere near the security level, which
+// is the uninteresting direction: no amount of silicon moves 2^256, and the
+// figures are here so the ratio is on the record rather than assumed.
 
 `default_nettype none
 
@@ -57,12 +79,14 @@ module hijaiyyah_rotate_core #(
 ) (
     input  wire          clk,
     input  wire          rst_n,
+    input  wire          standby,      // hold: no state change, no toggling
     input  wire          load,
     input  wire [1599:0] in_state,
     input  wire          lin_pulse,
     input  wire          sub_pulse,
     input  wire [7:0]    round_index,
     output wire          stall,
+    output wire          idle,         // nothing in flight
     output wire [1599:0] out_state
 );
 
@@ -75,7 +99,21 @@ module hijaiyyah_rotate_core #(
     reg               substituting;
 
     assign out_state = state;
-    assign stall     = substituting | (lin_pulse & sub_pulse);
+    assign stall     = substituting | (lin_pulse & sub_pulse) | standby;
+
+    // Standby holds the datapath AND stalls the generator through the same
+    // handshake the substitution uses. Routing it into `stall` rather than
+    // gating the generator separately is what makes it testable: the first
+    // version gated `enable` at the top level as well, so the core had nothing
+    // to do while held and its standby branch carried no load at all. Removing
+    // that branch left the testbench green -- a sabotage that passes is a test
+    // proving nothing, and it was the second time in this work that a standby
+    // -shaped assertion measured the wrong thing.
+    //
+    // It is not a security feature and is not offered as one: a held state is
+    // still a state, and anything that could read it running can read it
+    // stopped. It stops toggling, nothing more.
+    assign idle      = ~substituting;
 
     // ---- the linear layer, over the whole state ------------------------
     wire [1599:0] linear_out;
@@ -109,6 +147,10 @@ module hijaiyyah_rotate_core #(
             state        <= {1600{1'b0}};
             step         <= {COUNT_W{1'b0}};
             substituting <= 1'b0;
+        end else if (standby) begin
+            state        <= state;
+            step         <= step;
+            substituting <= substituting;
         end else if (load) begin
             state        <= in_state;
             step         <= {COUNT_W{1'b0}};
