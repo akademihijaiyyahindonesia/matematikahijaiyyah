@@ -40,48 +40,13 @@ module hijaiyyah_wave #(
     output wire [7:0] found_key
 );
 
-    // ---- stage 1b: deserialise, LSB first, starting at `phase` ----------
-    reg [2:0] clocks;               // bit index within the byte
-    reg [7:0] shifter;
-    reg       started;
-    reg [2:0] skipped;
+    wire       byte_valid;
+    wire [7:0] byte_out;
 
-    reg       byte_valid;
-    reg [7:0] byte_out;
-
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            clocks     <= 3'd0;
-            shifter    <= 8'h00;
-            started    <= 1'b0;
-            skipped    <= 3'd0;
-            byte_valid <= 1'b0;
-            byte_out   <= 8'h00;
-        end else if (bit_valid) begin
-            if (!started) begin
-                // Drop clocks until the boundary the caller found.
-                byte_valid <= 1'b0;
-                if (skipped == phase) begin
-                    started <= 1'b1;
-                    shifter <= {7'h00, bit_in};
-                    clocks  <= 3'd1;
-                end else begin
-                    skipped <= skipped + 3'd1;
-                end
-            end else begin
-                shifter <= {bit_in, shifter[7:1]};
-                clocks  <= clocks + 3'd1;
-                if (clocks == 3'd7) begin
-                    byte_valid <= 1'b1;
-                    byte_out   <= {bit_in, shifter[7:1]};
-                end else begin
-                    byte_valid <= 1'b0;
-                end
-            end
-        end else begin
-            byte_valid <= 1'b0;
-        end
-    end
+    hijaiyyah_deserialiser u_des (
+        .clk(clk), .rst_n(rst_n), .phase(phase),
+        .bit_valid(bit_valid), .bit_in(bit_in),
+        .byte_valid(byte_valid), .byte_out(byte_out));
 
     // ---- stage 2: classify and recover ---------------------------------
     hijaiyyah_node_counter #(.WINDOW(WINDOW)) u_counter (

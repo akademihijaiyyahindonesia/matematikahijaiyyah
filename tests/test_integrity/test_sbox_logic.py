@@ -535,3 +535,62 @@ def test_standby_and_load_outrank_an_absorb() -> None:
     assert build.returncode == 0, build.stderr
     run = subprocess.run(["/tmp/tb_priority"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS: standby holds an absorb" in run.stdout, run.stdout
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Ka'bah whole: bits on a wire to a permuted state
+# ══════════════════════════════════════════════════════════════════
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_whole_system_runs_from_raw_bits_to_the_python_state() -> None:
+    """
+    Every piece was verified alone; this is the one that says they fit
+    together. 3,069 raw bits at an arbitrary offset with no byte boundary
+    given, through the deserialiser, the jamrah gate, the node counter, lane
+    assembly, the tawaf ring and two permutations — landing on exactly the
+    state cube.py computes.
+
+    **The bug only integration could find.** The deserialiser put the first
+    data bit at shifter[0] instead of shifter[7], so the next shift pushed it
+    straight out: the FIRST byte of every stream was wrong and every byte
+    after it was right. tb_hijaiyyah_wave passed 78/78 with that present,
+    because a classifier over 64-byte windows cannot see one wrong byte. Only
+    assembling lanes and comparing against cube.py exposed it.
+
+    Backpressure is exercised here too — the run holds 622 clocks — because a
+    source that ignores it loses every lane offered during a permutation.
+    """
+    bits = (ROOT / "rtl" / "tb" / "kabah_bits.hex").read_text().strip().split("\n")
+    sources = [
+        "rtl/hijaiyyah_kabah_top.v", "rtl/hijaiyyah_deserialiser.v",
+        "rtl/hijaiyyah_jamrah_gate.v", "rtl/hijaiyyah_node_counter.v",
+        "rtl/hijaiyyah_sponge.v", "rtl/hijaiyyah_ramal_impulse.v",
+        "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
+        "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
+        "rtl/tb/tb_hijaiyyah_kabah_top.v",
+    ]
+    build = subprocess.run(
+        ["iverilog", "-g2012", f"-DNBITS={len(bits)}",
+         "-s", "tb_hijaiyyah_kabah_top", "-o", "/tmp/tb_kabah_top", *sources],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_kabah_top"], cwd=ROOT,
+                         capture_output=True, text=True)
+    assert "PASS:" in run.stdout, run.stdout
+    assert "clocks held" in run.stdout
+
+
+def test_the_top_level_names_what_it_does_not_contain() -> None:
+    """
+    A block diagram invites the wrong reading, so the header has to refuse it.
+    The gate and the counter are keyless triage. The sponge is [EH]. Layer 3 —
+    HMAC-SHA256, the part that actually carries the security — is not in
+    hardware at all, and neither is phase discovery.
+    """
+    raw = (ROOT / "rtl" / "hijaiyyah_kabah_top.v").read_text(encoding="utf-8")
+    source = " ".join(raw.replace("//", " ").split())
+    assert "is NOT in this module" in source
+    assert "no SHA-256 core" in source
+    assert "unauthenticated until software signs it" in source
+    assert "Phase discovery is also software" in source

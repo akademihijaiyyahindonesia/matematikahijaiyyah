@@ -336,7 +336,8 @@ def test_the_line_rate_stages_agree_with_the_python() -> None:
     one clock and removing the alignment entirely each produce 106 mismatches.
     """
     build = subprocess.run(
-        ["iverilog", "-g2012", "-o", "/tmp/tb_wave", "rtl/hijaiyyah_wave.v",
+        ["iverilog", "-g2012", "-s", "tb_hijaiyyah_wave", "-o", "/tmp/tb_wave",
+         "rtl/hijaiyyah_wave.v", "rtl/hijaiyyah_deserialiser.v",
          "rtl/hijaiyyah_node_counter.v", "rtl/tb/tb_hijaiyyah_wave.v"],
         cwd=ROOT, capture_output=True, text=True,
     )
