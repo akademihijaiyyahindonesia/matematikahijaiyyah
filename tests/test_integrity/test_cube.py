@@ -462,3 +462,33 @@ def test_the_attack_tool_reports_every_check_holding() -> None:
     assert len(results) == 3
     for result in results:
         assert result["pass"], f"{result['name']} was breached: {result}"
+
+
+def test_theta_already_reads_both_neighbours() -> None:
+    """
+    Why sa'i changes nothing on the permutation, pinned as a property rather
+    than as a sentence. Diffusion runs both ways every round because theta
+    reads C[x-1] and C[x+1]; a state differing in one column must therefore
+    change both adjacent columns after a single linear layer.
+    """
+    for column in range(5):
+        a = [0] * C.STATE_LANES
+        b = list(a)
+        b[column] ^= 1
+        la, lb = C.linear_layer(a), C.linear_layer(b)
+        touched = {i % 5 for i in range(C.STATE_LANES) if la[i] != lb[i]}
+        assert (column - 1) % 5 in touched, "the left neighbour is untouched"
+        assert (column + 1) % 5 in touched, "the right neighbour is untouched"
+
+
+def test_the_sai_result_is_recorded_as_a_negative() -> None:
+    """
+    Five measured negatives now live in this repository, and each one is worth
+    more than a justification invented afterwards. This keeps the sa'i finding
+    from quietly disappearing into a claim that it was adopted.
+    """
+    doc = " ".join((C.__doc__ or "").split())
+    assert "Sa'i was proposed and measured" in doc
+    assert "Three readings, all tested, none faster" in doc
+    assert "theta already goes both ways every round" in doc
+    assert "saturated" in doc

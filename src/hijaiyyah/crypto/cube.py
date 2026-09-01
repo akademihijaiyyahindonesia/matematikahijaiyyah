@@ -75,6 +75,44 @@ single fixed access latency and there is no cache to observe. A property
 software cannot have and the hardware gets for free is worth naming rather
 than leaving for a reader to find.
 
+
+**Sa'i was proposed and measured, and the system already had it.** Tawaf
+circles one way; sa'i is the back-and-forth between Safa and Marwah, seven
+traverses alternating direction. The proposal was that alternating would build
+entropy faster. Three readings, all tested, none faster:
+
+*On the permutation* — mirroring theta's neighbour and reversing rho/pi —
+nothing changes. Avalanche per round is identical (r2: 0.3268 against 0.3263;
+r3: 0.5005 against 0.4970) and the floor stays at three rounds. The mirrored
+linear layer is still a bijection, rank 1600 of 1600, so it is a valid
+alternative and simply not a faster one. The reason is structural rather than
+numerical: **theta already goes both ways every round.** D[x] = C[x-1] XOR
+rotl(C[x+1], 1) reads both neighbours, so the back-and-forth is in the round
+function already, and mirroring it swaps two symmetric roles.
+
+*On the absorption path between blocks* — walking the ring in reverse on
+alternate blocks — is measurably slightly worse: six comparisons in the
+reduced-round regime, all six negative.
+
+*On the path inside one cube block* — out-and-back over the same sixteen ring
+lanes, and the interleaved two-ends order — worse again, eight of eight:
+
+    rounds  blocks   tawaf   out-and-back    two-ends
+         1       2  0.1647  0.1572 (-.008)  0.1580 (-.007)
+         2       2  0.4094  0.3997 (-.010)  0.4070 (-.003)
+         2       4  0.4546  0.4530 (-.002)  0.4492 (-.005)
+
+Fourteen path comparisons across the two readings, every one of them negative
+and none positive. The order can only redistribute where bytes land; it cannot
+add mixing that theta is not doing already.
+
+The first attempt to measure this could not have answered the question and is
+worth recording as a method note: run at the full 28 rounds, one block already
+reaches 0.5012 either way, so diffusion is *saturated* and no path order can
+show an effect. A saturated measurement reporting "no difference" looks like
+evidence and is not. Only the reduced-round regime has room for a difference
+to appear, and there the sign is consistent.
+
 """
 
 from __future__ import annotations
