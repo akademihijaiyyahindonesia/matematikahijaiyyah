@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from hijaiyyah.crypto.guarded_record import CryptoRefusal as CryptoRefusalType
+from hijaiyyah.crypto.guarded_record import GuardedRecord as GuardedRecordType
 from hijaiyyah.crypto.node_counter import (
     EMPTY,
     HIGH_ENTROPY,
@@ -261,3 +263,96 @@ def test_no_boundary_stands_out_in_encrypted_data() -> None:
     bits = bitstream(os.urandom(4096), 3)
     scores = [coincidence(assemble(bits, phase)) for phase in range(8)]
     assert max(scores) / max(min(scores), 1e-9) < 1.15
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The wave: CMASS, the counter and Ka'bah as one pipeline
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_wave_runs_from_bits_to_an_authenticated_report() -> None:
+    """
+    Bits on a wire with no alignment given, an authenticated report out.
+    Nothing new is computed by the composition; what it adds is that the
+    findings survive the trip to whoever acts on them.
+    """
+    from hijaiyyah.crypto.node_counter import bitstream
+    from hijaiyyah.crypto.wave import Wave
+
+    key = b"\x9c\x41\x07\x22\xd5"
+    payload = (TEXT_SAMPLE * 8)[:8192]
+    cipher = bytes(b ^ key[i % 5] for i, b in enumerate(payload))
+
+    wave = Wave(bytes(range(32)), "triage")
+    report = wave.open(wave.run(bitstream(cipher, 3)))
+    assert (report.phase, report.period) == (5, 5)
+    assert sum(report.summary().values()) == len(report.classes) > 0
+
+
+def test_a_rewritten_verdict_is_refused() -> None:
+    """
+    The reason the two systems are one system. A classifier's output is worth
+    nothing if an attacker can rewrite it downstream, so the report carries
+    layer 3's MAC and a flipped verdict does not open.
+    """
+    from hijaiyyah.crypto.wave import Wave
+
+    wave = Wave(bytes(range(32)), "triage")
+    record = wave.seal(Wave.survey_bytes((TEXT_SAMPLE * 4)[:4096]))
+
+    # Both refusal paths, because the layering has two and they split roughly
+    # 41/59 over single-bit flips. Asserting only the MAC would have been
+    # wrong: this flip pushes a letter index out of 1..28, so layer 1 rejects
+    # it in O(1) before a hash is ever computed. That is the design, not a
+    # near miss, and the first version of this test expected the wrong one.
+    body = bytearray(record.to_bytes())
+    body[-40] ^= 0x01
+    with pytest.raises(CryptoRefusalType, match="structure rejected"):
+        wave.open(GuardedRecordType.from_bytes(bytes(body)))
+
+    # Tampering the tag itself is always structurally valid, so it reaches
+    # layer 3 and the MAC is what refuses.
+    tag = bytearray(record.to_bytes())
+    tag[-1] ^= 0x01
+    with pytest.raises(CryptoRefusalType, match="authentication failed"):
+        wave.open(GuardedRecordType.from_bytes(bytes(tag)))
+
+
+def test_the_report_is_canonical_and_round_trips() -> None:
+    """Layer 0's property, inherited rather than reinvented: fixed-width
+    integers throughout, so two parties cannot read one report differently."""
+    from hijaiyyah.crypto.wave import Wave, WaveReport
+
+    report = Wave.survey_bytes((TEXT_SAMPLE * 4)[:4096])
+    assert WaveReport.from_bytes(report.to_bytes()) == report
+    with pytest.raises(CryptoRefusalType, match="does not match"):
+        WaveReport.from_bytes(report.to_bytes() + b"\x00")
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_line_rate_stages_agree_with_the_python() -> None:
+    """
+    39,997 bits offered one per clock, no boundary given, against the same
+    stream in Python. Both sabotages were induced first: shifting the phase by
+    one clock and removing the alignment entirely each produce 106 mismatches.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-o", "/tmp/tb_wave", "rtl/hijaiyyah_wave.v",
+         "rtl/hijaiyyah_node_counter.v", "rtl/tb/tb_hijaiyyah_wave.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_wave"], cwd=ROOT, capture_output=True, text=True)
+    assert "PASS: 78/78" in run.stdout, run.stdout
+
+
+def test_the_rtl_says_what_it_does_not_contain() -> None:
+    """
+    A pipeline diagram that overstates its own extent is the most convincing
+    wrong thing a design can carry. Phase discovery needs a 256-bin histogram
+    and runs once per stream; layer 3 needs a SHA-256 core that does not exist
+    in this repository. The header has to keep saying both.
+    """
+    source = (ROOT / "rtl" / "hijaiyyah_wave.v").read_text(encoding="utf-8")
+    assert "NOT here" in source
+    assert "no SHA-256 core" in source
+    assert "does not authenticate" in source
