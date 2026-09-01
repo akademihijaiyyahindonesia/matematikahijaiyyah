@@ -374,3 +374,41 @@ def test_the_core_header_reports_that_nothing_fits_the_board_yet() -> None:
     assert "CONTRADICTS THE OBVIOUS EXPECTATION" in source
     assert "NONE of these fit a Tang Nano 9K" in source
     assert "not built yet" in source
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+@pytest.mark.parametrize("slice_bytes", [4, 8, 25, 50])
+def test_the_rotating_core_is_bit_identical_to_the_sliced_one(slice_bytes: int) -> None:
+    """
+    The architecture the measurement pointed at: rotate the state through one
+    fixed substitution position instead of addressing it, so the 1600-bit
+    multiplexer disappears. Same state, same clock count, roughly half the
+    area — 6,331 LUT4 against 12,074 at SLICE=25 — and it fits the board.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", f"-DSLICE_BYTES={slice_bytes}",
+         "-o", f"/tmp/tb_rot_{slice_bytes}",
+         "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_ramal_impulse.v",
+         "rtl/hijaiyyah_linear.v", "rtl/hijaiyyah_sbox.v",
+         "rtl/hijaiyyah_round_constants.v", "rtl/tb/tb_hijaiyyah_rotate_core.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run([f"/tmp/tb_rot_{slice_bytes}"], cwd=ROOT,
+                         capture_output=True, text=True)
+    assert "PASS: 28 rounds" in run.stdout, run.stdout
+
+
+def test_the_rotating_core_reports_that_it_fits_and_how_that_was_measured() -> None:
+    """
+    The claim that closes this thread, with its method attached. Fitting is
+    asserted from generic 4-LUT mapping, not from a vendor place-and-route,
+    and the header has to keep saying which.
+    """
+    raw = (ROOT / "rtl" / "hijaiyyah_rotate_core.v").read_text(encoding="utf-8")
+    # Comment prose wraps across lines, so match against normalised text —
+    # the first version of this asserted a phrase that a line break had split.
+    source = " ".join(raw.replace("//", " ").split())
+    assert "6,229 LUT4" in source and "72%" in source
+    assert "not a vendor fitting report" in source
+    assert "Fmax has no value until the board arrives" in source
