@@ -145,3 +145,40 @@ def test_an_index_naming_no_entry_halts_rather_than_loading_zeros() -> None:
     machine.load_program(assemble("HLOAD H0, #29\nMOVI R1, #7\nHALT\n"))
     machine.run()
     assert machine.dump_state()["gpr"][1] == 0, "execution must stop at the load"
+
+
+# ── E6: structural triage of a guarded record ────────────────────
+
+def test_the_record_triage_accepts_a_well_formed_record() -> None:
+    """
+    Sixteen sealed letters, one guard each, on the processor. The letters are
+    the base-28 encoding crypto/guarded_record.py produces, so the program on
+    the board and the library in Python are validating the same record.
+    """
+    assert run(BENCH / "e6_record_triage.hasm")["state"]["gpr"][1] == 200
+
+
+def test_the_triage_program_encodes_the_payload_the_library_would() -> None:
+    """
+    A hand-typed letter sequence would drift from the encoder. This checks the
+    program carries exactly what encode_bytes() produces.
+    """
+    from hijaiyyah.crypto.guarded_record import encode_bytes
+
+    source = (BENCH / "e6_record_triage.hasm").read_text(encoding="utf-8")
+    words = assemble(source)
+    loaded = [w & 0xFFF for w in words if w >> 24 == 0x40]
+
+    payload = source.split("Payload ")[1].split(" dikodekan")[0]
+    assert list(encode_bytes(eval(payload))) == loaded
+
+
+def test_one_guard_per_letter_and_nothing_more() -> None:
+    """
+    Triage is O(1) per element: the cost is the record's length, not its
+    content. Any extra work per letter would show up here as a second guard.
+    """
+    words = assemble((BENCH / "e6_record_triage.hasm").read_text(encoding="utf-8"))
+    loads = sum(1 for w in words if w >> 24 == 0x40)
+    guards = sum(1 for w in words if w >> 24 == 0x60)
+    assert loads == guards == 16

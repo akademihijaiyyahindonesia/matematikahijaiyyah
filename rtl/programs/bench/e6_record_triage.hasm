@@ -1,0 +1,69 @@
+; ============================================================================
+; E6 — triase struktural sebuah guarded record
+; ============================================================================
+; Payload b'IDR15000' dikodekan jadi 16 huruf tersegel
+; (dua huruf per byte, basis-28). Tiap huruf dijaga sendiri: enam kendala
+; atas delapan belas integer, satu siklus, tanpa kunci dan tanpa checksum
+; tersimpan.
+;
+; Ini lapisan pra-saring, bukan otentikasi — siapa pun bisa menyusun rekaman
+; yang sah secara struktur. Gunanya: di bawah banjir input rusak, sampah
+; ditolak tanpa menghabiskan satu hash pun.
+;
+; Diharapkan 200. Cetak 500 bila ada huruf yang gagal guard-nya.
+; Bacaan siklus: CYCLES=xxxxxxxx pada UART.
+        HLOAD   H0, #3
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #18
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #3
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #13
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #3
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #27
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #2
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #22
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #2
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #26
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #2
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #21
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #2
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #21
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #2
+        HGRD    H0
+        JNGD    reject
+        HLOAD   H0, #21
+        HGRD    H0
+        JNGD    reject
+        MOVI    R1, #200
+        PRINT   R1
+        HALT
+reject:
+        MOVI    R1, #500
+        PRINT   R1
+        HALT
