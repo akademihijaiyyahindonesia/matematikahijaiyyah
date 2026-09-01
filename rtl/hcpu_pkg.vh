@@ -46,8 +46,22 @@
 `define CODE_ADDR_W     12          // 4096 instruction words
 `define CODE_DEPTH      4096
 // ── Data memory ─────────────────────────────────────────────────
-`define DATA_ADDR_W     12          // 4096 × 32-bit words
-`define DATA_DEPTH      4096
+//
+// Bab III §IIIJ.3.2.1 specifies 4096 × 32-bit words, and that is the default
+// and the architecture. It is guarded rather than fixed because the ASIC
+// target cannot hold it: 131,072 bits is 86% of the design, and at
+// DIE_AREA 700×700 um it fits neither as flip-flops nor as sixteen 1 KB
+// OpenRAM macros. A reduced-area build overrides these two on the command
+// line; nothing else in the design changes, and rtl/tb still has to pass.
+//
+// The two must move together — DATA_ADDR_W is ceil(log2(DATA_DEPTH)) — and a
+// build that sets one without the other is caught by the assertion below.
+`ifndef DATA_ADDR_W
+  `define DATA_ADDR_W   12          // 4096 × 32-bit words
+`endif
+`ifndef DATA_DEPTH
+  `define DATA_DEPTH    4096
+`endif
 
 // ── Codex component indices (within 144-bit H-Reg) ──────────────
 // Component[i] is at bits [8*i+7 : 8*i]

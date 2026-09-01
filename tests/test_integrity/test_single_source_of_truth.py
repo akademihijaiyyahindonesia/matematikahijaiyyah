@@ -157,3 +157,40 @@ def test_a_difference_vector_is_refused_rather_than_crashing() -> None:
 
     with pytest.raises(EBNFSemanticError, match="18-component"):
         _guard_check([0] * 14)
+
+
+# ── Memory depth, which lives in three places ────────────────────
+
+def test_the_data_memory_depth_agrees_across_rtl_and_python() -> None:
+    """
+    Bab III §IIIJ.3.2.1 specifies 4096 × 32-bit words. hcpu_pkg.vh and
+    hisa/machine.py each hold that number, kept in step by a comment.
+
+    The header's defines are now `ifndef-guarded so a reduced-area ASIC build
+    can override them — 131,072 bits is 86% of the design and fits neither as
+    flip-flops nor as sixteen 1 KB OpenRAM macros at DIE_AREA 700x700 um. The
+    default is unchanged and remains the architecture; this pins the two
+    copies of it together.
+    """
+    import re
+
+    from hijaiyyah.hisa.machine import HISAMachine
+
+    header = (ROOT / "rtl" / "hcpu_pkg.vh").read_text(encoding="utf-8")
+
+    depth = re.search(r"^\s*`define\s+DATA_DEPTH\s+(\d+)", header, re.M)
+    width = re.search(r"^\s*`define\s+DATA_ADDR_W\s+(\d+)", header, re.M)
+    assert depth and width, "hcpu_pkg.vh no longer defines the data memory"
+
+    assert int(depth.group(1)) == HISAMachine.DATA_DEPTH, (
+        "the RTL and the Python machine disagree about how much data memory "
+        "the processor has"
+    )
+    assert HISAMachine.DATA_ADDR_MASK == HISAMachine.DATA_DEPTH - 1, (
+        "the mask must cover exactly the depth, or an address wraps differently "
+        "on the two machines"
+    )
+    assert 2 ** int(width.group(1)) == int(depth.group(1)), (
+        "DATA_ADDR_W must be ceil(log2(DATA_DEPTH)); a build that sets one "
+        "without the other addresses memory that is not there"
+    )

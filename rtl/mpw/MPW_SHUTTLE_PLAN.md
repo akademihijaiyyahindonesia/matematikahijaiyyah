@@ -160,8 +160,31 @@ are not mapped standard cells and no um2 area or timing can be derived from them
 flip-flops because the RTL describes a register array, not a memory macro.
 Excluding it, the design is 64,630 cells.
 
-Before any tape-out attempt the data RAM must become an SRAM macro (e.g. OpenRAM
-on SKY130) or shrink — 131,072 flip-flops will not fit the 700x700 um user area
+OpenRAM on SKY130 answers how to build the memory, and measurement says it does
+not answer the area question at this depth. 16 KB needs sixteen 1 KB macros or
+eight 2 KB ones, which is several mm2 against a 700x700 um die of 0.49 mm2. The
+Caravel user area is 2.92 x 3.52 mm = 10.28 mm2 — twenty-one times larger — so
+16 KB is a shuttle decision, not an RTL one.
+
+Shrinking is measured and cheap. Nothing in rtl/programs/ or rtl/programs/bench/
+touches the data RAM at all; the only accesses anywhere in the tree are two
+testbench programs at addresses 0 and 10. Cells scale linearly with depth:
+
+    depth   bits      cells (est. post-ABC)   share of design
+     4096   131,072              270,589                 86%
+     1024    32,768               70,728                 61%
+      256     8,192               17,876                 28%
+       64     2,048                4,225                  9%
+
+At 64 words the data RAM is smaller than the register file and needs no SRAM
+macro at all. hcpu_pkg.vh guards DATA_DEPTH and DATA_ADDR_W with `ifndef so a
+reduced-area build can override them; the default stays 4096, which is what
+Bab III §IIIJ.3.2.1 specifies and what test_book_anchor.py holds it to.
+
+All thirteen top-level assertions pass at depths 4096, 1024, 256, 64 and 16.
+
+Before any tape-out attempt the data RAM must become an SRAM macro or shrink —
+131,072 flip-flops will not fit the 700x700 um user area
 in `config.json`. The same applies to the 256x32 stack in `hcpu_memory`.
 
 Critical path: 84 logic levels through the divide/modulo-by-10 at

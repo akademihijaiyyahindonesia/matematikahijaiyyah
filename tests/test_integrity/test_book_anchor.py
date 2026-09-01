@@ -345,7 +345,10 @@ BOOK_PARAMETERS: Dict[str, int] = {
 )
 def test_hcpu_parameter_matches_the_book(name: str, value: int) -> None:
     text = PKG_VH.read_text(encoding="utf-8")
-    match = re.search(rf"^`define\s+{name}\s+(\d+)", text, re.M)
+    # The memory depths sit inside `ifndef guards so a reduced-area ASIC
+    # build can override them, so the define may be indented. The value the
+    # book specifies is what is being checked, not its column.
+    match = re.search(rf"^\s*`define\s+{name}\s+(\d+)", text, re.M)
     assert match, f"hcpu_pkg.vh no longer defines {name}"
     assert int(match.group(1)) == value
 
