@@ -417,3 +417,48 @@ def test_the_digest_does_not_present_itself_as_a_hash_function() -> None:
     doc = " ".join((C.digest.__doc__ or "").split())
     assert "[EH]" in doc
     assert "SHA-256 for anything that matters" in doc
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The gate that caught a fatal flaw
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_linear_layer_is_invertible() -> None:
+    """
+    A sponge requires a permutation, and this is the check that says whether
+    it has one. The first mixing layer added each column's parity to all five
+    lanes of that column, which forces the new parity to zero — five copies of
+    a value XOR back to one — so the state collapsed into a subspace. Rank was
+    1276 of 1600: 324 dimensions gone, 320 of them exactly five columns times
+    sixty-four bit positions.
+
+    Twenty thousand random states produced no collision, because the space is
+    2^1600. Only the rank computation could see it, which is the lesson worth
+    keeping: statistical tests on a broken construction can look perfect.
+    """
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
+    from tools.kabah_attack import BITS, linear_layer, rank_over_gf2
+
+    assert rank_over_gf2(linear_layer) == BITS == 1600
+
+
+def test_the_attack_tool_reports_every_check_holding() -> None:
+    """
+    tools/kabah_attack.py is a gate, not a report. If any check starts failing
+    the construction changed underneath it.
+    """
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
+    from tools import kabah_attack
+
+    results = kabah_attack.run(
+        ["attack_sbox", "attack_rotational", "attack_fixed_points"]
+    )
+    assert len(results) == 3
+    for result in results:
+        assert result["pass"], f"{result['name']} was breached: {result}"

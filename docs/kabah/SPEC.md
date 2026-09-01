@@ -89,25 +89,40 @@ keluarga, bukan memberi kekuatannya.
 Satu ronde `r`, untuk `r = 0 … 27`:
 
 ```
-1. SUBSTITUSI   setiap byte tiap lane melewati SBOX
+1. θ            C[col] = XOR seluruh lane di kolom itu
+                D[col] = C[col−1] ⊕ rotl(C[col+1], 1)
+                lane[row][col] ^= D[col]
 
-2. BARIS        untuk tiap baris:  acc = XOR seluruh lane di baris itu
-                lane[row][col] ^= rotl(acc, col + r + 1)
+2. ρ·π          lane[i] dirotasi kiri sebanyak RHO[i], lalu dipindah ke PI[i]
 
-3. KOLOM        untuk tiap kolom:  acc = XOR seluruh lane di kolom itu
-                lane[i] = rotl(lane[i] ^ acc, i + 1)      i = row·5 + col
+3. SUBSTITUSI   setiap byte tiap lane melewati SBOX
 
 4. KONSTANTA    lane[0] ^= RC[r]
 ```
 
+`RHO[i] = (i·(i+1)/2) mod 64`, `PI[i] = 5·(i mod 5) + ((i div 5) + 3·(i mod 5)) mod 5`.
 Rotasi adalah rotasi kiri 64-bit; jumlah geser diambil modulo 64.
+
+**Mengapa pola θ, bukan paritas kolom sendiri.** Versi pertama menambahkan
+paritas sebuah kolom ke kelima lane kolom itu. Itu **tidak invertibel**: lima
+salinan sebuah nilai ber-XOR kembali jadi satu, sehingga paritas kolom yang
+baru selalu nol dan seluruh state runtuh ke subruang. Terukur atas GF(2),
+lapisan linearnya berperingkat **1276 dari 1600** — 324 dimensi hilang, 320 di
+antaranya persis lima kolom × enam puluh empat posisi bit. Sponge mensyaratkan
+permutasi, dan itu bukan. Menambahkan paritas **tetangga** menghindarinya, dan
+lapisan yang ditulis ulang berperingkat 1600.
+
+Pencarian acak tak akan menemukannya: dua puluh ribu state acak tak memberi
+satu pun tabrakan, karena ruangnya 2¹⁶⁰⁰. Cacat itu hanya terlihat dengan
+membangun matriksnya dan menghitung rank-nya — dan itulah pelajaran yang layak
+dibawa: uji statistik atas konstruksi yang patah bisa tampak sempurna.
 
 **Konstanta ronde.** `RC[i] = 8 byte pertama SHA-256(cube_digest ‖ "tawaf" ‖ i)`,
 dibaca big-endian.
 
-**Mengapa 28 ronde.** Difusi jenuh pada ronde 3, terukur: ronde 1 mencapai 20
-dari 25 lane pada avalanche 0,055; ronde 2 mencapai 25 pada 0,302; ronde 3
-berada di 0,496 dan tak ada yang bergerak sesudahnya. Tiga adalah lantainya,
+**Mengapa 28 ronde.** Difusi jenuh pada ronde 3, terukur: ronde 1 mencapai 11
+dari 25 lane pada avalanche 0,029; ronde 2 mencapai 25 pada 0,335; ronde 3
+berada di 0,499 dan tak ada yang bergerak sesudahnya. Tiga adalah lantainya,
 selebihnya margin. Dua puluh delapan memberi 9,3× — Keccak memegang 8× dengan
 dua puluh empat.
 
@@ -159,10 +174,10 @@ Lengkap dalam [`test_vectors.json`](test_vectors.json) — S-box penuh,
 28 konstanta ronde, keluaran permutasi, dan digest.
 
 ```
-digest("")                = 79c6e637cd6577f733c2af82f8d1a80593574a8c1a4c2583367a3afd3ec6186f
-digest("a")               = c9bf4839e221831902e31205cb5e2b54607a26e171e2c792ac56b051568d26e1
-digest("Ka'bah")          = 276117a27d5b14569705cb01539a4a866a521a5ff5463cd89f0105c3ea08b608
-digest(bytes(range(128))) = 1a492f4e198abd9ece7ba09dae851bf71d018a57b29d4231ae4eb7d670049ff8
+digest("")                = b9921d81a84592c27a3ec3d0a6778e52a226cb93a07ef5f4c3d1781181b70208
+digest("a")               = 515a1d044720d26d4eedbcf774223f52f42bd40b6d708306fc4bc1102d112e7d
+digest("Ka'bah")          = 7a48622af64d532897e83d0aaf286c5f9d5f5d9df0dc34a41d159e512363ace4
+digest(bytes(range(128))) = 800dc26abcd86ccbb7d6545f3a943358f8af6c7cf565ec6fad866ad6549bf134
 ```
 
 Implementasi rujukan: `src/hijaiyyah/crypto/cube.py`.
@@ -195,5 +210,10 @@ kunci turunan HKDF.
 3. **Sifat aljabar** — derajat, kubus, integral. Peta invers punya struktur
    aljabar yang kaya; apakah lapisan linearnya cukup memecahnya?
 4. **Serangan rotasi** — lapisan campurnya bergantung berat pada rotasi.
+
+`tools/kabah_attack.py` menjalankan enam pemeriksaan: invertibilitas lewat rank
+GF(2), mutu S-box, lantai difusi, relasi rotasi, titik tetap, dan bias keluaran.
+Semuanya bertahan pada versi ini. Pemeriksaan pertamalah yang menemukan cacat
+di atas.
 
 Sampai ada yang mencoba, [EH] adalah label yang benar.

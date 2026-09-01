@@ -416,6 +416,17 @@ def _rotl(value: int, amount: int) -> int:
     return ((value << amount) | (value >> (LANE_BITS - amount))) & LANE_MASK
 
 
+#: Per-lane rotation offsets, triangular numbers modulo the lane width. Every
+#: lane turns by a different amount, so a difference cannot stay aligned.
+RHO: Tuple[int, ...] = tuple((i * (i + 1) // 2) % LANE_BITS for i in range(25))
+
+#: Lane repositioning, Keccak's π. Diffusion needs lanes to change columns as
+#: well as mix within them, or θ only ever sees the same groupings.
+PI: Tuple[int, ...] = tuple(
+    5 * (i % 5) + ((i // 5) + 3 * (i % 5)) % 5 for i in range(25)
+)
+
+
 def _substitute(lane: int) -> int:
     """The byte S-box applied across a lane, eight bytes at a time."""
     out = 0
@@ -424,39 +435,61 @@ def _substitute(lane: int) -> int:
     return out
 
 
+def linear_layer(state: Sequence[int]) -> List[int]:
+    """θ then ρ·π — the round with the substitution and constant removed.
+
+    Exposed rather than inlined so that an audit measures *this* layer. The
+    attack tool first carried its own copy, which meant a sabotage of the real
+    one left every check green: it was attacking a different construction,
+    which is exactly the failure the specification warns an attacker about.
+    """
+    s = [lane & LANE_MASK for lane in state]
+
+    parity = [0] * COLS
+    for col in range(COLS):
+        for row in range(ROWS):
+            parity[col] ^= s[row * COLS + col]
+    fold = [
+        parity[(col - 1) % COLS] ^ _rotl(parity[(col + 1) % COLS], 1)
+        for col in range(COLS)
+    ]
+    for row in range(ROWS):
+        for col in range(COLS):
+            s[row * COLS + col] ^= fold[col]
+
+    rotated = [_rotl(s[i], RHO[i]) for i in range(STATE_LANES)]
+    moved = [0] * STATE_LANES
+    for i in range(STATE_LANES):
+        moved[PI[i]] = rotated[i]
+    return moved
+
+
 def permute(state: List[int]) -> List[int]:
-    """Twenty-eight rounds: substitute, mix rows, mix columns, add a constant.
+    """Twenty-eight rounds: θ, ρ·π, substitute, add a constant.
 
-    Four tawaf of seven circuits each, which is also the alphabet. The number
-    is measured rather than chosen — see :data:`CIRCUITS`. Diffusion saturates
-    at three rounds, so twenty-eight is a 9.3× margin, against Keccak's 8×.
+    Four tawaf of seven circuits each, which is also the alphabet. The count
+    is measured rather than chosen — see :data:`CIRCUITS`.
 
-    An earlier version ran seven, which is 2.3× the floor and inside the range
-    an attack on this shape would plausibly reach.
+    **The mixing layer was rewritten after it failed its own audit.** The first
+    version computed each column's parity and added it to all five lanes of
+    that column. That is not invertible, and a sponge requires a permutation:
+    the new column parity is then always zero, because five copies of the
+    parity XOR back to one, so the whole state collapses into a subspace.
+    Measured over GF(2), the linear layer had rank 1276 of 1600 — 320
+    dimensions lost, exactly five columns times sixty-four bit positions, and
+    five more from the row step for the same reason.
+
+    Keccak's θ avoids it by adding a *neighbour's* parity rather than the
+    lane's own: D[x] = C[x−1] ⊕ rotl(C[x+1], 1). That is invertible, and the
+    rewritten layer measures rank 1600.
     """
     if len(state) != STATE_LANES:
         raise ValueError(f"state must be {STATE_LANES} lanes, got {len(state)}")
 
     s = [lane & LANE_MASK for lane in state]
     for circuit in range(CIRCUITS):
+        s = linear_layer(s)
         s = [_substitute(lane) for lane in s]
-
-        for row in range(ROWS):
-            base = row * COLS
-            acc = 0
-            for col in range(COLS):
-                acc ^= s[base + col]
-            for col in range(COLS):
-                s[base + col] ^= _rotl(acc, col + circuit + 1)
-
-        for col in range(COLS):
-            acc = 0
-            for row in range(ROWS):
-                acc ^= s[row * COLS + col]
-            for row in range(ROWS):
-                index = row * COLS + col
-                s[index] = _rotl(s[index] ^ acc, row * COLS + col + 1)
-
         s[0] ^= ROUND_CONSTANTS[circuit]
     return s
 
