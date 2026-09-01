@@ -104,3 +104,56 @@ def test_compute_U_is_linear() -> None:
             assert compute_U(total) == compute_U(list(a.vector)) + compute_U(
                 list(b.vector)
             )
+
+
+# ── The guard system, likewise defined once ──────────────────────
+
+def test_the_language_guard_is_the_canonical_guard() -> None:
+    """
+    HC's `.guard()` used to be its own implementation, and it disagreed.
+
+    It checked four constraints where ℋ has six, and numbered them wrongly:
+    ρ ≥ 0 was called "G1" and the Nuqṭah sum-check "G2", where Bab III
+    §IIIA.3.1.2 has G1–G3 as the sum-checks and G4 as turning conservation.
+    T1 and T2 were absent.
+
+    hcpu_guard.v computes all six, so the gap was a real HC↔HCPU divergence:
+    a vector with Ks > 0 and Qc = 0 passed .guard() in the language and would
+    have failed HGRD on the processor.
+    """
+    from hijaiyyah.core.guards import full_guard_check
+    from hijaiyyah.language.evaluator import _guard_check
+
+    # T1: Ks > 0 ⟹ Qc ≥ 1. Sum-checks all satisfied, so only T1 can fail.
+    t1_violation = [4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    assert full_guard_check(t1_violation)["all_pass"] is False
+    assert _guard_check(t1_violation) is False, "the language must see T1 too"
+
+    # T2: Kc > 0 ⟹ Qc ≥ 1.
+    t2_violation = [4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+    assert full_guard_check(t2_violation)["all_pass"] is False
+    assert _guard_check(t2_violation) is False, "the language must see T2 too"
+
+
+@pytest.mark.parametrize(
+    "entry", MASTER_TABLE.all_entries(), ids=[e.char for e in MASTER_TABLE.all_entries()]
+)
+def test_language_and_core_guards_agree_on_every_letter(entry) -> None:
+    from hijaiyyah.core.guards import full_guard_check
+    from hijaiyyah.language.evaluator import _guard_check
+
+    v = list(entry.vector)
+    assert _guard_check(v) == full_guard_check(v)["all_pass"] is True
+
+
+def test_a_difference_vector_is_refused_rather_than_crashing() -> None:
+    """
+    `a - b` is a 14D vector in Domain C, not a hybit — ℋ is a monoid with no
+    additive inverse. Asking it for a guard used to raise IndexError from
+    inside the guard code; it now says what is wrong.
+    """
+    from hijaiyyah.core.exceptions import EBNFSemanticError
+    from hijaiyyah.language.evaluator import _guard_check
+
+    with pytest.raises(EBNFSemanticError, match="18-component"):
+        _guard_check([0] * 14)

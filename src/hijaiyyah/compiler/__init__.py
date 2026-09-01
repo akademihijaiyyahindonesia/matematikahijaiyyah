@@ -28,6 +28,8 @@ from typing import Any, ClassVar, Dict, List, Optional
 # guarded against nothing, and assigning None to a class name is what mypy
 # was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
 # every remaining guarded import honest.
+from hijaiyyah.compiler.psi import PsiReport
+from hijaiyyah.compiler.psi import inject as psi_inject
 from hijaiyyah.language.lexer import Lexer as HCLexer
 from hijaiyyah.language.parser import Parser as HCParser
 
@@ -65,6 +67,7 @@ class CompileResult:
     stages_completed: List[CompileStage] = field(default_factory=list)
     token_count: int = 0
     instruction_count: int = 0
+    psi_report: Optional["PsiReport"] = None
 
     @property
     def failed(self) -> bool:
@@ -121,8 +124,10 @@ class HCCompiler:
             result.stages_completed.append(CompileStage.SEMANTIC)
 
             # Stage 4: Ψ-injection (optional)
+            self._last_psi = None
             if self.options.psi_mode:
                 typed_ast = self._psi_inject(typed_ast)
+                result.psi_report = self._last_psi
             result.stages_completed.append(CompileStage.PSI_INJECT)
 
             # Stage 5: Codegen → assembly
@@ -207,8 +212,16 @@ class HCCompiler:
         return ast
 
     def _psi_inject(self, ast):
-        """Ψ-Injection: attach hybit metadata to tokens."""
-        # Ψ-injection does NOT change semantics
+        """Ψ-Injection: prove what can be proved about every hybit expression.
+
+        Semantics are untouched. The pass records, per expression, whether the
+        value is provably in ℋ and what its folded codex is, so a later stage
+        can fold a guard check to a constant instead of emitting HGRD.
+
+        The report is kept on the compiler so ``compile_source`` can attach it
+        to the result; the AST is returned unchanged.
+        """
+        self._last_psi = psi_inject(ast)
         return ast
 
     def _codegen(self, ast):

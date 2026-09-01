@@ -19,7 +19,7 @@ import math
 from typing import Any, Callable, ClassVar, Dict, List, Optional
 
 from hijaiyyah.core.exceptions import EBNFSemanticError
-from hijaiyyah.core.guards import compute_U
+from hijaiyyah.core.guards import compute_U, full_guard_check
 from hijaiyyah.core.master_table import MASTER_TABLE, CodexEntry
 from hijaiyyah.language.ast_nodes import (
     ArrayLiteral,
@@ -150,24 +150,26 @@ _SLOT_MAP: Dict[str, int] = {
 
 def _guard_check(vec: List[int]) -> bool:
     """
-    Four structural guards on a raw v₁₈ vector.
-    Returns True if all pass.
+    The guard system on a raw v₁₈ vector. True when the value is in ℋ.
 
-    Guards (on raw vector):
-      G1: ρ ≥ 0           (Axiom 11.3.2)
-      G2: A_N = Na+Nb+Nd  (Definition 12.2.1)
-      G3: A_K = ΣK_j      (Definition 12.2.1)
-      G4: A_Q = ΣQ_j      (Definition 12.2.1)
+    Forwards to core.guards rather than restating the constraints. The copy
+    that used to live here checked four of them and numbered them wrongly:
+    it called ρ ≥ 0 "G1" and the Nuqṭah sum-check "G2", where Bab III
+    §IIIA.3.1.2 has G1–G3 as the sum-checks and G4 as turning conservation.
+    T1 and T2 were absent altogether.
+
+    That was not cosmetic. hcpu_guard.v computes all six, so a vector with
+    Ks > 0 and Qc = 0 passed .guard() in the language and failed HGRD on the
+    processor — a program that validated in software and halted in hardware.
     """
-    U = _U(vec)
-    rho = vec[0] - U
-
-    g1 = rho >= 0
-    g2 = vec[14] == vec[1] + vec[2] + vec[3]
-    g3 = vec[15] == vec[4] + vec[5] + vec[6] + vec[7] + vec[8]
-    g4 = vec[16] == vec[9] + vec[10] + vec[11] + vec[12] + vec[13]
-
-    return g1 and g2 and g3 and g4
+    if len(vec) < 18:
+        raise EBNFSemanticError(
+            f"guard() needs a full 18-component codex, got {len(vec)}. "
+            "A difference (a - b) is a 14D vector in Domain C, not a hybit: "
+            "ℋ is a monoid with no additive inverse, so a difference need "
+            "not lie in ℋ at all."
+        )
+    return full_guard_check(vec)["all_pass"]
 
 
 def _guard_detail(vec: List[int]) -> Dict[str, Any]:
