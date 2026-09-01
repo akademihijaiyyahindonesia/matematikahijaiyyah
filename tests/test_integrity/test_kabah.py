@@ -89,7 +89,7 @@ def test_the_docstring_names_the_layer_that_carries_security() -> None:
 
 
 def test_the_sponge_is_reported_as_a_hypothesis() -> None:
-    sponge = [layer for layer in LAYERS if layer.name == "Absorption"][0]
+    sponge = next(layer for layer in LAYERS if layer.name == "Absorption")
     assert sponge.label == "EH"
     doc = " ".join((Kabah.fingerprint.__doc__ or "").split())
     assert "[EH]" in doc
