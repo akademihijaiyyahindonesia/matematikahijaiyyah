@@ -21,7 +21,7 @@ module tb_hijaiyyah_ramal_impulse;
     always #5 clk = ~clk;
 
     hijaiyyah_ramal_impulse #(.ROUNDS(ROUNDS), .MAX_STRIDE(STRIDE)) dut (
-        .clk(clk), .rst_n(rst_n), .enable(enable),
+        .clk(clk), .rst_n(rst_n), .enable(enable), .stall(1'b0),
         .lin_pulse(lin_pulse), .sub_pulse(sub_pulse),
         .round_index(round_index), .done(done)
     );

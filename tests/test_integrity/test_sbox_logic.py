@@ -306,3 +306,71 @@ def test_the_linear_layer_states_its_real_cost() -> None:
     assert "not the same as" in source and "free" in source
     for figure in ("15,200 LUT4", "53,280 LUT4", "38,080 LUT4"):
         assert figure in source, f"{figure} missing from the cost accounting"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The core: the impulser's pulses, converted back into a computation
+# ══════════════════════════════════════════════════════════════════
+
+def test_substitution_is_position_independent_across_the_flat_state() -> None:
+    """
+    What lets the core slice a flat 200-byte state instead of tracking lanes.
+    Asserted rather than assumed, because the whole slicing scheme rests on it.
+    """
+    import random as _random
+
+    from hijaiyyah.crypto import cube
+
+    rng = _random.Random(1)
+    lanes = [rng.getrandbits(64) for _ in range(cube.STATE_LANES)]
+    by_lane = [cube._substitute(x) for x in lanes]
+
+    flat = b"".join(x.to_bytes(8, "little") for x in lanes)
+    substituted = bytes(cube.SBOX[b] for b in flat)
+    by_flat = [
+        int.from_bytes(substituted[i * 8 : (i + 1) * 8], "little")
+        for i in range(cube.STATE_LANES)
+    ]
+    assert by_lane == by_flat
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+@pytest.mark.parametrize("slice_bytes", [4, 8, 25, 50, 100])
+def test_the_core_reproduces_the_python_at_every_slice_width(slice_bytes: int) -> None:
+    """
+    The impulser driving a real datapath, which is the only thing that makes a
+    pacing generator more than a table. Every width lands on the same state.
+
+    Two handshake bugs were found here and both looked like design faults. A
+    registered `stall` is one clock late, so the generator advanced before the
+    core was busy and its next linear pulse was dropped: 142 clocks instead of
+    253 and a wrong state. Adding a wait state moved the race rather than
+    closing it — still wrong, at 156. The fix is a combinational stall, raised
+    on the clock the substitution is accepted.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", f"-DSLICE_BYTES={slice_bytes}",
+         "-o", f"/tmp/tb_core_{slice_bytes}",
+         "rtl/hijaiyyah_ramal_core.v", "rtl/hijaiyyah_ramal_impulse.v",
+         "rtl/hijaiyyah_linear.v", "rtl/hijaiyyah_sbox.v",
+         "rtl/hijaiyyah_round_constants.v", "rtl/tb/tb_hijaiyyah_ramal_core.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run([f"/tmp/tb_core_{slice_bytes}"], cwd=ROOT,
+                         capture_output=True, text=True)
+    assert "PASS: 28 rounds" in run.stdout, run.stdout
+
+
+def test_the_core_header_reports_that_nothing_fits_the_board_yet() -> None:
+    """
+    Narrowing the slice does not keep shrinking the design — SLICE=4 costs
+    more than SLICE=8, because the cost is the 1600-bit slice multiplexer and
+    not the S-boxes. And the cheapest configuration is already over a Tang
+    Nano 9K's 8,640 LUT4. Both belong in the header, not in a surprise on the
+    board.
+    """
+    source = (ROOT / "rtl" / "hijaiyyah_ramal_core.v").read_text(encoding="utf-8")
+    assert "CONTRADICTS THE OBVIOUS EXPECTATION" in source
+    assert "NONE of these fit a Tang Nano 9K" in source
+    assert "not built yet" in source
