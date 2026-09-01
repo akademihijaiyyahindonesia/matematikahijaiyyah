@@ -138,3 +138,53 @@ def test_the_spec_disclaims_what_it_must() -> None:
 def test_the_spec_names_which_layer_carries_security() -> None:
     assert "lapis 3" in TEXT.lower()
     assert "HMAC-SHA256" in TEXT
+
+
+# ── The inheritance argument, and its numbers ────────────────────
+
+def test_the_spec_states_what_is_inherited_and_what_is_not() -> None:
+    """
+    The strongest claim the design can make is that it recombines components
+    whose analysis is mature. It is only honest while the spec also says what
+    that does not cover — the composition — and gives the flaw as evidence.
+    """
+    assert "Apa yang diwarisi" in TEXT
+    assert "Yang tidak diwarisi" in TEXT
+    assert "rank 1276" in TEXT, "the composition failure has to be the evidence"
+
+
+def test_keccak_chi_really_has_the_properties_the_spec_quotes() -> None:
+    """
+    The comparison is only worth making if it is right, so χ is recomputed
+    here rather than cited.
+    """
+    chi = [
+        sum(
+            (((x >> i) & 1) ^ ((1 - ((x >> ((i + 1) % 5)) & 1)) & ((x >> ((i + 2) % 5)) & 1)))
+            << i
+            for i in range(5)
+        )
+        for x in range(32)
+    ]
+    worst = 0
+    for a in range(1, 32):
+        counts = [0] * 32
+        for x in range(32):
+            counts[chi[x] ^ chi[x ^ a]] += 1
+        worst = max(worst, max(counts))
+    assert worst == 8, f"χ differential uniformity is {worst}, spec says 8"
+    assert "| Keseragaman diferensial | 8 (relatif 0,250) | 4 (relatif **0,016**) |" in TEXT
+
+
+def test_the_degree_argument_is_stated_with_its_arithmetic() -> None:
+    """
+    Algebraic degree is what sets a round count. The spec has to show the
+    arithmetic, not just assert the conclusion.
+    """
+    assert "2^11 = 2048" in TEXT and "7^4 = 2401" in TEXT
+    assert "ronde 11" in TEXT and "ronde 4" in TEXT
+
+
+def test_the_spec_does_not_claim_inherited_trust() -> None:
+    """The distinction the whole section rests on."""
+    assert "Bukan bahwa Ka'bah mewarisi kepercayaan — ia tidak" in TEXT

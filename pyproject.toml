@@ -39,6 +39,7 @@ dependencies = [
 hc = "hijaiyyah.cli:main"
 hom = "hijaiyyah.__main__:main"
 hybit-ai = "hijaiyyah.ai.__main__:main"
+kabah = "hijaiyyah.crypto.cli:main"
 
 [project.optional-dependencies]
 dev = [

@@ -186,7 +186,11 @@ hijaiyyah-mathematics/
 │       │   ├── hashing.py
 │       │   ├── signing.py
 │       │   ├── certificate.py
-│       │   └── guard_filter.py
+│       │   ├── guard_filter.py
+│       │   ├── guarded_record.py   ← rekaman terjaga, HMAC + HKDF
+│       │   ├── cube.py             ← sponge tawaf [EH]
+│       │   ├── kabah.py            ← sistem terkomposisi, lima lapis
+│       │   └── cli.py              ← entry point `kabah`
 │       │
 │       ├── net/
 │       │   ├── __init__.py
@@ -518,6 +522,7 @@ Terdaftar di `[project.scripts]` pada `pyproject.toml`.
 | `hom` | `hijaiyyah.__main__:main` | GUI desktop (Tkinter) |
 | `hc` | `hijaiyyah.cli:main` | bahasa HC — `run`, `check`, `repl`, `lsp` |
 | `hybit-ai` | `hijaiyyah.ai.__main__:main` | runtime AI lokal |
+| `kabah` | `hijaiyyah.crypto.cli:main` | sistem integritas Ka'bah — `keygen`, `seal`, `open`, `fingerprint`, `describe` |
 
 ```bash
 hc run examples/hello.hc

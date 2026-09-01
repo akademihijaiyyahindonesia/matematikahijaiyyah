@@ -82,6 +82,65 @@ Keempatnya adalah optimum untuk bijeksi 8-bit. Sifat ini berlaku untuk
 **setiap** polinomial tak-tereduksi derajat 8 — kubus memilih anggota
 keluarga, bukan memberi kekuatannya.
 
+
+---
+
+## 2a. Apa yang diwarisi, dan dari mana
+
+Ka'bah bukan konstruksi dari nol. Ia **merakit komponen yang analisisnya sudah
+matang**, dan itu sengaja: lima belas tahun kriptanalisis atas Keccak dan tiga
+puluh tahun atas Rijndael tidak hanya menghasilkan kepercayaan, tetapi
+**data** — pengetahuan tentang apa yang bekerja dan mengapa. Data itu publik.
+
+| Komponen | Diwarisi dari | Apa yang analisisnya tetapkan |
+|---|---|---|
+| Kerangka sponge | Keccak / SHA-3 | keamanan tereduksi ke sifat permutasinya; capacity/2 |
+| Pola θ | Keccak | paritas **tetangga** invertibel; paritas sendiri tidak |
+| ρ·π | Keccak | rotasi per-lane + pemindahan posisi memberi difusi dua arah |
+| Konstanta ronde | Keccak / AES | memecah simetri antar-ronde |
+| Invers GF(2⁸) | Rijndael / AES | DU 4 dan NL 112 adalah optimum untuk bijeksi 8-bit |
+| Peta affine | Rijndael | memecah involusi dan titik tetap tanpa merusak DU/NL |
+
+**Yang tidak diwarisi:** komposisinya. Interaksi antar komponen inilah yang
+diserang, dan tak ada warisan yang menjaminnya. Bukti bahwa itu nyata: versi
+pertama lapisan campur memakai *gagasan* θ tetapi salah menerapkannya, dan
+kesalahannya fatal — rank 1276 dari 1600. Pengetahuannya tersedia; ia tetap
+salah diterapkan.
+
+### Di mana warisan itu memberi keunggulan terukur
+
+| | Keccak χ | Ka'bah |
+|---|---:|---:|
+| Lebar S-box | 5 bit | 8 bit |
+| Keseragaman diferensial | 8 (relatif 0,250) | 4 (relatif **0,016**) |
+| Nonlinearitas | 8 | **112** |
+| **Derajat aljabar** | **2** | **7** |
+
+Derajat aljabar itulah yang menentukan jumlah ronde. Derajat tumbuh sekitar
+`d^r`, dan harus menjenuhkan lebar state:
+
+- Keccak: `2^11 = 2048 > 1600` → jenuh sekitar **ronde 11**, dan ia berjalan 24.
+  Margin ≈ **2,2×**.
+- Ka'bah: `7^4 = 2401 > 1600` → jenuh sekitar **ronde 4**, dan ia berjalan 28.
+  Margin ≈ **7×**.
+
+Terukur: turunan orde-8 sudah tak nol pada **ronde 2**.
+
+Keccak memakai χ berderajat 2 karena ia harus murah di perangkat keras pada
+2008 dan harus melindungi 1600 bit dengan gerbang sesedikit mungkin. Pilihan
+itu masuk akal untuk keadaannya. Hari ini tabel 256-entri adalah satu blok RAM
+di FPGA termurah, jadi batasan yang memaksa χ sudah tidak ada — dan invers
+GF(2⁸) yang analisisnya sama matangnya bisa dipakai di tempatnya.
+
+**Itulah bentuk sebenarnya dari klaim "dibangun di atas lima belas tahun
+data".** Bukan bahwa Ka'bah mewarisi kepercayaan — ia tidak. Melainkan bahwa
+ia mewarisi *keputusan rancangan yang sudah terbukti*, dan menukar satu
+komponen dengan yang lebih kuat karena batasan yang memaksa pilihan lama sudah
+hilang.
+
+Yang tersisa untuk dibuktikan tetap yang sama: komposisinya, oleh orang lain,
+dalam waktu yang lama.
+
 ---
 
 ## 3. Permutasi
