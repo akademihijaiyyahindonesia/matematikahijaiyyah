@@ -355,7 +355,7 @@
       <span class="chip idle" id="c4">—</span>
     </div>
     <div class="out" id="mac">—</div>
-    <p class="hint">HMAC-SHA256 lewat WebCrypto. Dataset-seal ikut di dalam tag, jadi rekaman tak bisa diputar ulang ke rilis lain.</p>
+    <p class="hint">HMAC-SHA256 lewat WebCrypto, dengan setiap medan diberi awalan panjang. Nonce baru tiap penyegelan — tanpa itu, rekaman tersadap bisa dikirim ulang selamanya. Dataset-seal ikut di dalam tag, jadi rekaman tak bisa diputar ke rilis lain.</p>
   </section>
 
   <footer>
@@ -413,9 +413,14 @@ const KAT = {
   purpose: "self-test",
   key: "460665fffd5d0db4221a147dc4e15efdf73e8eb5f0100e973b6d86d45a2369aa",
   payload: "HYBIT",
+  nonce: "000102030405060708090a0b0c0d0e0f",
   letters: [3,17,4,6,3,11,3,18,4,1],
-  mac: "3277c85686419c28fe0fb38571fe6254c3073f7c2678893c8ad3482a9273c447",
+  mac: "a5c95cbbeab599870c2ba06b99d54df905507c3735c54a1bcf215e8652349e52",
 };
+
+const MAGIC = new Uint8Array([72,71,82,49]);   // "HGR1"
+const NONCE_LEN = 16;
+const be = (n, w) => { const o = new Uint8Array(w); for (let i=w-1;i>=0;i--){o[i]=n&255;n>>>=8;} return o; };
 
 const hex   = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,"0")).join("");
 const unhex = s => new Uint8Array((s.match(/../g) || []).map(x => parseInt(x,16)));
@@ -444,8 +449,17 @@ const encodeBytes = bytes => {
   return out;
 };
 
-const tagOf = (letters, key) =>
-  hmac(key, cat(enc.encode(SEAL + "|"), Uint8Array.from(letters)));
+// Every field is length-prefixed. Concatenating variable-length fields
+// without lengths lets two different records produce one tag input.
+const tagOf = (letters, nonce, key) => {
+  const seal = unhex(SEAL);
+  return hmac(key, cat(
+    MAGIC,
+    be(seal.length, 2), seal,
+    be(nonce.length, 2), nonce,
+    be(letters.length, 4), Uint8Array.from(letters),
+  ));
+};
 
 // U = Qx + Qs + Qa + 4*Qc  (Definition 11.1.1)
 const U = v => v[10] + v[11] + v[12] + 4*v[13];
@@ -465,7 +479,7 @@ function guards(v, rho) {
   return g;
 }
 
-let state = { letters: [], damaged: new Map(), key: null };
+let state = { letters: [], damaged: new Map(), key: null, nonce: null };
 
 const $ = id => document.getElementById(id);
 const setChip = (id, text, cls) => { const e = $(id); e.textContent = text; e.className = "chip " + cls; };
@@ -533,9 +547,9 @@ function render() {
 
 async function reauth() {
   if (!state.key) return;
-  const mac = await tagOf(state.letters, state.key);
+  const mac = await tagOf(state.letters, state.nonce, state.key);
   const intact = state.damaged.size === 0;
-  $("mac").innerHTML = `<b>MAC</b> ${hex(mac)}`;
+  $("mac").innerHTML = `<b>nonce</b> ${hex(state.nonce)}<br><b>MAC</b> ${hex(mac)}`;
   setChip("c4", intact ? "terotentikasi" : "struktur rusak", intact ? "ok" : "bad");
 }
 
@@ -544,6 +558,9 @@ async function seal() {
   if (master.length < 16) { setChip("c1", "kunci induk < 16 byte", "bad"); return; }
   state.key = await deriveKey(master, $("purpose").value.trim() || "default");
   state.letters = encodeBytes(enc.encode($("payload").value));
+  // A fresh nonce each time: without one, sealing the same payload twice
+  // produced the same record and a captured transfer could be replayed.
+  state.nonce = crypto.getRandomValues(new Uint8Array(NONCE_LEN));
   state.damaged.clear();
   setChip("c1", `${$("payload").value.length} byte`, "ok");
   render();
@@ -555,7 +572,7 @@ async function selfTest() {
   try {
     const k = await deriveKey(unhex(KAT.master), KAT.purpose);
     const letters = encodeBytes(enc.encode(KAT.payload));
-    const mac = await tagOf(letters, k);
+    const mac = await tagOf(letters, unhex(KAT.nonce), k);
     const ok = hex(k) === KAT.key
             && JSON.stringify(letters) === JSON.stringify(KAT.letters)
             && hex(mac) === KAT.mac;

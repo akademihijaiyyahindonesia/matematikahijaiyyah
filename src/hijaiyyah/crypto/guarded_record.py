@@ -21,20 +21,38 @@ reading.
 
 *Structural integrity, O(1) and keyless.* A MAC says the bytes did not change.
 The guard says the value is geometrically impossible. That is a different
-statement, and it needs no key and no stored checksum. Measured exhaustively
-over the sealed alphabet, single bit flips:
+statement, and it needs no key and no stored checksum.
 
-    G1–G4, T1–T2                         89.68% detected
-    + the decomposition identity          94.44% detected
+Two numbers, because there are two questions, and the first version of this
+docstring quoted only the flattering one.
+
+**On the wire**, which is what the system actually does. A record carries
+letter *indices*, not codex vectors, so a corrupted byte is caught only when
+it leaves 1..28. Measured over single-bit flips on a sealed record:
+
+    guard rejects                 41.2%   before any hash is computed
+    MAC rejects the remainder     58.8%
+    neither                        0.0%
+
+    random bytes rejected by the guard alone: 100.0%
+
+That last line is the one that matters, and it is the claim the layering was
+built for: under a flood of malformed input, garbage never reaches SHA-256.
+The 41.2% is not the security property — the MAC is — it is the triage rate.
+
+**On codex vectors**, which is what the guards themselves see, single-bit
+flips are caught exhaustively:
+
+    G1–G4, T1–T2                         89.68%
+    + the decomposition identity          94.44%
     + excluding the unconstrained Ψ tag  100.00% over payload components
 
-The two gaps are structural, not statistical. Ψ is a free tag no guard
-constrains — which is the same fact as rank(M18) = 14. And G4 is an
-*inequality*, Θ̂ ≥ U, so raising Θ̂ never violates it. Carrying ρ turns
+That figure describes :func:`detection_rate`, not this record format, and
+conflating the two overstates the system. The gaps behind it are structural:
+Ψ is a free tag no guard constrains — the same fact as rank(M18) = 14 — and
+G4 is an *inequality*, Θ̂ ≥ U, so raising Θ̂ never violates it. Carrying ρ turns
 §IC.1.24's identity Θ̂ = U + ρ into an equality and closes it. Both fixes come
 from Bab I; neither is invented here.
-
-Two-bit flips: 97.67% on the plain guards.
 
 *Provenance-bound key derivation.* Keys are derived through HKDF-SHA256 with
 the Master Table's own SHA-256 as the info parameter, so a key derived for one
@@ -210,65 +228,140 @@ def check_structure(letters: Sequence[int]) -> StructureReport:
     return StructureReport(True, len(letters))
 
 
-# ── Records ──────────────────────────────────────────────────────
+# ── Records ────────────────────────────────────────────────
+
+#: Wire format identifier, so a parser never guesses at what it was handed.
+MAGIC = b"HGR1"
+
+#: Bytes of per-record nonce. Without one, sealing the same payload twice
+#: produced the same record, and a captured transfer could be replayed.
+NONCE_LEN = 16
+
 
 @dataclass(frozen=True)
 class GuardedRecord:
-    """A payload, its canonical encoding, and its authentication tag."""
+    """A payload, its canonical encoding, a nonce, and its authentication tag."""
 
     letters: Tuple[int, ...]
+    nonce: bytes
     mac: bytes
     seal: str
 
     def to_bytes(self) -> bytes:
-        """Serialise canonically: seal, length, letters, MAC."""
-        head = self.seal.encode("ascii")
-        body = bytes(self.letters)
+        """Serialise: magic, seal, nonce, length, letters, MAC.
+
+        Every field the tag covers is length-delimited, so no two different
+        records can serialise to the same bytes and no field can be re-read as
+        part of another.
+        """
         return (
-            len(head).to_bytes(2, "big") + head
-            + len(body).to_bytes(4, "big") + body
+            MAGIC
+            + bytes.fromhex(self.seal)
+            + self.nonce
+            + len(self.letters).to_bytes(4, "big")
+            + bytes(self.letters)
             + self.mac
         )
 
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "GuardedRecord":
+        """Parse a serialised record, strictly.
 
-def _tag(letters: Sequence[int], key: bytes) -> bytes:
-    """HMAC-SHA256 over the canonical form, seal included.
+        There was no parser at all before this: ``to_bytes`` was write-only,
+        so the wire format could be produced and never read back, and nothing
+        checked that the two agreed.
 
-    The seal is inside the tag, so a record cannot be replayed against a
-    different sealed release even if its letters remain valid there.
+        Raises:
+            CryptoRefusal: On wrong magic, a truncated field, a length that
+                does not match what follows, or trailing bytes. Nothing is
+                repaired — a lenient parser is how two parties end up reading
+                one message differently.
+        """
+        head = len(MAGIC) + 32 + NONCE_LEN + 4
+        if len(data) < head + MAC_LEN:
+            raise CryptoRefusal(f"record is {len(data)} bytes; too short to parse")
+        if not hmac.compare_digest(data[: len(MAGIC)], MAGIC):
+            raise CryptoRefusal("not a guarded record: wrong magic")
+
+        offset = len(MAGIC)
+        seal = data[offset : offset + 32].hex()
+        offset += 32
+        nonce = data[offset : offset + NONCE_LEN]
+        offset += NONCE_LEN
+        count = int.from_bytes(data[offset : offset + 4], "big")
+        offset += 4
+
+        if len(data) != offset + count + MAC_LEN:
+            raise CryptoRefusal(
+                f"header declares {count} letters, which does not match the "
+                f"{len(data) - offset - MAC_LEN} that follow"
+            )
+
+        letters = tuple(data[offset : offset + count])
+        return cls(letters, nonce, data[offset + count :], seal)
+
+
+def _tag(letters: Sequence[int], nonce: bytes, key: bytes) -> bytes:
+    """HMAC-SHA256 over the canonical form: seal, nonce and letters.
+
+    Every field is length-prefixed. Concatenating variable-length fields
+    without lengths lets two different records produce one tag input, which is
+    the oldest mistake in MAC construction.
     """
-    material = dataset_seal().encode("ascii") + b"|" + bytes(letters)
+    seal = bytes.fromhex(dataset_seal())
+    material = (
+        MAGIC
+        + len(seal).to_bytes(2, "big") + seal
+        + len(nonce).to_bytes(2, "big") + nonce
+        + len(letters).to_bytes(4, "big") + bytes(letters)
+    )
     return hmac.new(key, material, hashlib.sha256).digest()
 
 
-def seal_record(payload: bytes, key: bytes) -> GuardedRecord:
+def seal_record(
+    payload: bytes, key: bytes, nonce: Optional[bytes] = None
+) -> GuardedRecord:
     """Encode a payload and authenticate it.
 
     Args:
         payload: The data to protect.
         key: A 32-byte key, normally from :func:`derive_key`.
+        nonce: Normally omitted, so a fresh one is drawn from the CSPRNG.
+            Supply one only to reproduce a known record in a test.
 
     Raises:
-        CryptoRefusal: If the key is too short to reach the security level
-            HMAC-SHA256 offers.
+        CryptoRefusal: If the key or a supplied nonce is too short.
     """
     if len(key) < 16:
         raise CryptoRefusal(f"key is {len(key)} bytes; at least 16 are required")
+    if nonce is None:
+        nonce = secrets.token_bytes(NONCE_LEN)
+    elif len(nonce) != NONCE_LEN:
+        raise CryptoRefusal(f"nonce must be {NONCE_LEN} bytes, got {len(nonce)}")
+
     letters = encode_bytes(payload)
-    return GuardedRecord(letters, _tag(letters, key), dataset_seal())
+    return GuardedRecord(letters, nonce, _tag(letters, nonce, key), dataset_seal())
 
 
-def open_record(record: GuardedRecord, key: bytes) -> bytes:
+def open_record(
+    record: GuardedRecord, key: bytes, seen: Optional[set] = None
+) -> bytes:
     """Verify a record and return its payload.
 
-    Structure first, then authenticity, then decode. The order matters: the
-    keyless check is the cheap one, so a flood of malformed records never
-    reaches the MAC.
+    Structure first, then authenticity, then replay, then decode. The keyless
+    check is the cheapest, so a flood of malformed records never reaches the
+    hash; the replay check runs after the MAC so an attacker cannot use it to
+    probe which nonces a receiver has seen.
+
+    Args:
+        record: The record to open.
+        key: The key it was sealed with.
+        seen: A set of nonces already accepted. Supply one to reject replays —
+            a MAC alone cannot, because a captured record stays valid forever.
 
     Raises:
-        CryptoRefusal: On a foreign seal, a broken structure, or a MAC that
-            does not verify. Nothing is returned from a record that fails any
-            of the three.
+        CryptoRefusal: On a foreign seal, broken structure, a failed MAC, or a
+            repeated nonce. Nothing is returned from a record that fails any.
     """
     if not hmac.compare_digest(record.seal, dataset_seal()):
         raise CryptoRefusal(
@@ -280,8 +373,13 @@ def open_record(record: GuardedRecord, key: bytes) -> bytes:
     if not report.valid:
         raise CryptoRefusal(f"structure rejected at {report.first_bad}: {report.reason}")
 
-    if not hmac.compare_digest(_tag(record.letters, key), record.mac):
+    if not hmac.compare_digest(_tag(record.letters, record.nonce, key), record.mac):
         raise CryptoRefusal("authentication failed")
+
+    if seen is not None:
+        if record.nonce in seen:
+            raise CryptoRefusal("replay: this nonce has been accepted before")
+        seen.add(record.nonce)
 
     return decode_letters(record.letters)
 

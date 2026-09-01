@@ -37,7 +37,7 @@ SOURCE = APP.read_text(encoding="utf-8")
 def _kat() -> dict:
     block = SOURCE.split("const KAT = {", 1)[1].split("};", 1)[0]
     out = {}
-    for key in ("master", "purpose", "key", "payload", "mac"):
+    for key in ("master", "purpose", "key", "payload", "nonce", "mac"):
         out[key] = re.search(rf'{key}:\s*"([^"]*)"', block).group(1)
     out["letters"] = json.loads(re.search(r"letters:\s*(\[[^\]]*\])", block).group(1))
     return out
@@ -57,7 +57,9 @@ def test_the_known_answer_vector_is_still_the_right_answer() -> None:
     kat = _kat()
     master = bytes.fromhex(kat["master"])
     key = derive_key(master, kat["purpose"])
-    record = seal_record(kat["payload"].encode("ascii"), key)
+    record = seal_record(
+        kat["payload"].encode("ascii"), key, nonce=bytes.fromhex(kat["nonce"])
+    )
 
     assert key.hex() == kat["key"], "derived key drifted"
     assert list(record.letters) == kat["letters"], "encoding drifted"
@@ -110,6 +112,26 @@ def test_the_identity_catches_a_theta_flip_on_every_letter(entry) -> None:
     corrupted = list(v)
     corrupted[0] ^= 1
     assert corrupted[0] != compute_U(corrupted) + rho
+
+
+def test_the_app_carries_a_nonce() -> None:
+    """
+    Without one the app would seal a payload to the same bytes every time, and
+    a captured record would replay forever. The library gained a nonce; the
+    page has to carry the same construction or the two disagree.
+    """
+    assert "NONCE_LEN = 16" in SOURCE
+    assert "getRandomValues(new Uint8Array(NONCE_LEN))" in SOURCE
+
+
+def test_the_app_length_prefixes_the_tag_input() -> None:
+    """
+    Concatenating variable-length fields without lengths lets two different
+    records produce one tag input.
+    """
+    assert "be(seal.length, 2)" in SOURCE
+    assert "be(nonce.length, 2)" in SOURCE
+    assert "be(letters.length, 4)" in SOURCE
 
 
 def test_the_app_refuses_to_encrypt() -> None:
