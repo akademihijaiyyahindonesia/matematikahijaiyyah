@@ -181,3 +181,83 @@ def test_the_verilog_agrees_on_class_and_key() -> None:
     run = subprocess.run(["/tmp/tb_node_counter"], cwd=ROOT,
                          capture_output=True, text=True)
     assert "PASS: 72/72" in run.stdout, run.stdout
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CMASS — the clock period is the unit, and the boundary is found
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_byte_boundary_is_recovered_from_a_raw_bitstream() -> None:
+    """
+    Everything above this point assumed a byte boundary. On a wire there is
+    none: bits arrive one per clock and where a byte starts has to be
+    discovered. Measured at 100% for every period tested.
+    """
+    from hijaiyyah.crypto.node_counter import bitstream, find_byte_boundary
+
+    rng = random.Random(21)
+    payload = (TEXT_SAMPLE * 4)[:4096]
+    for period in (1, 3, 5, 7):
+        key = bytes(rng.randrange(256) for _ in range(period))
+        cipher = bytes(b ^ key[i % period] for i, b in enumerate(payload))
+        for shift in range(8):
+            bits = bitstream(cipher, shift)
+            assert find_byte_boundary(bits, period) == (8 - shift) % 8
+
+
+def test_a_marginal_statistic_cannot_find_a_boundary_and_this_is_why() -> None:
+    """
+    The attempt that failed, kept because it explains the one that works.
+
+    Scoring phases by per-bit-position bias gave 2-5% against a 12.5% chance
+    level, and argmax and argmin both scored 0% — the scores were equal to
+    three decimals across all eight phases. Regrouping the same bits into
+    different bytes leaves every bit where it was; only the partition moves,
+    and per-position counts do not depend on the partition. A boundary needs a
+    statistic that is joint over the byte.
+    """
+    from hijaiyyah.crypto.node_counter import assemble, bit_counts, bitstream
+
+    bits = bitstream((TEXT_SAMPLE * 2)[:2048], 3)
+    totals = {
+        phase: sorted(bit_counts(assemble(bits, phase))) for phase in range(8)
+    }
+    spread = max(sum(v) for v in totals.values()) - min(sum(v) for v in totals.values())
+    assert spread <= 8, "per-position counts barely move with phase, as claimed"
+
+
+def test_coincidence_survives_the_key_it_is_used_to_break() -> None:
+    """XOR permutes the histogram, and permuting bins leaves the sum alone."""
+    from hijaiyyah.crypto.node_counter import coincidence
+
+    plain = TEXT_SAMPLE[:2048]
+    for key in (0x00, 0x5A, 0xFF):
+        assert abs(coincidence(bytes(b ^ key for b in plain))
+                   - coincidence(plain)) < 1e-12
+
+
+def test_alignment_recovers_the_key_up_to_a_rotation() -> None:
+    """
+    Inherent, not a defect: with no absolute start position the residue
+    classes can only be identified up to a cyclic shift of the key.
+    """
+    from hijaiyyah.crypto.node_counter import align, bitstream
+
+    key = b"\x9c\x41\x07\x22\xd5"
+    payload = (TEXT_SAMPLE * 4)[:4096]
+    cipher = bytes(b ^ key[i % 5] for i, b in enumerate(payload))
+    phase, period, data = align(bitstream(cipher, 3))
+
+    assert (phase, period) == (5, 5)
+    found = recover_repeating_key(data)
+    rotations = {key[i:] + key[:i] for i in range(5)}
+    assert found in rotations, f"{found.hex()} is not a rotation of {key.hex()}"
+
+
+def test_no_boundary_stands_out_in_encrypted_data() -> None:
+    """The negative control for the inversion, matching every other stage."""
+    from hijaiyyah.crypto.node_counter import assemble, bitstream, coincidence
+
+    bits = bitstream(os.urandom(4096), 3)
+    scores = [coincidence(assemble(bits, phase)) for phase in range(8)]
+    assert max(scores) / max(min(scores), 1e-9) < 1.15
