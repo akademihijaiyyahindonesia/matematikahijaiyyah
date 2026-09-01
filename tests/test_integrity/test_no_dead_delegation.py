@@ -135,7 +135,7 @@ def test_assembler_emits_real_instruction_words() -> None:
     """
     from hijaiyyah.assembler import HASMAssembler
 
-    result = HASMAssembler().assemble("HLOAD 0 0 0 2\nHGRD 0 0 0 0\nHALT")
+    result = HASMAssembler().assemble("HLOAD H0, #2\nHGRD H0\nHALT")
 
     assert result.success, result.errors
     assert result.instruction_count == 3, "one count per instruction, not per byte"

@@ -87,7 +87,7 @@ class TestHASMAssembler:
     def test_assemble_with_labels(self):
         asm_text = """; test
 main:
-    HALT 0
+    HALT
 """
         asm = HASMAssembler()
         result = asm.assemble(asm_text)
@@ -96,12 +96,12 @@ main:
 
     def test_assemble_result_has_bytecode(self):
         asm = HASMAssembler()
-        result = asm.assemble("HALT 0")
+        result = asm.assemble("HALT")
         assert isinstance(result.bytecode, bytes)
         assert len(result.bytecode) >= HBC_HEADER_SIZE
 
     def test_result_bytecode_starts_with_magic(self):
         asm = HASMAssembler()
-        result = asm.assemble("HALT 0")
+        result = asm.assemble("HALT")
         if result.bytecode:
             assert result.bytecode[:4] == HBC_MAGIC
