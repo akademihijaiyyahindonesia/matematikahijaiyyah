@@ -492,3 +492,90 @@ def test_the_sai_result_is_recorded_as_a_negative() -> None:
     assert "Three readings, all tested, none faster" in doc
     assert "theta already goes both ways every round" in doc
     assert "saturated" in doc
+
+
+def test_diffusion_barely_depends_on_which_lane_a_difference_lands_in() -> None:
+    """
+    The bound that makes every path-order question answerable at once.
+
+    A traversal order chooses which lane a byte lands in, never which clock —
+    every order absorbs one byte per clock. So the largest effect any order can
+    have is the lane-dependence of diffusion, and by round three that has
+    collapsed to about 0.01 while the permutation runs twenty-eight rounds.
+    """
+    rng = random.Random(2)
+    spread = []
+    for lane in range(C.STATE_LANES):
+        total = 0
+        for _ in range(8):
+            a = [rng.getrandbits(C.LANE_BITS) for _ in range(C.STATE_LANES)]
+            b = list(a)
+            b[lane] ^= 1 << rng.randrange(C.LANE_BITS)
+            x, y = a, b
+            for r in range(3):
+                x = [C._substitute(v) for v in C.linear_layer(x)]
+                y = [C._substitute(v) for v in C.linear_layer(y)]
+                x[0] ^= C.ROUND_CONSTANTS[r]
+                y[0] ^= C.ROUND_CONSTANTS[r]
+            total += sum(bin(p ^ q).count("1") for p, q in zip(x, y, strict=True))
+        spread.append(total / (8 * C.STATE_LANES * C.LANE_BITS))
+
+    assert max(spread) - min(spread) < 0.05, (
+        "lane choice would have room to matter, and a path order could exploit it"
+    )
+    assert 0.45 <= min(spread) <= max(spread) <= 0.55
+
+
+def test_a_wide_linear_stride_buys_a_substitution_layer() -> None:
+    """
+    The ramal finding, pinned so it cannot quietly decay.
+
+    Sa'i is not a uniform walk: between the markers the pace becomes a brisk
+    trot. Applied to the round schedule, that means a wider linear reach before
+    the nonlinearity is spent — and it is worth measuring because the two
+    layers are not the same price. The linear layer is XOR trees; a 25-lane
+    substitution is about 1900 LUT4.
+
+    Two substitution layers with a wide opening stride reach the diffusion
+    floor that a uniform three-round walk reaches. The order is not symmetric:
+    the stride has to come first.
+    """
+    def run(state, strides):
+        s = list(state)
+        for r, k in enumerate(strides):
+            for _ in range(k):
+                s = C.linear_layer(s)
+            s = [C._substitute(x) for x in s]
+            s[0] ^= C.ROUND_CONSTANTS[r]
+        return s
+
+    def avalanche(strides, trials=60):
+        rng = random.Random(5)
+        changed = total = 0
+        for _ in range(trials):
+            a = [rng.getrandbits(C.LANE_BITS) for _ in range(C.STATE_LANES)]
+            b = list(a)
+            b[rng.randrange(C.STATE_LANES)] ^= 1 << rng.randrange(C.LANE_BITS)
+            x, y = run(a, strides), run(b, strides)
+            changed += sum(bin(p ^ q).count("1") for p, q in zip(x, y, strict=True))
+            total += C.STATE_LANES * C.LANE_BITS
+        return changed / total
+
+    assert avalanche([1, 1]) < 0.40, "two uniform rounds should not be diffused"
+    assert 0.45 <= avalanche([2, 1]) <= 0.55, "the wide opening stride should be"
+    assert 0.45 <= avalanche([1, 1, 1]) <= 0.55
+
+
+def test_the_sealed_permutation_still_walks_uniformly() -> None:
+    """
+    Ramal was measured, not adopted. The schedule under seal is unchanged, and
+    this fails if an exploration ever leaks into the shipped permutation.
+    """
+    assert C.CIRCUITS == 28
+    state = [1] + [0] * (C.STATE_LANES - 1)
+    manual = list(state)
+    for r in range(C.CIRCUITS):
+        manual = C.linear_layer(manual)
+        manual = [C._substitute(x) for x in manual]
+        manual[0] ^= C.ROUND_CONSTANTS[r % len(C.ROUND_CONSTANTS)]
+    assert C.permute(state) == manual

@@ -103,8 +103,33 @@ lanes, and the interleaved two-ends order — worse again, eight of eight:
          2       4  0.4546  0.4530 (-.002)  0.4492 (-.005)
 
 Fourteen path comparisons across the two readings, every one of them negative
-and none positive. The order can only redistribute where bytes land; it cannot
-add mixing that theta is not doing already.
+and none positive.
+
+*Per clock, sampled at the pulse rather than after the block.* The first two
+readings compared *settled* states — absorb the block, run the rounds, then
+diff — and a settled comparison cannot see a transient. Re-run with absorption
+and permutation interleaved one lane and one round per clock, and the
+divergence curves of all three orders lie on top of each other at every clock:
+0.0501 against 0.0501 against 0.0496 at clock 4, 0.4349 against 0.4400 against
+0.4318 at clock 31.
+
+**And here is the bound that explains all of it.** A path order chooses which
+*lane* a byte lands in; it does not choose which *clock*, because every order
+absorbs one byte per clock. So the largest effect any order can have is the
+amount by which diffusion depends on the landing lane. Measured over all
+twenty-five lanes:
+
+    rounds   min      max      spread
+         1   0.0268   0.0288   0.0020
+         2   0.2866   0.3758   0.0892
+         3   0.4958   0.5069   0.0112
+
+Lane choice matters for about one round — it peaks at 0.089 in round two and
+has collapsed to 0.011 by round three. Every path effect measured above sits
+inside that window at 0.002 to 0.011, which is what a small redistribution
+within a one-round budget looks like. The permutation runs twenty-eight
+rounds. There is no room for a path order to matter, and that is a bound
+rather than an absence of evidence.
 
 The first attempt to measure this could not have answered the question and is
 worth recording as a method note: run at the full 28 rounds, one block already
