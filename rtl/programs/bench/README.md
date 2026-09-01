@@ -64,5 +64,5 @@ tunda propagasi, jadi lintasan 86 tingkat itu belum pernah diberi satuan waktu.
 ## Yang tidak dibuktikan papan ini
 
 Tidak ada µm², tidak ada mW, tidak ada timing ASIC — LUT bukan sel standar.
-`hcpu_dataram` menjadi BSRAM di FPGA dan selesai; di ASIC 131.072 bit masih
-menunggu makro SRAM, dan itu tetap alasan klaim kesiapan MPW ditahan.
+`hcpu_dataram` MPW menjadi BSRAM di FPGA dan selesai; di ASIC 131.072 bit masih
+menunggu makro SRAM, dan itu tetap alasan klaim kesiapan ditahan.
