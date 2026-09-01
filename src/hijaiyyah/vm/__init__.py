@@ -4,7 +4,7 @@ HVM — Hybit Virtual Machine
 Facade module: execute .hbc bytecode
 
 5 components (Bab III §3.30):
-  1. Loader      — parse .hbc, verify header
+  1. Loader      — parse .hbc, verify header and CRC
   2. Interpreter — fetch-decode-execute loop
   3. Hybit Engine — native ops (HCADD, HPROJ, etc.)
   4. Guard System — G1–G4, T1–T2 per-operation
@@ -17,9 +17,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import IntEnum
+from pathlib import Path
 from typing import Any, List, Optional, Tuple
 
-from hijaiyyah.assembler import HBC_MAGIC_INT, HBCHeader
+from hijaiyyah.assembler import HBC_HEADER_SIZE, HBC_MAGIC_INT, HBCHeader
 
 # hisa.hcheck exports HCHECK, not HCheck, and its scan() takes raw v18
 # vectors where this class works in HybitRegister objects. The delegation
@@ -234,14 +235,105 @@ class HVM:
         self.exit_code = ExitCode.SUCCESS
         self._machine = self._try_init_machine()
 
-    @staticmethod
-    def _try_init_machine():
-        if _Machine is None:
-            return None
+    # ── Component 1: Loader ─────────────────────────────────────
+
+    def load_bytecode(self, data: bytes) -> HBCHeader:
+        """Parse a .hbc image, verify it, and hand the code to the interpreter.
+
+        The loader Bab III §IIIH.3.1.1 names, and the one that was missing.
+        The assembler had been writing .hbc files with a correct HBYT header
+        and a real instruction stream since the dialect was unified, and
+        nothing read them back: HVM held a hybit engine, a guard system and
+        HCHECK, but no loader and no interpreter, so the format had a writer
+        and no reader.
+
+        Args:
+            data: The whole .hbc image, header included.
+
+        Returns:
+            The parsed header.
+
+        Raises:
+            ValueError: If the image is truncated, is not HBYT, fails its
+                CRC, or names a code section that runs past the file. A
+                bad image is refused rather than executed.
+        """
+        if len(data) < HBC_HEADER_SIZE:
+            raise ValueError(
+                f"not a .hbc image: {len(data)} bytes, header alone is "
+                f"{HBC_HEADER_SIZE}"
+            )
+
+        header = HBCHeader.unpack(data[:HBC_HEADER_SIZE])
+        if not header.verify():
+            raise ValueError(
+                "header failed verification — wrong magic or a CRC32 that "
+                "does not match the bytes it covers"
+            )
+
+        start = header.code_offset or HBC_HEADER_SIZE
+        end = start + header.code_size
+        if end > len(data):
+            raise ValueError(
+                f"code section runs to {end} but the image is {len(data)} bytes"
+            )
+        if header.code_size % 4:
+            raise ValueError(
+                f"code section is {header.code_size} bytes, not a whole number "
+                "of 32-bit instructions"
+            )
+
+        code = data[start:end]
+        words = [
+            int.from_bytes(code[i:i + 4], "big") for i in range(0, len(code), 4)
+        ]
+
+        if self._machine is None:
+            raise ValueError("no interpreter available")
+        self._machine.load_program(words)
+        self.pc = header.entry_point
+        self.exit_code = ExitCode.SUCCESS
+        return header
+
+    def load_file(self, path: str) -> HBCHeader:
+        """Load a .hbc file from disk."""
+        return self.load_bytecode(Path(path).read_bytes())
+
+    # ── Component 2: Interpreter ────────────────────────────────
+
+    def run(self) -> List[Any]:
+        """Execute the loaded program.
+
+        Returns:
+            The interpreter's trace, one entry per instruction retired.
+        """
+        if self._machine is None:
+            raise ValueError("nothing loaded")
+        self.running = True
         try:
-            return _Machine()
-        except Exception:
-            return None
+            trace: List[Any] = self._machine.run()
+            return trace
+        finally:
+            self.running = False
+
+    def state(self) -> dict:
+        """Register and flag state after a run."""
+        if self._machine is None:
+            raise ValueError("nothing loaded")
+        state: dict = self._machine.dump_state()
+        return state
+
+    @staticmethod
+    def _try_init_machine() -> Any:
+        """Construct the interpreter.
+
+        This used to call ``_Machine()`` with no arguments behind a bare
+        ``except Exception: return None``. HISAMachine takes the Master Table,
+        so the call raised TypeError every time and was swallowed — the VM
+        silently had no interpreter at all, and said so only when something
+        finally asked it to run.
+        """
+        return _Machine(MASTER_TABLE)
 
     def load_hybit(self, reg_idx: int, v18: List[int]):
         """HLOAD: load hybit into register."""

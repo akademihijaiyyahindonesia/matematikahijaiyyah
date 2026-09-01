@@ -94,6 +94,10 @@ _PROGRAMS = (
         "let x = 40;\nlet y = 2;\nprintln(x + y);\n",
         "let x = 50;\nlet y = 8;\nprintln(x - y);\n",
     ]
+    # load_id is the one hybit source that is proven without a known value,
+    # so the closure property below is vacuous without it in the corpus.
+    + [f"let h = load_id({i});\nprintln(h.norm2());\n" for i in (1, 2, 14, 27, 28)]
+    + [f"let h = load_id({i});\nprintln(h.theta());\n" for i in (1, 20, 27)]
 )
 
 
@@ -269,3 +273,65 @@ def test_a_guard_with_no_facts_at_all_is_still_emitted() -> None:
     assert emitted.guards_emitted == 1, "an unproven guard must survive"
     assert emitted.guards_elided == 0
     assert "HGRD" in assemble_text(emitted)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Guard insertion — the other half of Ψ
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_compilable_subset_is_closed_under_provability() -> None:
+    """
+    Every hybit a compilable program can produce is one Ψ can prove.
+
+    That is not a coincidence, it is the shape of the subset: the only hybit
+    sources codegen accepts are a sealed letter, load_id — which returns a
+    sealed letter or raises — and sums of those, which closure covers
+    (Proposisi IIIA.3.2.1). Register pressure keeps sums short enough that
+    the 8-bit bound is never reached either: nine letters exhaust H0–H15
+    before eight of them can push a component past 255.
+
+    So insertion has nothing to insert today. The property is worth pinning
+    rather than assuming: the moment codegen gains a source from outside the
+    sealed world — a function parameter, a memory load, decoded input — this
+    fails, and whoever adds it has to decide what guards it needs.
+    """
+    for source in _PROGRAMS:
+        ast = parse(source)
+        report = inject(ast)
+        emitted = generate(ast, report, insert_guards=True)
+        assert emitted.guards_inserted == 0, (
+            f"an unprovable hybit is now reachable:\n{source}"
+        )
+
+
+def test_insertion_emits_a_guard_for_an_unproven_value() -> None:
+    """
+    The mechanism itself, exercised directly. Deleting the facts models a
+    hybit the analysis knows nothing about — the case the property above says
+    cannot yet be written, and the case insertion exists for.
+    """
+    source = "let h = 'ب';\n"
+    ast = parse(source)
+    report = inject(ast)
+    report.facts.pop(id(ast.body[0].value), None)
+
+    emitted = generate(ast, report, insert_guards=True)
+    assert emitted.guards_inserted == 1
+    assert "HGRD" in assemble_text(emitted)
+    assert "disisipkan" in emitted.text, "the listing must say why"
+
+
+def test_insertion_leaves_a_proven_value_alone() -> None:
+    """Insertion adds a check where closure says nothing, never where it does."""
+    ast = parse("let w = 'ب' + 'س';\n")
+    emitted = generate(ast, inject(ast), insert_guards=True)
+    assert emitted.guards_inserted == 0
+    assert "HGRD" not in assemble_text(emitted)
+
+
+def test_insertion_is_off_by_default() -> None:
+    """It changes the instruction stream, so it is opt-in."""
+    ast = parse("let h = 'ب';\n")
+    report = inject(ast)
+    report.facts.pop(id(ast.body[0].value), None)
+    assert generate(ast, report).guards_inserted == 0

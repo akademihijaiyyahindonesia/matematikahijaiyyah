@@ -100,6 +100,7 @@ class Emitted:
     lines: List[str] = field(default_factory=list)
     guards_emitted: int = 0
     guards_elided: int = 0
+    guards_inserted: int = 0
 
     @property
     def text(self) -> str:
@@ -107,12 +108,12 @@ class Emitted:
 
     def summary(self) -> str:
         total = self.guards_emitted + self.guards_elided
-        if not total:
-            return f"{len(self.lines)} baris, tanpa guard"
-        return (
-            f"{len(self.lines)} baris; {self.guards_elided}/{total} HGRD "
-            "dihilangkan oleh Ψ"
-        )
+        parts = [f"{len(self.lines)} baris"]
+        if total:
+            parts.append(f"{self.guards_elided}/{total} HGRD dihilangkan oleh Ψ")
+        if self.guards_inserted:
+            parts.append(f"{self.guards_inserted} HGRD disisipkan")
+        return "; ".join(parts)
 
 
 class CodeGenerator:
@@ -124,8 +125,11 @@ class CodeGenerator:
             becomes no check, because closure made it unnecessary.
     """
 
-    def __init__(self, psi: Optional[PsiReport] = None) -> None:
+    def __init__(
+        self, psi: Optional[PsiReport] = None, *, insert_guards: bool = False
+    ) -> None:
         self._psi = psi
+        self._insert = insert_guards
         self._out = Emitted()
         self._bindings: Dict[str, Tuple[str, int]] = {}
         self._next_h = HREG_FIRST
@@ -187,6 +191,8 @@ class CodeGenerator:
         if isinstance(node, LetStmt):
             kind, register = self._expression(node.value)
             self._bindings[node.name] = (kind, register)
+            if kind is HYBIT:
+                self._maybe_insert_guard(node.value, register, node.name)
             return
 
         if isinstance(node, ExpressedStmt):
@@ -220,6 +226,29 @@ class CodeGenerator:
 
         # Anything else evaluated for its value alone has no effect.
         self._expression(node)
+
+    def _maybe_insert_guard(self, value: Any, register: int, name: str) -> None:
+        """Emit HGRD for a hybit the analysis could not prove.
+
+        The other half of Ψ. Elision removes a check that closure already
+        guarantees; insertion adds one where closure says nothing — a value
+        arriving from outside the sealed world, which is precisely where
+        "guard-on-the-fly" has to stop being the programmer's discipline.
+
+        Ψ already separates the two: proven_valid is the same field, read on
+        its false branch.
+        """
+        if not self._insert or self._psi is None:
+            return
+
+        facts = self._psi.facts.get(id(value))
+        if facts is not None and facts.can_discharge_guard():
+            return
+
+        reason = "no proof available" if facts is None else facts.reason
+        self._out.guards_inserted += 1
+        self._out.lines.append(f"        ; guard disisipkan untuk '{name}' — {reason}")
+        self._emit(f"HGRD    H{register}")
 
     def _guard(self, node: MethodCall) -> None:
         """Emit HGRD, unless Ψ already proved the value is in ℋ."""
@@ -394,14 +423,18 @@ class CodeGenerator:
         return SCALAR, total
 
 
-def generate(ast: Any, psi: Optional[PsiReport] = None) -> Emitted:
+def generate(
+    ast: Any, psi: Optional[PsiReport] = None, *, insert_guards: bool = False
+) -> Emitted:
     """Compile an HC AST into H-ISA assembly.
 
     Args:
         ast: The parsed program.
-        psi: Optional Ψ report, used to drop guards already proved.
+        psi: Optional Ψ report. Guards it has proved are dropped.
+        insert_guards: Emit HGRD for every hybit binding the report could not
+            prove, whether or not the source asked for a check.
 
     Returns:
         The emitted assembly.
     """
-    return CodeGenerator(psi).generate(ast)
+    return CodeGenerator(psi, insert_guards=insert_guards).generate(ast)
