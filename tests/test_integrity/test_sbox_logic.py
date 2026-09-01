@@ -222,6 +222,27 @@ def test_the_router_documents_measured_area_not_an_estimate() -> None:
         assert figure in source, f"{figure} missing from the router header"
 
 
+def test_the_face_is_two_hundred_bytes_not_twenty_five() -> None:
+    """
+    The arithmetic behind a claim I got wrong three times before checking it.
+
+    The cube face is 25 *lanes* of 64 bits — 1600 bits, 200 bytes — so a
+    router at WIDTH=25 covers one eighth of a face, not all of it. A fully
+    parallel face needs 200 S-boxes: 15,200 LUT4 in logic, which does not fit
+    a Tang Nano 9K's 8,640. The header has to keep saying so.
+    """
+    from hijaiyyah.crypto import cube
+
+    face_bytes = cube.STATE_LANES * cube.LANE_BITS // 8
+    assert face_bytes == 200
+    assert face_bytes * 76 > 8640, "a full parallel face would fit after all"
+
+    source = (ROOT / "rtl" / "hijaiyyah_sbox_router.v").read_text(encoding="utf-8")
+    assert "SCALE, CORRECTED" in source
+    assert "200 BYTES" in source
+    assert "does NOT fit" in source
+
+
 def test_the_area_figures_name_their_mapping_and_their_limit() -> None:
     """
     An area number without its method is the soft kind. The ratio is

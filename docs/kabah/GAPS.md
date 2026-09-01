@@ -177,10 +177,24 @@ luas FPGA berbasis LUT4), bukan ditaksir:
 | router WIDTH=25 | **2023 LUT4** | 6743 LUT4 |
 | — di Tang Nano 9K (8640 LUT4) | **23%** | 78% |
 
-WIDTH=25 adalah seluruh muka cube 5×5 tersubstitusi dalam satu clock. Versi
-logika bukan hanya yang tanpa celah timing — ia juga satu-satunya yang
-menyisakan ruang untuk sisa sponge, UART dan HCPU di sebelahnya. Versi tabel
-tidak muat untuk desain itu.
+**Koreksi skala.** Versi awal dokumen ini menyebut WIDTH=25 sebagai "seluruh
+muka cube 5×5 dalam satu clock". Itu **salah delapan kali lipat**, dan
+kesalahannya sempat terulang di tiga tempat sebelum aritmetikanya diperiksa
+terhadap state: muka cube adalah 25 **lajur** × 64 bit = 1600 bit = **200
+byte**. Jadi WIDTH=25 menyubstitusi **seperdelapan** muka, dan muka penuh butuh
+delapan clock pada lebar itu.
+
+Muka yang sepenuhnya paralel butuh 200 S-box:
+
+| | | |
+|---|---:|---|
+| logika | 200 × 76 = **15.200 LUT4** | **tidak muat** di Tang Nano 9K (8.640) |
+| tabel | 200 × 274 = **54.800 LUT4** | jauh dari muat |
+
+Jadi desain yang muat adalah seperdelapan muka per clock — dan justru di situ
+pilihan wujudnya menentukan: 2023 LUT4 dengan logika lawan 6743 dengan tabel,
+di papan berkapasitas 8640. Versi logika bukan hanya yang tanpa celah timing;
+ia satu-satunya yang menyisakan ruang untuk sisa sponge, UART dan HCPU.
 
 **Batas angka ini, supaya tidak dibaca lebih jauh dari yang ia tanggung.**
 Yang kokoh adalah **rasionya** — 3,6× per S-box, dan 2023 lawan 6743 untuk
