@@ -191,13 +191,13 @@ class Kabah:
 
 
 __all__ = [
-    "NAME",
+    "AUTHORITATIVE_LAYER",
     "EXPANSION",
     "LAYERS",
-    "AUTHORITATIVE_LAYER",
+    "NAME",
+    "CryptoRefusal",
     "Kabah",
     "Layer",
-    "CryptoRefusal",
     "encode_bytes",
     "generate_key",
 ]
