@@ -197,10 +197,22 @@ module hcpu_rom (
                                8'd0,8'd3};
 
             // ── Index 31: Test Negative (Corrupt Vector) ──
-            // Intentionally fails G4 (Theta=1, Qc=2 -> U=8. 1 >= 8 is FALSE)
+            //  [Θ̂=1, Na=0, Nb=0, Nd=0, Kp=0, Kx=0, Ks=0, Ka=0, Kc=0,
+            //   Qp=0, Qx=0, Qs=0, Qa=0, Qc=2, AN=0, AK=0, AQ=2, Ψ=0]
+            //
+            // Fails G4 and only G4, per Bab III §IIIK.3.1: U = 4·Qc = 8,
+            // so rho = 1 - 8 = -7 and (theta >= u_val) is FALSE.
+            //
+            // A_Q is 2, not 0, on purpose. G3 checks A_Q == sum(Q); leaving
+            // it 0 would trip G3 as well and guard_pass would fall for a
+            // reason the pipeline test cannot distinguish from G4. Isolating
+            // G4 is the whole point of this entry — it is the one guard that
+            // is a cross-constraint rather than a sum-check, and the only
+            // one no other negative case at this level exercises.
+            //
             // Used strictly for Hardware Pipeline Validation checks.
-            5'd31: data_out = {8'd0,8'd0,8'd0,8'd0,8'd0,8'd0,8'd0,8'd0,
-                               8'd0,8'd0,8'd0,8'd0,8'd0,8'd2,8'd0,8'd0,
+            5'd31: data_out = {8'd0,8'd2,8'd0,8'd0,8'd2,8'd0,8'd0,8'd0,
+                               8'd0,8'd0,8'd0,8'd0,8'd0,8'd0,8'd0,8'd0,
                                8'd0,8'd1};
 
             default: begin
