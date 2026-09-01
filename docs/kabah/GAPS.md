@@ -142,16 +142,56 @@ Tes: `test_trailing_bytes_are_refused`, `test_a_truncated_tag_is_refused`.
 
 Bagian ini ada supaya dokumen ini bukan brosur.
 
-**S-box adalah tabel, dan di perangkat lunak itu kanal samping cache.**
+**S-box sebagai tabel — DITUTUP di perangkat keras, masih terbuka di Python.**
 Lookup 256 entri yang diindeks data persis sasaran serangan cache-timing AES
-(Bernstein 2005; Osvik, Shamir, Tromer 2006). Tidak ada yang constant-time di
-lapis 2 dan tidak ada yang mengaku begitu. Dua hal membatasi ongkosnya: lapis
-2 **tanpa kunci** — rahasia hanya disentuh lapis 3, yang memakai HMAC-SHA256
-dari pustaka yang constant-time; dan sasaran sebenarnya adalah silikon HCPU,
-tempat tabel itu satu block RAM dengan satu latensi tetap dan tanpa cache
-untuk diamati. Sifat yang tidak bisa dimiliki perangkat lunak dan didapat
-perangkat keras secara cuma-cuma.
-Tes: `test_the_substitution_is_a_table_and_that_is_a_software_side_channel`.
+(Bernstein 2005; Osvik, Shamir, Tromer 2006). Ini dulu tercatat terbuka. Yang
+menutupnya adalah usulan arsitektur: **jangan pakai tabel — jadikan blok
+logika yang selesai per clock.**
+
+GF(2⁸) isomorfik dengan GF((2⁴)²), dan di sana inversi murah:
+
+```
+N    = ν·ah² + ah·al + al²             norma, masuk ke GF(2⁴)
+A⁻¹  = (ah·N⁻¹)·y + ((ah⊕al)·N⁻¹)
+```
+
+Jadi substitusinya menjadi `x → T → invers komposit → T⁻¹ → affine`, dengan T
+dan T⁻¹ linear atas GF(2) — artinya pohon XOR. Strukturnya milik Canright;
+yang **tidak** dipinjam adalah isomorfismanya: konstanta Canright untuk 0x11B
+milik AES, sedangkan cube tersegel memilih 0x12B, jadi ν, β dan kedua matriks
+dicari khusus untuk lapangan ini dan dipilih yang bobot XOR-nya terkecil
+(ν = 0xD, β = 0x71).
+
+Tidak ada memori di jalur itu. Tidak ada alamat, tidak ada port yang
+diperebutkan, tidak ada latensi yang bergantung pada nilai — satu propagation
+delay yang sama untuk setiap masukan. Sifat constant-time bukan dipertahankan,
+melainkan **tidak ada yang bisa bervariasi**.
+
+Terukur dengan yosys (`abc -lut 4`), bukan ditaksir:
+
+| | logika tower | tabel 256 entri |
+|---|---:|---:|
+| per S-box | **76 LUT4** | 274 LUT4 |
+| router WIDTH=8 | **605 LUT4** | 2209 LUT4 |
+| router WIDTH=25 | **2023 LUT4** | 6743 LUT4 |
+| — di Tang Nano 9K (8640 LUT4) | **23%** | 78% |
+
+WIDTH=25 adalah seluruh muka cube 5×5 tersubstitusi dalam satu clock. Versi
+logika bukan hanya yang tanpa celah timing — ia juga satu-satunya yang
+menyisakan ruang untuk sisa sponge, UART dan HCPU di sebelahnya. Versi tabel
+tidak muat untuk desain itu.
+
+Bit-exact dengan `cube.SBOX` untuk seluruh 256 masukan, di Python maupun di
+Verilog tersimulasi. Berkas: `src/hijaiyyah/crypto/sbox_logic.py`,
+`rtl/hijaiyyah_sbox.v`, `rtl/hijaiyyah_sbox_router.v`, dibangkitkan oleh
+`tools/gen_sbox_rtl.py` dari polinomial tersegel — `--check` adalah gerbang
+supaya RTL tidak pernah tertinggal dari Python.
+
+Yang **masih terbuka**: `cube.py` tetap memakai tabel, dan Python tidak
+constant-time apa pun bentuknya — integer CPython, `&` dan `^`-nya bukan
+constant-time. Penutupan ini milik silikon. Untuk perangkat lunak yang
+memproses rahasia, lapis 3 (HMAC-SHA256 dari pustaka yang sudah ditinjau)
+tetap satu-satunya bagian yang menyentuh kunci, dan lapis 2 tetap tanpa kunci.
 
 **Kunci tidak di-zeroize.** Python tidak menjamin penghapusan memori. Kunci
 bisa tertinggal di heap dan di swap.
@@ -163,3 +203,20 @@ menyerangnya selain penulisnya sendiri, dan itu bukan kriptanalisis.
 di sini baru berupa argumen — belum ada demonstrasi yang dijalankan seperti
 pada §1. Argumen struktural bukan bukti dengan mutu yang sama, dan bedanya
 sengaja tidak dikaburkan.
+
+---
+
+## 7. Catatan cara kerja
+
+Dua gerbang menembak penulisnya sendiri selama pekerjaan ini, dan keduanya
+dicatat di tempat masing-masing, bukan dirapikan:
+
+1. Verifikasi lapangan GF(2^128) awalnya membandingkan dengan konstanta
+   SP 800-38D **dari ingatan**; satu byte salah dan run berhenti. Sekarang
+   dijangkarkan ke hukum yang mendefinisikan lapangan itu.
+2. Invers GF(2⁴) awalnya ditulis sebagai `case`, dan yosys menyimpulkannya
+   sebagai memori 16×4 — `1 memories, 64 memory bits` — **di bawah komentar
+   yang mengaku "empat LUT4"**. Di papan ini bedanya tidak berakibat, tapi
+   netlist yang membantah komentarnya adalah cara sebuah klaim timing menjadi
+   salah di tempat yang berakibat. Sekarang ditulis sebagai bentuk normal
+   aljabar, yang tidak bisa disimpulkan sebagai memori oleh flow mana pun.
