@@ -1,8 +1,8 @@
 # STANDAR ENGINEERING
 # **HOM (Hijaiyyah Operating Machine)**
-## Versi 1.0 — March 2026
+## Versi 1.1 — 1 September 2026
 
-### Repository: `github.com/hybittech/HOM`
+### Repository: `github.com/hybittech/matematikahijaiyyah.github.io`
 
 ---
 
@@ -11,13 +11,18 @@
 | Field | Nilai |
 |---|---|
 | **Organization** | hybittech |
-| **Repository** | HOM |
+| **Repository** | matematikahijaiyyah.github.io |
+| **Paket** | `hijaiyyah-hom` |
 | **Nama Sistem** | Hijaiyyah Operating Machine |
-| **Fungsi** | Core computational system + GUI engine untuk Matematika Hijaiyyah |
-| **Bahasa Utama** | Python 3.11+ |
+| **Fungsi** | Sistem komputasi inti, bahasa HC, dan RTL HCPU untuk Matematika Hijaiyyah |
+| **Bahasa** | Python 3.11+ · Verilog-2001 (RTL) · JavaScript (GUI web) |
 | **Layout** | `src/` layout (PEP 517 / PEP 621) |
-| **Entry Point** | `python -m hijaiyyah` |
+| **Entry Point** | `hom` · `hc` · `hybit-ai` |
 | **Lisensi** | Proprietary — All Rights Reserved (© 2026 HMCL) |
+
+Repositori ini bersifat **publik** (dipublikasikan sebagai GitHub Pages di
+hybit.tech). Naskah buku, dokumen paten, dan proposal ditahan di lokal melalui
+`.gitignore` dan tidak boleh masuk riwayat git.
 
 ---
 
@@ -53,8 +58,19 @@ GitHub Organization: hybittech/
 
 ## 3. STRUKTUR DIREKTORI RESMI
 
+> **Status.** Pohon di bawah ini adalah struktur repositori yang **berlaku**,
+> bukan rencana. Ia dijaga oleh `tests/test_integrity/test_engineering_standard.py`:
+> setiap berkas yang terdaftar di sini harus ada, dan setiap paket di
+> `src/hijaiyyah/` harus terdaftar. Menambah paket baru tanpa memperbarui
+> bagian ini akan membuat suite gagal.
+>
+> Versi 1.0 dokumen ini mendaftar tata letak yang direncanakan pada Maret 2026.
+> Tiga puluh berkas di dalamnya tidak pernah ada, dan sepuluh paket yang kini
+> berjalan tidak tercantum — termasuk seluruh jalur kompilasi. Bagian ini
+> ditulis ulang dari repositori pada 1 September 2026.
+
 ```text
-HOM/
+hijaiyyah-mathematics/
 │
 ├── README.md
 ├── LICENSE
@@ -62,41 +78,47 @@ HOM/
 ├── CONTRIBUTING.md
 ├── CODE_OF_CONDUCT.md
 ├── SECURITY.md
+├── AUTHORS
+├── NOTICE
+├── ENGINEERING_STANDARD.md
 ├── .gitignore
 ├── .editorconfig
 ├── pyproject.toml
 ├── requirements.txt
 ├── requirements-dev.txt
+├── hm28.rom                        ← ROM biner Master Table (28 × 144 bit)
 │
 ├── src/
 │   └── hijaiyyah/
 │       ├── __init__.py
-│       ├── __main__.py
+│       ├── __main__.py             ← entry point GUI (`hom`)
+│       ├── cli.py                  ← entry point bahasa HC (`hc`)
+│       ├── lsp.py                  ← Language Server Protocol untuk .hc
 │       ├── version.py
-│       ├── config.py
-│       ├── constants.py
-│       ├── errors.py
 │       │
-│       ├── core/
+│       ├── core/                   ← Bab I: codex, guard, tabel tersegel
 │       │   ├── __init__.py
-│       │   ├── master_table.py
+│       │   ├── master_table.py     ← SUMBER KEBENARAN 28 × 18
 │       │   ├── codex_entry.py
-│       │   ├── codex.py
+│       │   ├── guards.py           ← G1–G4, T1–T2, compute_U, compute_rho
 │       │   ├── hybit.py
-│       │   ├── guards.py
-│       │   ├── checksum.py
 │       │   ├── rom.py
-│       │   └── dataset.py
+│       │   ├── har.py
+│       │   ├── hgeo.py
+│       │   ├── exomatrix.py
+│       │   ├── constants.py
+│       │   └── exceptions.py
 │       │
-│       ├── algebra/
+│       ├── algebra/                ← Bab II: lima operasi Metrik-Vektorial
 │       │   ├── __init__.py
-│       │   ├── vectronometry.py
-│       │   ├── differential.py
-│       │   ├── integral.py
-│       │   ├── geometry.py
-│       │   └── exomatrix_analysis.py
+│       │   ├── vektronometry.py    ← VTM — komposisi
+│       │   ├── normivektor.py      ← NMV — norma selisih
+│       │   ├── aggregametric.py    ← AGM — agregasi string
+│       │   ├── intrametric.py      ← ITM — jarak
+│       │   ├── exometric.py        ← EXM — konsistensi
+│       │   └── _common.py
 │       │
-│       ├── language/
+│       ├── language/               ← Bab III §IIIF: bahasa HC
 │       │   ├── __init__.py
 │       │   ├── tokens.py
 │       │   ├── lexer.py
@@ -104,27 +126,46 @@ HOM/
 │       │   ├── ast_nodes.py
 │       │   ├── evaluator.py
 │       │   ├── grammar.py
-│       │   └── builtins.py
+│       │   └── diagnostics.py
 │       │
-│       ├── hisa/
+│       ├── compiler/               ← Bab III §IIIG: HCC
+│       │   ├── __init__.py         ← pipeline 6 tahap
+│       │   └── psi.py              ← tahap 4, Ψ-Injector
+│       │
+│       ├── assembler/
+│       │   └── __init__.py         ← .hasm → .hbc
+│       │
+│       ├── pipeline/
+│       │   └── __init__.py         ← Ψ-Compiler, integrasi CSGI
+│       │
+│       ├── vm/
+│       │   └── __init__.py         ← HVM, runtime perangkat lunak
+│       │
+│       ├── hisa/                   ← Bab III §IIIF.3.2: H-ISA
 │       │   ├── __init__.py
-│       │   ├── opcodes.py
+│       │   ├── opcodes.py          ← 28 opcode, encoding kanonik
 │       │   ├── registers.py
 │       │   ├── machine.py
+│       │   ├── assembler.py
 │       │   ├── compiler.py
-│       │   └── assembler.py
+│       │   ├── hbc_format.py
+│       │   └── hcheck.py
 │       │
-│       ├── skeleton/
+│       ├── hisab/                  ← HPACK / HCRC
+│       │   ├── __init__.py
+│       │   ├── digest.py
+│       │   ├── protocol.py
+│       │   ├── serialize.py
+│       │   └── validate.py
+│       │
+│       ├── har/
+│       │   └── __init__.py         ← HISAB Alphabet Registry
+│       │
+│       ├── skeleton/               ← Bab I §IC.1.21: CSGI (lapisan L0)
 │       │   ├── __init__.py
 │       │   ├── skeletonizer.py
 │       │   ├── contractor.py
 │       │   └── csgi.py
-│       │
-│       ├── integrity/
-│       │   ├── __init__.py
-│       │   ├── injectivity.py
-│       │   ├── audit.py
-│       │   └── seal.py
 │       │
 │       ├── theorems/
 │       │   ├── __init__.py
@@ -133,6 +174,12 @@ HOM/
 │       │   ├── pythagorean.py
 │       │   ├── energy_norm.py
 │       │   └── test_suite.py
+│       │
+│       ├── integrity/
+│       │   ├── __init__.py
+│       │   ├── injectivity.py
+│       │   ├── audit.py
+│       │   └── seal.py
 │       │
 │       ├── crypto/
 │       │   ├── __init__.py
@@ -151,112 +198,106 @@ HOM/
 │       │   ├── __init__.py
 │       │   └── synchronizer.py
 │       │
+│       ├── ai/                     ← entry point `hybit-ai`
+│       │   ├── __init__.py
+│       │   ├── __main__.py
+│       │   └── runtime.py
+│       │
 │       └── gui/
 │           ├── __init__.py
 │           ├── app.py
 │           ├── theme.py
-│           ├── state.py
-│           │
-│           ├── tabs/
-│           │   ├── __init__.py
-│           │   ├── letter_explorer.py
-│           │   ├── master_table.py
-│           │   ├── theorems.py
-│           │   ├── string_integral.py
-│           │   ├── audit.py
-│           │   ├── five_fields.py
-│           │   ├── geometry.py
-│           │   ├── ide.py
-│           │   ├── hisa_machine.py
-│           │   ├── bytecode.py
-│           │   ├── hcvm.py
-│           │   ├── csgi.py
-│           │   ├── export.py
-│           │   └── release.py
-│           │
-│           └── widgets/
+│           ├── widgets.py
+│           ├── assets/
+│           └── tabs/
 │               ├── __init__.py
-│               ├── summary_panel.py
-│               ├── result_table.py
-│               └── detail_view.py
+│               ├── letter_explorer.py
+│               ├── master_table.py
+│               ├── theorems.py
+│               ├── string_integral.py
+│               ├── audit.py
+│               ├── five_fields.py
+│               ├── geometry.py
+│               ├── ide.py
+│               ├── hisa_machine.py
+│               ├── hisab.py
+│               ├── bytecode.py
+│               ├── csgi.py
+│               ├── export.py
+│               └── release.py
+│
+├── rtl/                            ← Bab III §IIIJ: HCPU
+│   ├── hcpu_pkg.vh                 ← parameter dan encoding opcode
+│   ├── hcpu_top.v
+│   ├── hcpu_rom.v                  ← Master Table sebagai ROM
+│   ├── hcpu_guard.v                ← G1–G4, T1–T2 dalam satu siklus
+│   ├── hcpu_codex_alu.v
+│   ├── hcpu_hisab.v
+│   ├── hcpu_*.v                    ← fetch, decode, memory, regfile, …
+│   ├── tb/                         ← testbench + Makefile
+│   ├── fpga/gowin/                 ← Tang Nano 9K
+│   └── mpw/                        ← sintesis dan laporan
 │
 ├── data/
 │   ├── hm28.json
 │   ├── hm28.csv
 │   ├── hm28_manifest.json
-│   ├── hm28.rom
-│   └── kfgqpc_seal/
-│       └── glyphs/
+│   ├── Master Table HM-28-v.1.0-HC18D.pdf
+│   ├── kfgqpc/
+│   └── logo/
 │
-├── tests/
+├── tests/                          ← cermin struktur src/
 │   ├── __init__.py
+│   ├── conftest.py
 │   ├── test_core/
-│   │   ├── __init__.py
-│   │   ├── test_master_table.py
-│   │   ├── test_codex_entry.py
-│   │   ├── test_guards.py
-│   │   └── test_rom.py
 │   ├── test_algebra/
-│   │   ├── __init__.py
-│   │   ├── test_vectronometry.py
-│   │   ├── test_differential.py
-│   │   ├── test_integral.py
-│   │   ├── test_geometry.py
-│   │   └── test_exomatrix.py
 │   ├── test_language/
-│   │   ├── __init__.py
-│   │   ├── test_lexer.py
-│   │   ├── test_parser.py
-│   │   └── test_evaluator.py
+│   ├── test_compiler/
+│   ├── test_assembler/
 │   ├── test_hisa/
-│   │   ├── __init__.py
-│   │   ├── test_opcodes.py
-│   │   ├── test_machine.py
-│   │   └── test_compiler.py
-│   ├── test_integrity/
-│   │   ├── __init__.py
-│   │   ├── test_injectivity.py
-│   │   └── test_seal.py
+│   ├── test_hisab/
+│   ├── test_har/
+│   ├── test_vm/
+│   ├── test_pipeline/
+│   ├── test_ai/
 │   ├── test_theorems/
-│   │   ├── __init__.py
-│   │   └── test_full_suite.py
-│   └── test_integration/
-│       ├── __init__.py
-│       └── test_end_to_end.py
+│   ├── test_integration/
+│   └── test_integrity/             ← paritas lintas implementasi
 │
 ├── docs/
-│   ├── architecture.md
-│   ├── hc_language.md
-│   ├── hisa_spec.md
-│   ├── csgi_spec.md
-│   ├── hcvm_spec.md
-│   ├── release_policy.md
-│   └── changelog.md
-│
-├── examples/
-│   ├── hello.hc
-│   ├── five_fields.hc
-│   ├── string_analysis.hc
-│   ├── banking_integrity.hc
-│   └── iot_guard.hc
-│
-├── scripts/
-│   ├── run_gui.py
-│   ├── build_rom.py
-│   ├── verify_release.py
-│   └── benchmark.py
-│
+├── examples/                       ← *.hc, *.hcai
+├── editors/vscode/                 ← pewarnaan sintaks + klien LSP
+├── hom-gui/                        ← GUI web (mesin JavaScript)
+├── Hybit/                          ← naskah Bab III
 ├── tools/
 │   ├── codex_calculator.py
 │   ├── table_verifier.py
-│   └── rom_generator.py
+│   ├── rom_generator.py
+│   ├── csgi_pipeline.py
+│   └── benchmark.py
 │
 └── release/
-    └── HL-18E-v1.0/
-        ├── MANIFEST.json
-        ├── CERTIFICATE.json
-        └── RELEASE_NOTES.md
 ```
+
+---
+
+### Aturan Penempatan
+
+| Kalau modul itu … | Letaknya di … |
+|---|---|
+| mendefinisikan atau memvalidasi codex | `core/` |
+| salah satu dari lima operasi Bab II | `algebra/` |
+| memproses teks `.hc` | `language/` |
+| mengubah AST menjadi instruksi | `compiler/` |
+| menyangkut encoding instruksi 32-bit | `hisa/` |
+| mengeksekusi bytecode di perangkat lunak | `vm/` |
+| mengubah citra glyph menjadi graf | `skeleton/` |
+| memeriksa dua implementasi agar sepakat | `tests/test_integrity/` |
+
+**Aturan tunggal yang mengikat:** satu invarian, satu definisi. `U`, guard, encoding
+opcode, dan tabel induk masing-masing ditulis **satu kali**; tempat lain memanggilnya.
+Pelanggaran aturan ini adalah sumber setiap divergensi yang pernah terjadi di
+proyek ini, dan dijaga oleh `test_single_source_of_truth.py`.
 
 ---
 
@@ -433,50 +474,83 @@ __all__ = ["__version__"]
 
 ### `src/hijaiyyah/version.py`
 
+Dua nomor yang bergerak sendiri-sendiri, dan itu disengaja. Versi perangkat
+lunak naik saat kode berubah; identitas dataset hanya berubah kalau Master
+Table dirilis ulang — dan Master Table dikunci oleh dokumen kanonik.
+Menggabungkan keduanya berarti sebuah perbaikan bug akan tampak seperti
+perubahan pada huruf.
+
 ```python
 # -*- coding: utf-8 -*-
-"""Version information for HOM."""
+"""Version information for HOM (Hijaiyyah Operating Machine)."""
 
-__version__ = "1.0.0"
-__release__ = "HM-28-v1.0-HC18D"
+# HOM software release (SemVer).
+__version__ = "1.2.0"
+
+# Sealed Master Table shipped with this software. This is the DATASET
+# identifier and moves independently of __version__ — it is fixed by the
+# canonical document "Master Table HM-28-v.1.0-HC18D".
+__dataset_release__ = "HM-28-v.1.0-HC18D"
+
+# Software-side release tag.
+__release__ = "HM-28-v1.2-HC18D"
 ```
+
+Sinkronisasinya dijaga oleh `tests/test_integrity/test_version_consistency.py`.
 
 ---
 
 ## 6. CARA MENJALANKAN
 
-### 6.1 Development mode
+### 6.1 Pemasangan
 
 ```bash
-cd HOM
+cd hijaiyyah-mathematics
 pip install -e ".[dev]"
-python -m hijaiyyah
 ```
 
-### 6.2 Production mode
+### 6.2 Tiga entry point
+
+Terdaftar di `[project.scripts]` pada `pyproject.toml`.
+
+| Perintah | Modul | Fungsi |
+|---|---|---|
+| `hom` | `hijaiyyah.__main__:main` | GUI desktop (Tkinter) |
+| `hc` | `hijaiyyah.cli:main` | bahasa HC — `run`, `check`, `repl`, `lsp` |
+| `hybit-ai` | `hijaiyyah.ai.__main__:main` | runtime AI lokal |
 
 ```bash
-pip install .
-hom
+hc run examples/hello.hc
+hc check examples/five_fields_demo.hc
+python -m hijaiyyah              # setara dengan `hom`
 ```
 
-### 6.3 Testing
+### 6.3 Pengujian
 
 ```bash
-pytest
+pytest                           # suite Python
+cd rtl/tb && make                # testbench RTL (perlu iverilog)
 ```
+
+Keduanya adalah gerbang rilis. Suite Python memeriksa perangkat lunak;
+testbench RTL memeriksa perangkat keras; dan `tests/test_integrity/`
+memeriksa bahwa keduanya sepakat.
 
 ### 6.4 Linting
 
 ```bash
-ruff check src/
+ruff check .
 ```
 
 ### 6.5 Type checking
 
 ```bash
-pyright
+mypy src/hijaiyyah
 ```
+
+`pyright` juga terkonfigurasi di `pyproject.toml`, tetapi **mypy** adalah
+gerbang yang dijalankan CI (`.github/workflows/test.yml`). Kalau hanya satu
+yang sempat dijalankan, jalankan mypy.
 
 ---
 
