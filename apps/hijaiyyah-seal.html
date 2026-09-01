@@ -1,0 +1,578 @@
+<title>Hijaiyyah Seal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Amiri:wght@400;700&display=swap">
+
+<style>
+  :root {
+    --ground:  #eef1f4;
+    --panel:   #ffffff;
+    --sunken:  #e4e9ee;
+    --ink:     #10171d;
+    --soft:    #55646f;
+    --faint:   #8a97a2;
+    --rule:    #ccd5dd;
+
+    --accent:  #1668c4;
+    --accent-bg: #dbe9fa;
+    --ok:      #12805a;
+    --ok-bg:   #d8f0e6;
+    --bad:     #c0392b;
+    --bad-bg:  #fadedb;
+    --warn:    #8a6112;
+    --warn-bg: #f8ecd4;
+
+    --ui: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --arabic: "Amiri", "Noto Naskh Arabic", serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:  #0d1116;
+      --panel:   #151b22;
+      --sunken:  #0a0e12;
+      --ink:     #dfe7ee;
+      --soft:    #93a2ae;
+      --faint:   #62717d;
+      --rule:    #26313b;
+      --accent:  #55a8ff;
+      --accent-bg: #10263f;
+      --ok:      #3ecf9a;
+      --ok-bg:   #0d2a21;
+      --bad:     #ff7a6b;
+      --bad-bg:  #2e1512;
+      --warn:    #e0ac52;
+      --warn-bg: #2a2113;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:  #0d1116;
+    --panel:   #151b22;
+    --sunken:  #0a0e12;
+    --ink:     #dfe7ee;
+    --soft:    #93a2ae;
+    --faint:   #62717d;
+    --rule:    #26313b;
+    --accent:  #55a8ff;
+    --accent-bg: #10263f;
+    --ok:      #3ecf9a;
+    --ok-bg:   #0d2a21;
+    --bad:     #ff7a6b;
+    --bad-bg:  #2e1512;
+    --warn:    #e0ac52;
+    --warn-bg: #2a2113;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: clamp(1.25rem, 0.8rem + 2vw, 2.5rem) clamp(0.9rem, 0.5rem + 1.8vw, 1.75rem) 4rem;
+  }
+
+  /* ── Masthead ───────────────────────────────────── */
+
+  header { margin-bottom: 1.5rem; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
+  .mark {
+    font-family: var(--arabic);
+    font-size: 1.9rem;
+    line-height: 1;
+    color: var(--accent);
+  }
+  h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .sub {
+    font-size: 0.9rem;
+    color: var(--soft);
+    margin: 0 0 1rem;
+    max-width: 54ch;
+  }
+
+  /* ── Self-test banner ───────────────────────────── */
+
+  #selftest {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    font-family: var(--mono);
+    border: 1px solid var(--rule);
+    background: var(--sunken);
+    color: var(--soft);
+  }
+  #selftest.ok  { background: var(--ok-bg);  border-color: var(--ok);  color: var(--ok); }
+  #selftest.bad { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); }
+
+  /* ── Stages ─────────────────────────────────────── */
+
+  section {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 1rem 1.1rem 1.15rem;
+    margin-top: 0.9rem;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .step {
+    width: 1.5rem; height: 1.5rem;
+    flex: none;
+    display: grid; place-items: center;
+    border-radius: 3px;
+    background: var(--accent);
+    color: var(--panel);
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+  h2 { font-size: 0.98rem; font-weight: 600; margin: 0; flex: 1 1 auto; }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .chip.ok   { color: var(--ok); background: var(--ok-bg); }
+  .chip.bad  { color: var(--bad); background: var(--bad-bg); }
+  .chip.idle { color: var(--faint); background: transparent; }
+
+  label {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.3rem;
+  }
+
+  input[type=text], textarea {
+    width: 100%;
+    background: var(--sunken);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    padding: 0.55rem 0.7rem;
+    resize: vertical;
+  }
+  input:focus-visible, textarea:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .row { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .row > div { flex: 1 1 12rem; min-width: 0; }
+
+  button {
+    font-family: var(--ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 0.9rem;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--accent); }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+
+  /* ── Letter strip ───────────────────────────────── */
+
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 0.5rem;
+  }
+  .cell {
+    width: 2.3rem;
+    border: 1px solid var(--ok);
+    background: var(--ok-bg);
+    border-radius: 3px;
+    padding: 0.25rem 0 0.15rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.08s;
+  }
+  .cell:hover { transform: translateY(-2px); }
+  .cell.bad { border-color: var(--bad); background: var(--bad-bg); }
+  .cell .ar {
+    font-family: var(--arabic);
+    font-size: 1.25rem;
+    line-height: 1.1;
+    display: block;
+    color: var(--ink);
+  }
+  .cell .ix {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--soft);
+    display: block;
+  }
+
+  .hint { font-size: 0.78rem; color: var(--faint); margin: 0.55rem 0 0; }
+
+  .out {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    background: var(--sunken);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.55rem 0.7rem;
+    word-break: break-all;
+    color: var(--soft);
+    margin-top: 0.5rem;
+  }
+  .out b { color: var(--ink); font-weight: 500; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.4rem; }
+  td { padding: 0.28rem 0.4rem; border-bottom: 1px solid var(--rule); }
+  td:first-child { font-family: var(--mono); color: var(--soft); width: 3.6rem; }
+  td:last-child { text-align: right; font-family: var(--mono); }
+  tr:last-child td { border-bottom: none; }
+  .pass { color: var(--ok); }
+  .fail { color: var(--bad); }
+
+  footer {
+    margin-top: 1.75rem;
+    font-size: 0.78rem;
+    color: var(--faint);
+    line-height: 1.6;
+  }
+  footer strong { color: var(--soft); font-weight: 600; }
+
+  @media (max-width: 30rem) { .cell { width: 2rem; } }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <span class="mark" aria-hidden="true">ح</span>
+      <h1>Hijaiyyah Seal</h1>
+    </div>
+    <p class="sub">
+      Integritas struktural di atas primitif standar. Guard membaca apakah nilainya
+      <em>mungkin secara geometri</em>; HMAC-SHA256 membaca apakah ia
+      <em>ditulis oleh pemegang kunci</em>. Dua pernyataan berbeda, dan keduanya diperlukan.
+    </p>
+    <div id="selftest">Menjalankan uji mandiri…</div>
+  </header>
+
+  <!-- 1 -->
+  <section>
+    <div class="head">
+      <span class="step">1</span>
+      <h2>Data</h2>
+      <span class="chip idle" id="c1">menunggu</span>
+    </div>
+    <textarea id="payload" rows="2" spellcheck="false">TRANSFER 1500000 IDR AC-8842</textarea>
+    <div class="row" style="margin-top:0.7rem">
+      <div>
+        <label for="master">Kunci induk (hex, ≥32 heks)</label>
+        <input id="master" type="text" spellcheck="false"
+               value="000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f">
+      </div>
+      <div>
+        <label for="purpose">Tujuan</label>
+        <input id="purpose" type="text" spellcheck="false" value="banking-ledger">
+      </div>
+    </div>
+    <button id="btn-seal">Segel rekaman</button>
+    <button class="ghost" id="btn-key">Kunci acak</button>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="head">
+      <span class="step">2</span>
+      <h2>Pengkodean kanonik</h2>
+      <span class="chip idle" id="c2">—</span>
+    </div>
+    <div class="strip" id="strip"></div>
+    <p class="hint" id="hint2">Dua huruf tersegel per byte, basis-28. Satu pembacaan per data — tidak ada bentuk kedua.</p>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="head">
+      <span class="step">3</span>
+      <h2>Guard struktural</h2>
+      <span class="chip idle" id="c3">—</span>
+    </div>
+    <table id="guards"></table>
+    <p class="hint">
+      Tanpa kunci, O(1) per huruf. <strong>Ketuk sebuah huruf di atas</strong> untuk merusaknya
+      dan lihat guard mana yang menangkapnya.
+    </p>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="head">
+      <span class="step">4</span>
+      <h2>Otentikasi</h2>
+      <span class="chip idle" id="c4">—</span>
+    </div>
+    <div class="out" id="mac">—</div>
+    <p class="hint">HMAC-SHA256 lewat WebCrypto. Dataset-seal ikut di dalam tag, jadi rekaman tak bisa diputar ulang ke rilis lain.</p>
+  </section>
+
+  <footer>
+    <strong>Yang aplikasi ini tidak lakukan: enkripsi.</strong>
+    Kerahasiaan butuh AEAD yang sudah puluhan tahun diserang publik — AES-256-GCM
+    atau ChaCha20-Poly1305. Sandi buatan sendiri lebih lemah dari yang digantikannya,
+    bukan lebih kuat.<br><br>
+    <strong>Guard bukan otentikasi.</strong> Ia tanpa kunci, jadi siapa pun bisa
+    menyusun rekaman yang sah secara struktur. Gunanya triase: di bawah banjir input
+    rusak, sampah ditolak tanpa menghabiskan satu hash pun.<br><br>
+    Master Table HM-28-v.1.0-HC18D. Terverifikasi cocok dengan implementasi Python
+    pada kunci turunan, urutan huruf, dan MAC.
+  </footer>
+</div>
+
+<script>
+const TABLE = [
+["ا","Alif",[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0]],
+["ب","Ba",[2,0,0,1,0,1,0,0,0,1,0,0,0,0,1,1,1,0]],
+["ت","Ta",[2,2,0,0,0,1,0,0,0,1,0,0,0,0,2,1,1,0]],
+["ث","Tsa",[2,3,0,0,0,1,0,0,0,1,0,0,0,0,3,1,1,0]],
+["ج","Jim",[3,0,1,0,0,1,0,0,0,1,0,0,0,0,1,1,1,0]],
+["ح","Ha",[3,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0]],
+["خ","Kha",[3,1,0,0,0,1,0,0,0,1,0,0,0,0,1,1,1,0]],
+["د","Dal",[1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0]],
+["ذ","Dzal",[1,1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0]],
+["ر","Ra",[1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0]],
+["ز","Zay",[1,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,1,0]],
+["س","Sin",[4,0,0,0,0,0,0,0,0,1,2,0,0,0,0,0,3,0]],
+["ش","Syin",[4,3,0,0,0,0,0,0,0,1,2,0,0,0,3,0,3,0]],
+["ص","Shad",[6,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,2,0]],
+["ض","Dhad",[6,1,0,0,0,0,0,0,0,1,0,0,0,1,1,0,2,0]],
+["ط","Tha",[4,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,1,0]],
+["ظ","Zha",[4,1,0,0,0,0,1,0,0,0,0,0,0,1,1,1,1,0]],
+["ع","Ain",[3,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,2,0]],
+["غ","Ghain",[3,1,0,0,0,0,0,0,0,1,1,0,0,0,1,0,2,0]],
+["ف","Fa",[5,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1,2,0]],
+["ق","Qaf",[6,2,0,0,0,0,0,0,0,1,0,0,0,1,2,0,2,0]],
+["ك","Kaf",[2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1]],
+["ل","Lam",[1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,1,0]],
+["م","Mim",[4,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1,1,0]],
+["ن","Nun",[2,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1,0]],
+["و","Waw",[5,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,2,0]],
+["هـ","Haa",[8,0,0,0,0,0,0,0,1,0,0,0,0,2,0,1,2,0]],
+["ي","Ya",[3,0,0,2,0,0,0,0,0,1,1,0,0,0,2,0,2,0]],
+];
+
+const SEAL  = "f82d385917ffe32ae2b5711409b1341e90934c52172ae9d0fa68888e3b9c51c8";
+const ALPHA = 28;
+const enc   = new TextEncoder();
+
+// Known-answer vector computed by the Python implementation.
+const KAT = {
+  master: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  purpose: "self-test",
+  key: "460665fffd5d0db4221a147dc4e15efdf73e8eb5f0100e973b6d86d45a2369aa",
+  payload: "HYBIT",
+  letters: [3,17,4,6,3,11,3,18,4,1],
+  mac: "3277c85686419c28fe0fb38571fe6254c3073f7c2678893c8ad3482a9273c447",
+};
+
+const hex   = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,"0")).join("");
+const unhex = s => new Uint8Array((s.match(/../g) || []).map(x => parseInt(x,16)));
+const cat   = (...a) => { const n = new Uint8Array(a.reduce((s,x)=>s+x.length,0)); let o=0; for (const x of a){n.set(x,o); o+=x.length;} return n; };
+
+async function hmac(key, data) {
+  const k = await crypto.subtle.importKey("raw", key, {name:"HMAC",hash:"SHA-256"}, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", k, data));
+}
+
+// HKDF-SHA256, RFC 5869, with the sealed dataset in the info parameter.
+async function deriveKey(master, purpose, len = 32) {
+  const info = enc.encode(`HGR|${SEAL}|${purpose}`);
+  const prk  = await hmac(new Uint8Array(32), master);
+  let out = new Uint8Array(0), block = new Uint8Array(0), c = 1;
+  while (out.length < len) {
+    block = await hmac(prk, cat(block, info, Uint8Array.of(c++)));
+    out = cat(out, block);
+  }
+  return out.slice(0, len);
+}
+
+const encodeBytes = bytes => {
+  const out = [];
+  for (const b of bytes) { out.push(Math.floor(b/ALPHA)+1, b%ALPHA+1); }
+  return out;
+};
+
+const tagOf = (letters, key) =>
+  hmac(key, cat(enc.encode(SEAL + "|"), Uint8Array.from(letters)));
+
+// U = Qx + Qs + Qa + 4*Qc  (Definition 11.1.1)
+const U = v => v[10] + v[11] + v[12] + 4*v[13];
+
+function guards(v, rho) {
+  const g = {
+    G1: v[14] === v[1]+v[2]+v[3],
+    G2: v[15] === v[4]+v[5]+v[6]+v[7]+v[8],
+    G3: v[16] === v[9]+v[10]+v[11]+v[12]+v[13],
+    G4: v[0] >= U(v),
+    T1: v[6] === 0 || v[13] >= 1,
+    T2: v[8] === 0 || v[13] >= 1,
+  };
+  // §IC.1.24 as an equality — this is what closes the Θ̂ gap G4 leaves open.
+  g["Θ̂=U+ρ"] = rho === undefined ? true : v[0] === U(v) + rho;
+  g.all = Object.values(g).every(Boolean);
+  return g;
+}
+
+let state = { letters: [], damaged: new Map(), key: null };
+
+const $ = id => document.getElementById(id);
+const setChip = (id, text, cls) => { const e = $(id); e.textContent = text; e.className = "chip " + cls; };
+
+function vectorFor(pos) {
+  const dmg = state.damaged.get(pos);
+  if (dmg) return dmg;
+  return TABLE[state.letters[pos] - 1][2];
+}
+
+function render() {
+  const strip = $("strip");
+  strip.textContent = "";
+  let bad = 0;
+
+  state.letters.forEach((idx, pos) => {
+    const base = TABLE[idx - 1];
+    const v = vectorFor(pos);
+    const rho = base[2][0] - U(base[2]);
+    const ok = guards(v, rho).all;
+    if (!ok) bad++;
+
+    const cell = document.createElement("button");
+    cell.className = "cell" + (ok ? "" : " bad");
+    cell.title = ok ? `${base[1]} — utuh, ketuk untuk merusak`
+                    : `${base[1]} — RUSAK, ketuk untuk memulihkan`;
+    cell.innerHTML = `<span class="ar">${base[0]}</span><span class="ix">${idx}</span>`;
+    cell.addEventListener("click", () => {
+      if (state.damaged.has(pos)) state.damaged.delete(pos);
+      else { const w = base[2].slice(); w[0] = w[0] ^ 1; state.damaged.set(pos, w); }
+      render(); reauth();
+    });
+    strip.appendChild(cell);
+  });
+
+  setChip("c2", `${state.letters.length} huruf`, "ok");
+  setChip("c3", bad ? `${bad} DITOLAK` : "semua lolos", bad ? "bad" : "ok");
+
+  // Guard detail for the first damaged letter, or the first letter.
+  const focus = state.damaged.size ? [...state.damaged.keys()][0] : 0;
+  const base = state.letters.length ? TABLE[state.letters[focus] - 1] : null;
+  const tbl = $("guards");
+  tbl.textContent = "";
+  if (!base) return;
+  const v = vectorFor(focus), rho = base[2][0] - U(base[2]);
+  const g = guards(v, rho);
+  const rows = [
+    ["G1", "A_N = Na+Nb+Nd", g.G1],
+    ["G2", "A_K = ΣK", g.G2],
+    ["G3", "A_Q = ΣQ", g.G3],
+    ["G4", "Θ̂ ≥ U", g.G4],
+    ["T1", "Ks>0 ⟹ Qc≥1", g.T1],
+    ["T2", "Kc>0 ⟹ Qc≥1", g.T2],
+    ["§IC.1.24", "Θ̂ = U + ρ", g["Θ̂=U+ρ"]],
+  ];
+  for (const [id, desc, pass] of rows) {
+    const tr = tbl.insertRow();
+    tr.insertCell().textContent = id;
+    tr.insertCell().textContent = desc;
+    const c = tr.insertCell();
+    c.textContent = pass ? "LOLOS" : "GAGAL";
+    c.className = pass ? "pass" : "fail";
+  }
+}
+
+async function reauth() {
+  if (!state.key) return;
+  const mac = await tagOf(state.letters, state.key);
+  const intact = state.damaged.size === 0;
+  $("mac").innerHTML = `<b>MAC</b> ${hex(mac)}`;
+  setChip("c4", intact ? "terotentikasi" : "struktur rusak", intact ? "ok" : "bad");
+}
+
+async function seal() {
+  const master = unhex($("master").value.trim());
+  if (master.length < 16) { setChip("c1", "kunci induk < 16 byte", "bad"); return; }
+  state.key = await deriveKey(master, $("purpose").value.trim() || "default");
+  state.letters = encodeBytes(enc.encode($("payload").value));
+  state.damaged.clear();
+  setChip("c1", `${$("payload").value.length} byte`, "ok");
+  render();
+  await reauth();
+}
+
+async function selfTest() {
+  const el = $("selftest");
+  try {
+    const k = await deriveKey(unhex(KAT.master), KAT.purpose);
+    const letters = encodeBytes(enc.encode(KAT.payload));
+    const mac = await tagOf(letters, k);
+    const ok = hex(k) === KAT.key
+            && JSON.stringify(letters) === JSON.stringify(KAT.letters)
+            && hex(mac) === KAT.mac;
+    el.className = ok ? "ok" : "bad";
+    el.textContent = ok
+      ? "UJI MANDIRI LOLOS — kunci turunan, urutan huruf, dan MAC cocok dengan implementasi Python"
+      : "UJI MANDIRI GAGAL — jangan percayai keluaran halaman ini";
+  } catch (e) {
+    el.className = "bad";
+    el.textContent = "UJI MANDIRI GAGAL — WebCrypto tidak tersedia: " + e.message;
+  }
+}
+
+$("btn-seal").addEventListener("click", seal);
+$("btn-key").addEventListener("click", () => {
+  $("master").value = hex(crypto.getRandomValues(new Uint8Array(32)));
+});
+
+selfTest().then(seal);
+</script>
