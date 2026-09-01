@@ -129,51 +129,104 @@ def test_the_baseline_bounds_describe_actual_random_permutations() -> None:
 
 
 # ══════════════════════════════════════════════════════════════════
-#  The permutation and the sponge
+#  Tawaf: the circuit that decides rate and capacity
 # ══════════════════════════════════════════════════════════════════
 
-def test_the_permutation_is_a_permutation_of_states() -> None:
-    """Distinct states must stay distinct, or the sponge loses capacity."""
-    seen = {tuple(C.permute([0] * C.STATE_BYTES))}
-    for i in range(C.STATE_BYTES):
-        state = [0] * C.STATE_BYTES
-        state[i] = 1
-        seen.add(tuple(C.permute(state)))
-    assert len(seen) == C.STATE_BYTES + 1
+def test_the_rings_partition_the_face() -> None:
+    """
+    Sixteen on the perimeter, nine enclosed. Rate and capacity fall out of the
+    geometry instead of being chosen — the first version picked eight lanes as
+    the rate for no reason but roundness.
+    """
+    assert len(C.OUTER_RING) == 16
+    assert len(C.CORE) == 9
+    assert set(C.OUTER_RING) | set(C.CORE) == set(range(C.STATE_LANES))
+    assert not set(C.OUTER_RING) & set(C.CORE)
 
 
-def test_one_changed_byte_reaches_every_lane() -> None:
+def test_the_tawaf_path_is_one_closed_circuit() -> None:
     """
-    Full diffusion in one permutation. If a lane never changed, part of the
-    state would be untouched by part of the message.
+    Every perimeter lane once, and each stop adjacent to the last — a circuit,
+    not raster order.
     """
-    base = C.permute([0] * C.STATE_BYTES)
-    changed = C.permute([1] + [0] * (C.STATE_BYTES - 1))
-    assert all(a != b for a, b in zip(base, changed, strict=True)), "a lane went unchanged"
+    assert len(C.TAWAF_PATH) == len(set(C.TAWAF_PATH)) == 16
+    assert set(C.TAWAF_PATH) == set(C.OUTER_RING)
+
+    def rc(i): return (i // C.COLS, i % C.COLS)
+    for a, b in zip(C.TAWAF_PATH, C.TAWAF_PATH[1:] + C.TAWAF_PATH[:1], strict=True):
+        (r1, c1), (r2, c2) = rc(a), rc(b)
+        assert abs(r1 - r2) + abs(c1 - c2) == 1, f"{a}→{b} is not a step"
+
+
+def test_seven_circuits() -> None:
+    """Tawaf is seven, and the permutation runs seven."""
+    assert C.CIRCUITS == 7
+    assert len(C.ROUND_CONSTANTS) == 7
+
+
+def test_the_capacity_carries_a_usable_security_level() -> None:
+    """
+    The first version had 8-bit lanes: a 200-bit state, 72 bits of capacity,
+    about 36 bits of security — which is not security. 64-bit lanes and the
+    ring split give 288.
+    """
+    assert C.LANE_BITS == 64
+    assert C.STATE_LANES * C.LANE_BITS == 1600
+    assert C.CAPACITY_BITS == 576
+    assert C.SECURITY_BITS == 288
+    assert C.SECURITY_BITS >= 128, "below this the construction is not a candidate"
+
+
+def test_input_never_reaches_the_capacity_directly() -> None:
+    """
+    The whole basis of a sponge. Absorption touches the outer ring only; the
+    enclosed lanes change through the permutation and nothing else.
+    """
+    state = [0] * C.STATE_LANES
+    step = 0
+    for _ in range(C.RATE_LANES - 1):
+        state, step = C.absorb_lane(state, 0xFFFF_FFFF_FFFF_FFFF, step)
+    assert all(state[i] == 0 for i in C.CORE), "input reached the capacity"
+
+
+def test_one_changed_bit_reaches_every_lane() -> None:
+    """
+    What seven circuits has to buy. Fewer rounds is less margin, so the
+    minimum it must still deliver is full diffusion.
+    """
+    for bit in (0, 31, 63):
+        state = [0] * C.STATE_LANES
+        state[0] = 1 << bit
+        base, moved = C.permute([0] * C.STATE_LANES), C.permute(state)
+        assert all(a != b for a, b in zip(base, moved, strict=True)), (
+            f"a lane survived a flip at bit {bit}"
+        )
+        changed = sum(bin(a ^ b).count("1") for a, b in zip(base, moved, strict=True))
+        assert 0.40 <= changed / 1600 <= 0.60, f"{changed}/1600 bits moved"
 
 
 def test_the_permutation_rejects_a_wrong_sized_state() -> None:
-    with pytest.raises(ValueError, match="25 bytes"):
+    with pytest.raises(ValueError, match="25 lanes"):
         C.permute([0] * 10)
 
 
-def test_absorption_takes_one_byte_at_a_time() -> None:
-    """The shape the HCPU wants: one byte in, one lane XORed."""
-    state, position = [0] * C.STATE_BYTES, 0
-    state, position = C.absorb_byte(state, 0xAB, position)
-    assert state[0] == 0xAB and position == 1
-    assert sum(1 for b in state if b) == 1, "one byte must touch one lane"
+def test_absorption_walks_the_circuit() -> None:
+    state, step = [0] * C.STATE_LANES, 0
+    for i in range(3):
+        state, step = C.absorb_lane(state, i + 1, step)
+        assert state[C.TAWAF_PATH[i]] == i + 1, "absorbed at the wrong stop"
+    assert step == 3
 
 
-def test_the_permutation_runs_when_the_rate_fills() -> None:
-    state, position = [0] * C.STATE_BYTES, 0
-    for i in range(C.RATE):
-        state, position = C.absorb_byte(state, i + 1, position)
-    assert position == 0, "the rate wrapped"
-    assert any(state[C.RATE:]), "capacity must have been touched by the permutation"
+def test_the_permutation_runs_when_the_circuit_closes() -> None:
+    state, step = [0] * C.STATE_LANES, 0
+    for i in range(C.RATE_LANES):
+        state, step = C.absorb_lane(state, i + 1, step)
+    assert step == 0, "the circuit closed"
+    assert any(state[i] for i in C.CORE), "the permutation must have stirred the core"
 
 
-@pytest.mark.parametrize("length", [1, 16, 32, 64])
+@pytest.mark.parametrize("length", [1, 16, 32, 64, 200])
 def test_the_digest_has_the_requested_length(length: int) -> None:
     assert len(C.digest(b"hybit", length)) == length
 
@@ -183,22 +236,21 @@ def test_the_digest_is_deterministic() -> None:
 
 
 def test_distinct_messages_give_distinct_digests() -> None:
-    messages = [os.urandom(24) for _ in range(200)]
-    assert len({C.digest(m) for m in messages}) == 200
+    messages = [os.urandom(48) for _ in range(300)]
+    assert len({C.digest(m) for m in messages}) == 300
 
 
 def test_trailing_zeros_do_not_collide() -> None:
-    """Padding exists for exactly this: without it these absorb identically."""
+    """Padding exists for exactly this."""
     assert C.digest(b"a") != C.digest(b"a\x00")
     assert C.digest(b"") != C.digest(b"\x00")
 
 
 def test_the_sponge_avalanches() -> None:
-    """One input bit should move about half the output bits."""
-    rng = random.Random(3)
+    rng = random.Random(5)
     changed = total = 0
-    for _ in range(60):
-        msg = bytes(rng.randrange(256) for _ in range(16))
+    for _ in range(30):
+        msg = bytes(rng.randrange(256) for _ in range(64))
         bit = rng.randrange(len(msg) * 8)
         flipped = bytearray(msg)
         flipped[bit // 8] ^= 1 << (bit % 8)

@@ -27,9 +27,27 @@ cube. The cube supplies the seed and the reproducibility; SHA-256 supplies the
 mixing. Claiming the geometry does the cryptographic work would be false, and
 the measurements below are what the construction is entitled to claim instead.
 
-Byte-per-clock absorption is the shape the HCPU wants: one byte in, one lane
-updated, no wide multiplier and no division. The S-box is a 256-entry lookup,
-which on the Tang Nano is block RAM rather than logic.
+**Tawaf decides the schedule, and it corrects an arbitrary choice.** The first
+version filled lanes 0..7 in order and called eight of them the rate, which
+was a number picked rather than derived. A circuit around a centre decomposes
+the 5×5 face on its own: sixteen lanes on the perimeter, eight on the inner
+ring, one at the centre. The perimeter takes the data; the nine it encloses
+are never touched by input, which is exactly what a sponge means by capacity.
+Absorption walks that circuit rather than raster order, and the permutation
+runs seven times because tawaf is seven.
+
+Lane width followed from the same correction. Eight-bit lanes put the state at
+200 bits and the capacity at 72 — about 36 bits of security, which is not
+security. Sixty-four-bit lanes give 1600 bits, the size Keccak settled on, and
+the ring split then yields 576 bits of capacity and about 288 of security.
+
+Seven circuits is fewer than Keccak's twenty-four, and the cost is stated
+rather than hidden: fewer rounds is less margin, and margin is what absorbs
+cryptanalysis nobody has done yet. What seven does buy is measured — a single
+changed bit reaches all twenty-five lanes and moves about half the state.
+
+The S-box is a 256-entry lookup, which on the Tang Nano is block RAM rather
+than logic, and absorption needs no multiplier and no division.
 """
 
 from __future__ import annotations
@@ -44,14 +62,62 @@ from hijaiyyah.core.master_table import MASTER_TABLE
 ROWS = COLS = 5
 LAYERS = 28
 
-#: Sponge state: 5×5 lanes of one byte — 200 bits.
-STATE_BYTES = ROWS * COLS
+#: Lane width. The first version used 8-bit lanes, which put the whole state
+#: at 200 bits and the capacity at 72 — about 36 bits of security, which is
+#: not security. 64-bit lanes give a 1600-bit state, the same size Keccak
+#: settled on, and the ring split below then yields 288.
+LANE_BITS = 64
+LANE_MASK = (1 << LANE_BITS) - 1
+LANE_BYTES = LANE_BITS // 8
 
-#: Bytes absorbed before a permutation. Capacity is STATE_BYTES - RATE.
-RATE = 8
+#: Circuits of the permutation. Tawaf is seven.
+CIRCUITS = 7
 
-#: Rounds per permutation.
-ROUNDS = 12
+
+def _rings() -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
+    """Split the 5×5 face into an outer ring and everything it encloses.
+
+    This is where the absorption schedule stops being arbitrary. The first
+    version filled lanes 0..7 in order and called eight of them the rate,
+    which was a number chosen rather than derived. A circuit around a centre
+    decomposes the face on its own: 16 lanes on the perimeter, 8 on the inner
+    ring, 1 at the centre.
+
+    The outer ring takes the data; the nine it encloses are never touched by
+    input, which is precisely what a sponge means by capacity. Rate and
+    capacity fall out of the geometry instead of being picked.
+    """
+    outer, inner = [], []
+    for row in range(ROWS):
+        for col in range(COLS):
+            index = row * COLS + col
+            if row in (0, ROWS - 1) or col in (0, COLS - 1):
+                outer.append(index)
+            else:
+                inner.append(index)
+    return tuple(outer), tuple(inner)
+
+
+OUTER_RING, CORE = _rings()
+
+#: Absorption walks the perimeter as one closed circuit rather than raster
+#: order, so consecutive input lands on adjacent lanes, and the walk closes on
+#: itself the way a circuit does.
+TAWAF_PATH: Tuple[int, ...] = (
+    tuple(range(COLS))                                              # top edge
+    + tuple(r * COLS + (COLS - 1) for r in range(1, ROWS))           # right edge
+    + tuple((ROWS - 1) * COLS + c for c in range(COLS - 2, -1, -1))  # bottom edge
+    + tuple(r * COLS for r in range(ROWS - 2, 0, -1))                # left edge
+)
+
+#: Lanes, and the bytes each part of the split carries.
+STATE_LANES = ROWS * COLS
+RATE_LANES = len(OUTER_RING)
+RATE = RATE_LANES * LANE_BYTES
+CAPACITY_BITS = len(CORE) * LANE_BITS
+
+#: Sponge security is about capacity/2.
+SECURITY_BITS = CAPACITY_BITS // 2
 
 
 def build_cube() -> Tuple[Tuple[Tuple[int, ...], ...], ...]:
@@ -185,96 +251,119 @@ def measure(box: Sequence[int] = SBOX) -> Dict[str, object]:
 # ── Permutation ──────────────────────────────────────────────────
 
 def _round_constants() -> Tuple[int, ...]:
-    """One constant per round, from the cube digest.
+    """One constant per circuit, from the cube digest.
 
     Round constants break the symmetry that would otherwise let a state of
-    all-equal lanes stay that way. Keccak takes its from an LFSR; these come
-    from the sealed cube, which is the same idea with a different source.
+    equal lanes stay equal. Keccak takes its from an LFSR; these come from the
+    sealed cube, which is the same idea with a different source.
     """
-    material = hashlib.sha256(cube_digest() + b"rounds").digest()
-    return tuple(material[i] for i in range(ROUNDS))
+    material = hashlib.sha256(cube_digest() + b"tawaf").digest()
+    return tuple(
+        int.from_bytes(material[i * 8 : (i + 1) * 8], "big") & LANE_MASK
+        if (i + 1) * 8 <= len(material)
+        else int.from_bytes(
+            hashlib.sha256(material + bytes([i])).digest()[:8], "big"
+        ) & LANE_MASK
+        for i in range(CIRCUITS)
+    )
 
 
 ROUND_CONSTANTS = _round_constants()
 
 
+def _rotl(value: int, amount: int) -> int:
+    amount %= LANE_BITS
+    return ((value << amount) | (value >> (LANE_BITS - amount))) & LANE_MASK
+
+
+def _substitute(lane: int) -> int:
+    """The byte S-box applied across a lane, eight bytes at a time."""
+    out = 0
+    for i in range(LANE_BYTES):
+        out |= SBOX[(lane >> (8 * i)) & 0xFF] << (8 * i)
+    return out
+
+
 def permute(state: List[int]) -> List[int]:
-    """The cube permutation: substitute, mix rows, mix columns, add constant.
+    """Seven circuits: substitute, mix rows, mix columns, add a constant.
 
-    Four steps per round, each with one job — the separation Keccak's θ, ρ, π,
-    χ, ι established. Substitution is the only nonlinear step; everything else
-    moves information sideways so that one changed byte reaches every lane.
+    Seven because tawaf is seven. That is a smaller number than Keccak's
+    twenty-four, and the cost is stated rather than hidden: fewer rounds is
+    less margin, and margin is what absorbs cryptanalysis nobody has done yet.
+    The diffusion test asserts a single changed bit still reaches every lane,
+    which is the minimum seven has to buy.
     """
-    if len(state) != STATE_BYTES:
-        raise ValueError(f"state must be {STATE_BYTES} bytes, got {len(state)}")
+    if len(state) != STATE_LANES:
+        raise ValueError(f"state must be {STATE_LANES} lanes, got {len(state)}")
 
-    s = list(state)
-    for r in range(ROUNDS):
-        s = [SBOX[b] for b in s]
+    s = [lane & LANE_MASK for lane in state]
+    for circuit in range(CIRCUITS):
+        s = [_substitute(lane) for lane in s]
 
-        # Rows: each lane takes its row's running parity, so a change spreads
-        # along the row within one round.
         for row in range(ROWS):
             base = row * COLS
             acc = 0
             for col in range(COLS):
                 acc ^= s[base + col]
             for col in range(COLS):
-                s[base + col] ^= acc ^ ((col + r) & 0xFF)
+                s[base + col] ^= _rotl(acc, col + circuit + 1)
 
-        # Columns, rotated, so diffusion travels the other axis too.
         for col in range(COLS):
             acc = 0
             for row in range(ROWS):
                 acc ^= s[row * COLS + col]
             for row in range(ROWS):
                 index = row * COLS + col
-                rot = (row + col + 1) & 7
-                mixed = s[index] ^ acc
-                s[index] = ((mixed << rot) | (mixed >> (8 - rot))) & 0xFF
+                s[index] = _rotl(s[index] ^ acc, row * COLS + col + 1)
 
-        s[0] ^= ROUND_CONSTANTS[r]
+        s[0] ^= ROUND_CONSTANTS[circuit]
     return s
 
 
 # ── Sponge ───────────────────────────────────────────────────────
 
-def absorb_byte(state: List[int], byte: int, position: int) -> Tuple[List[int], int]:
-    """Absorb one byte into one lane — the shape the HCPU wants.
+def absorb_lane(state: List[int], value: int, step: int) -> Tuple[List[int], int]:
+    """Absorb one lane's worth of data at the next stop on the circuit.
 
-    One byte in, one lane XORed, no multiplier and no division. The
-    permutation runs when the rate is full, which is the only step that costs
-    more than a clock.
+    Input only ever reaches the outer ring. The nine lanes it encloses are the
+    capacity, and nothing written from outside touches them — that separation
+    is what a sponge's security rests on, and here it is the geometry rather
+    than an index range.
     """
     s = list(state)
-    s[position] ^= byte & 0xFF
-    position += 1
-    if position == RATE:
+    s[TAWAF_PATH[step]] ^= value & LANE_MASK
+    step += 1
+    if step == RATE_LANES:
         s = permute(s)
-        position = 0
-    return s, position
+        step = 0
+    return s, step
 
 
 def digest(data: bytes, length: int = 32) -> bytes:
     """Sponge over the cube permutation. **[EH] — not a vetted hash.**
 
     Use SHA-256 for anything that matters. This exists to be measured, and to
-    give the FPGA something to run byte per clock.
+    give the FPGA something to stream.
     """
-    state = [0] * STATE_BYTES
-    position = 0
+    state = [0] * STATE_LANES
+    step = 0
 
-    for byte in data:
-        state, position = absorb_byte(state, byte, position)
+    padded = bytearray(data)
+    padded.append(0x01)
+    while len(padded) % RATE:
+        padded.append(0x00)
+    padded[-1] ^= 0x80
 
-    # Padding: a 0x01 marker then zeros, so two messages differing only in
-    # trailing zero bytes cannot absorb identically.
-    state[position] ^= 0x01
-    state[RATE - 1] ^= 0x80
-    state = permute(state)
+    for offset in range(0, len(padded), LANE_BYTES):
+        lane = int.from_bytes(padded[offset : offset + LANE_BYTES], "little")
+        state, step = absorb_lane(state, lane, step)
 
     out = bytearray()
     while len(out) < length:
-        out.extend(state[:RATE])
-        state = permute(state)
+        for index in TAWAF_PATH:
+            out.extend(state[index].to_bytes(LANE_BYTES, "little"))
+            if len(out) >= length:
+                break
+        if len(out) < length:
+            state = permute(state)
     return bytes(out[:length])
