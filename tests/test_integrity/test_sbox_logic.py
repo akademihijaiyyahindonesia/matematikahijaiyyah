@@ -220,3 +220,18 @@ def test_the_router_documents_measured_area_not_an_estimate() -> None:
     assert "MEASURED, not estimated" in source
     for figure in ("76 LUT4", "274 LUT4", "2023 LUT4", "6743 LUT4", "8640 LUT4"):
         assert figure in source, f"{figure} missing from the router header"
+
+
+def test_the_area_figures_name_their_mapping_and_their_limit() -> None:
+    """
+    An area number without its method is the soft kind. The ratio is
+    method-independent — both sides went through one mapping — but the
+    percentage-of-device line adds an assumption: that generic LUT4 count
+    tracks Gowin LUT4 count. synth_gowin did not complete on this module here
+    and nextpnr is not installed, so there is no placed-and-routed figure. The
+    header has to keep saying which of the two it is.
+    """
+    source = (ROOT / "rtl" / "hijaiyyah_sbox_router.v").read_text(encoding="utf-8")
+    assert "abc -lut 4" in source, "the mapping method is unnamed"
+    assert "proxy, not a fitting report" in source
+    assert "no placed-and-routed number exists yet" in source

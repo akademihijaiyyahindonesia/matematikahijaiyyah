@@ -167,7 +167,8 @@ diperebutkan, tidak ada latensi yang bergantung pada nilai — satu propagation
 delay yang sama untuk setiap masukan. Sifat constant-time bukan dipertahankan,
 melainkan **tidak ada yang bisa bervariasi**.
 
-Terukur dengan yosys (`abc -lut 4`), bukan ditaksir:
+Terukur dengan yosys, pemetaan generik `abc -lut 4` (proksi baku untuk
+luas FPGA berbasis LUT4), bukan ditaksir:
 
 | | logika tower | tabel 256 entri |
 |---|---:|---:|
@@ -180,6 +181,16 @@ WIDTH=25 adalah seluruh muka cube 5×5 tersubstitusi dalam satu clock. Versi
 logika bukan hanya yang tanpa celah timing — ia juga satu-satunya yang
 menyisakan ruang untuk sisa sponge, UART dan HCPU di sebelahnya. Versi tabel
 tidak muat untuk desain itu.
+
+**Batas angka ini, supaya tidak dibaca lebih jauh dari yang ia tanggung.**
+Yang kokoh adalah **rasionya** — 3,6× per S-box, dan 2023 lawan 6743 untuk
+muka penuh — karena kedua sisi melewati satu pemetaan yang sama, jadi
+perbandingannya tidak bergantung pada metode. Baris terakhir (23% lawan 78%)
+menambahkan satu asumsi: bahwa hitungan LUT4 generik sejalan dengan LUT4
+Gowin. `synth_gowin` **tidak selesai** pada modul ini di sini, dan nextpnr
+tidak terpasang, jadi belum ada angka hasil place-and-route. Persentase itu
+proksi, bukan laporan fitting. E1 (Fmax) tetap tanpa nilai sampai papannya
+datang.
 
 Bit-exact dengan `cube.SBOX` untuk seluruh 256 masukan, di Python maupun di
 Verilog tersimulasi. Berkas: `src/hijaiyyah/crypto/sbox_logic.py`,

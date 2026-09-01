@@ -17,7 +17,10 @@
 // whole absorb-permute path would be one combinational cone and Fmax would
 // be set by the longest chain across it rather than by this block.
 //
-// MEASURED, not estimated. yosys, `abc -lut 4`, flattened:
+// MEASURED, not estimated -- and measured by a named method, because the
+// method is where an area claim usually goes soft. All figures below are
+// yosys with `abc -lut 4`, flattened: generic mapping to 4-input LUTs, the
+// standard proxy for LUT4-FPGA area.
 //
 //   per S-box            tower-field logic    76 LUT4
 //                        256-entry table     274 LUT4      3.6x larger
@@ -27,11 +30,22 @@
 //   router, WIDTH=25     logic               2023 LUT4     201 FF
 //                        table               6743 LUT4
 //
-// WIDTH=25 is the whole 5x5 cube face substituting in one clock. On a Tang
-// Nano 9K (GW1NR-9, 8640 LUT4) that is 23% of the device with logic and 78%
-// with the table -- so the logic form is not only the one without the timing
-// weakness, it is the one that leaves room for the rest of the sponge, the
-// UART and the HCPU beside it. The table does not fit that design; this does.
+// WIDTH=25 is the whole 5x5 cube face substituting in one clock.
+//
+// WHAT IS AND IS NOT VERIFIED. The ratio -- 3.6x per S-box, and 2023 against
+// 6743 for the full face -- is solid: both sides went through one mapping,
+// so the comparison is method-independent even if the absolute numbers move.
+// Against a Tang Nano 9K's 8640 LUT4 those figures read as 23% and 78%, and
+// THAT step assumes generic LUT4 count tracks Gowin LUT4 count. Vendor
+// synthesis (`synth_gowin`) did not complete on this module here, and
+// nextpnr is not installed, so no placed-and-routed number exists yet. The
+// percentages are a proxy, not a fitting report. E1 (Fmax) has no value at
+// all until the board arrives.
+//
+// What the ratio already settles is the design question: the table form
+// costs more than three times the logic form, so the logic form is both the
+// one without the timing weakness and the one that leaves room for the rest
+// of the sponge, the UART and the HCPU beside it.
 
 `default_nettype none
 
