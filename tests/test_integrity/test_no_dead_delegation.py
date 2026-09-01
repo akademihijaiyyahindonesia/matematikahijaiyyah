@@ -146,17 +146,40 @@ def test_assembler_emits_real_instruction_words() -> None:
 
 def test_compiler_does_not_report_success_over_an_empty_result() -> None:
     """
-    Code generation is not implemented. compile_source used to return
-    success=True with zero instructions, which tells a caller their source
-    compiled when nothing was produced.
+    compile_source used to return success=True with zero instructions, which
+    tells a caller their source compiled when nothing was produced.
+
+    Code generation exists now, so the original probe compiles. The invariant
+    is unchanged and still worth holding: a result that carries no
+    instructions is not a success. An empty source is the case that reaches
+    it today.
     """
     from hijaiyyah.compiler import HCCompiler
 
-    result = HCCompiler().compile_source("let h = 1; println(h);")
+    sources = [
+        "let h = 1; println(h);",
+        "",                              # compiles to a lone HALT
+        "let h = '\u0628';\nprintln(h.theta());\n",   # refused: no opcode
+        "let d = '\u0628' - '\u0633';\n",              # refused: not a monoid op
+    ]
+    for source in sources:
+        result = HCCompiler().compile_source(source)
+        assert result.success is False or result.instruction_count > 0, (
+            f"success over an empty result for {source!r}"
+        )
+        assert result.success or result.errors, "a failure must say why"
 
+
+def test_codegen_refuses_rather_than_approximating() -> None:
+    """
+    Wrong instructions on a processor have no second check behind them, so a
+    construct outside the compilable subset must fail the compile.
+    """
+    from hijaiyyah.compiler import HCCompiler
+
+    result = HCCompiler().compile_source("let h = '\u0628';\nprintln(h.theta());\n")
     assert result.success is False
-    assert result.instruction_count == 0
-    assert any("not implemented" in e for e in result.errors), result.errors
+    assert any("no opcode" in e for e in result.errors), result.errors
 
 
 def test_available_stages_matches_what_the_compiler_can_do() -> None:
@@ -166,4 +189,5 @@ def test_available_stages_matches_what_the_compiler_can_do() -> None:
     assert stages["lexer"] is True
     assert stages["parser"] is True
     assert stages["assembler"] is True
-    assert stages["codegen"] is False, "codegen is a stub; do not advertise it"
+    assert stages["codegen"] is True, "codegen is implemented for a subset"
+    assert stages["semantic"] is False, "semantic analysis is still a pass-through"

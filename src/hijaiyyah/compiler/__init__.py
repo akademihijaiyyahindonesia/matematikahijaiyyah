@@ -28,6 +28,8 @@ from typing import Any, ClassVar, Dict, List, Optional
 # guarded against nothing, and assigning None to a class name is what mypy
 # was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
 # every remaining guarded import honest.
+from hijaiyyah.compiler.codegen import CodegenError
+from hijaiyyah.compiler.codegen import generate as codegen_generate
 from hijaiyyah.compiler.psi import PsiReport
 from hijaiyyah.compiler.psi import inject as psi_inject
 from hijaiyyah.language.lexer import Lexer as HCLexer
@@ -131,7 +133,12 @@ class HCCompiler:
             result.stages_completed.append(CompileStage.PSI_INJECT)
 
             # Stage 5: Codegen → assembly
-            asm_text = self._codegen(typed_ast)
+            try:
+                asm_text = self._codegen(typed_ast)
+            except CodegenError as exc:
+                result.success = False
+                result.errors.append(str(exc))
+                return result
             result.stages_completed.append(CompileStage.CODEGEN)
 
             # Code generation is not implemented, so this is where the pipeline
@@ -185,11 +192,12 @@ class HCCompiler:
         return {
             "lexer": self._lexer_cls is not None,
             "parser": self._parser_cls is not None,
-            # Semantic analysis is a pass-through and code generation is not
-            # implemented; only the assembler is real.
+            # Semantic analysis is still a pass-through. Code generation is
+            # real but covers a subset: it refuses what it cannot encode
+            # rather than approximating it.
             "semantic": False,
             "psi_inject": self.options.psi_mode,
-            "codegen": False,
+            "codegen": True,
             "assembler": True,
         }
 
@@ -228,10 +236,16 @@ class HCCompiler:
         """
         Generate H-ISA assembly from the AST.
 
-        Not implemented. It returns nothing rather than pretending, and
-        compile_source refuses to report success on an empty result.
+        Stage 5. The Ψ report from stage 4 is handed through, so a guard the
+        analysis proved is never emitted — closure makes the runtime check
+        unnecessary, and the O(1) validation becomes no instruction at all.
+
+        The generator refuses anything outside its subset rather than
+        approximating it; a CodegenError is reported as a compile error.
         """
-        return ""
+        emitted = codegen_generate(ast, self._last_psi)
+        self._last_codegen = emitted
+        return emitted.text
 
     def _assemble(self, asm_text: str) -> bytes:
         """Assemble H-ISA text into bytecode, one 32-bit word per instruction."""
