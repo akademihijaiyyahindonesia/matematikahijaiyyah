@@ -256,3 +256,53 @@ def test_the_area_figures_name_their_mapping_and_their_limit() -> None:
     assert "abc -lut 4" in source, "the mapping method is unnamed"
     assert "proxy, not a fitting report" in source
     assert "no placed-and-routed number exists yet" in source
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The linear layer in gates — step one of driving the impulser
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_generated_linear_rtl_is_not_stale() -> None:
+    """RHO and PI live in cube.py; this keeps the Verilog behind them."""
+    result = subprocess.run(
+        ["python3", "tools/gen_linear_rtl.py", "--check"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_linear_verilog_matches_cube_linear_layer() -> None:
+    """
+    Sixty-four random 1600-bit states, simulated. A wrong rotation constant or
+    a swapped pi destination leaves the layer full rank and avalanche at 0.5 —
+    only a vector comparison catches it, which is why this exists.
+
+    Three sabotages were induced before trusting it: a shifted rho rotation, a
+    swapped pi destination, and a dropped theta neighbour. All three caught.
+    The first rho attempt matched nothing in the file and reported PASS, which
+    is the reason a sabotage has to be verified to have actually applied.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-o", "/tmp/tb_linear", "rtl/hijaiyyah_linear.v",
+         "rtl/tb/tb_hijaiyyah_linear.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_linear"], cwd=ROOT, capture_output=True, text=True)
+    assert "PASS: 64/64" in run.stdout, run.stdout
+
+
+def test_the_linear_layer_states_its_real_cost() -> None:
+    """
+    "Pure XOR" is not "free". The layer synthesises to 2560 LUT4 — more than a
+    25-byte substitution router — and the ramal trade is good because linear
+    and substitution are an order of magnitude apart, not because one is free.
+    The header has to carry the numbers, since the loose version of that
+    reasoning is what motivated the schedule in the first place.
+    """
+    source = (ROOT / "rtl" / "hijaiyyah_linear.v").read_text(encoding="utf-8")
+    assert "2560 LUT4" in source
+    assert "not the same as" in source and "free" in source
+    for figure in ("15,200 LUT4", "53,280 LUT4", "38,080 LUT4"):
+        assert figure in source, f"{figure} missing from the cost accounting"
