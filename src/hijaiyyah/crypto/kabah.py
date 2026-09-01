@@ -14,6 +14,14 @@ Five layers, and the number that matters for each:
     3  Authentic    HMAC-SHA256, HKDF          the actual security
     4  Confidential refused                    use AES-256-GCM
 
+**Stages are not layers, and the difference is worth keeping.** Layers are what
+the system guarantees; stages are the order it has to be built in, and
+:meth:`Kabah.stages` carries them. Semi-log comes first because there is no
+cube without a substitution to fill it, and no circuit without a cube to walk.
+Getting that order wrong is not academic: building the substitution as a
+shuffle instead of a semi-log map cost 10 against 4 and 92 against 112, and no
+later stage could have recovered it.
+
 **Layer 3 is the security.** Layers 0–2 are structure, triage and hypothesis.
 If layer 3 were removed the system would have none, and no amount of geometry
 would replace it. That sentence is the reason this module exists.
@@ -66,6 +74,50 @@ EXPANSION = "Kriptografi Absorpsi Byte Atas Hijaiyyah"
 
 #: Layer 3 is the one that carries security. Named rather than implied.
 AUTHORITATIVE_LAYER = 3
+
+
+@dataclass(frozen=True)
+class Stage:
+    """One construction step, what it produces, and what measures it."""
+
+    order: int
+    name: str
+    produces: str
+    evidence: str
+
+
+#: How the system is built, in the order it has to be built in. Each stage
+#: needs the one before it: there is no cube without a substitution to fill it,
+#: no circuit without a cube to walk, and nothing to authenticate until the
+#: sponge exists.
+STAGES = (
+    Stage(
+        1, "Semi-log", "the substitution",
+        "log/antilog over GF(2⁸); differential uniformity 4, nonlinearity 112, "
+        "no fixed points — the algebraic optimum, and AES's figures",
+    ),
+    Stage(
+        2, "Cube", "the state",
+        "5×5×28 from the sealed exomatrices (§IIE.2.1); 5×5 lanes of 64 bits "
+        "is a 1600-bit state, the size Keccak settled on",
+    ),
+    Stage(
+        3, "Tawaf", "rate and capacity",
+        "the circuit splits the face into a 16-lane perimeter and a 9-lane "
+        "core; 1024-bit rate, 576-bit capacity, ~288-bit security",
+    ),
+    Stage(
+        4, "Absorption", "the input path",
+        "one byte or one bit per clock along the circuit; the bit schedule "
+        "spreads a byte across eight nodes — measured, and it makes no "
+        "difference to diffusion, which is why it is here for the hardware",
+    ),
+    Stage(
+        5, "Composition", "the system",
+        "canonical encoding, keyless triage, HMAC-SHA256 over a seal-bound "
+        "key; layers 0–2 are structure, layer 3 is the security",
+    ),
+)
 
 
 @dataclass(frozen=True)
@@ -165,6 +217,28 @@ class Kabah:
     # ── What it is, stated ───────────────────────────────────────
 
     @staticmethod
+    def stages() -> Dict[str, object]:
+        """The construction order, and what measures each step.
+
+        Stages are how it is built; layers are what it guarantees. Keeping
+        them apart matters: the substitution is stage 1 and belongs to no
+        layer, and layer 3 is stage 5's work and not a step of its own.
+        """
+        return {
+            "name": NAME,
+            "expansion": EXPANSION,
+            "stages": [
+                {
+                    "order": stage.order,
+                    "name": stage.name,
+                    "produces": stage.produces,
+                    "evidence": stage.evidence,
+                }
+                for stage in STAGES
+            ],
+        }
+
+    @staticmethod
     def describe() -> Dict[str, object]:
         """Every layer, its guarantee, its epistemic label, and the numbers."""
         return {
@@ -186,9 +260,18 @@ class Kabah:
             "sponge": {
                 "state_bits": cube.STATE_LANES * cube.LANE_BITS,
                 "rate_bytes": cube.RATE,
+                "rate_bits": cube.RATE_BITS,
                 "capacity_bits": cube.CAPACITY_BITS,
                 "security_bits": cube.SECURITY_BITS,
                 "circuits": cube.CIRCUITS,
+            },
+            "substitution": {
+                "polynomial": cube.POLYNOMIAL,
+                "generator": cube.GENERATOR,
+                "affine_constant": cube.AFFINE_C,
+                "differential_uniformity": 4,
+                "nonlinearity": 112,
+                "fixed_points": 0,
             },
         }
 

@@ -442,6 +442,39 @@ def permute(state: List[int]) -> List[int]:
 
 # ── Sponge ───────────────────────────────────────────────────────
 
+#: Bits absorbed before the circuit closes and the permutation runs.
+RATE_BITS = RATE_LANES * LANE_BITS
+
+
+def absorb_bit(state: List[int], bit: int, step: int) -> Tuple[List[int], int]:
+    """Absorb one bit, spreading consecutive bits across different nodes.
+
+    The spectrum schedule: bit *n* lands on node ``TAWAF_PATH[n % 16]`` at
+    position ``n // 16``, so one byte reaches eight nodes instead of filling
+    one lane. Lane-major would put all eight in a single lane.
+
+    **Measured, and the result is negative.** Digest avalanche is ~0.5 under
+    both schedules at every message length from 1 to 256 bytes — the
+    permutation is strong enough that the input schedule does not matter for
+    diffusion. Reporting that plainly is worth more than a justification
+    invented after the fact.
+
+    What the schedule is actually for is the input path. Bit-serial absorption
+    needs one wire and one bit of state, not a 64-bit bus, which is the
+    cheapest thing an FPGA can be asked to accept — 27 Mbit/s at 27 MHz, one
+    bit per clock, with no shift register per lane.
+    """
+    s = list(state)
+    node = TAWAF_PATH[step % RATE_LANES]
+    position = step // RATE_LANES
+    s[node] ^= (bit & 1) << position
+    step += 1
+    if step == RATE_BITS:
+        s = permute(s)
+        step = 0
+    return s, step
+
+
 def absorb_lane(state: List[int], value: int, step: int) -> Tuple[List[int], int]:
     """Absorb one lane's worth of data at the next stop on the circuit.
 

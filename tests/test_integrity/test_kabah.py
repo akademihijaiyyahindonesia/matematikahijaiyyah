@@ -181,3 +181,93 @@ def test_the_description_names_the_authoritative_layer() -> None:
     labels = {entry["name"]: entry["label"] for entry in description["layers"]}
     assert labels["Authentic"] == "VF"
     assert labels["Absorption"] == "EH"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Stages: the order it has to be built in
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_stages_are_ordered_and_start_with_the_substitution() -> None:
+    """
+    Semi-log is stage 1 because there is no cube without a substitution to
+    fill it, and no circuit without a cube to walk. Building the substitution
+    as a shuffle instead cost 10 against 4 and 92 against 112, and no later
+    stage could have recovered it.
+    """
+    from hijaiyyah.crypto.kabah import STAGES
+
+    assert [stage.order for stage in STAGES] == [1, 2, 3, 4, 5]
+    assert STAGES[0].name == "Semi-log"
+    assert STAGES[-1].name == "Composition"
+
+
+def test_stages_are_not_layers() -> None:
+    """
+    Layers are what the system guarantees; stages are how it is built. The
+    substitution belongs to no layer, and layer 3 is stage 5's work rather
+    than a step of its own — collapsing the two would hide both.
+    """
+    from hijaiyyah.crypto.kabah import STAGES
+
+    assert len(STAGES) == len(LAYERS) == 5
+    assert {s.name for s in STAGES} != {layer.name for layer in LAYERS}
+
+
+def test_the_reported_substitution_is_the_one_in_use() -> None:
+    substitution = Kabah.describe()["substitution"]
+    assert substitution["polynomial"] == cube.POLYNOMIAL
+    assert substitution["generator"] == cube.GENERATOR
+    assert substitution["affine_constant"] == cube.AFFINE_C
+    assert substitution["differential_uniformity"] == cube.differential_uniformity()
+    assert substitution["nonlinearity"] == cube.nonlinearity()
+    assert substitution["fixed_points"] == len(
+        [x for x in range(256) if cube.SBOX[x] == x]
+    ) == 0
+
+
+def test_bit_absorption_spreads_a_byte_across_nodes() -> None:
+    """
+    Stage 4's spectrum schedule. Eight bits reach eight nodes; lane-major
+    would put all eight in one.
+    """
+    state, step = [0] * cube.STATE_LANES, 0
+    for _ in range(8):
+        state, step = cube.absorb_bit(state, 1, step)
+    assert sum(1 for lane in state if lane) == 8
+    assert step == 8
+
+
+def test_the_bit_schedule_is_documented_as_a_negative_result() -> None:
+    """
+    It makes no difference to diffusion, measured at every message length.
+    Saying so is worth more than a justification invented afterwards, and the
+    docstring has to keep saying it.
+    """
+    doc = " ".join((cube.absorb_bit.__doc__ or "").split())
+    assert "the result is negative" in doc
+    assert "for the hardware" in doc or "input path" in doc
+
+
+def test_the_bit_and_lane_paths_differ_but_lose_nothing() -> None:
+    """
+    They do not, and that is the design: the bit path spreads across the ring
+    where the lane path fills one lane. What must hold is that neither loses
+    or invents a bit.
+    """
+    # All ones, so every node on the ring receives a set bit. A patterned
+    # value such as 0xA5A5… only reaches eight of the sixteen, which is a
+    # property of the pattern and not of the schedule.
+    value = (1 << cube.LANE_BITS) - 1
+    expected = bin(value).count("1")
+
+    by_bit, step = [0] * cube.STATE_LANES, 0
+    for i in range(cube.LANE_BITS):
+        by_bit, step = cube.absorb_bit(by_bit, (value >> i) & 1, step)
+
+    by_lane, _ = cube.absorb_lane([0] * cube.STATE_LANES, value, 0)
+
+    assert sum(bin(lane).count("1") for lane in by_bit) == expected
+    assert sum(bin(lane).count("1") for lane in by_lane) == expected
+    assert by_bit != by_lane, "the two schedules are meant to differ"
+    assert sum(1 for lane in by_bit if lane) == cube.RATE_LANES
+    assert sum(1 for lane in by_lane if lane) == 1
