@@ -82,6 +82,9 @@ module hijaiyyah_rotate_core #(
     input  wire          standby,      // hold: no state change, no toggling
     input  wire          load,
     input  wire [1599:0] in_state,
+    input  wire          absorb_valid, // XOR one lane onto the tawaf ring
+    input  wire [4:0]    absorb_step,  // position on the ring, 0..15
+    input  wire [63:0]   absorb_data,
     input  wire          lin_pulse,
     input  wire          sub_pulse,
     input  wire [7:0]    round_index,
@@ -142,6 +145,42 @@ module hijaiyyah_rotate_core #(
         .round_constant (round_constant)
     );
 
+    // ---- absorption: a one-hot write, never a read mux --------------
+    //
+    // Input only ever reaches the sixteen lanes of the outer ring; the nine
+    // it encloses are the capacity and nothing written from outside touches
+    // them. That separation is the sponge's security and here it is the
+    // geometry, not an index range.
+    //
+    // Written as a decoder plus per-lane write-enable rather than an
+    // addressed write. An addressed write would rebuild exactly the 1600-bit
+    // multiplexer that cost this design 6,000 LUT4 before it was removed.
+    //
+    // PRIORITY MATTERS AND I GOT IT WRONG. This branch was first inserted
+    // ahead of `standby` and `load`, so an absorb overrode both: asserting
+    // standby did not hold an absorb, and load did not clear the state while
+    // one was in flight. Neither showed up in any existing test, because the
+    // sponge never drives those signals together. A hold must hold
+    // everything and a clear must clear everything, so both now come first.
+    //
+    // TAWAF_PATH = 0, 1, 2, 3, 4, 9, 14, 19, 24, 23, 22, 21, 20, 15, 10, 5
+    wire ring0 = absorb_valid & (absorb_step == 5'd0);
+    wire ring1 = absorb_valid & (absorb_step == 5'd1);
+    wire ring2 = absorb_valid & (absorb_step == 5'd2);
+    wire ring3 = absorb_valid & (absorb_step == 5'd3);
+    wire ring4 = absorb_valid & (absorb_step == 5'd4);
+    wire ring5 = absorb_valid & (absorb_step == 5'd5);
+    wire ring6 = absorb_valid & (absorb_step == 5'd6);
+    wire ring7 = absorb_valid & (absorb_step == 5'd7);
+    wire ring8 = absorb_valid & (absorb_step == 5'd8);
+    wire ring9 = absorb_valid & (absorb_step == 5'd9);
+    wire ring10 = absorb_valid & (absorb_step == 5'd10);
+    wire ring11 = absorb_valid & (absorb_step == 5'd11);
+    wire ring12 = absorb_valid & (absorb_step == 5'd12);
+    wire ring13 = absorb_valid & (absorb_step == 5'd13);
+    wire ring14 = absorb_valid & (absorb_step == 5'd14);
+    wire ring15 = absorb_valid & (absorb_step == 5'd15);
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state        <= {1600{1'b0}};
@@ -155,6 +194,23 @@ module hijaiyyah_rotate_core #(
             state        <= in_state;
             step         <= {COUNT_W{1'b0}};
             substituting <= 1'b0;
+        end else if (absorb_valid) begin
+                if (ring0) state[0*64 +: 64] <= state[0*64 +: 64] ^ absorb_data;
+                if (ring1) state[1*64 +: 64] <= state[1*64 +: 64] ^ absorb_data;
+                if (ring2) state[2*64 +: 64] <= state[2*64 +: 64] ^ absorb_data;
+                if (ring3) state[3*64 +: 64] <= state[3*64 +: 64] ^ absorb_data;
+                if (ring4) state[4*64 +: 64] <= state[4*64 +: 64] ^ absorb_data;
+                if (ring5) state[9*64 +: 64] <= state[9*64 +: 64] ^ absorb_data;
+                if (ring6) state[14*64 +: 64] <= state[14*64 +: 64] ^ absorb_data;
+                if (ring7) state[19*64 +: 64] <= state[19*64 +: 64] ^ absorb_data;
+                if (ring8) state[24*64 +: 64] <= state[24*64 +: 64] ^ absorb_data;
+                if (ring9) state[23*64 +: 64] <= state[23*64 +: 64] ^ absorb_data;
+                if (ring10) state[22*64 +: 64] <= state[22*64 +: 64] ^ absorb_data;
+                if (ring11) state[21*64 +: 64] <= state[21*64 +: 64] ^ absorb_data;
+                if (ring12) state[20*64 +: 64] <= state[20*64 +: 64] ^ absorb_data;
+                if (ring13) state[15*64 +: 64] <= state[15*64 +: 64] ^ absorb_data;
+                if (ring14) state[10*64 +: 64] <= state[10*64 +: 64] ^ absorb_data;
+                if (ring15) state[5*64 +: 64] <= state[5*64 +: 64] ^ absorb_data;
         end else if (substituting) begin
             if (step == SLICES - 1) begin
                 // Last rotation: the state is back in position, so the

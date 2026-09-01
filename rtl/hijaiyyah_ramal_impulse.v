@@ -39,6 +39,7 @@ module hijaiyyah_ramal_impulse #(
 ) (
     input  wire       clk,
     input  wire       rst_n,
+    input  wire       start,        // begin a fresh schedule, clearing done
     input  wire       enable,
     input  wire       stall,        // datapath is busy; hold the pacing
     output reg        lin_pulse,      // fire the linear layer this clock
@@ -82,6 +83,16 @@ module hijaiyyah_ramal_impulse #(
             sub_pulse   <= 1'b0;
             round_index <= 8'd0;
             done        <= 1'b0;
+        end else if (start) begin
+            // A sponge runs one permutation per rate block, so the schedule
+            // has to be restartable. Without this `done` latches once and the
+            // second block never runs.
+            stride_left <= stride_for(8'd0);
+            round_no    <= 8'd0;
+            waiting     <= 1'b0;
+            done        <= 1'b0;
+            lin_pulse   <= 1'b0;
+            sub_pulse   <= 1'b0;
         end else if (waiting) begin
             lin_pulse <= 1'b0;
             sub_pulse <= 1'b0;

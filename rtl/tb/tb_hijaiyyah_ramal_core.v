@@ -36,7 +36,7 @@ module tb_hijaiyyah_ramal_core;
     always #5 clk = ~clk;
 
     hijaiyyah_ramal_impulse #(.ROUNDS(ROUNDS), .MAX_STRIDE(STRIDE)) u_imp (
-        .clk(clk), .rst_n(rst_n), .enable(enable), .stall(stall),
+        .clk(clk), .rst_n(rst_n), .start(1'b0), .enable(enable), .stall(stall),
         .lin_pulse(lin_pulse), .sub_pulse(sub_pulse),
         .round_index(round_index), .done(done)
     );

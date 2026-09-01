@@ -456,3 +456,82 @@ def test_the_throughput_figures_name_the_clock_they_assume() -> None:
     assert "AT AN ASSUMED CLOCK" in source
     assert "achievable Fmax is unmeasured" in source
     assert "11.15 MB/s" in source
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The sponge: what turns the permutation into a hash
+# ══════════════════════════════════════════════════════════════════
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_sponge_absorbs_two_rate_blocks_exactly_like_cube_py() -> None:
+    """
+    The first point where the whole crypto datapath is in gates at once:
+    substitution, linear layer, round constants, pacing, and the sponge
+    scheduling around them. Two rate blocks, so the permutation runs more than
+    once and a second-block failure cannot pass as coincidence.
+
+    Three bugs were found getting here and all three were mine, in the
+    testbench or the handshake:
+
+    * the lane count was written as a literal and read past the vector file,
+      absorbing lanes of X — it is bound to the file at build time now;
+    * the ready/valid feed advanced whether or not the sponge had taken the
+      lane, so every lane offered during a permutation was dropped;
+    * the sponge sampled `perm_done` in the clock `start` was clearing it, read
+      the *previous* permutation's done, and skipped the second permutation
+      entirely — 28 substitutions in the first block, zero in the second.
+
+    Each produced a fully defined, completely wrong state, which is the worst
+    shape a bug can take: nothing looks uninitialised.
+    """
+    lanes = (ROOT / "rtl" / "tb" / "sponge_lanes.hex").read_text().strip().split("\n")
+    build = subprocess.run(
+        ["iverilog", "-g2012", f"-DLANES={len(lanes)}", "-o", "/tmp/tb_sponge",
+         "rtl/hijaiyyah_sponge.v", "rtl/hijaiyyah_ramal_impulse.v",
+         "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
+         "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
+         "rtl/tb/tb_hijaiyyah_sponge.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_sponge"], cwd=ROOT, capture_output=True, text=True)
+    assert "PASS:" in run.stdout, run.stdout
+
+
+def test_the_sponge_documents_where_padding_and_squeezing_are_not() -> None:
+    """
+    Two real boundaries rather than omissions. Padding needs the message
+    length, which a streaming interface does not have until the stream ends,
+    so the caller pads. Squeezing would need a read port, and a read port is
+    the 1600-bit multiplexer this design spent six thousand LUT4 removing —
+    the whole state is already on `out_state`, so the consumer has the wires.
+    """
+    raw = (ROOT / "rtl" / "hijaiyyah_sponge.v").read_text(encoding="utf-8")
+    source = " ".join(raw.replace("//", " ").split())
+    assert "PADDING IS NOT IN THIS MODULE" in source
+    assert "SQUEEZING IS NOT IN THIS MODULE" in source
+    assert "The caller pads; this absorbs" in source
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_standby_and_load_outrank_an_absorb() -> None:
+    """
+    A priority bug I introduced and did not catch with anything already here.
+
+    The absorb branch was inserted ahead of `standby` and `load`, so an absorb
+    overrode both: asserting standby did not hold an absorb, and load did not
+    clear the state while one was in flight. No existing test saw it, because
+    the sponge never drives those signals together — only a probe that
+    deliberately collides them does. A hold must hold everything and a clear
+    must clear everything.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-o", "/tmp/tb_priority",
+         "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
+         "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
+         "rtl/tb/tb_hijaiyyah_priority.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_priority"], cwd=ROOT, capture_output=True, text=True)
+    assert "PASS: standby holds an absorb" in run.stdout, run.stdout

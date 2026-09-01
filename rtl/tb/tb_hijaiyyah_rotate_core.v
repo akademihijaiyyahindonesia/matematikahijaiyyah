@@ -36,13 +36,14 @@ module tb_hijaiyyah_rotate_core;
     always #5 clk = ~clk;
 
     hijaiyyah_ramal_impulse #(.ROUNDS(ROUNDS), .MAX_STRIDE(STRIDE)) u_imp (
-        .clk(clk), .rst_n(rst_n), .enable(enable), .stall(stall),
+        .clk(clk), .rst_n(rst_n), .start(1'b0), .enable(enable), .stall(stall),
         .lin_pulse(lin_pulse), .sub_pulse(sub_pulse),
         .round_index(round_index), .done(done)
     );
 
     hijaiyyah_rotate_core #(.SLICE_BYTES(SLICE_BYTES)) u_core (
         .clk(clk), .rst_n(rst_n), .standby(1'b0), .load(load), .in_state(in_state),
+        .absorb_valid(1'b0), .absorb_step(5'd0), .absorb_data(64'd0),
         .lin_pulse(lin_pulse), .sub_pulse(sub_pulse), .round_index(round_index),
         .stall(stall), .idle(), .out_state(out_state)
     );

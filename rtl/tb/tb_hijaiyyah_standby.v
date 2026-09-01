@@ -32,12 +32,13 @@ module tb_hijaiyyah_standby;
     always #5 clk = ~clk;
 
     hijaiyyah_ramal_impulse #(.ROUNDS(28), .MAX_STRIDE(2)) u_imp (
-        .clk(clk), .rst_n(rst_n), .enable(enable), .stall(stall),
+        .clk(clk), .rst_n(rst_n), .start(1'b0), .enable(enable), .stall(stall),
         .lin_pulse(lin_pulse), .sub_pulse(sub_pulse),
         .round_index(round_index), .done(done));
 
     hijaiyyah_rotate_core #(.SLICE_BYTES(SLICE_BYTES)) u_core (
         .clk(clk), .rst_n(rst_n), .standby(standby), .load(load),
+        .absorb_valid(1'b0), .absorb_step(5'd0), .absorb_data(64'd0),
         .in_state(in_state), .lin_pulse(lin_pulse), .sub_pulse(sub_pulse),
         .round_index(round_index), .stall(stall), .idle(idle),
         .out_state(out_state));
