@@ -21,11 +21,18 @@ made this standard: absorb, permute, squeeze. Building anything else would mean
 inventing the framework as well as the primitive, and then nothing could be
 evaluated at all.
 
-**Where the mixing actually comes from, said plainly.** The S-box is a
-bijection on 0..255 produced by a deterministic shuffle seeded from the sealed
-cube. The cube supplies the seed and the reproducibility; SHA-256 supplies the
-mixing. Claiming the geometry does the cryptographic work would be false, and
-the measurements below are what the construction is entitled to claim instead.
+**The substitution is algebraic, and that was a correction.** The first
+version shuffled a permutation with SHA-256, which produced a bijection
+indistinguishable from random — differential uniformity 10 where AES reaches
+4, nonlinearity 92 where AES reaches 112. The substitution is now the
+multiplicative inverse in GF(2⁸) read out of log tables, followed by an affine
+map, and it measures 4 and 112 exactly.
+
+Said plainly, because the division matters: those properties hold for *every*
+irreducible degree-8 polynomial. The sealed cube chooses which of the thirty
+fields is used and what the affine constant is; the strength comes from the
+inverse map. The geometry selects a member of a family, and crediting it with
+the algebra's work would be false.
 
 **Tawaf decides the schedule, and it corrects an arbitrary choice.** The first
 version filled lanes 0..7 in order and called eight of them the rate, which
@@ -53,7 +60,7 @@ than logic, and absorption needs no multiplier and no division.
 from __future__ import annotations
 
 import hashlib
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from hijaiyyah.core.exomatrix import build_exomatrix
 from hijaiyyah.core.master_table import MASTER_TABLE
@@ -141,37 +148,150 @@ def cube_digest() -> bytes:
     return hashlib.sha256(bytes(flat)).digest()
 
 
-# ── Substitution ─────────────────────────────────────────────────
+# ── Substitution: semi-log ───────────────────────────────────────────────
+
+def _mul(a: int, b: int, poly: int) -> int:
+    """Carry-less multiply in GF(2⁸) modulo an irreducible polynomial."""
+    result = 0
+    while b:
+        if b & 1:
+            result ^= a
+        a <<= 1
+        if a & 0x100:
+            a ^= poly
+        b >>= 1
+    return result
+
+
+def _generator(poly: int) -> Optional[int]:
+    """The smallest element whose powers cover all 255 non-zero values.
+
+    A polynomial with such an element is irreducible; one without is not, so
+    this doubles as the irreducibility test.
+    """
+    for candidate in range(2, 256):
+        seen, x = set(), 1
+        for _ in range(255):
+            x = _mul(x, candidate, poly)
+            seen.add(x)
+        if len(seen) == 255:
+            return candidate
+    return None
+
+
+def irreducible_polynomials() -> Tuple[Tuple[int, int], ...]:
+    """Every irreducible degree-8 polynomial and a generator for each.
+
+    Thirty of them, AES's 0x11B among them.
+    """
+    return tuple(
+        (poly, gen)
+        for poly in range(0x100, 0x200)
+        if (gen := _generator(poly)) is not None
+    )
+
+
+def _log_tables(poly: int, gen: int) -> Tuple[List[int], List[int]]:
+    """Antilog and log for one field — the semi-log step's lookup tables."""
+    antilog = [0] * 512
+    log = [0] * 256
+    x = 1
+    for i in range(255):
+        antilog[i] = x
+        log[x] = i
+        x = _mul(x, gen, poly)
+    for i in range(255, 512):
+        antilog[i] = antilog[i - 255]
+    return log, antilog
+
+
+def _first_fixed_point_free(start: int, poly: int, gen: int) -> int:
+    """Walk from the seal's byte to the first constant with no fixed point."""
+    log, antilog = _log_tables(poly, gen)
+
+    def inv(value: int) -> int:
+        return 0 if value == 0 else antilog[255 - log[value]]
+
+    for offset in range(256):
+        candidate = (start + offset) & 0xFF
+        if not any(_affine_with(inv(x), candidate) == x for x in range(256)):
+            return candidate
+    raise RuntimeError("no fixed-point-free affine constant exists in this field")
+
+
+def _affine_with(byte: int, constant: int) -> int:
+    result = byte
+    for shift in (1, 2, 3, 4):
+        result ^= ((byte << shift) | (byte >> (8 - shift))) & 0xFF
+    return result ^ constant
+
+
+def _field() -> Tuple[int, int, int, List[int], List[int]]:
+    """Choose the field from the sealed cube and build its log tables.
+
+    The construction is algebraic; the sealed table only chooses *which*
+    field and which affine constant. That division matters: the security
+    properties come from the inverse map and hold for any irreducible
+    polynomial, so the geometry selects a member of a family rather than
+    supplying the strength itself.
+    """
+    digest = cube_digest()
+    table = irreducible_polynomials()
+    poly, gen = table[digest[0] % len(table)]
+
+    # The affine constant is not simply the next digest byte. A fixed point,
+    # S(x) = x, is a value the substitution leaves alone, and 38% of the 256
+    # constants avoid them entirely — AES picked 0x63 for exactly this reason.
+    # Taking the digest byte blindly landed on 0xE5, which has two. The cube
+    # still chooses; it now chooses from the constants that are actually
+    # usable, which is a search seeded by the seal rather than a lottery.
+    affine_c = _first_fixed_point_free(digest[1], poly, gen)
+
+    log, antilog = _log_tables(poly, gen)
+    return poly, gen, affine_c, log, antilog
+
+
+POLYNOMIAL, GENERATOR, AFFINE_C, LOG, ANTILOG = _field()
+
+
+def inverse(value: int) -> int:
+    """Multiplicative inverse in GF(2⁸), read out of the log tables.
+
+    This is the semi-log step, and it is the whole reason the numbers below
+    reach AES's. The first version of this module shuffled a permutation with
+    SHA-256 instead, which produced a bijection indistinguishable from random:
+    differential uniformity 10 against AES's 4, nonlinearity 92 against 112.
+    Then the review said an algebraic construction was the only way to close
+    that gap — while the algebraic construction was the instruction that had
+    been skipped.
+
+    x ↦ x⁻¹ has differential uniformity 4 and nonlinearity 112 over GF(2⁸)
+    for every irreducible polynomial, so the strength is in the map and not in
+    which field the cube happened to pick.
+    """
+    return 0 if value == 0 else ANTILOG[255 - LOG[value]]
+
+
+def _affine(byte: int) -> int:
+    """Rotate-and-sum, then add a constant.
+
+    What this buys is not the differential or linear numbers — those are
+    affine invariants and the pure inverse already reaches 4 and 112. It buys
+    two other things AES ends its S-box for. The pure inverse is an
+    *involution*, S(S(x)) = x for every byte, which is a structure an attacker
+    can use; after the affine layer only two bytes survive that. And the
+    constant is chosen so no byte maps to itself.
+    """
+    return _affine_with(byte, AFFINE_C)
+
 
 def derive_sbox() -> Tuple[int, ...]:
-    """A bijection on 0..255, seeded by the sealed cube.
-
-    Fisher-Yates driven by SHA-256 in counter mode over the cube digest. The
-    shuffle is what guarantees bijectivity; the cube decides which permutation
-    of the 256! available is chosen, and does so reproducibly.
-    """
-    box = list(range(256))
-    seed = cube_digest()
-
-    stream = bytearray()
-    counter = 0
-    for i in range(255, 0, -1):
-        while not stream:
-            stream.extend(
-                hashlib.sha256(seed + counter.to_bytes(4, "big")).digest()
-            )
-            counter += 1
-        # Rejection-free: modulo bias over i+1 is acceptable here because the
-        # result only has to be a fixed permutation, not a uniform one.
-        j = stream.pop() % (i + 1)
-        box[i], box[j] = box[j], box[i]
-    return tuple(box)
+    """The substitution: semi-log inverse, then the affine map."""
+    return tuple(_affine(inverse(value)) for value in range(256))
 
 
 SBOX: Tuple[int, ...] = derive_sbox()
-INV_SBOX: Tuple[int, ...] = tuple(
-    SBOX.index(value) for value in range(256)
-)
+INV_SBOX: Tuple[int, ...] = tuple(SBOX.index(value) for value in range(256))
 
 
 # ── Measurement ──────────────────────────────────────────────────

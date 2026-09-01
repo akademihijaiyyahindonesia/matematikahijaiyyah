@@ -10,7 +10,7 @@ Five layers, and the number that matters for each:
 
     0  Canonical    codex encoding             one reading per value
     1  Guard        keyless, O(1)              100% of random garbage
-    2  Absorption   tawaf sponge over the cube ~288-bit capacity   [EH]
+    2  Absorption   tawaf sponge over the cube AES-class S-box   [EH]
     3  Authentic    HMAC-SHA256, HKDF          the actual security
     4  Confidential refused                    use AES-256-GCM
 
@@ -23,9 +23,12 @@ structurally valid record. Its job is to reject a flood before it reaches
 SHA-256, and it does that completely — random bytes never survive it. Reading
 it as proof of origin is the one misreading that would matter.
 
-**Layer 2 is [EH] and stays there.** The tawaf sponge is measured — full
-diffusion in seven circuits, avalanche 0.5007, capacity 576 bits — and
-measurement is not cryptanalysis. It is a candidate, not a primitive.
+**Layer 2 is [EH] and stays there.** The tawaf sponge is measured — an S-box
+at the algebraic optimum (differential uniformity 4, nonlinearity 112, no
+fixed points), full diffusion in seven circuits, capacity 576 bits — and
+measurement is not cryptanalysis. Seven circuits against Keccak's twenty-four
+leaves almost no margin, and margin is what absorbs the attacks nobody has
+tried. It is a candidate, not a primitive.
 :func:`fingerprint` says so and points at SHA-256.
 
 **Layer 4 is refused, and that is a security property.** A hand-rolled cipher
@@ -79,7 +82,7 @@ class Layer:
 LAYERS = (
     Layer(0, "Canonical", "one reading per value; no parsing ambiguity", "DP", False),
     Layer(1, "Guard", "rejects malformed input in O(1), without a key", "CC", False),
-    Layer(2, "Absorption", "tawaf sponge, ~288-bit capacity", "EH", False),
+    Layer(2, "Absorption", "tawaf sponge, AES-class S-box, 288-bit capacity", "EH", False),
     Layer(3, "Authentic", "HMAC-SHA256 over a seal-bound key", "VF", True),
     Layer(4, "Confidential", "refused — use AES-256-GCM from a vetted library", "—", True),
 )

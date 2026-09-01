@@ -83,27 +83,97 @@ def test_the_sbox_is_a_bijection() -> None:
     assert all(C.SBOX[C.INV_SBOX[v]] == v for v in range(256))
 
 
-def test_differential_uniformity_is_at_the_random_baseline() -> None:
+def test_differential_uniformity_reaches_the_algebraic_optimum() -> None:
     """
-    Measured 10. A random bijection sits at 10–12; AES reaches 4. So this is a
-    competent shuffle and not a competitive construction, and the assertion
-    bounds say so rather than leaving it to prose.
+    Four, which is the optimum for a bijection on eight bits and what AES
+    reaches. The first version of this module shuffled a permutation with
+    SHA-256 and measured 10 — indistinguishable from random. The semi-log
+    inverse is what closed that.
     """
     value = C.differential_uniformity()
-    low, high = RANDOM_DIFFERENTIAL
-    assert low <= value <= high, f"differential uniformity {value} left the baseline"
-    assert value > AES_DIFFERENTIAL, (
-        "if this ever beat AES the construction would need re-deriving, not "
-        "celebrating — a shuffle cannot reach an algebraic optimum"
+    assert value == AES_DIFFERENTIAL == 4, (
+        f"differential uniformity {value}; the semi-log inverse must reach 4"
+    )
+    assert value < RANDOM_DIFFERENTIAL[0], "a shuffle could never get here"
+
+
+def test_nonlinearity_matches_the_algebraic_optimum() -> None:
+    """112, again AES's figure. The shuffled version measured 92."""
+    value = C.nonlinearity()
+    assert value == AES_NONLINEARITY == 112
+    assert value > RANDOM_NONLINEARITY[1], "a shuffle could never get here"
+
+
+def test_the_strength_is_in_the_map_not_in_the_field_the_cube_picked() -> None:
+    """
+    x ↦ x⁻¹ has these properties over GF(2⁸) for *every* irreducible
+    polynomial. The sealed cube selects a member of the family; it does not
+    supply the strength, and saying otherwise would credit the geometry with
+    work the algebra does.
+    """
+    table = C.irreducible_polynomials()
+    assert len(table) == 30, "there are thirty irreducible degree-8 polynomials"
+    assert any(poly == 0x11B for poly, _ in table), "AES's field must be among them"
+    assert (C.POLYNOMIAL, C.GENERATOR) in table
+
+
+def test_the_field_is_chosen_by_the_sealed_cube() -> None:
+    digest = C.cube_digest()
+    table = C.irreducible_polynomials()
+    assert (C.POLYNOMIAL, C.GENERATOR) == table[digest[0] % len(table)]
+    # The constant is searched from the seal's byte forward rather than taken
+    # from it directly; test_the_affine_constant_is_reachable_from_the_seal
+    # pins that the search skipped nothing usable.
+    assert C.AFFINE_C == C._first_fixed_point_free(
+        digest[1], C.POLYNOMIAL, C.GENERATOR
     )
 
 
-def test_nonlinearity_is_at_the_random_baseline() -> None:
-    """Measured 92. Random sits at 92–94; AES reaches 112."""
-    value = C.nonlinearity()
-    low, high = RANDOM_NONLINEARITY
-    assert low <= value <= high, f"nonlinearity {value} left the baseline"
-    assert value < AES_NONLINEARITY
+def test_no_byte_maps_to_itself() -> None:
+    """
+    A fixed point is a value the substitution leaves alone. Taking the seal's
+    byte blindly landed on 0xE5, which has two; 38% of the 256 constants have
+    none, and AES picked 0x63 for exactly this reason. The cube now chooses
+    from the usable ones — a search seeded by the seal rather than a lottery.
+    """
+    assert not [x for x in range(256) if C.SBOX[x] == x]
+
+
+def test_the_substitution_is_not_an_involution() -> None:
+    """
+    What the affine layer actually buys. The differential and linear figures
+    are affine invariants — the pure inverse already reaches 4 and 112, so
+    deleting the affine layer failed no test until this one existed. But the
+    pure inverse is an involution, S(S(x)) = x for every byte, which is
+    structure an attacker can use.
+    """
+    survivors = [x for x in range(256) if C.SBOX[C.SBOX[x]] == x]
+    assert not survivors, f"{len(survivors)} bytes still involute"
+
+    pure = [C.inverse(x) for x in range(256)]
+    assert all(pure[pure[x]] == x for x in range(256)), (
+        "the pure inverse must be an involution, or this test proves nothing"
+    )
+
+
+def test_the_affine_constant_is_reachable_from_the_seal() -> None:
+    """Chosen from the seal's byte forward, so it stays determined by it."""
+    digest = C.cube_digest()
+    offset = (C.AFFINE_C - digest[1]) & 0xFF
+    assert offset < 256
+    for earlier in range(offset):
+        candidate = (digest[1] + earlier) & 0xFF
+        box = [C._affine_with(C.inverse(x), candidate) for x in range(256)]
+        assert any(box[x] == x for x in range(256)), (
+            f"0x{candidate:02X} was skipped but has no fixed point"
+        )
+
+
+def test_the_log_tables_really_invert() -> None:
+    """The semi-log step itself: x · x⁻¹ = 1 for every non-zero byte."""
+    assert C.inverse(0) == 0
+    for value in range(1, 256):
+        assert C._mul(value, C.inverse(value), C.POLYNOMIAL) == 1
 
 
 def test_avalanche_is_near_ideal() -> None:
@@ -115,10 +185,11 @@ def test_avalanche_is_near_ideal() -> None:
     assert 0.48 <= C.avalanche() <= 0.52
 
 
-def test_the_baseline_bounds_describe_actual_random_permutations() -> None:
+def test_the_random_baseline_is_where_a_shuffle_actually_lands() -> None:
     """
-    The bounds above are only meaningful if random boxes really fall inside
-    them. Sampled here rather than asserted from memory.
+    The contrast the two assertions above lean on. Sampled rather than
+    asserted from memory, because the whole claim is that the semi-log
+    construction leaves this range and a shuffle cannot.
     """
     rng = random.Random(11)
     for _ in range(3):
@@ -276,14 +347,15 @@ def test_the_module_carries_the_engineering_hypothesis_label() -> None:
     assert "cipher anyone should deploy" in doc
 
 
-def test_the_module_says_where_the_mixing_comes_from() -> None:
+def test_the_module_says_where_the_strength_comes_from() -> None:
     """
-    The cube supplies the seed; SHA-256 supplies the mixing. Claiming the
-    geometry does the cryptographic work would be false, and the docstring has
-    to say which is which.
+    The cube chooses the field; the inverse map supplies the strength. The
+    docstring has to say which is which, or the geometry gets credited with
+    the algebra's work.
     """
     doc = " ".join((C.__doc__ or "").split())
-    assert "SHA-256 supplies the mixing" in doc
+    assert "strength comes from the inverse map" in doc
+    assert "selects a member of a family" in doc
 
 
 def test_the_digest_does_not_present_itself_as_a_hash_function() -> None:
