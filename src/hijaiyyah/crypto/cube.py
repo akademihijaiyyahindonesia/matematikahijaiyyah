@@ -48,10 +48,14 @@ Lane width followed from the same correction. Eight-bit lanes put the state at
 security. Sixty-four-bit lanes give 1600 bits, the size Keccak settled on, and
 the ring split then yields 576 bits of capacity and about 288 of security.
 
-Seven circuits is fewer than Keccak's twenty-four, and the cost is stated
-rather than hidden: fewer rounds is less margin, and margin is what absorbs
-cryptanalysis nobody has done yet. What seven does buy is measured — a single
-changed bit reaches all twenty-five lanes and moves about half the state.
+Twenty-eight rounds: four tawaf of seven, which is also the alphabet. The
+number comes from measurement. Diffusion saturates at three rounds — round 1
+reaches 20 of 25 lanes at avalanche 0.055, round 2 all 25 at 0.302, round 3
+sits at 0.496 and nothing after it moves — so three is the floor and the rest
+is margin. Seven, the first version, gave 2.3× that floor, and attacks on
+constructions of this shape reach two to three times the floor. Seven sat
+inside the range. Twenty-eight gives 9.3×, the posture Keccak holds with
+twenty-four, and the cost is 150 MB/s falling to 78.5 at 27 MHz.
 
 The S-box is a 256-entry lookup, which on the Tang Nano is block RAM rather
 than logic, and absorption needs no multiplier and no division.
@@ -77,8 +81,26 @@ LANE_BITS = 64
 LANE_MASK = (1 << LANE_BITS) - 1
 LANE_BYTES = LANE_BITS // 8
 
-#: Circuits of the permutation. Tawaf is seven.
-CIRCUITS = 7
+#: Circuits in one tawaf.
+CIRCUIT = 7
+
+#: Tawaf performed. Four of them, which is 28 — the alphabet.
+TAWAF = 4
+
+#: Rounds of the permutation: 7 × 4 = 28.
+#:
+#: Not a preference. Diffusion saturates at three rounds, measured: round 1
+#: reaches 20 of 25 lanes at avalanche 0.055, round 2 reaches all 25 at 0.302,
+#: round 3 sits at 0.496 and nothing after it moves. Three is the floor, and
+#: everything above it is margin.
+#:
+#: Seven gave 2.3× that floor. Attacks on constructions of this shape reach
+#: two to three times the diffusion floor — six to nine rounds here — so seven
+#: sat inside the range an attack would plausibly reach. Twenty-eight gives
+#: 9.3×, which is the posture Keccak holds with twenty-four.
+#:
+#: The cost is measured too: 150 MB/s falls to 78.5 at 27 MHz.
+CIRCUITS = CIRCUIT * TAWAF
 
 
 def _rings() -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
@@ -377,12 +399,10 @@ def _round_constants() -> Tuple[int, ...]:
     equal lanes stay equal. Keccak takes its from an LFSR; these come from the
     sealed cube, which is the same idea with a different source.
     """
-    material = hashlib.sha256(cube_digest() + b"tawaf").digest()
+    seed = cube_digest() + b"tawaf"
     return tuple(
-        int.from_bytes(material[i * 8 : (i + 1) * 8], "big") & LANE_MASK
-        if (i + 1) * 8 <= len(material)
-        else int.from_bytes(
-            hashlib.sha256(material + bytes([i])).digest()[:8], "big"
+        int.from_bytes(
+            hashlib.sha256(seed + bytes([i])).digest()[:8], "big"
         ) & LANE_MASK
         for i in range(CIRCUITS)
     )
@@ -405,13 +425,14 @@ def _substitute(lane: int) -> int:
 
 
 def permute(state: List[int]) -> List[int]:
-    """Seven circuits: substitute, mix rows, mix columns, add a constant.
+    """Twenty-eight rounds: substitute, mix rows, mix columns, add a constant.
 
-    Seven because tawaf is seven. That is a smaller number than Keccak's
-    twenty-four, and the cost is stated rather than hidden: fewer rounds is
-    less margin, and margin is what absorbs cryptanalysis nobody has done yet.
-    The diffusion test asserts a single changed bit still reaches every lane,
-    which is the minimum seven has to buy.
+    Four tawaf of seven circuits each, which is also the alphabet. The number
+    is measured rather than chosen — see :data:`CIRCUITS`. Diffusion saturates
+    at three rounds, so twenty-eight is a 9.3× margin, against Keccak's 8×.
+
+    An earlier version ran seven, which is 2.3× the floor and inside the range
+    an attack on this shape would plausibly reach.
     """
     if len(state) != STATE_LANES:
         raise ValueError(f"state must be {STATE_LANES} lanes, got {len(state)}")

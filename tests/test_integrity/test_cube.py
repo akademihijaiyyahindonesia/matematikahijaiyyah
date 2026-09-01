@@ -229,10 +229,65 @@ def test_the_tawaf_path_is_one_closed_circuit() -> None:
         assert abs(r1 - r2) + abs(c1 - c2) == 1, f"{a}→{b} is not a step"
 
 
-def test_seven_circuits() -> None:
-    """Tawaf is seven, and the permutation runs seven."""
-    assert C.CIRCUITS == 7
-    assert len(C.ROUND_CONSTANTS) == 7
+def test_the_round_count_is_derived_from_the_measured_floor() -> None:
+    """
+    Four tawaf of seven, which is also the alphabet — and, more to the point,
+    9.3× the measured diffusion floor. The first version ran seven, which is
+    2.3× and inside the range an attack on this shape would plausibly reach.
+    """
+    assert C.CIRCUIT == 7, "one tawaf is seven circuits"
+    assert C.TAWAF == 4
+    assert C.CIRCUITS == 28 == C.LAYERS, "and 28 is the alphabet"
+    assert len(C.ROUND_CONSTANTS) == 28
+    assert len(set(C.ROUND_CONSTANTS)) == 28, "constants must not repeat"
+
+
+def test_diffusion_saturates_well_below_the_round_count() -> None:
+    """
+    The measurement the count rests on. Three rounds reach ideal avalanche and
+    nothing after moves, so the floor is three and the margin is 28/3.
+
+    If this ever fails upward — if saturation needs more rounds — the margin
+    shrank and the count has to be revisited.
+    """
+    import random
+
+    def permute_n(state, n):
+        s = [x & C.LANE_MASK for x in state]
+        for r in range(n):
+            s = [C._substitute(lane) for lane in s]
+            for row in range(C.ROWS):
+                base = row * C.COLS
+                acc = 0
+                for col in range(C.COLS):
+                    acc ^= s[base + col]
+                for col in range(C.COLS):
+                    s[base + col] ^= C._rotl(acc, col + r + 1)
+            for col in range(C.COLS):
+                acc = 0
+                for row in range(C.ROWS):
+                    acc ^= s[row * C.COLS + col]
+                for row in range(C.ROWS):
+                    i = row * C.COLS + col
+                    s[i] = C._rotl(s[i] ^ acc, i + 1)
+            s[0] ^= C.ROUND_CONSTANTS[r % len(C.ROUND_CONSTANTS)]
+        return s
+
+    rng = random.Random(3)
+    def avalanche_at(n):
+        changed = total = 0
+        for _ in range(12):
+            st = [rng.getrandbits(64) for _ in range(25)]
+            other = list(st)
+            other[rng.randrange(25)] ^= 1 << rng.randrange(64)
+            a, b = permute_n(st, n), permute_n(other, n)
+            changed += sum(bin(x ^ y).count("1") for x, y in zip(a, b, strict=True))
+            total += 1600
+        return changed / total
+
+    assert avalanche_at(1) < 0.2, "round 1 must not already be saturated"
+    assert 0.45 <= avalanche_at(3) <= 0.55, "the floor is three rounds"
+    assert C.CIRCUITS / 3 >= 8, "the margin must stay near Keccak's posture"
 
 
 def test_the_capacity_carries_a_usable_security_level() -> None:

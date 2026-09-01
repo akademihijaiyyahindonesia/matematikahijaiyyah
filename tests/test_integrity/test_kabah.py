@@ -166,7 +166,7 @@ def test_the_description_quotes_the_sponge_it_actually_uses() -> None:
     assert sponge["rate_bytes"] == cube.RATE
     assert sponge["capacity_bits"] == cube.CAPACITY_BITS == 576
     assert sponge["security_bits"] == cube.SECURITY_BITS == 288
-    assert sponge["circuits"] == cube.CIRCUITS == 7
+    assert sponge["circuits"] == cube.CIRCUITS == 28
 
 
 def test_the_description_quotes_the_current_seal() -> None:

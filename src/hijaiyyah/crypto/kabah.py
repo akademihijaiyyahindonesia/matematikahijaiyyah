@@ -33,10 +33,10 @@ it as proof of origin is the one misreading that would matter.
 
 **Layer 2 is [EH] and stays there.** The tawaf sponge is measured — an S-box
 at the algebraic optimum (differential uniformity 4, nonlinearity 112, no
-fixed points), full diffusion in seven circuits, capacity 576 bits — and
-measurement is not cryptanalysis. Seven circuits against Keccak's twenty-four
-leaves almost no margin, and margin is what absorbs the attacks nobody has
-tried. It is a candidate, not a primitive.
+fixed points), 28 rounds against a measured diffusion floor of three, capacity
+576 bits — and measurement is not cryptanalysis. The margin now matches
+Keccak's posture, which removes the last technical objection and none of the
+epistemic one: no one has attacked this. It is a candidate, not a primitive.
 :func:`fingerprint` says so and points at SHA-256.
 
 **Layer 4 is refused, and that is a security property.** A hand-rolled cipher
@@ -104,7 +104,8 @@ STAGES = (
     Stage(
         3, "Tawaf", "rate and capacity",
         "the circuit splits the face into a 16-lane perimeter and a 9-lane "
-        "core; 1024-bit rate, 576-bit capacity, ~288-bit security",
+        "core; 1024-bit rate, 576-bit capacity, ~288-bit security; four tawaf "
+        "of seven circuits is 28 rounds, 9.3x the measured diffusion floor",
     ),
     Stage(
         4, "Absorption", "the input path",
