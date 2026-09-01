@@ -20,6 +20,15 @@ from ..core.master_table import MasterTable
 from .opcodes import InstructionWord, OpCode
 from .registers import HREG_COUNT, RegisterFile
 
+#: The HCPU ROM carries a twenty-ninth entry used only for negative testing.
+#: hcpu_rom.v index 31: Θ̂ = 1 with Qc = 2 and A_Q = 2, so U = 8 and
+#: ρ = 1 − 8 = −7. It fails G4 and only G4 — the sum-checks and the
+#: topological guards all pass, so a failure isolates the one guard that is a
+#: cross-constraint rather than a checksum.
+ROM_TEST_INDEX = 31
+ROM_TEST_VECTOR = (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0)
+
+
 
 @dataclass
 class TraceEntry:
@@ -167,7 +176,21 @@ class HISAMachine:
                 entry = entries[imm - 1]
                 self.regs.hreg[dst] = list(entry.vector)
                 return f"HLOAD H{dst} ← {entry.char} ({entry.name}) [idx={imm}]"
-            return f"HLOAD H{dst} ← INVALID INDEX {imm}"
+
+            if imm == ROM_TEST_INDEX:
+                self.regs.hreg[dst] = list(ROM_TEST_VECTOR)
+                return f"HLOAD H{dst} ← corrupt test vector [idx={imm}]"
+
+            # An index naming no entry used to leave the register holding
+            # zeros, which is the monoid identity and passes every guard. So
+            # `HLOAD H0, #31` followed by `HGRD H0` reported PASS here and
+            # FAIL on the HCPU, whose ROM carries a deliberately corrupt
+            # vector at that address. Same program, opposite answer, and no
+            # parity test used the index.
+            self.regs.hreg[dst] = [0] * 18
+            self._halted = True
+            self._exit_code = 1
+            return f"HLOAD H{dst} ← index {imm} names no entry — HALT_ERR"
 
         # ── HCADD (CADD): H[dst] = H[s1] + H[s2] ──────────────
         if op == OpCode.HCADD:

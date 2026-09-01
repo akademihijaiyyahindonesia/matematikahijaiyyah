@@ -1,0 +1,123 @@
+; ============================================================================
+; E3 — sapuan 28 huruf tersegel
+; ============================================================================
+; Muat tiap huruf, jalankan guard-nya, cetak Theta. Membuktikan ROM
+; bersegel dieksekusi benar oleh perangkat, bukan hanya oleh simulator.
+; Keluaran yang diharapkan: 0 2 2 2 3 3 3 1 1 1 1 4 4 6 6 4 4 3 3 5 6 2 1 4 2 5 8 3
+;
+; Dibangkitkan oleh tools/make_bench.py — jangan disunting tangan.
+; Jalankan: cd rtl/fpga/gowin && make bitstream PROGRAM=../../programs/bench/e3_sweep28.hasm
+; Bacaan   : CYCLES=xxxxxxxx pada UART setelah halt.
+        HLOAD   H0, #1
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #2
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #3
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #4
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #5
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #6
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #7
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #8
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #9
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #10
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #11
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #12
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #13
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #14
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #15
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #16
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #17
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #18
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #19
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #20
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #21
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #22
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #23
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #24
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #25
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #26
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #27
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HLOAD   H0, #28
+        HGRD    H0
+        CGET    R1, H0, #0
+        PRINT   R1
+        HALT

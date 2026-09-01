@@ -1,0 +1,26 @@
+; ============================================================================
+; E2a — agregasi 8 huruf, satu guard
+; ============================================================================
+; Pasangan dengan e2_guard_x10. Selisih siklusnya adalah biaya sembilan
+; guard, jadi setiap ongkos penyiapan hilang dalam pengurangan.
+;
+; Dibangkitkan oleh tools/make_bench.py — jangan disunting tangan.
+; Jalankan: cd rtl/fpga/gowin && make bitstream PROGRAM=../../programs/bench/e2_guard_x1.hasm
+; Bacaan   : CYCLES=xxxxxxxx pada UART setelah halt.
+        HLOAD   H15, #2
+        HLOAD   H0, #12
+        HCADD   H15, H15, H0
+        HLOAD   H0, #24
+        HCADD   H15, H15, H0
+        HLOAD   H0, #1
+        HCADD   H15, H15, H0
+        HLOAD   H0, #27
+        HCADD   H15, H15, H0
+        HLOAD   H0, #20
+        HCADD   H15, H15, H0
+        HLOAD   H0, #16
+        HCADD   H15, H15, H0
+        HLOAD   H0, #5
+        HCADD   H15, H15, H0
+        HGRD    H15
+        HALT

@@ -105,9 +105,50 @@ def test_uart_output_decodes_at_the_boards_baud(simulation: str) -> None:
 
 
 def test_the_printed_value_matches_the_python_reference(simulation: str) -> None:
+    """
+    The program's own output, which the wrapper's cycle report now follows on
+    the same line. Everything before the report belongs to the program.
+    """
+    # The wrapper's cycle report follows on the same line once the core's
+    # output has drained, so only the leading digits belong to the program.
     text = _characters(simulation)
-    assert text.strip() == str(_expected_norm()), (
-        f"board printed {text.strip()!r}, Python computes {_expected_norm()}"
+    printed = re.match(r"\s*(\d+)", text)
+    assert printed, f"no digits on the serial line: {text!r}"
+    assert printed.group(1) == str(_expected_norm()), (
+        f"board printed {printed.group(1)!r}, Python computes {_expected_norm()}"
+    )
+
+
+def test_the_board_reports_its_own_cycle_count(simulation: str) -> None:
+    """
+    tools/integrity_benchmark.py counts instructions by reading programs. This
+    is the measurement that replaces the count: the wrapper's counter runs
+    from reset release to halt, so it sees pipeline fill and every stall.
+
+    test_bsm.hasm retires nine instructions and takes fourteen cycles — the
+    five-stage fill that a static count cannot show.
+    """
+    match = re.search(r"CYCLES=([0-9A-Fa-f]{8})", simulation)
+    assert match, "the board did not report a cycle count"
+
+    cycles = int(match.group(1), 16)
+    assert cycles == 14, f"expected 14 cycles for test_bsm.hasm, got {cycles}"
+
+
+def test_the_cycle_count_exceeds_the_instruction_count(simulation: str) -> None:
+    """
+    A counter that merely echoed the instruction count would prove nothing.
+    Nine instructions through five stages cannot retire in nine cycles.
+    """
+    from hijaiyyah.hisa.assembler import assemble
+
+    program = ROOT / "rtl" / "programs" / "test_bsm.hasm"
+    instructions = len(assemble(program.read_text(encoding="utf-8")))
+
+    match = re.search(r"CYCLES=([0-9A-Fa-f]{8})", simulation)
+    assert match
+    assert int(match.group(1), 16) > instructions, (
+        "the count must include pipeline fill, not just retired instructions"
     )
 
 

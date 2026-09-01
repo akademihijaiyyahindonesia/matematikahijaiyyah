@@ -1,0 +1,14 @@
+; ============================================================================
+; E2d — agregasi 2 huruf, satu guard
+; ============================================================================
+; Keluarga n=2,4,8,12. Biaya agregasi tumbuh linear; biaya guard tidak
+; bergerak sama sekali — agregat n huruf tetap satu codex.
+;
+; Dibangkitkan oleh tools/make_bench.py — jangan disunting tangan.
+; Jalankan: cd rtl/fpga/gowin && make bitstream PROGRAM=../../programs/bench/e2_scale_n02.hasm
+; Bacaan   : CYCLES=xxxxxxxx pada UART setelah halt.
+        HLOAD   H15, #2
+        HLOAD   H0, #12
+        HCADD   H15, H15, H0
+        HGRD    H15
+        HALT

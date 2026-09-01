@@ -1,0 +1,29 @@
+; ============================================================================
+; E2c — agregasi yang sama, divalidasi lewat jalur HISAB
+; ============================================================================
+; Pembanding guard: tiga HPACK dan satu HCRC menghasilkan frame 9 byte
+; beserta digest-nya. Bandingkan siklusnya dengan e2_guard_x1.
+;
+; Dibangkitkan oleh tools/make_bench.py — jangan disunting tangan.
+; Jalankan: cd rtl/fpga/gowin && make bitstream PROGRAM=../../programs/bench/e2_hisab.hasm
+; Bacaan   : CYCLES=xxxxxxxx pada UART setelah halt.
+        HLOAD   H15, #2
+        HLOAD   H0, #12
+        HCADD   H15, H15, H0
+        HLOAD   H0, #24
+        HCADD   H15, H15, H0
+        HLOAD   H0, #1
+        HCADD   H15, H15, H0
+        HLOAD   H0, #27
+        HCADD   H15, H15, H0
+        HLOAD   H0, #20
+        HCADD   H15, H15, H0
+        HLOAD   H0, #16
+        HCADD   H15, H15, H0
+        HLOAD   H0, #5
+        HCADD   H15, H15, H0
+        HPACK   R1, H15, 0
+        HPACK   R2, H15, 1
+        HPACK   R3, H15, 2
+        HCRC    R4, H15
+        HALT

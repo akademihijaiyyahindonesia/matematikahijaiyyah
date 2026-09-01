@@ -105,6 +105,7 @@ module hcpu_gowin_top #(
 
     // ── HCPU core ───────────────────────────────────────────────
     wire halted_out, guard_led_out;
+    wire core_txd;
 
     hcpu_top #(
         .CLK_HZ  (SYS_HZ),
@@ -116,7 +117,7 @@ module hcpu_gowin_top #(
         .imem_addr      (imem_addr),
         .imem_ce        (imem_ce),
         .imem_data      (imem_data),
-        .uart_tx        (uart_txd),
+        .uart_tx        (core_txd),
         .halted         (halted_out),
         .guard_led      (guard_led_out),
         // Debug port — unused on FPGA, tied off
@@ -124,6 +125,136 @@ module hcpu_gowin_top #(
         .dbg_gpr_rdata  (),
         .dbg_flags      ()
     );
+
+    // ── Cycle counter and its report ────────────────────────────
+    //
+    // The instruction counts in tools/integrity_benchmark.py are static: they
+    // come from reading programs, not running them, and they model no stalls.
+    // This measures. The counter runs from reset release to halt, so it
+    // includes load-use stalls, store-load stalls and branch flushes — every
+    // cycle the pipeline actually spent.
+    //
+    // The count goes out as hexadecimal, not decimal, on purpose. Decimal
+    // needs division by ten, and the divide in hcpu_top's PRINT FSM is
+    // already the longest topological path in the design at 86 logic levels.
+    // Adding a second one would make the wrapper worse at exactly the thing
+    // an Fmax measurement is trying to find. Eight nibbles through a lookup
+    // cost nothing.
+
+    reg [31:0] cycle_count;
+    always @(posedge clk_sys or negedge sys_rst_n) begin
+        if (!sys_rst_n)
+            cycle_count <= 32'd0;
+        else if (!halted_out)
+            cycle_count <= cycle_count + 32'd1;
+    end
+
+    // The core may still be shifting PRINT bytes when halt asserts, because
+    // hcpu_top's global_stall freezes the pipeline without waiting for the
+    // UART to drain. Taking the line early truncates them.
+    //
+    // A fixed delay is the wrong instrument for this. The first version
+    // waited a constant number of clocks, which was past one byte and not
+    // past three — test_bsm.hasm prints "112", and the wrapper cut into the
+    // second character. How long to wait depends on how much the program
+    // printed, which the wrapper cannot know.
+    //
+    // So it watches the line instead. A UART idles high; twelve bit times of
+    // continuous high is longer than any single frame, so it cannot fall
+    // inside one. The threshold is derived from SYS_HZ and BAUD rather than
+    // written down, for the same reason SYS_HZ itself is derived.
+
+    localparam IDLE_CLKS = (SYS_HZ / BAUD) * 12;
+    localparam IDLE_W    = $clog2(IDLE_CLKS + 1);
+
+    reg [IDLE_W-1:0] idle_count;
+    reg              report_armed;
+    always @(posedge clk_sys or negedge sys_rst_n) begin
+        if (!sys_rst_n) begin
+            idle_count   <= {IDLE_W{1'b0}};
+            report_armed <= 1'b0;
+        end else if (halted_out && !report_armed) begin
+            if (!core_txd)
+                idle_count <= {IDLE_W{1'b0}};
+            else if (idle_count >= IDLE_CLKS[IDLE_W-1:0])
+                report_armed <= 1'b1;
+            else
+                idle_count <= idle_count + 1'b1;
+        end
+    end
+
+    // "\r\nCYCLES=" + 8 hex digits + "\r\n"  =  19 bytes
+    localparam MSG_LEN = 5'd19;
+
+    reg  [4:0] msg_idx;
+    reg        msg_start;
+    reg        msg_done;
+    wire       msg_busy;
+
+    function [7:0] hexchar;
+        input [3:0] nibble;
+        hexchar = (nibble < 4'd10) ? (8'd48 + {4'd0, nibble})
+                                   : (8'd55 + {4'd0, nibble});
+    endfunction
+
+    reg [7:0] msg_byte;
+    always @(*) begin
+        case (msg_idx)
+            5'd0:  msg_byte = 8'h0D;
+            5'd1:  msg_byte = 8'h0A;
+            5'd2:  msg_byte = "C";
+            5'd3:  msg_byte = "Y";
+            5'd4:  msg_byte = "C";
+            5'd5:  msg_byte = "L";
+            5'd6:  msg_byte = "E";
+            5'd7:  msg_byte = "S";
+            5'd8:  msg_byte = "=";
+            5'd9:  msg_byte = hexchar(cycle_count[31:28]);
+            5'd10: msg_byte = hexchar(cycle_count[27:24]);
+            5'd11: msg_byte = hexchar(cycle_count[23:20]);
+            5'd12: msg_byte = hexchar(cycle_count[19:16]);
+            5'd13: msg_byte = hexchar(cycle_count[15:12]);
+            5'd14: msg_byte = hexchar(cycle_count[11:8]);
+            5'd15: msg_byte = hexchar(cycle_count[7:4]);
+            5'd16: msg_byte = hexchar(cycle_count[3:0]);
+            5'd17: msg_byte = 8'h0D;
+            default: msg_byte = 8'h0A;
+        endcase
+    end
+
+    always @(posedge clk_sys or negedge sys_rst_n) begin
+        if (!sys_rst_n) begin
+            msg_idx   <= 5'd0;
+            msg_start <= 1'b0;
+            msg_done  <= 1'b0;
+        end else begin
+            msg_start <= 1'b0;
+            if (report_armed && !msg_done && !msg_busy && !msg_start) begin
+                msg_start <= 1'b1;
+                if (msg_idx == MSG_LEN - 1)
+                    msg_done <= 1'b1;
+                else
+                    msg_idx <= msg_idx + 5'd1;
+            end
+        end
+    end
+
+    wire report_txd;
+    hcpu_uart_tx #(
+        .CLK_HZ (SYS_HZ),
+        .BAUD   (BAUD)
+    ) u_report_tx (
+        .clk      (clk_sys),
+        .rst_n    (sys_rst_n),
+        .tx_data  (msg_byte),
+        .tx_start (msg_start),
+        .tx_out   (report_txd),
+        .tx_busy  (msg_busy)
+    );
+
+    // The core owns the line until its output has drained; the report owns it
+    // afterwards. Idle is high on a UART, which is what the core holds.
+    assign uart_txd = report_armed ? report_txd : core_txd;
 
     // ── LED mapping (active low) ────────────────────────────────
     // LED[0]: GUARD flag (on = pass)
@@ -134,7 +265,7 @@ module hcpu_gowin_top #(
     assign led[1] = ~halted_out;
     assign led[2] = ~pll_locked;
     assign led[3] = ~sys_rst_n;
-    assign led[4] = 1'b1;            // off
+    assign led[4] = ~report_armed;   // cycle report sent
     assign led[5] = 1'b1;            // off
 
 endmodule

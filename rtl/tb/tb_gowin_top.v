@@ -45,8 +45,8 @@ module tb_gowin_top;
     always #HALF_PERIOD clk_27m = ~clk_27m;
 
     hcpu_gowin_top #(
-        .USE_PLL (0),
-        .BAUD    (BAUD)
+        .USE_PLL      (0),
+        .BAUD         (BAUD)
     ) u_board (
         .clk_27m   (clk_27m),
         .btn_rst_n (btn_rst_n),
@@ -127,6 +127,63 @@ module tb_gowin_top;
         if (count == 0) begin
             $display("FAIL: nothing came out of the serial pin");
             fail_count = fail_count + 1;
+        end
+
+        $display("=======================================");
+        $display("Gowin wrapper: %0d PASS, %0d FAIL", pass_count, fail_count);
+        $display("=======================================");
+
+        // ── The cycle report ────────────────────────────────────
+        // tools/integrity_benchmark.py counts instructions by reading
+        // programs. This is the measurement that replaces the count: the
+        // wrapper's counter runs from reset release to halt, so it includes
+        // load-use stalls, store-load stalls and branch flushes.
+        // The buffer is not cleared: the report can begin inside the first
+        // window, and clearing here threw away its prefix.
+        // Twelve idle bit times to arm, then nineteen bytes of report.
+        #(BIT_NS * 12 + BIT_NS * 10 * 21);
+
+        $display("\nSerial line, %0d characters total:", count);
+        text = 0;
+        for (i = 0; i < count && i < 32; i = i + 1)
+            $write("%c", received[i]);
+        $display("");
+
+        begin : check_report
+            integer p;
+            integer parsed;
+            integer nib;
+            reg     found;
+            found = 1'b0;
+            parsed = 0;
+            for (p = 0; p + 14 < count; p = p + 1) begin
+                // "CYCLES=" is seven characters: C Y C L E S =
+                if (received[p] == "C" && received[p+1] == "Y" &&
+                    received[p+2] == "C" && received[p+5] == "S" &&
+                    received[p+6] == "=" && !found) begin
+                    found = 1'b1;
+                    for (i = 0; i < 8; i = i + 1) begin
+                        nib = received[p + 7 + i];
+                        if (nib >= "0" && nib <= "9") nib = nib - "0";
+                        else if (nib >= "A" && nib <= "F") nib = nib - "A" + 10;
+                        else nib = -1;
+                        parsed = (parsed * 16) + nib;
+                    end
+                end
+            end
+
+            if (!found) begin
+                $display("FAIL: no CYCLES= report on the serial line");
+                fail_count = fail_count + 1;
+            end else if (parsed != u_board.cycle_count) begin
+                $display("FAIL: reported 0x%08h, counter holds 0x%08h",
+                         parsed, u_board.cycle_count);
+                fail_count = fail_count + 1;
+            end else begin
+                $display("PASS: cycle report 0x%08h matches the counter (%0d cycles)",
+                         parsed, parsed);
+                pass_count = pass_count + 1;
+            end
         end
 
         $display("=======================================");

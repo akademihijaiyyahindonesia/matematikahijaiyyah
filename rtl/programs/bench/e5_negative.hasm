@@ -1,0 +1,19 @@
+; ============================================================================
+; E5 — vektor rusak ditolak oleh perangkat keras
+; ============================================================================
+; Indeks 31 gagal G4 dan hanya G4. Mencetak 200 bila guard menolaknya,
+; 404 bila lolos. Diharapkan: 200
+;
+; Dibangkitkan oleh tools/make_bench.py — jangan disunting tangan.
+; Jalankan: cd rtl/fpga/gowin && make bitstream PROGRAM=../../programs/bench/e5_negative.hasm
+; Bacaan   : CYCLES=xxxxxxxx pada UART setelah halt.
+        HLOAD   H0, #31
+        HGRD    H0
+        JNGD    audit_pass
+        MOVI    R1, #404
+        PRINT   R1
+        HALT
+audit_pass:
+        MOVI    R1, #200
+        PRINT   R1
+        HALT

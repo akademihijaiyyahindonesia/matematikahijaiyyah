@@ -1,0 +1,34 @@
+; ============================================================================
+; E2b — agregasi 8 huruf, sepuluh guard
+; ============================================================================
+; Lihat e2_guard_x1. (siklus_x10 - siklus_x1) / 9 = biaya satu HGRD.
+;
+; Dibangkitkan oleh tools/make_bench.py — jangan disunting tangan.
+; Jalankan: cd rtl/fpga/gowin && make bitstream PROGRAM=../../programs/bench/e2_guard_x10.hasm
+; Bacaan   : CYCLES=xxxxxxxx pada UART setelah halt.
+        HLOAD   H15, #2
+        HLOAD   H0, #12
+        HCADD   H15, H15, H0
+        HLOAD   H0, #24
+        HCADD   H15, H15, H0
+        HLOAD   H0, #1
+        HCADD   H15, H15, H0
+        HLOAD   H0, #27
+        HCADD   H15, H15, H0
+        HLOAD   H0, #20
+        HCADD   H15, H15, H0
+        HLOAD   H0, #16
+        HCADD   H15, H15, H0
+        HLOAD   H0, #5
+        HCADD   H15, H15, H0
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HGRD    H15
+        HALT
