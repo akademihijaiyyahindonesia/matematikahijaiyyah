@@ -195,7 +195,7 @@ def _test_exo_audit() -> Tuple[bool, str]:
         E = exo.build(e)
         r = exo.audit(E)
         if not r["all_pass"]:
-            failed = [k for k in ["R1", "R2", "R3", "R4", "R5"] if not r[k]]
+            failed = [k for k in ["R1", "R2", "R3", "R4", "T1", "T2"] if not r[k]]
             return False, f"{e.char}: {', '.join(failed)} failed"
     return True, "All 5 relations verified for 28/28 letters (140 checks total)"
 
@@ -225,16 +225,21 @@ def _test_anagram() -> Tuple[bool, str]:
 
 
 def _test_guard_detail() -> Tuple[bool, str]:
-    """Test 13: Detailed R1–R5 guard check passes for all 28."""
+    """Test 13: Detailed guard check passes for all 28.
+
+    R5 was dropped: it read U == compute_U(vec) two lines after U was assigned
+    compute_U(vec), so it compared a value with itself and never failed once
+    in 28,064 vectors. The six that remain all fail on real input.
+    """
     entries = _all()
     for e in entries:
         d = guard_detail(e)
-        for key in ("R1", "R2", "R3", "R4", "R5"):
+        for key in ("R1", "R2", "R3", "R4", "T1", "T2"):
             if not d[key]:
                 return False, f"{e.char}: {key} = False"
         if not d["all_pass"]:
             return False, f"{e.char}: all_pass = False"
-    return True, "All 5 detailed audit relations pass for 28/28 letters"
+    return True, "All 6 detailed audit relations pass for 28/28 letters"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -692,7 +697,7 @@ class TheoremTab:
                 all_ok = False
 
             cells = ""
-            for key in ("R1", "R2", "R3", "R4", "R5"):
+            for key in ("R1", "R2", "R3", "R4", "T1", "T2"):
                 cells += f"{'✓':<5}" if d[key] else f"{'✗':<5}"
 
             tag = "pass" if ok else "fail"

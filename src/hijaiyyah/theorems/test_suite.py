@@ -30,7 +30,7 @@ class TheoremTestSuite:
             ("Prop 31.1.1", "diam²=70", self._diam),
             ("Thm 18.2.1", "rN+rK+rQ=1", self._ratios),
             ("Thm 29.3.1", "Polarization", self._polar),
-            ("Id 33.1.1", "Exomatrix R1-R5", self._exo),
+            ("Id 33.1.1", "Exomatrix R1-R4, T1-T2", self._exo),
             ("Thm 36.2.1", "Reconstruction", self._recon),
             ("Commut.", "Anagram", self._anagram),
             ("Axiom 9.4+", "Guard detail", self._guard_d),

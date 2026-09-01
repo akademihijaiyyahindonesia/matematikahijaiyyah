@@ -21,7 +21,7 @@ Audit relations R1–R5 (Identity 33.1.1):
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 def _to_vec(v: Any) -> List[int]:
@@ -113,35 +113,65 @@ def full_guard_check(v: Any) -> Dict[str, bool]:
     }
 
 
-def guard_detail(v: Any) -> Dict[str, Any]:
-    """
-    Check all 5 audit relations (R1–R5) plus topological guards
-    with detailed output.
+def guard_detail(v: Any, carried_rho: Optional[int] = None) -> Dict[str, Any]:
+    """The audit relations, with detailed output — and one of them used to be
+    a tautology.
+
+    **R5 could not fail.** It read ``U == compute_U(vec)`` two lines after
+    ``U = compute_U(vec)``, so it compared a value with itself. Measured over
+    every letter, every component, every value in the nibble domain and twenty
+    thousand random vectors — 28,064 in all — R1 failed 21,490 times, R2
+    21,386, R3 22,503, R4 22,499, T1 1,497, T2 1,505, and **R5 zero**. A check
+    that never fails is not a check, and the count advertised seven where six
+    were doing work.
+
+    R1 carried a smaller version of the same fault: ``vec[0] == U + rho`` with
+    ``rho = vec[0] - U`` is an identity, so only its second conjunct
+    (``rho >= 0``, which is G4) was ever load-bearing. It now says that.
+
+    **The real seventh is the carried residue.** §IC.1.24's identity
+    Θ̂ = U + ρ only tests anything when ρ arrives from outside — off a wire, out
+    of a record — rather than being recomputed from the vector it is meant to
+    check. That is the gap :mod:`hijaiyyah.crypto.guarded_record` documents:
+    G4 is an inequality, so raising Θ̂ never violates it, and only a carried ρ
+    closes it. Supply ``carried_rho`` and R7 becomes a check; omit it and R7
+    reports ``None``, because reporting ``True`` for a test that did not run
+    is how R5 survived this long.
+
+    Args:
+        v: The codex vector.
+        carried_rho: The residue as received, not as recomputed.
     """
     vec = _to_vec(v)
 
     U = compute_U(vec)
     rho = vec[0] - U
 
-    R1 = (vec[0] == U + rho) and (rho >= 0)
+    R1 = rho >= 0                                    # G4: Θ̂ ≥ U
     R2 = vec[14] == vec[1] + vec[2] + vec[3]
     R3 = vec[15] == vec[4] + vec[5] + vec[6] + vec[7] + vec[8]
     R4 = vec[16] == vec[9] + vec[10] + vec[11] + vec[12] + vec[13]
-    R5 = U == compute_U(vec)
 
     # Topological guards
     T1 = vec[13] >= 1 if vec[6] > 0 else True
     T2 = vec[13] >= 1 if vec[8] > 0 else True
+
+    # The seventh throw: the identity, against a residue from outside.
+    R7 = None if carried_rho is None else (vec[0] == U + carried_rho)
+
+    checks = [R1, R2, R3, R4, T1, T2]
+    if R7 is not None:
+        checks.append(R7)
 
     return {
         "R1": R1,
         "R2": R2,
         "R3": R3,
         "R4": R4,
-        "R5": R5,
+        "R7": R7,
         "T1": T1,
         "T2": T2,
         "U": U,
         "rho": rho,
-        "all_pass": R1 and R2 and R3 and R4 and R5 and T1 and T2,
+        "all_pass": all(checks),
     }

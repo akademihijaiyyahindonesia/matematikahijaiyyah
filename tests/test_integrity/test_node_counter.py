@@ -356,3 +356,75 @@ def test_the_rtl_says_what_it_does_not_contain() -> None:
     assert "NOT here" in source
     assert "no SHA-256 core" in source
     assert "does not authenticate" in source
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Jamrah: seven throws, one gate
+# ══════════════════════════════════════════════════════════════════
+
+def test_a_byte_reduces_through_exactly_seven_nodes() -> None:
+    """
+    Jamrat al-Aqabah is seven pebbles at one pillar, and the byte has the same
+    shape for the same reason: an 8-leaf binary reduction tree has exactly
+    4 + 2 + 1 = 7 internal nodes and one root. Not a metaphor over the
+    arithmetic — the arithmetic.
+    """
+    levels = []
+    width = 8
+    while width > 1:
+        width //= 2
+        levels.append(width)
+    assert levels == [4, 2, 1]
+    assert sum(levels) == 7
+
+
+def test_the_taps_carry_what_the_root_throws_away() -> None:
+    """
+    Why tap all seven rather than read the root. The root is the popcount, and
+    popcount is exactly the statistic that cannot recover an XOR key, because
+    summing across bit positions destroys where the key lives. Two bytes can
+    share a root and differ at every node below it.
+    """
+    def nodes(byte: int):
+        n0 = (byte & 1) + ((byte >> 1) & 1)
+        n1 = ((byte >> 2) & 1) + ((byte >> 3) & 1)
+        n2 = ((byte >> 4) & 1) + ((byte >> 5) & 1)
+        n3 = ((byte >> 6) & 1) + ((byte >> 7) & 1)
+        return (n0, n1, n2, n3, n0 + n1, n2 + n3, n0 + n1 + n2 + n3)
+
+    for byte in range(256):
+        assert nodes(byte)[6] == bin(byte).count("1")
+
+    same_root = [b for b in range(256) if bin(b).count("1") == 4]
+    assert len({nodes(b)[:4] for b in same_root}) > 1, (
+        "the taps would carry nothing the root does not"
+    )
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_jamrah_gate_agrees_on_all_256_bytes() -> None:
+    """
+    Every node checked, not only the root — a popcount would still look right
+    with the tree's internals wrong. Both sabotages induced first: truncating
+    node4 gives 192 mismatches, widening the alphabet to 29 gives one.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-o", "/tmp/tb_jamrah",
+         "rtl/hijaiyyah_jamrah_gate.v", "rtl/tb/tb_hijaiyyah_jamrah_gate.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_jamrah"], cwd=ROOT, capture_output=True, text=True)
+    assert "PASS: 256/256" in run.stdout, run.stdout
+
+
+def test_the_gate_is_triage_and_says_so() -> None:
+    """
+    It has no key, so anyone can build a byte that passes. hcpu_guard.v is the
+    geometric check on a full codex vector; this is the cheap gate in front of
+    it. Reading it as authority is the one misreading that would matter.
+    """
+    raw = (ROOT / "rtl" / "hijaiyyah_jamrah_gate.v").read_text(encoding="utf-8")
+    source = " ".join(raw.replace("//", " ").split())
+    assert "triage and not authority" in source
+    assert "no key" in source

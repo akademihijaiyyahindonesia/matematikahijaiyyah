@@ -144,7 +144,7 @@ _SLOT_MAP: Dict[str, int] = {
 
 
 # ══════════════════════════════════════════════════════════════════
-#  SECTION 2 — GUARD CHECKS (aligned with book R1–R5)
+#  SECTION 2 — GUARD CHECKS (one implementation, in core.guards)
 # ══════════════════════════════════════════════════════════════════
 
 
@@ -173,43 +173,26 @@ def _guard_check(vec: List[int]) -> bool:
 
 
 def _guard_detail(vec: List[int]) -> Dict[str, Any]:
-    """
-    Five audit relations (Identity 33.1.1) checked on raw vector.
+    """The audit relations, delegated to the one implementation.
 
-    R1: Θ̂ = U + ρ              (Proposition 11.3.1)
+    This used to be a second copy, and it had drifted in two ways at once.
+    Its R5 was the same tautology as the original — ``U == _U(vec)`` two lines
+    after ``U = _U(vec)`` — and its ``all_pass`` omitted T1 and T2 entirely,
+    so a vector failing a topological guard passed here and failed in
+    core.guards. Two implementations of one check is how that happens, so
+    there is now one.
+
+    R1: Θ̂ ≥ U                   (Proposition 11.3.1, the load-bearing half)
     R2: A_N = Na + Nb + Nd      (Definition 12.2.1)
     R3: A_K = ΣK_j              (Definition 12.2.1)
     R4: A_Q = ΣQ_j              (Definition 12.2.1)
-    R5: U = Qx + Qs + Qa + 4Qc (Definition 11.1.1)
+    T1, T2: topological implications
+    R7: Θ̂ = U + ρ against a *carried* ρ — a check only when ρ comes from
+        outside, which is why it is absent here and lives on the wire.
     """
-    U = _U(vec)
-    rho = vec[0] - U
+    from ..core.guards import guard_detail
 
-    # R1: Θ̂ = U + ρ (equivalent to ρ ≥ 0 on raw vectors)
-    R1 = (vec[0] == U + rho) and (rho >= 0)
-
-    # R2: A_N = Na + Nb + Nd
-    R2 = vec[14] == vec[1] + vec[2] + vec[3]
-
-    # R3: A_K = Kp + Kx + Ks + Ka + Kc
-    R3 = vec[15] == vec[4] + vec[5] + vec[6] + vec[7] + vec[8]
-
-    # R4: A_Q = Qp + Qx + Qs + Qa + Qc
-    R4 = vec[16] == vec[9] + vec[10] + vec[11] + vec[12] + vec[13]
-
-    # R5: U = Qx + Qs + Qa + 4·Qc
-    R5 = U == _U(vec)
-
-    return {
-        "R1": R1,
-        "R2": R2,
-        "R3": R3,
-        "R4": R4,
-        "R5": R5,
-        "rho": rho,
-        "U": U,
-        "all_pass": R1 and R2 and R3 and R4 and R5,
-    }
+    return guard_detail(vec)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -357,7 +340,7 @@ class HCEvaluator:
       - comp_angle uses arctan(A_Q/A_K) per Definition 19.3.1
       - all_dot_variants checks theta equality
       - Duplicate method dispatch removed
-      - Guard detail aligned with R1–R5
+      - Guard detail aligned with R1–R4, T1–T2
       - Index expression support
       - Hash method support
     """
