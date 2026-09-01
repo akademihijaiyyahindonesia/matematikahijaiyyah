@@ -59,6 +59,22 @@ twenty-four, and the cost is 150 MB/s falling to 78.5 at 27 MHz.
 
 The S-box is a 256-entry lookup, which on the Tang Nano is block RAM rather
 than logic, and absorption needs no multiplier and no division.
+
+**The table is a software side channel, and this is the honest statement of
+it.** A 256-entry lookup indexed by data is the exact target of the AES
+cache-timing attacks — Bernstein in 2005, then Osvik, Shamir and Tromer in
+2006 — where the pattern of cache lines touched leaks the index, and the index
+depends on the state. Nothing in this module is constant-time and nothing here
+claims to be.
+
+Two things bound what that costs. This layer is keyless: it is the [EH]
+sponge, and no key enters it — layer 3's HMAC-SHA256 is where a secret is
+touched, and that runs in a vetted constant-time implementation. And the
+intended target is HCPU silicon, where the table is one block RAM with a
+single fixed access latency and there is no cache to observe. A property
+software cannot have and the hardware gets for free is worth naming rather
+than leaving for a reader to find.
+
 """
 
 from __future__ import annotations

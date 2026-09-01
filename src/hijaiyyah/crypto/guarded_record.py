@@ -71,8 +71,9 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, MutableSet, Optional, Sequence, Tuple, Union
 
 from hijaiyyah.core.guards import compute_U, full_guard_check
 from hijaiyyah.core.master_table import MASTER_TABLE
@@ -90,6 +91,40 @@ UNCONSTRAINED = 17
 
 class CryptoRefusal(Exception):
     """Raised for an operation this module will not perform."""
+
+
+def reject_degenerate_key(key: bytes, role: str = "key") -> None:
+    """Refuse a key made of one repeated byte.
+
+    The Debian OpenSSL failure of 2008 shipped keys drawn from a 15-bit space
+    for two years, and nothing in the consuming code noticed, because a weak
+    key looks exactly like a strong one. That is the honest limit here:
+    **entropy cannot be checked after the fact.** Given 32 bytes there is no
+    test that separates a CSPRNG's output from a compromised generator's, and
+    a module claiming otherwise would be selling false assurance.
+
+    Where this runs matters. It guards the boundaries where a key *enters*
+    the system — :func:`seal_record`, :class:`~hijaiyyah.crypto.kabah.Kabah`,
+    the CLI's key loader — and deliberately not :func:`derive_key`, which is a
+    primitive and must be able to reproduce a published vector. RFC 5869's own
+    test case 1 uses input keying material of 0x0b repeated twenty-two times;
+    a primitive that refused it could not be checked against the standard it
+    implements. Putting the refusal inside `derive_key` broke exactly that,
+    and the three tests that failed were right.
+
+    What *is* checkable is the degenerate case — all-zero, all-0xFF, any
+    constant fill — which is what an uninitialised buffer, a truncated read,
+    or a placeholder left in a config file actually produces. A real 32-byte
+    key trips this with probability 256 · 256⁻³² ≈ 2⁻²⁴⁸.
+
+    Raises:
+        CryptoRefusal: If every byte is the same.
+    """
+    if key and len(set(key)) == 1:
+        raise CryptoRefusal(
+            f"{role} is {len(key)} copies of byte {key[0]:#04x}; that is an "
+            "uninitialised buffer or a placeholder, not a key"
+        )
 
 
 # ── Provenance ───────────────────────────────────────────────────
@@ -238,6 +273,55 @@ MAGIC = b"HGR1"
 NONCE_LEN = 16
 
 
+#: Nonces a default window remembers. 4096 × 16 bytes is 64 KiB of state.
+REPLAY_CAPACITY = 4096
+
+
+class ReplayWindow:
+    """Bounded memory of accepted nonces.
+
+    :func:`open_record` originally took a plain ``set``, which never forgets.
+    That is correct and it is also a slow leak: a long-running verifier grows
+    by sixteen bytes for every record it accepts, forever, and the operator
+    finds out when the process is killed months later. Deployed protocols do
+    not do this — IPsec and DTLS both carry a *window*, not a full history —
+    and the reason is the same one.
+
+    Bounding it costs something real, and the cost is named rather than
+    hidden: once ``capacity`` nonces are held, the oldest is forgotten, and a
+    record older than the window becomes replayable again. :attr:`evicted`
+    counts every nonce dropped, so a window sized too small for the traffic
+    is visible as a number instead of as a silent hole.
+
+    A ``set`` still works and still never forgets. This is the default for a
+    server; the set is the right choice when the record count is bounded and
+    the full history matters.
+    """
+
+    def __init__(self, capacity: int = REPLAY_CAPACITY) -> None:
+        if capacity < 1:
+            raise CryptoRefusal(f"capacity {capacity} remembers nothing")
+        self.capacity = capacity
+        self.evicted = 0
+        self._seen: "OrderedDict[bytes, None]" = OrderedDict()
+
+    def __contains__(self, nonce: bytes) -> bool:
+        return nonce in self._seen
+
+    def __len__(self) -> int:
+        return len(self._seen)
+
+    def add(self, nonce: bytes) -> None:
+        self._seen[nonce] = None
+        while len(self._seen) > self.capacity:
+            self._seen.popitem(last=False)
+            self.evicted += 1
+
+
+#: What :func:`open_record` accepts as replay memory.
+ReplayMemory = Union[MutableSet[bytes], ReplayWindow]
+
+
 @dataclass(frozen=True)
 class GuardedRecord:
     """A payload, its canonical encoding, a nonce, and its authentication tag."""
@@ -334,6 +418,7 @@ def seal_record(
     """
     if len(key) < 16:
         raise CryptoRefusal(f"key is {len(key)} bytes; at least 16 are required")
+    reject_degenerate_key(key)
     if nonce is None:
         nonce = secrets.token_bytes(NONCE_LEN)
     elif len(nonce) != NONCE_LEN:
@@ -344,7 +429,7 @@ def seal_record(
 
 
 def open_record(
-    record: GuardedRecord, key: bytes, seen: Optional[set] = None
+    record: GuardedRecord, key: bytes, seen: Optional[ReplayMemory] = None
 ) -> bytes:
     """Verify a record and return its payload.
 
@@ -356,8 +441,9 @@ def open_record(
     Args:
         record: The record to open.
         key: The key it was sealed with.
-        seen: A set of nonces already accepted. Supply one to reject replays —
-            a MAC alone cannot, because a captured record stays valid forever.
+        seen: Nonces already accepted — a :class:`ReplayWindow` or any set.
+            Supply one to reject replays; a MAC alone cannot, because a
+            captured record stays valid forever.
 
     Raises:
         CryptoRefusal: On a foreign seal, broken structure, a failed MAC, or a

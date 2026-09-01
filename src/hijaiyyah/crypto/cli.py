@@ -25,7 +25,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
-from hijaiyyah.crypto.guarded_record import GuardedRecord
+from hijaiyyah.crypto.guarded_record import GuardedRecord, reject_degenerate_key
 from hijaiyyah.crypto.kabah import EXPANSION, NAME, CryptoRefusal, Kabah, generate_key
 
 #: Where the key lives unless --key says otherwise.
@@ -50,6 +50,7 @@ def _load_key(path: Path) -> bytes:
     key = bytes.fromhex(path.read_text(encoding="ascii").strip())
     if len(key) < 16:
         raise CryptoRefusal(f"{path} holds {len(key)} bytes; at least 16 are needed")
+    reject_degenerate_key(key, str(path))
     return key
 
 

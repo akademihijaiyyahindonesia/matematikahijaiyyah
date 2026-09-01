@@ -52,19 +52,23 @@ shape that was already there.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Set
+from typing import Dict, Optional
 
 from hijaiyyah.crypto import cube
 from hijaiyyah.crypto.guarded_record import (
     ALPHABET,
+    REPLAY_CAPACITY,
     CryptoRefusal,
     GuardedRecord,
+    ReplayMemory,
+    ReplayWindow,
     check_structure,
     dataset_seal,
     derive_key,
     encode_bytes,
     generate_key,
     open_record,
+    reject_degenerate_key,
     seal_record,
 )
 
@@ -148,6 +152,10 @@ class Kabah:
         master: Master keying material, at least 16 bytes. Omit to generate one.
         purpose: Domain label. Keys for different purposes never coincide, and
             neither do keys for different sealed releases.
+        replay_capacity: How many recent nonces the window holds. Bounded, so
+            a long-running verifier does not grow without limit; a record
+            older than the window becomes replayable again, and
+            :attr:`ReplayWindow.evicted` counts every nonce that fell out.
         track_replays: Keep accepted nonces so a captured record cannot be
             replayed. A MAC alone cannot detect that.
     """
@@ -157,10 +165,14 @@ class Kabah:
         master: Optional[bytes] = None,
         purpose: str = "default",
         track_replays: bool = True,
+        replay_capacity: int = REPLAY_CAPACITY,
     ) -> None:
         self._master = master if master is not None else generate_key()
+        reject_degenerate_key(self._master, "master key")
         self._key = derive_key(self._master, purpose)
-        self._seen: Optional[Set[bytes]] = set() if track_replays else None
+        self._seen: Optional[ReplayMemory] = (
+            ReplayWindow(replay_capacity) if track_replays else None
+        )
         self.purpose = purpose
 
     # ── Layers 0–3 ───────────────────────────────────────────────
