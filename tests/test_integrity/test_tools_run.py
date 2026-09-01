@@ -108,3 +108,49 @@ def test_codex_calculator_computes_the_reference_identity() -> None:
     assert result.returncode == 0, f"tool failed:\n{result.stderr}"
     assert "Θ̂=10" in result.stdout, result.stdout
     assert "Θ̂=U+ρ: True" in result.stdout, result.stdout
+
+
+def test_integrity_benchmark_measures_the_two_claims_separately() -> None:
+    """
+    §IIIC.3.2.1 states "Validasi O(1) vs CRC O(n)" and never puts a number on
+    it. tools/integrity_benchmark.py does, and keeps the method claim apart
+    from the machine claim — conflating them overstates the case, because only
+    the first grows with n.
+    """
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "integrity_benchmark.py"),
+         "--lengths", "1", "10", "100"],
+        capture_output=True, text=True, check=True,
+    )
+    out = result.stdout
+    assert "METODE" in out and "MESIN" in out
+    assert "diukur" in out, "the HCPU column must be labelled as measured"
+
+    # The method ratio must grow with n; the machine ratio must not.
+    import re
+    method = [float(m) for m in re.findall(r"(\d+)x$", out, re.M)][:3]
+    assert method[0] < method[-1], "the O(1)-vs-O(n) advantage must grow with n"
+
+
+def test_the_rv32i_reference_sequence_is_in_the_repository() -> None:
+    """
+    The RV32I side of the benchmark is a static count, not a measurement, so
+    the sequence it counts has to be readable and disputable.
+    """
+    source = (ROOT / "rtl" / "reference" / "guard_g1_g4_t1_t2.rv32i.s")
+    assert source.exists(), "the counted sequence must be in the repo"
+    text = source.read_text(encoding="utf-8")
+    instructions = [
+        line for line in text.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+        and not line.strip().endswith(":")
+    ]
+    from tools.integrity_benchmark import RV32I_GUARD  # type: ignore[import-not-found]
+
+    assert len(instructions) == RV32I_GUARD, (
+        f"the sequence has {len(instructions)} instructions but the benchmark "
+        f"counts {RV32I_GUARD}"
+    )

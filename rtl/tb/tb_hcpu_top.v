@@ -311,9 +311,16 @@ module tb_hcpu_top;
         // Ba = ROM index 2
         // Expected: pack_word0 = 0x00010120, CRC32 = 0x9A3115CC
         imem[0] = enc(`OP_HLOAD, 4'd0, 4'd0, 4'd0, 12'd2);   // H0 <- Ba
-        imem[1] = enc(`OP_HPACK, 4'd0, 4'd0, 4'd0, 12'd0);   // R0 <- pack_word0(H0)
-        imem[2] = enc(`OP_HCRC,  4'd1, 4'd0, 4'd0, 12'd0);   // R1 <- CRC32(H0)
-        imem[3] = enc(`OP_HALT,  4'd0, 4'd0, 4'd0, 12'd0);
+        // S2 selects the word. Checking only word 0 left the other two
+        // unreachable: pack_word1 and pack_word2 were wired to the top level
+        // and never read, so the processor emitted four bytes of a nine-byte
+        // frame and the test could not tell.
+        imem[1] = enc(`OP_HPACK, 4'd0, 4'd0, 4'd0, 12'd0);   // R0 <- word0
+        imem[2] = enc(`OP_HCRC,  4'd1, 4'd0, 4'd0, 12'd0);   // R1 <- CRC32
+        imem[3] = enc(`OP_HPACK, 4'd2, 4'd0, 4'd1, 12'd0);   // R2 <- word1
+        imem[4] = enc(`OP_HPACK, 4'd3, 4'd0, 4'd2, 12'd0);   // R3 <- word2
+        imem[5] = enc(`OP_HPACK, 4'd4, 4'd0, 4'd5, 12'd0);   // R4 <- 0 (no word 5)
+        imem[6] = enc(`OP_HALT,  4'd0, 4'd0, 4'd0, 12'd0);
 
         rst_n = 0;
         repeat (5) @(posedge clk);
@@ -334,6 +341,20 @@ module tb_hcpu_top;
             pass_count = pass_count + 1;
         end else begin
             $display("FAIL: HPACK pack_word0 mismatch!");
+            fail_count = fail_count + 1;
+        end
+
+        $display("R2 (word1) = 0x%08X  R3 (word2) = 0x%08X  R4 (word5) = 0x%08X",
+                 u_dut.u_regfile.gpr[2], u_dut.u_regfile.gpr[3],
+                 u_dut.u_regfile.gpr[4]);
+
+        if (u_dut.u_regfile.gpr[2] == 32'h11000001 &&
+            u_dut.u_regfile.gpr[3] == 32'h00003F10 &&
+            u_dut.u_regfile.gpr[4] == 32'h00000000) begin
+            $display("PASS: HPACK selects all three words, and only three");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("FAIL: HPACK word select broken");
             fail_count = fail_count + 1;
         end
 

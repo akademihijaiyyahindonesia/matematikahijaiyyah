@@ -495,13 +495,20 @@ class HISAMachine:
         # ── HISAB serialization ─────────────────────────────────
 
         if op == OpCode.HPACK:
-            from ..hisab.serialize import _nibble_pack
+            from ..hisab.serialize import _compute_guard_status, _nibble_pack
 
             # Little-endian, matching hcpu_hisab.v and rtl/tb/gen_golden.py.
+            # S2 selects the word. Only word 0 used to be reachable, so a
+            # nine-byte HISAB frame could never be assembled from the machine.
             packed = _nibble_pack(self.regs.hreg[s1])
-            word0 = int.from_bytes(bytes(packed[0:4]), "little")
-            self.regs.gpr[dst] = word0
-            return f"HPACK R{dst} = 0x{word0:08X}"
+            words = [
+                int.from_bytes(bytes(packed[0:4]), "little"),
+                int.from_bytes(bytes(packed[4:8]), "little"),
+                (_compute_guard_status(self.regs.hreg[s1]) << 8) | packed[8],
+            ]
+            value = words[s2] if s2 <= 2 else 0
+            self.regs.gpr[dst] = value
+            return f"HPACK R{dst} = word{s2} = 0x{value:08X}"
 
         if op == OpCode.HCRC:
             from ..hisab.serialize import serialize_letter

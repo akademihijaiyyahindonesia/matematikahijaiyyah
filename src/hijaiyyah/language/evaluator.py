@@ -632,6 +632,33 @@ class HCEvaluator:
             return _guard_detail(vec)
 
         # ── [C] Algebraic ──
+        # ── HISAB: the interchange format, reachable from the language ──
+        # HPACK and HCRC exist in the ISA and in hcpu_hisab.v, and HC had no
+        # way to produce either: two of the twenty-nine opcodes were
+        # unreachable from the language they belong to. Both forward to
+        # hijaiyyah.hisab rather than restating the packing here — the RTL is
+        # cross-validated against that same module.
+        if method == "pack":
+            from hijaiyyah.hisab.serialize import _compute_guard_status, _nibble_pack
+
+            packed = _nibble_pack(vec)
+            words = [
+                int.from_bytes(packed[0:4], "little"),
+                int.from_bytes(packed[4:8], "little"),
+                (_compute_guard_status(vec) << 8) | packed[8],
+            ]
+            index = int(args[0]) if args else 0
+            if not 0 <= index <= 2:
+                raise EBNFSemanticError(
+                    f"pack({index}): HISAB packs 18 components into words 0–2"
+                )
+            return words[index]
+
+        if method == "crc":
+            from hijaiyyah.hisab.serialize import serialize_letter
+
+            return serialize_letter(vec).digest
+
         if method == "norm2":
             return _norm2_v14(vec)
         if method == "norm":

@@ -22,6 +22,7 @@ HC                           H-ISA
 ``h.guard()``                ``HGRD Hs`` — elided when Ψ proved it
 ``h.theta()``, ``h.Qc()``…   ``CGET Rd, Hs, #i``
 ``h.U()``, ``h.rho()``       ``CGET`` + integer arithmetic
+``h.pack(i)``, ``h.crc()``   ``HPACK Rd, Hs, i`` / ``HCRC Rd, Hs``
 ``h.norm2()``                ``HNRM2 Rd, Hs``
 ``a.dist2(b)``               ``HDIST Rd, Ha, Hb``
 ``load_id(n)``               ``HLOAD Hn, #n``
@@ -36,12 +37,6 @@ one component out of a codex — have no encoding in the frozen H-ISA. The 28
 opcodes of §IIIM.3.1 contain no AND, no shift, no DIV and no MOD, and no
 opcode that projects a component. ``HPACK`` packs the 18 components into three
 GPR words as nibbles, but nothing can mask a nibble back out.
-
-``HPACK`` and ``HCRC`` have the opposite problem: they exist in the ISA and in
-``hcpu_hisab.v``, but HC has no surface that produces them — there is no
-``.pack()`` or ``.crc()`` method in the evaluator. Two of the twenty-eight
-opcodes are unreachable from the language, and giving them one is a language
-decision that belongs with the evaluator, not here.
 
 That gap reaches the book: the example program in §IIIF.3.1.2 uses
 ``PROJ THETA word``, so it cannot be assembled against the instruction table
@@ -378,6 +373,23 @@ class CodeGenerator:
             _, budget = self._budget(register)
             out = self._alloc_scalar()
             self._emit(f"SUB     R{out}, R{theta}, R{budget}")
+            return SCALAR, out
+
+        if node.method == "pack":
+            # HISAB word select lives in the S2 field as a literal 0–2, so a
+            # bare number is written rather than a register name.
+            if len(node.args) != 1 or not isinstance(node.args[0], Literal):
+                raise CodegenError("pack() takes a literal word index 0–2")
+            index = node.args[0].value
+            if not isinstance(index, int) or not 0 <= index <= 2:
+                raise CodegenError(f"pack({index}): HISAB has words 0–2")
+            out = self._alloc_scalar()
+            self._emit(f"HPACK   R{out}, H{register}, {index}")
+            return SCALAR, out
+
+        if node.method == "crc":
+            out = self._alloc_scalar()
+            self._emit(f"HCRC    R{out}, H{register}")
             return SCALAR, out
 
         if node.method == "norm2":

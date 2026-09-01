@@ -161,7 +161,16 @@ module hcpu_execute #(
             `OP_HNRM2: codex_gpr  = calu_result_scl;
             `OP_HDIST: codex_gpr  = calu_result_scl;
             `OP_CGET: codex_gpr  = calu_result_scl;
-            `OP_HPACK: codex_gpr  = hisab_pack0;  // HISAB: first 4 packed bytes
+            // HISAB word select. §IIIM.3.1 gives HPACK as
+            // GPR[DST] <- nibble_pack(H[S1])[S2], words 0-2. Only word 0 was
+            // ever selected: pack_word1 and pack_word2 were wired up to the
+            // top level and never read, so the processor could emit the first
+            // four bytes of a nine-byte frame and no more. A word past 2
+            // names nothing and yields zero, as CGET does.
+            `OP_HPACK: codex_gpr  = (id_s2 == 4'd0) ? hisab_pack0 :
+                                    (id_s2 == 4'd1) ? hisab_pack1 :
+                                    (id_s2 == 4'd2) ? hisab_pack2 :
+                                                      {`XLEN{1'b0}};
             `OP_HCRC:  codex_gpr  = hisab_crc;    // HISAB: CRC32 digest
             default: ;
         endcase
