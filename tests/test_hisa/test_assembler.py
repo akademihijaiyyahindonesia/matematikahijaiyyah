@@ -28,6 +28,7 @@ from typing import List
 
 import pytest
 
+from hijaiyyah.core.master_table import MASTER_TABLE
 from hijaiyyah.hisa.assembler import (
     MAX_GPR,
     MAX_HREG,
@@ -248,3 +249,45 @@ def test_blank_and_comment_lines_produce_nothing() -> None:
     assert assemble_line("") is None
     assert assemble_line("   ; hanya komentar") is None
     assert assemble_line("label_only:") is None
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CGET, and the index bound both machines must agree on
+# ══════════════════════════════════════════════════════════════════
+
+def test_cget_encodes_the_component_index_in_the_immediate() -> None:
+    assert assemble_line("CGET R1, H0, #13") == encode(0x44, 1, 0, 0, 13)
+
+
+@pytest.mark.parametrize("index", [18, 31, 32, 99, 4095])
+def test_an_index_past_seventeen_reads_nothing_on_either_machine(index: int) -> None:
+    """
+    A codex has eighteen components, so 18 and up name none of them and must
+    yield zero. The bound has to be checked against the whole 12-bit
+    immediate, not its low five bits: the RTL first truncated, so IMM=99
+    arrived as 3 and returned Ba's Nd = 1 while the Python machine — checking
+    the full immediate — returned 0. The two disagreed for every out-of-range
+    index whose low five bits named a non-zero component, and Ba is exactly
+    such a letter.
+    """
+    from hijaiyyah.hisa.machine import HISAMachine
+
+    words = assemble(f"HLOAD H0, #2\nCGET R1, H0, #{index}\nHALT\n")
+    machine = HISAMachine(MASTER_TABLE)
+    machine.load_program(words)
+    machine.run()
+    assert machine.dump_state()["gpr"][1] == 0, (
+        f"index {index} (low five bits {index & 0x1F}) must read nothing"
+    )
+
+
+def test_the_probe_would_notice_truncation() -> None:
+    """
+    Ba's component 3 is Nd = 1, so a machine that truncated 99 to 3 would
+    return 1 and the test above would fail. Without this the probe could pass
+    on a letter whose component 3 happens to be zero — which is how the first
+    version of the RTL check stayed green while the bound was broken.
+    """
+    entry = MASTER_TABLE.get_by_char("ب")
+    assert entry is not None
+    assert entry.vector[99 & 0x1F] != 0

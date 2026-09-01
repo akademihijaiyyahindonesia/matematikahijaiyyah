@@ -159,7 +159,7 @@ def test_compiler_does_not_report_success_over_an_empty_result() -> None:
     sources = [
         "let h = 1; println(h);",
         "",                              # compiles to a lone HALT
-        "let h = '\u0628';\nprintln(h.theta());\n",   # refused: no opcode
+        "let h = '\u0628';\nprintln(h.array());\n",   # refused: no place for a vector
         "let d = '\u0628' - '\u0633';\n",              # refused: not a monoid op
     ]
     for source in sources:
@@ -177,9 +177,9 @@ def test_codegen_refuses_rather_than_approximating() -> None:
     """
     from hijaiyyah.compiler import HCCompiler
 
-    result = HCCompiler().compile_source("let h = '\u0628';\nprintln(h.theta());\n")
+    result = HCCompiler().compile_source("let h = '\u0628';\nprintln(h.array());\n")
     assert result.success is False
-    assert any("no opcode" in e for e in result.errors), result.errors
+    assert any("32-bit integer" in e for e in result.errors), result.errors
 
 
 def test_available_stages_matches_what_the_compiler_can_do() -> None:

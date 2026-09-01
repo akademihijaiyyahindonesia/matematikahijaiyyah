@@ -97,6 +97,7 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "PUSH":     ("s1",),
     "POP":      ("dst",),
     "HLOAD":    ("dst", "immreg"),
+    "CGET":     ("dst", "s1", "imm"),
     "HCADD":    ("dst", "s1", "s2"),
     "HNRM2":    ("dst", "s1"),
     "HDIST":    ("dst", "s1", "s2"),

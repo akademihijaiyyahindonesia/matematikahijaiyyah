@@ -254,6 +254,22 @@ BOOK_OPCODES: Dict[str, int] = {
 }
 
 
+#: Opcodes added after the book was sealed. Each needs a reason rooted in
+#: the book, so an extension cannot quietly become "what the book says".
+EXTENSIONS: Dict[str, int] = {
+    # §IIIH.3.1.1 lists HCADD, HPROJ, HDCMP and HEXMT as the Hybit Engine's
+    # operations; §IIIM.3.1 encodes only HCADD. Without a component read,
+    # nothing can get Θ̂, N, K or Q out of an H-Reg — there is no AND, no
+    # shift and no DIV in the table, and HPACK cannot be unpacked. The book's
+    # own example program in §IIIF.3.1.2 uses PROJ THETA and could not be
+    # assembled against its own instruction table.
+    #
+    # The name and slot are not invented: HISA_SPEC.md already assigned 0x44
+    # to CGET with exactly this semantics and never implemented it.
+    "CGET": 0x44,
+}
+
+
 def _rtl_opcodes() -> Dict[str, int]:
     text = PKG_VH.read_text(encoding="utf-8")
     return {
@@ -272,17 +288,39 @@ def test_the_rtl_encoding_is_the_book_encoding() -> None:
     because it is what §IIIM.3.1 prints, not merely because it was one of the
     three.
     """
-    assert _rtl_opcodes() == BOOK_OPCODES
+    assert _rtl_opcodes() == {**BOOK_OPCODES, **EXTENSIONS}
 
 
 def test_the_python_encoding_is_the_book_encoding() -> None:
     got = {op.name: int(op.value) for op in RTL_IMPLEMENTED}
-    assert got == BOOK_OPCODES
+    assert got == {**BOOK_OPCODES, **EXTENSIONS}
 
 
 def test_the_book_lists_twenty_eight_opcodes() -> None:
     assert len(BOOK_OPCODES) == 28
     assert len(set(BOOK_OPCODES.values())) == 28, "two mnemonics share a hex"
+
+
+def test_no_extension_collides_with_the_book() -> None:
+    """
+    An extension may add an opcode; it may never redefine one the book prints.
+    """
+    assert not set(EXTENSIONS) & set(BOOK_OPCODES), "an extension shadows a book mnemonic"
+    assert not set(EXTENSIONS.values()) & set(BOOK_OPCODES.values()), (
+        "an extension reuses a hex the book already assigned"
+    )
+
+
+def test_every_extension_is_explained() -> None:
+    """
+    The transcription only stays trustworthy while additions are marked as
+    additions. Each one must carry a comment citing why the book needs it.
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+    block = source.split("EXTENSIONS: Dict[str, int] = {", 1)[1].split("}", 1)[0]
+    for name in EXTENSIONS:
+        assert f'"{name}"' in block
+    assert "§IIIH.3.1.1" in block, "extensions must cite the book"
 
 
 # ══════════════════════════════════════════════════════════════════

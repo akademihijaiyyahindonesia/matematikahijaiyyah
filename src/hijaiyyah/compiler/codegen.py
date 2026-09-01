@@ -20,6 +20,8 @@ HC                           H-ISA
 ``let h = 'ب'``              ``HLOAD Hn, #2``
 ``a + b`` (hybits)           ``HCADD Hd, Ha, Hb``
 ``h.guard()``                ``HGRD Hs`` — elided when Ψ proved it
+``h.theta()``, ``h.Qc()``…   ``CGET Rd, Hs, #i``
+``h.U()``, ``h.rho()``       ``CGET`` + integer arithmetic
 ``h.norm2()``                ``HNRM2 Rd, Hs``
 ``a.dist2(b)``               ``HDIST Rd, Ha, Hb``
 ``load_id(n)``               ``HLOAD Hn, #n``
@@ -65,6 +67,7 @@ from hijaiyyah.language.ast_nodes import (
     Program,
     VarRef,
 )
+from hijaiyyah.language.evaluator import _SLOT_MAP
 
 from .psi import PsiReport
 
@@ -72,10 +75,15 @@ from .psi import PsiReport
 GPR_FIRST, GPR_LAST = 1, 17
 HREG_FIRST, HREG_LAST = 0, 15
 
-#: Component accessors that would need an opcode H-ISA does not have.
-_PROJECTION_METHODS = frozenset(
-    {"theta", "U", "rho", "total", "array", "norm", "cosine", "dot", "guard_detail"}
-    | {"Na", "Nb", "Nd", "Kp", "Kx", "Ks", "Ka", "Kc", "Qp", "Qx", "Qs", "Qa", "Qc"}
+#: Component accessors, compiled with CGET. The map is the evaluator's, so
+#: the two ends cannot disagree about which name is which index.
+_COMPONENT_METHODS = dict(_SLOT_MAP)
+
+#: Still without an encoding: these return a vector, a matrix or a float, and
+#: a GPR holds a 32-bit integer.
+_UNENCODABLE_METHODS = frozenset(
+    {"total", "array", "norm", "cosine", "dot", "guard_detail", "exomatrix",
+     "phi", "hash", "alpha", "r_rho", "r_loop", "proj_theta"}
 )
 
 HYBIT, SCALAR = "hybit", "scalar"
@@ -315,17 +323,33 @@ class CodeGenerator:
         return SCALAR, register
 
     def _method(self, node: MethodCall) -> Tuple[str, int]:
-        if node.method in _PROJECTION_METHODS:
+        if node.method in _UNENCODABLE_METHODS:
             raise CodegenError(
-                f".{node.method}() reads a component out of a codex, and H-ISA "
-                "has no opcode for that: the 28 in §IIIM.3.1 contain no AND, "
-                "no shift and no DIV, and HPACK cannot be unpacked. Closing "
-                "this needs a projection opcode, which is an ISA decision."
+                f".{node.method}() returns a vector, a matrix or a float; a GPR "
+                "holds a 32-bit integer, so there is nowhere for the result to go"
             )
 
         kind, register = self._expression(node.obj)
         if kind is not HYBIT:
             raise CodegenError(f".{node.method}() applies to a hybit")
+
+        if node.method in _COMPONENT_METHODS:
+            index = _COMPONENT_METHODS[node.method]
+            out = self._alloc_scalar()
+            self._emit(f"CGET    R{out}, H{register}, #{index}   ; {node.method}")
+            return SCALAR, out
+
+        if node.method == "U":
+            return self._budget(register)
+
+        if node.method == "rho":
+            # ρ = Θ̂ − U, the decomposition identity of §IC.1.24.
+            theta = self._alloc_scalar()
+            self._emit(f"CGET    R{theta}, H{register}, #0   ; theta")
+            _, budget = self._budget(register)
+            out = self._alloc_scalar()
+            self._emit(f"SUB     R{out}, R{theta}, R{budget}")
+            return SCALAR, out
 
         if node.method == "norm2":
             out = self._alloc_scalar()
@@ -343,6 +367,31 @@ class CodeGenerator:
             return SCALAR, out
 
         raise CodegenError(f".{node.method}() has no H-ISA encoding")
+
+    def _budget(self, register: int) -> Tuple[str, int]:
+        """U = Qx + Qs + Qa + 4·Qc, built out of CGET and integer arithmetic.
+
+        The linearity that makes the monoid close (Lemma IIIA.3.2.2) is also
+        what makes this four reads and three adds rather than a special
+        opcode.
+        """
+        parts = []
+        for name, index in (("Qx", 10), ("Qs", 11), ("Qa", 12), ("Qc", 13)):
+            slot = self._alloc_scalar()
+            self._emit(f"CGET    R{slot}, H{register}, #{index}   ; {name}")
+            parts.append(slot)
+
+        four = self._alloc_scalar()
+        self._emit(f"MOVI    R{four}, #4")
+        scaled = self._alloc_scalar()
+        self._emit(f"MUL     R{scaled}, R{parts[3]}, R{four}   ; 4*Qc")
+
+        total = parts[0]
+        for nxt in (parts[1], parts[2], scaled):
+            acc = self._alloc_scalar()
+            self._emit(f"ADD     R{acc}, R{total}, R{nxt}")
+            total = acc
+        return SCALAR, total
 
 
 def generate(ast: Any, psi: Optional[PsiReport] = None) -> Emitted:

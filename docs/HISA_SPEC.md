@@ -466,6 +466,20 @@ memicu `HALT_ERR` (0xFF).
 
 #### Codex Operations (0x40–0x5F)
 
+> **`CGET` (0x44) adalah perluasan pasca-buku.** Bab III §IIIM.3.1 membekukan
+> 28 opcode dan tidak memuatnya, tetapi §IIIH.3.1.1 menyebut Hybit Engine
+> mengimplementasikan HCADD, HPROJ, HDCMP, dan HEXMT — dan hanya HCADD yang
+> punya encoding. Tanpa pembacaan komponen, tidak ada yang bisa mengambil Θ̂,
+> N, K, atau Q dari H-Reg: tabel itu tidak punya AND, geser, maupun DIV, dan
+> HPACK tidak bisa dibongkar. Akibatnya contoh program buku sendiri di
+> §IIIF.3.1.2, yang memakai `PROJ THETA`, tidak dapat dirakit terhadap tabel
+> instruksinya sendiri. `CGET` menutup ketidakkonsistenan itu.
+>
+> Nama dan slotnya tidak dikarang: spesifikasi ini sudah mencantumkan `CGET`
+> di 0x44 dengan semantik persis itu dan tidak pernah mengimplementasikannya.
+> Bukan `HPROJ` — 0x80 memakai nama itu untuk proyeksi *lapisan*, yang
+> menghasilkan sub-vektor dan tidak muat di GPR 32-bit.
+
 | Opcode | Mnemonic | Format | Deskripsi |
 |---|---|---|---|
 | 0x40 | `HLOAD` | C | Load codex dari ROM ke H-Reg: `H[DST] ← ROM[IMM]` |
@@ -474,7 +488,7 @@ memicu `HALT_ERR` (0xFF).
 | 0x42 | `HCADD` | C | `H[DST] ← H[S1] + H[S2]` (vektor 18D) |
 | 0x42 | `CADD` | C | Alias dari `HCADD` (ejaan spesifikasi lama) |
 | 0x43 | `CSUB` | C | `H[DST] ← H[S1] - H[S2]` (delta 14D) |
-| 0x44 | `CGET` | C | `GPR[DST] ← H[S1][IMM]` (ambil komponen) |
+| 0x44 | `CGET` | C | ✅ `GPR[DST] ← H[S1][IMM]` (ambil komponen, IMM 0–17; di luar itu 0) |
 | 0x45 | `CSET` | C | `H[DST][IMM] ← GPR[S1]` (set komponen) |
 | 0x46 | `CMOV` | C | `H[DST] ← H[S1]` (copy codex) |
 | 0x47 | `CZERO` | C | `H[DST] ← 0` (zero codex) |

@@ -192,7 +192,7 @@ class HISAMachine:
             self.regs.sr.guard_pass = ok
             return f"HGRD H{s1} → {'PASS ✓' if ok else 'FAIL ✗'}"
 
-        # ── HPROJ: projection to layer ──────────────────────────
+        # ── HPROJ: projection to layer (software only, 0x80) ────
         if op == OpCode.HPROJ:
             h = self.regs.hreg[s1]
             layer = imm & 0x3
@@ -235,6 +235,19 @@ class HISAMachine:
             n2 = sum(x * x for x in h[:14])
             self.regs.gpr[dst] = n2
             return f"HNRM2 GPR[{dst}] = ‖H{s1}‖² = {n2}"
+
+        # ── CGET: read one codex component ─────────────────────
+        # The projection Bab III §IIIH.3.1.1 names for the Hybit Engine and
+        # §IIIM.3.1 never encoded. Without it nothing can read Θ̂, N, K or Q
+        # out of an H-Reg: H-ISA has no AND, no shift and no DIV, and HPACK
+        # cannot be unpacked.
+        if op == OpCode.CGET:
+            if imm > 17:
+                self.regs.gpr[dst] = 0
+                return f"CGET GPR[{dst}] = 0 (index {imm} names no component)"
+            value = self.regs.hreg[s1][imm]
+            self.regs.gpr[dst] = value
+            return f"CGET GPR[{dst}] = H{s1}[{imm}] = {value}"
 
         # ── HDIST: squared Euclidean distance ───────────────────
         if op == OpCode.HDIST:

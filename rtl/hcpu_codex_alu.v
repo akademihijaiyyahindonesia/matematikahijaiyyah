@@ -8,6 +8,7 @@
 //   HCADD: H[dst] ← H[s1] + H[s2]   (18 × 8-bit parallel adds)
 //   HNRM2: GPR[dst] ← ‖H[s1]‖²₁₄   (sum of squares, 14 components)
 //   HDIST: GPR[dst] ← ‖H[s1]−H[s2]‖²₁₄  (sq. Euclidean distance)
+//   CGET: GPR[dst] ← H[s1][index]      (one codex component)
 //
 // Values in the master table are small (max Θ̂=8), so:
 //   - Each square fits in 7 bits (max 64)
@@ -20,7 +21,8 @@
 
 module hcpu_codex_alu (
     // Inputs
-    input  wire [2:0]              op,         // 0=HCADD, 1=HNRM2, 2=HDIST
+    input  wire [2:0]              op,         // 0=HCADD 1=HNRM2 2=HDIST 3=CGET
+    input  wire [11:0]             index,      // CGET: component 0–17
     input  wire [`HREG_W-1:0]     src1,       // H-Reg source 1 (144-bit)
     input  wire [`HREG_W-1:0]     src2,       // H-Reg source 2 (144-bit)
     // Outputs
@@ -32,6 +34,7 @@ module hcpu_codex_alu (
     localparam ALU_HCADD = 3'd0;
     localparam ALU_HNRM2 = 3'd1;
     localparam ALU_HDIST = 3'd2;
+    localparam ALU_CGET = 3'd3;
 
     assign done = 1'b1;  // All ops are single-cycle
 
@@ -104,6 +107,16 @@ module hcpu_codex_alu (
             ALU_HCADD: result_vec = packed_add;
             ALU_HNRM2: result_scl = {16'd0, norm2_sum};
             ALU_HDIST: result_scl = {16'd0, dist2_sum};
+            // CGET reads one component out of the codex. An index past
+            // 17 has no component to name, so it yields zero rather than
+            // whatever the wider bus happens to carry.
+            // The whole 12-bit immediate is compared, not its low five
+            // bits. Truncating first made IMM=99 arrive as 3 and return Ba's
+            // Nd, where the Python machine checked the full immediate and
+            // returned 0 — the two disagreed for every out-of-range index
+            // whose low five bits named a non-zero component.
+            ALU_CGET: result_scl = (index <= 12'd17)
+                                  ? {24'd0, s1[index[4:0]]} : {`XLEN{1'b0}};
             default: begin
                 result_vec = {`HREG_W{1'b0}};
                 result_scl = {`XLEN{1'b0}};

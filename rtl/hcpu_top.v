@@ -126,6 +126,7 @@ module hcpu_top #(
 
     // Codex ALU
     wire [2:0]  calu_op;
+    wire [11:0] calu_index;
     wire [`HREG_W-1:0] calu_src1, calu_src2;
     wire [`HREG_W-1:0] calu_result_vec;
     wire [`XLEN-1:0]   calu_result_scl;
@@ -361,6 +362,7 @@ module hcpu_top #(
         .guard_vec      (guard_vec),
         .guard_pass     (guard_pass),
         .calu_op        (calu_op),
+        .calu_index     (calu_index),
         .calu_src1      (calu_src1),
         .calu_src2      (calu_src2),
         .calu_result_vec(calu_result_vec),
@@ -506,6 +508,7 @@ module hcpu_top #(
     // ── Codex ALU ───────────────────────────────────────────────
     hcpu_codex_alu u_codex_alu (
         .op         (calu_op),
+        .index      (calu_index),
         .src1       (calu_src1),
         .src2       (calu_src2),
         .result_vec (calu_result_vec),

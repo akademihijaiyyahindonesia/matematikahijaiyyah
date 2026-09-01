@@ -152,16 +152,32 @@ def assemble_text(emitted: Emitted) -> str:
 #  Everything the generator refuses
 # ══════════════════════════════════════════════════════════════════
 
-def test_component_projection_is_refused_with_the_reason() -> None:
+def test_component_reads_compile_to_cget() -> None:
     """
-    .theta() and its siblings read one component out of a codex. The 28
-    opcodes of §IIIM.3.1 have no AND, no shift, no DIV, and no projection, and
-    HPACK cannot be unpacked — so this is an ISA gap, not a compiler gap. The
-    book's own example program in §IIIF.3.1.2 uses PROJ THETA and runs into
-    the same wall.
+    These were uncompilable until CGET existed: H-ISA had no AND, no shift,
+    no DIV and no projection, and HPACK could not be unpacked. The book's own
+    example in §IIIF.3.1.2 uses PROJ THETA and hit the same wall.
     """
-    for method in ("theta", "U", "rho", "Na", "Qc"):
-        with pytest.raises(CodegenError, match="no opcode"):
+    for method, index in (("theta", 0), ("Na", 1), ("Qc", 13), ("AQ", 16)):
+        words = assemble(compile_hc(f"let h = 'ب';\nprintln(h.{method}());\n").text)
+        projection = next(w for w in words if w >> 24 == 0x44)
+        assert projection & 0xFFF == index
+
+
+def test_derived_quantities_compile_to_arithmetic() -> None:
+    """
+    U = Qx + Qs + Qa + 4·Qc is four reads and three adds. The linearity that
+    makes ℋ close (Lemma IIIA.3.2.2) is what keeps it that simple.
+    """
+    words = assemble(compile_hc("let h = 'هـ';\nprintln(h.U());\n").text)
+    assert sum(1 for w in words if w >> 24 == 0x44) == 4, "one CGET per Q component"
+    assert any(w >> 24 == 0x14 for w in words), "MUL for the 4·Qc term"
+
+
+def test_a_result_with_nowhere_to_go_is_still_refused() -> None:
+    """A vector, a matrix or a float cannot land in a 32-bit GPR."""
+    for method in ("array", "norm", "exomatrix"):
+        with pytest.raises(CodegenError, match="32-bit integer"):
             compile_hc(f"let h = 'ب';\nprintln(h.{method}());\n")
 
 

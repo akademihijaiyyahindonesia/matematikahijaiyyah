@@ -197,7 +197,7 @@ Jadi perbaikannya bekerja; laporan gerbang generik hanya tidak bisa melihatnya. 
 
 **Properti yang tetap terverifikasi** [CC]:
 - HCPU adalah desain _Single Clock Domain_, menihilkan masalah _Cross-Domain Clocking (CDC)_.
-- Lima _testbench_ Icarus Verilog (`rtl/tb/`) melaporkan **205 assertion PASS, 0 FAIL**: ROM 30, Guard 34, Codex ALU 6, HISAB 124, integrasi _top-level_ 11 — mencakup penyapuan penuh 28 huruf terhadap ROM dan guard, serta round-trip LIFO stack.
+- Lima _testbench_ Icarus Verilog (`rtl/tb/`) melaporkan **206 assertion PASS, 0 FAIL**: ROM 30, Guard 34, Codex ALU 6, HISAB 124, integrasi _top-level_ 12 — mencakup penyapuan penuh 28 huruf terhadap ROM dan guard, round-trip LIFO stack, serta pembacaan komponen `CGET`.
 - Jalur topologis terpanjang: 86 tingkat logika, melalui operasi bagi dan modulo-10 pada FSM PRINT (`hcpu_top.v:193-194`) — jalur yang sama dengan run sebelumnya. Ini persoalan _timing_, bukan luas. Pengganti shift-add buatan tangan sudah dicoba dan terukur lebih buruk pada kedua metrik, karena Yosys sudah menurunkan pembagian oleh konstanta menjadi rangkaian yang lebih baik.
 
 ### 10.2 Realisasi Fotonik (Studi Kelayakan)

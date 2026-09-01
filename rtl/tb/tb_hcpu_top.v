@@ -396,6 +396,56 @@ module tb_hcpu_top;
         end
 
         // ═══════════════════════════════════════════════════════
+        //  Program 9: CGET — read one codex component
+        // ═══════════════════════════════════════════════════════
+        //  Until CGET existed nothing could get Theta, N, K or Q out of an
+        //  H-Reg: the frozen table has no AND, no shift and no DIV, and HPACK
+        //  cannot be unpacked. Haa is the sharpest probe — Theta=8 and Qc=2
+        //  are the largest values in the sealed table, and an index past 17
+        //  names no component at all.
+        for (i = 0; i < `CODE_DEPTH; i = i + 1)
+            imem[i] = {`OP_NOP, 24'h000000};
+
+        imem[0] = enc(`OP_HLOAD, 4'd0, 4'd0, 4'd0, 12'd27);  // H0 <- Haa
+        imem[1] = enc(`OP_CGET,  4'd1, 4'd0, 4'd0, 12'd0);   // R1 <- Theta = 8
+        imem[2] = enc(`OP_CGET,  4'd2, 4'd0, 4'd0, 12'd13);  // R2 <- Qc    = 2
+        imem[3] = enc(`OP_CGET,  4'd3, 4'd0, 4'd0, 12'd16);  // R3 <- A_Q   = 2
+        // The out-of-range probe loads Ba, not Haa, and asks for index 99.
+        // calu_index is five bits, so 99 truncates to 3 — and Ba's component
+        // 3 is Nd = 1, not 0. Probing Haa here proved nothing: its component
+        // 3 is zero, so removing the bound left the answer unchanged and the
+        // test green.
+        imem[4] = enc(`OP_HLOAD, 4'd1, 4'd0, 4'd0, 12'd2);   // H1 <- Ba
+        imem[5] = enc(`OP_CGET,  4'd4, 4'd1, 4'd0, 12'd99);  // R4 <- 0, not Nd
+        imem[6] = enc(`OP_HALT,  4'd0, 4'd0, 4'd0, 12'd0);
+
+        rst_n = 0;
+        repeat (5) @(posedge clk);
+        rst_n = 1;
+
+        cycle_count = 0;
+        while (!halted && cycle_count < 50) begin
+            @(posedge clk);
+            cycle_count = cycle_count + 1;
+        end
+
+        $display("\nProgram 9 (CGET) halted after %0d cycles", cycle_count);
+        $display("R1=%0d R2=%0d R3=%0d R4=%0d (expected 8, 2, 2, 0)",
+                 u_dut.u_regfile.gpr[1], u_dut.u_regfile.gpr[2],
+                 u_dut.u_regfile.gpr[3], u_dut.u_regfile.gpr[4]);
+
+        if (u_dut.u_regfile.gpr[1] == 32'd8 &&
+            u_dut.u_regfile.gpr[2] == 32'd2 &&
+            u_dut.u_regfile.gpr[3] == 32'd2 &&
+            u_dut.u_regfile.gpr[4] == 32'd0) begin
+            $display("PASS: CGET read Haa component for component");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("FAIL: CGET returned the wrong components");
+            fail_count = fail_count + 1;
+        end
+
+        // ═══════════════════════════════════════════════════════
         $display("\n=============================");
         $display("Total: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("=============================");

@@ -87,6 +87,11 @@ class OpCode(IntEnum):
 
     # ── Codex operations (0x40–0x5F) ─────────────────────────────
     HLOAD = 0x40    # Load hybit from the sealed ROM by letter index
+    # Component read. HISA_SPEC.md already assigned 0x44 to CGET with
+    # exactly this semantics and never implemented it; this fills that
+    # slot rather than inventing a new one. Not HPROJ — 0x80 carries that
+    # name for layer projection, which yields a sub-vector.
+    CGET = 0x44     # GPR[dst] ← H[s1][imm], component 0–17
     HCADD = 0x42    # Codex addition: dst ← src1 + src2
     CSUB = 0x43     # Component-wise subtract     (software only)
     VMOV = 0x46     # Copy H-register             (software only)
@@ -167,7 +172,7 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.CMP, OpCode.CMPI, OpCode.JMP, OpCode.JEQ, OpCode.JNE,
     OpCode.JGD, OpCode.JNGD,
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,
-    OpCode.HLOAD, OpCode.HCADD,
+    OpCode.HLOAD, OpCode.CGET, OpCode.HCADD,
     OpCode.HPACK, OpCode.HCRC,
     OpCode.HGRD,
     OpCode.PRINT,

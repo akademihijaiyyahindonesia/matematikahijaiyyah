@@ -49,6 +49,7 @@ module hcpu_execute #(
 
     // ── Codex ALU interface ─────────────────────────────────────
     output wire [2:0]              calu_op,
+    output wire [11:0]             calu_index,
     output wire [`HREG_W-1:0]      calu_src1,
     output wire [`HREG_W-1:0]      calu_src2,
     input  wire [`HREG_W-1:0]      calu_result_vec,
@@ -140,7 +141,10 @@ module hcpu_execute #(
     // Codex ALU operation select
     assign calu_op   = (id_opcode == `OP_HCADD) ? 3'd0 :
                        (id_opcode == `OP_HNRM2) ? 3'd1 :
-                       (id_opcode == `OP_HDIST) ? 3'd2 : 3'd0;
+                       (id_opcode == `OP_HDIST) ? 3'd2 :
+                       (id_opcode == `OP_CGET) ? 3'd3 : 3'd0;
+    // CGET names its component in the immediate.
+    assign calu_index = id_imm;
     assign calu_src1 = id_hreg_s1;
     assign calu_src2 = id_hreg_s2;
 
@@ -156,6 +160,7 @@ module hcpu_execute #(
             `OP_HCADD: codex_hvec = calu_result_vec;
             `OP_HNRM2: codex_gpr  = calu_result_scl;
             `OP_HDIST: codex_gpr  = calu_result_scl;
+            `OP_CGET: codex_gpr  = calu_result_scl;
             `OP_HPACK: codex_gpr  = hisab_pack0;  // HISAB: first 4 packed bytes
             `OP_HCRC:  codex_gpr  = hisab_crc;    // HISAB: CRC32 digest
             default: ;
@@ -258,6 +263,7 @@ module hcpu_execute #(
 
             // GPR result selection
             if (id_is_codex && (id_opcode == `OP_HNRM2 || id_opcode == `OP_HDIST ||
+                                id_opcode == `OP_CGET ||
                                 id_opcode == `OP_HPACK || id_opcode == `OP_HCRC))
                 ex_gpr_result <= codex_gpr;
             else if (id_is_pop)

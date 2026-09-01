@@ -57,6 +57,11 @@ PROGRAMS = {
     "distance": "let a = 'ب';\nlet b = 'ت';\nprintln(a.dist2(b));\n",
     "scalar": "let x = 6;\nlet y = 7;\nprintln(x * y);\n",
     "dynamic_load": "let h = load_id(27);\nh.guard();\nprintln(h.norm2());\n",
+    # CGET, and the derived quantities built on it.
+    "theta": "let h = 'هـ';\nprintln(h.theta());\n",
+    "budget_u": "let h = 'و';\nprintln(h.U());\n",
+    "residue_rho": "let h = 'س';\nprintln(h.rho());\n",
+    "dots": "let h = 'ث';\nprintln(h.Na());\n",
 }
 
 

@@ -83,6 +83,7 @@ module hcpu_decode (
         case (opcode)
             `OP_MOV, `OP_ADD, `OP_SUB, `OP_MUL, `OP_CMP, `OP_ADDI, `OP_CMPI,
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
+            `OP_CGET,
             `OP_HPACK, `OP_HCRC,
             `OP_PRINT, `OP_PUSH: id_uses_s1 = 1'b1;
             default: ;
@@ -239,6 +240,7 @@ module hcpu_decode (
                 `OP_HCADD:  begin id_is_codex <= 1'b1; id_hreg_we <= 1'b1; end
                 `OP_HGRD:   begin id_is_codex <= 1'b1; end  // Sets GUARD flag only
                 `OP_HNRM2:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_CGET:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
 
                 `OP_HPACK:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB nibble-pack
