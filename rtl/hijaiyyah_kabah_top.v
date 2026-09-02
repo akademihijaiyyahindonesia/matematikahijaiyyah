@@ -46,8 +46,16 @@
 // is still unmeasured:
 //
 //     SLICE_BYTES    LUT4          FF     clocks per permutation
-//               8   6,231 (72%)   1,928        786
-//              25   7,426 (85%)   1,926        310
+//               8   6,910 (80%)   2,009        786
+//              25   8,096 (94%)   2,007        310
+//
+// Those were 6,231 (72%) and 7,426 (85%) when this header was first written,
+// and they went stale in the very next commit: making the gate actually gate
+// -- gate_mode, break_at, break_count, the bits_ready backpressure -- cost
+// ~670 LUT4 and was never re-synthesised. At SLICE=25 the margin fell from
+// 15% of the board to 6%, or 544 LUT4 spare. Re-measured with yosys 0.68,
+// `synth -flatten` then `abc -lut 4`. A synthesis number that is not re-run
+// after the module changes is a claim about a design that no longer exists.
 //
 // Both fit. At SLICE=25 and the board's own 27 MHz crystal -- no overclocking
 // -- the sponge turns 87,097 permutations per second, which is 11.15 MB/s at
