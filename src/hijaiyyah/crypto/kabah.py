@@ -330,6 +330,54 @@ class Kabah:
         return self.seal(found.to_bytes())
 
     @staticmethod
+    def throughput(volume: int = 10 ** 12, hertz: int = 27_000_000) -> Dict[str, object]:
+        """Clock counts for a volume of data, and the ratio that shapes the design.
+
+        The two paths through this system do not cost the same, and at
+        terabyte scale the difference stops being a detail.
+
+        *Triage* — the jamrah gate and the node counter — takes **one byte per
+        clock**. It is a reduction tree and eight counters; nothing about it
+        waits.
+
+        *The sponge* takes 128 bytes per permutation and a permutation is 310
+        clocks at SLICE=25, so **0.41 bytes per clock**. It is 2.4x slower
+        than the triage in front of it, and that ratio is the whole argument
+        for having a triage in front of it.
+
+        Over one terabyte at the board's 27 MHz crystal:
+
+            triage everything          10.3 hours
+            sponge everything          24.9 hours
+            triage all, sponge 5%      11.5 hours
+
+        So the layering is not only about rejecting garbage before spending a
+        hash — at volume it is what makes the volume finishable at all.
+
+        [EH] on the clock: 27 MHz is what the crystal offers, not an Fmax this
+        design has been shown to close timing at. Every duration here scales
+        inversely with whatever the real number turns out to be.
+        """
+        rate = cube.RATE
+        rows: Dict[str, object] = {"volume": volume, "hertz": hertz,
+                                   "rate_bytes": rate}
+        paths: Dict[str, Dict[str, float]] = {}
+        paths["triage"] = {"bytes_per_clock": 1.0, "clocks": float(volume)}
+        for name, clocks in (("sponge_slice_8", 786), ("sponge_slice_25", 310),
+                             ("sponge_slice_50", 198)):
+            paths[name] = {
+                "bytes_per_clock": rate / clocks,
+                "clocks": volume / rate * clocks,
+            }
+        for entry in paths.values():
+            entry["seconds"] = entry["clocks"] / hertz
+            entry["hours"] = entry["seconds"] / 3600
+        rows["paths"] = paths
+        rows["sponge_slower_by"] = (
+            paths["sponge_slice_25"]["clocks"] / paths["triage"]["clocks"])
+        return rows
+
+    @staticmethod
     def describe() -> Dict[str, object]:
         """Every layer, its guarantee, its epistemic label, and the numbers."""
         return {

@@ -169,3 +169,56 @@ def test_an_empty_input_does_not_invent_findings() -> None:
     found = _system().examine(bytes(4096))
     assert found.recovered == ()
     assert isinstance(found, Examination)
+
+
+# ══════════════════════════════════════════════════════════════════
+#  At volume: the ratio that shapes the design
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_sponge_is_the_bottleneck_and_the_arithmetic_says_by_how_much() -> None:
+    """
+    Triage is a reduction tree and eight counters: one byte per clock, nothing
+    waits. The sponge is 128 bytes per 310-clock permutation — 0.41 bytes per
+    clock, 2.4x slower.
+
+    That ratio is the whole argument for putting triage in front. Over a
+    terabyte at 27 MHz: triage everything in 10.3 hours, sponge everything in
+    24.9, or triage everything and sponge the 5% it flags in 11.5. At volume
+    the layering is not only about rejecting garbage before spending a hash —
+    it is what makes the volume finishable.
+    """
+    from hijaiyyah.crypto import cube
+
+    numbers = Kabah.throughput()
+    paths = numbers["paths"]
+
+    assert paths["triage"]["bytes_per_clock"] == 1.0
+    assert abs(paths["sponge_slice_25"]["bytes_per_clock"] - cube.RATE / 310) < 1e-9
+    assert 2.4 <= numbers["sponge_slower_by"] < 2.5
+
+    assert 10.0 < paths["triage"]["hours"] < 10.6
+    assert 24.5 < paths["sponge_slice_25"]["hours"] < 25.5
+
+    # A wider slice buys clocks, not bytes: the rate is fixed by the sponge.
+    assert (paths["sponge_slice_50"]["clocks"]
+            < paths["sponge_slice_25"]["clocks"]
+            < paths["sponge_slice_8"]["clocks"])
+
+
+def test_the_throughput_figures_scale_with_the_clock_they_assume() -> None:
+    """
+    27 MHz is what the crystal offers, not an Fmax this design has been shown
+    to close timing at. Doubling the assumed clock must halve every duration —
+    if it did not, the figures would be carrying an assumption they do not
+    declare.
+    """
+    slow = Kabah.throughput(hertz=27_000_000)["paths"]["sponge_slice_25"]
+    fast = Kabah.throughput(hertz=54_000_000)["paths"]["sponge_slice_25"]
+    assert abs(slow["hours"] / fast["hours"] - 2.0) < 1e-9
+    assert slow["clocks"] == fast["clocks"]
+
+
+def test_the_docstring_keeps_the_epistemic_label_on_the_clock() -> None:
+    doc = " ".join((Kabah.throughput.__doc__ or "").split())
+    assert "[EH] on the clock" in doc
+    assert "not an Fmax this design has been shown to close timing at" in doc
