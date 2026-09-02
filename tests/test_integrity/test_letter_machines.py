@@ -344,3 +344,110 @@ def test_the_alphabet_is_an_oscillator_bank_and_most_of_it_is_silent() -> None:
     hz = 27_000_000 / 31
     assert abs(hz - 870_967.7) < 1.0          # Jim and Kha, the longest wave
     assert 27_000_000 / 2 > hz, "period 31 must be the lowest tone"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Words: what addition does to the machine
+# ══════════════════════════════════════════════════════════════════
+
+def _sum(vs: list[list[int]]) -> list[int]:
+    return [sum(col) for col in zip(*vs, strict=True)]
+
+
+def test_the_guard_is_additive_and_the_period_is_not() -> None:
+    """
+    Two properties of the same object, and only one of them survives addition.
+
+    The guard is closed: the sum of valid letters is a valid hybit, at any
+    length. The period is not a function of the summands' periods at all --
+    and the first reading of this called it "addition destroys the machine",
+    which is wrong in an interesting way. It does not destroy it. It moves it
+    somewhere the letters cannot reach.
+    """
+    import itertools as it
+
+    from hijaiyyah.core.guards import _to_vec, guard_check
+
+    vectors = [list(_to_vec(e)) for e in ENTRIES]
+    single = {_orbit(build_exomatrix(v))[1] for v in vectors}
+    assert single == {1, 2, 3, 4, 31}
+
+    pair_periods, valid = set(), 0
+    for a, b in it.product(range(28), repeat=2):
+        s = _sum([vectors[a], vectors[b]])
+        valid += guard_check(s)
+        pair_periods.add(_orbit(build_exomatrix(s))[1])
+
+    assert valid == 784, "closure broke"
+    assert pair_periods > single, "sums reached no new period"
+    assert {5, 6, 7, 12, 14, 15, 21} <= pair_periods
+
+
+def test_words_open_frequencies_no_letter_carries() -> None:
+    """
+    Five periods among the letters, thirteen once they are added. Every one of
+    them divides |GL(5,2)| = 9,999,360, which is what says these are orders of
+    group elements rather than an artefact of the search depth.
+    """
+    import random
+
+    from hijaiyyah.core.guards import _to_vec
+
+    vectors = [list(_to_vec(e)) for e in ENTRIES]
+    reached = {_orbit(build_exomatrix(v))[1] for v in vectors}
+
+    random.seed(3)
+    for n in (2, 3, 5, 7):
+        for _ in range(200):
+            s = _sum([random.choice(vectors) for _ in range(n)])
+            reached.add(_orbit(build_exomatrix(s))[1])
+
+    assert len(reached) >= 12
+    for p in reached:
+        assert 9_999_360 % p == 0, f"period {p} does not divide |GL(5,2)|"
+
+
+def test_the_basmalah_runs_through_the_whole_system() -> None:
+    """
+    Nineteen letters, summed. The guards all pass -- closure holds on a real
+    sentence, not only on pairs. Theta-hat is 43, which is 10.75 full turns.
+
+    And it carries no maximal-period letter: no Jim, no Kha. The sentence's own
+    face has period 1. That is reported, not read into.
+    """
+    from hijaiyyah.core.guards import _to_vec, compute_U, full_guard_check
+
+    normalise = {"ه": "هـ", "ٱ": "ا", "أ": "ا", "إ": "ا", "آ": "ا"}
+    by_char = {e.char: e for e in ENTRIES}
+    text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+    letters = [c for c in (normalise.get(ch, ch) for ch in text) if c in by_char]
+
+    assert len(letters) == 19
+    total = _sum([list(_to_vec(by_char[c])) for c in letters])
+
+    status = full_guard_check(total)
+    assert all(status[k] for k in ("G1", "G2", "G3", "G4", "T1", "T2"))
+    assert total[0] == 43
+    assert total[0] - compute_U(total) == 18
+
+    assert not {"ج", "خ"} & set(letters), "a maximal letter entered the phrase"
+
+
+def test_bare_heh_does_not_resolve_and_that_is_a_real_edge() -> None:
+    """
+    The table stores Haa as U+0647 followed by U+0640 TATWEEL -- a presentation
+    character baked into the letter's identity. Real Arabic text writes bare
+    U+0647, so get_by_char returns None for it and there is no normaliser
+    anywhere in the package.
+
+    Known and documented (HAA_SEQUENCE in constants, and the CLI warns), but it
+    means text has to be pre-processed before it can enter the system at all.
+    Pinned so the day someone adds normalisation, this test is what tells them
+    the shape of the problem.
+    """
+    from hijaiyyah.core.constants import HAA_SEQUENCE
+
+    assert HAA_SEQUENCE == "هـ"
+    assert MASTER_TABLE.get_by_char("ه") is None
+    assert MASTER_TABLE.get_by_char(HAA_SEQUENCE) is not None
+    assert MASTER_TABLE.get_by_char("ٱ") is None      # alef wasla
