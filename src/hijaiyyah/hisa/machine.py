@@ -86,6 +86,10 @@ class HISAMachine:
         self.mode: int = self.MODE_SUPER
         self.trap_prev: int = self.MODE_SUPER
         self._priv_fault: bool = False
+        # The boot path. Without it a program lives inside the bitstream and
+        # changing one means resynthesising -- which makes the board something
+        # you flash rather than something you develop on.
+        self.imem_waddr: int = 0
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -209,6 +213,9 @@ class HISAMachine:
     REG_TRAP_ENABLE = 0xB
     REG_TRAP_PENDING = 0xC
     REG_TRAP_MODE = 0xD
+    CODE_DEPTH = 4096
+    REG_IMEM_ADDR = 0x3
+    REG_IMEM_DATA = 0x7
 
     # Trap causes. One bit each in ENABLE and PENDING; CAUSE holds the index.
     TRAP_TIMER = 0
@@ -274,6 +281,8 @@ class HISAMachine:
             return self._trap_pending()
         if reg == self.REG_TRAP_MODE:
             return (self.trap_prev << 1) | self.mode
+        if reg == self.REG_IMEM_ADDR:
+            return self.imem_waddr
         return 0
 
     def _periph_write(self, reg: int, value: int) -> None:
@@ -288,6 +297,17 @@ class HISAMachine:
             self.trap_epc = value
         elif reg == self.REG_TRAP_ENABLE:
             self.trap_enable = value & ((1 << self.TRAP_MASK_W) - 1)
+        elif reg == self.REG_IMEM_ADDR:
+            self.imem_waddr = value & (self.CODE_DEPTH - 1)
+        elif reg == self.REG_IMEM_DATA:
+            # One store per word: the address advances on its own. A loader
+            # that had to write the address each time would spend two
+            # instructions per word, and it has to fit in front of what it
+            # loads.
+            while len(self.code) <= self.imem_waddr:
+                self.code.append(0)
+            self.code[self.imem_waddr] = value
+            self.imem_waddr = (self.imem_waddr + 1) & (self.CODE_DEPTH - 1)
         elif reg == self.REG_TRAP_MODE:
             # Bit 1 only. Bit 0 is the current mode and is read-only: if it
             # were writable, dropping privilege and raising it again would be
@@ -328,6 +348,7 @@ class HISAMachine:
         self.trap_cause = cause
         self.trap_active = True
         self._priv_fault = False
+        self.imem_waddr = 0
         self.trap_prev = self.mode
         self.mode = self.MODE_SUPER
         self.regs.pc = self.trap_vector

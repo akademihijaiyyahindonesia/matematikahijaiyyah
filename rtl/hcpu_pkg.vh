@@ -187,6 +187,19 @@
 `define REG_TRAP_PENDING  4'hC       // per-cause pending bits, read-only
 `define REG_TRAP_MODE     4'hD       // bit0 mode (RO), bit1 previous (RW)
 
+// ── The boot path ───────────────────────────────────────────────
+// Without these the program lives inside the bitstream: $readmemh puts it
+// there at synthesis and imem_data is an INPUT to hcpu_top, so the CPU cannot
+// write it. Changing a program meant rebuilding and reflashing, which makes
+// the board a fixed-function device rather than something you develop on.
+//
+// A write to REG_IMEM_DATA stores one word and ADVANCES the address, so
+// loading 4,096 words costs one store each instead of two. Both registers sit
+// in the peripheral window, so they are already supervisor-only -- a user
+// program that could write instruction memory would have no boundary at all.
+`define REG_IMEM_ADDR     4'h3       // where the next word goes
+`define REG_IMEM_DATA     4'h7       // write one word, address auto-advances
+
 // ── Trap causes ─────────────────────────────────────────────────
 // One bit per cause in ENABLE and PENDING; the CAUSE register holds the index,
 // not the mask, so a handler can jump on it directly.

@@ -39,6 +39,9 @@ module tb_gowin_top;
 
     reg  clk_27m = 1'b0;
     reg  btn_rst_n = 1'b0;
+    // Idle high. It was left unconnected when uart_rxd became a port, which in
+    // Verilog is not an error -- it floats, and the receiver sees X.
+    reg  uart_rxd  = 1'b1;
     wire uart_txd;
     wire [5:0] led;
 
@@ -50,6 +53,7 @@ module tb_gowin_top;
     ) u_board (
         .clk_27m   (clk_27m),
         .btn_rst_n (btn_rst_n),
+        .uart_rxd  (uart_rxd),
         .uart_txd  (uart_txd),
         .led       (led)
     );

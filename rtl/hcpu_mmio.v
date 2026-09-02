@@ -69,7 +69,15 @@ module hcpu_mmio #(
     output wire [`XLEN-1:0]        trap_reg_wdata,
     input  wire [`XLEN-1:0]        trap_reg_rdata,
     output wire                    src_timer,
-    output wire                    src_uart_rx
+    output wire                    src_uart_rx,
+
+    // ── Instruction memory write port ───────────────────────────
+    // Harvard is kept for EXECUTION -- fetch still has its own read-only port.
+    // What this adds is a privileged write path, which is what a loader needs
+    // and what nothing else may have.
+    output wire                    imem_we,
+    output reg  [`CODE_ADDR_W-1:0] imem_waddr,
+    output wire [`ILEN-1:0]        imem_wdata
 );
 
     // The map is in hcpu_pkg.vh. It used to be localparams here, which was
@@ -152,6 +160,31 @@ module hcpu_mmio #(
     assign src_timer   = tmr_expired;
     assign src_uart_rx = rx_ready;
 
+    // ── instruction memory write port ───────────────────────────
+    // The address advances on every data write. A loader that had to store the
+    // address each time would spend two instructions per word, and the loader
+    // itself has to be small enough to fit in front of what it loads.
+    assign imem_wdata = wdata;
+    wire imem_addr_we = we & is_periph & (reg_sel == `REG_IMEM_ADDR);
+    wire imem_data_we = we & is_periph & (reg_sel == `REG_IMEM_DATA);
+
+    // imem_we MUST be combinational. Registering it would assert the write one
+    // cycle after imem_waddr had already advanced, so every word would land at
+    // the address after its own -- the whole program shifted by one, which on
+    // hardware looks like a program that almost works.
+    assign imem_we = imem_data_we;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            imem_waddr <= {`CODE_ADDR_W{1'b0}};
+        end else begin
+            if (imem_addr_we)
+                imem_waddr <= wdata[`CODE_ADDR_W-1:0];
+            else if (imem_data_we)
+                imem_waddr <= imem_waddr + 1'b1;
+        end
+    end
+
     // ── read data, registered to match the RAM ──────────────────
     reg [`XLEN-1:0] periph_rdata;
     reg             periph_sel;
@@ -175,6 +208,8 @@ module hcpu_mmio #(
                 `REG_TRAP_CAUSE,
                 `REG_TRAP_ENABLE,
                 `REG_TRAP_PENDING: periph_rdata <= trap_reg_rdata;
+                `REG_IMEM_ADDR:    periph_rdata <= {{(`XLEN-`CODE_ADDR_W){1'b0}},
+                                                   imem_waddr};
                 default:       periph_rdata <= {`XLEN{1'b0}};
             endcase
         end

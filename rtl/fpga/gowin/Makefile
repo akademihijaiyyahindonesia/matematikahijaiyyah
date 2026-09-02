@@ -23,7 +23,10 @@ BOARD    = tangnano9k
 
 RTL_DIR  = ../..
 TOP      = hcpu_gowin_top
-PROGRAM  = $(RTL_DIR)/programs/test_bsm.hasm
+# What gets baked into the bitstream. `make bridge` swaps this for the loader,
+# after which the bitstream stops being one program and becomes the thing that
+# accepts any program over the wire -- which is the point of the board.
+PROGRAM ?= $(RTL_DIR)/programs/test_bsm.hasm
 PYTHON  ?= python3
 
 # The three tools the bitstream needs, overridable so the build does not care
@@ -48,7 +51,7 @@ LOADER     ?= openFPGALoader
 # and would have failed on the day the board arrived, not before.
 SOURCES  = hcpu_gowin_top.v $(wildcard $(RTL_DIR)/hcpu_*.v)
 
-.PHONY: all sim synth bitstream flash clean
+.PHONY: all sim synth bitstream flash bridge send clean
 
 all: sim
 
@@ -104,5 +107,19 @@ tools:
 	@printf '%-22s %s\n' gowin_pack      "$$(command -v $(GOWIN_PACK)   || echo MISSING)"
 	@printf '%-22s %s\n' openFPGALoader  "$$(command -v $(LOADER)       || echo MISSING)"
 
+# ── The bridge ──────────────────────────────────────────────────
+# Build and flash a bitstream whose baked program is the loader. After this,
+# changing a program costs a second instead of a synthesis run.
+bridge:
+	$(MAKE) PROGRAM=$(RTL_DIR)/programs/loader.hasm flash
+
+# Send a program to a board already running the loader:
+#     make send PORT=/dev/tty.usbserial-X PROG=../../programs/trap_timer.hasm
+PORT ?=
+PROG ?= $(RTL_DIR)/programs/trap_timer.hasm
+send:
+	@test -n "$(PORT)" || { echo "set PORT=<serial device>"; exit 1; }
+	$(PYTHON) $(RTL_DIR)/scripts/send_program.py $(PORT) $(PROG)
+
 clean:
-	rm -f program.hex *.json *.fs *.vvp *.vcd
+	rm -f program.hex loader.hex payload.txt *.json *.fs *.vvp *.vcd

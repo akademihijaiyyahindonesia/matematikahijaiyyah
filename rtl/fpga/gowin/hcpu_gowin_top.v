@@ -76,6 +76,9 @@ module hcpu_gowin_top #(
     // has to spare and produces a bitstream, so 0 is the default here and the
     // DSP path stays available for whoever fixes the packer.
     parameter USE_DSP = 0,
+    // Which image is baked in. Default is the program; a testbench points it
+    // at the loader instead, so the boot path can be proved without a board.
+    parameter PROGRAM_HEX = "program.hex",
     parameter BAUD    = 115200
 ) (
     input  wire        clk_27m,      // 27 MHz onboard oscillator
@@ -134,8 +137,18 @@ module hcpu_gowin_top #(
         // whatever the block RAM powers up holding.
         for (i = 0; i < `CODE_DEPTH; i = i + 1)
             imem[i] = {`OP_NOP, 24'h000000};
-        $readmemh("program.hex", imem);
+        $readmemh(PROGRAM_HEX, imem);
     end
+
+    // The loader's write port. $readmemh still puts a program there at
+    // synthesis -- that program is now the LOADER, and what it loads arrives
+    // over the wire.
+    wire                    imem_we;
+    wire [`CODE_ADDR_W-1:0] imem_waddr;
+    wire [`ILEN-1:0]        imem_wdata;
+
+    always @(posedge clk_sys)
+        if (imem_we) imem[imem_waddr] <= imem_wdata;
 
     always @(posedge clk_sys) begin
         if (imem_ce)
@@ -157,6 +170,9 @@ module hcpu_gowin_top #(
         .imem_addr      (imem_addr),
         .imem_ce        (imem_ce),
         .imem_data      (imem_data),
+        .imem_we        (imem_we),
+        .imem_waddr     (imem_waddr),
+        .imem_wdata     (imem_wdata),
         .uart_rx        (uart_rxd),
         .uart_tx        (core_txd),
         .halted         (halted_out),

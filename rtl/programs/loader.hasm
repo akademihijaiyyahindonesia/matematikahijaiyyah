@@ -1,0 +1,74 @@
+; loader.hasm — the boot path. This is what makes the board a bridge.
+;
+; Until now a program lived inside the bitstream: $readmemh put it there at
+; synthesis and the CPU could not write instruction memory, so changing one
+; instruction meant a full resynthesis and a reflash. That is a fixed-function
+; device, not something you develop on.
+;
+; This program stays in the bitstream. What it loads arrives over the wire.
+;
+; PROTOCOL, most significant byte first:
+;     4 bytes   word count N
+;     4N bytes  the program, one 32-bit instruction per four bytes
+;
+; It is then entered through ERET. There is no register-indirect jump in the
+; ISA and none had to be invented: ERET jumps to TRAP_EPC, which is a register
+; the loader writes, and it sets the privilege level in the same act.
+;
+; THE LOADED PROGRAM STARTS IN SUPERVISOR, deliberately. At this stage it IS
+; the system -- there is no OS above it to serve it, so dropping it to user
+; mode would only mean it could not print, could not halt, and would fault on
+; its first useful instruction. When an OS exists it will load applications
+; through this same mechanism with bit 1 clear, and then the boundary matters.
+; Changing `MOVI R7, 2` to `MOVI R7, 0` below is the whole difference.
+;
+;   R5   zero base for peripheral access
+;   R6   words remaining
+;   R3   the word being assembled
+;   R2   the byte just received
+;   R4   bytes remaining in this word
+
+        MOVI  R5, 0
+
+; ── receive the word count ──────────────────────────────────────
+        MOVI  R3, 0
+        MOVI  R4, 4
+cnt_b:  LOAD  R1, R5, 0xFF1     ; RX_STATUS — bit 0 is "a byte is waiting"
+        CMPI  R1, 0
+        JEQ   cnt_b             ; spin; the UART is the only clock that matters
+        LOAD  R2, R5, 0xFF0     ; RX_DATA — reading it consumes the byte
+        SHLI  R3, R3, 8
+        OR    R3, R3, R2
+        ADDI  R4, R4, -1
+        CMPI  R4, 0
+        JNE   cnt_b
+        MOV   R6, R3            ; N
+
+; ── point the write port at where the program goes ──────────────
+        MOVI  R7, 64
+        STORE R7, R5, 0xFF3     ; IMEM_ADDR — advances by itself after this
+
+; ── receive N words ─────────────────────────────────────────────
+words:  CMPI  R6, 0
+        JEQ   done
+        MOVI  R3, 0
+        MOVI  R4, 4
+w_b:    LOAD  R1, R5, 0xFF1
+        CMPI  R1, 0
+        JEQ   w_b
+        LOAD  R2, R5, 0xFF0
+        SHLI  R3, R3, 8
+        OR    R3, R3, R2
+        ADDI  R4, R4, -1
+        CMPI  R4, 0
+        JNE   w_b
+        STORE R3, R5, 0xFF7     ; IMEM_DATA — one store per word
+        ADDI  R6, R6, -1
+        JMP   words
+
+; ── hand over ───────────────────────────────────────────────────
+done:   MOVI  R7, 64
+        STORE R7, R5, 0xFF9     ; TRAP_EPC = entry point
+        MOVI  R7, 2             ; bit1 = 1 → the program runs in SUPERVISOR
+        STORE R7, R5, 0xFFD
+        ERET

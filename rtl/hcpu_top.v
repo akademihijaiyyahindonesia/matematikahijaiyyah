@@ -31,6 +31,15 @@ module hcpu_top #(
     output wire                    imem_ce,       // BRAM clock-enable
     input  wire [`ILEN-1:0]        imem_data,
 
+    // ── Instruction memory write port ───────────────────────────
+    // Harvard is kept for execution: fetch keeps its own read-only port above.
+    // This is the privileged path a loader uses, and the reason the board
+    // stops being a fixed-function device. It is reachable only through the
+    // peripheral window, so user mode cannot touch it.
+    output wire                    imem_we,
+    output wire [`CODE_ADDR_W-1:0] imem_waddr,
+    output wire [`ILEN-1:0]        imem_wdata,
+
     // ── External I/O ────────────────────────────────────────────
     // `uart_rx` idles high, and every existing instantiation leaves it
     // unconnected — an unconnected input reads as z, which the receiver's
@@ -602,7 +611,10 @@ module hcpu_top #(
         .trap_reg_wdata (trap_reg_wdata_w),
         .trap_reg_rdata (trap_reg_rdata_w),
         .src_timer      (trap_src_timer_w),
-        .src_uart_rx    (trap_src_rx_w)
+        .src_uart_rx    (trap_src_rx_w),
+        .imem_we        (imem_we),
+        .imem_waddr     (imem_waddr),
+        .imem_wdata     (imem_wdata)
     );
 
     // ── Trap unit ───────────────────────────────────────────────

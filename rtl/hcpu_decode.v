@@ -263,6 +263,16 @@ module hcpu_decode (
 
                 `OP_PRINT:  id_is_print <= 1'b1;
 
+                // ERET sets nothing up here -- the redirect and the privilege
+                // change are both resolved in Execute. But it MUST appear in
+                // this case, because `default` means HALT_ERR: without it the
+                // one instruction that returns from a trap also stopped the
+                // machine, and it did, for several commits. Nothing caught it
+                // because tb_hcpu_trap exercises the unit without a decoder
+                // and the interpreter has no decode table at all -- ERET had
+                // never run through the actual pipeline.
+                `OP_ERET:   ;
+
                 default: begin
                     id_is_halt <= 1'b1;  // Unimplemented → HALT_ERR
                     id_dst     <= 4'hE;  // Arbitrary error code mark
