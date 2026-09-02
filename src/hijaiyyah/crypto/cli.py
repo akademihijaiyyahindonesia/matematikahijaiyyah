@@ -10,6 +10,7 @@ three lines too many.
     kabah open  ledger.txt.kbh      → ledger.txt
     kabah fingerprint ledger.txt    the [EH] sponge digest
     kabah describe                  every layer and what it guarantees
+    kabah memscan dump.raw          find injected regions, recover payloads
 
 The key file is the only state. Losing it loses nothing that was encrypted —
 nothing here encrypts — but it makes sealed records unverifiable, which for an
@@ -108,6 +109,56 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_memscan(args: argparse.Namespace) -> int:
+    """Scan a memory or RAM dump, and recover what can be recovered.
+
+    Reads bytes, not operating-system structures: it cannot name a process or
+    read page permissions, which is what Volatility is for. What it does is
+    find regions whose structure is wrong for where they sit, and restore the
+    payload where one is obfuscated.
+    """
+    from hijaiyyah.crypto.memscan import (
+        find_clue,
+        recover,
+        report,
+        to_autopsy_csv,
+    )
+
+    data = Path(args.file).read_bytes()
+    found = report(data)
+
+    if args.csv:
+        print(to_autopsy_csv(found.regions), end="")
+        return 0
+
+    print(f"{args.file}  {len(data):,} bytes\n")
+    print(f"{'offset':>10} {'length':>9}  {'kind':<14} {'confidence':<10} evidence")
+    for region in found.regions:
+        print(f"{region.offset:>10} {region.length:>9}  {region.kind:<14} "
+              f"{region.confidence:<10} {region.evidence}")
+
+    staged = [r for r in found.regions if r.key]
+    if staged:
+        print()
+        for region in staged:
+            payload = recover(data, region)
+            clue = find_clue(payload)
+            key = region.key or b""
+            print(f"  recovered at {region.offset:#x}: key {key.hex()}, "
+                  f"{len(payload):,} bytes, {clue or 'unnamed'}")
+            if args.out:
+                target = Path(f"{args.out}.{region.offset:08x}.bin")
+                target.write_bytes(payload)
+                print(f"    written to {target}")
+
+    counts = found.summary()
+    print(f"\n  {sum(counts.values())} regions: "
+          + ", ".join(f"{n}x {k}" for k, n in sorted(counts.items())))
+    print("  [CC] structural triage — high entropy is not malice, and nothing "
+          "encrypted with a real cipher is recoverable here", file=sys.stderr)
+    return 0
+
+
 def cmd_describe(args: argparse.Namespace) -> int:
     info: Dict[str, Any] = Kabah.describe()
     layers: List[Dict[str, Any]] = info["layers"]
@@ -151,6 +202,12 @@ def build_parser() -> argparse.ArgumentParser:
     fp = sub.add_parser("fingerprint", help="sponge digest [EH]")
     fp.add_argument("file")
     fp.set_defaults(func=cmd_fingerprint)
+
+    scan = sub.add_parser("memscan", help="find injected regions in a dump")
+    scan.add_argument("file")
+    scan.add_argument("--out", help="write recovered payloads to this prefix")
+    scan.add_argument("--csv", action="store_true", help="Autopsy-shaped CSV")
+    scan.set_defaults(func=cmd_memscan)
 
     sub.add_parser("describe", help="what each layer guarantees").set_defaults(
         func=cmd_describe
