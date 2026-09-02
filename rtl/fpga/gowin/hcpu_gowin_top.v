@@ -35,8 +35,47 @@
 
 `include "hcpu_pkg.vh"
 
+// ============================================================================
+// PLACED AND ROUTED, 3 September 2026 -- and this is where Fmax stopped being
+// [EH]. Every per-second figure in this project carried "if it closes at
+// 27 MHz" because nobody had run place-and-route. Now it has been run:
+// yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW1NR-LV9QN88PC6/I5.
+//
+//     LUT4        6,746 / 8,640    78%
+//     MUX2_LUT5     714 / 4,320    16%
+//     ALU         1,544 / 6,480    23%
+//     DFF         1,719 / 6,480    26%
+//     BSRAM           4 /    26    15%     <- the data RAM, not flip-flops
+//     IOB            10 /   276     3%
+//
+//     Fmax        90.14 MHz        board crystal 27 MHz -> 3.34x margin
+//
+// So 27 MHz is met with room, and the durations that scaled inversely with an
+// unknown can now be stated. THIS IS THE HCPU ONLY. hijaiyyah_kabah_top is a
+// different design with no board wrapper, and its Fmax is still unmeasured.
+//
+// -nodsp IS REQUIRED, and the reason is the packer rather than the design.
+// synth_gowin infers MULT9X9 from the multiplies in hcpu_codex_alu's squared
+// norm and distance as much as from hcpu_mul, nextpnr places them without
+// complaint, and gowin_pack then dies on `KeyError: 'IRBY_IREG0BL_0'` -- an
+// attribute apycula's chipdb does not carry. The suite's own gowin_pack fails
+// identically, so it is not a version mismatch. The cost is measured:
+//
+//     with DSP     LUT4 4,550 (52%)   Fmax 82.33 MHz
+//     -nodsp       LUT4 6,746 (78%)   Fmax 90.14 MHz
+//
+// +2,196 LUT4 and, unexpectedly, a FASTER clock -- the DSP sat on the critical
+// path. Drop the flag when apycula can pack a MULT9X9.
+//
 module hcpu_gowin_top #(
     parameter USE_PLL = 0,           // 0: run at 27 MHz; 1: use the rPLL
+    // 1 infers a MULT9X9, which nextpnr places happily and gowin_pack then
+    // refuses: `KeyError: 'IRBY_IREG0BL_0'`, an attribute apycula's chipdb
+    // does not carry -- the suite's own gowin_pack fails identically, so it is
+    // the packer and not a version mismatch. Shift-add costs LUTs the board
+    // has to spare and produces a bitstream, so 0 is the default here and the
+    // DSP path stays available for whoever fixes the packer.
+    parameter USE_DSP = 0,
     parameter BAUD    = 115200
 ) (
     input  wire        clk_27m,      // 27 MHz onboard oscillator
@@ -111,7 +150,7 @@ module hcpu_gowin_top #(
     hcpu_top #(
         .CLK_HZ  (SYS_HZ),
         .BAUD    (BAUD),
-        .USE_DSP (1)                 // FPGA: use the DSP multiplier
+        .USE_DSP (USE_DSP)
     ) u_hcpu (
         .clk            (clk_sys),
         .rst_n          (sys_rst_n),

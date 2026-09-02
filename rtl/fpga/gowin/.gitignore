@@ -1,0 +1,12 @@
+# Build products: derivable from the sources beside them, and excluded from the
+# CosmicTera manifest for the same reason (BUILD_PRODUCTS in crypto/program.py).
+*.json
+*.fs
+*.vvp
+*.vcd
+
+# program.hex is NOT here. It is a board artifact the manifest seals -- pattern
+# `rtl/fpga/*/program.hex` in SYSTEM_PATTERNS -- and check_board_hex
+# re-assembles it from the Makefile's PROGRAM to prove the hex on the board
+# matches the source that produced it. A `make clean` once removed it from git
+# and nothing noticed.

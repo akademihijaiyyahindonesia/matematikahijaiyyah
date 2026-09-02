@@ -177,5 +177,6 @@ Program H‑ISA disegel oleh `seal_program`, dan opcode dibaca **dari
 - **Tidak ada kerahasiaan.** Lapis 4 ditolak, disengaja.
 - **HCPU tidak dilebur dengan blok kripto.** CosmicTera **membungkus** program
   yang berjalan di H‑ISA; ia tidak menyuntikkan kripto ke datapath.
-- **Fmax belum diukur.** Setiap angka per detik membawa asumsi 27 MHz, dan
-  berskala terbalik terhadap angka sebenarnya.
+- **Fmax HCPU sudah terukur: 90,14 MHz**, margin 3,34× atas 27 MHz. Angka per
+  detik untuk HCPU tidak lagi membawa asumsi. **Kabah top belum** — 1.665 bit
+  port melawan 276 IOB berarti ia harus punya wrapper dulu.

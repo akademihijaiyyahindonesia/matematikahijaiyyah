@@ -26,6 +26,21 @@ TOP      = hcpu_gowin_top
 PROGRAM  = $(RTL_DIR)/programs/test_bsm.hasm
 PYTHON  ?= python3
 
+# The three tools the bitstream needs, overridable so the build does not care
+# where they were installed:
+#
+#   gowin_pack        pip install apycula      (lands in the project venv)
+#   openFPGALoader    brew install openfpgaloader
+#   nextpnr-himbaechel  not in Homebrew and not quick to build -- it comes from
+#                     a prebuilt oss-cad-suite, referenced by path rather than
+#                     by sourcing its environment, because that environment
+#                     shadows the yosys and python this project already uses.
+OSS_CAD  ?= $(HOME)/opt/oss-cad-suite
+NEXTPNR  ?= $(firstword $(wildcard $(OSS_CAD)/bin/nextpnr-himbaechel) \
+                        $(shell command -v nextpnr-himbaechel 2>/dev/null))
+GOWIN_PACK ?= gowin_pack
+LOADER     ?= openFPGALoader
+
 # The wrapper plus every hcpu_*.v, found rather than listed. The hand-written
 # list here went stale exactly the way rtl/tb/Makefile's did: hcpu_mmio.v and
 # hcpu_trap.v were added to the design and not to this list, so `make sim`,
@@ -53,20 +68,41 @@ sim: program.hex
 	vvp tb_gowin_top.vvp
 
 # ── Synthesis, place and route, pack ────────────────────────────
+# -nodsp because gowin_pack cannot pack the MULT9X9 that synth_gowin infers:
+# `KeyError: 'IRBY_IREG0BL_0'`, an attribute apycula's chipdb does not carry.
+# nextpnr places it happily, so the failure only appears at the last step, and
+# the suite's own gowin_pack fails identically -- it is the packer, not a
+# version mismatch. The multiplies come from hcpu_codex_alu's squared norm and
+# distance as much as from hcpu_mul, so USE_DSP=0 alone does not avoid them.
+# Drop the flag once apycula packs DSPs; the LUT cost is measured in the header
+# of hcpu_gowin_top.v.
+YOSYS_FLAGS ?= -nodsp
+
 synth: program.hex
 	yosys -p "read_verilog -I $(RTL_DIR) $(SOURCES); \
-	          synth_gowin -top $(TOP) -json $(TOP).json"
+	          synth_gowin $(YOSYS_FLAGS) -top $(TOP) -json $(TOP).json"
 
 $(TOP)_pnr.json: synth
-	nextpnr-himbaechel --json $(TOP).json --write $@ \
+	@test -n "$(NEXTPNR)" || { echo "nextpnr-himbaechel not found."; \
+	    echo "Set OSS_CAD=<path to oss-cad-suite> or put it on PATH."; exit 1; }
+	$(NEXTPNR) --json $(TOP).json --write $@ \
 	    --device $(DEVICE) --vopt cst=hcpu_gowin.cst \
 	    --vopt family=$(FAMILY)
 
 bitstream: $(TOP)_pnr.json
-	gowin_pack -d $(FAMILY) -o $(TOP).fs $<
+	$(GOWIN_PACK) -d $(FAMILY) -o $(TOP).fs $<
 
 flash: bitstream
-	openFPGALoader -b $(BOARD) $(TOP).fs
+	$(LOADER) -b $(BOARD) $(TOP).fs
+
+# What is installed, and what is not. Run this first on a new machine.
+.PHONY: tools
+tools:
+	@printf '%-22s %s\n' yosys           "$$(command -v yosys           || echo MISSING)"
+	@printf '%-22s %s\n' iverilog        "$$(command -v iverilog        || echo MISSING)"
+	@printf '%-22s %s\n' nextpnr-himbaechel "$(if $(NEXTPNR),$(NEXTPNR),MISSING)"
+	@printf '%-22s %s\n' gowin_pack      "$$(command -v $(GOWIN_PACK)   || echo MISSING)"
+	@printf '%-22s %s\n' openFPGALoader  "$$(command -v $(LOADER)       || echo MISSING)"
 
 clean:
 	rm -f program.hex *.json *.fs *.vvp *.vcd

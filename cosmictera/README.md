@@ -91,5 +91,6 @@ menggagalkan tes.
   keamanan yang bertumpu padanya.
 - **Lapis 4 ditolak.** Untuk kerahasiaan, pakai AES‑256‑GCM dari pustaka
   teruji.
-- **Fmax belum diukur.** 27 MHz adalah kristal yang ditawarkan papan, bukan
-  timing yang terbukti tertutup.
+- **Fmax HCPU terukur: 90,14 MHz** (place-and-routed, 3 September 2026) — margin
+  3,34× atas kristal 27 MHz papan. **Fmax Kabah top masih [EH]**: antarmukanya
+  1.665 bit port melawan 276 IOB, jadi ia butuh wrapper sebelum bisa ditempatkan.

@@ -137,8 +137,40 @@ Keduanya muat. Margin di SLICE=25 adalah **544 LUT4**.
 > `bits_ready` — dan sintesis tidak pernah dijalankan ulang. Biayanya **+670
 > LUT4**, dan margin turun dari 15% ke 6%. Lihat R4.
 
-**Pemetaan 4‑LUT generik, bukan laporan fitting vendor. Fmax belum diukur —
-`synth_gowin` tidak selesai di lingkungan ini dan nextpnr tidak terpasang.**
+**Pemetaan 4‑LUT generik, bukan laporan fitting vendor.** Kabah top belum bisa
+di‑place‑and‑route: antarmukanya **1.665 bit port** melawan **276 IOB** papan,
+jadi ia butuh wrapper yang menyempitkan antarmuka sebelum bisa ditempatkan sama
+sekali. Fmax‑nya tetap **[EH]**.
+
+### HCPU di Tang Nano 9K — ini sudah place‑and‑routed
+
+Dan di sinilah Fmax berhenti jadi [EH]. Rantai penuh dijalankan 3 September 2026:
+yosys 0.68 → nextpnr‑himbaechel 0.11.1 → gowin_pack, GW1NR‑LV9QN88PC6/I5.
+
+| Sumber daya | Terpakai | Kapasitas | % |
+|---|---:|---:|---:|
+| LUT4 | 6.746 | 8.640 | **78%** |
+| MUX2_LUT5 | 714 | 4.320 | 16% |
+| ALU | 1.544 | 6.480 | 23% |
+| DFF | 1.719 | 6.480 | 26% |
+| BSRAM | 4 | 26 | 15% |
+| IOB | 10 | 276 | 3% |
+
+**Fmax 90,14 MHz** terhadap kristal papan 27 MHz — **margin 3,34×**. Setiap durasi
+yang selama ini berskala terbalik terhadap angka tak dikenal sekarang bisa
+dinyatakan, **untuk HCPU**.
+
+`-nodsp` wajib, dan sebabnya packer bukan desain: `synth_gowin` menyimpulkan
+`MULT9X9` dari perkalian di norma kuadrat `hcpu_codex_alu`, nextpnr menempatkannya
+tanpa keluhan, lalu `gowin_pack` mati pada `KeyError: 'IRBY_IREG0BL_0'`. Versi
+gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
+
+| | LUT4 | Fmax |
+|---|---:|---:|
+| dengan DSP | 4.550 (52%) | 82,33 MHz |
+| `-nodsp` | 6.746 (78%) | **90,14 MHz** |
+
++2.196 LUT4 dan — tak disangka — **clock lebih cepat**: DSP‑nya ada di jalur kritis.
 
 ---
 
@@ -189,7 +221,8 @@ Keduanya muat. Margin di SLICE=25 adalah **544 LUT4**.
 | | Label | Kenapa |
 |---|---|---|
 | Spons tahan kriptanalisis | **EH** | terukur, belum dikriptanalisis |
-| Fmax menutup 27 MHz | **EH** | papan belum ada; nextpnr tidak terpasang |
+| Fmax Kabah top | **EH** | 1.665 bit port vs 276 IOB — butuh wrapper sebelum bisa ditempatkan |
+| ~~Fmax HCPU~~ | **CC** | **terukur 90,14 MHz**, margin 3,34× atas 27 MHz |
 | FIFO akan memberi 8,00 clock/byte | **EH** | belum dibangun |
 | Skala tera node‑hertz | **AT** | terukur 43,72 giga; butuh 22,9× |
 | Kerahasiaan | — | **ditolak** — pakai AES‑256‑GCM |
