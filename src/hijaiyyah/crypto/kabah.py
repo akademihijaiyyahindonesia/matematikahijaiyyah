@@ -52,7 +52,7 @@ shape that was already there.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence, Tuple
 
 from hijaiyyah.crypto import cube
 from hijaiyyah.crypto.guarded_record import (
@@ -71,6 +71,10 @@ from hijaiyyah.crypto.guarded_record import (
     reject_degenerate_key,
     seal_record,
 )
+
+#: Format identifier for a sealed examination. One suite, no negotiation.
+EXAMINATION_MAGIC = b"HEX1"
+
 
 #: The expansion, kept here so the name cannot drift from what it stands for.
 NAME = "Ka'bah"
@@ -251,6 +255,80 @@ class Kabah:
             ],
         }
 
+    # ── the whole system, on one input ───────────────────────────
+
+    def examine(self, data: bytes) -> "Examination":
+        """Fold data through every stage and return one summary.
+
+        Until this existed the system had four front doors — the wave, the
+        memory scanner, the elemental profile and the record layers — and a
+        caller had to know which to open and in what order. That is four
+        chances to use it wrongly and no single answer at the end.
+
+        One pass now produces one report:
+
+            what it is        elemental identification, or its marker
+            how it reads      the classification profile, per window
+            what is hidden    injected regions, with payloads recovered
+            what it hashes to the sponge fingerprint            [EH]
+
+        **Rotation is what makes the report stable.** A repeating key is
+        recoverable only up to a cyclic shift, so two runs over different
+        window alignments can return the same key wearing different phases.
+        Every key here is stored in canonical rotation — the lexicographically
+        smallest — so the same input always produces the same report bytes,
+        which is what lets the report be sealed and compared.
+        """
+        from hijaiyyah.crypto.elements import identify
+        from hijaiyyah.crypto.memscan import canonical, find_clue, recover, scan_memory
+        from hijaiyyah.crypto.node_counter import NAMES, scan
+
+        verdicts = scan(data)
+        profile = {
+            NAMES[code]: verdicts.count(code) for code in sorted(NAMES)
+        }
+        regions = scan_memory(data)
+        recovered = tuple(
+            (r.offset, canonical(r.key or b""), find_clue(recover(data, r)) or "")
+            for r in regions if r.key
+        )
+        return Examination(
+            length=len(data),
+            family=identify(data, clue=find_clue(data[:4096])).family,
+            marker=find_clue(data[:4096]) or "",
+            profile=profile,
+            regions=tuple((r.offset, r.length, r.kind) for r in regions),
+            recovered=recovered,
+            fingerprint=self.fingerprint(data),
+        )
+
+    def examine_stream(self, bits: "Sequence[int]") -> "Examination":
+        """Examine a raw bitstream — folded one bit per clock, no alignment given.
+
+        :meth:`examine` takes bytes, which presumes someone already knew where
+        a byte begins. A wire carries no such thing. This takes the bits as
+        they arrive, recovers the boundary from the data itself, and examines
+        what falls out — the same path the silicon runs.
+
+        The recovered phase travels in the report, because a report about a
+        stream that does not say where its bytes started is not reproducible.
+        """
+        from hijaiyyah.crypto.node_counter import align
+
+        phase, _period, data = align(bits)
+        found = self.examine(data)
+        return Examination(
+            found.length, found.family, found.marker, found.profile,
+            found.regions, found.recovered, found.fingerprint, phase=phase)
+
+    def seal_examination(self, found: "Examination") -> GuardedRecord:
+        """Authenticate the findings so they survive the trip to whoever acts.
+
+        Forensic output that can be rewritten on the way is worth nothing, and
+        this is the one layer in the system that can stop that.
+        """
+        return self.seal(found.to_bytes())
+
     @staticmethod
     def describe() -> Dict[str, object]:
         """Every layer, its guarantee, its epistemic label, and the numbers."""
@@ -300,3 +378,56 @@ __all__ = [
     "encode_bytes",
     "generate_key",
 ]
+
+
+@dataclass(frozen=True)
+class Examination:
+    """Everything one pass over the data found, before it is sealed.
+
+    Canonical by construction: fixed-width integers, keys in canonical
+    rotation, profile keys in sorted order. Two runs over one input produce
+    identical bytes, which is what makes the report comparable and sealable.
+    """
+
+    length: int
+    family: str
+    marker: str
+    profile: Dict[str, int]
+    regions: Tuple[Tuple[int, int, str], ...]
+    recovered: Tuple[Tuple[int, bytes, str], ...]
+    fingerprint: bytes
+
+    #: Clock the first byte started on, when the input was a raw bitstream.
+    #: -1 when bytes were handed in already aligned, which is a different
+    #: claim from "the boundary was found to be zero".
+    phase: int = -1
+
+    def to_bytes(self) -> bytes:
+        out = bytearray(EXAMINATION_MAGIC)
+        out += self.length.to_bytes(8, "big")
+        out += (self.phase & 0xFF).to_bytes(1, "big")
+        out += self.family.encode("ascii")[:16].ljust(16, b"\x00")
+        out += self.marker.encode("ascii")[:24].ljust(24, b"\x00")
+        out += len(self.profile).to_bytes(2, "big")
+        for name in sorted(self.profile):
+            out += name.encode("utf-8")[:16].ljust(16, b"\x00")
+            out += self.profile[name].to_bytes(4, "big")
+        out += len(self.regions).to_bytes(4, "big")
+        for offset, length, kind in self.regions:
+            out += (offset.to_bytes(8, "big") + length.to_bytes(8, "big")
+                    + kind.encode("ascii")[:16].ljust(16, b"\x00"))
+        out += len(self.recovered).to_bytes(4, "big")
+        for offset, key, clue in self.recovered:
+            out += (offset.to_bytes(8, "big") + bytes([len(key)])
+                    + key[:16].ljust(16, b"\x00")
+                    + clue.encode("utf-8")[:24].ljust(24, b"\x00"))
+        out += self.fingerprint
+        return bytes(out)
+
+    def summary(self) -> str:
+        """One line, for a log or a terminal."""
+        hidden = f", {len(self.recovered)} recovered" if self.recovered else ""
+        named = f" ({self.marker})" if self.marker else ""
+        aligned = f", phase {self.phase}" if self.phase >= 0 else ""
+        return (f"{self.length:,} bytes: {self.family}{named}, "
+                f"{len(self.regions)} regions{hidden}{aligned}")

@@ -12,6 +12,7 @@ three lines too many.
     kabah describe                  every layer and what it guarantees
     kabah memscan dump.raw          find injected regions, recover payloads
     kabah identify fragment.bin     what a headerless fragment is
+    kabah examine  anything.bin     the whole system in one pass, sealed
 
 The key file is the only state. Losing it loses nothing that was encrypted —
 nothing here encrypts — but it makes sealed records unverifiable, which for an
@@ -187,6 +188,51 @@ def cmd_identify(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_examine(args: argparse.Namespace) -> int:
+    """Fold data through every stage and print one summary.
+
+    The system had four front doors before this — the wave, the memory
+    scanner, the elemental profile, the record layers — and a caller had to
+    know which to open and in what order. This is one.
+
+    With ``--bits`` the input is read as a raw bitstream with no byte boundary
+    given, and the boundary is recovered from the data. With ``--seal`` the
+    report is authenticated, which is the only thing here that stops a finding
+    being rewritten between this machine and whoever acts on it.
+    """
+    from hijaiyyah.crypto.node_counter import bitstream
+
+    data = Path(args.file).read_bytes()
+    system = Kabah(
+        _load_key(Path(args.key)) if args.seal else None,
+        args.purpose, track_replays=False)
+
+    found = (system.examine_stream(bitstream(data, args.offset))
+             if args.bits else system.examine(data))
+
+    print(f"{args.file}\n")
+    print(f"  {found.summary()}\n")
+    print("  profil     " + "  ".join(
+        f"{name} {count}" for name, count in found.profile.items() if count))
+    if found.regions:
+        print()
+        for offset, length, kind in found.regions:
+            print(f"  {offset:>10}  {length:>8}  {kind}")
+    for offset, key, clue in found.recovered:
+        print(f"\n  dipulihkan @ {offset:#x}: kunci kanonik {key.hex()}"
+              f"{f', {clue}' if clue else ''}")
+    print(f"\n  sidik      {found.fingerprint.hex()[:32]}…  [EH]")
+
+    if args.seal:
+        record = system.seal_examination(found)
+        target = Path(f"{args.file}.examination{SUFFIX}")
+        target.write_bytes(record.to_bytes())
+        print(f"  tersegel   {target}  ({target.stat().st_size} byte)")
+    else:
+        print("  [CC] laporan TIDAK terotentikasi — pakai --seal", file=sys.stderr)
+    return 0
+
+
 def cmd_describe(args: argparse.Namespace) -> int:
     info: Dict[str, Any] = Kabah.describe()
     layers: List[Dict[str, Any]] = info["layers"]
@@ -240,6 +286,16 @@ def build_parser() -> argparse.ArgumentParser:
     ident = sub.add_parser("identify", help="what headerless data is")
     ident.add_argument("file")
     ident.set_defaults(func=cmd_identify)
+
+    exam = sub.add_parser("examine", help="the whole system in one pass")
+    exam.add_argument("file")
+    exam.add_argument("--bits", action="store_true",
+                      help="read as a raw bitstream; recover the byte boundary")
+    exam.add_argument("--offset", type=int, default=0,
+                      help="clocks to drop before the stream begins")
+    exam.add_argument("--seal", action="store_true",
+                      help="authenticate the report with layer 3")
+    exam.set_defaults(func=cmd_examine)
 
     sub.add_parser("describe", help="what each layer guarantees").set_defaults(
         func=cmd_describe
