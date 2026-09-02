@@ -338,6 +338,38 @@ PROGRAMS: Dict[str, List[int]] = {
         enc(OpCode.XORI, dst=4, s1=1, imm=0xFFF),
         enc(OpCode.HALT),
     ],
+    # ── Memory-mapped I/O ────────────────────────────────────────
+    #
+    # The top sixteen words of the data space are peripherals in both
+    # engines. Only the deterministic registers appear here: the timer's
+    # free-running counter counts real clock cycles, and this interpreter
+    # does not model the pipeline's timing, so a "parity" check on it would
+    # mean one of the two was lying about what it measures.
+    "mmio_compare_round_trip": [
+        enc(OpCode.MOVI, dst=5, imm=0),
+        enc(OpCode.MOVI, dst=6, imm=0x123),
+        enc(OpCode.STORE, s1=6, s2=5, imm=0xFF5),   # timer compare
+        enc(OpCode.LOAD, dst=1, s1=5, imm=0xFF5),
+        enc(OpCode.HALT),
+    ],
+    "mmio_status_when_idle": [
+        enc(OpCode.MOVI, dst=5, imm=0),
+        enc(OpCode.LOAD, dst=1, s1=5, imm=0xFF1),   # rx status, nothing sent
+        enc(OpCode.LOAD, dst=2, s1=5, imm=0xFF6),   # timer status
+        enc(OpCode.HALT),
+    ],
+    # A peripheral write must not disturb RAM, and RAM below the base must
+    # keep working with peripherals present.
+    "mmio_does_not_disturb_ram": [
+        enc(OpCode.MOVI, dst=5, imm=0),
+        enc(OpCode.MOVI, dst=6, imm=0x0AA),
+        enc(OpCode.STORE, s1=6, s2=5, imm=0x010),
+        enc(OpCode.MOVI, dst=7, imm=0x7FF),
+        enc(OpCode.STORE, s1=7, s2=5, imm=0xFF5),
+        enc(OpCode.LOAD, dst=1, s1=5, imm=0x010),
+        enc(OpCode.HALT),
+    ],
+
     # A shift of 33 must mask to 1 in both engines, not be undefined.
     "shift_overflow": [
         enc(OpCode.MOVI, dst=1, imm=0x0F0),

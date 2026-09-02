@@ -62,6 +62,13 @@ class HISAMachine:
         self.code: List[int] = []
         # Sparse stand-in for hcpu_dataram: 4096 x 32-bit words, zero-filled.
         self.data_mem: Dict[int, int] = {}
+
+        # Peripheral state, mirroring hcpu_mmio.v. `rx_queue` is what a test
+        # or a host feeds in; the pipeline gets its bytes off a wire instead,
+        # which is why only the deterministic registers are compared.
+        self.rx_queue: List[int] = []
+        self.timer_compare: int = 0xFFFFFFFF
+        self.timer_expired: bool = False
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -144,11 +151,64 @@ class HISAMachine:
         self.regs.sr.zero = result == 0
         self.regs.sr.overflow = bool(result & self._SIGN)
 
+    # ── Memory-mapped I/O ────────────────────────────────────────
+    #
+    # The top sixteen words of the data space are peripherals, exactly as
+    # hcpu_mmio.v decodes them. Modelling them here is not optional: without
+    # it a `LOAD` from 0xFF4 reads RAM in this interpreter and the timer in
+    # the pipeline, and the two engines quietly disagree about what a program
+    # does.
+    #
+    # **What can and cannot be checked in parity.** The compare register and
+    # the status words are deterministic and are compared. The free-running
+    # counter is not: it counts real clock cycles, and this interpreter does
+    # not model the pipeline's timing. Reporting a counter here that "agrees"
+    # with the RTL would mean one of the two was lying.
+
+    PERIPH_BASE = 0xFF0
+
+    REG_RX_DATA = 0x0
+    REG_RX_STATUS = 0x1
+    REG_TX_STATUS = 0x2
+    REG_COUNTER = 0x4
+    REG_COMPARE = 0x5
+    REG_TIMER_STATUS = 0x6
+
     def _mem_read(self, addr: int) -> int:
-        return self.data_mem.get(addr & self.DATA_ADDR_MASK, 0)
+        masked = addr & self.DATA_ADDR_MASK
+        if masked >= self.PERIPH_BASE:
+            return self._periph_read(masked & 0xF)
+        return self.data_mem.get(masked, 0)
 
     def _mem_write(self, addr: int, value: int) -> None:
-        self.data_mem[addr & self.DATA_ADDR_MASK] = self._u32(value)
+        masked = addr & self.DATA_ADDR_MASK
+        if masked >= self.PERIPH_BASE:
+            self._periph_write(masked & 0xF, self._u32(value))
+            return
+        self.data_mem[masked] = self._u32(value)
+
+    def _periph_read(self, reg: int) -> int:
+        if reg == self.REG_RX_DATA:
+            byte = self.rx_queue.pop(0) if self.rx_queue else 0
+            return byte
+        if reg == self.REG_RX_STATUS:
+            return 1 if self.rx_queue else 0
+        if reg == self.REG_TX_STATUS:
+            return 0                     # this interpreter never stalls on TX
+        if reg == self.REG_COUNTER:
+            return self._u32(self.cycle)
+        if reg == self.REG_COMPARE:
+            return self.timer_compare
+        if reg == self.REG_TIMER_STATUS:
+            return 1 if self.timer_expired else 0
+        return 0
+
+    def _periph_write(self, reg: int, value: int) -> None:
+        if reg == self.REG_COMPARE:
+            self.timer_compare = value
+            self.timer_expired = False
+        elif reg == self.REG_TIMER_STATUS:
+            self.timer_expired = False
 
     def _execute(self, iw: InstructionWord) -> str:
         """Execute a decoded instruction. Returns description string."""
@@ -649,3 +709,8 @@ class HISAMachine:
         self.cycle = 0
         self._halted = False
         self._exit_code = 0
+
+        # Peripheral state, declared in __init__ and only re-set here.
+        self.rx_queue = []
+        self.timer_compare = 0xFFFFFFFF
+        self.timer_expired = False

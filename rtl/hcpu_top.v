@@ -32,6 +32,12 @@ module hcpu_top #(
     input  wire [`ILEN-1:0]        imem_data,
 
     // ── External I/O ────────────────────────────────────────────
+    // `uart_rx` idles high, and every existing instantiation leaves it
+    // unconnected — an unconnected input reads as z, which the receiver's
+    // synchroniser would latch as x and never leave IDLE. It is pulled up
+    // internally instead, so a wrapper that does not drive it behaves exactly
+    // as it did before this port existed.
+    input  wire        uart_rx,
     output wire        uart_tx,
     output wire        halted,
     output wire        guard_led,     // Current GUARD flag state
@@ -544,14 +550,43 @@ module hcpu_top #(
         .tx_busy  (uart_busy)
     );
 
-    // ── Data RAM ────────────────────────────────────────────────
+    // ── Memory-mapped I/O, then the RAM behind it ───────────────
+    //
+    // The decoder sits between the memory stage and the RAM rather than
+    // beside it: the top sixteen words of the data space are peripherals and
+    // everything below is memory, so `LOAD` and `STORE` reach the receiver
+    // and the timer with no new instruction.
+    wire                    ram_re;
+    wire                    ram_we;
+    wire [`DATA_ADDR_W-1:0] ram_addr;
+    wire [`XLEN-1:0]        ram_wdata;
+    wire [`XLEN-1:0]        ram_rdata;
+    wire                    uart_rx_pulled = (uart_rx === 1'b0) ? 1'b0 : 1'b1;
+
+    hcpu_mmio #(.CLK_HZ(CLK_HZ), .BAUD(BAUD)) u_mmio (
+        .clk          (clk),
+        .rst_n        (rst_n),
+        .re           (dram_re),
+        .we           (dram_we),
+        .addr         (dram_addr),
+        .wdata        (dram_wdata),
+        .rdata        (dram_rdata),
+        .ram_re       (ram_re),
+        .ram_we       (ram_we),
+        .ram_addr     (ram_addr),
+        .ram_wdata    (ram_wdata),
+        .ram_rdata    (ram_rdata),
+        .uart_rx_in   (uart_rx_pulled),
+        .uart_tx_busy (uart_busy)
+    );
+
     hcpu_dataram u_dataram (
         .clk   (clk),
-        .re    (dram_re),
-        .we    (dram_we),
-        .addr  (dram_addr),
-        .wdata (dram_wdata),
-        .rdata (dram_rdata)
+        .re    (ram_re),
+        .we    (ram_we),
+        .addr  (ram_addr),
+        .wdata (ram_wdata),
+        .rdata (ram_rdata)
     );
 
     // ── Controller ──────────────────────────────────────────────

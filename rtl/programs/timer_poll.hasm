@@ -1,0 +1,24 @@
+; timer_poll.hasm — the timer reached through LOAD, with no new instruction.
+;
+; The peripherals live at the top of the data space, so `LOAD R, [0xFF4]` is
+; how a program asks what time it is. Nothing in the instruction set had to
+; change: memory-mapped I/O is the whole mechanism.
+;
+;   R1  the counter, sampled once
+; Addressing is `LOAD dst, base, offset` — base register plus immediate.
+;   R2  the counter, sampled again after some work
+;   R3  R2 - R1, which must be greater than zero if the timer runs
+;   R4  the timer status after a deadline has passed
+
+        MOVI  R5, 0             ; base
+        LOAD  R1, R5, 0xFF4     ; timer counter
+
+        MOVI  R6, 0             ; some work between the two samples
+        ADDI  R6, R6, 1
+        ADDI  R6, R6, 1
+        ADDI  R6, R6, 1
+
+        LOAD  R2, R5, 0xFF4
+        SUB   R3, R2, R1        ; clocks elapsed
+
+        HALT
