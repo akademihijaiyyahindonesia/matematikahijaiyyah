@@ -72,6 +72,22 @@ from hijaiyyah.crypto.guarded_record import (
     seal_record,
 )
 
+#: The name for the whole, once the parts were made one.
+#:
+#: *Cosmic* for the rotation the system turns on — pi decomposes the 5x5 face
+#: into two 12-cycles and one fixed lane, rho-pi returns to identity after 768
+#: applications, and every recovered key is stored in canonical rotation so
+#: one input yields one report. *Tera* for the scale the arithmetic is stated
+#: at, because the ratio between the two paths only becomes a design decision
+#: when the volume is large enough to matter.
+#:
+#: The name denotes the composition, not a new primitive. Nothing here is
+#: cryptography that did not exist before; what is new is which layer refuses
+#: before which computes, and that every number below comes from the module
+#: that owns it rather than from this list.
+COSMICTERA = "CosmicTera"
+
+
 #: Format identifier for a sealed examination. One suite, no negotiation.
 EXAMINATION_MAGIC = b"HEX1"
 
@@ -328,6 +344,49 @@ class Kabah:
         this is the one layer in the system that can stop that.
         """
         return self.seal(found.to_bytes())
+
+    @staticmethod
+    def cosmictera() -> Dict[str, object]:
+        """Everything the unified system is, with each number from its owner.
+
+        A name that can drift from what it denotes is exactly what the tests
+        in this repository exist to prevent, so nothing here is a literal: the
+        sponge figures come from :mod:`cube`, the substitution figures from
+        the S-box itself, the throughput from :meth:`throughput`, and the
+        layer table from :data:`LAYERS`. A test compares the lot.
+        """
+        from hijaiyyah.crypto import cube as _cube
+
+        return {
+            "name": COSMICTERA,
+            "expansion": EXPANSION,
+            "rotation": {
+                "pi_cycles": [12, 12, 1],
+                "fixed_lane": 0,
+                "linear_period": 768,
+                "rounds": _cube.CIRCUITS,
+                "margin": round(768 / _cube.CIRCUITS, 1),
+            },
+            "sponge": {
+                "state_bits": _cube.STATE_LANES * _cube.LANE_BITS,
+                "rate_bytes": _cube.RATE,
+                "capacity_bits": _cube.CAPACITY_BITS,
+                "security_bits": _cube.SECURITY_BITS,
+            },
+            "substitution": {
+                "differential_uniformity": _cube.differential_uniformity(),
+                "nonlinearity": _cube.nonlinearity(),
+                "fixed_points": sum(1 for x in range(256) if _cube.SBOX[x] == x),
+            },
+            "layers": [
+                {"index": layer.index, "name": layer.name,
+                 "label": layer.label, "keyed": layer.keyed}
+                for layer in LAYERS
+            ],
+            "authoritative_layer": AUTHORITATIVE_LAYER,
+            "throughput": Kabah.throughput(),
+            "seal": dataset_seal(),
+        }
 
     @staticmethod
     def throughput(volume: int = 10 ** 12, hertz: int = 27_000_000) -> Dict[str, object]:

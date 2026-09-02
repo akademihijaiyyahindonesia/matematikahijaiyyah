@@ -10,11 +10,12 @@ answer at the end.
 from __future__ import annotations
 
 import random
+from pathlib import Path
 
 import pytest
 
-from hijaiyyah.crypto.guarded_record import CryptoRefusal, GuardedRecord
-from hijaiyyah.crypto.kabah import Examination, Kabah
+from hijaiyyah.crypto.guarded_record import CryptoRefusal, GuardedRecord, dataset_seal
+from hijaiyyah.crypto.kabah import AUTHORITATIVE_LAYER, Examination, Kabah
 from hijaiyyah.crypto.node_counter import bitstream
 
 MASTER = bytes(range(32))
@@ -222,3 +223,84 @@ def test_the_docstring_keeps_the_epistemic_label_on_the_clock() -> None:
     doc = " ".join((Kabah.throughput.__doc__ or "").split())
     assert "[EH] on the clock" in doc
     assert "not an Fmax this design has been shown to close timing at" in doc
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CosmicTera: the name, and what it is held to
+# ══════════════════════════════════════════════════════════════════
+
+class TestCosmicTera:
+    """
+    A name that can drift from what it denotes is exactly what the tests in
+    this repository exist to prevent. Every figure the descriptor reports is
+    compared against the module that owns it.
+    """
+
+    def test_every_number_comes_from_its_owner(self):
+        from hijaiyyah.crypto import cube
+
+        found = Kabah.cosmictera()
+
+        sponge = found["sponge"]
+        assert sponge["state_bits"] == cube.STATE_LANES * cube.LANE_BITS == 1600
+        assert sponge["rate_bytes"] == cube.RATE
+        assert sponge["capacity_bits"] == cube.CAPACITY_BITS
+        assert sponge["security_bits"] == cube.SECURITY_BITS
+
+        sub = found["substitution"]
+        assert sub["differential_uniformity"] == cube.differential_uniformity()
+        assert sub["nonlinearity"] == cube.nonlinearity()
+        assert sub["fixed_points"] == 0
+
+        assert found["seal"] == dataset_seal()
+        assert found["throughput"] == Kabah.throughput()
+
+    def test_the_rotation_figures_match_the_permutation_itself(self):
+        """
+        The half of the name that is not a metaphor: pi really does decompose
+        into two 12-cycles and one fixed lane, and rho-pi really does return
+        to identity after 768.
+        """
+        from hijaiyyah.crypto import cube
+
+        rotation = Kabah.cosmictera()["rotation"]
+
+        seen, lengths = set(), []
+        for start in range(cube.STATE_LANES):
+            if start in seen:
+                continue
+            length, node = 0, start
+            while node not in seen:
+                seen.add(node)
+                length += 1
+                node = cube.PI[node]
+            lengths.append(length)
+        assert sorted(lengths, reverse=True) == rotation["pi_cycles"]
+
+        assert [i for i in range(cube.STATE_LANES) if cube.PI[i] == i] == [
+            rotation["fixed_lane"]
+        ]
+        assert rotation["rounds"] == cube.CIRCUITS
+        assert abs(rotation["margin"] - 768 / cube.CIRCUITS) < 0.05
+
+    def test_the_layer_table_matches_the_layers(self):
+        from hijaiyyah.crypto.kabah import LAYERS
+
+        reported = Kabah.cosmictera()["layers"]
+        assert [entry["index"] for entry in reported] == [layer.index for layer in LAYERS]
+        assert [entry["label"] for entry in reported] == [layer.label for layer in LAYERS]
+        assert Kabah.cosmictera()["authoritative_layer"] == AUTHORITATIVE_LAYER
+
+    def test_the_name_denotes_a_composition_and_says_so(self):
+        """
+        Nothing here is cryptography that did not exist before. What is new is
+        which layer refuses before which computes — and the docstring has to
+        keep saying that rather than letting a name imply otherwise.
+        """
+        from hijaiyyah.crypto import kabah
+
+        doc = " ".join((kabah.__doc__ or "").split())
+        source = Path("src/hijaiyyah/crypto/kabah.py").read_text(encoding="utf-8")
+        assert "COSMICTERA" in source
+        assert "denotes the composition, not a new primitive" in " ".join(source.split())
+        assert "Layer 3 is the security" in doc
