@@ -185,6 +185,7 @@
 `define REG_TRAP_CAUSE    4'hA       // cause of the trap taken, read-only
 `define REG_TRAP_ENABLE   4'hB       // per-cause enable mask, writable
 `define REG_TRAP_PENDING  4'hC       // per-cause pending bits, read-only
+`define REG_TRAP_MODE     4'hD       // bit0 mode (RO), bit1 previous (RW)
 
 // ── Trap causes ─────────────────────────────────────────────────
 // One bit per cause in ENABLE and PENDING; the CAUSE register holds the index,
@@ -192,9 +193,26 @@
 `define TRAP_TIMER        3'd0
 `define TRAP_UART_RX      3'd1
 `define TRAP_ILLEGAL      3'd2
-`define TRAP_CAUSES       3           // how many are defined
-// 3..7 are reserved for memory protection and syscall, which come later. The
+`define TRAP_PRIV         3'd3       // privileged act attempted in user mode
+`define TRAP_CAUSES       4           // how many are defined
+// 4..7 are reserved for memory protection and syscall, which come later. The
 // width is 8 so those can be added without moving anything.
+
+// ── Privilege ───────────────────────────────────────────────────
+// Two levels, and the peripheral window is the boundary: everything the trap
+// unit, the timer and the UART expose lives there, so one rule covers all of
+// them. User code reaches them through a syscall, which is the step after
+// this one.
+`define MODE_USER         1'b0
+`define MODE_SUPER        1'b1
+
+// TRAP_PRIV IS NOT MASKABLE, and that distinction is the whole point. A timer
+// or a UART byte is an INTERRUPT: it arrives from outside, and software is
+// entitled to say "not now" by clearing its enable bit. A privilege violation
+// is an EXCEPTION: it is the instruction stream itself doing something it may
+// not, and if the enable mask could suppress it then user code could disable
+// the protection by writing one register -- which is exactly the thing being
+// protected against.
 `define TRAP_MASK_W       8
 
 `endif // HCPU_PKG_VH

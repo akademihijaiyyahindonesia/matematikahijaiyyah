@@ -1,0 +1,54 @@
+; user_mode.hasm — dropping into user mode, faulting, and recovering.
+;
+; The smallest program that shows the boundary is real. Supervisor sets up a
+; handler, drops to user mode, and user code then tries to read the timer.
+; That read is refused: the peripheral window is the boundary, and everything
+; the trap unit, the timer and the UART expose lives inside it.
+;
+; Entering user mode takes two steps and no new instruction: write the mode
+; ERET will install, and ERET. That is also why epc has to be set first --
+; ERET returns to epc, so epc is where user code begins.
+;
+; The handler must SKIP the faulting instruction or emulate it. epc points AT
+; the instruction that faulted, not past it, so returning unchanged re-runs it
+; and loops. That is deliberate: emulating is how the syscall step will work,
+; and a loop is visible where a silent skip would not be.
+;
+;   R5   zero base for peripheral access
+;   R7   set by user code before the fault
+;   R8   the timer read that must NOT happen
+;   R9   set after the handler returns
+;   R10  set by the handler
+;   R11  the cause the handler read back
+
+        MOVI  R5, 0
+        MOVI  R8, 0
+        MOVI  R10, 0
+
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+
+        MOVI  R1, usercode
+        STORE R1, R5, 0xFF9     ; TRAP_EPC — where ERET will land
+
+        MOVI  R1, 0             ; bit1 = 0 → previous mode is USER
+        STORE R1, R5, 0xFFD     ; TRAP_MODE
+        ERET                    ; drop privilege
+
+; ── user mode ───────────────────────────────────────────────────
+usercode:
+        MOVI  R7, 1             ; ordinary arithmetic: allowed
+        LOAD  R8, R5, 0xFF4     ; the timer: REFUSED, and R8 must stay 0
+        MOVI  R9, 1             ; reached only after the handler skips the load
+        HALT
+
+; ── handler, always entered in supervisor ───────────────────────
+handler:
+        LOAD  R11, R5, 0xFFA    ; TRAP_CAUSE — should be 3, TRAP_PRIV
+        LOAD  R12, R5, 0xFF9    ; TRAP_EPC — the faulting instruction
+        ADDI  R12, R12, 1       ; step past it
+        STORE R12, R5, 0xFF9
+        MOVI  R1, 2             ; bit1 = 1 → return to SUPERVISOR
+        STORE R1, R5, 0xFFD
+        MOVI  R10, 1
+        ERET

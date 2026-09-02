@@ -87,6 +87,16 @@ module hcpu_execute #(
     // is stalled, which is harmless: both redirects are idempotent.
     output wire                    is_eret,
 
+    // ── Privilege ───────────────────────────────────────────────
+    // The fault is raised HERE, not in the peripheral decoder, for one
+    // reason: this is the last stage that still knows the PC. A fault
+    // detected in Memory would have no instruction to point at, and an
+    // exception that cannot name where it happened is not much of an
+    // exception. Detecting it here also means the access never leaves the
+    // stage -- it is suppressed rather than performed and undone.
+    input  wire                    in_user,
+    output wire                    priv_fault,
+
     // ── Data RAM control (passed through to memory stage) ──────
     input  wire                    id_mem_read,
     input  wire                    id_mem_write,
@@ -209,7 +219,28 @@ module hcpu_execute #(
                              (ex_flags_we)   ? ex_flags_new  :  // CMP just left EX
                              current_flags;                      // Register file
 
-    assign is_eret = (id_opcode == `OP_ERET);
+    wire eret_decoded = (id_opcode == `OP_ERET);
+
+    // The address this instruction would touch, computed the same way the
+    // pipeline register below computes it. One truth would be better, but the
+    // register is clocked and this has to be combinational.
+    wire [`DATA_ADDR_W-1:0] would_addr =
+        (id_mem_write ? (id_gpr_s2 + imm_sext) : (id_gpr_s1 + imm_sext))
+        & {`DATA_ADDR_W{1'b1}};
+
+    // Two privileged acts: touching the peripheral window, and returning from
+    // a trap. HALT is the third, and it is caught in Decode where it is
+    // recognised. Everything the trap unit, the timer and the UART expose
+    // lives in that window, so one rule covers all of them.
+    wire touches_window = (id_mem_read | id_mem_write)
+                          && (would_addr >= `PERIPH_BASE);
+    assign priv_fault = in_user && (touches_window || eret_decoded || id_is_halt);
+
+    // A faulting ERET must not also return. Without this the one instruction
+    // that changes privilege would still change it while reporting that it
+    // was not allowed to -- user code would escape by executing an ERET and
+    // letting the fault it raised be handled afterwards.
+    assign is_eret = eret_decoded && !in_user;
 
     // ── Branch resolution ───────────────────────────────────────
     always @(*) begin
@@ -293,7 +324,7 @@ module hcpu_execute #(
                 ex_hreg_we  <= 1'b0;
                 ex_mem_write <= 1'b0;
             end else begin
-                ex_is_halt  <= id_is_halt;
+                ex_is_halt  <= id_is_halt & ~priv_fault;
             end
 
             // GPR result selection
@@ -333,8 +364,11 @@ module hcpu_execute #(
             ex_push_data <= id_gpr_s1;
 
             // Data RAM LOAD/STORE
-            ex_mem_read  <= id_mem_read;
-            ex_mem_write <= id_mem_write;
+            // A faulting access is not performed. The trap fires in the same
+            // cycle, so letting the write through and undoing it later would
+            // mean a peripheral had already seen it.
+            ex_mem_read  <= id_mem_read  & ~priv_fault;
+            ex_mem_write <= id_mem_write & ~priv_fault;
             // LOAD: addr = GPR[S1] + IMM  (DST <- MEM[S1+IMM])
             // STORE: addr = GPR[S2] + IMM  (MEM[S2+IMM] <- GPR[S1])
             if (id_mem_write)

@@ -5,23 +5,24 @@
 
 module tb_hcpu_trap;
     reg clk = 0, rst_n = 0;
-    reg src_timer = 0, src_uart_rx = 0, src_illegal = 0;
-    reg [`XLEN-1:0] pc_now = 0;
+    reg src_timer = 0, src_uart_rx = 0, src_illegal = 0, src_priv = 0;
+    reg [`XLEN-1:0] pc_now = 0, pc_fault = 0;
     reg pc_valid = 1;
     reg reg_we = 0; reg [3:0] reg_sel = 0; reg [`XLEN-1:0] reg_wdata = 0;
     wire [`XLEN-1:0] reg_rdata;
     reg eret = 0;
-    wire trap_redirect, in_trap;
+    wire trap_redirect, in_trap, in_user;
     wire [`XLEN-1:0] trap_target;
 
     integer errors = 0;
 
     hcpu_trap dut (.clk(clk), .rst_n(rst_n),
         .src_timer(src_timer), .src_uart_rx(src_uart_rx), .src_illegal(src_illegal),
-        .pc_now(pc_now), .pc_valid(pc_valid),
+        .src_priv(src_priv),
+        .pc_now(pc_now), .pc_valid(pc_valid), .pc_fault(pc_fault),
         .reg_we(reg_we), .reg_sel(reg_sel), .reg_wdata(reg_wdata), .reg_rdata(reg_rdata),
         .eret(eret), .trap_redirect(trap_redirect), .trap_target(trap_target),
-        .in_trap(in_trap));
+        .in_trap(in_trap), .in_user(in_user));
 
     always #5 clk = ~clk;
 
@@ -148,6 +149,58 @@ module tb_hcpu_trap;
         check(trap_target == 32'h0000_0055,
               "eret harus menang atas trap serentak (epc, bukan vector)");
         @(negedge clk); eret = 0; src_timer = 0;
+
+        // ── 10. Privilege: reset is supervisor ──────────────────
+        check(!in_user, "reset harus mendarat di supervisor");
+
+        // ── 11. Entering user mode: write prev, then ERET ───────
+        wr(`REG_TRAP_EPC, 32'h0000_0200);
+        wr(`REG_TRAP_MODE, 32'h0000_0000);      // bit1 = 0 -> previous = USER
+        @(negedge clk); eret = 1; @(negedge clk); eret = 0; @(negedge clk);
+        check(in_user, "eret dengan prev=USER harus menurunkan privilese");
+
+        // ── 12. Bit 0 is read-only ─────────────────────────────
+        wr(`REG_TRAP_MODE, 32'h0000_0001);      // try to set mode = SUPER
+        @(negedge clk);
+        check(in_user, "bit mode saat ini harus read-only");
+
+        // ── 13. A privilege fault is NOT maskable ──────────────
+        wr(`REG_TRAP_ENABLE, 32'h0000_0000);    // everything masked
+        wr(`REG_TRAP_VECTOR, 32'h0000_0300);
+        pc_now   = 32'h0000_09AA;
+        pc_fault = 32'h0000_0055;
+        src_priv = 1; #1;
+        check(trap_redirect, "TRAP_PRIV harus menyala walau semua enable nol");
+        check(trap_target == 32'h0000_0300, "target harus vector");
+        @(negedge clk);
+        check(!in_user, "handler harus berjalan di supervisor");
+        reg_sel = `REG_TRAP_CAUSE; #1;
+        check(reg_rdata == `TRAP_PRIV, "cause harus TRAP_PRIV");
+
+        // ── 14. An exception names its own instruction ─────────
+        reg_sel = `REG_TRAP_EPC; #1;
+        check(reg_rdata == 32'h0000_0055,
+              "epc harus pc_fault, bukan pc_now — exception menyebut instruksinya");
+        reg_sel = `REG_TRAP_MODE; #1;
+        check(reg_rdata[1] == 1'b0, "prev harus mengingat USER");
+
+        src_priv = 0;
+        @(negedge clk); eret = 1; @(negedge clk); eret = 0; @(negedge clk);
+        check(in_user, "eret harus mengembalikan ke USER");
+
+        // ── 15. An interrupt still uses pc_now ─────────────────
+        wr(`REG_TRAP_MODE, 32'h0000_0002);      // prev = SUPER
+        @(negedge clk); eret = 1; @(negedge clk); eret = 0; @(negedge clk);
+        check(!in_user, "kembali ke supervisor");
+        wr(`REG_TRAP_ENABLE, 32'h0000_0001);
+        pc_now = 32'h0000_0AAA; pc_fault = 32'h0000_0055;
+        src_timer = 1; #1;
+        check(trap_redirect, "interupsi timer harus menyala");
+        @(negedge clk);
+        reg_sel = `REG_TRAP_EPC; #1;
+        check(reg_rdata == 32'h0000_0AAA,
+              "interupsi harus memakai pc_now, bukan pc_fault");
+        src_timer = 0; @(negedge clk); eret = 1; @(negedge clk); eret = 0;
 
         if (errors == 0) $display("PASS: tb_hcpu_trap — semua pemeriksaan lulus");
         else             $display("FAIL: tb_hcpu_trap — %0d gagal", errors);

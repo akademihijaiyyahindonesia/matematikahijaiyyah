@@ -48,10 +48,18 @@ module hcpu_trap (
     input  wire                     src_timer,
     input  wire                     src_uart_rx,
     input  wire                     src_illegal,
+    input  wire                     src_priv,      // privileged act in user mode
 
     // ── The PC a trap would return to ───────────────────────────
     input  wire [`XLEN-1:0]         pc_now,
     input  wire                     pc_valid,   // 0 while the front end is empty
+
+    // An INTERRUPT returns to pc_now -- the instruction that has not run yet.
+    // An EXCEPTION must name the instruction that caused it, which is already
+    // past fetch, so Execute supplies its PC separately. Saving pc_now for a
+    // fault would return to whatever happened to be in the front end and lose
+    // the faulting instruction entirely.
+    input  wire [`XLEN-1:0]         pc_fault,
 
     // ── Software access through the peripheral window ───────────
     input  wire                     reg_we,
@@ -65,9 +73,12 @@ module hcpu_trap (
     // ── Redirect to the fetch stage ─────────────────────────────
     output wire                     trap_redirect,
     output wire [`XLEN-1:0]         trap_target,
-    output wire                     in_trap
+    output wire                     in_trap,
+    output wire                     in_user        // gates the peripheral window
 );
 
+    reg                  mode;      // MODE_USER / MODE_SUPER, current
+    reg                  prev;      // what ERET will install
     reg [`XLEN-1:0]      vector;
     reg [`XLEN-1:0]      epc;
     reg [2:0]            cause;
@@ -75,13 +86,21 @@ module hcpu_trap (
     reg                  trap_active;
 
     assign in_trap = trap_active;
+    assign in_user = (mode == `MODE_USER);
 
     // ── Pending: raw sources, one bit each ──────────────────────
     wire [`TRAP_MASK_W-1:0] pending;
     assign pending = { {(`TRAP_MASK_W-`TRAP_CAUSES){1'b0}},
-                       src_illegal, src_uart_rx, src_timer };
+                       src_priv, src_illegal, src_uart_rx, src_timer };
 
-    wire [`TRAP_MASK_W-1:0] armed = pending & enable;
+    // Exceptions ignore the mask; interrupts obey it. A timer or a UART byte
+    // arrives from outside and software may say "not now". A privilege
+    // violation is the instruction stream itself doing what it may not, and a
+    // maskable protection is not a protection -- user code would disable it by
+    // clearing one bit.
+    localparam [`TRAP_MASK_W-1:0] NONMASKABLE = (1 << `TRAP_PRIV);
+
+    wire [`TRAP_MASK_W-1:0] armed = (pending & enable) | (pending & NONMASKABLE);
 
     // A trap fires only when the front end has a real PC to come back to.
     // Redirecting to a handler that returns into a bubble loses an instruction.
@@ -109,13 +128,28 @@ module hcpu_trap (
             cause       <= 3'd0;
             enable      <= {`TRAP_MASK_W{1'b0}};
             trap_active <= 1'b0;
+            // Reset lands in supervisor. There is no other way in: entering
+            // user mode is a deliberate act -- write `prev` then ERET -- and
+            // if reset came up in user mode nothing could ever configure the
+            // machine, because configuring it means touching the window that
+            // user mode cannot touch.
+            mode        <= `MODE_SUPER;
+            prev        <= `MODE_SUPER;
         end else begin
             if (eret) begin
                 trap_active <= 1'b0;
+                mode        <= prev;      // return to where the trap came from
             end else if (fire) begin
-                epc         <= pc_now;
+                // epc points AT the faulting instruction, not past it, so a
+                // handler can emulate the operation and advance epc itself --
+                // which is how the syscall step will work. A handler that does
+                // neither will re-execute it and loop, and that is visible
+                // rather than silent.
+                epc         <= (which == `TRAP_PRIV) ? pc_fault : pc_now;
                 cause       <= which;
                 trap_active <= 1'b1;
+                prev        <= mode;      // remember it
+                mode        <= `MODE_SUPER;  // a handler always runs privileged
             end
 
             // Software writes land after the hardware update, so a handler
@@ -126,6 +160,10 @@ module hcpu_trap (
                     `REG_TRAP_VECTOR: vector <= reg_wdata;
                     `REG_TRAP_EPC:    epc    <= reg_wdata;
                     `REG_TRAP_ENABLE: enable <= reg_wdata[`TRAP_MASK_W-1:0];
+                    // Bit 1 only. Bit 0 is the CURRENT mode and is read-only:
+                    // if software could write it, dropping privilege and
+                    // raising it again would be the same instruction.
+                    `REG_TRAP_MODE:   prev   <= reg_wdata[1];
                     default: ;   // CAUSE and PENDING are read-only
                 endcase
             end
@@ -140,6 +178,7 @@ module hcpu_trap (
             `REG_TRAP_CAUSE:   reg_rdata = { {(`XLEN-3){1'b0}}, cause };
             `REG_TRAP_ENABLE:  reg_rdata = { {(`XLEN-`TRAP_MASK_W){1'b0}}, enable };
             `REG_TRAP_PENDING: reg_rdata = { {(`XLEN-`TRAP_MASK_W){1'b0}}, pending };
+            `REG_TRAP_MODE:    reg_rdata = { {(`XLEN-2){1'b0}}, prev, mode };
             default:           reg_rdata = {`XLEN{1'b0}};
         endcase
     end

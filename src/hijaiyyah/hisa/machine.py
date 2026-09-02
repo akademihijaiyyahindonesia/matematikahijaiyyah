@@ -79,6 +79,13 @@ class HISAMachine:
         self.trap_cause: int = 0
         self.trap_enable: int = 0
         self.trap_active: bool = False
+        # Reset lands in supervisor. There is no other way in: entering user
+        # mode is a deliberate act -- set `trap_prev` then ERET -- and a
+        # machine that came up in user mode could never configure itself,
+        # because configuring it means touching the window user mode cannot.
+        self.mode: int = self.MODE_SUPER
+        self.trap_prev: int = self.MODE_SUPER
+        self._priv_fault: bool = False
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -201,23 +208,42 @@ class HISAMachine:
     REG_TRAP_CAUSE = 0xA
     REG_TRAP_ENABLE = 0xB
     REG_TRAP_PENDING = 0xC
+    REG_TRAP_MODE = 0xD
 
     # Trap causes. One bit each in ENABLE and PENDING; CAUSE holds the index.
     TRAP_TIMER = 0
     TRAP_UART_RX = 1
     TRAP_ILLEGAL = 2
-    TRAP_CAUSES = 3
+    TRAP_PRIV = 3
+    TRAP_CAUSES = 4
     TRAP_MASK_W = 8
+
+    MODE_USER = 0
+    MODE_SUPER = 1
+
+    # Exceptions ignore the enable mask; interrupts obey it. A maskable
+    # protection is not a protection: user code would clear one bit and the
+    # privilege check would stop firing.
+    NONMASKABLE = 1 << TRAP_PRIV
 
     def _mem_read(self, addr: int) -> int:
         masked = addr & self.DATA_ADDR_MASK
         if masked >= self.PERIPH_BASE:
+            if self.mode == self.MODE_USER:
+                # Suppressed, not performed and undone. A read of RX_DATA
+                # consumes the byte, so letting it through would destroy state
+                # the handler is about to be told did not happen.
+                self._priv_fault = True
+                return 0
             return self._periph_read(masked & 0xF)
         return self.data_mem.get(masked, 0)
 
     def _mem_write(self, addr: int, value: int) -> None:
         masked = addr & self.DATA_ADDR_MASK
         if masked >= self.PERIPH_BASE:
+            if self.mode == self.MODE_USER:
+                self._priv_fault = True
+                return
             self._periph_write(masked & 0xF, self._u32(value))
             return
         self.data_mem[masked] = self._u32(value)
@@ -246,6 +272,8 @@ class HISAMachine:
             return self.trap_enable
         if reg == self.REG_TRAP_PENDING:
             return self._trap_pending()
+        if reg == self.REG_TRAP_MODE:
+            return (self.trap_prev << 1) | self.mode
         return 0
 
     def _periph_write(self, reg: int, value: int) -> None:
@@ -260,6 +288,11 @@ class HISAMachine:
             self.trap_epc = value
         elif reg == self.REG_TRAP_ENABLE:
             self.trap_enable = value & ((1 << self.TRAP_MASK_W) - 1)
+        elif reg == self.REG_TRAP_MODE:
+            # Bit 1 only. Bit 0 is the current mode and is read-only: if it
+            # were writable, dropping privilege and raising it again would be
+            # the same instruction.
+            self.trap_prev = (value >> 1) & 1
         # CAUSE and PENDING are read-only, in the RTL and here.
 
     def _trap_pending(self) -> int:
@@ -269,6 +302,8 @@ class HISAMachine:
             bits |= 1 << self.TRAP_TIMER
         if self.rx_queue:
             bits |= 1 << self.TRAP_UART_RX
+        if self._priv_fault:
+            bits |= 1 << self.TRAP_PRIV
         # TRAP_ILLEGAL is defined but nothing raises it, in the RTL or here.
         return bits
 
@@ -281,13 +316,20 @@ class HISAMachine:
         """
         if self.trap_active:
             return None
-        armed = self._trap_pending() & self.trap_enable
+        pending = self._trap_pending()
+        armed = (pending & self.trap_enable) | (pending & self.NONMASKABLE)
         if not armed:
             return None
         cause = (armed & -armed).bit_length() - 1
-        self.trap_epc = self.regs.pc
+        # An exception names the instruction that caused it -- which has
+        # already advanced the PC -- while an interrupt returns to the
+        # instruction that has not run yet.
+        self.trap_epc = (self.regs.pc - 1) if cause == self.TRAP_PRIV else self.regs.pc
         self.trap_cause = cause
         self.trap_active = True
+        self._priv_fault = False
+        self.trap_prev = self.mode
+        self.mode = self.MODE_SUPER
         self.regs.pc = self.trap_vector
         self.cycle += 1
         entry = TraceEntry(
@@ -466,6 +508,9 @@ class HISAMachine:
 
         # ── HALT: stop execution ────────────────────────────────
         if op == OpCode.HALT:
+            if self.mode == self.MODE_USER:
+                self._priv_fault = True
+                return "HALT → privilege fault (user mode)"
             self._halted = True
             self._exit_code = imm
             return f"HALT — execution stopped (code={imm})"
@@ -476,8 +521,14 @@ class HISAMachine:
         # would be taken with the old epc still in place, and the first
         # handler's return address would be gone.
         if op == OpCode.ERET:
+            if self.mode == self.MODE_USER:
+                # A faulting ERET must not also return, or user code escapes by
+                # executing one and letting the fault be handled afterwards.
+                self._priv_fault = True
+                return "ERET → privilege fault (user mode)"
             self.regs.pc = self.trap_epc
             self.trap_active = False
+            self.mode = self.trap_prev
             return f"ERET → {self.trap_epc}"
 
         # ── Legacy VPROJ_T / VPROJ_N / VPROJ_K / VPROJ_Q ───────
@@ -814,3 +865,6 @@ class HISAMachine:
         self.trap_cause = 0
         self.trap_enable = 0
         self.trap_active = False
+        self.mode = self.MODE_SUPER
+        self.trap_prev = self.MODE_SUPER
+        self._priv_fault = False
