@@ -13,6 +13,8 @@ three lines too many.
     kabah memscan dump.raw          find injected regions, recover payloads
     kabah identify fragment.bin     what a headerless fragment is
     kabah examine  anything.bin     the whole system in one pass, sealed
+    kabah sign     prog.hbc         seal an H-ISA program
+    kabah verify   prog.hbc.kbh     verify one before it runs
 
 The key file is the only state. Losing it loses nothing that was encrypted —
 nothing here encrypts — but it makes sealed records unverifiable, which for an
@@ -233,6 +235,53 @@ def cmd_examine(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sign(args: argparse.Namespace) -> int:
+    """Seal a built H-ISA program.
+
+    The equivalent of signing a binary: between the assembler writing a file
+    and the HCPU fetching it, anything with write access can change an
+    instruction word — and a changed word is a different program under the
+    same name.
+    """
+    from hijaiyyah.crypto.program import check_code, seal_program
+
+    source = Path(args.file)
+    image = source.read_bytes()
+    report = check_code(image)
+    system = Kabah(_load_key(Path(args.key)), args.purpose, track_replays=False)
+    record = seal_program(image, system)
+
+    target = Path(args.out) if args.out else source.with_suffix(source.suffix + SUFFIX)
+    target.write_bytes(record.to_bytes())
+    print(f"{source} → {target}")
+    print(f"  {report.words} instruksi, {len(image)} byte → {target.stat().st_size} byte")
+    return 0
+
+
+def cmd_verify(args: argparse.Namespace) -> int:
+    """Verify a sealed program before anything runs it.
+
+    Structure first and keyless — a word holding an undefined opcode is
+    refused before a hash is computed — then the MAC, which is the check that
+    means anything.
+    """
+    from hijaiyyah.crypto.program import check_code, load_verified
+
+    source = Path(args.file)
+    system = Kabah(_load_key(Path(args.key)), args.purpose, track_replays=False)
+    image = load_verified(GuardedRecord.from_bytes(source.read_bytes()), system)
+
+    report = check_code(image)
+    print(f"{source}  terverifikasi")
+    print(f"  {report.words} instruksi, {len(image)} byte")
+    if args.out:
+        Path(args.out).write_bytes(image)
+        print(f"  ditulis ke {args.out}")
+    print("  [VF] lapis 3 — bukan tanda tangan: kunci simetris, "
+          "siapa pun yang bisa memverifikasi juga bisa menyegel", file=sys.stderr)
+    return 0
+
+
 def cmd_describe(args: argparse.Namespace) -> int:
     info: Dict[str, Any] = Kabah.describe()
     layers: List[Dict[str, Any]] = info["layers"]
@@ -296,6 +345,15 @@ def build_parser() -> argparse.ArgumentParser:
     exam.add_argument("--seal", action="store_true",
                       help="authenticate the report with layer 3")
     exam.set_defaults(func=cmd_examine)
+
+    for name, func, help_text in (
+        ("sign", cmd_sign, "seal an H-ISA program"),
+        ("verify", cmd_verify, "verify a sealed program before it runs"),
+    ):
+        sp = sub.add_parser(name, help=help_text)
+        sp.add_argument("file")
+        sp.add_argument("--out")
+        sp.set_defaults(func=func)
 
     sub.add_parser("describe", help="what each layer guarantees").set_defaults(
         func=cmd_describe
