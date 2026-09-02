@@ -1,0 +1,71 @@
+; jamrah_gate.hasm — the seven-node reduction, in H-ISA.
+;
+; The first CosmicTera primitive expressible as a program rather than a
+; block. Until the bitwise instructions existed it could not be written at
+; all: extracting a bit needs a shift and a mask, and the instruction set had
+; neither.
+;
+; Eight bits fall through a binary tree whose internal nodes number exactly
+; 4 + 2 + 1 = SEVEN, ending at ONE root — the same shape as seven pebbles at
+; one pillar, and the same arithmetic as rtl/hijaiyyah_jamrah_gate.v.
+;
+;   R1  the byte
+;   R2  the root (popcount)
+;   R3  1 if the byte names a letter (1..28), 0 otherwise
+;
+; R6..R9 hold the four level-1 nodes, R10..R11 level 2, R2 the root.
+
+        MOVI  R1, 0xB5          ; the byte under test
+
+; ── level 1: four nodes, each a pair of adjacent bits ────────────
+        ANDI  R4, R1, 1
+        SHRI  R5, R1, 1
+        ANDI  R5, R5, 1
+        ADD   R6, R4, R5       ; n0 = b0 + b1
+
+        SHRI  R4, R1, 2
+        ANDI  R4, R4, 1
+        SHRI  R5, R1, 3
+        ANDI  R5, R5, 1
+        ADD   R7, R4, R5       ; n1 = b2 + b3
+
+        SHRI  R4, R1, 4
+        ANDI  R4, R4, 1
+        SHRI  R5, R1, 5
+        ANDI  R5, R5, 1
+        ADD   R8, R4, R5       ; n2 = b4 + b5
+
+        SHRI  R4, R1, 6
+        ANDI  R4, R4, 1
+        SHRI  R5, R1, 7
+        ANDI  R5, R5, 1
+        ADD   R9, R4, R5       ; n3 = b6 + b7
+
+; ── level 2: two nodes ───────────────────────────────────────────
+        ADD   R10, R6, R7     ; n4 = n0 + n1
+        ADD   R11, R8, R9     ; n5 = n2 + n3
+
+; ── level 3: the root ────────────────────────────────────────────
+        ADD   R2, R10, R11      ; n6 = popcount
+
+; ── the gate: 1 <= byte <= 28, branchless ────────────────────────
+;
+; The instruction set has only JEQ and JNE in hardware — no "jump if
+; greater" — so a range check used to need a comparison chain. With shifts it
+; needs none: subtract, then read the sign bit. Bit 31 of (x - 29) is 1
+; exactly when x < 29, and bit 31 of (0 - x) is 1 exactly when x > 0.
+;
+; Branchless matters beyond elegance here. A gate that branches on its input
+; takes a different number of cycles for different bytes, and that is a timing
+; channel on the very check meant to be cheap and uniform.
+
+        MOVI  R12, 29
+        SUB   R13, R1, R12      ; x - 29
+        SHRI  R13, R13, 31      ; 1 if x < 29
+
+        MOVI  R14, 0
+        SUB   R15, R14, R1      ; 0 - x
+        SHRI  R15, R15, 31      ; 1 if x > 0
+
+        AND   R3, R13, R15      ; both conditions
+        HALT
