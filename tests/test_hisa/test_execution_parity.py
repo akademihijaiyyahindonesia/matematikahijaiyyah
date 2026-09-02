@@ -288,6 +288,66 @@ PROGRAMS: Dict[str, List[int]] = {
         enc(OpCode.HCRC, dst=2, s1=0),
         enc(OpCode.HALT),
     ],
+    # ── Bitwise and shift ────────────────────────────────────────
+    #
+    # The prerequisite that was missing until now. Every value below is
+    # checked in both engines: an interpreter and a pipeline that disagree
+    # about a shift of 33 disagree about the program, so the shift-amount
+    # masking and the zero-extended logical immediates are exercised here
+    # rather than trusted to two comments that happen to match.
+    "bitwise_register": [
+        enc(OpCode.MOVI, dst=1, imm=0x0F0),
+        enc(OpCode.MOVI, dst=2, imm=0x03C),
+        enc(OpCode.AND, dst=3, s1=1, s2=2),
+        enc(OpCode.OR,  dst=4, s1=1, s2=2),
+        enc(OpCode.XOR, dst=5, s1=1, s2=2),
+        enc(OpCode.NOT, dst=6, s1=1),
+        enc(OpCode.HALT),
+    ],
+    "bitwise_shift": [
+        enc(OpCode.MOVI, dst=1, imm=0x0F0),
+        enc(OpCode.MOVI, dst=2, imm=4),
+        enc(OpCode.SHL, dst=3, s1=1, s2=2),
+        enc(OpCode.SHR, dst=4, s1=1, s2=2),
+        enc(OpCode.SHLI, dst=5, s1=1, imm=8),
+        enc(OpCode.SHRI, dst=6, s1=1, imm=4),
+        enc(OpCode.HALT),
+    ],
+    "bitwise_immediate": [
+        enc(OpCode.MOVI, dst=1, imm=0x0F0),
+        enc(OpCode.ANDI, dst=2, s1=1, imm=0x0FF),
+        enc(OpCode.ORI,  dst=3, s1=1, imm=0x00F),
+        enc(OpCode.XORI, dst=4, s1=1, imm=0x0FF),
+        enc(OpCode.HALT),
+    ],
+    # Zero- against sign-extension, and it took two attempts to test at all.
+    #
+    # The immediate must have bit 11 set OR the two extensions agree. That was
+    # the first mistake. The second: the *operand* must also carry bits above
+    # bit 11, because 0x0F0 & 0xFFFFFFFF and 0x0F0 & 0x00000FFF are the same
+    # value. Swapping imm_zext for imm_sext in the RTL passed every parity
+    # test twice before this program existed.
+    #
+    # R1 = ~0 = 0xFFFFFFFF, so ANDI with 0xFFF gives 0x00000FFF zero-extended
+    # and 0xFFFFFFFF sign-extended. Nothing subtle survives that.
+    "bitwise_immediate_extension": [
+        enc(OpCode.MOVI, dst=0, imm=0),
+        enc(OpCode.NOT,  dst=1, s1=0),              # R1 = 0xFFFFFFFF
+        enc(OpCode.ANDI, dst=2, s1=1, imm=0xFFF),
+        enc(OpCode.ANDI, dst=3, s1=1, imm=0x800),
+        enc(OpCode.XORI, dst=4, s1=1, imm=0xFFF),
+        enc(OpCode.HALT),
+    ],
+    # A shift of 33 must mask to 1 in both engines, not be undefined.
+    "shift_overflow": [
+        enc(OpCode.MOVI, dst=1, imm=0x0F0),
+        enc(OpCode.MOVI, dst=2, imm=33),
+        enc(OpCode.SHL, dst=3, s1=1, s2=2),
+        enc(OpCode.SHR, dst=4, s1=1, s2=2),
+        enc(OpCode.SHLI, dst=5, s1=1, imm=33),
+        enc(OpCode.HALT),
+    ],
+
 }
 
 

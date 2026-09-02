@@ -119,6 +119,24 @@ module hcpu_execute #(
             `OP_ADDI: alu_result = id_gpr_s1 + imm_sext;
             `OP_SUB:  alu_result = id_gpr_s1 - id_gpr_s2;
             `OP_MUL:  alu_result = mul_result;
+
+            // Bitwise and shift. Shift amounts take the low five bits only:
+            // a shift of 32 or more has no natural answer on a 32-bit
+            // machine, and leaving it undefined lets this pipeline and the
+            // interpreter disagree about the same program. Logical
+            // immediates are zero-extended -- ANDI must mask, and a
+            // sign-extended mask is not a mask.
+            `OP_AND:  alu_result = id_gpr_s1 & id_gpr_s2;
+            `OP_OR:   alu_result = id_gpr_s1 | id_gpr_s2;
+            `OP_XOR:  alu_result = id_gpr_s1 ^ id_gpr_s2;
+            `OP_NOT:  alu_result = ~id_gpr_s1;
+            `OP_SHL:  alu_result = id_gpr_s1 << id_gpr_s2[4:0];
+            `OP_SHR:  alu_result = id_gpr_s1 >> id_gpr_s2[4:0];
+            `OP_ANDI: alu_result = id_gpr_s1 & imm_zext;
+            `OP_ORI:  alu_result = id_gpr_s1 | imm_zext;
+            `OP_XORI: alu_result = id_gpr_s1 ^ imm_zext;
+            `OP_SHLI: alu_result = id_gpr_s1 << imm_zext[4:0];
+            `OP_SHRI: alu_result = id_gpr_s1 >> imm_zext[4:0];
             `OP_CMP, `OP_CMPI: begin
                 alu_flags_we = 1'b1;
                 // Compute S1 - S2/IMM for flag setting

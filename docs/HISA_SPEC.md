@@ -464,6 +464,43 @@ memicu `HALT_ERR` (0xFF).
 > di sini, sesuai lokasi yang memang lebih tepat secara semantik. `LOADR` dan
 > `LEA` belum dialokasikan ulang.
 
+#### Bitwise dan Geser (0xB0–0xBA)
+
+> **Perluasan pasca-buku.** Bab III §IIIM.3.1 membekukan 28 opcode dan
+> **tak satu pun menyentuh bit** — tidak ada AND, OR, XOR, NOT, geser, DIV,
+> atau MOD. Celah itu sudah tercatat ketika `CGET` ditambahkan: *"there is no
+> AND, no shift and no DIV in the table"* adalah buktinya sendiri bahwa tabel
+> itu tidak lengkap untuk keperluan bukunya.
+>
+> Yang dihalanginya bukan kenyamanan. Alokator memori butuh bitmap free-list,
+> penjadwal butuh mask ready, driver butuh field register, filesystem butuh
+> bitmap blok — tak satu pun bisa ditulis dengan tambah, kurang, dan kali.
+> Ruang `0xB0–0xBF` kosong di peta buku, jadi tidak ada yang tergeser.
+>
+> **Dua keputusan yang harus disebut**, karena membiarkannya tersirat adalah
+> cara VM dan RTL menyimpang:
+>
+> 1. **Jumlah geseran di-mask ke 5 bit.** Geseran 32 atau lebih tidak punya
+>    jawaban alami di mesin 32-bit, dan "tak terdefinisi" berarti interpreter
+>    dan silikon bebas berbeda. RISC-V mem-mask; ini juga.
+> 2. **Immediate logika di-zero-extend**, sementara `ADDI` di-sign-extend.
+>    `ANDI r, r, 0x0FF` harus mem-mask delapan bit terendah; sign-extension
+>    akan menjadikannya `0xFFFFF0FF`, yang tidak pernah berarti sebuah mask.
+
+| Nilai | Opcode | Operasi |
+|:---|:---|:---|
+| 0xB0 | `AND`  | `GPR[DST] ← GPR[S1] & GPR[S2]` |
+| 0xB1 | `OR`   | `GPR[DST] ← GPR[S1] \| GPR[S2]` |
+| 0xB2 | `XOR`  | `GPR[DST] ← GPR[S1] ^ GPR[S2]` |
+| 0xB3 | `NOT`  | `GPR[DST] ← ~GPR[S1]` |
+| 0xB4 | `SHL`  | `GPR[DST] ← GPR[S1] << GPR[S2][4:0]` |
+| 0xB5 | `SHR`  | `GPR[DST] ← GPR[S1] >> GPR[S2][4:0]` (logis) |
+| 0xB6 | `ANDI` | `GPR[DST] ← GPR[S1] & zext(IMM)` |
+| 0xB7 | `ORI`  | `GPR[DST] ← GPR[S1] \| zext(IMM)` |
+| 0xB8 | `XORI` | `GPR[DST] ← GPR[S1] ^ zext(IMM)` |
+| 0xB9 | `SHLI` | `GPR[DST] ← GPR[S1] << IMM[4:0]` |
+| 0xBA | `SHRI` | `GPR[DST] ← GPR[S1] >> IMM[4:0]` (logis) |
+
 #### Codex Operations (0x40–0x5F)
 
 > **`CGET` (0x44) adalah perluasan pasca-buku.** Bab III §IIIM.3.1 membekukan

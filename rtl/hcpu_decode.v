@@ -82,6 +82,8 @@ module hcpu_decode (
         // S1 usage: instructions that read GPR[S1] or H-Reg[S1]
         case (opcode)
             `OP_MOV, `OP_ADD, `OP_SUB, `OP_MUL, `OP_CMP, `OP_ADDI, `OP_CMPI,
+            `OP_AND, `OP_OR, `OP_XOR, `OP_NOT, `OP_SHL, `OP_SHR,
+            `OP_ANDI, `OP_ORI, `OP_XORI, `OP_SHLI, `OP_SHRI,
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
             `OP_CGET,
             `OP_HPACK, `OP_HCRC,
@@ -92,6 +94,7 @@ module hcpu_decode (
         // S2 usage: instructions that read GPR[S2] or H-Reg[S2]
         case (opcode)
             `OP_ADD, `OP_SUB, `OP_MUL, `OP_CMP,
+            `OP_AND, `OP_OR, `OP_XOR, `OP_SHL, `OP_SHR,
             `OP_STORE, `OP_HCADD, `OP_HDIST: id_uses_s2 = 1'b1;
             default: ;
         endcase
@@ -221,6 +224,18 @@ module hcpu_decode (
                 `OP_ADDI:   id_gpr_we <= 1'b1;
                 `OP_SUB:    id_gpr_we <= 1'b1;
                 `OP_MUL:    id_gpr_we <= 1'b1;
+
+                `OP_AND:    id_gpr_we <= 1'b1;
+                `OP_OR:     id_gpr_we <= 1'b1;
+                `OP_XOR:    id_gpr_we <= 1'b1;
+                `OP_NOT:    id_gpr_we <= 1'b1;
+                `OP_SHL:    id_gpr_we <= 1'b1;
+                `OP_SHR:    id_gpr_we <= 1'b1;
+                `OP_ANDI:   id_gpr_we <= 1'b1;
+                `OP_ORI:    id_gpr_we <= 1'b1;
+                `OP_XORI:   id_gpr_we <= 1'b1;
+                `OP_SHLI:   id_gpr_we <= 1'b1;
+                `OP_SHRI:   id_gpr_we <= 1'b1;
 
                 `OP_CMP:    ;  // Only sets flags, no reg write
                 `OP_CMPI:   ;

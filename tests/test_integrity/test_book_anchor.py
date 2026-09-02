@@ -267,6 +267,31 @@ EXTENSIONS: Dict[str, int] = {
     # The name and slot are not invented: HISA_SPEC.md already assigned 0x44
     # to CGET with exactly this semantics and never implemented it.
     "CGET": 0x44,
+
+    # Bitwise and shift, 0xB0-0xBA. §IIIM.3.1 freezes 28 opcodes and not one
+    # of them touches a bit: no AND, no OR, no XOR, no NOT, no shift, no
+    # divide, no modulo. The gap was already recorded in this file when CGET
+    # was added — "there is no AND, no shift and no DIV in the table" was the
+    # evidence that the table is incomplete for the book's own purposes.
+    #
+    # What it blocks is not a convenience. An allocator needs free-list
+    # bitmaps, a scheduler needs ready masks, a driver needs register fields,
+    # a filesystem needs block bitmaps; none can be written with add,
+    # subtract and multiply. The CosmicTera modules lean on 80 bitwise
+    # operations across four core files and could not be expressed at all.
+    #
+    # 0xB0-0xBF was empty in the book's map, so nothing is displaced.
+    "AND":  0xB0,
+    "OR":   0xB1,
+    "XOR":  0xB2,
+    "NOT":  0xB3,
+    "SHL":  0xB4,
+    "SHR":  0xB5,
+    "ANDI": 0xB6,
+    "ORI":  0xB7,
+    "XORI": 0xB8,
+    "SHLI": 0xB9,
+    "SHRI": 0xBA,
 }
 
 

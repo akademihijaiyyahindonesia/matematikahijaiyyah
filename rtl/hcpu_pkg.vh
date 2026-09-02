@@ -101,6 +101,29 @@
 `define OP_MUL          8'h14       // DST ← S1 × S2 (lower 32)
 
 // Compare & Branch (0x20–0x2F)
+// ── Bitwise and shift (0xB_) ─────────────────────────────────────
+//
+// Their absence was the blocker for everything above this layer: an
+// allocator needs free-list bitmaps, a scheduler needs ready masks, a driver
+// needs register fields. None of those can be written with add and multiply.
+//
+// Shift amounts are masked to 5 bits, and logical immediates are ZERO-
+// extended where ADDI's is sign-extended -- ANDI r,r,0x0FF must mask the low
+// eight bits, and sign extension would make it 0xFFFFF0FF. Both decisions
+// are mirrored in src/hijaiyyah/hisa/machine.py; a pipeline and an
+// interpreter that disagree about a shift of 33 disagree about the program.
+`define OP_AND         8'hB0       // GPR[DST] <- GPR[S1] & GPR[S2]
+`define OP_OR          8'hB1       // GPR[DST] <- GPR[S1] | GPR[S2]
+`define OP_XOR         8'hB2       // GPR[DST] <- GPR[S1] ^ GPR[S2]
+`define OP_NOT         8'hB3       // GPR[DST] <- ~GPR[S1]
+`define OP_SHL         8'hB4       // GPR[DST] <- GPR[S1] << GPR[S2][4:0]
+`define OP_SHR         8'hB5       // GPR[DST] <- GPR[S1] >> GPR[S2][4:0]
+`define OP_ANDI        8'hB6       // GPR[DST] <- GPR[S1] & {20'b0, IMM}
+`define OP_ORI         8'hB7       // GPR[DST] <- GPR[S1] | {20'b0, IMM}
+`define OP_XORI        8'hB8       // GPR[DST] <- GPR[S1] ^ {20'b0, IMM}
+`define OP_SHLI        8'hB9       // GPR[DST] <- GPR[S1] << IMM[4:0]
+`define OP_SHRI        8'hBA       // GPR[DST] <- GPR[S1] >> IMM[4:0]
+
 `define OP_CMP          8'h20       // set FLAGS from S1 - S2
 `define OP_CMPI         8'h21       // set FLAGS from S1 - sign_ext(IMM)
 `define OP_JMP          8'h22       // PC ← zero_ext(IMM)

@@ -62,6 +62,37 @@ class OpCode(IntEnum):
     SUB = 0x12      # GPR subtraction
     MUL = 0x14      # GPR multiplication
 
+    # ── Bitwise and shift (0xB_) ─────────────────────────────────
+    #
+    # Absent until now, and their absence was the blocker: an allocator needs
+    # free-list bitmaps, a scheduler needs ready masks, a driver needs
+    # register fields, a filesystem needs block bitmaps. None of those can be
+    # written with add, subtract and multiply. Every CosmicTera module leans
+    # on them too — 80 bitwise operations across four core files.
+    #
+    # Two decisions worth stating, because leaving either implicit is how the
+    # VM and the RTL drift apart:
+    #
+    #   Shift amounts are masked to 5 bits. A shift of 32 or more has no
+    #   natural answer on a 32-bit machine, and "undefined" means the
+    #   interpreter and the silicon are free to disagree. RISC-V masks; so
+    #   does this.
+    #
+    #   Logical immediates are ZERO-extended, unlike ADDI's which is sign-
+    #   extended. `ANDI r, r, 0x0FF` must mask the low eight bits; sign
+    #   extension would make it 0xFFFFF0FF, which is never what a mask means.
+    AND = 0xb0      # GPR bitwise and
+    OR = 0xb1       # GPR bitwise or
+    XOR = 0xb2      # GPR bitwise exclusive or
+    NOT = 0xb3      # GPR bitwise complement (one source)
+    SHL = 0xb4      # GPR shift left, amount from a register
+    SHR = 0xb5      # GPR shift right, logical, amount from a register
+    ANDI = 0xb6     # GPR and immediate, zero-extended
+    ORI = 0xb7      # GPR or immediate, zero-extended
+    XORI = 0xb8     # GPR xor immediate, zero-extended
+    SHLI = 0xb9     # GPR shift left by immediate
+    SHRI = 0xBA     # GPR shift right by immediate, logical
+
     # ── Compare and control flow (0x2_) ──────────────────────────
     CMP = 0x20      # Compare two GPRs, set flags
     CMPI = 0x21     # Compare GPR with immediate
@@ -169,6 +200,9 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI,
     OpCode.HNRM2, OpCode.HDIST,
     OpCode.ADD, OpCode.ADDI, OpCode.SUB, OpCode.MUL,
+    OpCode.AND, OpCode.OR, OpCode.XOR, OpCode.NOT,
+    OpCode.SHL, OpCode.SHR,
+    OpCode.ANDI, OpCode.ORI, OpCode.XORI, OpCode.SHLI, OpCode.SHRI,
     OpCode.CMP, OpCode.CMPI, OpCode.JMP, OpCode.JEQ, OpCode.JNE,
     OpCode.JGD, OpCode.JNGD,
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,

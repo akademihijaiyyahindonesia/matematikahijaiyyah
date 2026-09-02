@@ -363,6 +363,60 @@ class HISAMachine:
             self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] + self.regs.gpr[s2])
             return f"ADD R{dst} = R{s1} + R{s2} = {self.regs.gpr[dst]}"
 
+        # ── Bitwise and shift ────────────────────────────────────
+        #
+        # Shift amounts are masked to 5 bits and logical immediates are
+        # zero-extended. Both are stated in opcodes.py and both must match
+        # hcpu_execute.v exactly — an interpreter and a pipeline that disagree
+        # about a shift of 33 disagree about the program.
+        if op == OpCode.AND:
+            self.regs.gpr[dst] = self.regs.gpr[s1] & self.regs.gpr[s2]
+            return f"AND R{dst} = R{s1} & R{s2} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.OR:
+            self.regs.gpr[dst] = self.regs.gpr[s1] | self.regs.gpr[s2]
+            return f"OR R{dst} = R{s1} | R{s2} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.XOR:
+            self.regs.gpr[dst] = self.regs.gpr[s1] ^ self.regs.gpr[s2]
+            return f"XOR R{dst} = R{s1} ^ R{s2} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.NOT:
+            self.regs.gpr[dst] = self._u32(~self.regs.gpr[s1])
+            return f"NOT R{dst} = ~R{s1} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.SHL:
+            shift = self.regs.gpr[s2] & 0x1F
+            self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] << shift)
+            return f"SHL R{dst} = R{s1} << {shift} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.SHR:
+            shift = self.regs.gpr[s2] & 0x1F
+            self.regs.gpr[dst] = self.regs.gpr[s1] >> shift
+            return f"SHR R{dst} = R{s1} >> {shift} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.ANDI:
+            self.regs.gpr[dst] = self.regs.gpr[s1] & imm
+            return f"ANDI R{dst} = R{s1} & {imm:#x} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.ORI:
+            self.regs.gpr[dst] = self.regs.gpr[s1] | imm
+            return f"ORI R{dst} = R{s1} | {imm:#x} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.XORI:
+            self.regs.gpr[dst] = self.regs.gpr[s1] ^ imm
+            return f"XORI R{dst} = R{s1} ^ {imm:#x} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.SHLI:
+            shift = imm & 0x1F
+            self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] << shift)
+            return f"SHLI R{dst} = R{s1} << {shift} = {self.regs.gpr[dst]:#x}"
+
+        if op == OpCode.SHRI:
+            shift = imm & 0x1F
+            self.regs.gpr[dst] = self.regs.gpr[s1] >> shift
+            return f"SHRI R{dst} = R{s1} >> {shift} = {self.regs.gpr[dst]:#x}"
+
         if op == OpCode.SUB:
             self.regs.gpr[dst] = self._u32(self.regs.gpr[s1] - self.regs.gpr[s2])
             return f"SUB R{dst} = R{s1} - R{s2} = {self.regs.gpr[dst]}"
