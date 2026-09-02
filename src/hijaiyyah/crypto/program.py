@@ -324,7 +324,74 @@ SYSTEM_PATTERNS: Tuple[Tuple[str, str], ...] = (
     ("rtl/tb/*.v", "testbench"),
     ("rtl/tb/*.hex", "vector"),
     ("rtl/*.vh", "header"),
+
+    # The board path. These decide what physically runs: the constraint file
+    # assigns pins and the clock, the Makefile names which program is built
+    # in, and program.hex is what `$readmemh` puts in the instruction memory.
+    # Leaving them out would seal a design and not the thing flashed onto the
+    # part.
+    ("rtl/fpga/*/*.cst", "board"),
+    ("rtl/fpga/*/*.xdc", "board"),
+    ("rtl/fpga/*/*.tcl", "board"),
+    ("rtl/fpga/*/Makefile", "board"),
+    ("rtl/fpga/*/program.hex", "board"),
+    ("rtl/fpga/*/*.v", "fpga"),
+    ("rtl/scripts/*.py", "tool"),
 )
+
+#: Build products, never manifest entries. A compiled simulator or a bitstream
+#: is derived from what is sealed above; digesting it would make the manifest
+#: churn on every build while adding nothing a rebuild could not re-derive.
+BUILD_PRODUCTS: Tuple[str, ...] = (".vvp", ".fs", ".bit", ".bin", ".o")
+
+
+def check_board_hex(root: Path) -> List[str]:
+    """Verify each program.hex is the assembly of the program its Makefile names.
+
+    A digest over program.hex proves it did not change; it does not prove it
+    was ever right. The interesting failure is a hex edited directly — the
+    `.hasm` source reads correctly, review passes, and the board runs
+    something else. Re-assembling the named source and comparing is the only
+    check that catches it.
+    """
+    import re
+
+    problems: List[str] = []
+    for makefile in sorted(root.glob("rtl/fpga/*/Makefile")):
+        hex_path = makefile.parent / "program.hex"
+        if not hex_path.exists():
+            continue
+        # Two forms live in this tree and the first version of this regex
+        # matched only one: Gowin writes `PROGRAM  = $(RTL_DIR)/programs/...`
+        # and Xilinx writes `PROGRAM ?= ../../programs/...`. Missing the
+        # second reported it as unverifiable when its hex was in fact correct
+        # — a check that cannot read half its inputs invents failures.
+        match = re.search(r"^PROGRAM\s*\??=\s*(\S+)\s*$",
+                          makefile.read_text(encoding="utf-8"), re.M)
+        if match is None:
+            problems.append(f"{makefile}: no PROGRAM line to check against")
+            continue
+
+        named = match.group(1)
+        if named.startswith("$(RTL_DIR)/"):
+            source = root / "rtl" / named[len("$(RTL_DIR)/"):]
+        else:
+            source = (makefile.parent / named).resolve()
+        if not source.exists():
+            problems.append(f"{makefile} names {named}, which does not exist")
+            continue
+
+        from hijaiyyah.hisa.assembler import assemble
+
+        want = [f"{word:08X}" for word in assemble(source.read_text(encoding="utf-8"))]
+        have = [line.split("//")[0].strip()
+                for line in hex_path.read_text(encoding="utf-8").splitlines()
+                if line.split("//")[0].strip()]
+        if have != want:
+            problems.append(
+                f"{hex_path} is not the assembly of {named} "
+                f"({len(have)} words against {len(want)})")
+    return problems
 
 
 def build_system_manifest(root: Path) -> Manifest:
@@ -352,7 +419,7 @@ def build_system_manifest(root: Path) -> Manifest:
 
     for pattern, kind in SYSTEM_PATTERNS:
         for path in sorted(root.glob(pattern)):
-            if ".git" in path.parts:
+            if ".git" in path.parts or path.suffix in BUILD_PRODUCTS:
                 continue
             entries.append(ProgramEntry(
                 f"{kind}:{path.relative_to(root)}",

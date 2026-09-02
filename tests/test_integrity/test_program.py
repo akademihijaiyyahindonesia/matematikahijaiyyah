@@ -363,3 +363,78 @@ def test_the_summary_does_not_call_bytes_instructions() -> None:
     assert "sources" in line and "bytes" in line
     instructions = int(line.split(" instructions")[0].split(", ")[-1])
     assert instructions < 10_000
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The board path: what actually gets flashed
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_manifest_covers_what_decides_the_board() -> None:
+    """
+    Constraints assign the pins and the clock, the Makefile names which
+    program is built in, and program.hex is what `$readmemh` puts in the
+    instruction memory. Sealing the RTL without them seals a design and not
+    the thing flashed onto the part.
+    """
+    from hijaiyyah.crypto.program import build_system_manifest
+
+    paths = {e.path for e in build_system_manifest(ROOT).entries}
+    for expected in ("board:rtl/fpga/gowin/hcpu_gowin.cst",
+                     "board:rtl/fpga/gowin/Makefile",
+                     "board:rtl/fpga/gowin/program.hex"):
+        assert expected in paths, f"{expected} is not covered"
+
+
+def test_build_products_are_not_manifest_entries() -> None:
+    """
+    A compiled simulator is derived from what is sealed. Digesting it would
+    make the manifest churn on every build while adding nothing a rebuild
+    could not re-derive.
+    """
+    from hijaiyyah.crypto.program import BUILD_PRODUCTS, build_system_manifest
+
+    paths = [e.path for e in build_system_manifest(ROOT).entries]
+    assert ".vvp" in BUILD_PRODUCTS
+    assert not any(path.endswith(tuple(BUILD_PRODUCTS)) for path in paths)
+
+
+def test_each_program_hex_is_the_assembly_of_the_source_its_makefile_names() -> None:
+    """
+    A digest over program.hex proves it did not change; it does not prove it
+    was ever right. The interesting failure is a hex edited directly — the
+    .hasm reads correctly, review passes, and the board runs something else.
+    """
+    from hijaiyyah.crypto.program import check_board_hex
+
+    assert check_board_hex(ROOT) == []
+
+
+def test_a_hex_edited_behind_its_source_is_caught() -> None:
+    from hijaiyyah.crypto.program import check_board_hex
+
+    target = ROOT / "rtl" / "fpga" / "gowin" / "program.hex"
+    original = target.read_text(encoding="utf-8")
+    try:
+        lines = original.splitlines()
+        lines[3] = "00000000  // addr    3: NOP"
+        target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        problems = check_board_hex(ROOT)
+        assert problems and "program.hex is not the assembly" in problems[0]
+    finally:
+        target.write_text(original, encoding="utf-8")
+    assert check_board_hex(ROOT) == []
+
+
+def test_both_makefile_forms_are_readable() -> None:
+    """
+    Gowin writes `PROGRAM  = $(RTL_DIR)/programs/...`, Xilinx writes
+    `PROGRAM ?= ../../programs/...`. The first version of the regex matched
+    only the first and reported the second as unverifiable when its hex was
+    in fact correct — a check that cannot read half its inputs invents
+    failures.
+    """
+    import re
+
+    pattern = re.compile(r"^PROGRAM\s*\??=\s*(\S+)\s*$", re.M)
+    for makefile in sorted(ROOT.glob("rtl/fpga/*/Makefile")):
+        assert pattern.search(makefile.read_text(encoding="utf-8")), makefile
