@@ -11,6 +11,35 @@ Topological Guards — Definition 3.3.1, Bab III:
   T1: Ks > 0 ⇒ Qc ≥ 1         (S-curve implies loop presence)
   T2: Kc > 0 ⇒ Qc ≥ 1         (Closed curve implies loop presence)
 
+WHY THERE IS NO G5, AND WHY THE NULL SPACE IS NOT THE ANSWER.
+
+Computing the null space of the 28x18 alphabet returns exactly four column
+relations, and three of them are the guards, recovered without being sought:
+
+    A_N = Na + Nb + Nd              G1
+    A_K = Kp + Kx + Ks + Ka + Kc    G2
+    A_Q = Qp + Qx + Qs + Qa + Qc    G3
+    H*  = Ka                        <- nothing checks this
+
+The fourth is exact on all 28 letters, closed under addition, and rejects no
+canonical letter. It looks like a missing guard, and adding it takes the
+system's corruption detection from 88.1% to 93.1% by closing the one component
+that is currently at 0%.
+
+It was added here and then removed, because the first three are DEFINITIONAL
+-- A_N *is* the sum, by construction -- while `H* = Ka` is EMPIRICAL WITH ONE
+DATA POINT. Twenty-seven letters have both components zero; one letter, Kaf,
+has both equal to one. That is the entire evidence. A relation supported by a
+single non-trivial sample is a coincidence of the alphabet, not a law about
+hybits, and the null space cannot tell the two apart: it returns whatever holds
+on the rows it was given.
+
+So H* stays unguarded, and crypto/guarded_record.py is right to exclude it from
+payload rather than assume it harmless -- see UNCONSTRAINED there. The honest
+position is that one of eighteen components carries no checkable structure, not
+that a fitted rule can be dressed up as a seventh guard.
+
+
 Audit relations R1–R5 (Identity 33.1.1):
   R1: Θ̂ = U + ρ               (Proposition 11.3.1)
   R2: A_N = Na + Nb + Nd       (Definition 12.2.1)
