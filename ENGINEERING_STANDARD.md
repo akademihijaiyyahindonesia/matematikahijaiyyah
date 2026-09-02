@@ -522,7 +522,7 @@ Terdaftar di `[project.scripts]` pada `pyproject.toml`.
 | `hom` | `hijaiyyah.__main__:main` | GUI desktop (Tkinter) |
 | `hc` | `hijaiyyah.cli:main` | bahasa HC — `run`, `check`, `repl`, `lsp` |
 | `hybit-ai` | `hijaiyyah.ai.__main__:main` | runtime AI lokal |
-| `kabah` | `hijaiyyah.crypto.cli:main` | sistem integritas Ka'bah — `keygen`, `seal`, `open`, `fingerprint`, `describe` |
+| `kabah` | `hijaiyyah.crypto.cli:main` | sistem integritas Ka'bah — `keygen`, `seal`, `open`, `fingerprint`, `describe`, `memscan`, `identify` |
 
 ```bash
 hc run examples/hello.hc

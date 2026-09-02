@@ -11,6 +11,7 @@ three lines too many.
     kabah fingerprint ledger.txt    the [EH] sponge digest
     kabah describe                  every layer and what it guarantees
     kabah memscan dump.raw          find injected regions, recover payloads
+    kabah identify fragment.bin     what a headerless fragment is
 
 The key file is the only state. Losing it loses nothing that was encrypted —
 nothing here encrypts — but it makes sealed records unverifiable, which for an
@@ -159,6 +160,33 @@ def cmd_memscan(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_identify(args: argparse.Namespace) -> int:
+    """Name headerless data from the composition of its bytes.
+
+    Where a magic number exists it wins and is reported as the answer — a
+    header is better evidence than any statistic. This is for the case where
+    there is none: a carved fragment, a memory page, a recovered sector.
+    """
+    from hijaiyyah.crypto.elements import atoms, identify
+    from hijaiyyah.crypto.memscan import find_clue
+
+    data = Path(args.file).read_bytes()
+    found = identify(data, clue=find_clue(data[:4096]))
+
+    print(f"{args.file}  {len(data):,} bytes\n")
+    print(f"  keluarga   {found.family}   ({found.confidence})")
+    if found.marker:
+        print(f"  penanda    {found.marker}")
+    print()
+    for name, value in atoms(data).as_row().items():
+        bar = "\u2588" * int(min(value, 8.0) / 8.0 * 28) if name == "entropy" \
+            else "\u2588" * int(value * 28)
+        print(f"  {name:<10} {value:>7}  {bar}")
+    if found.caveat:
+        print(f"\n  [CC] {found.caveat}")
+    return 0
+
+
 def cmd_describe(args: argparse.Namespace) -> int:
     info: Dict[str, Any] = Kabah.describe()
     layers: List[Dict[str, Any]] = info["layers"]
@@ -208,6 +236,10 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument("--out", help="write recovered payloads to this prefix")
     scan.add_argument("--csv", action="store_true", help="Autopsy-shaped CSV")
     scan.set_defaults(func=cmd_memscan)
+
+    ident = sub.add_parser("identify", help="what headerless data is")
+    ident.add_argument("file")
+    ident.set_defaults(func=cmd_identify)
 
     sub.add_parser("describe", help="what each layer guarantees").set_defaults(
         func=cmd_describe
