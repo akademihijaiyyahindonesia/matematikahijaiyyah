@@ -93,6 +93,7 @@
 `define OP_HALT         8'h01
 `define OP_MOV          8'h03       // DST ← S1
 `define OP_MOVI         8'h04       // DST ← zero_ext(IMM)
+`define OP_ERET         8'h08       // PC ← trap epc; leave trap
 
 // Arithmetic & Logic (0x10–0x1F)
 `define OP_ADD          8'h10       // DST ← S1 + S2
@@ -166,5 +167,34 @@
 // ── UART default ────────────────────────────────────────────────
 `define UART_BAUD       115200
 `define SYS_CLK_HZ     50_000_000  // 50 MHz system clock
+
+
+// ── Peripheral register map ─────────────────────────────────────
+// Offsets from PERIPH_BASE (the top 16 words of data space). These lived as
+// localparams inside hcpu_mmio.v, which meant the trap unit and the machine
+// model would each have needed their own copy. One truth, one place.
+`define PERIPH_BASE      12'hFF0
+`define REG_RX_DATA       4'h0
+`define REG_RX_STATUS     4'h1
+`define REG_TX_STATUS     4'h2
+`define REG_COUNTER       4'h4
+`define REG_COMPARE       4'h5
+`define REG_TIMER_ST      4'h6
+`define REG_TRAP_VECTOR   4'h8       // handler address, writable
+`define REG_TRAP_EPC      4'h9       // PC saved on entry, writable (for nesting)
+`define REG_TRAP_CAUSE    4'hA       // cause of the trap taken, read-only
+`define REG_TRAP_ENABLE   4'hB       // per-cause enable mask, writable
+`define REG_TRAP_PENDING  4'hC       // per-cause pending bits, read-only
+
+// ── Trap causes ─────────────────────────────────────────────────
+// One bit per cause in ENABLE and PENDING; the CAUSE register holds the index,
+// not the mask, so a handler can jump on it directly.
+`define TRAP_TIMER        3'd0
+`define TRAP_UART_RX      3'd1
+`define TRAP_ILLEGAL      3'd2
+`define TRAP_CAUSES       3           // how many are defined
+// 3..7 are reserved for memory protection and syscall, which come later. The
+// width is 8 so those can be added without moving anything.
+`define TRAP_MASK_W       8
 
 `endif // HCPU_PKG_VH

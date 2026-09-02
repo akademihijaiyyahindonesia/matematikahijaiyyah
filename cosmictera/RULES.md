@@ -65,8 +65,13 @@ dengan **sengaja merusak** apa yang ia jaga dan memastikan ia menyala.
 > **nol tes** karena filter `-k` tidak cocok apa pun.
 
 **Penegakan.** Sabotase wajib melaporkan bahwa ia benar‑benar mengubah sesuatu
-(hitung kemunculan sebelum/sesudah) dan bahwa tesnya benar‑benar berjalan
-(`1 failed`, bukan `no tests ran`).
+**dan** bahwa tesnya benar‑benar berjalan (`1 failed`, bukan `no tests ran`).
+
+Dan penjaganya harus **hash berkas, bukan hitungan kemunculan**. Hitungan
+kemunculan buta terhadap **sisipan**: sabotase yang menambahkan baris di depan
+pola meninggalkan hitungannya tetap 1, dan penjaga melaporkan "tidak berubah"
+padahal berkasnya berubah. Itu terjadi persis begitu saat menguji trap, dan
+sabotase yang sah nyaris dibuang sebagai gagal.
 
 ---
 

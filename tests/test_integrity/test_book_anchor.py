@@ -268,6 +268,21 @@ EXTENSIONS: Dict[str, int] = {
     # to CGET with exactly this semantics and never implemented it.
     "CGET": 0x44,
 
+    # ERET, 0x08. §IIIM.3.1 has no way to return from an interrupt because it
+    # has no interrupts: the book's machine runs one program to HALT. An OS
+    # cannot be built on that. A timer that cannot preempt is a counter, and a
+    # UART that cannot interrupt has to be polled, which costs the whole CPU.
+    #
+    # Everything else the trap unit needs is reachable as memory -- vector,
+    # epc, cause, enable and pending sit in the peripheral window -- so this
+    # is the ONE instruction the extension adds. The return cannot be a load
+    # and a jump, because clearing the in-trap latch and redirecting the fetch
+    # have to happen together, or a trap arriving between the two is lost.
+    #
+    # 0x08 is in the book's own "system and control" block (0x0_) and was
+    # empty there, so nothing is displaced.
+    "ERET": 0x08,
+
     # Bitwise and shift, 0xB0-0xBA. §IIIM.3.1 freezes 28 opcodes and not one
     # of them touches a bit: no AND, no OR, no XOR, no NOT, no shift, no
     # divide, no modulo. The gap was already recorded in this file when CGET

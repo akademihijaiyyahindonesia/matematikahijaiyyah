@@ -69,6 +69,16 @@ class HISAMachine:
         self.rx_queue: List[int] = []
         self.timer_compare: int = 0xFFFFFFFF
         self.timer_expired: bool = False
+
+        # Trap state, mirroring hcpu_trap.v. `trap_active` is the whole
+        # difficulty: the sources are level-sensitive, so without it the first
+        # trap would re-enter every step and the handler's first instruction
+        # would never run.
+        self.trap_vector: int = 0
+        self.trap_epc: int = 0
+        self.trap_cause: int = 0
+        self.trap_enable: int = 0
+        self.trap_active: bool = False
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -99,6 +109,19 @@ class HISAMachine:
                 self.trace.append(entry)
                 self._halted = True
                 return entry
+
+        # The timer's own tick. hcpu_timer.v sets `expired` on `counter ==
+        # compare` -- a single match, not a level -- and clears it on a write.
+        # Modelling it as `>=` here would make the VM re-expire forever after
+        # the deadline while the RTL fired once, so a handler correct on one
+        # would spin on the other. The MECHANISM matches; the timing cannot,
+        # because this counter counts instructions and the RTL's counts clocks.
+        if self.cycle == self.timer_compare:
+            self.timer_expired = True
+
+        trapped = self._maybe_trap()
+        if trapped is not None:
+            return trapped
 
         raw = self.code[self.regs.pc]
         iw = InstructionWord(raw)
@@ -173,6 +196,18 @@ class HISAMachine:
     REG_COUNTER = 0x4
     REG_COMPARE = 0x5
     REG_TIMER_STATUS = 0x6
+    REG_TRAP_VECTOR = 0x8
+    REG_TRAP_EPC = 0x9
+    REG_TRAP_CAUSE = 0xA
+    REG_TRAP_ENABLE = 0xB
+    REG_TRAP_PENDING = 0xC
+
+    # Trap causes. One bit each in ENABLE and PENDING; CAUSE holds the index.
+    TRAP_TIMER = 0
+    TRAP_UART_RX = 1
+    TRAP_ILLEGAL = 2
+    TRAP_CAUSES = 3
+    TRAP_MASK_W = 8
 
     def _mem_read(self, addr: int) -> int:
         masked = addr & self.DATA_ADDR_MASK
@@ -201,6 +236,16 @@ class HISAMachine:
             return self.timer_compare
         if reg == self.REG_TIMER_STATUS:
             return 1 if self.timer_expired else 0
+        if reg == self.REG_TRAP_VECTOR:
+            return self.trap_vector
+        if reg == self.REG_TRAP_EPC:
+            return self.trap_epc
+        if reg == self.REG_TRAP_CAUSE:
+            return self.trap_cause
+        if reg == self.REG_TRAP_ENABLE:
+            return self.trap_enable
+        if reg == self.REG_TRAP_PENDING:
+            return self._trap_pending()
         return 0
 
     def _periph_write(self, reg: int, value: int) -> None:
@@ -209,6 +254,46 @@ class HISAMachine:
             self.timer_expired = False
         elif reg == self.REG_TIMER_STATUS:
             self.timer_expired = False
+        elif reg == self.REG_TRAP_VECTOR:
+            self.trap_vector = value
+        elif reg == self.REG_TRAP_EPC:
+            self.trap_epc = value
+        elif reg == self.REG_TRAP_ENABLE:
+            self.trap_enable = value & ((1 << self.TRAP_MASK_W) - 1)
+        # CAUSE and PENDING are read-only, in the RTL and here.
+
+    def _trap_pending(self) -> int:
+        """The raw source bits, masked or not — same as the RTL's `pending`."""
+        bits = 0
+        if self.timer_expired:
+            bits |= 1 << self.TRAP_TIMER
+        if self.rx_queue:
+            bits |= 1 << self.TRAP_UART_RX
+        # TRAP_ILLEGAL is defined but nothing raises it, in the RTL or here.
+        return bits
+
+    def _maybe_trap(self) -> Optional[TraceEntry]:
+        """Enter a trap before fetching, if one is armed and none is running.
+
+        Priority is the lowest set index, fixed, because two causes arriving
+        together must resolve the same way every time or the machine is not
+        deterministic.
+        """
+        if self.trap_active:
+            return None
+        armed = self._trap_pending() & self.trap_enable
+        if not armed:
+            return None
+        cause = (armed & -armed).bit_length() - 1
+        self.trap_epc = self.regs.pc
+        self.trap_cause = cause
+        self.trap_active = True
+        self.regs.pc = self.trap_vector
+        self.cycle += 1
+        entry = TraceEntry(
+            self.cycle, f"TRAP {cause} → {self.trap_vector} (epc={self.trap_epc})")
+        self.trace.append(entry)
+        return entry
 
     def _execute(self, iw: InstructionWord) -> str:
         """Execute a decoded instruction. Returns description string."""
@@ -384,6 +469,16 @@ class HISAMachine:
             self._halted = True
             self._exit_code = imm
             return f"HALT — execution stopped (code={imm})"
+
+        # ── ERET: return from a trap ────────────────────────────
+        # Clearing the latch and redirecting have to happen together. As a
+        # load and a jump they could not: a trap arriving between the two
+        # would be taken with the old epc still in place, and the first
+        # handler's return address would be gone.
+        if op == OpCode.ERET:
+            self.regs.pc = self.trap_epc
+            self.trap_active = False
+            return f"ERET → {self.trap_epc}"
 
         # ── Legacy VPROJ_T / VPROJ_N / VPROJ_K / VPROJ_Q ───────
         if op == OpCode.VPROJ_T:
@@ -714,3 +809,8 @@ class HISAMachine:
         self.rx_queue = []
         self.timer_compare = 0xFFFFFFFF
         self.timer_expired = False
+        self.trap_vector = 0
+        self.trap_epc = 0
+        self.trap_cause = 0
+        self.trap_enable = 0
+        self.trap_active = False

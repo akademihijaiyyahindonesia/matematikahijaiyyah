@@ -1,0 +1,50 @@
+; trap_timer.hasm — a timer interrupt, taken and returned from.
+;
+; This is the smallest program that proves traps work rather than merely
+; compile: a loop that would never stop on its own is preempted, a handler
+; runs, and the loop resumes and then finishes. If the trap never fired the
+; program would spin forever; if ERET were wrong it would never come back.
+;
+; The trap unit is reached as memory. Nothing here needed a new instruction
+; except ERET, and ERET exists only because clearing the in-trap latch and
+; redirecting the fetch have to be one indivisible act.
+;
+;   R5   zero base for every peripheral access
+;   R7   the loop counter the trap interrupts
+;   R8   set by the handler; the loop waits on it
+;   R9   the cause the handler read back
+;   R10  the epc the handler read back
+
+        MOVI  R5, 0
+        MOVI  R8, 0
+        MOVI  R7, 0
+
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+
+        MOVI  R2, 12
+        STORE R2, R5, 0xFF5     ; COMPARE — the timer expires shortly
+
+        MOVI  R1, 1
+        STORE R1, R5, 0xFFB     ; TRAP_ENABLE, timer only
+
+; The loop the trap has to break into. Without the handler setting R8 this
+; never leaves.
+wait:   ADDI  R7, R7, 1
+        CMPI  R8, 1
+        JNE   wait
+
+        HALT
+
+; ── handler ─────────────────────────────────────────────────────
+; It must clear its own source before ERET. The timer's expired flag is
+; sticky, so returning with it still set traps again immediately — which is
+; how every real interrupt controller behaves, and hiding it would only turn
+; a visible spin into a lost interrupt.
+handler:
+        LOAD  R9,  R5, 0xFFA    ; TRAP_CAUSE  — the index, not a mask
+        LOAD  R10, R5, 0xFF9    ; TRAP_EPC    — where it will return
+        MOVI  R1, 0
+        STORE R1, R5, 0xFF6     ; clear the timer status: the source goes low
+        MOVI  R8, 1             ; tell the loop it may finish
+        ERET

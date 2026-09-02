@@ -53,6 +53,11 @@ class OpCode(IntEnum):
 
     # Hybit scalars that return to a GPR. In the 0x0_ block rather than 0x4_
     # because their result is an integer, not a hybit.
+    # Return from a trap: PC <- the saved epc, and the in-trap latch clears.
+    # It takes no operands -- everything it needs is in the trap unit, which
+    # software reaches through the peripheral window, so no CSR instruction
+    # had to be invented for it.
+    ERET = 0x08     # Return from trap
     HNRM2 = 0x06    # Squared norm: ‖v₁₄‖² → GPR
     HDIST = 0x07    # Squared Euclidean distance → GPR
 
@@ -197,7 +202,7 @@ class OpCode(IntEnum):
 # the HVM and the HISA machine, and must not appear in a program intended for
 # hardware. Kept as data so tests can check it against hcpu_pkg.vh directly.
 RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
-    OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI,
+    OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI, OpCode.ERET,
     OpCode.HNRM2, OpCode.HDIST,
     OpCode.ADD, OpCode.ADDI, OpCode.SUB, OpCode.MUL,
     OpCode.AND, OpCode.OR, OpCode.XOR, OpCode.NOT,

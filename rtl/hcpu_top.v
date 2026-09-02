@@ -59,6 +59,21 @@ module hcpu_top #(
     wire branch_taken_w;
     wire [`XLEN-1:0] branch_target_w;
 
+    // ── Trap redirect ───────────────────────────────────────────
+    // A trap is a branch the program did not write, so it joins the same
+    // redirect path and gets the same flush. It takes priority: a branch that
+    // loses to a trap is re-fetched from epc on return, but a trap that loses
+    // to a branch is simply gone.
+    wire trap_redirect_w, trap_in_trap_w, trap_is_eret_w;
+    wire [`XLEN-1:0] trap_target_w;
+    wire trap_reg_we_w, trap_src_timer_w, trap_src_rx_w;
+    wire [3:0] trap_reg_sel_w;
+    wire [`XLEN-1:0] trap_reg_wdata_w, trap_reg_rdata_w;
+
+    wire redirect_taken  = trap_redirect_w | branch_taken_w;
+    wire [`XLEN-1:0] redirect_target =
+        trap_redirect_w ? trap_target_w : branch_target_w;
+
     // Fetch → Decode
     wire [`ILEN-1:0] if_instruction;
     wire [`XLEN-1:0] if_pc;
@@ -257,8 +272,8 @@ module hcpu_top #(
         .rst_n          (rst_n),
         .stall          (pc_stall),
         .flush          (if_flush),
-        .branch_taken   (branch_taken_w),
-        .branch_target  (branch_target_w),
+        .branch_taken   (redirect_taken),
+        .branch_target  (redirect_target),
         .imem_addr      (imem_addr),
         .imem_ce        (imem_ce),
         .imem_data      (imem_data),
@@ -394,6 +409,7 @@ module hcpu_top #(
         .ex_push_data   (ex_push_data),
         .branch_taken   (branch_taken_w),
         .branch_target  (branch_target_w),
+        .is_eret        (trap_is_eret_w),
         // Data RAM
         .id_mem_read    (id_mem_read),
         .id_mem_write   (id_mem_write),
@@ -577,7 +593,43 @@ module hcpu_top #(
         .ram_wdata    (ram_wdata),
         .ram_rdata    (ram_rdata),
         .uart_rx_in   (uart_rx_pulled),
-        .uart_tx_busy (uart_busy)
+        .uart_tx_busy (uart_busy),
+        .trap_reg_we    (trap_reg_we_w),
+        .trap_reg_sel   (trap_reg_sel_w),
+        .trap_reg_wdata (trap_reg_wdata_w),
+        .trap_reg_rdata (trap_reg_rdata_w),
+        .src_timer      (trap_src_timer_w),
+        .src_uart_rx    (trap_src_rx_w)
+    );
+
+    // ── Trap unit ───────────────────────────────────────────────
+    // `pc_valid` is tied high: hcpu_fetch always presents a PC, and on a flush
+    // it presents the redirect target rather than nothing. If the front end
+    // ever gains a state with no meaningful PC, this has to become that state's
+    // inverse or a trap will return into a bubble.
+    //
+    // `src_illegal` IS TIED OFF. The cause is defined so that adding it later
+    // does not renumber the others, but nothing raises it yet: the machine's
+    // only illegal-instruction path is HALT_ERR on a bad ROM index, and turning
+    // a halt into a trap is a semantic change, not part of adding traps.
+    // tests/test_integrity/test_traps.py pins it at zero so it cannot be
+    // mistaken for something that works.
+    hcpu_trap u_trap (
+        .clk           (clk),
+        .rst_n         (rst_n),
+        .src_timer     (trap_src_timer_w),
+        .src_uart_rx   (trap_src_rx_w),
+        .src_illegal   (1'b0),
+        .pc_now        (if_pc),
+        .pc_valid      (1'b1),
+        .reg_we        (trap_reg_we_w),
+        .reg_sel       (trap_reg_sel_w),
+        .reg_wdata     (trap_reg_wdata_w),
+        .reg_rdata     (trap_reg_rdata_w),
+        .eret          (trap_is_eret_w),
+        .trap_redirect (trap_redirect_w),
+        .trap_target   (trap_target_w),
+        .in_trap       (trap_in_trap_w)
     );
 
     hcpu_dataram u_dataram (
@@ -594,7 +646,7 @@ module hcpu_top #(
         .clk             (clk),
         .rst_n           (rst_n),
         .ex_is_print     (print_active),
-        .branch_taken      (branch_taken_w),
+        .branch_taken      (redirect_taken),
         .wb_halt           (wb_halt),
         .load_use_hazard   (load_use_hazard),
         .store_load_hazard (store_load_hazard),

@@ -81,6 +81,12 @@ module hcpu_execute #(
     output reg                     branch_taken,
     output reg  [`XLEN-1:0]        branch_target,
 
+    // ERET redirects the fetch exactly the way a branch does, so it is
+    // resolved here with the branches. A flush sets id_opcode to NOP, so this
+    // cannot fire on a bubble. Like branch_taken it is held while the stage
+    // is stalled, which is harmless: both redirects are idempotent.
+    output wire                    is_eret,
+
     // ── Data RAM control (passed through to memory stage) ──────
     input  wire                    id_mem_read,
     input  wire                    id_mem_write,
@@ -202,6 +208,8 @@ module hcpu_execute #(
     assign forwarded_flags = (alu_flags_we)  ? alu_flags     :  // CMP in EX now
                              (ex_flags_we)   ? ex_flags_new  :  // CMP just left EX
                              current_flags;                      // Register file
+
+    assign is_eret = (id_opcode == `OP_ERET);
 
     // ── Branch resolution ───────────────────────────────────────
     always @(*) begin

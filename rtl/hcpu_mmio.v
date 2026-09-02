@@ -57,17 +57,31 @@ module hcpu_mmio #(
 
     // ── the world ───────────────────────────────────────────────
     input  wire                    uart_rx_in,
-    input  wire                    uart_tx_busy
+    input  wire                    uart_tx_busy,
+
+    // ── trap unit ───────────────────────────────────────────────
+    // The trap unit lives in the top, because it needs the fetch PC and the
+    // ERET from Execute -- neither of which belongs on a peripheral bus. Its
+    // registers are decoded here anyway, so the peripheral window has exactly
+    // one decoder. Two would be two truths.
+    output wire                    trap_reg_we,
+    output wire [3:0]              trap_reg_sel,
+    output wire [`XLEN-1:0]        trap_reg_wdata,
+    input  wire [`XLEN-1:0]        trap_reg_rdata,
+    output wire                    src_timer,
+    output wire                    src_uart_rx
 );
 
-    localparam [`DATA_ADDR_W-1:0] PERIPH_BASE = 12'hFF0;
-
-    localparam [3:0] REG_RX_DATA   = 4'h0;
-    localparam [3:0] REG_RX_STATUS = 4'h1;
-    localparam [3:0] REG_TX_STATUS = 4'h2;
-    localparam [3:0] REG_COUNTER   = 4'h4;
-    localparam [3:0] REG_COMPARE   = 4'h5;
-    localparam [3:0] REG_TIMER_ST  = 4'h6;
+    // The map is in hcpu_pkg.vh. It used to be localparams here, which was
+    // fine while this was the only module that decoded the window -- and stops
+    // being fine the moment the trap unit needs the same numbers.
+    localparam [`DATA_ADDR_W-1:0] PERIPH_BASE = `PERIPH_BASE;
+    localparam [3:0] REG_RX_DATA   = `REG_RX_DATA;
+    localparam [3:0] REG_RX_STATUS = `REG_RX_STATUS;
+    localparam [3:0] REG_TX_STATUS = `REG_TX_STATUS;
+    localparam [3:0] REG_COUNTER   = `REG_COUNTER;
+    localparam [3:0] REG_COMPARE   = `REG_COMPARE;
+    localparam [3:0] REG_TIMER_ST  = `REG_TIMER_ST;
 
     wire       is_periph = (addr >= PERIPH_BASE);
     wire [3:0] reg_sel   = addr[3:0];
@@ -125,6 +139,19 @@ module hcpu_mmio #(
         .clear     (timer_write & (reg_sel == REG_TIMER_ST)),
         .counter(tmr_counter), .compare(tmr_compare), .expired(tmr_expired));
 
+    // ── trap register access ────────────────────────────────────
+    wire is_trap_reg = (reg_sel >= `REG_TRAP_VECTOR) && (reg_sel <= `REG_TRAP_PENDING);
+    assign trap_reg_we    = we & is_periph & is_trap_reg;
+    assign trap_reg_sel   = reg_sel;
+    assign trap_reg_wdata = wdata;
+
+    // The two level-sensitive sources. `expired` is sticky until written and
+    // `rx_ready` stays up until the byte is read, which is exactly what a
+    // level-triggered trap input has to be: a pulse would be missed whenever
+    // the trap unit happened to be blocked.
+    assign src_timer   = tmr_expired;
+    assign src_uart_rx = rx_ready;
+
     // ── read data, registered to match the RAM ──────────────────
     reg [`XLEN-1:0] periph_rdata;
     reg             periph_sel;
@@ -143,6 +170,11 @@ module hcpu_mmio #(
                 REG_COUNTER:   periph_rdata <= tmr_counter;
                 REG_COMPARE:   periph_rdata <= tmr_compare;
                 REG_TIMER_ST:  periph_rdata <= {31'd0, tmr_expired};
+                `REG_TRAP_VECTOR,
+                `REG_TRAP_EPC,
+                `REG_TRAP_CAUSE,
+                `REG_TRAP_ENABLE,
+                `REG_TRAP_PENDING: periph_rdata <= trap_reg_rdata;
                 default:       periph_rdata <= {`XLEN{1'b0}};
             endcase
         end

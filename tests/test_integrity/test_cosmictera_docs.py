@@ -188,9 +188,21 @@ def test_the_sealing_counts_come_from_program_not_from_prose() -> None:
     text = _all()
     assert str(len(SYSTEM_PATTERNS)) in text
     assert str(len(BUILD_PRODUCTS)) in text
-    assert str(len(defined_opcodes())) in text
     for magic in ("HMF1", "HEX1"):
         assert magic in text
+
+    # Read the opcode count out of its own table cell. As a search over the
+    # whole folder this passed while the table said 66 and the code said 67,
+    # because "67" happened to occur elsewhere -- the same substring-anywhere
+    # hole that two other assertions here already had to lose.
+    cells = _row(_text("CONCRETE.md"), "Opcode H‑ISA", 3)
+    assert cells[1].split()[0] == str(len(defined_opcodes())), cells
+
+    rtl_ops = set(re.findall(r"OP_[A-Z0-9_]+",
+                             "\n".join(p.read_text(encoding="utf-8")
+                                        for p in (ROOT / "rtl").glob("hcpu_*.v*"))))
+    cells = _row(_text("CONCRETE.md"), "Opcode berencoding RTL", 3)
+    assert cells[1] == str(len(rtl_ops)), (cells, len(rtl_ops))
 
 
 def test_the_refusals_and_the_unmeasured_are_stated_not_buried() -> None:

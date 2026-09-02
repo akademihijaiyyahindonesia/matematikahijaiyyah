@@ -78,6 +78,7 @@ class AssemblyError(HijaiyyahError):
 OPERANDS: Dict[str, Tuple[str, ...]] = {
     "NOP":      (),
     "HALT":     (),
+    "ERET":     (),
     "HALT_ERR": (),
     "MOV":      ("dst", "s1"),
     "MOVI":     ("dst", "imm"),

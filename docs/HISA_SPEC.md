@@ -393,6 +393,7 @@ memicu `HALT_ERR` (0xFF).
 |---|---|---|---|---|
 | 0x00 | `NOP` | — | ✅ | No operation |
 | 0x01 | `HALT` | — | ✅ | Stop execution |
+| 0x08 | `ERET` | — | ✅ | Kembali dari trap: PC ← epc, kunci in-trap dilepas |
 | 0x02 | `RESET` | — | — | Reset machine state |
 | 0x03 | `MOV` | R | ✅ | `DST ← S1` |
 | 0x04 | `MOVI` | I | ✅ | `DST ← IMM` |
