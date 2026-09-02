@@ -12,6 +12,7 @@ recorded here because each was a different way of being wrong.
 from __future__ import annotations
 
 import os
+import random
 
 from hijaiyyah.crypto.memscan import (
     CLUES,
@@ -39,8 +40,16 @@ def _payload() -> bytes:
     return bytes(pe)
 
 
-def _dump():
-    """A dump with one XOR-staged injection at a known offset."""
+def _dump(seed: int = 20260902):
+    """A dump with one XOR-staged injection at a known offset.
+
+    The filler is seeded rather than drawn from urandom. With urandom this
+    suite failed intermittently — two tests in one full run, both passing on
+    the next — because the recovery is 99.4% and not certain, so an unseeded
+    fixture samples the failure instead of asserting the capability. A flaky
+    test teaches nothing except to re-run it.
+    """
+    rng = random.Random(seed)
     data = bytearray()
     placed = {}
 
@@ -50,7 +59,7 @@ def _dump():
 
     place("text", b"C:\\Windows\\System32\\ntdll.dll\x00" * 200)
     place("zeros", bytes(4096))
-    place("packed", os.urandom(6144))
+    place("packed", bytes(rng.randrange(256) for _ in range(6144)))
     payload = _payload()
     place("inject", bytes(b ^ KEY[i % 5] for i, b in enumerate(payload)))
     place("sled", b"\x90" * 96)
