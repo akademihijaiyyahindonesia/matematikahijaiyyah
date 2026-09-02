@@ -41,6 +41,7 @@ module hcpu_gowin_top #(
 ) (
     input  wire        clk_27m,      // 27 MHz onboard oscillator
     input  wire        btn_rst_n,    // Button S2 — active low reset
+    input  wire        uart_rxd,     // UART RX ← USB bridge
     output wire        uart_txd,     // UART TX → USB bridge
     output wire [5:0]  led           // 6 LEDs — active low
 );
@@ -117,6 +118,7 @@ module hcpu_gowin_top #(
         .imem_addr      (imem_addr),
         .imem_ce        (imem_ce),
         .imem_data      (imem_data),
+        .uart_rx        (uart_rxd),
         .uart_tx        (core_txd),
         .halted         (halted_out),
         .guard_led      (guard_led_out),

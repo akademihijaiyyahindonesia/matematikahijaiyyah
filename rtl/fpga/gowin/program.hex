@@ -1,9 +1,0 @@
-40000002  // addr    0: HLOAD H0, 2
-4010000C  // addr    1: HLOAD H1, 12
-40300018  // addr    2: HLOAD H3, 24
-42201000  // addr    3: HCADD H2, H0, H1
-42223000  // addr    4: HCADD H2, H2, H3
-60020000  // addr    5: HGRD  H2
-06020000  // addr    6: HNRM2 R0, H2
-A0000000  // addr    7: PRINT R0
-01000000  // addr    8: HALT

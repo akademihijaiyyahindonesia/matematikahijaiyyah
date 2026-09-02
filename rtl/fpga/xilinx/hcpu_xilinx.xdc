@@ -11,8 +11,9 @@ create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { c
 ## ── Reset Button (BTN0, active high) ────────────────────────────
 set_property -dict { PACKAGE_PIN D9    IOSTANDARD LVCMOS33 } [get_ports { btn_rst }]
 
-## ── UART TX (USB-FTDI) ──────────────────────────────────────────
+## ── UART TX / RX (USB-FTDI) ─────────────────────────────────────
 set_property -dict { PACKAGE_PIN D10   IOSTANDARD LVCMOS33 } [get_ports { uart_txd }]
+set_property -dict { PACKAGE_PIN A9    IOSTANDARD LVCMOS33 } [get_ports { uart_rxd }]
 
 ## ── LEDs (active high) ──────────────────────────────────────────
 set_property -dict { PACKAGE_PIN H5    IOSTANDARD LVCMOS33 } [get_ports { led[0] }]

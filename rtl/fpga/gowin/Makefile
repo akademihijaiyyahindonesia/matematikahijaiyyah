@@ -26,15 +26,12 @@ TOP      = hcpu_gowin_top
 PROGRAM  = $(RTL_DIR)/programs/test_bsm.hasm
 PYTHON  ?= python3
 
-SOURCES  = hcpu_gowin_top.v \
-           $(RTL_DIR)/hcpu_top.v      $(RTL_DIR)/hcpu_fetch.v   \
-           $(RTL_DIR)/hcpu_decode.v   $(RTL_DIR)/hcpu_execute.v \
-           $(RTL_DIR)/hcpu_memory.v   $(RTL_DIR)/hcpu_writeback.v \
-           $(RTL_DIR)/hcpu_regfile.v  $(RTL_DIR)/hcpu_forward.v \
-           $(RTL_DIR)/hcpu_controller.v $(RTL_DIR)/hcpu_rom.v   \
-           $(RTL_DIR)/hcpu_guard.v    $(RTL_DIR)/hcpu_codex_alu.v \
-           $(RTL_DIR)/hcpu_dataram.v  $(RTL_DIR)/hcpu_uart_tx.v \
-           $(RTL_DIR)/hcpu_mul.v      $(RTL_DIR)/hcpu_hisab.v
+# The wrapper plus every hcpu_*.v, found rather than listed. The hand-written
+# list here went stale exactly the way rtl/tb/Makefile's did: hcpu_mmio.v and
+# hcpu_trap.v were added to the design and not to this list, so `make sim`,
+# `make synth` and `make bitstream` all failed with "Unknown module type" --
+# and would have failed on the day the board arrived, not before.
+SOURCES  = hcpu_gowin_top.v $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim synth bitstream flash clean
 

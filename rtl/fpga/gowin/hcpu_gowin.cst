@@ -13,6 +13,11 @@ IO_PORT "btn_rst_n" IO_TYPE=LVCMOS18;
 // Pin 17 = UART TX on Tang Nano 9K via USB-C bridge
 IO_LOC  "uart_txd"  17;
 IO_PORT "uart_txd"  IO_TYPE=LVCMOS33 DRIVE=8;
+// Pin 18 is the bridge's RX on the Tang Nano 9K, the pair to 17. Without it
+// the receiver, the timer's interrupt and every trap that depends on them are
+// dead on the board while simulating perfectly.
+IO_LOC  "uart_rxd"  18;
+IO_PORT "uart_rxd"  IO_TYPE=LVCMOS33 PULL_MODE=UP;
 
 // ── LEDs (active low) ───────────────────────────────────────────
 // LED[0] = Guard   LED[1] = Halted  LED[2] = PLL

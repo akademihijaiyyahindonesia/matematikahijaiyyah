@@ -16,6 +16,7 @@
 module hcpu_xilinx_top (
     input  wire        clk_100m,    // 100 MHz onboard oscillator
     input  wire        btn_rst,     // BTN0 — active high reset
+    input  wire        uart_rxd,    // UART RX ← USB-FTDI
     output wire        uart_txd,    // UART TX → USB-FTDI
     output wire [3:0]  led          // 4 green LEDs
 );
@@ -76,6 +77,7 @@ module hcpu_xilinx_top (
         .imem_addr      (imem_addr),
         .imem_ce        (imem_ce),
         .imem_data      (imem_data),
+        .uart_rx        (uart_rxd),
         .uart_tx        (uart_txd),
         .halted         (halted_out),
         .guard_led      (guard_led_out),
