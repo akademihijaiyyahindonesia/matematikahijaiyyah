@@ -259,3 +259,88 @@ def test_a_second_dot_destroys_what_the_first_one_built() -> None:
         assert with_dots(na, nb, nd) == 2, "a doubled slot should collapse"
     for na, nb, nd in ((1, 1, 0), (1, 0, 1), (0, 1, 1)):
         assert with_dots(na, nb, nd) < 31, "two taps should not stay maximal"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The wave: what the machine emits
+# ══════════════════════════════════════════════════════════════════
+
+def _emit(m: list[list[int]], n: int = 31) -> list[int]:
+    """One period of the bit stream, as +-1 for correlation."""
+    mm = [[x & 1 for x in row] for row in m]
+    state, out = [1, 0, 0, 0, 0], []
+    for _ in range(n):
+        out.append(state[0])
+        state = [sum(mm[i][j] * state[j] for j in range(5)) & 1 for i in range(5)]
+    return [1 - 2 * b for b in out]
+
+
+def test_the_maximal_letters_emit_a_proper_m_sequence() -> None:
+    """
+    All three of Golomb's randomness postulates, exactly. A period-31 sequence
+    with two-valued autocorrelation is an m-sequence, which is what a ranging
+    or spreading code is -- the thing a correlator can find in noise.
+    """
+    import itertools as it
+
+    for i in (JIM, KHA):
+        bits = _emit(build_exomatrix(ENTRIES[i]))
+        assert len(bits) == 31
+
+        # G1: balance. 16 ones to 15 zeros, off by exactly one.
+        ones = sum(1 for b in bits if b == -1)
+        assert ones == 16 and 31 - ones == 15
+
+        # G2: runs halve. 8 of length 1, 4 of 2, 2 of 3, then singletons.
+        runs = [len(list(g)) for _, g in it.groupby(bits)]
+        counts = {k: runs.count(k) for k in set(runs)}
+        assert counts[1] == 8 and counts[2] == 4 and counts[3] == 2
+
+        # G3: two-valued autocorrelation, and the off-peak value is exactly -1.
+        auto = [sum(bits[j] * bits[(j + t) % 31] for j in range(31))
+                for t in range(31)]
+        assert auto[0] == 31
+        assert set(auto[1:]) == {-1}
+
+
+def test_the_two_maximal_letters_are_not_a_preferred_pair() -> None:
+    """
+    Kept because the first reading of this measurement was wrong. Their
+    cross-correlation peak is 11, which satisfies 2*sqrt(31)+1 ~ 12, and that
+    bound alone was taken for the definition. It is not.
+
+    A preferred pair of m-sequences at n=5 has THREE-valued cross-correlation
+    {-1, -9, 7}. This pair is six-valued with a peak of 11, so Gold codes
+    cannot be built from it. 2.8x separation is enough to tell two nodes apart
+    and not enough for a code family.
+    """
+    j = _emit(build_exomatrix(ENTRIES[JIM]))
+    k = _emit(build_exomatrix(ENTRIES[KHA]))
+    cross = {sum(j[i] * k[(i + t) % 31] for i in range(31)) for t in range(31)}
+
+    t = 2 ** ((5 + 1) // 2) + 1                       # 9
+    assert cross != {-1, -t, t - 2}, "it became a preferred pair — recheck"
+    assert len(cross) == 6
+    assert max(abs(c) for c in cross) == 11 > t
+
+    # What does hold: each is far more like itself than like the other.
+    assert 31 / max(abs(c) for c in cross) > 2.5
+
+
+def test_the_alphabet_is_an_oscillator_bank_and_most_of_it_is_silent() -> None:
+    """
+    Clocked, a letter's period is a frequency. At the board's 27 MHz the
+    alphabet gives four tones and a lot of silence: sixteen letters have
+    period 1 and emit nothing at all.
+    """
+    tones: dict[int, int] = {}
+    for e in ENTRIES:
+        p = _orbit(build_exomatrix(e))[1]
+        tones[p] = tones.get(p, 0) + 1
+
+    assert tones[1] == 16, "the silent majority moved"
+    assert set(tones) == {1, 2, 3, 4, 31}
+
+    hz = 27_000_000 / 31
+    assert abs(hz - 870_967.7) < 1.0          # Jim and Kha, the longest wave
+    assert 27_000_000 / 2 > hz, "period 31 must be the lowest tone"
