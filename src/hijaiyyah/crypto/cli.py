@@ -15,6 +15,7 @@ three lines too many.
     kabah examine  anything.bin     the whole system in one pass, sealed
     kabah sign     prog.hbc         seal an H-ISA program
     kabah verify   prog.hbc.kbh     verify one before it runs
+    kabah manifest .                seal every program in a tree
 
 The key file is the only state. Losing it loses nothing that was encrypted —
 nothing here encrypts — but it makes sealed records unverifiable, which for an
@@ -282,6 +283,45 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_manifest(args: argparse.Namespace) -> int:
+    """Seal every program under a directory, or check them against a seal.
+
+    Twenty-eight programs sealed one at a time is twenty-eight records to
+    keep, and one going missing says nothing. A manifest turns that into a
+    single question.
+    """
+    from hijaiyyah.crypto.program import (
+        Manifest,
+        build_manifest,
+        verify_manifest,
+    )
+
+    root = Path(args.file)
+    system = Kabah(_load_key(Path(args.key)), args.purpose, track_replays=False)
+    target = Path(args.out) if args.out else root / f"programs{SUFFIX}"
+
+    if args.check:
+        stored = Manifest.from_bytes(
+            system.open(GuardedRecord.from_bytes(target.read_bytes())))
+        changed = verify_manifest(stored, root)
+        print(f"{target}  {stored.summary()}")
+        if changed:
+            for path in changed:
+                print(f"  CHANGED  {path}")
+            print(f"\n  {len(changed)} differ from the sealed manifest", file=sys.stderr)
+            return 1
+        print("  every program matches the seal")
+        return 0
+
+    manifest = build_manifest(root)
+    target.write_bytes(system.seal(manifest.to_bytes()).to_bytes())
+    print(f"{root}  →  {target}")
+    print(f"  {manifest.summary()}")
+    for item in manifest.unsealed:
+        print(f"  not compilable: {item.path} — {item.reason}")
+    return 0
+
+
 def cmd_describe(args: argparse.Namespace) -> int:
     info: Dict[str, Any] = Kabah.describe()
     layers: List[Dict[str, Any]] = info["layers"]
@@ -354,6 +394,13 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("file")
         sp.add_argument("--out")
         sp.set_defaults(func=func)
+
+    man = sub.add_parser("manifest", help="seal every program in a tree")
+    man.add_argument("file", help="directory to walk")
+    man.add_argument("--out")
+    man.add_argument("--check", action="store_true",
+                     help="verify the tree against an existing manifest")
+    man.set_defaults(func=cmd_manifest)
 
     sub.add_parser("describe", help="what each layer guarantees").set_defaults(
         func=cmd_describe

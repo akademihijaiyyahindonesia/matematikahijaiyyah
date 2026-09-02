@@ -40,6 +40,7 @@ otherwise.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Optional, Sequence, Set, Tuple
 
 from hijaiyyah.crypto.guarded_record import CryptoRefusal, GuardedRecord
@@ -140,6 +141,184 @@ def _code_section(image: bytes) -> bytes:
         # Refusing here would make this module unusable for raw images, which
         # the assembler also emits.
         return image
+
+
+# ── The whole corpus, in one record ──────────────────────────────
+
+@dataclass(frozen=True)
+class ProgramEntry:
+    """One program: where it lives, how big it is, what it hashes to."""
+
+    path: str
+    words: int
+    digest: bytes                       # SHA-256 of the assembled image
+
+    def line(self) -> str:
+        return f"{self.digest.hex()}  {self.words:>6}  {self.path}"
+
+
+@dataclass(frozen=True)
+class Unsealed:
+    """A program that could not be reduced to instructions, and why.
+
+    These are recorded rather than skipped. A manifest that quietly omits what
+    it could not handle answers "is everything I sealed unchanged?" when the
+    question worth answering is "is everything unchanged?" — and the gap
+    between those two is exactly where something goes missing unnoticed.
+    """
+
+    path: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class Manifest:
+    """Every program in a tree, under one seal.
+
+    Sealing twenty-eight programs individually gives twenty-eight records to
+    keep, and a set of records is only as trustworthy as the weakest habit
+    around it — one goes missing and nothing says so. A manifest turns that
+    into a single question: does the corpus still match?
+
+    **The digest is SHA-256, not the sponge.** The sponge fingerprint is [EH]
+    and must not carry integrity weight, however convenient it would be to
+    use the project's own primitive here. Using an unproven hash for the one
+    artefact that certifies everything else would invert the whole layering.
+
+    Canonical by construction: entries sorted by path, fixed-width counts,
+    no optional fields. Two builds over one tree produce identical bytes.
+    """
+
+    entries: Tuple[ProgramEntry, ...]
+    unsealed: Tuple[Unsealed, ...] = ()
+
+    def to_bytes(self) -> bytes:
+        out = bytearray(b"HMF1")
+        out += len(self.entries).to_bytes(4, "big")
+        for entry in self.entries:
+            encoded = entry.path.encode("utf-8")
+            out += len(encoded).to_bytes(2, "big") + encoded
+            out += entry.words.to_bytes(4, "big")
+            out += entry.digest
+        out += len(self.unsealed).to_bytes(4, "big")
+        for item in self.unsealed:
+            for field_text in (item.path, item.reason):
+                encoded = field_text.encode("utf-8")[:255]
+                out += bytes([len(encoded)]) + encoded
+        return bytes(out)
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "Manifest":
+        if not data.startswith(b"HMF1"):
+            raise CryptoRefusal("not a program manifest: wrong magic")
+        count = int.from_bytes(data[4:8], "big")
+        at = 8
+        entries = []
+        for _ in range(count):
+            length = int.from_bytes(data[at : at + 2], "big")
+            at += 2
+            path = data[at : at + length].decode("utf-8")
+            at += length
+            words = int.from_bytes(data[at : at + 4], "big")
+            at += 4
+            entries.append(ProgramEntry(path, words, data[at : at + 32]))
+            at += 32
+
+        skipped = int.from_bytes(data[at : at + 4], "big")
+        at += 4
+        unsealed = []
+        for _ in range(skipped):
+            values = []
+            for _field in range(2):
+                length = data[at]
+                at += 1
+                values.append(data[at : at + length].decode("utf-8"))
+                at += length
+            unsealed.append(Unsealed(*values))
+
+        if at != len(data):
+            raise CryptoRefusal(f"{len(data) - at} trailing bytes after {count} entries")
+        return cls(tuple(entries), tuple(unsealed))
+
+    def summary(self) -> str:
+        total = sum(entry.words for entry in self.entries)
+        tail = f", {len(self.unsealed)} not compilable" if self.unsealed else ""
+        return f"{len(self.entries)} programs, {total} instructions{tail}"
+
+
+def image_of(path: Path) -> bytes:
+    """Assemble or compile one source file into instruction words.
+
+    Both front ends land in the same place, which is the point: a `.hc`
+    program and a `.hasm` program are the same thing once they are words, and
+    the seal should not care which one a file started as.
+    """
+    import struct
+
+    from hijaiyyah.hisa.assembler import assemble
+
+    text = path.read_text(encoding="utf-8")
+    if path.suffix == ".hc":
+        # `compile_hc` writes a file and returns a status, so it hands back no
+        # words at all. Using it here produced a manifest whose ten HC entries
+        # all carried the SHA-256 of the empty string — a manifest certifying
+        # nothing, which is worse than no manifest. The lower-level path is
+        # what the integration tests use, and it returns the assembly.
+        from hijaiyyah.compiler.codegen import generate
+        from hijaiyyah.compiler.psi import inject
+        from hijaiyyah.language.lexer import Lexer
+        from hijaiyyah.language.parser import Parser
+
+        ast = Parser(Lexer(text).tokenize()).parse()
+        text = generate(ast, inject(ast)).text
+
+    words = assemble(text)
+    if not words:
+        raise CryptoRefusal(f"{path} produced no instructions")
+    return b"".join(struct.pack("<I", int(word)) for word in words)
+
+
+def build_manifest(root: Path, patterns: Sequence[str] = ("*.hasm", "*.hc")) -> Manifest:
+    """Assemble every program under `root` and record what it hashes to."""
+    import hashlib
+
+    found: List[ProgramEntry] = []
+    skipped: List[Unsealed] = []
+    for pattern in patterns:
+        for path in root.rglob(pattern):
+            if ".git" in path.parts:
+                continue
+            name = str(path.relative_to(root))
+            try:
+                image = image_of(path)
+            except Exception as reason:
+                skipped.append(Unsealed(name, str(reason)[:120]))
+                continue
+            found.append(ProgramEntry(
+                name, len(image) // WORD, hashlib.sha256(image).digest()))
+    return Manifest(
+        tuple(sorted(found, key=lambda e: e.path)),
+        tuple(sorted(skipped, key=lambda u: u.path)))
+
+
+def verify_manifest(manifest: Manifest, root: Path) -> List[str]:
+    """Paths whose program no longer matches the manifest.
+
+    Reports *which* ones, and reports a missing file as a mismatch rather
+    than skipping it — a program that vanished is exactly the case a manifest
+    exists to catch, and a silent skip would turn deletion into a way of
+    passing.
+    """
+    current = {entry.path: entry for entry in build_manifest(root).entries}
+    changed = []
+    for entry in manifest.entries:
+        found = current.get(entry.path)
+        if found is None or found.digest != entry.digest:
+            changed.append(entry.path)
+    for path in current:
+        if not any(entry.path == path for entry in manifest.entries):
+            changed.append(path)
+    return sorted(changed)
 
 
 def disassemble_opcodes(code: bytes) -> List[Tuple[int, int]]:

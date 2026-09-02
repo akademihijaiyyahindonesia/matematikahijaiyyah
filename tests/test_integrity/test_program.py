@@ -161,3 +161,115 @@ def test_the_module_states_what_a_symmetric_key_cannot_do() -> None:
     assert "It does not establish who signed" in doc
     assert "needs a signature, not a MAC" in doc
     assert "does not sandbox, meter, or isolate" in doc
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The whole corpus under one seal
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_manifest_covers_every_program_that_assembles() -> None:
+    """
+    Sealing programs one at a time gives one record each, and a set of records
+    is only as good as the habit around it — one goes missing and nothing says
+    so. A manifest turns that into a single question.
+    """
+    from hijaiyyah.crypto.program import build_manifest
+
+    manifest = build_manifest(ROOT)
+    assert len(manifest.entries) >= 18
+    assert sum(entry.words for entry in manifest.entries) > 300
+    assert all(len(entry.digest) == 32 for entry in manifest.entries)
+
+
+def test_programs_that_cannot_compile_are_recorded_not_skipped() -> None:
+    """
+    None of the ten .hc examples reduce to H-ISA: seven use string literals,
+    which have no representation, and the rest hit FnDecl, ForStmt and
+    string_integral(). That is the code generator's scope, not a sealing
+    failure — and it belongs *in* the manifest.
+
+    A manifest that quietly omits what it could not handle answers "is
+    everything I sealed unchanged?" when the question worth answering is "is
+    everything unchanged?" The gap between those is where something goes
+    missing unnoticed.
+    """
+    from hijaiyyah.crypto.program import build_manifest
+
+    manifest = build_manifest(ROOT)
+    assert len(manifest.unsealed) >= 10
+    assert all(item.reason for item in manifest.unsealed)
+    assert any("string literal" in item.reason for item in manifest.unsealed)
+
+
+def test_an_empty_image_is_refused_rather_than_hashed() -> None:
+    """
+    The first version of `image_of` used `compile_hc`, which writes a file and
+    returns a status rather than words — so every .hc entry carried the
+    SHA-256 of the empty string. A manifest certifying nothing is worse than
+    no manifest, so an empty image is now a refusal.
+    """
+    from hijaiyyah.crypto.program import image_of
+
+    empty = ROOT / "rtl" / "programs" / "_empty_probe.hasm"
+    empty.write_text("; nothing here\n", encoding="utf-8")
+    try:
+        with pytest.raises(CryptoRefusal, match="no instructions"):
+            image_of(empty)
+    finally:
+        empty.unlink()
+
+
+def test_the_manifest_round_trips_and_is_deterministic() -> None:
+    from hijaiyyah.crypto.program import Manifest, build_manifest
+
+    manifest = build_manifest(ROOT)
+    assert Manifest.from_bytes(manifest.to_bytes()) == manifest
+    assert build_manifest(ROOT).to_bytes() == manifest.to_bytes()
+    with pytest.raises(CryptoRefusal, match="trailing bytes"):
+        Manifest.from_bytes(manifest.to_bytes() + b"\x00")
+
+
+def test_a_changed_program_is_named_not_merely_counted() -> None:
+    """
+    "One program differs" is not actionable; "rtl/programs/test_loop.hasm
+    differs" is.
+    """
+    from hijaiyyah.crypto.program import build_manifest, verify_manifest
+
+    manifest = build_manifest(ROOT)
+    assert verify_manifest(manifest, ROOT) == []
+
+    target = ROOT / "rtl" / "programs" / "test_loop.hasm"
+    original = target.read_text(encoding="utf-8")
+    try:
+        target.write_text(original + "        NOP\n", encoding="utf-8")
+        assert verify_manifest(manifest, ROOT) == ["rtl/programs/test_loop.hasm"]
+    finally:
+        target.write_text(original, encoding="utf-8")
+
+
+def test_a_deleted_program_counts_as_a_mismatch() -> None:
+    """
+    A silent skip would turn deletion into a way of passing, which is the one
+    failure a manifest exists to catch.
+    """
+    from hijaiyyah.crypto.program import Manifest, ProgramEntry, verify_manifest
+
+    ghost = Manifest((ProgramEntry("rtl/programs/gone.hasm", 4, bytes(32)),))
+    assert "rtl/programs/gone.hasm" in verify_manifest(ghost, ROOT)
+
+
+def test_the_manifest_digest_is_sha256_and_not_the_sponge() -> None:
+    """
+    The sponge fingerprint is [EH]. Using an unproven hash for the one
+    artefact that certifies every other would invert the whole layering,
+    however convenient the project's own primitive would be here.
+    """
+    import hashlib
+
+    from hijaiyyah.crypto.program import build_manifest, image_of
+
+    entry = next(e for e in build_manifest(ROOT).entries
+                 if e.path == "rtl/programs/test_loop.hasm")
+    assert entry.digest == hashlib.sha256(
+        image_of(ROOT / "rtl" / "programs" / "test_loop.hasm")).digest()
