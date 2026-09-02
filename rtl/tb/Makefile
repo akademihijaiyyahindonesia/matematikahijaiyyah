@@ -14,22 +14,13 @@ TB_DIR    = .
 INC       = -I$(RTL_DIR)
 
 # RTL sources (order matters for dependencies)
-RTL_SRC   = $(RTL_DIR)/hcpu_rom.v \
-            $(RTL_DIR)/hcpu_mul.v \
-            $(RTL_DIR)/hcpu_guard.v \
-            $(RTL_DIR)/hcpu_codex_alu.v \
-            $(RTL_DIR)/hcpu_hisab.v \
-            $(RTL_DIR)/hcpu_regfile.v \
-            $(RTL_DIR)/hcpu_uart_tx.v \
-            $(RTL_DIR)/hcpu_fetch.v \
-            $(RTL_DIR)/hcpu_decode.v \
-            $(RTL_DIR)/hcpu_execute.v \
-            $(RTL_DIR)/hcpu_memory.v \
-            $(RTL_DIR)/hcpu_writeback.v \
-            $(RTL_DIR)/hcpu_controller.v \
-            $(RTL_DIR)/hcpu_dataram.v \
-            $(RTL_DIR)/hcpu_forward.v \
-            $(RTL_DIR)/hcpu_top.v
+# Every hcpu_*.v in the parent, found rather than listed. The hand-written
+# list went stale twice without anyone noticing: hcpu_mmio.v and hcpu_trap.v
+# were added to the design and never added here, so tb_hcpu_top stopped
+# elaborating and its integration assertions silently stopped running. The
+# Python side globs, so it kept passing -- two lists, one truth, and the one
+# that was maintained by hand is the one that drifted.
+RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 # ── Simulation targets ──────────────────────────────────────────
 

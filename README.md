@@ -145,7 +145,7 @@ ruff check src/
 for tb in tb_guard tb_rom tb_codex_alu tb_hisab tb_hcpu_top; do
   iverilog -g2012 -I rtl -o /tmp/$tb.vvp rtl/tb/$tb.v rtl/*.v && vvp /tmp/$tb.vvp
 done
-# 204 assertions, 0 gagal
+# 207 assertions, 0 gagal
 ```
 
 **Sintesis** (perlu Yosys):
@@ -246,7 +246,7 @@ Dinyatakan apa adanya, dengan label epistemik.
 | Metrik-vektorial (Bab II) | 683 pemeriksaan, 0 gagal | `VF+CC` |
 | Struktur monoid terkendala | Closure dibuktikan secara aljabar | `VF` |
 | HVM, HC, HCC, HASM | Operasional | `CC` |
-| HCPU RTL | 204 assertion simulasi, 0 gagal | `CC` |
+| HCPU RTL | 207 assertion simulasi, 0 gagal | `CC` |
 | HCPU sintesis | Berjalan; lihat catatan di bawah | `CC` |
 | Target ASIC | Belum ada pemetaan sel standar | `EH` |
 | Realisasi fotonik | DoF individual terdemonstrasi | `EH` |

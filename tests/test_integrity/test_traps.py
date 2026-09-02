@@ -268,3 +268,28 @@ def test_without_the_handler_clearing_its_source_the_program_spins() -> None:
     assert not m._halted, "a handler that never clears its source must not finish"
     taken = [t for t in m.trace if "TRAP" in t.description]
     assert len(taken) > 5, "the source stayed high; it must keep re-trapping"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The build list that went stale twice
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_testbench_makefile_finds_its_sources_instead_of_listing_them() -> None:
+    """
+    rtl/tb/Makefile hand-listed every hcpu_*.v. hcpu_mmio.v was added to the
+    design and not to the list, then hcpu_trap.v was too -- so tb_hcpu_top
+    stopped elaborating and its 13 integration assertions silently stopped
+    running. Nothing failed; they just were not there any more.
+
+    The Python side globs, which is exactly why it kept passing while the
+    Makefile drifted. Two lists, one truth, and the hand-maintained one lost.
+    """
+    makefile = (ROOT / "rtl" / "tb" / "Makefile").read_text(encoding="utf-8")
+    assert "$(wildcard $(RTL_DIR)/hcpu_*.v)" in makefile
+    body = makefile.split("RTL_SRC")[1].split("\n\n")[0]
+    assert "hcpu_top.v" not in body, "a hand-written source list is back"
+
+    # And every module the top instantiates has to exist, so the glob is enough.
+    top = (ROOT / "rtl" / "hcpu_top.v").read_text(encoding="utf-8")
+    for name in set(re.findall(r"^\s{4}(hcpu_[a-z_]+)\s+u_", top, re.M)):
+        assert (ROOT / "rtl" / f"{name}.v").is_file(), name
