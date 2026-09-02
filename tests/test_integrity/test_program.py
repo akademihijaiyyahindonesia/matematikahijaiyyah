@@ -273,3 +273,93 @@ def test_the_manifest_digest_is_sha256_and_not_the_sponge() -> None:
                  if e.path == "rtl/programs/test_loop.hasm")
     assert entry.digest == hashlib.sha256(
         image_of(ROOT / "rtl" / "programs" / "test_loop.hasm")).digest()
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The whole system, not only its programs
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_system_manifest_covers_the_rtl_as_well_as_the_programs() -> None:
+    """
+    A program is only half of what decides what happens: change
+    hcpu_execute.v and every sealed program still verifies while doing
+    something different on the board.
+    """
+    from hijaiyyah.crypto.program import build_system_manifest
+
+    manifest = build_system_manifest(ROOT)
+    kinds = {entry.path.split(":")[0] for entry in manifest.entries if ":" in entry.path}
+    assert {"rtl", "header", "testbench", "vector", "fpga", "seal"} <= kinds
+    assert len(manifest.entries) >= 85
+
+
+@pytest.mark.parametrize(
+    "target,suffix",
+    [
+        ("rtl/hcpu_execute.v", "\n// probe\n"),
+        ("rtl/hcpu_pkg.vh", "\n// probe\n"),
+        ("rtl/tb/tb_hijaiyyah_sbox.v", "\n// probe\n"),
+        ("rtl/tb/linear_in.hex", "0\n"),
+        ("rtl/programs/test_loop.hasm", "        NOP\n"),
+    ],
+)
+def test_a_change_to_any_kind_of_artefact_is_detected(target: str, suffix: str) -> None:
+    from hijaiyyah.crypto.program import build_system_manifest, verify_manifest
+
+    manifest = build_system_manifest(ROOT)
+    path = ROOT / target
+    original = path.read_bytes()
+    try:
+        path.write_bytes(original + suffix.encode())
+        changed = verify_manifest(manifest, ROOT)
+        assert any(target in name for name in changed), f"{target} went unnoticed"
+    finally:
+        path.write_bytes(original)
+    assert verify_manifest(manifest, ROOT) == []
+
+
+def test_programs_are_digested_by_image_and_sources_by_text() -> None:
+    """
+    The difference is deliberate. A program's seal is about what runs, so
+    reformatting a comment must not break it. An RTL file has no canonical
+    compiled form here, so any byte of it could change the gates and every
+    byte is covered.
+    """
+    from hijaiyyah.crypto.program import build_system_manifest
+
+    def loop_entry(manifest):
+        return next(e for e in manifest.entries
+                    if e.path.endswith("test_loop.hasm"))
+
+    before = build_system_manifest(ROOT)
+    program = ROOT / "rtl" / "programs" / "test_loop.hasm"
+    original = program.read_text(encoding="utf-8")
+    try:
+        program.write_text(original + "; a comment changes nothing\n", encoding="utf-8")
+        assert loop_entry(before).digest == loop_entry(build_system_manifest(ROOT)).digest
+    finally:
+        program.write_text(original, encoding="utf-8")
+
+
+def test_the_dataset_seal_travels_in_the_manifest() -> None:
+    """So a manifest that verifies also pins which sealed release it belongs to."""
+    from hijaiyyah.crypto.guarded_record import dataset_seal
+    from hijaiyyah.crypto.program import build_system_manifest
+
+    entry = next(e for e in build_system_manifest(ROOT).entries
+                 if e.path == "seal:master-table")
+    assert entry.digest.hex() == dataset_seal()
+
+
+def test_the_summary_does_not_call_bytes_instructions() -> None:
+    """
+    `words` counts instructions for a program and bytes for a source file, so
+    summing the column and calling the total "instructions" is false — the
+    first system manifest reported 479,626 of them.
+    """
+    from hijaiyyah.crypto.program import build_system_manifest
+
+    line = build_system_manifest(ROOT).summary()
+    assert "sources" in line and "bytes" in line
+    instructions = int(line.split(" instructions")[0].split(", ")[-1])
+    assert instructions < 10_000

@@ -43,7 +43,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence, Set, Tuple
 
-from hijaiyyah.crypto.guarded_record import CryptoRefusal, GuardedRecord
+from hijaiyyah.crypto.guarded_record import CryptoRefusal, GuardedRecord, dataset_seal
 from hijaiyyah.crypto.kabah import Kabah
 
 #: Bytes in one H-ISA instruction word.
@@ -241,9 +241,23 @@ class Manifest:
         return cls(tuple(entries), tuple(unsealed))
 
     def summary(self) -> str:
-        total = sum(entry.words for entry in self.entries)
-        tail = f", {len(self.unsealed)} not compilable" if self.unsealed else ""
-        return f"{len(self.entries)} programs, {total} instructions{tail}"
+        """One line, and it must not conflate the two kinds of entry.
+
+        `words` counts instructions for a program and bytes for a source
+        file, so summing the column and calling the total "instructions" is
+        false: the first system manifest reported 479,626 of them. They are
+        counted apart now.
+        """
+        programs = [e for e in self.entries if ":" not in e.path]
+        others = [e for e in self.entries if ":" in e.path]
+
+        parts = [f"{len(programs)} programs",
+                 f"{sum(e.words for e in programs)} instructions"]
+        if others:
+            parts.append(f"{len(others)} sources, {sum(e.words for e in others):,} bytes")
+        if self.unsealed:
+            parts.append(f"{len(self.unsealed)} not compilable")
+        return ", ".join(parts)
 
 
 def image_of(path: Path) -> bytes:
@@ -301,6 +315,57 @@ def build_manifest(root: Path, patterns: Sequence[str] = ("*.hasm", "*.hc")) -> 
         tuple(sorted(skipped, key=lambda u: u.path)))
 
 
+#: What determines what the silicon does, beyond the programs themselves.
+#: Digested as *text*, not as an image — an RTL file has no canonical compiled
+#: form here, and any change to its bytes could change the gates.
+SYSTEM_PATTERNS: Tuple[Tuple[str, str], ...] = (
+    ("rtl/*.v", "rtl"),
+    ("rtl/fpga/gowin/*.v", "fpga"),
+    ("rtl/tb/*.v", "testbench"),
+    ("rtl/tb/*.hex", "vector"),
+    ("rtl/*.vh", "header"),
+)
+
+
+def build_system_manifest(root: Path) -> Manifest:
+    """Everything that decides this system's behaviour, under one digest.
+
+    The program manifest answers "is the software unchanged?". This answers
+    the larger question, because a program is only half of what determines
+    what happens: change `hcpu_execute.v` and every sealed program still
+    verifies while doing something different on the board.
+
+    **Two kinds of digest, and the difference is deliberate.** A program is
+    hashed over its *assembled image*, so reformatting a comment does not
+    invalidate a seal — the seal is about what runs. An RTL file is hashed
+    over its *text*, because there is no canonical compiled form here and any
+    byte of it could change the gates. Using one rule for both would either
+    make comments load-bearing or make a Verilog edit invisible.
+
+    The dataset seal is included as an entry of its own, so a manifest that
+    verifies also pins which sealed release of the Master Table it belongs to.
+    """
+    import hashlib
+
+    manifest = build_manifest(root)
+    entries = list(manifest.entries)
+
+    for pattern, kind in SYSTEM_PATTERNS:
+        for path in sorted(root.glob(pattern)):
+            if ".git" in path.parts:
+                continue
+            entries.append(ProgramEntry(
+                f"{kind}:{path.relative_to(root)}",
+                len(path.read_bytes()),
+                hashlib.sha256(path.read_bytes()).digest()))
+
+    entries.append(ProgramEntry(
+        "seal:master-table", 0, bytes.fromhex(dataset_seal())))
+
+    return Manifest(
+        tuple(sorted(entries, key=lambda e: e.path)), manifest.unsealed)
+
+
 def verify_manifest(manifest: Manifest, root: Path) -> List[str]:
     """Paths whose program no longer matches the manifest.
 
@@ -309,7 +374,14 @@ def verify_manifest(manifest: Manifest, root: Path) -> List[str]:
     exists to catch, and a silent skip would turn deletion into a way of
     passing.
     """
-    current = {entry.path: entry for entry in build_manifest(root).entries}
+    # Whichever manifest was sealed, rebuild the same shape. A system
+    # manifest carries "rtl:" and "seal:" entries the program one does not,
+    # and comparing across the two kinds would report every RTL file as
+    # deleted.
+    builder = (build_system_manifest
+               if any(":" in entry.path for entry in manifest.entries)
+               else build_manifest)
+    current = {entry.path: entry for entry in builder(root).entries}
     changed = []
     for entry in manifest.entries:
         found = current.get(entry.path)
