@@ -67,7 +67,7 @@ def test_six_components_name_a_letter_and_degrees_come_first() -> None:
     chosen = [0]
     while _candidates(chosen) > 1.0:
         nxt = min((k for k in range(18) if k not in chosen),
-                  key=lambda k: _candidates(chosen + [k]))
+                  key=lambda k: _candidates([*chosen, k]))
         before = _candidates(chosen)
         chosen.append(nxt)
         assert _candidates(chosen) < before, "greedy stalled"
@@ -146,3 +146,94 @@ def test_jim_is_a_poor_metric_pivot_because_centres_always_are() -> None:
     ranked = sorted(range(28), key=pruned, reverse=True)
     assert ranked.index(JIM) > 15, "Jim became a good pivot — recheck the claim"
     assert VECTORS[ranked[0]][0] in (0, 8), "the best pivot is no longer extreme"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The exomatrix panel — where the counting jump actually is
+# ══════════════════════════════════════════════════════════════════
+
+def test_the_exomatrix_is_one_face_of_the_cube() -> None:
+    """
+    5x5 = 25 cells, and the sponge state is 25 lanes. Each letter is literally
+    one face. That is what "panel" means here -- not a metaphor and not an
+    index, a face.
+    """
+    from hijaiyyah.core.exomatrix import build_exomatrix
+    from hijaiyyah.crypto import cube
+
+    m = build_exomatrix(ENTRIES[JIM])
+    assert len(m) == 5 and all(len(r) == 5 for r in m)
+    assert len(m) * len(m[0]) == cube.STATE_LANES == 25
+
+
+def test_the_panel_is_sparse_and_low_rank_at_the_same_time() -> None:
+    """
+    74% of cells are zero, and the average rank is 3.71 of 5. Either alone
+    would be worth something; together they are why the panel costs a fraction
+    of its 25 cells.
+    """
+    from fractions import Fraction
+
+    from hijaiyyah.core.exomatrix import build_exomatrix
+
+    def rank(m: list[list[int]]) -> int:
+        a = [[Fraction(x) for x in row] for row in m]
+        r = 0
+        for c in range(5):
+            p = next((i for i in range(r, 5) if a[i][c]), None)
+            if p is None:
+                continue
+            a[r], a[p] = a[p], a[r]
+            for i in range(5):
+                if i != r and a[i][c]:
+                    f = a[i][c] / a[r][c]
+                    a[i] = [x - f * y for x, y in zip(a[i], a[r], strict=True)]
+            r += 1
+        return r
+
+    mats = [build_exomatrix(e) for e in ENTRIES]
+    zeros = sum(1 for m in mats for row in m for x in row if x == 0)
+    assert zeros / (28 * 25) > 0.70
+
+    ranks = [rank(m) for m in mats]
+    assert max(ranks) <= 5
+    assert sum(ranks) / 28 < 4.0, "the panels stopped being low-rank"
+
+
+def test_the_counting_jump_and_where_each_factor_comes_from() -> None:
+    """
+    The recipe said there was a jump in the counting, and there is. It is the
+    product of two things acting on different axes, which is why it multiplies
+    rather than adds:
+
+        degree picks the panel     28 candidates -> 4.50    6.2x
+        the panel is sparse        125 MACs      -> 9.8    12.7x
+                                                          -----
+        together                   3500          -> 44      79x
+
+    Neither half is impressive alone. The reason they compose is that one
+    decides WHICH panels are touched and the other decides HOW MUCH each
+    touched panel costs.
+    """
+    import itertools
+
+    from hijaiyyah.core.exomatrix import build_exomatrix
+
+    mats = [build_exomatrix(e) for e in ENTRIES]
+
+    def sparse_macs(a: list[list[int]], b: list[list[int]]) -> int:
+        return sum(1 for i in range(5) for k in range(5) if a[i][k]
+                   for j in range(5) if b[k][j])
+
+    costs = [sparse_macs(mats[x], mats[y])
+             for x, y in itertools.product(range(28), repeat=2)]
+    mean_cost = sum(costs) / len(costs)
+
+    assert 125 / mean_cost > 12.0, f"sparsity gain fell to {125 / mean_cost:.1f}x"
+    assert 125 / max(costs) > 5.0, "even the worst case must beat dense"
+
+    candidates = _candidates([0])
+    dense_full = 28 * 125
+    sparse_panel = candidates * mean_cost
+    assert dense_full / sparse_panel > 70.0, (
+        f"the combined jump fell to {dense_full / sparse_panel:.0f}x")
