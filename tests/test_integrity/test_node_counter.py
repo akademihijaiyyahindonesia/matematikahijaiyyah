@@ -121,7 +121,15 @@ def test_real_encryption_leaves_nothing_to_count() -> None:
     for _ in range(200):
         key = rng.randrange(256)
         hits += recover_xor_key(bytes(b ^ key for b in os.urandom(1024))) == key
-    assert hits <= 4, f"{hits}/200 — that would mean structure in urandom"
+
+    # The bound is arithmetic, not taste. Each trial recovers the key by
+    # accident with p = 1/256, so 200 trials expect 0.78 hits. A bound of 4
+    # fails once in 786 runs — small, but this suite runs often enough that
+    # "small" becomes "sometimes", and a test that fails for the reason it is
+    # testing against is worse than no test. At 8 the false-failure rate is
+    # about 1e-7, and real structure would put hits far above it: recovery
+    # against text lands at 95%, which is 190.
+    assert hits <= 8, f"{hits}/200 — that would mean structure in urandom"
 
 
 def test_compressed_and_encrypted_are_the_same_object_here() -> None:
