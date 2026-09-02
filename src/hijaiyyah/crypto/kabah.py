@@ -91,6 +91,13 @@ COSMICTERA = "CosmicTera"
 #: Format identifier for a sealed examination. One suite, no negotiation.
 EXAMINATION_MAGIC = b"HEX1"
 
+# The deserialiser takes one bit per clock, so a byte costs eight before any
+# other stage sees it. This is the system's bottleneck -- 3.3x the sponge's
+# own 2.42 clocks per byte -- and quoting the sponge's rate as the system's
+# overstated it by 4x. Measured in tb_hijaiyyah_kabah_top: 383 bytes, 3,698
+# clocks, 622 held.
+DESERIAL_CLOCKS_PER_BYTE = 8
+
 
 #: The expansion, kept here so the name cannot drift from what it stands for.
 NAME = "Ka'bah"
@@ -390,50 +397,93 @@ class Kabah:
 
     @staticmethod
     def throughput(volume: int = 10 ** 12, hertz: int = 27_000_000) -> Dict[str, object]:
-        """Clock counts for a volume of data, and the ratio that shapes the design.
+        """Clock counts for a volume of data, and which stage actually pays them.
 
-        The two paths through this system do not cost the same, and at
-        terabyte scale the difference stops being a detail.
+        This used to report the sponge's own rate as the system's. That was
+        wrong by 4x, and wrong in the direction that flatters: the sponge is
+        not the bottleneck. The front end is.
 
-        *Triage* — the jamrah gate and the node counter — takes **one byte per
-        clock**. It is a reduction tree and eight counters; nothing about it
-        waits.
+        *The deserialiser* takes bits. One bit per clock, eight per byte, so
+        **8 clocks per byte** before any other stage sees anything. That is the
+        machine that was built — CMASS reads a bit stream, not a byte stream.
 
-        *The sponge* takes 128 bytes per permutation and a permutation is 310
-        clocks at SLICE=25, so **0.41 bytes per clock**. It is 2.4x slower
-        than the triage in front of it, and that ratio is the whole argument
-        for having a triage in front of it.
+        *Triage* — the jamrah gate and the node counter — takes one byte per
+        clock. Against 8 clocks per byte arriving it is **free**: it finishes
+        each byte long before the next is assembled.
+
+        *The sponge* takes 128 bytes per permutation, 310 clocks at SLICE=25,
+        so 2.42 clocks per byte. Also under 8 — but it does not overlap. The
+        permutation stalls the deserialiser for its whole length, so it adds
+        instead of hiding.
+
+        Measured, not assumed: 383 bytes cost 3,698 clocks, 622 of them held.
+        622 is 2 x 310 — the two permutations that fired, each stalling in
+        full. 8 + 622/383 = 9.62 against 9.66 observed. Asymptotically, per
+        byte: **8 + 310/128 = 10.42 clocks**.
 
         Over one terabyte at the board's 27 MHz crystal:
 
-            triage everything          10.3 hours
-            sponge everything          24.9 hours
-            triage all, sponge 5%      11.5 hours
+            triage everything                   10.3 hours   (free; hidden)
+            the sponge alone, byte-parallel      24.9 hours   <- never built
+            the deserialiser alone               82.3 hours
+            the system as built                 107.2 hours
 
-        So the layering is not only about rejecting garbage before spending a
-        hash — at volume it is what makes the volume finishable at all.
+        The second row is the one that used to be quoted as the system's. It
+        describes a machine fed one byte per clock, which this is not.
+
+        What that costs the layering argument: triage is free, but skipping the
+        sponge saves only its 2.42, so triaging everything and sponging nothing
+        is just **1.30x** faster than sponging everything — not the 2.42x a
+        byte-parallel feed would give. The triage earns its place by what it
+        *finds*, not by what it saves.
+
+        A FIFO would recover most of that: 310 clocks of permutation fit inside
+        the 1,024 clocks the next 128 bytes take to deserialise, so the sponge
+        could hide entirely and the system would run at the deserialiser's 8.
+        That is [EH] — not built, not measured.
 
         [EH] on the clock: 27 MHz is what the crystal offers, not an Fmax this
         design has been shown to close timing at. Every duration here scales
         inversely with whatever the real number turns out to be.
         """
         rate = cube.RATE
-        rows: Dict[str, object] = {"volume": volume, "hertz": hertz,
-                                   "rate_bytes": rate}
+        rows: Dict[str, object] = {
+            "volume": volume, "hertz": hertz, "rate_bytes": rate,
+            "deserial_clocks_per_byte": DESERIAL_CLOCKS_PER_BYTE,
+        }
         paths: Dict[str, Dict[str, float]] = {}
         paths["triage"] = {"bytes_per_clock": 1.0, "clocks": float(volume)}
+        paths["deserialiser"] = {
+            "bytes_per_clock": 1.0 / DESERIAL_CLOCKS_PER_BYTE,
+            "clocks": float(volume * DESERIAL_CLOCKS_PER_BYTE),
+        }
         for name, clocks in (("sponge_slice_8", 786), ("sponge_slice_25", 310),
                              ("sponge_slice_50", 198)):
             paths[name] = {
                 "bytes_per_clock": rate / clocks,
                 "clocks": volume / rate * clocks,
             }
+        # The system as built. The permutation stalls the deserialiser rather
+        # than hiding behind it -- 622 clocks held for 2 permutations, measured
+        # -- so the two costs add. A FIFO would make this a max() instead.
+        system = paths["deserialiser"]["clocks"] + paths["sponge_slice_25"]["clocks"]
+        paths["system_bit_serial"] = {
+            "bytes_per_clock": (volume / system) if system else 0.0,
+            "clocks": system,
+        }
         for entry in paths.values():
             entry["seconds"] = entry["clocks"] / hertz
             entry["hours"] = entry["seconds"] / 3600
         rows["paths"] = paths
         rows["sponge_slower_by"] = (
             paths["sponge_slice_25"]["clocks"] / paths["triage"]["clocks"])
+        # Which stage the volume actually waits on. Naming it stops the
+        # sponge's own rate being quoted as the system's again.
+        rows["bottleneck"] = max(
+            ("triage", "deserialiser", "sponge_slice_25"),
+            key=lambda name: paths[name]["clocks"])
+        rows["triage_only_faster_by"] = (
+            (system / paths["deserialiser"]["clocks"]) if volume else 1.0)
         return rows
 
     @staticmethod

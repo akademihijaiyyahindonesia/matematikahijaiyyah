@@ -50,8 +50,32 @@
 //              25   7,426 (85%)   1,926        310
 //
 // Both fit. At SLICE=25 and the board's own 27 MHz crystal -- no overclocking
-// -- that is 87,097 permutations per second, 11.15 MB/s at the sponge's
-// 128-byte rate.
+// -- the sponge turns 87,097 permutations per second, which is 11.15 MB/s at
+// its 128-byte rate.
+//
+// THAT IS NOT THIS MODULE'S THROUGHPUT, and quoting it as such overstated the
+// system by 4x for many commits. This top is fed a BIT STREAM. The
+// deserialiser takes one bit per clock, so a byte costs 8 clocks before the
+// gate, the counter, or the sponge sees it -- 3.3x the sponge's own 2.42
+// clocks per byte. The sponge is not the bottleneck here; the front end is.
+//
+// Worse, the permutation does not hide behind the deserialiser. It asserts
+// backpressure and stalls it for the full 310 clocks, so the costs add:
+//
+//     deserialiser      8.00 clocks/byte
+//     permutation       2.42 clocks/byte   (310 per 128)
+//     ------------------------------------
+//     system           10.42 clocks/byte    2.59 MB/s at 27 MHz
+//
+// MEASURED, not modelled: the end-to-end run below costs 3,698 clocks for 383
+// bytes, 622 of them held. 622 is exactly 2 x 310 -- the two permutations that
+// fired, each stalling in full. 8 + 622/383 = 9.62 against 9.66 observed; the
+// gap is that 383 bytes is 2.99 rate blocks, so only two permutations ran.
+//
+// A FIFO between deserialiser and sponge would recover this: 310 clocks fit
+// inside the 1,024 the next 128 bytes take to arrive, so the permutation could
+// hide entirely and the system would run at the deserialiser's 8.00. Not
+// built, not measured -- [EH].
 //
 // VERIFIED END TO END: 3,069 raw bits at an arbitrary offset, deserialised at
 // the discovered phase, gated, classified, assembled, absorbed over 47 lanes

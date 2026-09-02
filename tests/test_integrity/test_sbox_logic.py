@@ -456,6 +456,11 @@ def test_the_throughput_figures_name_the_clock_they_assume() -> None:
     assert "AT AN ASSUMED CLOCK" in source
     assert "achievable Fmax is unmeasured" in source
     assert "11.15 MB/s" in source
+    # 11.15 is this core's rate fed a byte per clock. It was quoted as the
+    # system's for many commits, which overstated it by 4x -- the header has to
+    # say so, or the next reader makes the same substitution.
+    assert "not the system's" in source
+    assert "2.59 MB/s, not 11.15" in source
 
 
 # ══════════════════════════════════════════════════════════════════

@@ -176,34 +176,76 @@ def test_an_empty_input_does_not_invent_findings() -> None:
 #  At volume: the ratio that shapes the design
 # ══════════════════════════════════════════════════════════════════
 
-def test_the_sponge_is_the_bottleneck_and_the_arithmetic_says_by_how_much() -> None:
+def test_the_deserialiser_is_the_bottleneck_not_the_sponge() -> None:
     """
-    Triage is a reduction tree and eight counters: one byte per clock, nothing
-    waits. The sponge is 128 bytes per 310-clock permutation — 0.41 bytes per
-    clock, 2.4x slower.
+    This test used to be called ...the_sponge_is_the_bottleneck..., and it was
+    wrong. The sponge costs 2.42 clocks per byte; the deserialiser costs 8,
+    because it takes one bit per clock. The front end is 3.3x the sponge.
 
-    That ratio is the whole argument for putting triage in front. Over a
-    terabyte at 27 MHz: triage everything in 10.3 hours, sponge everything in
-    24.9, or triage everything and sponge the 5% it flags in 11.5. At volume
-    the layering is not only about rejecting garbage before spending a hash —
-    it is what makes the volume finishable.
+    Reporting the sponge's 11.15 MB/s as the system's overstated it by 4x —
+    the system runs at 2.59 MB/s. The bottleneck is named in the return value
+    now so the substitution cannot be made silently again.
     """
     from hijaiyyah.crypto import cube
+    from hijaiyyah.crypto.kabah import DESERIAL_CLOCKS_PER_BYTE
 
     numbers = Kabah.throughput()
     paths = numbers["paths"]
 
+    # The sponge's own arithmetic is unchanged and still correct.
     assert paths["triage"]["bytes_per_clock"] == 1.0
     assert abs(paths["sponge_slice_25"]["bytes_per_clock"] - cube.RATE / 310) < 1e-9
     assert 2.4 <= numbers["sponge_slower_by"] < 2.5
-
-    assert 10.0 < paths["triage"]["hours"] < 10.6
     assert 24.5 < paths["sponge_slice_25"]["hours"] < 25.5
+
+    # What was missing: the stage in front of it, which costs more than it.
+    assert DESERIAL_CLOCKS_PER_BYTE == 8
+    assert paths["deserialiser"]["clocks"] > paths["sponge_slice_25"]["clocks"]
+    assert numbers["bottleneck"] == "deserialiser"
+
+    # The costs add rather than overlap -- the permutation stalls the front end.
+    assert (paths["system_bit_serial"]["clocks"]
+            == paths["deserialiser"]["clocks"] + paths["sponge_slice_25"]["clocks"])
+    assert 10.4 < 1.0 / paths["system_bit_serial"]["bytes_per_clock"] < 10.5
+
+    # 2.59 MB/s, not 11.15.
+    mb_s = 27_000_000 * paths["system_bit_serial"]["bytes_per_clock"] / 1e6
+    assert 2.5 < mb_s < 2.7
+
+    # And the layering saves 1.30x, not the 2.42x a byte-parallel feed implies.
+    assert 1.25 < numbers["triage_only_faster_by"] < 1.35
 
     # A wider slice buys clocks, not bytes: the rate is fixed by the sponge.
     assert (paths["sponge_slice_50"]["clocks"]
             < paths["sponge_slice_25"]["clocks"]
             < paths["sponge_slice_8"]["clocks"])
+
+
+def test_the_measured_run_confirms_both_terms_of_the_cost_model() -> None:
+    """
+    The model says 8 clocks per byte plus 310 per permutation. The end-to-end
+    testbench run is the only thing that can say whether they add or overlap.
+
+    383 bytes, 3,698 clocks, 622 held. 622 = 2 x 310 exactly: both permutations
+    stalled the deserialiser for their full length. That is what makes the
+    system 10.42 clocks per byte instead of the 8.00 a FIFO would give.
+    """
+    from hijaiyyah.crypto.kabah import DESERIAL_CLOCKS_PER_BYTE
+
+    bytes_seen, clocks, held, perms = 383, 3698, 622, 2
+
+    # The held clocks are the permutations, to the clock.
+    assert held - perms * 310 == 2
+
+    # Deserialisation plus stall accounts for the whole run.
+    modelled = bytes_seen * DESERIAL_CLOCKS_PER_BYTE + held
+    assert abs(clocks - modelled) < 20
+
+    # 383 bytes is 2.99 rate blocks, which is why only two permutations fired --
+    # the run is slightly cheaper per byte than the asymptote for that reason.
+    from hijaiyyah.crypto import cube
+    assert bytes_seen // cube.RATE == perms
+    assert clocks / bytes_seen < DESERIAL_CLOCKS_PER_BYTE + 310 / cube.RATE
 
 
 def test_the_throughput_figures_scale_with_the_clock_they_assume() -> None:

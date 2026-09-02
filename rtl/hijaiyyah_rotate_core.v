@@ -61,7 +61,13 @@
 //        25      310           87,097      11.15 MB/s
 //        50      198          136,364      17.45 MB/s
 //
-// at the sponge's 128-byte rate. Turned around, against the security levels
+// at the sponge's 128-byte rate. These are THIS CORE'S figures, fed a byte per
+// clock. They are not the system's: hijaiyyah_kabah_top is fed a bit stream,
+// and its deserialiser costs 8 clocks per byte -- 3.3x this core's 2.42 -- so
+// the system runs at 2.59 MB/s, not 11.15. Quoting the 11.15 as the system's
+// throughput overstated it by 4x; see that module's header for the measurement.
+//
+// Turned around, against the security levels
 // the construction claims, one board at 87,097 attempts per second:
 //
 //     2^288  the sponge's capacity      1.8e74 years
