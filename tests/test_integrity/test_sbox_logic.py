@@ -594,3 +594,44 @@ def test_the_top_level_names_what_it_does_not_contain() -> None:
     assert "no SHA-256 core" in source
     assert "unauthenticated until software signs it" in source
     assert "Phase discovery is also software" in source
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_gate_actually_gates_and_the_break_point_is_joined() -> None:
+    """
+    An instruction I acknowledged and then skipped for several commits.
+
+    `gate_pulse` went to an output port and the sponge absorbed every byte
+    regardless — a detector wired to nothing, which is worse than no detector
+    because the output looks like enforcement. In `gate_mode` only bytes that
+    name a letter reach the sponge, and the *position* of the first refusal is
+    held: "the stream broke at byte 37" rather than "the stream broke".
+
+    Verified on a codex record with one byte corrupted at a known position:
+    the break is reported at exactly 37, one refusal counted, and the absorbed
+    state equals cube.py over the admitted bytes only. Three sabotages all
+    caught — disabling the gate, pinning the position to zero, and counting
+    without reporting.
+
+    The mode is a mode on purpose: the check is that a byte names a letter,
+    1..28, which is true of a codex record and false of nearly every other
+    byte. Gate what is parsed as letters; pass through what is not.
+    """
+    bits = (ROOT / "rtl" / "tb" / "gate_bits.hex").read_text().strip().split("\n")
+    sources = [
+        "rtl/hijaiyyah_kabah_top.v", "rtl/hijaiyyah_deserialiser.v",
+        "rtl/hijaiyyah_jamrah_gate.v", "rtl/hijaiyyah_node_counter.v",
+        "rtl/hijaiyyah_sponge.v", "rtl/hijaiyyah_ramal_impulse.v",
+        "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
+        "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
+        "rtl/tb/tb_hijaiyyah_gate_mode.v",
+    ]
+    build = subprocess.run(
+        ["iverilog", "-g2012", f"-DNBITS={len(bits)}",
+         "-s", "tb_hijaiyyah_gate_mode", "-o", "/tmp/tb_gate_mode", *sources],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_gate_mode"], cwd=ROOT,
+                         capture_output=True, text=True)
+    assert "PASS: break at byte 37" in run.stdout, run.stdout

@@ -36,9 +36,10 @@ module tb_hijaiyyah_kabah_top;
     always #5 clk = ~clk;
 
     hijaiyyah_kabah_top #(.SLICE_BYTES(25), .WINDOW(64)) dut (
-        .clk(clk), .rst_n(rst_n), .standby(standby), .load(load),
+        .clk(clk), .rst_n(rst_n), .standby(standby), .load(load), .gate_mode(1'b0),
         .phase(PHASE), .bit_valid(bit_valid), .bit_in(bit_in),
         .gate_pulse(gate_pulse), .gate_root(gate_root),
+        .break_valid(), .break_at(), .break_count(),
         .class_valid(class_valid), .class_out(class_out),
         .xor_key_out(xor_key_out),
         .bits_ready(bits_ready), .absorbing(absorbing), .permuting(permuting),

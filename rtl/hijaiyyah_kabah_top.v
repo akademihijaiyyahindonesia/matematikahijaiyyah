@@ -11,6 +11,13 @@
 //   bytes, one per 8 clocks
 //        |--> jamrah gate: seven nodes, one pulse            (per byte, free)
 //        |--> node counter: class + XOR key per 64 bytes     (triage)
+//        |
+//        |  in gate_mode the gate is a GATE: only bytes that pass reach the
+//        |  sponge, and the POSITION of the first refusal is held on
+//        |  break_at -- "the stream broke at byte 1,043", not "the stream
+//        |  broke". Without that the gate was a reporter wired to nothing,
+//        |  which is worse than no gate because the output looks like
+//        |  enforcement.
 //        v
 //   lanes, one per 8 bytes
 //        |  sponge: 16 lanes onto the tawaf ring             (rate = 1024 bit)
@@ -69,6 +76,7 @@ module hijaiyyah_kabah_top #(
     input  wire          rst_n,
     input  wire          standby,
     input  wire          load,          // clear the sponge state
+    input  wire          gate_mode,     // 1 = only gated bytes reach the sponge
 
     // the wire
     input  wire [2:0]    phase,         // byte boundary, found in software
@@ -78,6 +86,9 @@ module hijaiyyah_kabah_top #(
     // triage, per byte and per window
     output wire          gate_pulse,    // this byte names a letter
     output wire [3:0]    gate_root,     // its popcount, the tree's root
+    output reg           break_valid,   // the stream broke at least once
+    output reg  [31:0]   break_at,      // byte position of the FIRST break
+    output reg  [15:0]   break_count,   // how many bytes the gate refused
     output wire          class_valid,
     output wire [1:0]    class_out,
     output wire [7:0]    xor_key_out,
@@ -114,6 +125,59 @@ module hijaiyyah_kabah_top #(
         .valid_out(class_valid), .class_out(class_out),
         .xor_key_out(xor_key_out));
 
+    // ---- the gate opens per parse, and the break point is joined -------
+    //
+    // Without this the gate was a REPORTER, not a gate: it published
+    // `gate_pulse` on a port and the sponge absorbed every byte regardless.
+    // That is a detector wired to nothing, which is worse than no detector,
+    // because the output looks like enforcement.
+    //
+    // In `gate_mode` only bytes the gate passes reach the sponge. And a
+    // refusal is not merely counted -- the POSITION of the first one is held,
+    // because "the stream broke" is not actionable and "the stream broke at
+    // byte 1,043" is. That is the break point joined back.
+    //
+    // The mode is a mode rather than always on, and deliberately: the gate's
+    // check is that a byte names a letter, 1..28. That is true of a codex
+    // record and false of almost every other byte, so enforcing it on
+    // arbitrary data would reject nearly everything. Gate what is parsed as
+    // letters; pass through what is not.
+
+    reg [31:0] position;
+
+    // The gate registers its verdict, so the byte it belongs to has already
+    // moved on by the time `gate_pulse` is readable. Recompute the same
+    // predicate combinationally for the admit decision -- one comparator, and
+    // it keeps the decision in step with the byte it is about.
+    wire gate_pulse_now = (byte_out != 8'd0) && (byte_out <= 8'd28);
+
+    wire byte_admitted = byte_valid && (!gate_mode || gate_pulse_now);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            position    <= 32'd0;
+            break_valid <= 1'b0;
+            break_at    <= 32'd0;
+            break_count <= 16'd0;
+        end else if (load) begin
+            position    <= 32'd0;
+            break_valid <= 1'b0;
+            break_at    <= 32'd0;
+            break_count <= 16'd0;
+        end else if (standby) begin
+            position    <= position;
+        end else if (byte_valid) begin
+            position <= position + 32'd1;
+            if (gate_mode && !gate_pulse_now) begin
+                break_count <= break_count + 16'd1;
+                if (!break_valid) begin
+                    break_valid <= 1'b1;
+                    break_at    <= position;
+                end
+            end
+        end
+    end
+
     // ---- bytes to lanes ------------------------------------------------
     reg [2:0]  lane_fill;
     reg [63:0] lane_shift;
@@ -140,7 +204,7 @@ module hijaiyyah_kabah_top #(
             lane_valid <= lane_valid;
         end else begin
             lane_valid <= 1'b0;
-            if (byte_valid) begin
+            if (byte_admitted) begin
                 // Little-endian within the lane, matching cube.py's
                 // int.from_bytes(..., "little").
                 lane_shift <= {byte_out, lane_shift[63:8]};
