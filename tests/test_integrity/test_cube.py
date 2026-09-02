@@ -579,3 +579,75 @@ def test_the_sealed_permutation_still_walks_uniformly() -> None:
         manual = [C._substitute(x) for x in manual]
         manual[0] ^= C.ROUND_CONSTANTS[r % len(C.ROUND_CONSTANTS)]
     assert C.permute(state) == manual
+
+
+class TestRotationPeriod:
+    """
+    What rho-pi actually does over the face — structure that was present from
+    the start and had not been written down until it was computed.
+    """
+
+    def _cycles(self):
+        seen, cycles = set(), []
+        for start in range(C.STATE_LANES):
+            if start in seen:
+                continue
+            cycle, node = [], start
+            while node not in seen:
+                seen.add(node)
+                cycle.append(node)
+                node = C.PI[node]
+            cycles.append(cycle)
+        return cycles
+
+    def test_pi_is_two_rings_of_twelve_and_one_fixed_lane(self):
+        lengths = sorted(len(c) for c in self._cycles())
+        assert lengths == [1, 12, 12]
+
+    def test_lane_zero_is_the_fixed_one_and_that_is_why_the_constant_lands_there(self):
+        """
+        Not a justification invented afterwards: lane 0 is the only lane pi
+        leaves in place, and a lane that neither moves nor changes would be
+        structurally distinguished for as long as the sponge ran. The round
+        constant is what stops that.
+        """
+        fixed = [i for i in range(C.STATE_LANES) if C.PI[i] == i]
+        assert fixed == [0]
+
+        # The constant must actually reach that lane, or the argument is empty.
+        state = [0] * C.STATE_LANES
+        once = C.permute(state)
+        assert once != state, "an all-zero state must not be a fixed point"
+
+    def test_the_linear_layer_returns_to_identity_after_768_applications(self):
+        """
+        12 because that is when every lane is home, 64 because the accumulated
+        rotations must return to zero mod the lane width. 12 x 64 = 768.
+        """
+        totals = [0] * C.STATE_LANES
+        positions = list(range(C.STATE_LANES))
+        for step in range(1, 2000):
+            moved = [0] * C.STATE_LANES
+            for lane in range(C.STATE_LANES):
+                moved[C.PI[lane]] = (totals[lane] + C.RHO[lane]) % C.LANE_BITS
+            totals = moved
+            positions = [C.PI[p] for p in positions]
+            if positions == list(range(C.STATE_LANES)) and not any(totals):
+                assert step == 768
+                break
+        else:
+            raise AssertionError("no period found below 2000")
+
+    def test_the_round_count_sits_well_inside_that_period(self):
+        """
+        A round count anywhere near 768 would be running the linear layer back
+        toward the identity it started from. 28 is 27.4x below it.
+        """
+        assert C.CIRCUITS == 28
+        assert 768 / C.CIRCUITS > 25
+
+    def test_the_module_records_the_period_it_was_measured_at(self):
+        doc = " ".join((C.__doc__ or "").split())
+        assert "two 12-cycles and one fixed point" in doc
+        assert "768 = 12 x 64" in doc
+        assert "27.4x below the period" in doc

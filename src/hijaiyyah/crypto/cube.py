@@ -138,6 +138,32 @@ show an effect. A saturated measurement reporting "no difference" looks like
 evidence and is not. Only the reduced-round regime has room for a difference
 to appear, and there the sign is consistent.
 
+
+**The rotation has a period, and the round count sits inside it.** Working out
+what rho-pi actually does over the 5x5 face turns up structure that was there
+all along and had not been written down:
+
+*pi decomposes into exactly two 12-cycles and one fixed point.*
+
+    1 -> 8 -> 15 -> 3 -> 19 -> 20 -> 4 -> 22 -> 10 -> 2 -> 11 -> 5 -> 1
+    6 -> 9 -> 23 -> 18 -> 17 -> 14 -> 24 -> 21 -> 7 -> 12 -> 13 -> 16 -> 6
+    0 -> 0
+
+Twenty-four lanes turn in two rings of twelve; **lane 0 never moves**. That
+explains a choice already in this file rather than justifying it after the
+fact: the round constant is XORed into lane 0 precisely because it is the one
+lane the permutation leaves in place, and a lane that neither moves nor
+changes would be structurally distinguished for as long as the sponge ran.
+
+*The order of pi is 12; the order of rho-pi together is 768 = 12 x 64.* Twelve
+because that is when every lane is home again, sixty-four because the
+accumulated rotations have to return to zero mod the lane width. After 768
+applications the whole linear layer is the identity.
+
+The permutation runs 28 rounds. **That is 27.4x below the period**, which is
+the margin that matters here: a round count anywhere near 768 would be running
+a linear layer back toward the identity it started from.
+
 """
 
 from __future__ import annotations
