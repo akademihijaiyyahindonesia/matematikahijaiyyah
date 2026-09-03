@@ -190,9 +190,10 @@ def test_the_kernels_own_limits_are_stated_where_it_is_claimed() -> None:
     assert "OFF.md" in ON
     # The book gives H-Kernel four responsibilities. Two run. Claiming the
     # component without naming the split is the overstatement this catches.
-    for missing in ("I/O", "daemon guard"):
+    for missing in ("daemon guard",):
         assert missing in ON, f"ON.md stops naming what the kernel lacks: {missing}"
     assert "**empat** tanggung jawab" in ON
+    assert "3 of 4" in (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
     spec = (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
     row = next(ln for ln in spec.splitlines() if ln.startswith("| H-Kernel"))
     assert "PARTIAL" in row and "OPERATIONAL" not in row, row
@@ -250,12 +251,12 @@ def test_nothing_blocked_is_ticked_green() -> None:
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
     reads them together."""
-    for figure in ("226 asersi", "14 bench"):
+    for figure in ("232 asersi", "15 bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
     # The pytest count is the one figure here nothing can verify -- checking it
     # would mean running pytest inside pytest -- so what is guarded is that the
     # checklist says so, rather than presenting it as though it were checked.
     assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
     assert "tidak dijaga" in CHECKLIST
-    assert "226 asersi RTL di 14 testbench" in README
-    assert "226 asersi, 14 bench, 0 gagal" in ON
+    assert "232 asersi RTL di 15 testbench" in README
+    assert "232 asersi, 15 bench, 0 gagal" in ON

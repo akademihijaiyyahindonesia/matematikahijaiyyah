@@ -119,7 +119,7 @@ def test_the_rtl_assertion_count_is_quoted_correctly() -> None:
         r"ROM (\d+), Guard (\d+), Codex ALU (\d+), HISAB (\d+), "
         r"integrasi _top-level_ (\d+), wrapper papan (\d+), "
         r"boot lewat kabel (\d+), H-Kernel (\d+), instruksi huruf (\d+), "
-        r"subrutin (\d+)",
+        r"subrutin (\d+), syscall I/O (\d+)",
         text,
     )
     assert breakdown, "the per-testbench breakdown is missing"

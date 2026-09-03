@@ -107,6 +107,10 @@ class HISAMachine:
         #: Return addresses. Separate from the PUSH/POP stack in both
         #: implementations -- see the CALL handler for why.
         self.return_stack: list[int] = []
+        #: Everything PRINT emitted, in order. There was no sink at all, which
+        #: is why test_codegen.py re-read the register named in the source line
+        #: instead of reading the output.
+        self.output: list[int] = []
 
     def load_program(self, code: List[int]) -> None:
         """Load bytecode into code memory."""
@@ -114,6 +118,7 @@ class HISAMachine:
         self.data_mem.clear()
         self.regs.pc = 0
         self.return_stack.clear()
+        self.output.clear()
         self._halted = False
         self._exit_code = 0
 
@@ -567,10 +572,28 @@ class HISAMachine:
             self.regs.hreg[dst] = list(self.regs.hreg[s1])
             return f"VMOV H{dst} = H{s1}"
 
-        # ── PRINT: output register ──────────────────────────────
+        # ── PRINT: the machine's one output path ────────────────
+        # GPR[S1], as the spec and the RTL both say. This printed hreg[dst],
+        # which is PRINTH's job at 0xA1 -- a different opcode -- so the
+        # interpreter and the hardware disagreed about what 0xA0 does while
+        # both were listed as implementing it. The same shape as the letters.
+        #
+        # It is privileged now. PRINT is the only way anything reaches the
+        # serial line, so leaving it open to user mode meant unmediated I/O:
+        # two processes interleaving characters with nothing arbitrating.
         if op == OpCode.PRINT:
-            h = self.regs.hreg[dst]
-            return f"PRINT H{dst} = ({', '.join(str(x) for x in h)})"
+            if self.mode == self.MODE_USER:
+                self._priv_fault = True
+                return "PRINT → privilege fault (user mode)"
+            value = self.regs.gpr[s1]
+            self.output.append(value)
+            return f"PRINT R{s1} = {value}"
+
+        # PRINTH is software-only by the spec and stays that way: it is the
+        # H-Reg print that PRINT was wrongly doing.
+        if op == OpCode.PRINTH:
+            h = self.regs.hreg[s1]
+            return f"PRINTH H{s1} = ({', '.join(str(x) for x in h)})"
 
         # ── HALT: stop execution ────────────────────────────────
         if op == OpCode.HALT:
@@ -967,6 +990,7 @@ class HISAMachine:
         self.trace = []
         self.cycle = 0
         self.return_stack = []
+        self.output = []
         self._halted = False
         self._exit_code = 0
 

@@ -84,6 +84,7 @@ Label: `CC`.
 | 4 Mode supervisor | jendela periferal tertutup bagi user | `rtl/hcpu_execute.v` |
 | 5 Proteksi memori | jendela `[base, limit)` per proses | `rtl/hcpu_mmio.v` |
 | 6 Syscall | `0x09`, non-maskable, epc menunjuk dirinya | `rtl/programs/syscall.hasm` |
+| **I/O lewat kernel** | `PRINT` istimewa; user meminta, supervisor mencetak | `rtl/tb/tb_hcpu_syscall_io.v` |
 | **H-Kernel** | **dua proses, dipreempt, register masing-masing** | `rtl/programs/kernel.hasm` |
 
 H-Kernel berjalan di **dua tempat**: penafsir Python dan pipeline RTL.
@@ -103,14 +104,19 @@ teruji sekaligus: tanpa `epc` dimajukan untuk cause 5, B akan mengulang
 
 Ruang lingkupnya jujur, dan buku menetapkan ukurannya. H-Kernel di sana punya
 **empat** tanggung jawab — proses, memori, I/O, daemon guard. Yang berjalan
-**dua**, dan keduanya sebagian:
+**tiga**:
 
 | tanggung jawab | keadaan |
 |---|---|
 | proses | dua slot tetap, round-robin — tanpa pembuatan dinamis |
 | memori | jendela `[base, limit)` per proses — tanpa heap |
-| I/O | **belum** — proses user tidak bisa melakukan I/O sama sekali |
+| I/O | **ada, dimediasi** — `PRINT` istimewa, keluaran lewat `SYSCALL` |
 | daemon guard | **belum** — tak ada yang menjadwalkan HCHECK |
+
+Klaim lama di baris I/O salah, dan kenyataannya lebih buruk daripada yang
+ditulis: `PRINT` **tidak** istimewa, jadi mode user menulis ke jalur serial
+tanpa perantara — bukan *tanpa* I/O, tapi I/O *tanpa wasit*. Sekarang ia
+istimewa dan keluaran melewati kernel.
 
 Karena itu spec pipeline menyebutnya `PARTIAL (2 of 4)`, bukan `OPERATIONAL`.
 Rinciannya di [OFF.md](OFF.md).
@@ -167,6 +173,6 @@ Label: `CC` dalam simulasi, `EH` di silikon.
 
 ```bash
 python3 -m pytest -q          # 4.279 lulus, 4 dilewati
-make -C rtl/tb all            # 226 asersi, 14 bench, 0 gagal
+make -C rtl/tb all            # 232 asersi, 15 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

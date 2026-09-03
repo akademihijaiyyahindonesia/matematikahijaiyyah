@@ -260,13 +260,19 @@ module hcpu_execute #(
         (id_mem_write ? (id_gpr_s2 + imm_sext) : (id_gpr_s1 + imm_sext))
         & {`DATA_ADDR_W{1'b1}};
 
-    // Two privileged acts: touching the peripheral window, and returning from
-    // a trap. HALT is the third, and it is caught in Decode where it is
-    // recognised. Everything the trap unit, the timer and the UART expose
-    // lives in that window, so one rule covers all of them.
+    // Privileged acts: touching the peripheral window, returning from a trap,
+    // HALT, and PRINT.
+    //
+    // PRINT was not on this list, and that was a hole rather than a gap. It is
+    // the machine's only output path, so user mode could write to the serial
+    // line with nothing between it and the wire -- two processes printing
+    // interleave their characters and no one arbitrates. "User mode cannot do
+    // I/O" was never true here; what was true is that its I/O was unmediated,
+    // which is worse. It goes through the kernel now, by SYSCALL.
     wire touches_window = (id_mem_read | id_mem_write)
                           && (would_addr >= `PERIPH_BASE);
-    assign priv_fault = in_user && (touches_window || eret_decoded || id_is_halt);
+    assign priv_fault = in_user && (touches_window || eret_decoded || id_is_halt
+                                    || id_is_print);
 
     // Ordinary RAM is open to user mode -- the boundary is the window, not
     // memory -- but only inside [base, limit). A peripheral address is
@@ -388,7 +394,7 @@ module hcpu_execute #(
         end else if (!stall) begin
             ex_opcode   <= id_opcode;
             ex_dst      <= id_dst;
-            ex_is_print <= id_is_print;
+            ex_is_print <= id_is_print & ~priv_fault;
             ex_is_push  <= id_is_push;
             ex_is_pop   <= id_is_pop;
 

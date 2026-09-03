@@ -122,6 +122,19 @@ module hcpu_trap (
             if (armed[i]) which = i[2:0];
     end
 
+    // A write to TRAP_MODE in the same cycle as an ERET has to be the value
+    // that ERET returns to. `mode <= prev` reads the register before the write
+    // lands, so an ERET one instruction after `STORE ... 0xFFD` returned to
+    // SUPERVISOR -- silently, with nothing to see. Every program that drops to
+    // user mode writes TRAP_MODE and then ERETs, because that is the obvious
+    // way to write it, so on hardware none of them ever left privilege. The
+    // interpreter has no pipeline and dropped correctly, so the two agreed on
+    // every result they were asked for and disagreed on the one thing that
+    // mattered. One NOP in between was enough to hide it; the fix is not to
+    // require one.
+    wire mode_write   = reg_we && (reg_sel == `REG_TRAP_MODE);
+    wire prev_at_eret = mode_write ? reg_wdata[1] : prev;
+
     // ── Redirect ────────────────────────────────────────────────
     // ERET beats a new trap: the return has already been decided by an
     // instruction that retired, and dropping it would strand the handler.
@@ -145,7 +158,7 @@ module hcpu_trap (
         end else begin
             if (eret) begin
                 trap_active <= 1'b0;
-                mode        <= prev;      // return to where the trap came from
+                mode        <= prev_at_eret;
             end else if (fire) begin
                 // epc points AT the faulting instruction, not past it, so a
                 // handler can emulate the operation and advance epc itself --

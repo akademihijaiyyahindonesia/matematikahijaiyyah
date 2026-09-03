@@ -1,0 +1,84 @@
+; syscall_io.hasm — I/O goes through the kernel, and only through the kernel.
+;
+; PRINT is this machine's only output path and it was not privileged, so user
+; mode could write to the serial line with nothing in between. That is not "no
+; I/O" -- it is unmediated I/O, which is worse: two processes interleave their
+; characters and nothing arbitrates. PRINT is privileged now, and this program
+; shows both halves of what that means.
+;
+; The user tries to print 99 directly. It faults, the handler steps over it,
+; and 99 never reaches the wire. Then the user asks for 42 by SYSCALL and the
+; supervisor prints it on its behalf. So the test is not "did something come
+; out" but "did the RIGHT thing come out and the wrong thing not".
+;
+; The handler is written with CALL/RET, which is the first program here that
+; could be.
+;
+;   R7   set after the syscall returns
+;   R8   set after the refused PRINT, so continuing past it is visible
+;   R10  set by the handler when it refuses a direct PRINT
+;   R1   call number in, result out    R2  argument
+
+        MOVI  R5, 0
+        MOVI  R8, 0
+        MOVI  R7, 0
+        MOVI  R10, 0
+
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT
+
+        MOVI  R1, usr
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0
+        STORE R1, R5, 0xFFD     ; previous mode = USER
+        ERET
+
+; ── user mode ───────────────────────────────────────────────────
+usr:    MOVI  R3, 99
+        PRINT R3                ; refused: 99 must never reach the wire
+        MOVI  R8, 1             ; reached only because the handler stepped over
+
+        MOVI  R1, 1             ; call 1 = write
+        MOVI  R2, 42
+        SYSCALL                 ; the supervisor prints it instead
+        MOVI  R7, 1
+spin:   JMP   spin
+
+; ── handler ─────────────────────────────────────────────────────
+handler:
+        LOAD  R9, R5, 0xFFA     ; TRAP_CAUSE
+        CMPI  R9, 3             ; TRAP_PRIV
+        JEQ   h_priv
+        CMPI  R9, 5             ; TRAP_SYSCALL
+        JEQ   h_call
+        HALT                    ; nothing else should arrive here
+
+h_priv: MOVI  R10, 1            ; a direct PRINT was refused
+        CALL  skip
+        ERET
+
+h_call: CALL  serve
+        CALL  skip
+        ERET
+
+; Serve the call. R1 and R2 are still the user's: this handler does not switch
+; context, so the arguments are simply there.
+serve:  CMPI  R1, 1
+        JNE   s_bad
+        PRINT R2                ; supervisor may print; the user may not
+        MOVI  R1, 1             ; result: one value written
+        RET
+s_bad:  MOVI  R1, 0
+        RET
+
+; Both causes name their own instruction, so returning without advancing epc
+; would re-execute it forever.
+skip:   LOAD  R11, R5, 0xFF9
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+        RET

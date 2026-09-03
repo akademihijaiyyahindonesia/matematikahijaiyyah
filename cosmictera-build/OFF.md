@@ -13,7 +13,7 @@ Place-and-route **gagal**. Desainnya **159% dari LUT4** papan dan nextpnr
 berhenti pada `no BELs remaining to implement cell type 'LUT4'`.
 
 ```
-LUT4    13.926 / 8.640   161%   ← tidak muat
+LUT4    13.948 / 8.640   161%   ← tidak muat
 DFF      4.454 / 6.480    68%
 BSRAM       17 /    26    65%
 Fmax    tidak terukur — routing tidak selesai, jadi tak ada laporan timing
@@ -113,7 +113,7 @@ Yang menghalangi, berurutan:
 |---|---|
 | penyimpanan blok | **tak ada** — tak ada driver, tak ada media |
 | heap | **tak ada** — buku menyebut 64 KB dengan `malloc`/`free`; mesin ini tak punya |
-| I/O lewat kernel | **tak ada** — proses user tak bisa menyentuh periferal, dan tak ada syscall I/O |
+| I/O lewat kernel | ✅ **ada** — `PRINT` istimewa, keluaran lewat `SYSCALL` |
 | `CALL`/`RET` | **belum di RTL** — tanpa subrutin, sistem berkas harus ditulis lurus |
 | Guard saat menulis | ✅ **ada** — G1–G4 sudah di RTL, 34 asersi |
 
@@ -149,7 +149,7 @@ daemon justru butuh penjadwal — dan penjadwal itulah yang baru saja ada.
 #### Urutan yang masuk akal
 
 1. ~~**`CALL`/`RET`**~~ — **selesai**, 0x2E/0x2F, empat asersi di `tb_hcpu_subroutine`.
-2. **Syscall I/O** — melengkapi tanggung jawab ketiga H-Kernel.
+2. ~~**Syscall I/O**~~ — **selesai**, enam asersi di `tb_hcpu_syscall_io`.
 3. **HCHECK sebagai daemon** — proses ketiga di penjadwal; tanggung jawab keempat.
 4. **HAL** — sebelum papan kedua, bukan sesudah.
 5. **Heap** — prasyarat HFS.

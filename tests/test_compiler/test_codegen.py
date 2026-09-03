@@ -20,7 +20,6 @@ failure mode worth guarding against.
 from __future__ import annotations
 
 import itertools
-import re
 from typing import Any, List
 
 import pytest
@@ -61,14 +60,12 @@ def run_machine(source: str) -> List[int]:
     machine.load_program(words)
     machine.run()
 
-    state = machine.dump_state()
-    # PRINT names its source register in the emitted line; read those back.
-    printed = []
-    for line in emitted.lines:
-        match = re.match(r"\s*PRINT\s+R(\d+)", line)
-        if match:
-            printed.append(state["gpr"][int(match.group(1))])
-    return printed
+    # Read what PRINT actually emitted. This used to re-read the register
+    # named in each emitted PRINT line instead, because the interpreter had no
+    # output sink at all -- its PRINT printed an H-Reg, which is PRINTH's job.
+    # Re-deriving the answer from the source cannot catch a PRINT that emits
+    # the wrong thing, since the source is what it was derived from.
+    return list(machine.output)
 
 
 # ══════════════════════════════════════════════════════════════════
