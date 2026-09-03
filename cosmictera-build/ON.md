@@ -85,6 +85,7 @@ Label: `CC`.
 | 5 Proteksi memori | jendela `[base, limit)` per proses | `rtl/hcpu_mmio.v` |
 | 6 Syscall | `0x09`, non-maskable, epc menunjuk dirinya | `rtl/programs/syscall.hasm` |
 | **I/O lewat kernel** | `PRINT` istimewa; user meminta, supervisor mencetak | `rtl/tb/tb_hcpu_syscall_io.v` |
+| **HOS** | heap, HFS guard-on-write, HAR sebagai layanan kernel | `rtl/tb/tb_hcpu_hos.v` |
 | **H-Kernel** | **tiga proses, dipreempt, register masing-masing** | `rtl/programs/kernel.hasm` |
 
 H-Kernel berjalan di **dua tempat**: penafsir Python dan pipeline RTL.
@@ -123,6 +124,52 @@ tanpa pembuatan proses dinamis, dan **stack alamat-kembali tidak ikut
 disimpan** saat pergantian konteks. Rinciannya di [OFF.md](OFF.md).
 
 Label: `CC`.
+
+### HOS: heap, HFS, HAR
+
+Buku memberi HOS empat sifat yang secara eksplisit dibedakan dari Linux dan
+Windows. Keempatnya kini nyata, dengan batasnya masing-masing dinamai:
+
+| sifat | keadaan |
+|---|---|
+| guard-on-write | ✅ `hos_fs_write` menolak vektor korup sebelum tersimpan |
+| penjajaran 18-wide | ✅ `HREG_W` = 144 bit = 18×8 |
+| HAR tingkat kernel | ✅ `hos_har_get`, titik masuk bernama, bukan indeks ROM mentah |
+| daemon guard | ✅ proses C di `kernel.hasm`, sudah sejak H-Kernel |
+
+**Heap** (`hos_alloc`/`hos_free`) adalah free-list first-fit dengan
+pemisahan blok, header 2-kata, penanda pakai `0xFFFFFFFF` (alamat yang
+mustahil nyata, `DATA_ADDR_W`=12 bit) menolak double-free alih-alih diam-diam
+merusak daftar bebas.
+
+**HFS** membaca "sistem berkas yang sadar hybit" secara harfiah: satu berkas
+adalah satu vektor hybit 18-komponen, dan `hos_fs_write` menjalankan `HGRD`
+sebelum berkomitmen — vektor korup (indeks ROM 31, vektor uji yang sama
+dipakai setiap bench guard) ditolak, tak pernah tersimpan. Jalur bacanya
+**setengah**, dan itu batas perangkat keras, bukan pilihan desain: `CGET`
+membaca satu komponen H-Reg ke GPR, tapi **tidak ada `CSET`** — tidak ada
+instruksi yang menulis nilai GPR ke komponen H-Reg. `hos_fs_read` karena itu
+mengembalikan penunjuk ke 18 kata mentah, bukan H-Reg hidup.
+
+**HAR** sebagai layanan: `hos_har_get(index)` memberi titik masuk bernama
+dan stabil, bukan mengharuskan pemanggil tahu pengindeksan ROM sendiri —
+tepat perbedaan yang buku klaim atas Linux dan Windows. Dibangun 28 kali
+`HLOAD` bercabang compile-time, bukan satu `HLOAD` terindeks-register: field
+ROM-nya immediate, `rom_addr = is_letter ? letter_index : id_imm[...]` di
+`hcpu_execute.v` tak pernah membaca register untuk itu.
+
+Membangun ini menemukan dua celah lagi. Pertama, `HLOAD H0, Rn` **dulu bisa
+dirakit** dan diam-diam selalu memuat indeks ROM 0 — assembler menolaknya
+sekarang, dan `rtl/programs/test_guard.hasm` (ada sejak lama, tak pernah
+benar-benar dijalankan dan diperiksa) ternyata mencetak 0, bukan 28, karena
+persis bug ini. Kedua, **FLAGS tidak punya write-through** yang sudah dimiliki
+GPR dan H-Reg — `CMP` lalu satu instruksi lalu `JNE` bisa membaca hasil basi
+satu siklus, dan `hos_alloc` adalah kode pertama di seluruh repositori yang
+punya jarak itu (semua `CMP`-lalu-cabang lain berdampingan langsung).
+Keduanya di [CHECKLIST.md](CHECKLIST.md) dengan rincian penuh.
+
+Label: `CC`. Bukti: `rtl/tb/tb_hcpu_hos.v`, `tests/test_integrity/test_hos.py`
+(30 tes).
 
 ---
 
@@ -174,6 +221,6 @@ Label: `CC` dalam simulasi, `EH` di silikon.
 
 ```bash
 python3 -m pytest -q          # 4.279 lulus, 4 dilewati
-make -C rtl/tb all            # 234 asersi, 16 bench, 0 gagal
+make -C rtl/tb all            # 240 asersi, 17 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

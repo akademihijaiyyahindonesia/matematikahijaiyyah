@@ -56,7 +56,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **234 asersi, 16 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **240 asersi, 17 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -71,8 +71,9 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | Wrapper papan | `make -C rtl/tb sim_board` |
 | ✅ | Boot lewat kabel | `make -C rtl/tb sim_loader` |
 | ✅ | **Cabang & interupsi bertabrakan** | `make -C rtl/tb sim_branch_trap_race` |
+| ✅ | **HOS: heap, HFS guard-on-write, HAR** | `make -C rtl/tb sim_hos` |
 
-Empat baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
+Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 - **H-Kernel** hijau karena `B = 127400 = 1274 × 100`. Kelipatan yang bersih
   hanya mungkin bila R1 milik B tak pernah memegang nilai A.
@@ -109,6 +110,27 @@ Empat baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
   `tb_hcpu_branch_trap_race.v` mereproduksinya sesuai permintaan, dengan
   menyapu tenggat timer sampai bertepatan persis dengan siklus Execute —
   bukan menunggu 1-dari-532 keberuntungan.
+- **FLAGS tidak punya write-through — GPR dan H-Reg punya.** Ditemukan lewat
+  HOS: `CMP R1,R2` untuk dua alamat heap yang genuinely berbeda (3587,
+  3594) menghasilkan Z=1 (salah — seharusnya 0) tepat di titik `JNE`
+  membacanya. `hcpu_regfile.v` punya baris eksplisit "GPR read (with
+  transparent write-through)" untuk GPR dan H-Reg —
+  `gpr_rdata1 = (gpr_we && gpr_waddr==gpr_raddr1) ? gpr_wdata : gpr[...]` —
+  tapi FLAGS hanya `assign flags_out = flags;`, murni nilai teregister
+  siklus lalu, tanpa bypass. Rantai forward di `hcpu_execute.v`
+  (`forwarded_flags`) menutupi konsumen 1-2 tahap di belakang produsen
+  (EX-forward, MEM-forward) lalu jatuh ke `current_flags` — dan `current_flags`
+  itulah yang, tanpa write-through, tetap basi tepat di siklus tulisannya
+  sendiri commit. Celah ini sempit: **setiap** pasangan CMP-lalu-cabang yang
+  sudah ada di seluruh repositori ini berdampingan langsung (jarak nol
+  instruksi), selalu masuk jendela EX-forward, tak pernah menyentuh
+  register ini sama sekali. `hos_alloc` adalah kode pertama yang punya satu
+  instruksi di antara perbandingan dan cabangnya, DAN cukup stall (dari
+  interlock load-use pada dua LOAD berurutan) untuk menaruh pembacaan
+  cabang itu tepat di siklus tabrakan. Diperbaiki dengan satu baris,
+  menyalin pola GPR persis: `assign flags_out = flags_we ? flags_in : flags;`
+  Direproduksi minimal di `tb_hcpu_hos.v` dan seluruh 17 bench tetap hijau
+  sesudahnya.
 
 ---
 
@@ -131,7 +153,7 @@ Dua, dan keduanya dinamai supaya centang di atas berarti sesuatu.
 | | apa | keadaan |
 |---|---|---|
 | ⬜ | `python3 rtl/scripts/lint_hcpu.py` | **0 error struktural** (dulu 1), sisa **76 peringatan** — keluar bukan-nol |
-| 🔴 | `make -C rtl/fpga/gowin bitstream` | **gagal**: 13.948 / 8.640 LUT4 = **161%** |
+| 🔴 | `make -C rtl/fpga/gowin bitstream` | **gagal**: 13.945 / 8.640 LUT4 = **161%** |
 
 Error Verilator hilang justru karena `default:` ganda itu diperbaiki — jadi
 lint yang selama ini merah sebenarnya sedang menunjuk cacat huruf, dan tak ada
@@ -148,7 +170,7 @@ Sebabnya satu komit dan sudah dibisect — lihat [OFF.md](OFF.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.300 lulus, 4 dilewati
-make -C rtl/tb all               # 234 asersi, 16 bench, 0 gagal
+make -C rtl/tb all               # 240 asersi, 17 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← merah, dan memang seharusnya terlihat
 ```
 

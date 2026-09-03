@@ -26,8 +26,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race \
-        sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_subroutine clean
+     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos sim_subroutine clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -38,7 +38,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race
+     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -81,7 +81,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex letters.hex subroutine.hex syscall_io.hex
+	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -118,6 +118,16 @@ sim_branch_trap_race: tb_hcpu_branch_trap_race.vvp
 	$(VVP) $<
 
 tb_hcpu_branch_trap_race.vvp: $(TB_DIR)/tb_hcpu_branch_trap_race.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+# HOS: heap, guarded HFS, HAR -- pure software over HAL, no new opcode.
+sim_hos: tb_hcpu_hos.vvp hos_demo.hex
+	$(VVP) $<
+
+hos_demo.hex: $(RTL_DIR)/programs/hos_demo.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+tb_hcpu_hos.vvp: $(TB_DIR)/tb_hcpu_hos.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
 tb_hcpu_subroutine.vvp: $(TB_DIR)/tb_hcpu_subroutine.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)

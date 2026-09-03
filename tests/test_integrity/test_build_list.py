@@ -172,11 +172,16 @@ def test_the_bisection_in_off_matches_the_wrappers_record() -> None:
 
 
 def test_the_three_designed_components_are_sorted_correctly() -> None:
-    """H-Kernel is built and runs; HFS and HOS are not. Putting all three in
-    either column would be the easy lie."""
+    """H-Kernel and HOS are built and run, with their real limits named where
+    they are claimed. HFS's WRITE path is real (it is what HOS's guard-on-write
+    property demonstrates) but its read path and persistent storage are not --
+    so HFS is described in ON.md, not claimed complete there, and its specific
+    remaining gaps (no CSET, no persistent medium) stay in OFF.md rather than
+    being folded into "HFS is done" or hidden behind "HOS is done"."""
     assert "**H-Kernel**" in ON
-    assert "HFS" not in ON and "HOS" not in ON
-    assert "**HFS**" in OFF and "**HOS**" in OFF
+    assert "### HOS" in ON
+    assert "**setengah**" in ON, "the HFS read-path limit must stay visible where HFS is claimed"
+    assert "CSET" in OFF and "persisten" in OFF
 
 
 def test_only_layer_three_is_said_to_carry_security() -> None:
@@ -249,22 +254,30 @@ def test_the_bitstream_is_red_not_absent() -> None:
 
 
 def test_nothing_blocked_is_ticked_green() -> None:
-    """OFF.md and the green column have to stay disjoint."""
+    """OFF.md and the green column have to stay disjoint. HOS moved out of
+    this blacklist once its four properties were actually built (see
+    ON.md#hos-heap-hfs-har); "HFS" stays allowed only in the SPECIFIC phrase
+    that names what is real about it (its write path), checked separately
+    below, not as a blanket word-ban."""
     green = [ln for ln in CHECKLIST.splitlines() if ln.startswith("| ✅")]
     assert len(green) > 20, f"only {len(green)} green rows -- the list shrank"
-    for word in ("bitstream", "flash", "HFS", "HOS", "Fmax"):
+    for word in ("bitstream", "flash", "Fmax"):
         assert not [ln for ln in green if word in ln], f"{word} is ticked green"
+    hfs_rows = [ln for ln in green if "HFS" in ln]
+    assert hfs_rows, "HOS's HFS row went missing from the checklist"
+    for ln in hfs_rows:
+        assert "guard-on-write" in ln, f"HFS ticked green without its real scope: {ln}"
 
 
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
     reads them together."""
-    for figure in ("234 asersi", "16 bench"):
+    for figure in ("240 asersi", "17 bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
     # The pytest count is the one figure here nothing can verify -- checking it
     # would mean running pytest inside pytest -- so what is guarded is that the
     # checklist says so, rather than presenting it as though it were checked.
     assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
     assert "tidak dijaga" in CHECKLIST
-    assert "234 asersi RTL di 16 testbench" in README
-    assert "234 asersi, 16 bench, 0 gagal" in ON
+    assert "240 asersi RTL di 17 testbench" in README
+    assert "240 asersi, 17 bench, 0 gagal" in ON

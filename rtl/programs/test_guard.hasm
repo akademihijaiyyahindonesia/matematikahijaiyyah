@@ -1,22 +1,159 @@
 ; ============================================================================
 ; test_guard.hasm — Load all 28 letters with guard verification
 ; Tests HLOAD + HGRD for every letter in the Master Table
+;
+; Unrolled, not looped: HLOAD's ROM index is a compile-time immediate, not a
+; runtime one -- `rom_addr = is_letter ? letter_index : id_imm[...]` in
+; hcpu_execute.v never consults S1 for HLOAD, no matter what the assembler
+; syntax suggests. `HLOAD H0, R2` used to assemble without complaint (the
+; operand parser had a register fallback for it, "immreg"), landing R2's
+; register NUMBER in the S1 field and 0 in IMM -- so this file spent its
+; whole life loading ROM index 0 twenty-eight times over, R0 never moved past
+; 0, and nothing ran it and checked. The assembler refuses a register operand
+; for HLOAD now.
 ; (c) 2026 HMCL
 ; ============================================================================
 
-    MOVI R0, 0        ; R0 = pass counter
-    MOVI R1, 28       ; R1 = total letters
-    MOVI R2, 1        ; R2 = current letter index
-
-loop:
-    HLOAD H0, R2      ; H0 <- ROM[R2]
-    HGRD  H0          ; Guard check H0
-    JNGD  fail        ; If guard fails, jump to fail
-    ADDI  R0, R0, 1   ; pass_count++
-fail:
-    ADDI  R2, R2, 1   ; index++
-    CMP   R2, R1      ; Compare index vs 28
-    JNE   loop        ; Loop if not done
-
-    PRINT R0          ; Print pass count (should be 28)
-    HALT
+        MOVI R0, 0        ; R0 = pass counter
+        HLOAD H0, 1
+        HGRD  H0
+        JNGD  f1
+        ADDI  R0, R0, 1
+f1:  NOP
+        HLOAD H0, 2
+        HGRD  H0
+        JNGD  f2
+        ADDI  R0, R0, 1
+f2:  NOP
+        HLOAD H0, 3
+        HGRD  H0
+        JNGD  f3
+        ADDI  R0, R0, 1
+f3:  NOP
+        HLOAD H0, 4
+        HGRD  H0
+        JNGD  f4
+        ADDI  R0, R0, 1
+f4:  NOP
+        HLOAD H0, 5
+        HGRD  H0
+        JNGD  f5
+        ADDI  R0, R0, 1
+f5:  NOP
+        HLOAD H0, 6
+        HGRD  H0
+        JNGD  f6
+        ADDI  R0, R0, 1
+f6:  NOP
+        HLOAD H0, 7
+        HGRD  H0
+        JNGD  f7
+        ADDI  R0, R0, 1
+f7:  NOP
+        HLOAD H0, 8
+        HGRD  H0
+        JNGD  f8
+        ADDI  R0, R0, 1
+f8:  NOP
+        HLOAD H0, 9
+        HGRD  H0
+        JNGD  f9
+        ADDI  R0, R0, 1
+f9:  NOP
+        HLOAD H0, 10
+        HGRD  H0
+        JNGD  f10
+        ADDI  R0, R0, 1
+f10:  NOP
+        HLOAD H0, 11
+        HGRD  H0
+        JNGD  f11
+        ADDI  R0, R0, 1
+f11:  NOP
+        HLOAD H0, 12
+        HGRD  H0
+        JNGD  f12
+        ADDI  R0, R0, 1
+f12:  NOP
+        HLOAD H0, 13
+        HGRD  H0
+        JNGD  f13
+        ADDI  R0, R0, 1
+f13:  NOP
+        HLOAD H0, 14
+        HGRD  H0
+        JNGD  f14
+        ADDI  R0, R0, 1
+f14:  NOP
+        HLOAD H0, 15
+        HGRD  H0
+        JNGD  f15
+        ADDI  R0, R0, 1
+f15:  NOP
+        HLOAD H0, 16
+        HGRD  H0
+        JNGD  f16
+        ADDI  R0, R0, 1
+f16:  NOP
+        HLOAD H0, 17
+        HGRD  H0
+        JNGD  f17
+        ADDI  R0, R0, 1
+f17:  NOP
+        HLOAD H0, 18
+        HGRD  H0
+        JNGD  f18
+        ADDI  R0, R0, 1
+f18:  NOP
+        HLOAD H0, 19
+        HGRD  H0
+        JNGD  f19
+        ADDI  R0, R0, 1
+f19:  NOP
+        HLOAD H0, 20
+        HGRD  H0
+        JNGD  f20
+        ADDI  R0, R0, 1
+f20:  NOP
+        HLOAD H0, 21
+        HGRD  H0
+        JNGD  f21
+        ADDI  R0, R0, 1
+f21:  NOP
+        HLOAD H0, 22
+        HGRD  H0
+        JNGD  f22
+        ADDI  R0, R0, 1
+f22:  NOP
+        HLOAD H0, 23
+        HGRD  H0
+        JNGD  f23
+        ADDI  R0, R0, 1
+f23:  NOP
+        HLOAD H0, 24
+        HGRD  H0
+        JNGD  f24
+        ADDI  R0, R0, 1
+f24:  NOP
+        HLOAD H0, 25
+        HGRD  H0
+        JNGD  f25
+        ADDI  R0, R0, 1
+f25:  NOP
+        HLOAD H0, 26
+        HGRD  H0
+        JNGD  f26
+        ADDI  R0, R0, 1
+f26:  NOP
+        HLOAD H0, 27
+        HGRD  H0
+        JNGD  f27
+        ADDI  R0, R0, 1
+f27:  NOP
+        HLOAD H0, 28
+        HGRD  H0
+        JNGD  f28
+        ADDI  R0, R0, 1
+f28:  NOP
+        PRINT R0          ; 28 if every canonical letter passes its guard
+        HALT

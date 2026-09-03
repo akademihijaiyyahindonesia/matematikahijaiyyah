@@ -55,6 +55,7 @@ rtl/tb/kernel.hex
 rtl/tb/letters.hex
 rtl/tb/subroutine.hex
 rtl/tb/syscall_io.hex
+rtl/tb/hos_demo.hex
 rtl/tb/payload.txt
 
 # Naskah buku, dokumen paten, dan proposal — TIDAK dipublikasikan.

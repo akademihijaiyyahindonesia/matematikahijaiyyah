@@ -1,0 +1,441 @@
+; hos.hasm -- H-Kernel's fourth layer up: heap, a guarded filesystem, HAR.
+;
+; The book gives HOS four properties Linux and Windows are explicitly said
+; not to have (the OS comparison table): guard-on-write, 18-wide alignment,
+; HAR as a kernel-level service, and a guard daemon. Alignment and the daemon
+; exist already -- HREG_W is 144 bits (18x8) and kernel.hasm's process C
+; sweeps the guard periodically. This file is the other two.
+;
+; It sits on HAL, not on bare peripherals: nothing here names a peripheral
+; address, only .include "hal.hasm" for the one routine HFS borrows (none, in
+; this version -- HFS is pure data-RAM, but the include stays so a future
+; write-through-to-storage path has somewhere to reach). It needed CALL and
+; RET to exist as a layer instead of a paste, same as HAL did.
+;
+; -- memory map ------------------------------------------------------
+; A fixed OS-reserved region, chosen to sit clear of the demo windows
+; kernel.hasm already claims (0x000-0x3FF) and the scheduler state above it
+; (0xF00-0xF6F) and the peripherals (0xFF0-0xFFF). A real deployment composing
+; its own kernel has to keep user process windows out of this range, the same
+; obligation PCB placement already carries.
+;
+;   0xE00        heap free-list head (0 = empty)
+;   0xE01-0xE7F  heap arena, 127 words
+;   0xE80-0xE97  HFS file table, 8 files x 3 words
+;
+; -- calling convention ------------------------------------------------
+;   R1   argument in, result out
+;   R2   second argument
+;   R3, R6-R12   scratch, clobbered by every routine here
+; everything else is preserved. Wider than HAL's (R1, R2, R12) because a
+; free-list walk needs more live state than one register holds.
+;
+; -- the missing comparison, and the workaround -----------------------
+; CMP/CMPI compute S1-S2 and set two flags: Z (the result is zero) and LT
+; (its sign bit, `alu_flags[FLAG_LT] = alu_result[XLEN-1]` in hcpu_execute.v).
+; No branch instruction reads LT. The five jumps this ISA has are JMP,
+; JEQ/JNE (on Z), and JGD/JNGD -- and G is bit 0 of the SAME flags register,
+; the GUARD-pass flag HGRD sets, unrelated to arithmetic entirely. `CMP
+; R1,R2 / JGD label` reads exactly like "branch if R1>R2" and branches on
+; whatever the guard flag happened to hold instead -- the same shape as
+; `HLOAD H0, Rn` reading like register-indexed addressing and quietly being
+; nothing of the kind (see hos_har_get's header below).
+;
+; hos_size_ge is the workaround: SUB computes R1-R2 into a real register
+; instead of only flags, SHRI by 31 isolates its sign bit as a LOGICAL shift
+; -- confirmed directly, since an arithmetic shift would have made this
+; wrong -- XORI flips it because SHRI's raw bit means less-than and this
+; wants the opposite, and JEQ closes the loop with the one comparison this
+; ISA actually has.
+;
+; R1, R2 in -> R3 = 1 if R1 >= R2, else 0. Touches nothing but R3.
+hos_size_ge:
+        SUB   R3, R1, R2
+        SHRI  R3, R3, 31
+        XORI  R3, R3, 1
+        RET
+
+; -- the heap ----------------------------------------------------------
+; A free list, first-fit, with splitting and a fixed 2-word header on every
+; block whether it is free or allocated:
+;
+;   [0] size       payload words the block holds
+;   [1] next/tag    FREE: the next free block's address, or 0 at the list's
+;                    end. ALLOCATED: 0xFFFFFFFF -- a value no real address
+;                    can ever be, since DATA_ADDR_W is 12 bits (max 0xFFF).
+;                    hos_free checks for it and refuses anything else: a
+;                    double-free or a bad pointer corrupts the free list
+;                    silently otherwise.
+;
+; No coalescing in this version: two adjacent freed blocks stay two blocks.
+; Recorded as a real limit in cosmictera-build/OFF.md rather than left to be
+; discovered as fragmentation on a long-running system.
+hos_heap_init:
+        MOVI  R10, 0
+        MOVI  R11, 0xE01
+        STORE R11, R10, 0xE00   ; free-list head -> the whole arena
+        MOVI  R12, 125          ; 127 words - 2-word header = 125 payload
+        STORE R12, R11, 0
+        MOVI  R12, 0
+        STORE R12, R11, 1       ; next = 0, end of list
+        RET
+
+; R1 = payload words wanted -> R1 = pointer past the header, or 0
+hos_alloc:
+        MOV   R9, R1            ; R9 = wanted size, held for the whole routine
+        MOVI  R10, 0            ; R10 = 0, the absolute-address anchor
+        MOVI  R8, 0             ; R8 = previous block's address, 0 = none yet
+        LOAD  R7, R10, 0xE00    ; R7 = current candidate block
+
+ha_lp:  CMPI  R7, 0
+        JEQ   ha_oom            ; walked off the end: out of memory
+        LOAD  R1, R7, 0         ; candidate's declared size
+        MOV   R2, R9
+        CALL  hos_size_ge       ; R3 = 1 if candidate >= wanted
+        CMPI  R3, 1
+        JEQ   ha_fit
+        MOV   R8, R7
+        LOAD  R7, R7, 1
+        JMP   ha_lp
+
+; A block big enough. Split it if the remainder is worth a header (3+ words
+; spare), else hand the whole block over -- a near-exact fit would otherwise
+; leave a free block too small to ever satisfy another request, a permanent
+; leak of a few words at a time.
+ha_fit: LOAD  R6, R7, 0         ; R6 = candidate's size, kept across the call
+        SUB   R6, R6, R9        ; R6 = remainder if this block is taken whole
+        MOV   R1, R6
+        MOVI  R2, 3
+        CALL  hos_size_ge       ; R3 = 1 if the remainder is worth its own header
+        CMPI  R3, 1
+        JEQ   ha_split
+
+        LOAD  R2, R7, 1         ; whole block: unlink it as-is
+        CMPI  R8, 0
+        JEQ   ha_head0
+        STORE R2, R8, 1
+        JMP   ha_done
+ha_head0:
+        STORE R2, R10, 0xE00
+        JMP   ha_done
+
+ha_split:
+        ADDI  R2, R7, 2
+        ADD   R2, R2, R9        ; R2 = address of the new free remainder
+        STORE R6, R2, 0         ; remainder's size (R6 still holds it)
+        LOAD  R11, R7, 1
+        STORE R11, R2, 1        ; remainder inherits the old next pointer
+        CMPI  R8, 0
+        JEQ   ha_split_head
+        STORE R2, R8, 1
+        JMP   ha_done
+ha_split_head:
+        STORE R2, R10, 0xE00
+
+ha_done:
+        STORE R9, R7, 0         ; allocated block declares the REQUESTED size
+        MOVI  R2, 0
+        NOT   R2, R2            ; 0xFFFFFFFF -- MOVI cannot name it, IMM is 12 bits
+        STORE R2, R7, 1
+        ADDI  R1, R7, 2         ; return the payload pointer, past the header
+        RET
+ha_oom: MOVI  R1, 0
+        RET
+
+; R1 = pointer from hos_alloc -> R1 = 1 (freed) or 0 (refused)
+hos_free:
+        MOVI  R10, 0
+        ADDI  R11, R1, -2       ; block header
+        LOAD  R12, R11, 1
+        MOVI  R2, 0
+        NOT   R2, R2            ; the in-use sentinel again
+        CMP   R12, R2
+        JNE   hf_bad            ; not marked in-use: double-free or a bad pointer
+        LOAD  R12, R10, 0xE00
+        STORE R12, R11, 1       ; push onto the free list
+        STORE R11, R10, 0xE00
+        MOVI  R1, 1
+        RET
+hf_bad: MOVI  R1, 0
+        RET
+
+; -- HFS: a filesystem for validated hybit vectors --------------------
+; "sistem berkas yang sadar hybit" (the book's layer 4) is read literally
+; here: a file does not hold arbitrary bytes, it holds ONE eighteen-component
+; hybit vector, and hos_fs_write refuses to persist one that fails its own
+; guard. That is the whole feature the book distinguishes from Linux and
+; Windows -- neither validates what a write contains before committing it.
+;
+; The write path is real. The read path is half of what it should be, and
+; that half is a hardware gap rather than a design choice: CGET (0x44) reads
+; ONE component of an H-Reg into a GPR, but there is no CSET -- no instruction
+; writes a GPR value INTO an H-Reg component. HLOAD can only bring in a
+; canonical ROM letter, and HCADD can only combine H-Regs already held in
+; registers; neither can rebuild an arbitrary vector from words sitting in
+; data RAM. So hos_fs_read hands back a pointer to the eighteen stored words
+; for a caller to inspect as plain data -- it cannot hand back a live H-Reg.
+; Recorded in cosmictera-build/OFF.md as what CSET would unlock.
+;
+; File table entry, 3 words at 0xE80 + 3*file_id:
+;   [0] in_use (0/1)   [1] size (18, once written)   [2] heap pointer
+
+; R1 = file_id (0-7), H0 = the vector to persist -> R1 = 1 (written) or 0 (refused)
+; R4 holds file_id for the whole routine, not R9 or R10: hos_alloc uses BOTH
+; internally (R9 as its own "wanted size", R10 as its own address anchor),
+; and a CALL preserves nothing this file has not put outside that clobber
+; set. This bit first: file_id survived HGRD fine and died silently across
+; `CALL hos_alloc`, so the write "succeeded" into a table entry recomputed
+; from garbage, and the very next read of the same file found nothing.
+hos_fs_write:
+        MOV   R4, R1             ; R4 = file_id, safe across any call below
+        HGRD  H0
+        JGD   fw_ok
+        MOVI  R1, 0              ; guard failed: nothing is persisted
+        RET
+fw_ok:  MOVI  R10, 3
+        MUL   R10, R4, R10
+        ADDI  R10, R10, 0xE80    ; R10 = this file's table entry
+        LOAD  R11, R10, 0        ; already in use?
+        CMPI  R11, 1
+        JEQ   fw_reuse
+
+        MOVI  R1, 18
+        CALL  hos_alloc          ; clobbers R9, R10, R11, R12 among others
+        CMPI  R1, 0
+        JNE   fw_have
+        MOVI  R1, 0
+        RET                      ; heap exhausted
+fw_have:
+        MOVI  R10, 3             ; R10 is gone; the table entry is recomputed
+        MUL   R10, R4, R10
+        ADDI  R10, R10, 0xE80
+        STORE R1, R10, 2         ; record the heap pointer
+        MOVI  R11, 1
+        STORE R11, R10, 0
+        MOVI  R11, 18
+        STORE R11, R10, 1
+fw_reuse:
+        LOAD  R12, R10, 2        ; heap pointer -- component 0 lands at R12+0
+        ; Unrolled, not looped: CGET names its component in the immediate --
+        ; `calu_index = id_imm` in hcpu_execute.v, same as HLOAD's ROM index
+        ; and for the same shape of reason. Eighteen compile-time CGETs is
+        ; the only correct form.
+        CGET  R2, H0, 0
+        STORE R2, R12, 0
+        CGET  R2, H0, 1
+        STORE R2, R12, 1
+        CGET  R2, H0, 2
+        STORE R2, R12, 2
+        CGET  R2, H0, 3
+        STORE R2, R12, 3
+        CGET  R2, H0, 4
+        STORE R2, R12, 4
+        CGET  R2, H0, 5
+        STORE R2, R12, 5
+        CGET  R2, H0, 6
+        STORE R2, R12, 6
+        CGET  R2, H0, 7
+        STORE R2, R12, 7
+        CGET  R2, H0, 8
+        STORE R2, R12, 8
+        CGET  R2, H0, 9
+        STORE R2, R12, 9
+        CGET  R2, H0, 10
+        STORE R2, R12, 10
+        CGET  R2, H0, 11
+        STORE R2, R12, 11
+        CGET  R2, H0, 12
+        STORE R2, R12, 12
+        CGET  R2, H0, 13
+        STORE R2, R12, 13
+        CGET  R2, H0, 14
+        STORE R2, R12, 14
+        CGET  R2, H0, 15
+        STORE R2, R12, 15
+        CGET  R2, H0, 16
+        STORE R2, R12, 16
+        CGET  R2, H0, 17
+        STORE R2, R12, 17
+        MOVI  R1, 1
+        RET
+
+; R1 = file_id -> R1 = 1 (found) or 0 (empty slot); R2 = pointer to 18 raw
+; words if found. See the header above for why this is words, not an H-Reg.
+hos_fs_read:
+        MOVI  R10, 3
+        MUL   R10, R1, R10
+        ADDI  R10, R10, 0xE80
+        LOAD  R11, R10, 0
+        CMPI  R11, 1
+        JEQ   fr_found
+        MOVI  R1, 0
+        MOVI  R2, 0
+        RET
+fr_found:
+        LOAD  R2, R10, 2
+        MOVI  R1, 1
+        RET
+
+; -- HAR: the alphabet as a kernel-level service ------------------------
+; "HAR sebagai layanan sistem, tingkat kernel" -- the book's point is not that
+; direct access is unsafe (ROM is read-only; two readers cannot corrupt each
+; other, unlike PRINT and the serial line). It is that a real service has a
+; stable, named entry point instead of requiring every caller to know ROM's
+; own indexing. Building that entry point ran into the same fact test_guard
+; ran into: HLOAD's ROM index is a compile-time immediate --
+; `rom_addr = is_letter ? letter_index : id_imm[...]` in hcpu_execute.v never
+; reads a register for it. `HLOAD H0, Rn` used to assemble (the parser had a
+; register fallback for it, "immreg"), landing the register NUMBER in an
+; unused field and 0 in IMM, which would have made "the service" silently
+; always return letter 0 no matter what index was asked for. The assembler
+; refuses that syntax now, so the only correct shape is what is below:
+; twenty-eight compile-time HLOADs, the same pattern kernel.hasm's guard
+; daemon already uses for the same reason.
+;
+; R1 = index (1-28) -> H0 = the letter's vector, R1 = 1 (found) or 0 (out of range)
+hos_har_get:
+        CMPI  R1, 1
+        JEQ   har_1
+        CMPI  R1, 2
+        JEQ   har_2
+        CMPI  R1, 3
+        JEQ   har_3
+        CMPI  R1, 4
+        JEQ   har_4
+        CMPI  R1, 5
+        JEQ   har_5
+        CMPI  R1, 6
+        JEQ   har_6
+        CMPI  R1, 7
+        JEQ   har_7
+        CMPI  R1, 8
+        JEQ   har_8
+        CMPI  R1, 9
+        JEQ   har_9
+        CMPI  R1, 10
+        JEQ   har_10
+        CMPI  R1, 11
+        JEQ   har_11
+        CMPI  R1, 12
+        JEQ   har_12
+        CMPI  R1, 13
+        JEQ   har_13
+        CMPI  R1, 14
+        JEQ   har_14
+        CMPI  R1, 15
+        JEQ   har_15
+        CMPI  R1, 16
+        JEQ   har_16
+        CMPI  R1, 17
+        JEQ   har_17
+        CMPI  R1, 18
+        JEQ   har_18
+        CMPI  R1, 19
+        JEQ   har_19
+        CMPI  R1, 20
+        JEQ   har_20
+        CMPI  R1, 21
+        JEQ   har_21
+        CMPI  R1, 22
+        JEQ   har_22
+        CMPI  R1, 23
+        JEQ   har_23
+        CMPI  R1, 24
+        JEQ   har_24
+        CMPI  R1, 25
+        JEQ   har_25
+        CMPI  R1, 26
+        JEQ   har_26
+        CMPI  R1, 27
+        JEQ   har_27
+        CMPI  R1, 28
+        JEQ   har_28
+        MOVI  R1, 0
+        RET
+
+har_1:  HLOAD H0, 1
+        MOVI  R1, 1
+        RET
+har_2:  HLOAD H0, 2
+        MOVI  R1, 1
+        RET
+har_3:  HLOAD H0, 3
+        MOVI  R1, 1
+        RET
+har_4:  HLOAD H0, 4
+        MOVI  R1, 1
+        RET
+har_5:  HLOAD H0, 5
+        MOVI  R1, 1
+        RET
+har_6:  HLOAD H0, 6
+        MOVI  R1, 1
+        RET
+har_7:  HLOAD H0, 7
+        MOVI  R1, 1
+        RET
+har_8:  HLOAD H0, 8
+        MOVI  R1, 1
+        RET
+har_9:  HLOAD H0, 9
+        MOVI  R1, 1
+        RET
+har_10: HLOAD H0, 10
+        MOVI  R1, 1
+        RET
+har_11: HLOAD H0, 11
+        MOVI  R1, 1
+        RET
+har_12: HLOAD H0, 12
+        MOVI  R1, 1
+        RET
+har_13: HLOAD H0, 13
+        MOVI  R1, 1
+        RET
+har_14: HLOAD H0, 14
+        MOVI  R1, 1
+        RET
+har_15: HLOAD H0, 15
+        MOVI  R1, 1
+        RET
+har_16: HLOAD H0, 16
+        MOVI  R1, 1
+        RET
+har_17: HLOAD H0, 17
+        MOVI  R1, 1
+        RET
+har_18: HLOAD H0, 18
+        MOVI  R1, 1
+        RET
+har_19: HLOAD H0, 19
+        MOVI  R1, 1
+        RET
+har_20: HLOAD H0, 20
+        MOVI  R1, 1
+        RET
+har_21: HLOAD H0, 21
+        MOVI  R1, 1
+        RET
+har_22: HLOAD H0, 22
+        MOVI  R1, 1
+        RET
+har_23: HLOAD H0, 23
+        MOVI  R1, 1
+        RET
+har_24: HLOAD H0, 24
+        MOVI  R1, 1
+        RET
+har_25: HLOAD H0, 25
+        MOVI  R1, 1
+        RET
+har_26: HLOAD H0, 26
+        MOVI  R1, 1
+        RET
+har_27: HLOAD H0, 27
+        MOVI  R1, 1
+        RET
+har_28: HLOAD H0, 28
+        MOVI  R1, 1
+        RET
+
+        .include "hal.hasm"

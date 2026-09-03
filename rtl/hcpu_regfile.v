@@ -68,7 +68,30 @@ module hcpu_regfile (
     assign hreg_rdata2 = (hreg_we && hreg_waddr == hreg_raddr2) ? hreg_wdata : hreg[hreg_raddr2];
 
     // ── FLAGS / PC read ───────────────────────────────────────
-    assign flags_out = flags;
+    // FLAGS needs the same write-through GPR and H-Reg already have, above,
+    // and did not have it: `flags_out` was a bare passthrough of last
+    // cycle's committed value. GPR/H-Reg's forwarding chain in
+    // hcpu_execute.v covers a consumer up to two stages behind a producer
+    // (EX-forward, then MEM-forward) and falls back to the register file for
+    // anything further -- which works for GPR because the register file
+    // itself is transparent on the exact cycle a write lands. FLAGS' fallback
+    // was the same `current_flags` wire, fed from this module, but with no
+    // write-through here it was NOT transparent on that cycle: a consumer
+    // reading flags on the exact cycle CMP's result reaches this stage read
+    // the value from BEFORE that write, one full cycle stale.
+    //
+    // This is narrow enough that nothing else in this codebase had hit it:
+    // every existing CMP/CMPI-then-branch pair here is adjacent (zero
+    // instructions between them), which lands inside the EX-forward window
+    // and never reaches this register at all. hos.hasm's `hos_alloc`
+    // (rtl/programs/hos.hasm) was the first code with an intervening
+    // instruction between a comparison and the branch reading it, ALSO
+    // preceded by enough stalls (from the load-use interlock on adjacent
+    // LOADs) to land the branch's read exactly on the collision cycle --
+    // `CMP R1,R2 / MOVI R2,1 / JNE` read Z=1 for two GENUINELY DIFFERENT
+    // operands (3587, 3594), because the correct Z=0/LT=1 result committed
+    // to `flags` one cycle after JNE had already evaluated the stale one.
+    assign flags_out = flags_we ? flags_in : flags;
     assign pc_out    = pc;
 
     // ── Debug read port (no write-through, read-only) ──────────

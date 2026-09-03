@@ -13,7 +13,7 @@ Place-and-route **gagal**. Desainnya **159% dari LUT4** papan dan nextpnr
 berhenti pada `no BELs remaining to implement cell type 'LUT4'`.
 
 ```
-LUT4    13.948 / 8.640   161%   ← tidak muat
+LUT4    13.945 / 8.640   161%   ← tidak muat
 DFF      4.454 / 6.480    68%
 BSRAM       17 /    26    65%
 Fmax    tidak terukur — routing tidak selesai, jadi tak ada laporan timing
@@ -85,78 +85,47 @@ Label: `AT`.
 
 ### HFS dan HOS
 
-Buku menetapkan tumpukan tujuh lapis, dan itu yang menentukan urutan kerjanya:
+Buku menetapkan tumpukan tujuh lapis:
 
 ```
 7  Aplikasi          program HC, alat analisis                 ✅
 6  HVM / HCPU        eksekusi bytecode (perangkat lunak/keras)  ✅
-5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ⬜
-4  HFS               sistem berkas yang sadar hybit             ⬜
-3  H-Kernel          manajemen proses, memori, dan I/O          ◐  2 dari 4
-2  HAL               lapisan abstraksi perangkat keras          ⬜  tak ada berkasnya
+5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ◐  HAR ada, HISAB belum layanan
+4  HFS               sistem berkas yang sadar hybit             ◐  tulis ada, baca setengah
+3  H-Kernel          manajemen proses, memori, dan I/O          ✅  4 dari 4
+2  HAL               lapisan abstraksi perangkat keras          ✅
 1  Perangkat keras   CPU/HCPU, memori, I/O                      ✅
 ```
 
-Perhatikan lapis 2. **HAL tidak ada sama sekali** — bukan "terancang", tak ada
-berkasnya. H-Kernel sekarang berbicara langsung ke MMIO. Selama itu begitu,
-setiap papan baru berarti menulis ulang kernelnya.
+Enam dari tujuh lapis kini punya sesuatu yang nyata. Yang tersisa, berurutan:
 
-#### HFS — sistem berkas
+#### HFS — dua celah bersisa, keduanya bernama
 
-Yang buku minta: **penyimpanan guard-on-write**. Setiap tulisan divalidasi
-terhadap constraint G1–G4 pada saat menulis, bukan saat membaca. Itu satu dari
-empat hal yang buku klaim tidak dimiliki Linux maupun Windows.
-
-Yang menghalangi, berurutan:
+Jalur tulis (`hos_fs_write` di `rtl/programs/hos.hasm`) nyata: `HGRD`
+dijalankan sebelum berkomitmen, vektor korup ditolak. Dua hal masih hilang:
 
 | butuh | keadaan |
 |---|---|
-| penyimpanan blok | **tak ada** — tak ada driver, tak ada media |
-| heap | **tak ada** — buku menyebut 64 KB dengan `malloc`/`free`; mesin ini tak punya |
-| I/O lewat kernel | ✅ **ada** — `PRINT` istimewa, keluaran lewat `SYSCALL` |
-| `CALL`/`RET` | **belum di RTL** — tanpa subrutin, sistem berkas harus ditulis lurus |
-| Guard saat menulis | ✅ **ada** — G1–G4 sudah di RTL, 34 asersi |
+| `CSET` (tulis satu komponen GPR ke H-Reg) | **tak ada di ISA** — `CGET` (0x44) hanya membaca. Tanpa ini, `hos_fs_read` tak bisa merekonstruksi H-Reg hidup dari kata tersimpan, hanya penunjuk ke 18 kata mentah |
+| penyimpanan persisten | **belum diverifikasi** — HFS sekarang murni RAM data (`0xE00`+), hilang saat reset. Tang Nano 20K punya jalur SDRAM/PSRAM di chipdb-nya (`IO_sdram_dq[0:31]` muncul saat PNR), tapi belum dipastikan papan fisiknya benar-benar memasang chip PSRAM |
 
-Jadi satu-satunya bagian yang sudah siap justru bagian yang menamai HFS.
-Sisanya belum.
+`CSET` adalah keputusan desain ISA (menambah opcode, jalur RTL, bench, PNR
+ulang) — di luar cakupan kerja hari ini. Verifikasi PSRAM Tang Nano 20K adalah
+pertanyaan perangkat keras yang bisa dijawab lebih cepat.
 
-#### HOS — sistem operasi
+#### Layanan Hybit — HAR ada, HISAB belum
 
-Yang buku minta: **manajemen sumber daya**, dengan empat sifat yang secara
-eksplisit dibedakan dari Linux dan Windows:
+`hos_har_get` memenuhi "HAR sebagai layanan sistem" persis seperti yang buku
+minta: titik masuk bernama dan stabil, bukan indeks ROM mentah. Protokol
+HISAB (HPACK/HCRC, sudah di RTL sejak lama) belum dibungkus jadi layanan
+kernel yang sama — masih dipanggil langsung sebagai instruksi, bukan lewat
+`SYSCALL` bernama. Daemon pengaman sudah ada (proses C, sejak H-Kernel).
 
-| sifat | keadaan |
-|---|---|
-| validasi berkas saat menulis (guard-on-write) | butuh HFS |
-| penjajaran 18-wide | ✅ ada di mesin — H-Reg 18×8 = 144 bit (`HREG_W`, bukan `GPR_COUNT`: GPR_COUNT=18 adalah kedalaman penyimpanan, bukan cacah yang bisa dialamatkan — lihat `MAX_GPR` di assembler) |
-| HAR sebagai layanan sistem (tingkat kernel) | **belum** — HAR ada di Python, bukan layanan |
-| daemon guard (HCHECK periodik) | ✅ **terjadwal** — proses C di `kernel.hasm` |
+#### Apa yang HOS-nya sendiri sudah selesaikan
 
-Baris terakhir kini paling dekat. Buku memisahkan dua kelas error
-(Proposisi IIIH.3.2.1, `DP`):
-
-```
-Guard    per-operasi, O(1)        inkonsistensi constraint tiap HCADD/HGRD
-HCHECK   periodik, O(n×25)        bit flip, drift akumulatif, HC-00…HC-03
-```
-
-Guard sudah operasional di perangkat keras. HCHECK **tidak sepenuhnya**: yang
-ada di RTL hanyalah tiga jebakan — `HC-01` indeks ROM tak sah, `HC-02` stack
-overflow, `HC-03` underflow. **`HC-00` tidak ada di mana pun**, dan pemindai
-periodiknya hanya ada di Python (`src/hijaiyyah/hisa/hcheck.py`). Menjadikannya
-daemon justru butuh penjadwal — dan penjadwal itulah yang baru saja ada.
-
-#### Urutan yang masuk akal
-
-1. ~~**`CALL`/`RET`**~~ — **selesai**, 0x2E/0x2F, empat asersi di `tb_hcpu_subroutine`.
-2. ~~**Syscall I/O**~~ — **selesai**, enam asersi di `tb_hcpu_syscall_io`.
-3. ~~**HCHECK sebagai daemon**~~ — **selesai**, proses C menyapu 28 huruf tiap giliran.
-4. **HAL** — sebelum papan kedua, bukan sesudah.
-5. **Heap** — prasyarat HFS.
-6. **HFS**, lalu **HOS**.
-
-Label: `AT` untuk keduanya, dan `AT` yang jujur — tak ada dokumen desain untuk
-HFS maupun HOS di pohon ini, hanya baris tabel.
+Empat sifat HOS di buku semuanya berjalan sekarang — lihat
+[ON.md](ON.md#hos-heap-hfs-har). Yang tertulis di sini adalah sisa di bawahnya
+(HFS lapis 4, layanan HISAB lapis 5), bukan HOS-nya sendiri.
 
 ### Yang H-Kernel belum punya
 

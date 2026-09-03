@@ -163,7 +163,7 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "STORE":    ("s1", "s2", "imm?"),
     "PUSH":     ("s1",),
     "POP":      ("dst",),
-    "HLOAD":    ("dst", "immreg"),
+    "HLOAD":    ("dst", "imm"),
     "CGET":     ("dst", "s1", "imm"),
     "HCADD":    ("dst", "s1", "s2"),
     "HNRM2":    ("dst", "s1"),
@@ -175,8 +175,6 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
 }
 
 #: A layout entry ending in "?" may be omitted, defaulting to zero.
-#: "immreg" accepts either an immediate or a register — HLOAD takes a literal
-#: letter index or, for dynamic indexing, a register holding one.
 
 _MNEMONICS: Dict[str, OpCode] = {op.name: op for op in RTL_IMPLEMENTED}
 
@@ -339,12 +337,6 @@ def assemble_line(
         kind = field.rstrip("?")
         if kind in ("dst", "s1", "s2"):
             slots[kind] = parse_register(raw)
-        elif kind == "immreg":
-            # HLOAD takes a literal letter index, or a register holding one.
-            try:
-                slots["imm"] = parse_immediate(raw, labels, address)
-            except AssemblyError:
-                slots["s1"] = parse_register(raw)
         else:
             slots["imm"] = parse_immediate(
                 raw, labels, address, pc_relative=(kind == "bimm")

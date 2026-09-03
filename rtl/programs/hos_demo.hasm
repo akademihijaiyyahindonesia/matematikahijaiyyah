@@ -1,0 +1,122 @@
+; hos_demo.hasm — HOS on the real pipeline: heap, guarded HFS, HAR.
+;
+; Six checks, each landing a 0/1 or a value at a fixed data address so the
+; testbench can read them straight out of block RAM. The VM already proved
+; the logic (tests/test_integrity/test_hos.py); this is the same routines,
+; the same program, run through fetch/decode/execute/memory/writeback
+; instead of an interpreter loop.
+;
+; State that must outlive a CALL to a HOS routine is kept in DATA MEMORY
+; here, not in registers -- HOS's own documented clobber set is R3, R6-R12,
+; and this file found that out the hard way on its first draft: it kept a
+; pointer in R6 across a second `CALL hos_alloc`, which uses R6 internally
+; for its own bookkeeping, so the "are these two allocations distinct"
+; check compared the wrong thing and still happened to read 1 -- passing
+; for a reason that had nothing to do with what it claimed to test. Scratch
+; slots at 0x1F0+ replace every such register.
+;
+;   0x100  1  if two allocations of 5 words land at different addresses
+;   0x101  1  if freeing then reallocating the same size reuses the address
+;   0x102  0  if the demo's own double-free (two frees, no realloc between) is refused
+;   0x103  1  if a canonical letter (index 4) writes and its first and last
+;             stored components both match ROM exactly
+;   0x104  1  if a corrupt vector (index 31, the same one every guard bench
+;             uses) is refused by hos_fs_write and never reaches storage
+;   0x105  1  if HAR returns the right first component for letter 10
+
+        CALL  hos_heap_init
+        MOVI  R5, 0
+
+; ── two distinct allocations ──────────────────────────────────────
+        MOVI  R1, 5
+        CALL  hos_alloc
+        STORE R1, R5, 0x1F0     ; first pointer, parked in memory
+        MOVI  R1, 5
+        CALL  hos_alloc
+        STORE R1, R5, 0x1F1     ; second pointer
+        LOAD  R1, R5, 0x1F0
+        LOAD  R2, R5, 0x1F1
+        CMP   R1, R2
+        MOVI  R2, 1
+        JNE   d_distinct
+        MOVI  R2, 0
+d_distinct:
+        STORE R2, R5, 0x100
+
+; ── free then realloc reuses the address ──────────────────────────
+        LOAD  R1, R5, 0x1F0
+        CALL  hos_free
+        MOVI  R1, 5
+        CALL  hos_alloc
+        LOAD  R2, R5, 0x1F0
+        CMP   R1, R2
+        MOVI  R2, 0
+        JNE   d_reuse
+        MOVI  R2, 1
+d_reuse:
+        STORE R2, R5, 0x101
+
+; ── double free is refused ─────────────────────────────────────────
+; The block at 0x1F0 was just reallocated above, so it is legitimately
+; in-use again -- freeing it now is an ordinary, valid free (1), not a
+; double-free. The real test is freeing the SAME pointer a second time
+; immediately after, with no allocation in between.
+        LOAD  R1, R5, 0x1F0
+        CALL  hos_free           ; ordinary free of the reallocated block
+        LOAD  R1, R5, 0x1F0
+        CALL  hos_free           ; the actual double-free
+        STORE R1, R5, 0x102      ; hos_free's own 0/1 result -- must be 0
+
+; ── HFS: a canonical letter round-trips exactly ────────────────────
+        HLOAD H0, 4
+        MOVI  R1, 0
+        CALL  hos_fs_write
+        MOVI  R1, 0
+        CALL  hos_fs_read        ; R2 = heap pointer
+        STORE R2, R5, 0x1F2
+        MOVI  R8, 0              ; mismatch accumulator
+        HLOAD H0, 4
+        CGET  R2, H0, 0
+        LOAD  R1, R5, 0x1F2
+        LOAD  R9, R1, 0
+        CMP   R2, R9
+        JEQ   c0
+        ADDI  R8, R8, 1
+c0:     HLOAD H0, 4
+        CGET  R2, H0, 17
+        LOAD  R1, R5, 0x1F2
+        LOAD  R9, R1, 17
+        CMP   R2, R9
+        JEQ   c17
+        ADDI  R8, R8, 1
+c17:    CMPI  R8, 0
+        MOVI  R2, 1
+        JEQ   d_hfs_ok
+        MOVI  R2, 0
+d_hfs_ok:
+        STORE R2, R5, 0x103
+
+; ── HFS: a corrupt vector is refused ────────────────────────────────
+        HLOAD H0, 31
+        MOVI  R1, 5
+        CALL  hos_fs_write
+        MOVI  R2, 0
+        CMPI  R1, 0
+        JNE   d_corrupt_bad
+        MOVI  R1, 5
+        CALL  hos_fs_read        ; must still report "not found"
+        CMPI  R1, 0
+        JNE   d_corrupt_bad
+        MOVI  R2, 1
+d_corrupt_bad:
+        STORE R2, R5, 0x104
+
+; ── HAR: letter 10 ─────────────────────────────────────────────────
+        MOVI  R1, 10
+        CALL  hos_har_get
+        CGET  R2, H0, 0
+        STORE R2, R5, 0x105
+
+        HALT
+
+        .include "hos.hasm"

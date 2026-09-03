@@ -199,10 +199,18 @@ def test_underscore_means_unused() -> None:
     assert assemble_line("ADD R1, _, R2") == encode(0x10, 1, 0, 2)
 
 
-def test_hload_accepts_a_register_for_dynamic_indexing() -> None:
-    """`HLOAD H0, R2` reads the letter index out of a register."""
+def test_hload_is_immediate_only() -> None:
+    """HLOAD's ROM index has to be a compile-time immediate: `rom_addr =
+    is_letter ? letter_index : id_imm[...]` in hcpu_execute.v never reads S1
+    for HLOAD. A register operand used to be accepted -- "immreg" tried
+    parse_immediate, and on failure fell back to parse_register, landing the
+    register NUMBER in S1 and 0 in IMM -- so `HLOAD H0, R2` silently became
+    `HLOAD H0, 0`, always, regardless of what R2 held. rtl/programs/
+    test_guard.hasm was written exactly that way and had been printing 0
+    instead of 28 since it was committed; nothing had ever run it and checked."""
     assert assemble_line("HLOAD H0, 31") == encode(0x40, 0, 0, 0, 31)
-    assert assemble_line("HLOAD H0, R2") == encode(0x40, 0, 2, 0, 0)
+    with pytest.raises(AssemblyError):
+        assemble_line("HLOAD H0, R2")
 
 
 # ══════════════════════════════════════════════════════════════════
