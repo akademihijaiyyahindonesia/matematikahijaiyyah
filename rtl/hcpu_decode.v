@@ -47,6 +47,8 @@ module hcpu_decode (
     output reg                     id_mem_write,  // Store to data RAM
     output reg                     id_is_branch,  // Branch instruction
     output reg                     id_is_jump,    // Unconditional jump
+    output reg                     id_is_call,    // CALL: link then jump
+    output reg                     id_is_ret,     // RET:  jump to the link
     output reg                     id_is_codex,   // Codex H-Reg operation
     output reg                     id_is_halt,    // HALT instruction
     output reg                     id_is_print,   // PRINT instruction
@@ -166,6 +168,8 @@ module hcpu_decode (
             id_mem_write <= 1'b0;
             id_is_branch <= 1'b0;
             id_is_jump   <= 1'b0;
+            id_is_call   <= 1'b0;
+            id_is_ret    <= 1'b0;
             id_is_codex  <= 1'b0;
             id_is_halt   <= 1'b0;
             id_is_print  <= 1'b0;
@@ -188,6 +192,8 @@ module hcpu_decode (
             id_mem_write <= 1'b0;
             id_is_branch <= 1'b0;
             id_is_jump   <= 1'b0;
+            id_is_call   <= 1'b0;
+            id_is_ret    <= 1'b0;
             id_is_codex  <= 1'b0;
             id_is_halt   <= 1'b0;
             id_is_print  <= 1'b0;
@@ -214,6 +220,8 @@ module hcpu_decode (
             id_mem_write <= 1'b0;
             id_is_branch <= 1'b0;
             id_is_jump   <= 1'b0;
+            id_is_call   <= 1'b0;
+            id_is_ret    <= 1'b0;
             id_is_codex  <= 1'b0;
             id_is_halt   <= 1'b0;
             id_is_print  <= 1'b0;
@@ -248,7 +256,9 @@ module hcpu_decode (
                 `OP_CMP:    ;  // Only sets flags, no reg write
                 `OP_CMPI:   ;
 
-                `OP_JMP:    id_is_jump <= 1'b1;
+                `OP_CALL:   id_is_call <= 1'b1;
+                `OP_RET:    id_is_ret  <= 1'b1;
+            `OP_JMP:    id_is_jump <= 1'b1;
                 `OP_JEQ:    id_is_branch <= 1'b1;
                 `OP_JNE:    id_is_branch <= 1'b1;
                 `OP_JGD:    id_is_branch <= 1'b1;

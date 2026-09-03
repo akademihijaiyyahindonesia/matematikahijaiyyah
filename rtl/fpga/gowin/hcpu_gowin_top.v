@@ -41,8 +41,8 @@
 // 'LUT4'". Measured 3 September 2026 with yosys 0.68 -> nextpnr-himbaechel
 // 0.11.1, GW1NR-LV9QN88PC6/I5:
 //
-//     LUT4       13,777 / 8,640   159%    <- does not fit
-//     DFF         4,410 / 6,480    68%
+//     LUT4       13,926 / 8,640   161%    <- does not fit
+//     DFF         4,454 / 6,480    68%
 //     BSRAM          17 /    26    65%
 //
 //     Fmax        unmeasured -- routing never completes, so there is no
@@ -75,7 +75,7 @@
 // that were resolved by 90.14 MHz are unresolved again until either the
 // memory is inferred cleanly or the instruction memory is made smaller.
 //
-// RTL FINGERPRINT: 712694922c542d41a5e656b5317509a4fd3627d0c4bfca049032d5be9062d199
+// RTL FINGERPRINT: e41b6419d4664d1612955903b45a6fa06c5d48203a480622f2a19b0a937aa8fb
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

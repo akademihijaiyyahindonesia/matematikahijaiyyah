@@ -98,6 +98,7 @@ module hcpu_top #(
     wire [`XLEN-1:0]  id_pc;
     wire id_gpr_we, id_hreg_we, id_mem_read, id_mem_write;
     wire id_is_branch, id_is_jump, id_is_codex;
+    wire id_is_call, id_is_ret;
     wire id_is_halt, id_is_print, id_is_push, id_is_pop;
 
     // Forwarded values (from forwarding unit)
@@ -330,6 +331,8 @@ module hcpu_top #(
         .id_mem_write   (id_mem_write),
         .id_is_branch   (id_is_branch),
         .id_is_jump     (id_is_jump),
+        .id_is_call     (id_is_call),
+        .id_is_ret      (id_is_ret),
         .id_is_codex    (id_is_codex),
         .id_is_halt     (id_is_halt),
         .id_is_print    (id_is_print),
@@ -382,6 +385,8 @@ module hcpu_top #(
         .id_hreg_we     (id_hreg_we),
         .id_is_branch   (id_is_branch),
         .id_is_jump     (id_is_jump),
+        .id_is_call     (id_is_call),
+        .id_is_ret      (id_is_ret),
         .id_is_codex    (id_is_codex),
         .id_is_halt     (id_is_halt),
         .id_is_print    (id_is_print),

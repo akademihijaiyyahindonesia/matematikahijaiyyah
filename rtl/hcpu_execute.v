@@ -31,6 +31,8 @@ module hcpu_execute #(
     input  wire                    id_hreg_we,
     input  wire                    id_is_branch,
     input  wire                    id_is_jump,
+    input  wire                    id_is_call,
+    input  wire                    id_is_ret,
     input  wire                    id_is_codex,
     input  wire                    id_is_halt,
     input  wire                    id_is_print,
@@ -280,6 +282,38 @@ module hcpu_execute #(
     // letting the fault it raised be handled afterwards.
     assign is_eret = eret_decoded && !in_user;
 
+    // ── Return-address stack ────────────────────────────────────
+    // Its own array, read combinationally, so RET has its target while it is
+    // still here and resolves exactly like a branch. See hcpu_pkg.vh for why
+    // it is not the PUSH/POP stack.
+    reg  [`CODE_ADDR_W-1:0] ra_stack [0:`RA_DEPTH-1];
+    reg  [`RA_PTR_W-1:0]    ra_sp;
+    wire [`CODE_ADDR_W-1:0] ra_top = ra_stack[ra_sp - 1'b1];
+
+    // [HC-04] return stack overflow, [HC-05] underflow. The book's HCHECK
+    // codes stop at HC-03; these two are additions of the same class, and
+    // they halt the way HC-01..HC-03 do rather than jumping somewhere
+    // arbitrary -- a RET with nothing to return to has no correct target, and
+    // inventing one is how a fault becomes a wild branch.
+    wire ra_overflow  = id_is_call && (ra_sp >= `RA_DEPTH);
+    wire ra_underflow = id_is_ret  && (ra_sp == {`RA_PTR_W{1'b0}});
+    wire ra_fault     = ra_overflow || ra_underflow;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            ra_sp <= {`RA_PTR_W{1'b0}};
+        else if (!stall && !ra_fault) begin
+            if (id_is_call) ra_sp <= ra_sp + 1'b1;
+            if (id_is_ret)  ra_sp <= ra_sp - 1'b1;
+        end
+    end
+
+    // Clock-only, like the data stack and for the same reason: an array
+    // touched inside an async-reset block cannot map to a memory primitive.
+    always @(posedge clk)
+        if (!stall && id_is_call && !ra_overflow)
+            ra_stack[ra_sp] <= id_pc[`CODE_ADDR_W-1:0] + 1'b1;
+
     // ── Branch resolution ───────────────────────────────────────
     always @(*) begin
         branch_taken  = 1'b0;
@@ -288,6 +322,12 @@ module hcpu_execute #(
         if (id_is_jump) begin
             branch_taken  = 1'b1;
             branch_target = imm_zext;  // Absolute jump
+        end else if (id_is_call && !ra_overflow) begin
+            branch_taken  = 1'b1;
+            branch_target = imm_zext;  // Absolute, like JMP
+        end else if (id_is_ret && !ra_underflow) begin
+            branch_taken  = 1'b1;
+            branch_target = {{(`XLEN-`CODE_ADDR_W){1'b0}}, ra_top};
         end else if (id_is_branch) begin
             case (id_opcode)
                 `OP_JEQ:  branch_taken = forwarded_flags[`FLAG_Z];
@@ -362,7 +402,7 @@ module hcpu_execute #(
                 ex_hreg_we  <= 1'b0;
                 ex_mem_write <= 1'b0;
             end else begin
-                ex_is_halt  <= id_is_halt & ~priv_fault;
+                ex_is_halt  <= (id_is_halt & ~priv_fault) | ra_fault;
             end
 
             // GPR result selection

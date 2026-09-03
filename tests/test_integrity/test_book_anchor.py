@@ -268,6 +268,17 @@ EXTENSIONS: Dict[str, int] = {
     # to CGET with exactly this semantics and never implemented it.
     "CGET": 0x44,
 
+    # CALL and RET. The book puts them at 0x07/0x08, which HCPU cannot: 0x06
+    # and 0x07 carry HNRM2 and HDIST, and 0x08 is ERET. HISA_SPEC.md records
+    # the move -- PUSH/POP to the Memory block at 0x32/0x33, CALL/RET to the
+    # tail of the same block -- and reserved 0x2E/0x2F for them, marked
+    # software-only because nothing implemented them. They are hardware now.
+    #
+    # The slots are the spec's own, so this is a relocation the book's own
+    # successor document already made, not a new assignment.
+    "CALL": 0x2E,
+    "RET": 0x2F,
+
     # The 28 letter instructions, 0xE0-0xFB. §IIIM.3.1 encodes operations on
     # codex vectors -- HLOAD by index, HCADD by register pair -- but never a
     # letter itself. Writing one letter therefore took three instructions and

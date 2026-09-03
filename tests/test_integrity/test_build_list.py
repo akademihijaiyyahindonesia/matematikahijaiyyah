@@ -77,7 +77,7 @@ def test_off_names_exactly_the_opcodes_that_are_missing() -> None:
     """Naming them is the point. A count alone cannot be checked against
     anything, and a wrong name would survive a count."""
     missing = {o.name for o in OpCode if o not in RTL_IMPLEMENTED}
-    block = OFF.split("70 dari 96")[1].split("```")[1]
+    block = OFF.split("opcode belum di RTL")[1].split("```")[1]
     listed = set(re.findall(r"\b([A-Z][A-Z0-9_]{2,})\b", block))
     assert listed == missing, (
         f"only in OFF.md: {sorted(listed - missing)}; "
@@ -231,7 +231,11 @@ def test_the_bitstream_is_red_not_absent() -> None:
     row = [ln for ln in CHECKLIST.splitlines() if "bitstream" in ln]
     assert row, "the bitstream row is gone from the checklist"
     assert "🔴" in row[0] and "✅" not in row[0]
-    assert "159%" in row[0]
+    # The percentage is read back from the wrapper, not typed twice: it moves
+    # every time the design does, and a hard-coded copy here would be one more
+    # transcription to drift.
+    pct = re.search(r"LUT4\s+[\d,]+ / [\d,]+\s+(\d+)%", WRAPPER).group(1)
+    assert f"{pct}%" in row[0], f"the checklist says {row[0]}, the wrapper says {pct}%"
     assert "make -C rtl/fpga/gowin bitstream" in CHECKLIST.split("Satu tarikan napas")[1]
 
 
@@ -246,12 +250,12 @@ def test_nothing_blocked_is_ticked_green() -> None:
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
     reads them together."""
-    for figure in ("222 asersi", "13 bench"):
+    for figure in ("226 asersi", "14 bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
     # The pytest count is the one figure here nothing can verify -- checking it
     # would mean running pytest inside pytest -- so what is guarded is that the
     # checklist says so, rather than presenting it as though it were checked.
     assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
     assert "tidak dijaga" in CHECKLIST
-    assert "222 asersi RTL di 13 testbench" in README
-    assert "222 asersi, 13 bench, 0 gagal" in ON
+    assert "226 asersi RTL di 14 testbench" in README
+    assert "226 asersi, 14 bench, 0 gagal" in ON

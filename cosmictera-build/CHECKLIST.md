@@ -56,7 +56,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **222 asersi, 13 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **226 asersi, 14 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -66,6 +66,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | MMIO, timer, UART RX | `make -C rtl/tb sim_mmio sim_timer sim_uart_rx` |
 | ✅ | **H-Kernel: dua proses** | `make -C rtl/tb sim_kernel` |
 | ✅ | **28 instruksi huruf** | `make -C rtl/tb sim_letters` |
+| ✅ | **`CALL`/`RET`, sarang 8 tingkat** | `make -C rtl/tb sim_subroutine` |
 | ✅ | Wrapper papan | `make -C rtl/tb sim_board` |
 | ✅ | Boot lewat kabel | `make -C rtl/tb sim_loader` |
 
@@ -89,7 +90,7 @@ Dua baris tebal itu baru hijau **hari ini**, dan keduanya sempat berbohong:
 | ✅ | Closure monoid dibuktikan, bukan disampel | `tests/test_algebra/` |
 | ✅ | Cakupan guard **93,1%**, dan itu langit-langitnya | `matematika-hijaiyyah/GUARD.md` |
 | ✅ | Throughput **2,59 MB/s**, hambatan = deserialiser | `src/hijaiyyah/crypto/kabah.py` |
-| ✅ | 70 dari 96 opcode di RTL, 26 sisanya dinamai | [OFF.md](OFF.md) |
+| ✅ | 72 dari 96 opcode di RTL, 24 sisanya dinamai | [OFF.md](OFF.md) |
 
 ---
 
@@ -100,7 +101,7 @@ Dua, dan keduanya dinamai supaya centang di atas berarti sesuatu.
 | | apa | keadaan |
 |---|---|---|
 | ⬜ | `python3 rtl/scripts/lint_hcpu.py` | **0 error struktural** (dulu 1), sisa **74 peringatan** — keluar bukan-nol |
-| 🔴 | `make -C rtl/fpga/gowin bitstream` | **gagal**: 13.777 / 8.640 LUT4 = **159%** |
+| 🔴 | `make -C rtl/fpga/gowin bitstream` | **gagal**: 13.926 / 8.640 LUT4 = **161%** |
 
 Error Verilator hilang justru karena `default:` ganda itu diperbaiki — jadi
 lint yang selama ini merah sebenarnya sedang menunjuk cacat huruf, dan tak ada
@@ -117,7 +118,7 @@ Sebabnya satu komit dan sudah dibisect — lihat [OFF.md](OFF.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.300 lulus, 4 dilewati
-make -C rtl/tb all               # 222 asersi, 13 bench, 0 gagal
+make -C rtl/tb all               # 226 asersi, 14 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← merah, dan memang seharusnya terlihat
 ```
 

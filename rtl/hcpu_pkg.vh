@@ -25,6 +25,23 @@
 `define HREG_COUNT      16          // H0–H15
 `define STACK_DEPTH     256         // Stack entries (PUSH/POP)
 
+// Return addresses live on their OWN stack, not the PUSH/POP one. The data
+// stack is a synchronous-read array so a pop's value arrives a stage late,
+// which is fine for POP -- it writes a register -- and useless for RET, which
+// needs its target while it is still in Execute. Reading the data stack
+// combinationally would work and would also cost the design its block RAM:
+// hcpu_memory.v records that an async read turns the array into 8,392
+// flip-flops, and the board is already over its LUT budget.
+//
+// So a small dedicated array, read combinationally, and RET resolves in
+// Execute exactly like a branch -- no third redirect source, no new priority
+// question against traps. It costs one property: PUSH and CALL do not share a
+// stack, so a subroutine cannot return to an address it pushed by hand. It
+// buys the mirror of that: PUSH/POP inside a subroutine cannot corrupt the
+// return path, however unbalanced they are.
+`define RA_DEPTH        32          // return-address stack entries
+`define RA_PTR_W        6
+
 // ── Master Table ────────────────────────────────────────────────
 `define ROM_LETTERS     28          // 28 Hijaiyyah letters
 `define ROM_ADDR_W      5           // ceil(log2(28)) = 5 bits
@@ -131,6 +148,8 @@
 `define OP_JMP          8'h22       // PC ← zero_ext(IMM)
 `define OP_JEQ          8'h23       // if Z=1: PC ← PC + sign_ext(IMM)
 `define OP_JNE          8'h24       // if Z=0: PC ← PC + sign_ext(IMM)
+`define OP_CALL         8'h2E       // push PC+1 on the return stack; PC ← IMM
+`define OP_RET          8'h2F       // PC ← pop of the return stack
 `define OP_JGD          8'h29       // if G=1: PC ← PC + sign_ext(IMM)
 `define OP_JNGD         8'h2A       // if G=0: PC ← PC + sign_ext(IMM)
 

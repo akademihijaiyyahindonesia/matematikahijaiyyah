@@ -104,12 +104,16 @@ class HISAMachine:
         # Bab III §3.25 flags
         self.guard_strict = guard_strict
         self.hcheck_interval = hcheck_interval
+        #: Return addresses. Separate from the PUSH/POP stack in both
+        #: implementations -- see the CALL handler for why.
+        self.return_stack: list[int] = []
 
     def load_program(self, code: List[int]) -> None:
         """Load bytecode into code memory."""
         self.code = list(code)
         self.data_mem.clear()
         self.regs.pc = 0
+        self.return_stack.clear()
         self._halted = False
         self._exit_code = 0
 
@@ -245,6 +249,9 @@ class HISAMachine:
     # A maskable syscall does not fault, it does NOTHING -- user code would
     # call, get no answer, and continue on a return value never written.
     NONMASKABLE = (1 << TRAP_PRIV) | (1 << TRAP_MEM) | (1 << TRAP_SYSCALL)
+
+    #: Return-address stack depth, matching `RA_DEPTH` in hcpu_pkg.vh.
+    RA_DEPTH = 32
 
     def _mem_read(self, addr: int) -> int:
         masked = addr & self.DATA_ADDR_MASK
@@ -751,6 +758,27 @@ class HISAMachine:
             self.regs.gpr[dst] = ip
             return f"VDOT GPR[{dst}] = ⟨H{s1}, H{s2}⟩ = {ip}"
 
+        # ── Subroutines ─────────────────────────────────────────
+        # A return stack of their own, matching hcpu_execute.v. The data stack
+        # is not it: in hardware its read is synchronous, so a pop's value
+        # arrives a stage after RET needs it, and reading that array
+        # combinationally would cost the design its block RAM. The visible
+        # consequence is the same in both: PUSH and CALL do not share a stack.
+        if op == OpCode.CALL:
+            if len(self.return_stack) >= self.RA_DEPTH:
+                self.halted = True
+                return "CALL → HC-04 return stack overflow"
+            self.return_stack.append(self.regs.pc)
+            self.regs.pc = imm
+            return f"CALL → {imm} (kembali ke {self.return_stack[-1]})"
+
+        if op == OpCode.RET:
+            if not self.return_stack:
+                self.halted = True
+                return "RET → HC-05 return stack underflow"
+            self.regs.pc = self.return_stack.pop()
+            return f"RET → {self.regs.pc}"
+
         # ── Control Flow ────────────────────────────────────────
         if op == OpCode.JMP:
             self.regs.pc = imm
@@ -938,6 +966,7 @@ class HISAMachine:
         self.code = []
         self.trace = []
         self.cycle = 0
+        self.return_stack = []
         self._halted = False
         self._exit_code = 0
 

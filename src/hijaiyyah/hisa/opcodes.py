@@ -263,6 +263,7 @@ class OpCode(IntEnum):
 # hardware. Kept as data so tests can check it against hcpu_pkg.vh directly.
 RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI, OpCode.ERET, OpCode.SYSCALL,
+    OpCode.CALL, OpCode.RET,
     OpCode.L_ALIF, OpCode.L_BA, OpCode.L_TA, OpCode.L_TSA, OpCode.L_JIM, OpCode.L_HA, OpCode.L_KHA,
     OpCode.L_DAL, OpCode.L_DZAL, OpCode.L_RA, OpCode.L_ZAY,
     OpCode.L_SIN, OpCode.L_SYIN, OpCode.L_SHAD,

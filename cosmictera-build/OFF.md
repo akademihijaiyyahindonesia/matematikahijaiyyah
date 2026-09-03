@@ -13,8 +13,8 @@ Place-and-route **gagal**. Desainnya **159% dari LUT4** papan dan nextpnr
 berhenti pada `no BELs remaining to implement cell type 'LUT4'`.
 
 ```
-LUT4    13.777 / 8.640   159%   ← tidak muat
-DFF      4.410 / 6.480    68%
+LUT4    13.926 / 8.640   161%   ← tidak muat
+DFF      4.454 / 6.480    68%
 BSRAM       17 /    26    65%
 Fmax    tidak terukur — routing tidak selesai, jadi tak ada laporan timing
 ```
@@ -63,12 +63,11 @@ ditempatkan. Label: `EH`.
 
 ## Belum ada
 
-### 26 opcode belum di RTL
+### 24 opcode belum di RTL
 
-70 dari 96 terimplementasi. Yang belum:
+72 dari 96 terimplementasi. Yang belum:
 
 ```
-CALL RET                        panggilan bersarang
 VMOV VCMP VDOT VDIST VNORM      vektor
 VSCL VRHO VPROJ_K VPROJ_N
 VPROJ_Q VPROJ_T
@@ -78,8 +77,9 @@ HPROJ HSER
 JGF JGP JNP PRINTH              lompatan dan cetak
 ```
 
-`CALL`/`RET` yang paling menghalangi: tanpanya tidak ada subrutin, dan tanpa
-subrutin sebuah kernel harus ditulis lurus. `kernel.hasm` memang ditulis lurus.
+`CALL`/`RET` dulu yang paling menghalangi dan **sudah tidak**: keduanya kini di
+perangkat keras, di 0x2E/0x2F tempat spec memesannya. Sisanya vektor dan codex —
+tak ada yang menghalangi HFS atau HOS.
 
 Label: `AT`.
 
@@ -148,7 +148,7 @@ daemon justru butuh penjadwal — dan penjadwal itulah yang baru saja ada.
 
 #### Urutan yang masuk akal
 
-1. **`CALL`/`RET`** — tanpa subrutin semuanya ditulis lurus; ini yang paling menghalangi.
+1. ~~**`CALL`/`RET`**~~ — **selesai**, 0x2E/0x2F, empat asersi di `tb_hcpu_subroutine`.
 2. **Syscall I/O** — melengkapi tanggung jawab ketiga H-Kernel.
 3. **HCHECK sebagai daemon** — proses ketiga di penjadwal; tanggung jawab keempat.
 4. **HAL** — sebelum papan kedua, bukan sesudah.

@@ -447,8 +447,8 @@ memicu `HALT_ERR` (0xFF).
 | 0x2B | `JGP` | B | Jump if guard pass — perangkat lunak saja |
 | 0x2C | `JGF` | B | Jump if guard fail — perangkat lunak saja |
 | 0x2D | `JNP` | B | Jump if not pass — perangkat lunak saja |
-| 0x2E | `CALL` | J | Call subroutine at IMM — perangkat lunak saja |
-| 0x2F | `RET` | — | Return from subroutine — perangkat lunak saja |
+| 0x2E | `CALL` | J | Panggil subrutin di IMM: dorong PC+1 ke stack alamat-kembali, lalu PC ← IMM. Stack itu **bukan** stack `PUSH`/`POP` — lihat `RA_DEPTH` di `hcpu_pkg.vh` |
+| 0x2F | `RET` | — | Kembali dari subrutin: PC ← pop stack alamat-kembali. Kedalaman 32; luber/kosong menghentikan mesin sebagai HC-04/HC-05 alih-alih melompat ke alamat karangan |
 
 #### Memory (0x30–0x3F)
 

@@ -53,6 +53,7 @@ rtl/tb/program.hex
 rtl/tb/loader.hex
 rtl/tb/kernel.hex
 rtl/tb/letters.hex
+rtl/tb/subroutine.hex
 rtl/tb/payload.txt
 
 # Naskah buku, dokumen paten, dan proposal — TIDAK dipublikasikan.

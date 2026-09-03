@@ -1,0 +1,75 @@
+; subroutine.hasm — CALL and RET on the real pipeline.
+;
+; The spec reserved 0x2E/0x2F and marked them "perangkat lunak saja". They are
+; hardware now, and they resolve in Execute exactly like a branch: the return
+; address lives on its own small stack that is read combinationally, so RET has
+; its target while it is still in the stage that redirects. No third redirect
+; source, and no new priority question against traps.
+;
+; Four answers, each at its own address:
+;   0x100  21   three flat calls, 7 each
+;   0x101  111  nested: outer adds 1 and 100 around an inner that adds 10
+;   0x102  8    eight levels deep, one per level
+;   0x103  3    a subroutine that leaves the DATA stack unbalanced and still
+;               returns -- which is only true because CALL does not use it
+
+        MOVI  R5, 0
+
+        MOVI  R1, 0
+        CALL  add7
+        CALL  add7
+        CALL  add7
+        STORE R1, R5, 0x100
+
+        MOVI  R1, 0
+        CALL  outer
+        STORE R1, R5, 0x101
+
+        MOVI  R1, 0
+        CALL  d0
+        STORE R1, R5, 0x102
+
+        MOVI  R1, 0
+        CALL  messy
+        STORE R1, R5, 0x103
+        HALT
+
+add7:   ADDI  R1, R1, 7
+        RET
+
+outer:  ADDI  R1, R1, 1
+        CALL  inner
+        ADDI  R1, R1, 100
+        RET
+inner:  ADDI  R1, R1, 10
+        RET
+
+; An unbalanced PUSH. On a shared stack the RET below would return to 5.
+messy:  MOVI  R2, 5
+        PUSH  R2
+        ADDI  R1, R1, 3
+        RET
+
+d0:     ADDI  R1, R1, 1
+        CALL  d1
+        RET
+d1:     ADDI  R1, R1, 1
+        CALL  d2
+        RET
+d2:     ADDI  R1, R1, 1
+        CALL  d3
+        RET
+d3:     ADDI  R1, R1, 1
+        CALL  d4
+        RET
+d4:     ADDI  R1, R1, 1
+        CALL  d5
+        RET
+d5:     ADDI  R1, R1, 1
+        CALL  d6
+        RET
+d6:     ADDI  R1, R1, 1
+        CALL  d7
+        RET
+d7:     ADDI  R1, R1, 1
+        RET
