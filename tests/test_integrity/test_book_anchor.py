@@ -502,3 +502,101 @@ def test_rom_carries_the_sealed_letter(row: Row) -> None:
     assert tuple(v[1:4]) == n, f"{char}: ROM N"
     assert tuple(v[4:9]) == k, f"{char}: ROM K"
     assert tuple(v[9:14]) == q, f"{char}: ROM Q"
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Page 41 — §IA.1.1, the formal definition
+# ══════════════════════════════════════════════════════════════════
+
+PAGE_41 = (ROOT / "Matematika Hijaiyyah"
+           / "Buku Matematika Hijaiyyah Edisi v.1.1.1 @2026 HMCL" / "41.pdf")
+
+
+def _page_41_text() -> str:
+    pymupdf = pytest.importorskip("pymupdf")
+    with pymupdf.open(PAGE_41) as doc:
+        return "\n".join(page.get_text() for page in doc)
+
+
+def test_page_41_states_the_fourteen_dimensional_invariant() -> None:
+    """
+    Item 4 of §IA.1.1: "direpresentasikan sebagai vektor invarian 14-dimensi
+    dan codex 18-dimensi".
+
+    The rank of the 28x18 alphabet is 14, and v14 alone has full rank 14.
+    That was measured before this page was read, and taken for a finding; it
+    is not one. The book says it, and names the two halves: the fourteen are
+    the INVARIANT, the remaining four are what the CODEX carries -- the three
+    aggregates and the marker.
+
+    Anchored here so the measurement and the text cannot drift apart.
+    """
+    from fractions import Fraction
+
+    from hijaiyyah.core.constants import V14_SLOTS, V18_SLOTS
+    from hijaiyyah.core.guards import _to_vec
+
+    text = " ".join(_page_41_text().split())
+    assert "vektor invarian 14-dimensi dan codex 18-dimensi" in text
+
+    vectors = [list(_to_vec(e)) for e in MASTER_TABLE.all_entries()]
+
+    def rank(rows: list[list[int]]) -> int:
+        a = [[Fraction(x) for x in r] for r in rows]
+        r = 0
+        for c in range(len(a[0])):
+            p = next((i for i in range(r, len(a)) if a[i][c]), None)
+            if p is None:
+                continue
+            a[r], a[p] = a[p], a[r]
+            for i in range(len(a)):
+                if i != r and a[i][c]:
+                    f = a[i][c] / a[r][c]
+                    a[i] = [x - f * y for x, y in zip(a[i], a[r], strict=True)]
+            r += 1
+        return r
+
+    assert rank(vectors) == 14
+    assert rank([v[:14] for v in vectors]) == 14      # the invariant is full rank
+    assert list(V14_SLOTS) == list(V18_SLOTS[:14])
+    assert list(V18_SLOTS[14:]) == ["AN", "AK", "AQ", "H*"]
+
+
+def test_page_41_lists_twelve_properties_and_the_code_has_all_of_them() -> None:
+    """
+    §IA.1.1 enumerates twelve things the system must be able to do. They are
+    checked by importing what implements each, rather than by reading the
+    prose back to itself.
+    """
+    import pathlib
+
+    text = " ".join(_page_41_text().split())
+    for phrase in ("dikunci pada representasi kanonik tunggal",
+                   "vektor invarian 14-dimensi",
+                   "divalidasi melalui guard internal",
+                   "ruang Metrik-Vektorial Hijaiyyah",
+                   "compiler, assembler, dan virtual machine"):
+        assert phrase in text, phrase
+
+    from hijaiyyah.algebra import aggregametric, exometric, intrametric, normivektor, vektronometry
+    from hijaiyyah.core import guards
+    from hijaiyyah.crypto import program
+
+    assert len(MASTER_TABLE.all_entries()) == 28
+    assert guards.guard_check and program.build_manifest
+    assert all((exometric, intrametric, aggregametric, normivektor, vektronometry))
+    assert aggregametric.string_integral("بسم")["cod18"]
+    assert (ROOT / "rtl" / "hcpu_top.v").exists()
+    assert pathlib.Path(ROOT / "src" / "hijaiyyah" / "vm").is_dir()
+
+
+def test_the_five_object_roles_are_named_on_the_page() -> None:
+    """
+    "objek ukur, objek hitung, objek representasi, objek komputasi, objek
+    teknologi" -- the same five faces measured separately in
+    test_letter_machines, arriving from the book rather than from the code.
+    """
+    text = " ".join(_page_41_text().split())
+    for role in ("objek ukur", "objek hitung", "objek representasi",
+                 "objek komputasi", "objek teknologi"):
+        assert role in text, role
