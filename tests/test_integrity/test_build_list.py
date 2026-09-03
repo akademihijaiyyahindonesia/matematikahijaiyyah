@@ -194,7 +194,7 @@ def test_the_kernels_own_limits_are_stated_where_it_is_claimed() -> None:
         assert missing in ON, f"ON.md stops naming what the kernel lacks: {missing}"
     assert "**empat** tanggung jawab" in ON
     spec = (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
-    row = [ln for ln in spec.splitlines() if ln.startswith("| H-Kernel")][0]
+    row = next(ln for ln in spec.splitlines() if ln.startswith("| H-Kernel"))
     assert "PARTIAL" in row and "OPERATIONAL" not in row, row
     assert "`PUSH` tidak dibatasi mode user" in OFF
 
