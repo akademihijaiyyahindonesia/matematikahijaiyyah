@@ -67,6 +67,13 @@ dengan **sengaja merusak** apa yang ia jaga dan memastikan ia menyala.
 **Penegakan.** Sabotase wajib melaporkan bahwa ia benar‑benar mengubah sesuatu
 **dan** bahwa tesnya benar‑benar berjalan (`1 failed`, bukan `no tests ran`).
 
+Dan asersi pada angka harus **memparse tempatnya, bukan mencari di berkas**.
+Angka yang muncul dua kali — di tabel dan di prosa sebelahnya — membuat
+pencarian substring lolos sementara tabelnya berbohong. Lubang ini muncul
+**empat kali** di sesi yang sama: pada biaya, pada geometri, pada hitungan
+opcode, dan pada periode Jim. Setiap kali sabotase yang menemukannya, bukan
+pembacaan ulang.
+
 Dan penjaganya harus **hash berkas, bukan hitungan kemunculan**. Hitungan
 kemunculan buta terhadap **sisipan**: sabotase yang menambahkan baris di depan
 pola meninggalkan hitungannya tetap 1, dan penjaga melaporkan "tidak berubah"
