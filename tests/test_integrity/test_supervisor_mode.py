@@ -191,8 +191,11 @@ def test_the_fault_is_raised_where_the_pc_is_still_known() -> None:
     top = (ROOT / "rtl" / "hcpu_top.v").read_text(encoding="utf-8")
     assert ".pc_fault      (id_pc)," in top
     assert ".src_priv      (trap_priv_fault_w)," in top
-    # And the trap unit must choose between the two PCs by cause.
-    assert "(which == `TRAP_PRIV) ? pc_fault : pc_now" in TRAP
+    # And the trap unit must choose between the two PCs by cause. The test
+    # is `>=` rather than `==` because TRAP_MEM joined TRAP_PRIV above the
+    # interrupts: both are exceptions and both name their own instruction,
+    # while the causes below them are interrupts and return to pc_now.
+    assert "(which >= `TRAP_PRIV) ? pc_fault : pc_now" in TRAP
 
 
 # ══════════════════════════════════════════════════════════════════

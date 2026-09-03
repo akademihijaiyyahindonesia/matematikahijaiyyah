@@ -1,0 +1,60 @@
+; mem_protect.hasm — a user program held inside its own window.
+;
+; Supervisor mode is the boundary around the PERIPHERAL WINDOW. That stops a
+; user program touching the timer or the trap unit, and stops nothing else:
+; all 4 KB of data RAM was open to it, including whatever the supervisor was
+; keeping there.
+;
+; base and limit close that. A user data access outside [base, limit) faults,
+; and the access is suppressed rather than performed and undone.
+;
+; The fault is an EXCEPTION, not an interrupt: it bypasses the enable mask
+; entirely, because a boundary software can switch off is not a boundary.
+;
+;   R5   zero base for peripheral access
+;   R7   written inside the window — must succeed
+;   R8   read back from outside the window — must stay 0
+;   R9   set by the handler
+;   R10  the cause the handler saw
+
+        MOVI  R5, 0
+        MOVI  R8, 0
+        MOVI  R9, 0
+
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE  = 0x100
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT = 0x200
+
+        MOVI  R1, usercode
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0             ; bit1 = 0 → drop to USER
+        STORE R1, R5, 0xFFD
+        ERET
+
+; ── user mode, window [0x100, 0x200) ────────────────────────────
+usercode:
+        MOVI  R7, 42
+        MOVI  R2, 0x150
+        STORE R7, R2, 0         ; inside — allowed
+
+        MOVI  R2, 0x050
+        LOAD  R8, R2, 0         ; OUTSIDE — refused, R8 stays 0
+        HALT                    ; unreachable: the handler takes over
+
+; ── handler ─────────────────────────────────────────────────────
+; It steps past the faulting instruction and returns to supervisor, so the
+; program can finish. Returning to user without stepping past would loop, the
+; same way it does for a privilege fault.
+handler:
+        LOAD  R10, R5, 0xFFA    ; TRAP_CAUSE — 4, TRAP_MEM
+        LOAD  R11, R5, 0xFF9    ; TRAP_EPC — the faulting LOAD
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+        MOVI  R1, 2             ; return to SUPERVISOR
+        STORE R1, R5, 0xFFD
+        MOVI  R9, 1
+        ERET

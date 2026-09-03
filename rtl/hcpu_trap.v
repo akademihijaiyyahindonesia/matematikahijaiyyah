@@ -49,6 +49,7 @@ module hcpu_trap (
     input  wire                     src_uart_rx,
     input  wire                     src_illegal,
     input  wire                     src_priv,      // privileged act in user mode
+    input  wire                     src_mem,       // data access out of bounds
 
     // ── The PC a trap would return to ───────────────────────────
     input  wire [`XLEN-1:0]         pc_now,
@@ -91,14 +92,18 @@ module hcpu_trap (
     // ── Pending: raw sources, one bit each ──────────────────────
     wire [`TRAP_MASK_W-1:0] pending;
     assign pending = { {(`TRAP_MASK_W-`TRAP_CAUSES){1'b0}},
-                       src_priv, src_illegal, src_uart_rx, src_timer };
+                       src_mem, src_priv, src_illegal, src_uart_rx, src_timer };
 
     // Exceptions ignore the mask; interrupts obey it. A timer or a UART byte
     // arrives from outside and software may say "not now". A privilege
     // violation is the instruction stream itself doing what it may not, and a
     // maskable protection is not a protection -- user code would disable it by
     // clearing one bit.
-    localparam [`TRAP_MASK_W-1:0] NONMASKABLE = (1 << `TRAP_PRIV);
+    // Both are EXCEPTIONS: the instruction stream doing what it may not.
+    // A maskable memory boundary is not a boundary, for the same reason a
+    // maskable privilege check is not a check.
+    localparam [`TRAP_MASK_W-1:0] NONMASKABLE =
+        (1 << `TRAP_PRIV) | (1 << `TRAP_MEM);
 
     wire [`TRAP_MASK_W-1:0] armed = (pending & enable) | (pending & NONMASKABLE);
 
@@ -145,7 +150,7 @@ module hcpu_trap (
                 // which is how the syscall step will work. A handler that does
                 // neither will re-execute it and loop, and that is visible
                 // rather than silent.
-                epc         <= (which == `TRAP_PRIV) ? pc_fault : pc_now;
+                epc         <= (which >= `TRAP_PRIV) ? pc_fault : pc_now;
                 cause       <= which;
                 trap_active <= 1'b1;
                 prev        <= mode;      // remember it

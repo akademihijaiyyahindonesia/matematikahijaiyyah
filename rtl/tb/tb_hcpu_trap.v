@@ -5,7 +5,7 @@
 
 module tb_hcpu_trap;
     reg clk = 0, rst_n = 0;
-    reg src_timer = 0, src_uart_rx = 0, src_illegal = 0, src_priv = 0;
+    reg src_timer = 0, src_uart_rx = 0, src_illegal = 0, src_priv = 0, src_mem = 0;
     reg [`XLEN-1:0] pc_now = 0, pc_fault = 0;
     reg pc_valid = 1;
     reg reg_we = 0; reg [3:0] reg_sel = 0; reg [`XLEN-1:0] reg_wdata = 0;
@@ -18,7 +18,7 @@ module tb_hcpu_trap;
 
     hcpu_trap dut (.clk(clk), .rst_n(rst_n),
         .src_timer(src_timer), .src_uart_rx(src_uart_rx), .src_illegal(src_illegal),
-        .src_priv(src_priv),
+        .src_priv(src_priv), .src_mem(src_mem),
         .pc_now(pc_now), .pc_valid(pc_valid), .pc_fault(pc_fault),
         .reg_we(reg_we), .reg_sel(reg_sel), .reg_wdata(reg_wdata), .reg_rdata(reg_rdata),
         .eret(eret), .trap_redirect(trap_redirect), .trap_target(trap_target),
@@ -201,6 +201,30 @@ module tb_hcpu_trap;
         check(reg_rdata == 32'h0000_0AAA,
               "interupsi harus memakai pc_now, bukan pc_fault");
         src_timer = 0; @(negedge clk); eret = 1; @(negedge clk); eret = 0;
+
+        // ── 16. TRAP_MEM: juga exception, juga non-maskable ─────
+        wr(`REG_TRAP_ENABLE, 32'h0000_0000);
+        wr(`REG_TRAP_VECTOR, 32'h0000_0400);
+        pc_now = 32'h0000_0BBB; pc_fault = 32'h0000_0077;
+        src_mem = 1; #1;
+        check(trap_redirect, "TRAP_MEM harus menyala walau semua enable nol");
+        @(negedge clk);
+        reg_sel = `REG_TRAP_CAUSE; #1;
+        check(reg_rdata == `TRAP_MEM, "cause harus TRAP_MEM");
+        reg_sel = `REG_TRAP_EPC; #1;
+        check(reg_rdata == 32'h0000_0077,
+              "TRAP_MEM harus memakai pc_fault — ia exception, bukan interupsi");
+        src_mem = 0;
+        @(negedge clk); eret = 1; @(negedge clk); eret = 0; @(negedge clk);
+
+        // ── 17. Prioritas: TRAP_PRIV di bawah TRAP_MEM ─────────
+        src_priv = 1; src_mem = 1; #1;
+        check(trap_redirect, "dua exception serentak harus menyala");
+        @(negedge clk);
+        reg_sel = `REG_TRAP_CAUSE; #1;
+        check(reg_rdata == `TRAP_PRIV, "indeks terendah tetap menang");
+        src_priv = 0; src_mem = 0;
+        @(negedge clk); eret = 1; @(negedge clk); eret = 0;
 
         if (errors == 0) $display("PASS: tb_hcpu_trap — semua pemeriksaan lulus");
         else             $display("FAIL: tb_hcpu_trap — %0d gagal", errors);

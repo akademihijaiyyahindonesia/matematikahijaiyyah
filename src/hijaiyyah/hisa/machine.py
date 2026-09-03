@@ -90,6 +90,11 @@ class HISAMachine:
         # changing one means resynthesising -- which makes the board something
         # you flash rather than something you develop on.
         self.imem_waddr: int = 0
+        # The protection window. Limit starts at the top of data space, so a
+        # machine that never sets it behaves as it did before protection.
+        self.mem_base: int = 0
+        self.mem_limit: int = 0xFFF
+        self._mem_fault: bool = False
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -216,13 +221,16 @@ class HISAMachine:
     CODE_DEPTH = 4096
     REG_IMEM_ADDR = 0x3
     REG_IMEM_DATA = 0x7
+    REG_MEM_BASE = 0xE
+    REG_MEM_LIMIT = 0xF
 
     # Trap causes. One bit each in ENABLE and PENDING; CAUSE holds the index.
     TRAP_TIMER = 0
     TRAP_UART_RX = 1
     TRAP_ILLEGAL = 2
     TRAP_PRIV = 3
-    TRAP_CAUSES = 4
+    TRAP_MEM = 4
+    TRAP_CAUSES = 5
     TRAP_MASK_W = 8
 
     MODE_USER = 0
@@ -231,7 +239,8 @@ class HISAMachine:
     # Exceptions ignore the enable mask; interrupts obey it. A maskable
     # protection is not a protection: user code would clear one bit and the
     # privilege check would stop firing.
-    NONMASKABLE = 1 << TRAP_PRIV
+    # Both are exceptions. A maskable memory boundary is not a boundary.
+    NONMASKABLE = (1 << TRAP_PRIV) | (1 << TRAP_MEM)
 
     def _mem_read(self, addr: int) -> int:
         masked = addr & self.DATA_ADDR_MASK
@@ -243,6 +252,10 @@ class HISAMachine:
                 self._priv_fault = True
                 return 0
             return self._periph_read(masked & 0xF)
+        if self.mode == self.MODE_USER and not (
+                self.mem_base <= masked < self.mem_limit):
+            self._mem_fault = True
+            return 0
         return self.data_mem.get(masked, 0)
 
     def _mem_write(self, addr: int, value: int) -> None:
@@ -252,6 +265,10 @@ class HISAMachine:
                 self._priv_fault = True
                 return
             self._periph_write(masked & 0xF, self._u32(value))
+            return
+        if self.mode == self.MODE_USER and not (
+                self.mem_base <= masked < self.mem_limit):
+            self._mem_fault = True
             return
         self.data_mem[masked] = self._u32(value)
 
@@ -283,6 +300,10 @@ class HISAMachine:
             return (self.trap_prev << 1) | self.mode
         if reg == self.REG_IMEM_ADDR:
             return self.imem_waddr
+        if reg == self.REG_MEM_BASE:
+            return self.mem_base
+        if reg == self.REG_MEM_LIMIT:
+            return self.mem_limit
         return 0
 
     def _periph_write(self, reg: int, value: int) -> None:
@@ -308,6 +329,10 @@ class HISAMachine:
                 self.code.append(0)
             self.code[self.imem_waddr] = value
             self.imem_waddr = (self.imem_waddr + 1) & (self.CODE_DEPTH - 1)
+        elif reg == self.REG_MEM_BASE:
+            self.mem_base = value & self.DATA_ADDR_MASK
+        elif reg == self.REG_MEM_LIMIT:
+            self.mem_limit = value & self.DATA_ADDR_MASK
         elif reg == self.REG_TRAP_MODE:
             # Bit 1 only. Bit 0 is the current mode and is read-only: if it
             # were writable, dropping privilege and raising it again would be
@@ -324,6 +349,8 @@ class HISAMachine:
             bits |= 1 << self.TRAP_UART_RX
         if self._priv_fault:
             bits |= 1 << self.TRAP_PRIV
+        if self._mem_fault:
+            bits |= 1 << self.TRAP_MEM
         # TRAP_ILLEGAL is defined but nothing raises it, in the RTL or here.
         return bits
 
@@ -344,11 +371,15 @@ class HISAMachine:
         # An exception names the instruction that caused it -- which has
         # already advanced the PC -- while an interrupt returns to the
         # instruction that has not run yet.
-        self.trap_epc = (self.regs.pc - 1) if cause == self.TRAP_PRIV else self.regs.pc
+        exception = cause in (self.TRAP_PRIV, self.TRAP_MEM)
+        self.trap_epc = (self.regs.pc - 1) if exception else self.regs.pc
         self.trap_cause = cause
         self.trap_active = True
         self._priv_fault = False
         self.imem_waddr = 0
+        self.mem_base = 0
+        self.mem_limit = 0xFFF
+        self._mem_fault = False
         self.trap_prev = self.mode
         self.mode = self.MODE_SUPER
         self.regs.pc = self.trap_vector
@@ -906,3 +937,7 @@ class HISAMachine:
         self.mode = self.MODE_SUPER
         self.trap_prev = self.MODE_SUPER
         self._priv_fault = False
+        self.imem_waddr = 0
+        self.mem_base = 0
+        self.mem_limit = 0xFFF
+        self._mem_fault = False

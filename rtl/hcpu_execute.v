@@ -97,6 +97,12 @@ module hcpu_execute #(
     input  wire                    in_user,
     output wire                    priv_fault,
 
+    // The protection window, checked here for the same reason the privilege
+    // check is here: this is the last stage that still knows the PC.
+    input  wire [`DATA_ADDR_W-1:0] mem_base,
+    input  wire [`DATA_ADDR_W-1:0] mem_limit,
+    output wire                    mem_fault,
+
     // ── Data RAM control (passed through to memory stage) ──────
     input  wire                    id_mem_read,
     input  wire                    id_mem_write,
@@ -246,6 +252,14 @@ module hcpu_execute #(
                           && (would_addr >= `PERIPH_BASE);
     assign priv_fault = in_user && (touches_window || eret_decoded || id_is_halt);
 
+    // Ordinary RAM is open to user mode -- the boundary is the window, not
+    // memory -- but only inside [base, limit). A peripheral address is
+    // already refused by priv_fault, so it is excluded here rather than
+    // reported twice.
+    assign mem_fault = in_user && (id_mem_read | id_mem_write)
+                       && !touches_window
+                       && ((would_addr < mem_base) || (would_addr >= mem_limit));
+
     // A faulting ERET must not also return. Without this the one instruction
     // that changes privilege would still change it while reporting that it
     // was not allowed to -- user code would escape by executing an ERET and
@@ -377,8 +391,8 @@ module hcpu_execute #(
             // A faulting access is not performed. The trap fires in the same
             // cycle, so letting the write through and undoing it later would
             // mean a peripheral had already seen it.
-            ex_mem_read  <= id_mem_read  & ~priv_fault;
-            ex_mem_write <= id_mem_write & ~priv_fault;
+            ex_mem_read  <= id_mem_read  & ~priv_fault & ~mem_fault;
+            ex_mem_write <= id_mem_write & ~priv_fault & ~mem_fault;
             // LOAD: addr = GPR[S1] + IMM  (DST <- MEM[S1+IMM])
             // STORE: addr = GPR[S2] + IMM  (MEM[S2+IMM] <- GPR[S1])
             if (id_mem_write)

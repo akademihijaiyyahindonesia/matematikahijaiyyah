@@ -186,6 +186,8 @@
 `define REG_TRAP_ENABLE   4'hB       // per-cause enable mask, writable
 `define REG_TRAP_PENDING  4'hC       // per-cause pending bits, read-only
 `define REG_TRAP_MODE     4'hD       // bit0 mode (RO), bit1 previous (RW)
+`define REG_MEM_BASE      4'hE       // lowest data address user mode may touch
+`define REG_MEM_LIMIT     4'hF       // one past the highest
 
 // ── The boot path ───────────────────────────────────────────────
 // Without these the program lives inside the bitstream: $readmemh puts it
@@ -207,8 +209,9 @@
 `define TRAP_UART_RX      3'd1
 `define TRAP_ILLEGAL      3'd2
 `define TRAP_PRIV         3'd3       // privileged act attempted in user mode
-`define TRAP_CAUSES       4           // how many are defined
-// 4..7 are reserved for memory protection and syscall, which come later. The
+`define TRAP_MEM          3'd4       // data access outside [base, limit)
+`define TRAP_CAUSES       5           // how many are defined
+// 5..7 are reserved for syscall and what follows it. The
 // width is 8 so those can be added without moving anything.
 
 // ── Privilege ───────────────────────────────────────────────────

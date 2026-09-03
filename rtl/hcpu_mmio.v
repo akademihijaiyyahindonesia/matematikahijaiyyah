@@ -71,6 +71,13 @@ module hcpu_mmio #(
     output wire                    src_timer,
     output wire                    src_uart_rx,
 
+    // ── Memory protection window ────────────────────────────────
+    // Base and limit for user mode. Supervisor-only because they live in the
+    // peripheral window, which is the whole reason that rule was drawn there
+    // first: a user program that could move its own boundary has none.
+    output reg  [`DATA_ADDR_W-1:0] mem_base,
+    output reg  [`DATA_ADDR_W-1:0] mem_limit,
+
     // ── Instruction memory write port ───────────────────────────
     // Harvard is kept for EXECUTION -- fetch still has its own read-only port.
     // What this adds is a privileged write path, which is what a loader needs
@@ -147,6 +154,22 @@ module hcpu_mmio #(
         .clear     (timer_write & (reg_sel == REG_TIMER_ST)),
         .counter(tmr_counter), .compare(tmr_compare), .expired(tmr_expired));
 
+    // ── memory protection window ────────────────────────────────
+    // Limit resets to the top of data space, so a machine that never sets it
+    // behaves exactly as it did before protection existed.
+    wire base_we  = we & is_periph & (reg_sel == `REG_MEM_BASE);
+    wire limit_we = we & is_periph & (reg_sel == `REG_MEM_LIMIT);
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            mem_base  <= {`DATA_ADDR_W{1'b0}};
+            mem_limit <= {`DATA_ADDR_W{1'b1}};
+        end else begin
+            if (base_we)  mem_base  <= wdata[`DATA_ADDR_W-1:0];
+            if (limit_we) mem_limit <= wdata[`DATA_ADDR_W-1:0];
+        end
+    end
+
     // ── trap register access ────────────────────────────────────
     wire is_trap_reg = (reg_sel >= `REG_TRAP_VECTOR) && (reg_sel <= `REG_TRAP_PENDING);
     assign trap_reg_we    = we & is_periph & is_trap_reg;
@@ -210,6 +233,10 @@ module hcpu_mmio #(
                 `REG_TRAP_PENDING: periph_rdata <= trap_reg_rdata;
                 `REG_IMEM_ADDR:    periph_rdata <= {{(`XLEN-`CODE_ADDR_W){1'b0}},
                                                    imem_waddr};
+                `REG_MEM_BASE:     periph_rdata <= {{(`XLEN-`DATA_ADDR_W){1'b0}},
+                                                   mem_base};
+                `REG_MEM_LIMIT:    periph_rdata <= {{(`XLEN-`DATA_ADDR_W){1'b0}},
+                                                   mem_limit};
                 default:       periph_rdata <= {`XLEN{1'b0}};
             endcase
         end
