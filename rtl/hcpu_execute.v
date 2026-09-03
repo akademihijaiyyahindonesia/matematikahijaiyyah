@@ -211,7 +211,6 @@ module hcpu_execute #(
         case (id_opcode)
             `OP_HLOAD: codex_hvec = rom_data;
             `OP_HCADD: codex_hvec = calu_result_vec;
-            default:   if (is_letter) codex_hvec = calu_result_vec;
             `OP_HNRM2: codex_gpr  = calu_result_scl;
             `OP_HDIST: codex_gpr  = calu_result_scl;
             `OP_CGET: codex_gpr  = calu_result_scl;
@@ -226,7 +225,17 @@ module hcpu_execute #(
                                     (id_s2 == 4'd2) ? hisab_pack2 :
                                                       {`XLEN{1'b0}};
             `OP_HCRC:  codex_gpr  = hisab_crc;    // HISAB: CRC32 digest
-            default: ;
+            // The letters land here, and this is the ONLY default. There used
+            // to be a second one in the middle of the case carrying this line,
+            // which Verilog does not allow and which no simulator resolves the
+            // same way: iverilog took the trailing `default: ;`, so every one
+            // of the twenty-eight letter opcodes wrote nothing. The Python
+            // machine has no case statement and computed the right answer, and
+            // RTL_IMPLEMENTED said the opcodes were done because it is a
+            // declaration rather than a measurement -- so nothing disagreed.
+            // ||Ba+Sin+Mim||^2 is 112 through HLOAD/HCADD and was 0 through
+            // the letters.
+            default:   if (is_letter) codex_hvec = calu_result_vec;
         endcase
     end
 

@@ -52,6 +52,7 @@ rtl/mpw/hcpu_synth_netlist.v
 rtl/tb/program.hex
 rtl/tb/loader.hex
 rtl/tb/kernel.hex
+rtl/tb/letters.hex
 rtl/tb/payload.txt
 
 # Naskah buku, dokumen paten, dan proposal — TIDAK dipublikasikan.

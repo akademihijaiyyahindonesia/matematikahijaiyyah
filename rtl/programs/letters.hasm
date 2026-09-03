@@ -1,0 +1,55 @@
+; letters.hasm — every letter opcode, on the real pipeline.
+;
+; "Satu huruf adalah satu instruksi utuh" was true in the interpreter and
+; false in hardware, and nothing said so: no testbench and no program ever
+; executed one of the twenty-eight. RTL_IMPLEMENTED listed them, but that set
+; is a declaration, not a measurement.
+;
+; What was wrong was a second `default:` in the middle of the codex result
+; case in hcpu_execute.v. Verilog allows one. iverilog resolved it to the
+; trailing `default: ;`, so every letter wrote nothing; verilator refused the
+; file outright, which is why `python3 rtl/scripts/lint_hcpu.py` had been
+; failing. The Python machine has no case statement and kept computing the
+; right answer.
+;
+; Two checks, both against numbers the explicit HLOAD/HCADD path already
+; produces:
+;   0x100  ||Ba+Sin+Mim||^2   = 112, the same value tb_gowin_top reads
+;   0x101  all 28 accumulated, squared norm
+        L_BA
+        L_SIN
+        L_MIM
+        HNRM2 R1, H0
+        MOVI R5, 0
+        STORE R1, R5, 0x100
+        L_ALIF
+        L_BA
+        L_TA
+        L_TSA
+        L_JIM
+        L_HA
+        L_KHA
+        L_DAL
+        L_DZAL
+        L_RA
+        L_ZAY
+        L_SIN
+        L_SYIN
+        L_SHAD
+        L_DHAD
+        L_THA
+        L_ZHA
+        L_AIN
+        L_GHAIN
+        L_FA
+        L_QAF
+        L_KAF
+        L_LAM
+        L_MIM
+        L_NUN
+        L_WAW
+        L_HAA
+        L_YA
+        HNRM2 R2, H0
+        STORE R2, R5, 0x101
+        HALT

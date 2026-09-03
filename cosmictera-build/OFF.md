@@ -13,7 +13,7 @@ Place-and-route **gagal**. Desainnya **159% dari LUT4** papan dan nextpnr
 berhenti pada `no BELs remaining to implement cell type 'LUT4'`.
 
 ```
-LUT4    13.805 / 8.640   159%   ← tidak muat
+LUT4    13.777 / 8.640   159%   ← tidak muat
 DFF      4.410 / 6.480    68%
 BSRAM       17 /    26    65%
 Fmax    tidak terukur — routing tidak selesai, jadi tak ada laporan timing

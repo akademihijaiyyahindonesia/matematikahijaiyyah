@@ -236,11 +236,38 @@ def test_the_module_says_what_volatility_does_that_it_cannot() -> None:
     assert "not recoverable here or anywhere without the key" in doc
 
 
+#: How much noise a chance hit is measured against, and how much of it is
+#: tolerable. 0.01 means: fewer than one accidental match per hundred scans
+#: of this size. The three-byte markers sit at 0.0039 and are kept -- MZ\x90
+#: and the gzip header really are three bytes in the wild.
+NOISE_BYTES = 1 << 16
+CHANCE_BUDGET = 0.01
+
+
 def test_every_clue_is_distinctive_enough_to_be_worth_having() -> None:
-    """A marker that fires on random data is noise wearing a name."""
-    sample = os.urandom(1 << 16)
+    """A marker that fires on random data is noise wearing a name.
+
+    This drew os.urandom and asserted that no marker appeared in it, which is
+    the mistake _dump's docstring names one function above: an unseeded
+    fixture samples the outcome instead of asserting the property. Two markers
+    are three bytes, so each had about a 1-in-256 chance of turning up in a
+    64 KB draw, and the suite failed roughly once in every 127 runs -- once
+    here, which is how it was found.
+
+    The property is arithmetic. Over NOISE_BYTES the expected number of chance
+    hits is NOISE_BYTES / 256**len(marker), and that is what has to stay small.
+    The draw below is then a reproducible demonstration rather than a die.
+    """
     for marker, name in CLUES:
-        assert marker not in sample, f"{name} marker {marker!r} occurs in noise"
+        expected = NOISE_BYTES / (256 ** len(marker))
+        assert expected < CHANCE_BUDGET, (
+            f"{name} marker {marker!r} is only {len(marker)} bytes: about "
+            f"{expected:.3g} chance hits per {NOISE_BYTES}-byte scan"
+        )
+
+    noise = random.Random(20260903).randbytes(NOISE_BYTES)
+    for marker, name in CLUES:
+        assert marker not in noise, f"{name} marker {marker!r} occurs in noise"
 
 
 def test_the_parse_is_inverted_so_the_region_starts_at_the_payload() -> None:

@@ -48,7 +48,7 @@ Label: `CC`.
 |---|---|---|
 | Pipeline HCPU | fetch → decode → execute → mem → writeback | `rtl/hcpu_top.v` |
 | Opcode | **70 dari 96** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
-| Opcode huruf | **28** (`0xE0`–`0xFB`), semuanya di RTL | `rtl/hcpu_pkg.vh`, `rtl/hcpu_execute.v` |
+| Opcode huruf | **28** (`0xE0`–`0xFB`), dijalankan di pipeline | `rtl/tb/tb_hcpu_letters.v`, `rtl/programs/letters.hasm` |
 | Codex ALU | HCADD, HNRM2, HDIST | `rtl/hcpu_codex_alu.v`, 6 asersi |
 | Hisab | penyapuan 28 huruf, 124 asersi | `rtl/hcpu_hisab.v` |
 | Interlock | load-use, store-load, **termasuk POP** | `rtl/hcpu_decode.v` |
@@ -59,6 +59,15 @@ Label: `CC`.
 **Satu huruf adalah satu instruksi utuh.** Itu inti resepnya: `0xE0`–`0xFB`
 mengindeks ROM codex langsung di tahap Execute, jadi perintah tidak perlu
 ditulis sebagai deretan angka.
+
+Sampai `f57793e` klaim itu **salah di perangkat keras**, dan tidak ada yang
+mengatakannya: tak satu pun bench atau program pernah menjalankan salah satu
+dari dua puluh delapan. `RTL_IMPLEMENTED` mendaftarkannya, tapi himpunan itu
+sebuah **deklarasi, bukan pengukuran**. Penyebabnya `default:` kedua di tengah
+`case` codex — iverilog memilih yang akhir, jadi setiap huruf menulis nol,
+sementara penafsir Python tetap menghitung benar. `tb_hcpu_letters` sekarang
+mengadu keduanya: 112 untuk Ba+Sin+Mim lewat jalur huruf, angka yang sama yang
+sudah dibuktikan jalur HLOAD/HCADD.
 
 Label: `CC`.
 
@@ -146,6 +155,6 @@ Label: `CC` dalam simulasi, `EH` di silikon.
 
 ```bash
 python3 -m pytest -q          # 4.279 lulus, 4 dilewati
-make -C rtl/tb all            # 219 asersi, 12 bench, 0 gagal
+make -C rtl/tb all            # 222 asersi, 13 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

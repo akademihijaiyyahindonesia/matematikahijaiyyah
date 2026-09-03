@@ -31,7 +31,7 @@ WRAPPER = (GOWIN / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 CRYSTAL_MHZ = 27.0
 
 # What place and route reported at THIS commit. It fails, so there is no Fmax.
-UTILISATION = {"LUT4": (13805, 8640), "DFF": (4410, 6480), "BSRAM": (17, 26)}
+UTILISATION = {"LUT4": (13777, 8640), "DFF": (4410, 6480), "BSRAM": (17, 26)}
 
 # The commit the fitting result was taken from, re-run to confirm it still
 # reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.

@@ -6,6 +6,7 @@ janji: setiap baris menyebut tempatnya di pohon ini dan apa yang membuktikannya.
 
 | berkas | isinya |
 |---|---|
+| [CHECKLIST.md](CHECKLIST.md) | daftar cek — tiap centang punya perintahnya |
 | [ON.md](ON.md) | yang menyala — enam lapis, dengan bukti per baris |
 | [OFF.md](OFF.md) | yang belum, dan yang terbangun tapi terhalang |
 
@@ -33,7 +34,7 @@ muat di papan. Itu ada di [OFF.md](OFF.md), bukan disembunyikan.
 
 ```
 4.279 tes Python lulus, 4 dilewati          ruff bersih, mypy bersih
-  219 asersi RTL di 12 testbench, 0 gagal
+  222 asersi RTL di 13 testbench, 0 gagal
    70 dari 96 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
     6 penyebab trap, 6 prasyarat OS tertutup, H-Kernel berjalan

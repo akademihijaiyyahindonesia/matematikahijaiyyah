@@ -25,7 +25,9 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # ── Simulation targets ──────────────────────────────────────────
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
-        sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader clean
+        sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
+     sim_letters \
+        sim_letters clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -35,7 +37,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # while traps, supervisor mode, memory protection and syscall were all built
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
-     sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader
+     sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
+     sim_letters
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -78,13 +81,23 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex
+	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex letters.hex
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
 # instruction memory the kernel is baked into.
 sim_kernel: tb_hcpu_kernel.vvp kernel.hex
 	$(VVP) $<
+
+# The twenty-eight letter opcodes. Nothing executed one until this bench.
+sim_letters: tb_hcpu_letters.vvp letters.hex
+	$(VVP) $<
+
+letters.hex: $(RTL_DIR)/programs/letters.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+tb_hcpu_letters.vvp: $(TB_DIR)/tb_hcpu_letters.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
 
 kernel.hex: $(RTL_DIR)/programs/kernel.hasm
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@

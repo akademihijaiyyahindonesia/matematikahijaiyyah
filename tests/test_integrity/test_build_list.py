@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FOLDER = ROOT / "cosmictera-build"
 README = (FOLDER / "README.md").read_text(encoding="utf-8")
 ON = (FOLDER / "ON.md").read_text(encoding="utf-8")
+CHECKLIST = (FOLDER / "CHECKLIST.md").read_text(encoding="utf-8")
 OFF = (FOLDER / "OFF.md").read_text(encoding="utf-8")
 PKG = (ROOT / "rtl" / "hcpu_pkg.vh").read_text(encoding="utf-8")
 WRAPPER = (ROOT / "rtl" / "fpga" / "gowin" / "hcpu_gowin_top.v").read_text(encoding="utf-8")
@@ -46,7 +47,8 @@ def test_every_path_the_list_cites_exists() -> None:
     """A list that points at files which are gone is worse than no list: it
     reads as current."""
     missing = []
-    for doc, text in (("README.md", README), ("ON.md", ON), ("OFF.md", OFF)):
+    for doc, text in (("README.md", README), ("ON.md", ON), ("OFF.md", OFF),
+                      ("CHECKLIST.md", CHECKLIST)):
         for cited in _cited_paths(text):
             base = FOLDER if cited.startswith("../") else ROOT
             if "*" in cited:
@@ -84,10 +86,31 @@ def test_off_names_exactly_the_opcodes_that_are_missing() -> None:
 
 
 def test_the_letters_are_whole_instructions_and_all_of_them_reach_rtl() -> None:
+    """RTL_IMPLEMENTED listing them is not evidence -- it is a declaration,
+    and for a while it was a false one: no bench executed a letter opcode, so
+    a duplicate `default:` left all twenty-eight writing nothing while every
+    suite passed. The claim now has to point at the bench that runs them."""
     letters = [o for o in OpCode if 0xE0 <= o.value <= 0xFB]
     assert len(letters) == len(MASTER_TABLE.all_entries()) == 28
     assert all(o in RTL_IMPLEMENTED for o in letters)
-    assert "**28** (`0xE0`–`0xFB`), semuanya di RTL" in ON
+    assert "**28** (`0xE0`–`0xFB`), dijalankan di pipeline" in ON
+    assert "rtl/tb/tb_hcpu_letters.v" in ON
+    bench = (ROOT / "rtl" / "tb" / "tb_hcpu_letters.v").read_text(encoding="utf-8")
+    assert "112" in bench and "10814" in bench
+
+
+def test_the_codex_case_has_exactly_one_default() -> None:
+    """Verilog allows one, and simulators do not agree on which of two wins.
+    iverilog took the trailing one, so the letters were dead in hardware and
+    verilator refused the file -- which is why the RTL lint had been failing."""
+    execute = (ROOT / "rtl" / "hcpu_execute.v").read_text(encoding="utf-8")
+    case_body = execute.split("codex_gpr  = {`XLEN{1'b0}};")[1].split("endcase")[0]
+    # Count case items, not the word: the comment above the surviving default
+    # quotes `default: ;` while explaining what went wrong.
+    items = [ln.strip() for ln in case_body.splitlines()
+             if ln.strip().startswith("default:")]
+    assert len(items) == 1, f"the codex case has {len(items)} defaults: {items}"
+    assert "if (is_letter)" in items[0]
 
 
 def test_the_trap_and_register_figures_come_from_the_package() -> None:
@@ -166,3 +189,61 @@ def test_the_kernels_own_limits_are_stated_where_it_is_claimed() -> None:
     entry overstates itself."""
     assert "dua proses tetap" in ON and "OFF.md" in ON
     assert "`PUSH` tidak dibatasi mode user" in OFF
+
+
+# ── the checklist ───────────────────────────────────────────────
+
+
+def test_every_bench_the_checklist_ticks_is_a_real_target() -> None:
+    """A tick beside a command nobody can run is the worst kind: it reads as
+    reproducible."""
+    cited = set(re.findall(r"make -C rtl/tb ([\w ]+?)`", CHECKLIST))
+    targets = set()
+    for group in cited:
+        targets |= set(group.split())
+    targets.discard("all")
+    real = set(re.findall(r"^(sim_\w+):", TB_MAKEFILE, re.M))
+    assert targets <= real, f"ticked but not a target: {sorted(targets - real)}"
+    assert targets, "the checklist stopped naming any bench"
+
+
+def test_the_checklist_ticks_every_bench_the_makefile_runs() -> None:
+    body = TB_MAKEFILE.split("\nall:")[1].split("\n\n")[0]
+    benches = set(re.findall(r"\bsim_\w+", body))
+    cited = set()
+    for group in re.findall(r"make -C rtl/tb ([\w ]+?)`", CHECKLIST):
+        cited |= set(group.split())
+    missing = benches - cited - {"all"}
+    assert not missing, f"benches that run but are not on the checklist: {sorted(missing)}"
+
+
+def test_the_bitstream_is_red_not_absent() -> None:
+    """The one row that must never quietly disappear. A checklist that stops
+    before the red line is not a checklist."""
+    row = [ln for ln in CHECKLIST.splitlines() if "bitstream" in ln]
+    assert row, "the bitstream row is gone from the checklist"
+    assert "🔴" in row[0] and "✅" not in row[0]
+    assert "159%" in row[0]
+    assert "make -C rtl/fpga/gowin bitstream" in CHECKLIST.split("Satu tarikan napas")[1]
+
+
+def test_nothing_blocked_is_ticked_green() -> None:
+    """OFF.md and the green column have to stay disjoint."""
+    green = [ln for ln in CHECKLIST.splitlines() if ln.startswith("| ✅")]
+    assert len(green) > 20, f"only {len(green)} green rows -- the list shrank"
+    for word in ("bitstream", "flash", "HFS", "HOS", "Fmax"):
+        assert not [ln for ln in green if word in ln], f"{word} is ticked green"
+
+
+def test_the_counts_agree_across_the_folder() -> None:
+    """Three files quote the same three numbers. They drift unless something
+    reads them together."""
+    for figure in ("222 asersi", "13 bench"):
+        assert figure in CHECKLIST, f"the checklist lost {figure}"
+    # The pytest count is the one figure here nothing can verify -- checking it
+    # would mean running pytest inside pytest -- so what is guarded is that the
+    # checklist says so, rather than presenting it as though it were checked.
+    assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
+    assert "tidak dijaga" in CHECKLIST
+    assert "222 asersi RTL di 13 testbench" in README
+    assert "222 asersi, 13 bench, 0 gagal" in ON
