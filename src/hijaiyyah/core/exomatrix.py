@@ -1,6 +1,21 @@
 """
 Exomatrix: 5×5 structured display matrix (Definition 32.1.1).
 
+NOTE ON ORIENTATION. This builds the TRANSPOSE of the matrix Bab II prints.
+IIE.2.1 on page 105 puts Theta-hat, Na, Kp, Qp and H* along the first ROW;
+the layout below puts them down the first COLUMN. Verified as an exact
+transpose on all 28 letters by tests/test_integrity/test_bab_dua.py.
+
+It changes nothing that has been measured. A matrix and its transpose share a
+characteristic polynomial, so the GF(2) periods, the primitivity of Jim and
+Kha, and the maximal order 31 are identical either way; the zero count is
+identical, so sparsity is too; and the emitted sequences come out identical on
+all 28, which the transpose alone does not imply and is simply what the
+numbers do. Left as it is rather than flipped, because flipping it would
+change every downstream measurement's provenance for no gain -- but recorded,
+so nobody reading the book beside the code concludes one of them is wrong.
+
+
   Row 0: [Θ̂,  U,    ρ,   0,   0  ]
   Row 1: [Na,  Nb,   Nd,  0,   A_N]
   Row 2: [Kp,  Kx,   Ks,  Ka,  Kc ]
