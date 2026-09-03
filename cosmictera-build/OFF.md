@@ -85,13 +85,78 @@ Label: `AT`.
 
 ### HFS dan HOS
 
-Dua dari tiga komponen "DESIGNED" di `docs/hybit_pipeline_spec.md`. Yang ketiga,
-H-Kernel, sudah berjalan.
+Buku menetapkan tumpukan tujuh lapis, dan itu yang menentukan urutan kerjanya:
 
-- **HFS** — sistem berkas dengan guard-on-write. Belum ada.
-- **HOS** — sistem operasi di atas kernel. Belum ada.
+```
+7  Aplikasi          program HC, alat analisis                 ✅
+6  HVM / HCPU        eksekusi bytecode (perangkat lunak/keras)  ✅
+5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ⬜
+4  HFS               sistem berkas yang sadar hybit             ⬜
+3  H-Kernel          manajemen proses, memori, dan I/O          ◐  2 dari 4
+2  HAL               lapisan abstraksi perangkat keras          ⬜  tak ada berkasnya
+1  Perangkat keras   CPU/HCPU, memori, I/O                      ✅
+```
 
-Label: `AT`.
+Perhatikan lapis 2. **HAL tidak ada sama sekali** — bukan "terancang", tak ada
+berkasnya. H-Kernel sekarang berbicara langsung ke MMIO. Selama itu begitu,
+setiap papan baru berarti menulis ulang kernelnya.
+
+#### HFS — sistem berkas
+
+Yang buku minta: **penyimpanan guard-on-write**. Setiap tulisan divalidasi
+terhadap constraint G1–G4 pada saat menulis, bukan saat membaca. Itu satu dari
+empat hal yang buku klaim tidak dimiliki Linux maupun Windows.
+
+Yang menghalangi, berurutan:
+
+| butuh | keadaan |
+|---|---|
+| penyimpanan blok | **tak ada** — tak ada driver, tak ada media |
+| heap | **tak ada** — buku menyebut 64 KB dengan `malloc`/`free`; mesin ini tak punya |
+| I/O lewat kernel | **tak ada** — proses user tak bisa menyentuh periferal, dan tak ada syscall I/O |
+| `CALL`/`RET` | **belum di RTL** — tanpa subrutin, sistem berkas harus ditulis lurus |
+| Guard saat menulis | ✅ **ada** — G1–G4 sudah di RTL, 34 asersi |
+
+Jadi satu-satunya bagian yang sudah siap justru bagian yang menamai HFS.
+Sisanya belum.
+
+#### HOS — sistem operasi
+
+Yang buku minta: **manajemen sumber daya**, dengan empat sifat yang secara
+eksplisit dibedakan dari Linux dan Windows:
+
+| sifat | keadaan |
+|---|---|
+| validasi berkas saat menulis (guard-on-write) | butuh HFS |
+| penjajaran 18-wide | ✅ ada di mesin — `GPR_COUNT 18`, H-Reg 18×8 = 144 bit |
+| HAR sebagai layanan sistem (tingkat kernel) | **belum** — HAR ada di Python, bukan layanan |
+| daemon guard (HCHECK periodik) | **belum dijadwalkan** |
+
+Baris terakhir kini paling dekat. Buku memisahkan dua kelas error
+(Proposisi IIIH.3.2.1, `DP`):
+
+```
+Guard    per-operasi, O(1)        inkonsistensi constraint tiap HCADD/HGRD
+HCHECK   periodik, O(n×25)        bit flip, drift akumulatif, HC-00…HC-03
+```
+
+Guard sudah operasional di perangkat keras. HCHECK **tidak sepenuhnya**: yang
+ada di RTL hanyalah tiga jebakan — `HC-01` indeks ROM tak sah, `HC-02` stack
+overflow, `HC-03` underflow. **`HC-00` tidak ada di mana pun**, dan pemindai
+periodiknya hanya ada di Python (`src/hijaiyyah/hisa/hcheck.py`). Menjadikannya
+daemon justru butuh penjadwal — dan penjadwal itulah yang baru saja ada.
+
+#### Urutan yang masuk akal
+
+1. **`CALL`/`RET`** — tanpa subrutin semuanya ditulis lurus; ini yang paling menghalangi.
+2. **Syscall I/O** — melengkapi tanggung jawab ketiga H-Kernel.
+3. **HCHECK sebagai daemon** — proses ketiga di penjadwal; tanggung jawab keempat.
+4. **HAL** — sebelum papan kedua, bukan sesudah.
+5. **Heap** — prasyarat HFS.
+6. **HFS**, lalu **HOS**.
+
+Label: `AT` untuk keduanya, dan `AT` yang jujur — tak ada dokumen desain untuk
+HFS maupun HOS di pohon ini, hanya baris tabel.
 
 ### Yang H-Kernel belum punya
 

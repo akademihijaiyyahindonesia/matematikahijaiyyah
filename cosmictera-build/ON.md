@@ -100,8 +100,19 @@ A dipreempt timer dan B menyerah lewat `SYSCALL`, jadi kedua jalur masuk trap
 teruji sekaligus: tanpa `epc` dimajukan untuk cause 5, B akan mengulang
 `SYSCALL`-nya sendiri selamanya.
 
-Ruang lingkupnya jujur: **dua proses tetap**, round-robin, tanpa pembuatan
-proses dinamis. Yang belum ada di [OFF.md](OFF.md).
+Ruang lingkupnya jujur, dan buku menetapkan ukurannya. H-Kernel di sana punya
+**empat** tanggung jawab — proses, memori, I/O, daemon guard. Yang berjalan
+**dua**, dan keduanya sebagian:
+
+| tanggung jawab | keadaan |
+|---|---|
+| proses | dua slot tetap, round-robin — tanpa pembuatan dinamis |
+| memori | jendela `[base, limit)` per proses — tanpa heap |
+| I/O | **belum** — proses user tidak bisa melakukan I/O sama sekali |
+| daemon guard | **belum** — tak ada yang menjadwalkan HCHECK |
+
+Karena itu spec pipeline menyebutnya `PARTIAL (2 of 4)`, bukan `OPERATIONAL`.
+Rinciannya di [OFF.md](OFF.md).
 
 Label: `CC`.
 

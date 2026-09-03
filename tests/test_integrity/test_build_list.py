@@ -187,7 +187,15 @@ def test_only_layer_three_is_said_to_carry_security() -> None:
 def test_the_kernels_own_limits_are_stated_where_it_is_claimed() -> None:
     """The kernel is in ON. Its gaps have to be reachable from there, or the
     entry overstates itself."""
-    assert "dua proses tetap" in ON and "OFF.md" in ON
+    assert "OFF.md" in ON
+    # The book gives H-Kernel four responsibilities. Two run. Claiming the
+    # component without naming the split is the overstatement this catches.
+    for missing in ("I/O", "daemon guard"):
+        assert missing in ON, f"ON.md stops naming what the kernel lacks: {missing}"
+    assert "**empat** tanggung jawab" in ON
+    spec = (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
+    row = [ln for ln in spec.splitlines() if ln.startswith("| H-Kernel")][0]
+    assert "PARTIAL" in row and "OPERATIONAL" not in row, row
     assert "`PUSH` tidak dibatasi mode user" in OFF
 
 
