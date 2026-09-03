@@ -536,6 +536,23 @@ class HISAMachine:
             self._exit_code = imm
             return f"HALT — execution stopped (code={imm})"
 
+        # ── Letter instructions ─────────────────────────────────
+        # One letter, no operands, accumulating into H-Reg 0. The guard is
+        # closed under addition, so a program of letters cannot leave the
+        # valid set -- which is what makes an implicit accumulator safe rather
+        # than merely convenient.
+        if 0xE0 <= int(op) <= 0xFB:
+            # get_by_index is 1-BASED while all_entries() is 0-based. The
+            # first version used the 0-based offset here and silently
+            # accumulated the wrong letters; the RTL, which adds one to reach
+            # its 1-indexed ROM, was right.
+            letter = self.table.get_by_index(int(op) - 0xE0 + 1)
+            assert letter is not None, f"letter opcode {int(op):#x} has no entry"
+            v = list(letter.vector)
+            acc = self.regs.hreg[0]
+            self.regs.hreg[0] = [acc[i] + v[i] for i in range(18)]
+            return f"{letter.char} → H0 += {letter.name}"
+
         # ── ERET: return from a trap ────────────────────────────
         # Clearing the latch and redirecting have to happen together. As a
         # load and a jump they could not: a trap arriving between the two

@@ -77,14 +77,29 @@ def test_every_opcode_claimed_for_rtl_is_recognised_by_decode() -> None:
 
     # HALT_ERR is what the default branch PRODUCES, not something decode
     # recognises. It is the one legitimate absence.
-    missing = claimed - recognised - {"OP_HALT_ERR"}
+    #
+    # The 28 letter instructions are the other: they are caught by a RANGE
+    # check inside `default`, before it can halt, rather than by 28 cases.
+    # That is deliberate -- one contiguous block, one comparison -- so the
+    # rule here becomes "recognised by name OR inside the letter range".
+    assert "`LETTER_OP_FIRST" in DECODE and "`LETTER_OP_LAST" in DECODE
+    letters = {f"OP_{op.name}" for op in RTL_IMPLEMENTED
+               if 0xE0 <= int(op) <= 0xFB}
+    assert len(letters) == 28
+
+    missing = claimed - recognised - letters - {"OP_HALT_ERR"}
     assert not missing, f"decode falls through to HALT_ERR for: {sorted(missing)}"
 
 
 def test_the_default_branch_really_is_a_halt() -> None:
     """The reason the test above matters, pinned so it cannot quietly change."""
     tail = DECODE[DECODE.index("default: begin"):]
-    assert "id_is_halt <= 1'b1" in tail[:400]
+    assert "id_is_halt <= 1'b1" in tail[:1200]
+    # And the letter range is checked BEFORE the halt, or the letters would
+    # stop the machine exactly the way OP_ERET once did.
+    halt_at = tail.index("id_is_halt <= 1'b1")
+    range_at = tail.index("`LETTER_OP_FIRST")
+    assert range_at < halt_at, "the letter range is checked after the halt"
 
 
 # ══════════════════════════════════════════════════════════════════

@@ -274,11 +274,22 @@ module hcpu_decode (
                 `OP_ERET:   ;
 
                 default: begin
+                    if (opcode >= `LETTER_OP_FIRST && opcode <= `LETTER_OP_LAST) begin
+                        // A letter instruction. The ROM index is the opcode's
+                        // own offset, the destination is H-Reg 0 because there
+                        // is nothing to choose, and both source fields are
+                        // already zero -- so id_hreg_s1 reads H0 without
+                        // anything having to say so.
+                        id_is_codex  <= 1'b1;
+                        id_hreg_we   <= 1'b1;
+                        id_dst       <= 4'd0;
+                    end else begin
                     id_is_halt <= 1'b1;  // Unimplemented → HALT_ERR
                     id_dst     <= 4'hE;  // Arbitrary error code mark
                     id_gpr_we  <= 1'b0;
                     id_hreg_we <= 1'b0;
                     id_mem_write <= 1'b0;
+                    end
                 end
             endcase
         end

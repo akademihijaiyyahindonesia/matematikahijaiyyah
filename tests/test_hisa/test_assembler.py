@@ -98,8 +98,16 @@ def test_every_frozen_opcode_has_an_operand_layout(op) -> None:
 
 
 def test_no_layout_describes_an_unknown_mnemonic() -> None:
-    known = {op.name for op in RTL_IMPLEMENTED}
-    assert set(OPERANDS) <= known, f"stale layouts: {sorted(set(OPERANDS) - known)}"
+    """
+    Every layout must belong to something the assembler will accept. That is
+    not the same as an opcode NAME: the Arabic letters are aliases for their
+    own instructions, so `ج` is assemblable while not being a member name.
+    """
+    from hijaiyyah.hisa.assembler import _MNEMONICS
+
+    assert set(OPERANDS) <= set(_MNEMONICS), (
+        f"stale layouts: {sorted(set(OPERANDS) - set(_MNEMONICS))}")
+    assert {op.name for op in RTL_IMPLEMENTED} <= set(_MNEMONICS)
 
 
 # ══════════════════════════════════════════════════════════════════

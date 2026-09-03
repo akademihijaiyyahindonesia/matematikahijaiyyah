@@ -619,6 +619,34 @@ memicu `HALT_ERR` (0xFF).
 
 | Opcode | Mnemonic | Format | HCPU | Deskripsi |
 |---|---|---|---|---|
+| 0xE0 | `L_ALIF` | — | ✅ | ا — `H0 ← H0 + v(Alif)` |
+| 0xE1 | `L_BA` | — | ✅ | ب — `H0 ← H0 + v(Ba)` |
+| 0xE2 | `L_TA` | — | ✅ | ت — `H0 ← H0 + v(Ta)` |
+| 0xE3 | `L_TSA` | — | ✅ | ث — `H0 ← H0 + v(Tsa)` |
+| 0xE4 | `L_JIM` | — | ✅ | ج — `H0 ← H0 + v(Jim)` |
+| 0xE5 | `L_HA` | — | ✅ | ح — `H0 ← H0 + v(Ha)` |
+| 0xE6 | `L_KHA` | — | ✅ | خ — `H0 ← H0 + v(Kha)` |
+| 0xE7 | `L_DAL` | — | ✅ | د — `H0 ← H0 + v(Dal)` |
+| 0xE8 | `L_DZAL` | — | ✅ | ذ — `H0 ← H0 + v(Dzal)` |
+| 0xE9 | `L_RA` | — | ✅ | ر — `H0 ← H0 + v(Ra)` |
+| 0xEA | `L_ZAY` | — | ✅ | ز — `H0 ← H0 + v(Zay)` |
+| 0xEB | `L_SIN` | — | ✅ | س — `H0 ← H0 + v(Sin)` |
+| 0xEC | `L_SYIN` | — | ✅ | ش — `H0 ← H0 + v(Syin)` |
+| 0xED | `L_SHAD` | — | ✅ | ص — `H0 ← H0 + v(Shad)` |
+| 0xEE | `L_DHAD` | — | ✅ | ض — `H0 ← H0 + v(Dhad)` |
+| 0xEF | `L_THA` | — | ✅ | ط — `H0 ← H0 + v(Tha)` |
+| 0xF0 | `L_ZHA` | — | ✅ | ظ — `H0 ← H0 + v(Zha)` |
+| 0xF1 | `L_AIN` | — | ✅ | ع — `H0 ← H0 + v(Ain)` |
+| 0xF2 | `L_GHAIN` | — | ✅ | غ — `H0 ← H0 + v(Ghain)` |
+| 0xF3 | `L_FA` | — | ✅ | ف — `H0 ← H0 + v(Fa)` |
+| 0xF4 | `L_QAF` | — | ✅ | ق — `H0 ← H0 + v(Qaf)` |
+| 0xF5 | `L_KAF` | — | ✅ | ك — `H0 ← H0 + v(Kaf)` |
+| 0xF6 | `L_LAM` | — | ✅ | ل — `H0 ← H0 + v(Lam)` |
+| 0xF7 | `L_MIM` | — | ✅ | م — `H0 ← H0 + v(Mim)` |
+| 0xF8 | `L_NUN` | — | ✅ | ن — `H0 ← H0 + v(Nun)` |
+| 0xF9 | `L_WAW` | — | ✅ | و — `H0 ← H0 + v(Waw)` |
+| 0xFA | `L_HAA` | — | ✅ | هـ — `H0 ← H0 + v(Haa)` |
+| 0xFB | `L_YA` | — | ✅ | ي — `H0 ← H0 + v(Ya)` |
 | 0xFF | `HALT_ERR` | — | ✅ | Berhenti karena opcode tak terimplementasi atau instruksi gagal |
 
 HCPU menaikkan `HALT_ERR` ketika menemui opcode di luar `RTL_IMPLEMENTED` —

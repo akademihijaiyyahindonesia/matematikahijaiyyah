@@ -47,6 +47,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from hijaiyyah.core.exceptions import HijaiyyahError
 
+from ..core.master_table import MASTER_TABLE
 from .opcodes import RTL_IMPLEMENTED, OpCode
 
 #: Highest general-purpose register index (R0–R17, §IIIJ.3.3.1).
@@ -79,6 +80,36 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "NOP":      (),
     "HALT":     (),
     "ERET":     (),
+
+    # One letter, no operands.
+    "L_ALIF":     (),
+    "L_BA":       (),
+    "L_TA":       (),
+    "L_TSA":      (),
+    "L_JIM":      (),
+    "L_HA":       (),
+    "L_KHA":      (),
+    "L_DAL":      (),
+    "L_DZAL":     (),
+    "L_RA":       (),
+    "L_ZAY":      (),
+    "L_SIN":      (),
+    "L_SYIN":     (),
+    "L_SHAD":     (),
+    "L_DHAD":     (),
+    "L_THA":      (),
+    "L_ZHA":      (),
+    "L_AIN":      (),
+    "L_GHAIN":    (),
+    "L_FA":       (),
+    "L_QAF":      (),
+    "L_KAF":      (),
+    "L_LAM":      (),
+    "L_MIM":      (),
+    "L_NUN":      (),
+    "L_WAW":      (),
+    "L_HAA":      (),
+    "L_YA":       (),
     "HALT_ERR": (),
     "MOV":      ("dst", "s1"),
     "MOVI":     ("dst", "imm"),
@@ -124,6 +155,14 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
 #: letter index or, for dynamic indexing, a register holding one.
 
 _MNEMONICS: Dict[str, OpCode] = {op.name: op for op in RTL_IMPLEMENTED}
+
+# The Arabic letter is an alias for its own instruction, so a source line can
+# be one character. `ج` and `L_JIM` assemble identically.
+_MNEMONICS.update({
+    entry.char: OpCode[f"L_{entry.name.upper()}"]
+    for entry in MASTER_TABLE.all_entries()
+})
+OPERANDS.update({entry.char: () for entry in MASTER_TABLE.all_entries()})
 
 _LABEL_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*")
 _SPLIT_RE = re.compile(r"[,\s]+")

@@ -168,6 +168,54 @@ class OpCode(IntEnum):
     PRINTH = 0xA1   # Print hybit with detail     (software only)
 
     # ── Error ────────────────────────────────────────────────────
+
+    # ── Letter instructions, 0xE0–0xFB ───────────────────────────
+    # One letter is the whole instruction. No register to name, no immediate
+    # to write: a letter already IS a value, a function and a rate, and
+    # spelling that out in operands discards what it carries.
+    #
+    #     HREG[0] <- HREG[0] + v(letter)
+    #
+    # The accumulator is implicit because there is nothing to choose, and that
+    # is safe rather than merely short: the guard is closed under addition,
+    # measured over all 784 pairs and 2,000 five-term sums, so a program made
+    # of letters cannot leave the valid set. A word therefore computes its own
+    # codex by being written -- string_integral, as instructions.
+    #
+    # ASCII names because hcpu_pkg.vh needs them and Verilog identifiers are
+    # ASCII. The assembler takes the Arabic letter itself as an alias, which
+    # is the point: `ج` is a line of source.
+    #
+    # 0xE0-0xFB is exactly 28 slots. 0xFC-0xFE stay free; 0xFF is HALT_ERR.
+    L_ALIF     = 0xE0      # ا  Alif
+    L_BA       = 0xE1      # ب  Ba
+    L_TA       = 0xE2      # ت  Ta
+    L_TSA      = 0xE3      # ث  Tsa
+    L_JIM      = 0xE4      # ج  Jim
+    L_HA       = 0xE5      # ح  Ha
+    L_KHA      = 0xE6      # خ  Kha
+    L_DAL      = 0xE7      # د  Dal
+    L_DZAL     = 0xE8      # ذ  Dzal
+    L_RA       = 0xE9      # ر  Ra
+    L_ZAY      = 0xEA      # ز  Zay
+    L_SIN      = 0xEB      # س  Sin
+    L_SYIN     = 0xEC      # ش  Syin
+    L_SHAD     = 0xED      # ص  Shad
+    L_DHAD     = 0xEE      # ض  Dhad
+    L_THA      = 0xEF      # ط  Tha
+    L_ZHA      = 0xF0      # ظ  Zha
+    L_AIN      = 0xF1      # ع  Ain
+    L_GHAIN    = 0xF2      # غ  Ghain
+    L_FA       = 0xF3      # ف  Fa
+    L_QAF      = 0xF4      # ق  Qaf
+    L_KAF      = 0xF5      # ك  Kaf
+    L_LAM      = 0xF6      # ل  Lam
+    L_MIM      = 0xF7      # م  Mim
+    L_NUN      = 0xF8      # ن  Nun
+    L_WAW      = 0xF9      # و  Waw
+    L_HAA      = 0xFA      # هـ  Haa
+    L_YA       = 0xFB      # ي  Ya
+
     HALT_ERR = 0xFF  # Halt on an unimplemented or faulting instruction
 
     # ── Aliases ──────────────────────────────────────────────────
@@ -203,6 +251,12 @@ class OpCode(IntEnum):
 # hardware. Kept as data so tests can check it against hcpu_pkg.vh directly.
 RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI, OpCode.ERET,
+    OpCode.L_ALIF, OpCode.L_BA, OpCode.L_TA, OpCode.L_TSA, OpCode.L_JIM, OpCode.L_HA, OpCode.L_KHA,
+    OpCode.L_DAL, OpCode.L_DZAL, OpCode.L_RA, OpCode.L_ZAY,
+    OpCode.L_SIN, OpCode.L_SYIN, OpCode.L_SHAD,
+    OpCode.L_DHAD, OpCode.L_THA, OpCode.L_ZHA, OpCode.L_AIN,
+    OpCode.L_GHAIN, OpCode.L_FA, OpCode.L_QAF,
+    OpCode.L_KAF, OpCode.L_LAM, OpCode.L_MIM, OpCode.L_NUN, OpCode.L_WAW, OpCode.L_HAA, OpCode.L_YA,
     OpCode.HNRM2, OpCode.HDIST,
     OpCode.ADD, OpCode.ADDI, OpCode.SUB, OpCode.MUL,
     OpCode.AND, OpCode.OR, OpCode.XOR, OpCode.NOT,

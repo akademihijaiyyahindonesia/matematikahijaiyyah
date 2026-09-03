@@ -228,4 +228,44 @@
 // protected against.
 `define TRAP_MASK_W       8
 
+
+// ── Letter instructions, 0xE0-0xFB ──────────────────────────────
+// One letter is the whole instruction: HREG[0] <- HREG[0] + v(letter).
+// No register field, no immediate. The ROM index is the opcode's own low
+// bits, and the accumulator is implicit because there is nothing to choose.
+//
+// Safe rather than merely short: the guard is closed under addition, so a
+// program made of letters cannot leave the valid set. A word computes its
+// own codex by being written.
+`define LETTER_OP_FIRST 8'hE0
+`define LETTER_OP_LAST   8'hFB
+`define OP_L_ALIF     8'hE0       // ا
+`define OP_L_BA       8'hE1       // ب
+`define OP_L_TA       8'hE2       // ت
+`define OP_L_TSA      8'hE3       // ث
+`define OP_L_JIM      8'hE4       // ج
+`define OP_L_HA       8'hE5       // ح
+`define OP_L_KHA      8'hE6       // خ
+`define OP_L_DAL      8'hE7       // د
+`define OP_L_DZAL     8'hE8       // ذ
+`define OP_L_RA       8'hE9       // ر
+`define OP_L_ZAY      8'hEA       // ز
+`define OP_L_SIN      8'hEB       // س
+`define OP_L_SYIN     8'hEC       // ش
+`define OP_L_SHAD     8'hED       // ص
+`define OP_L_DHAD     8'hEE       // ض
+`define OP_L_THA      8'hEF       // ط
+`define OP_L_ZHA      8'hF0       // ظ
+`define OP_L_AIN      8'hF1       // ع
+`define OP_L_GHAIN    8'hF2       // غ
+`define OP_L_FA       8'hF3       // ف
+`define OP_L_QAF      8'hF4       // ق
+`define OP_L_KAF      8'hF5       // ك
+`define OP_L_LAM      8'hF6       // ل
+`define OP_L_MIM      8'hF7       // م
+`define OP_L_NUN      8'hF8       // ن
+`define OP_L_WAW      8'hF9       // و
+`define OP_L_HAA      8'hFA       // هـ
+`define OP_L_YA       8'hFB       // ي
+
 `endif // HCPU_PKG_VH

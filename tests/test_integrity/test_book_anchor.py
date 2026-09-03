@@ -268,6 +268,48 @@ EXTENSIONS: Dict[str, int] = {
     # to CGET with exactly this semantics and never implemented it.
     "CGET": 0x44,
 
+    # The 28 letter instructions, 0xE0-0xFB. §IIIM.3.1 encodes operations on
+    # codex vectors -- HLOAD by index, HCADD by register pair -- but never a
+    # letter itself. Writing one letter therefore took three instructions and
+    # two numbers: load an index, load a register, add. The numbers are the
+    # thing being removed. A letter already carries a value, a function and a
+    # rate; naming it by index and then adding it by register spells out what
+    # it already holds.
+    #
+    # Safe because closure is measured, not assumed: the guard is closed under
+    # addition over all 784 pairs, so a program made of letters cannot leave
+    # the valid set, which is what lets the accumulator be implicit.
+    #
+    # 0xE0-0xFB was empty in the book's map and is exactly 28 slots wide.
+    "L_ALIF": 0xE0,
+    "L_BA": 0xE1,
+    "L_TA": 0xE2,
+    "L_TSA": 0xE3,
+    "L_JIM": 0xE4,
+    "L_HA": 0xE5,
+    "L_KHA": 0xE6,
+    "L_DAL": 0xE7,
+    "L_DZAL": 0xE8,
+    "L_RA": 0xE9,
+    "L_ZAY": 0xEA,
+    "L_SIN": 0xEB,
+    "L_SYIN": 0xEC,
+    "L_SHAD": 0xED,
+    "L_DHAD": 0xEE,
+    "L_THA": 0xEF,
+    "L_ZHA": 0xF0,
+    "L_AIN": 0xF1,
+    "L_GHAIN": 0xF2,
+    "L_FA": 0xF3,
+    "L_QAF": 0xF4,
+    "L_KAF": 0xF5,
+    "L_LAM": 0xF6,
+    "L_MIM": 0xF7,
+    "L_NUN": 0xF8,
+    "L_WAW": 0xF9,
+    "L_HAA": 0xFA,
+    "L_YA": 0xFB,
+
     # ERET, 0x08. §IIIM.3.1 has no way to return from an interrupt because it
     # has no interrupts: the book's machine runs one program to HALT. An OS
     # cannot be built on that. A timer that cannot preempt is a counter, and a

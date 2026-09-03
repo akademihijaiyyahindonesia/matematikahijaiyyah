@@ -169,18 +169,27 @@ module hcpu_execute #(
     end
 
     // ── Codex operation routing ─────────────────────────────────
-    assign rom_addr  = id_imm[`ROM_ADDR_W-1:0];
+    // A letter instruction names its ROM entry with its own opcode. The ROM
+    // is 1-indexed by letter, so the offset gets one added to it.
+    wire is_letter = (id_opcode >= `LETTER_OP_FIRST) &&
+                     (id_opcode <= `LETTER_OP_LAST);
+    wire [`ROM_ADDR_W-1:0] letter_index =
+        (id_opcode - `LETTER_OP_FIRST) + 1'b1;
+    assign rom_addr  = is_letter ? letter_index : id_imm[`ROM_ADDR_W-1:0];
     assign guard_vec = id_hreg_s1;
 
     // Codex ALU operation select
-    assign calu_op   = (id_opcode == `OP_HCADD) ? 3'd0 :
+    assign calu_op   = (id_opcode == `OP_HCADD || is_letter) ? 3'd0 :
                        (id_opcode == `OP_HNRM2) ? 3'd1 :
                        (id_opcode == `OP_HDIST) ? 3'd2 :
                        (id_opcode == `OP_CGET) ? 3'd3 : 3'd0;
     // CGET names its component in the immediate.
     assign calu_index = id_imm;
     assign calu_src1 = id_hreg_s1;
-    assign calu_src2 = id_hreg_s2;
+    // The letter itself is the second operand, straight off the ROM. This is
+    // the one new path the instruction needed: everything else -- the adder,
+    // the H-Reg write, the accumulator -- was already here.
+    assign calu_src2 = is_letter ? rom_data : id_hreg_s2;
 
     // Codex result mux
     reg [`HREG_W-1:0] codex_hvec;
@@ -192,6 +201,7 @@ module hcpu_execute #(
         case (id_opcode)
             `OP_HLOAD: codex_hvec = rom_data;
             `OP_HCADD: codex_hvec = calu_result_vec;
+            default:   if (is_letter) codex_hvec = calu_result_vec;
             `OP_HNRM2: codex_gpr  = calu_result_scl;
             `OP_HDIST: codex_gpr  = calu_result_scl;
             `OP_CGET: codex_gpr  = calu_result_scl;
