@@ -75,7 +75,11 @@ def test_package_and_rtl_script_agree(path: Path) -> None:
     The gate. Both ends of the toolchain must encode the same file identically,
     instruction for instruction.
     """
-    assert assemble(path.read_text(encoding="utf-8")) == _asm2hex_words(path)
+    # base_dir=path.parent: kernel.hasm ends in `.include "hal.hasm"`, and
+    # both ends of the parity check have to resolve it the same way asm2hex
+    # does (from the including file's own directory).
+    assert assemble(path.read_text(encoding="utf-8"), base_dir=path.parent) == \
+        _asm2hex_words(path)
 
 
 # ══════════════════════════════════════════════════════════════════

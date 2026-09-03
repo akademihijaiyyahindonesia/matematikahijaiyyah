@@ -52,7 +52,7 @@ def load(path: Path) -> list[int]:
     """A .hasm is assembled; a .hex is read as one hex word per line."""
     if path.suffix == ".hex":
         return [int(line, 16) for line in path.read_text().split() if line.strip()]
-    return assemble(path.read_text(encoding="utf-8"))
+    return assemble(path.read_text(encoding="utf-8"), base_dir=path.parent)
 
 
 def main(argv: list[str] | None = None) -> int:

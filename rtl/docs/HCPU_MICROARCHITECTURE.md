@@ -117,11 +117,15 @@ pipeline latency (3 cycles from write to read without forwarding).
 ## 6. Register File Architecture
 
 ### GPR Bank
-- **18 registers** × 32-bit (R0–R17)
+- **16 addressable** × 32-bit (R0–R15) — the array is 18 slots deep
+  (`GPR_COUNT`, the book's own §IIIJ.3.3.1 count), but the instruction
+  word's register fields are 4 bits (§IIIF.3.3.1), zero-extended to the
+  regfile's 5-bit port, so `gpr[16]`/`gpr[17]` can never be addressed
 - Dual read ports, single write port
 - Asynchronous read, synchronous write
 - R0 = return value / accumulator
-- R17 = link register
+- No link register: `CALL`/`RET` (0x2E/0x2F) use a dedicated hardware
+  return-address stack instead, precisely because R17 cannot be named
 
 ### H-Reg Bank
 - **16 registers** × 144-bit (H0–H15)

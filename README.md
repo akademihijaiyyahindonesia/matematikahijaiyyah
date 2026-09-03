@@ -143,7 +143,7 @@ ruff check src/
 
 ```bash
 make -C rtl/tb all
-# 234 assertion, 0 gagal, di lima belas testbench
+# 234 assertion, 0 gagal, di enam belas testbench
 ```
 
 Perintahnya satu baris karena daftar testbench dulu ditulis tangan di sini dan
@@ -251,7 +251,7 @@ Dinyatakan apa adanya, dengan label epistemik.
 | Metrik-vektorial (Bab II) | 683 pemeriksaan, 0 gagal | `VF+CC` |
 | Struktur monoid terkendala | Closure dibuktikan secara aljabar | `VF` |
 | HVM, HC, HCC, HASM | Operasional | `CC` |
-| HCPU RTL | 234 assertion simulasi, 0 gagal, lima belas bench | `CC` |
+| HCPU RTL | 234 assertion simulasi, 0 gagal, enam belas bench | `CC` |
 | HCPU sintesis | Berjalan; lihat catatan di bawah | `CC` |
 | Target ASIC | Belum ada pemetaan sel standar | `EH` |
 | Realisasi fotonik | DoF individual terdemonstrasi | `EH` |

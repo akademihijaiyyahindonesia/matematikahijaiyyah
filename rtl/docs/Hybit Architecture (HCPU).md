@@ -126,14 +126,13 @@ HCPU is a **5-stage in-order pipelined processor** implementing the H-ISA (Hijai
 
 | Property | Value |
 |---|---|
-| Count | 18 registers (`R0`–`R17`) |
+| Count | 16 addressable (`R0`–`R15`) — the array holds 18 slots (`GPR_COUNT`, matching the book's §IIIJ.3.3.1), but `gpr[16]`/`gpr[17]` are dead: nothing in the pipeline ever addresses them |
 | Width | 32 bits each |
 | Read ports | 2 pipeline (combinational, with write-through) + 1 debug (read-only) |
 | Write port | 1 (synchronous, rising edge) |
 | Debug port | `dbg_gpr_raddr` / `dbg_gpr_rdata` — synthesis-safe Wishbone/MPW read-back |
 | R0 | General-purpose (not hardwired to zero) |
-| R17 | Link register (by convention) |
-| Addressing | 5-bit (4-bit from instruction field, zero-extended) |
+| Addressing | 5-bit port, but always `{1'b0, s1}` — the 4-bit instruction field zero-extended, so bit 4 can never be set and R16/R17 can never be reached. This row already said so; the "18 registers, R17 = link" claims above and below it did not follow from it. |
 | Reset value | All zeros (`32'h0`) |
 
 ### 3.2 H-Reg Bank — Hybit / Codex Operations
@@ -668,7 +667,7 @@ Critical path: 84 logic levels through the divide/modulo-by-10 at
 
 | Check | Valid Range | Error |
 |---|---|---|
-| GPR index | `R0`–`R17` | `ValueError` |
+| GPR index | `R0`–`R15` | `AssemblyError` (was silently aliased to `R0`/`R1` via `& 0xF` before it was checked) |
 | H-Reg index | `H0`–`H15` | `ValueError` |
 | Signed immediate | `−2048` to `+2047` | `ValueError` |
 | Mnemonic | Known opcodes only | `ValueError` |

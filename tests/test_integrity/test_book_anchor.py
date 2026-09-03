@@ -38,6 +38,7 @@ import pytest
 
 from hijaiyyah.core.guards import compute_U
 from hijaiyyah.core.master_table import MASTER_TABLE
+from hijaiyyah.hisa.assembler import AssemblyError
 from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -544,12 +545,19 @@ def _find_page(number: int) -> Path | None:
 PAGE_41 = _find_page(41)
 
 
-def _page_41_text() -> str:
+def _page_text(number: int) -> str:
+    """Any single page, by number. `_page_41_text` is kept as the name every
+    other test here already calls; this is the general form beneath it."""
     pymupdf = pytest.importorskip("pymupdf")
-    if PAGE_41 is None:
+    page = _find_page(number)
+    if page is None:
         pytest.skip("the book PDFs are not in this checkout")
-    with pymupdf.open(PAGE_41) as doc:
-        return "\n".join(page.get_text() for page in doc)
+    with pymupdf.open(page) as doc:
+        return "\n".join(p.get_text() for p in doc)
+
+
+def _page_41_text() -> str:
+    return _page_text(41)
 
 
 def test_page_41_states_the_fourteen_dimensional_invariant() -> None:
@@ -634,3 +642,58 @@ def test_the_five_object_roles_are_named_on_the_page() -> None:
     for role in ("objek ukur", "objek hitung", "objek representasi",
                  "objek komputasi", "objek teknologi"):
         assert role in text, role
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Pages 127 and 133 — the book contradicts itself about GPR_COUNT
+# ══════════════════════════════════════════════════════════════════
+
+
+def test_the_book_gives_a_four_bit_register_field_on_page_127() -> None:
+    """
+    §IIIF.3.3.1, the .hbc bytecode header. DST/S1/S2 are four bits each --
+    `[23:20] [19:16] [15:12]` -- which matches hcpu_pkg.vh's DST_MSB..S2_LSB
+    exactly and cannot address past 15.
+    """
+    text = " ".join(_page_text(127).split())
+    assert "4 bits" in text
+    assert "[23:20]" in text.replace(" ", "") or "23:20" in text
+
+
+def test_the_book_gives_eighteen_gpr_with_r17_as_link_on_page_133() -> None:
+    """
+    §IIIJ.3.3.1, GPR Bank. "18 register (R0-R17)" and R17 named a link
+    register, by convention -- irreconcilable with the four-bit field two
+    pages earlier. Both are read from the book itself, not from a
+    paraphrase, so this test and the field-width one above it cannot drift
+    into agreeing with each other by accident.
+    """
+    text = " ".join(_page_text(133).split())
+    assert "18 register" in text or "18register" in text.replace(" ", "")
+    assert "R0" in text and "R17" in text
+    assert "Register tautan" in text or "tautan" in text
+
+
+def test_the_code_follows_the_field_width_not_the_count() -> None:
+    """
+    The two pages above disagree; the code has to pick a side and say so.
+    MAX_GPR follows the field width (15, not 17) because that is what every
+    opcode in this repository actually encodes against -- GPR_COUNT in
+    hcpu_pkg.vh stays 18, transcribing the book's storage claim unchanged,
+    and the two co-existing is the point, not an inconsistency to resolve
+    by editing one to match the other.
+    """
+    from hijaiyyah.hisa import assembler as _asm
+
+    assert _asm.MAX_GPR == 15
+    pkg_text = PKG_VH.read_text(encoding="utf-8")
+    match = re.search(r"`define\s+GPR_COUNT\s+(\d+)", pkg_text)
+    assert match and int(match.group(1)) == 18, (
+        "hcpu_pkg.vh's GPR_COUNT should keep transcribing the book, "
+        "not the code's own addressing limit"
+    )
+
+    with pytest.raises(AssemblyError):
+        _asm.assemble("        MOVI R16, 1\n")
+    with pytest.raises(AssemblyError):
+        _asm.assemble("        MOVI R17, 1\n")

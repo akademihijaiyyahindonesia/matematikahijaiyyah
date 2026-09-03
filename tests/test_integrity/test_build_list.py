@@ -259,12 +259,12 @@ def test_nothing_blocked_is_ticked_green() -> None:
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
     reads them together."""
-    for figure in ("234 asersi", "15 bench"):
+    for figure in ("234 asersi", "16 bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
     # The pytest count is the one figure here nothing can verify -- checking it
     # would mean running pytest inside pytest -- so what is guarded is that the
     # checklist says so, rather than presenting it as though it were checked.
     assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
     assert "tidak dijaga" in CHECKLIST
-    assert "234 asersi RTL di 15 testbench" in README
-    assert "234 asersi, 15 bench, 0 gagal" in ON
+    assert "234 asersi RTL di 16 testbench" in README
+    assert "234 asersi, 16 bench, 0 gagal" in ON

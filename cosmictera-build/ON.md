@@ -174,6 +174,6 @@ Label: `CC` dalam simulasi, `EH` di silikon.
 
 ```bash
 python3 -m pytest -q          # 4.279 lulus, 4 dilewati
-make -C rtl/tb all            # 234 asersi, 15 bench, 0 gagal
+make -C rtl/tb all            # 234 asersi, 16 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

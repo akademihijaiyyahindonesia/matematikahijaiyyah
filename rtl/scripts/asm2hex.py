@@ -27,6 +27,7 @@ if _SRC.is_dir() and str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from hijaiyyah.hisa.assembler import (  # noqa: E402
+    expand_includes,
     AssemblyError,
     assemble_line,
     collect_labels,
@@ -41,7 +42,12 @@ def main() -> None:
         print("Usage: asm2hex.py input.hasm [--verbose] > program.hex", file=sys.stderr)
         sys.exit(1)
 
-    lines = Path(args[0]).read_text(encoding="utf-8").splitlines()
+    source = Path(args[0]).resolve()
+    # Includes resolve next to the file that names them, so the directory has
+    # to travel with the text. Without this the HAL cannot be a separate file.
+    lines = expand_includes(
+        source.read_text(encoding="utf-8").splitlines(), source.parent
+    )
 
     try:
         labels = collect_labels(lines)

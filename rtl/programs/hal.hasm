@@ -1,0 +1,78 @@
+; hal.hasm — the Hardware Abstraction Layer.
+;
+; Layer 2 of the book's seven-layer stack, and until now it did not exist as a
+; file. H-Kernel spoke straight to MMIO, so a second board did not mean porting
+; the kernel -- it meant rewriting it.
+;
+; This is the only file that knows a peripheral address. Everything above it
+; asks by name. Whether the timer compare lives at 0xFF5 or somewhere else is
+; a fact about the board, and facts about the board belong in one place.
+;
+; It became possible three commits ago: without CALL and RET there is no way to
+; put a layer anywhere, only to paste it.
+;
+; ── calling convention ──────────────────────────────────────────
+;   R1   argument in, result out
+;   R2   second argument; clobbered by hal_timer_arm
+;   R12  clobbered by every routine — it is the HAL's own zero base
+;   everything else is preserved
+;
+; Every routine here is supervisor-only, because every address here is inside
+; the window user mode is refused.
+
+; ── traps ───────────────────────────────────────────────────────
+hal_vector_set:                 ; R1 = handler address
+        MOVI  R12, 0
+        STORE R1, R12, 0xFF8
+        RET
+
+hal_epc_get:                    ; -> R1, the PC the trap will return to
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFF9
+        RET
+
+hal_epc_set:                    ; R1 = the PC to return to
+        MOVI  R12, 0
+        STORE R1, R12, 0xFF9
+        RET
+
+hal_cause_get:                  ; -> R1, the index, not a mask
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFFA
+        RET
+
+hal_trap_enable:                ; R1 = per-cause enable mask
+        MOVI  R12, 0
+        STORE R1, R12, 0xFFB
+        RET
+
+; The next ERET returns to user mode. Bit 0 of TRAP_MODE is the CURRENT mode
+; and read-only: if software could write it, dropping privilege and raising it
+; again would be the same instruction.
+hal_mode_user:
+        MOVI  R12, 0
+        MOVI  R1, 0
+        STORE R1, R12, 0xFFD
+        RET
+
+; ── memory window ───────────────────────────────────────────────
+hal_window_set:                 ; R1 = base, R2 = one past the top
+        MOVI  R12, 0
+        STORE R1, R12, 0xFFE
+        STORE R2, R12, 0xFFF
+        RET
+
+; ── timer ───────────────────────────────────────────────────────
+; Deadline = now + R1. Writing COMPARE also clears `expired`, so this both
+; acknowledges the interrupt and sets the next deadline -- which is why the
+; caller has to place it last, not because of anything in here.
+;
+; `expired` is an equality, not a threshold: a deadline that has already gone
+; past is never met again. R1 must stay under 2048, because the immediate the
+; caller loads it with is twelve bits SIGNED.
+hal_timer_arm:                  ; R1 = quantum; clobbers R2
+        MOVI  R12, 0
+        LOAD  R2, R12, 0xFF4
+        ADD   R1, R2, R1
+        STORE R1, R12, 0xFF5
+        RET

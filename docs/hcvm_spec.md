@@ -176,7 +176,7 @@ HCVM **adalah**:
 │  │                                                │  │
 │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐  │  │
 │  │  │ GPR    │ │ H-Reg  │ │ FLAGS  │ │ PC/SP  │  │  │
-│  │  │ R0–R17 │ │ H0–H3  │ │ G Z O  │ │        │  │  │
+│  │  │ R0–R15 │ │ H0–H3  │ │ G Z O  │ │        │  │  │
 │  │  └────────┘ └────────┘ └────────┘ └────────┘  │  │
 │  │                                                │  │
 │  │  ┌──────────────────┐  ┌────────────────────┐  │  │
@@ -227,7 +227,11 @@ Seluruh register state HCVM identik dengan spesifikasi H-ISA:
 
 ```python
 class MachineState:
-    gpr: List[int]          # R0–R17 (18 × 32-bit)
+    # R0-R15: 16, not 18. The book names R0-R17 at §IIIJ.3.3.1, but its own
+    # instruction word (§IIIF.3.3.1) gives each register field four bits,
+    # which cannot address past 15 -- see MAX_GPR's comment in
+    # src/hijaiyyah/hisa/assembler.py for the book's own contradiction.
+    gpr: List[int]          # R0–R15 (16 × 32-bit)
     hreg: List[List[int]]   # H0–H3 (4 × 18-int vector)
     pc: int                 # Program Counter
     sp: int                 # Stack Pointer

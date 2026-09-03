@@ -70,9 +70,39 @@ module hcpu_top #(
 
     // ── Trap redirect ───────────────────────────────────────────
     // A trap is a branch the program did not write, so it joins the same
-    // redirect path and gets the same flush. It takes priority: a branch that
-    // loses to a trap is re-fetched from epc on return, but a trap that loses
-    // to a branch is simply gone.
+    // redirect path and gets the same flush. It takes priority for FETCHING:
+    // whatever a branch decided this cycle is discarded in favour of the trap
+    // vector. That part is fine, and always was.
+    //
+    // What the priority does NOT do, and what the comment here used to claim
+    // it did ("a branch that loses to a trap is re-fetched from epc on
+    // return"), is preserve the branch's OWN effect for the return address.
+    // A maskable interrupt's epc was simply `if_pc` -- Fetch's own PC, which
+    // is a SPECULATIVE sequential PC+1, one stage ahead of Execute. A branch
+    // resolves IN Execute, so at the exact cycle a trap and a taken branch
+    // coincide, `if_pc` already shows the branch's FALL-THROUGH address, not
+    // its target -- Execute has not corrected Fetch's guess yet, and the trap
+    // fires before it gets the chance to. On return, execution resumed as if
+    // the branch had NOT been taken, even though it was, and even though a
+    // CALL's return-address-stack push (a real side effect, gated on nothing
+    // but `id_is_call`) had ALREADY committed that same cycle regardless.
+    // Found through the guard daemon in kernel.hasm -- a JGD that had just
+    // passed its guard resumed on the "guard failed" path, once in 400,000
+    // cycles -- and reproduced on demand in
+    // tb_hcpu_branch_trap_race.v, sweeping a timer deadline against a fixed
+    // JMP until it lands on Execute's cycle rather than relying on that kind
+    // of luck.
+    //
+    // The fix: when Execute is ALSO resolving a taken branch this cycle, the
+    // "next instruction that has not happened yet" is not Fetch's stale
+    // guess -- it is the branch's OWN target, because the branch's effect is
+    // already final. Re-fetching the branch instruction itself (what the old
+    // comment described) was considered and rejected: that would mean
+    // re-reading FLAGS on resume, which are not part of a saved context
+    // (rtl/programs/kernel.hasm's own header lists what is not saved), so a
+    // handler's own comparisons could silently change the branch's outcome
+    // between the first attempt and the replay. Resuming at the target
+    // instead depends on nothing but what already committed.
     wire trap_redirect_w, trap_in_trap_w, trap_is_eret_w;
     wire trap_in_user_w, trap_priv_fault_w, trap_mem_fault_w, trap_syscall_w;
     wire [`DATA_ADDR_W-1:0] mem_base_w, mem_limit_w;
@@ -84,6 +114,7 @@ module hcpu_top #(
     wire redirect_taken  = trap_redirect_w | branch_taken_w;
     wire [`XLEN-1:0] redirect_target =
         trap_redirect_w ? trap_target_w : branch_target_w;
+
 
     // Fetch → Decode
     wire [`ILEN-1:0] if_instruction;
@@ -650,7 +681,14 @@ module hcpu_top #(
         .src_priv      (trap_priv_fault_w),
         .src_mem       (trap_mem_fault_w),
         .src_syscall   (trap_syscall_w),
-        .pc_now        (if_pc),
+        // What a maskable interrupt should resume at: the branch's own
+        // target if Execute is taking one THIS cycle (its effect is already
+        // final), else Fetch's ordinary sequential guess. Declared here,
+        // right before use, because it needs `if_pc` -- declared later in
+        // this file, in the Fetch -> Decode section -- and Verilog wires
+        // have no forward-declaration the way the `wire redirect_target`
+        // block above this could rely on for signals already in scope there.
+        .pc_now        (branch_taken_w ? branch_target_w : if_pc),
         .pc_valid      (1'b1),
         .pc_fault      (id_pc),
         .reg_we        (trap_reg_we_w),

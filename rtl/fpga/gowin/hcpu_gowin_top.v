@@ -75,7 +75,7 @@
 // that were resolved by 90.14 MHz are unresolved again until either the
 // memory is inferred cleanly or the instruction memory is made smaller.
 //
-// RTL FINGERPRINT: a3ac26df7861070ef75934011de206fcf577d16d9693e25b2234f2de12bcaccf
+// RTL FINGERPRINT: 12c54d3c595032997e680e9a77310578e7865060cfb3e6352db0e931decd04b4
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

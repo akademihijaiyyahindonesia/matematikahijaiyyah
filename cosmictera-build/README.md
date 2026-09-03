@@ -34,7 +34,7 @@ muat di papan. Itu ada di [OFF.md](OFF.md), bukan disembunyikan.
 
 ```
 4.279 tes Python lulus, 4 dilewati          ruff bersih, mypy bersih
-  234 asersi RTL di 15 testbench, 0 gagal
+  234 asersi RTL di 16 testbench, 0 gagal
    72 dari 96 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
     6 penyebab trap, 6 prasyarat OS tertutup, H-Kernel 4 dari 4

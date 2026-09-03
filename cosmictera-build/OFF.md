@@ -128,7 +128,7 @@ eksplisit dibedakan dari Linux dan Windows:
 | sifat | keadaan |
 |---|---|
 | validasi berkas saat menulis (guard-on-write) | butuh HFS |
-| penjajaran 18-wide | ✅ ada di mesin — `GPR_COUNT 18`, H-Reg 18×8 = 144 bit |
+| penjajaran 18-wide | ✅ ada di mesin — H-Reg 18×8 = 144 bit (`HREG_W`, bukan `GPR_COUNT`: GPR_COUNT=18 adalah kedalaman penyimpanan, bukan cacah yang bisa dialamatkan — lihat `MAX_GPR` di assembler) |
 | HAR sebagai layanan sistem (tingkat kernel) | **belum** — HAR ada di Python, bukan layanan |
 | daemon guard (HCHECK periodik) | ✅ **terjadwal** — proses C di `kernel.hasm` |
 

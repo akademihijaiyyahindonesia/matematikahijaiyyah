@@ -43,6 +43,7 @@ dialect wrote, so existing files keep assembling.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from hijaiyyah.core.exceptions import HijaiyyahError
@@ -50,8 +51,28 @@ from hijaiyyah.core.exceptions import HijaiyyahError
 from ..core.master_table import MASTER_TABLE
 from .opcodes import RTL_IMPLEMENTED, OpCode
 
-#: Highest general-purpose register index (R0–R17, §IIIJ.3.3.1).
-MAX_GPR = 17
+#: Highest general-purpose register index a program may NAME.
+#:
+#: The book contradicts itself here, and the contradiction is worth stating
+#: precisely rather than picking a side silently. §IIIJ.3.3.1 (hal. 133) gives
+#: the GPR bank 18 registers, R0-R17, and even assigns R17 a role: "Register
+#: tautan (berdasarkan konvensi)" -- a link register, by software convention,
+#: for returns. But §IIIF.3.3.1 (hal. 127), the .hbc instruction word format,
+#: gives DST/S1/S2 four bits each: `[23:20] [19:16] [15:12]`, which can name
+#: 0-15 and nothing past it. hcpu_pkg.vh's four-bit fields match the second
+#: claim exactly; nothing in this codebase builds the first one.
+#:
+#: So R16 and R17 cannot be encoded, full stop -- not "not yet wired up",
+#: architecturally absent from every instruction that names a register. This
+#: used to be `17`, and `parse_register` masked the result with `& 0xF`
+#: rather than checking it, which made the absence invisible: `MOVI R16, 7`
+#: assembled byte-identical to `MOVI R0, 7`, silently. See
+#: tests/test_integrity/test_book_anchor.py for both citations side by side
+#: and for why hcpu_pkg.vh's own `GPR_COUNT` define stays 18 rather than
+#: being "corrected" to match this -- that constant is a transcription of the
+#: book's storage claim, not of its addressing claim, and the two book
+#: sections disagree about that, not about how deep the array is.
+MAX_GPR = 15
 
 #: Highest hybit register index (H0–H15, §IIIJ.3.3.2).
 MAX_HREG = 15
@@ -193,10 +214,17 @@ def parse_register(text: str) -> int:
         index = int(token[1:])
         limit = MAX_GPR if token[0] == "R" else MAX_HREG
         if index > limit:
+            hint = ""
+            if token[0] == "R" and index <= 17:
+                hint = (
+                    " -- the book names R16/R17 (§IIIJ.3.3.1) but the "
+                    "instruction word's 4-bit register field (§IIIF.3.3.1) "
+                    "cannot address past R15; see MAX_GPR's comment"
+                )
             raise AssemblyError(
-                f"register {token} is out of range (max {token[0]}{limit})"
+                f"register {token} is out of range (max {token[0]}{limit}){hint}"
             )
-        return index & 0xF
+        return index
 
     if token.lstrip("-").isdigit():
         index = int(token)
@@ -346,11 +374,57 @@ def collect_labels(lines: Sequence[str]) -> Dict[str, int]:
     return labels
 
 
-def assemble(source: str) -> List[int]:
+_INCLUDE_RE = re.compile(r'^\s*\.include\s+"([^"]+)"\s*(?:;.*)?$')
+
+
+def expand_includes(
+    lines: List[str],
+    base_dir: Optional[Path],
+    seen: Optional[set[Path]] = None,
+) -> List[str]:
+    """Splice ``.include "file"`` lines in, resolved next to the includer.
+
+    A file already included is skipped rather than refused. Including the same
+    thing twice is what a shared layer invites, and pasting it twice would
+    collide every label in it -- so the second include is a no-op, the way a
+    header guard behaves, instead of an error the caller has to route around.
+    """
+    seen = set() if seen is None else seen
+    out: List[str] = []
+    for number, line in enumerate(lines, start=1):
+        match = _INCLUDE_RE.match(line)
+        if match is None:
+            out.append(line)
+            continue
+        if base_dir is None:
+            raise AssemblyError(
+                f'.include "{match.group(1)}" needs a directory to resolve '
+                "against; assemble() was given text with no base_dir",
+                line_number=number,
+            )
+        target = (base_dir / match.group(1)).resolve()
+        if target in seen:
+            continue
+        if not target.is_file():
+            raise AssemblyError(f"cannot include {target}", line_number=number)
+        seen.add(target)
+        out.append(f"; ── included: {match.group(1)} ──")
+        out.extend(
+            expand_includes(
+                target.read_text(encoding="utf-8").splitlines(), target.parent, seen
+            )
+        )
+    return out
+
+
+def assemble(source: str, base_dir: "Optional[Path]" = None) -> List[int]:
     """Assemble a whole program into instruction words.
 
     Args:
         source: The ``.hasm`` text.
+        base_dir: Where ``.include`` paths resolve from. Callers that read a
+            file should pass its directory; without it an include is an error
+            rather than a guess.
 
     Returns:
         One 32-bit word per instruction, in address order.
@@ -358,7 +432,7 @@ def assemble(source: str) -> List[int]:
     Raises:
         AssemblyError: Carrying the source line number of the first problem.
     """
-    lines = source.splitlines()
+    lines = expand_includes(source.splitlines(), base_dir)
     labels = collect_labels(lines)
 
     words: List[int] = []

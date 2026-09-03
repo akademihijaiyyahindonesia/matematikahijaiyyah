@@ -11,8 +11,10 @@ The hard part is narrow and worth naming. The handler begins with the register
 file still holding the user's values, so saving them needs a base register,
 and setting one up destroys the value it was meant to save. There is no zero
 register in this ISA: MOVI R0, 7 puts 7 in R0. PUSH is the way out, because
-its stack pointer lives in hardware rather than in a GPR: eighteen pushes take
-the whole file off the CPU without touching any of it.
+its stack pointer lives in hardware rather than in a GPR: sixteen pushes take
+the whole file off the CPU without touching any of it. Sixteen, not eighteen:
+R16/R17 do not exist -- see MAX_GPR's comment in the assembler for the book's
+own contradiction that settles it.
 
 Both processes count in R1 -- A by one, B by a hundred. That is the whole
 proof of privacy: B's total stays an exact multiple of a hundred only if it
@@ -30,7 +32,8 @@ from hijaiyyah.hisa.assembler import assemble
 from hijaiyyah.hisa.machine import HISAMachine
 
 ROOT = Path(__file__).resolve().parents[2]
-KERNEL = ROOT / "rtl" / "programs" / "kernel.hasm"
+PROGRAMS = ROOT / "rtl" / "programs"
+KERNEL = PROGRAMS / "kernel.hasm"
 SOURCE = KERNEL.read_text(encoding="utf-8")
 
 CUR_PID = 0xF00
@@ -48,7 +51,7 @@ STEPS = 200_000
 
 def _run(source: str, steps: int = STEPS) -> HISAMachine:
     m = HISAMachine(MASTER_TABLE)
-    m.code = assemble(source)
+    m.code = assemble(source, base_dir=PROGRAMS)
     n = 0
     while n < steps and m.step() is not None:
         n += 1
@@ -56,11 +59,11 @@ def _run(source: str, steps: int = STEPS) -> HISAMachine:
 
 
 def _run_broken(source: str) -> tuple[HISAMachine, BaseException | None]:
-    """Run a sabotaged kernel. A crash is a legitimate outcome -- eighteen
-    pops against seventeen pushes underflows the stack -- so the exception is
+    """Run a sabotaged kernel. A crash is a legitimate outcome -- sixteen
+    pops against fifteen pushes underflows the stack -- so the exception is
     returned rather than swallowed or allowed to fail the test."""
     m = HISAMachine(MASTER_TABLE)
-    m.code = assemble(source)
+    m.code = assemble(source, base_dir=PROGRAMS)
     n = 0
     try:
         while n < STEPS and m.step() is not None:
@@ -153,19 +156,21 @@ def test_all_three_run_together() -> None:
 
 def test_the_two_causes_are_entered_differently() -> None:
     """A timer interrupt leaves epc at the next instruction; a syscall leaves
-    it at its own. The kernel advances epc only for cause 5."""
-    assert "CMPI  R9, 5" in SOURCE
+    it at its own. The kernel advances epc only for cause 5. The comparison
+    happens against R1, not R9, now: hal_cause_get returns the cause there,
+    per hal.hasm's calling convention."""
+    assert "CMPI  R1, 5" in SOURCE
     assert "ADDI  R8, R8, 1" in SOURCE
 
 
 def test_the_whole_file_is_saved_before_anything_uses_a_register() -> None:
-    """Nothing may precede the eighteen pushes, because until they are done
+    """Nothing may precede the sixteen pushes, because until they are done
     every register still belongs to the interrupted process."""
     entry = SOURCE.split("vector:")[1]
     ops = [ln.split()[0] for ln in entry.splitlines() if ln.startswith("        ")]
-    assert ops[:18] == ["PUSH"] * 18, f"first ops after the vector are {ops[:4]}"
-    pushed = {ln.split()[1] for ln in entry.splitlines()[:19] if "PUSH" in ln}
-    assert pushed == {f"R{i}" for i in range(18)}, "not every register is saved"
+    assert ops[:16] == ["PUSH"] * 16, f"first ops after the vector are {ops[:4]}"
+    pushed = {ln.split()[1] for ln in entry.splitlines()[:17] if "PUSH" in ln}
+    assert pushed == {f"R{i}" for i in range(16)}, "not every register is saved"
 
 
 # ── each part is load-bearing ───────────────────────────────────
@@ -187,10 +192,13 @@ def test_without_the_epc_advance_a_yield_never_returns() -> None:
 def test_without_restoring_epc_there_is_no_switch() -> None:
     """Writing the next process's pc into epc IS the context switch. Without
     it ERET returns to whoever just trapped."""
+    # epc is set inside hal_epc_set now; sabotage the CALL to it, which
+    # exercises the layering too -- dispatch forgetting to call the layer
+    # underneath is exactly as broken as the layer forgetting its own store.
     m, _ = _run_broken(
         _break(
-            "        STORE R8, R5, 0xFF9     ; TRAP_EPC  — this is the switch itself",
-            "        MOV   R8, R8            ; TRAP_EPC  — this is the switch itself",
+            "        CALL  hal_epc_set       ; this is the switch itself",
+            "        NOP                     ; this is the switch itself",
         )
     )
     assert _at(m, A_COUNT) == 0 or _at(m, B_COUNT) == 0, (
@@ -204,11 +212,10 @@ def test_without_re_arming_the_timer_nothing_is_ever_preempted() -> None:
     arrives: A, which contains no SYSCALL, owns the machine forever and B
     never runs once. The timer is the kernel's only hold over a process that
     declines to yield."""
+    # Re-arming is inside hal_timer_arm now; sabotage the CALL to it.
+    quantum_line = "        MOVI  R1, 2047          ; quantum — see hal.hasm for why not 2048\n"
     m, _ = _run_broken(
-        _break(
-            "        STORE R1, R5, 0xFF5     ; COMPARE — acknowledges and re-arms at once",
-            "        MOV   R1, R1            ; COMPARE — acknowledges and re-arms at once",
-        )
+        _break(quantum_line + "        CALL  hal_timer_arm", quantum_line + "        NOP")
     )
     assert _at(m, B_COUNT) == 0, "B ran without the timer ever being armed"
     assert _at(m, TICKS) == 1, "dispatch ran more than the single boot entry"
@@ -217,9 +224,9 @@ def test_without_re_arming_the_timer_nothing_is_ever_preempted() -> None:
     )
 
 
-@pytest.mark.parametrize("victim", [1, 7, 17])
+@pytest.mark.parametrize("victim", [1, 7, 15])
 def test_dropping_any_single_push_corrupts_a_process(victim: int) -> None:
-    """Seventeen of eighteen is not a context switch."""
+    """Fifteen of sixteen is not a context switch."""
     m, exc = _run_broken(_break(f"        PUSH  R{victim}\n", ""))
     b = _at(m, B_COUNT)
     assert exc is not None or b % 100 != 0 or b == 0, (
@@ -230,8 +237,11 @@ def test_dropping_any_single_push_corrupts_a_process(victim: int) -> None:
 def test_the_pointer_register_is_restored_last() -> None:
     """R7 addresses the block being restored, so it cannot be restored from
     the middle of the sequence -- it has to come out of itself, at the end."""
-    # split on the instruction, not the word: the file's comments name ERET
-    tail = SOURCE.split("previous mode = USER")[1].split("\n        ERET")[0]
+    # split on the instruction, not the word: the file's comments name ERET.
+    # "previous mode = USER" lived inline before dispatch called out to
+    # hal_mode_user for it; "CALL  hal_mode_user" is the anchor now, the last
+    # thing before the restore loads begin.
+    tail = SOURCE.split("CALL  hal_mode_user")[1].split("\n        ERET")[0]
     loads = [ln for ln in tail.splitlines() if ln.strip().startswith("LOAD  R")]
     assert loads[-1].split()[1].rstrip(",") == "R7", "R7 is not restored last"
 
@@ -305,7 +315,7 @@ def test_the_load_use_interlock_covers_pop() -> None:
     """POP writes a register from memory with a LOAD's latency, but the
     interlock tested `id_mem_read`, which only OP_LOAD sets. `POP Rn` followed
     by a use of Rn read the previous value -- and a context switch is built
-    out of exactly that pair, eighteen times."""
+    out of exactly that pair, sixteen times."""
     expr = DECODE.split("assign load_use_hazard")[1].split(";")[0]
     assert "id_is_pop" in expr, "the interlock does not cover POP"
     assert "id_mem_read" in expr, "covering POP must not drop LOAD"

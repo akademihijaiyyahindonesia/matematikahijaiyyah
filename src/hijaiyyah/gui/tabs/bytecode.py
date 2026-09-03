@@ -756,7 +756,7 @@ class BytecodeTab:
         ref_out.writeln("REGISTER LAYOUT", "header")
         ref_out.writeln("=" * 50, "dim")
         ref_out.writeln("  H0-H3:  4 codex registers (18 × uint8 each)", "value")
-        ref_out.writeln("  R0-R17: 18 general purpose registers", "value")
+        ref_out.writeln("  R0-R15: 16 general purpose registers", "value")
         ref_out.writeln("  SR:     Status register", "value")
         ref_out.writeln("    .GUARD_PASS: set by VCHK", "dim")
         ref_out.writeln("    .ZERO:       set when result is zero vector", "dim")

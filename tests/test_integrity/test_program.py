@@ -32,7 +32,12 @@ PROGRAMS = sorted((ROOT / "rtl" / "programs").glob("*.hasm"))
 
 
 def _image(path: Path) -> bytes:
-    return b"".join(struct.pack("<I", word) for word in assemble(path.read_text()))
+    # base_dir=path.parent: kernel.hasm resolves `.include "hal.hasm"` next
+    # to itself, and every caller here has to do the same.
+    return b"".join(
+        struct.pack("<I", word)
+        for word in assemble(path.read_text(), base_dir=path.parent)
+    )
 
 
 def _system(purpose: str = "programs") -> Kabah:

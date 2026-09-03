@@ -401,11 +401,18 @@ src/hijaiyyah/hisa/
 ### 6.4 Register Model
 
 ```
-18 General Purpose Registers (R0–R17)
- 4 Codex Registers (H0–H3)
+16 General Purpose Registers (R0–R15)
+16 Codex Registers (H0–H15)
  1 Program Counter (PC)
  1 Status Register (FLAGS: GUARD/ZERO/OVR)
 ```
+
+The book names R0–R17 at §IIIJ.3.3.1 — eighteen, with R17 as a link register
+by convention. The DST/S1/S2 fields two rows up are four bits each, per the
+book's own §IIIF.3.3.1 bytecode header, and four bits cannot address past 15.
+The book contradicts itself here; this table follows the field width, since
+that is what every opcode in this repository actually encodes against. See
+`MAX_GPR`'s comment in `src/hijaiyyah/hisa/assembler.py` for the full citation.
 
 ### 6.5 Operasi Asli
 

@@ -56,7 +56,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **234 asersi, 15 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **234 asersi, 16 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -70,8 +70,9 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **I/O lewat kernel, dua sisi** | `make -C rtl/tb sim_syscall_io` |
 | ✅ | Wrapper papan | `make -C rtl/tb sim_board` |
 | ✅ | Boot lewat kabel | `make -C rtl/tb sim_loader` |
+| ✅ | **Cabang & interupsi bertabrakan** | `make -C rtl/tb sim_branch_trap_race` |
 
-Dua baris tebal itu baru hijau **hari ini**, dan keduanya sempat berbohong:
+Empat baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 - **H-Kernel** hijau karena `B = 127400 = 1274 × 100`. Kelipatan yang bersih
   hanya mungkin bila R1 milik B tak pernah memegang nilai A.
@@ -80,6 +81,34 @@ Dua baris tebal itu baru hijau **hari ini**, dan keduanya sempat berbohong:
   jawabannya **0**: `default:` kedua di tengah `case` membuat kedua puluh
   delapan opcode menulis nol, dan tak ada bench yang pernah menjalankan satu
   pun. Enam bench di kolom ini juga tidak punya target `make` sama sekali.
+- **`R0`-`R17` bukan enam belas register — kecuali dua tak pernah bisa
+  dipakai.** Buku sendiri berkontradiksi: §IIIJ.3.3.1 (hal. 133) memberi GPR
+  bank 18 register, R0–R17, bahkan menugaskan R17 sebagai register tautan.
+  §IIIF.3.3.1 (hal. 127), format word instruksi, memberi tiap field register
+  **4 bit** — tidak bisa menamai lebih dari 15. Assembler dulu memangkas
+  dengan `& 0xF` alih-alih memeriksa, jadi `MOVI R16, 7` terakit **identik**
+  dengan `MOVI R0, 7`, diam-diam. Kernel yang barusan dibangun sebelum
+  temuan ini menyimpan "18 register" per proses — sebenarnya menyimpan R0
+  dan R1 dua kali, kebetulan tak merusak apa pun karena mendorong lalu
+  memuat nilai yang sama dua kali adalah no-op. Sekarang assembler menolak
+  R16/R17 dengan pesan yang mengutip kedua bagian buku, dan kernel menyimpan
+  enam belas yang sungguh ada — lihat `MAX_GPR` di
+  `src/hijaiyyah/hisa/assembler.py` dan
+  [`test_the_code_follows_the_field_width_not_the_count`](../tests/test_integrity/test_book_anchor.py).
+- **Cabang yang diambil bisa kalah dari interupsi yang bertepatan — dan
+  epc-nya salah, bukan cabangnya.** Ditemukan lewat daemon penjaga: sebuah
+  `JGD` yang baru saja lulus guard-nya kembali ke jalur "guard gagal", sekali
+  dalam 400.000 siklus. Sebabnya: `pc_now` (yang disimpan interupsi
+  maskable sebagai alamat kembali) memakai `if_pc` — tebakan sekuensial
+  spekulatif Fetch, satu tahap di depan Execute yang justru sedang
+  menyelesaikan cabang itu SAAT itu juga. Jika interupsi tiba tepat di
+  siklus itu, `if_pc` masih menunjukkan alamat jatuh-lanjut cabang, bukan
+  targetnya — dan cabang itu tak pernah "diputar ulang": efek sampingnya
+  (misalnya dorongan stack alamat-kembali `CALL`) sudah terlanjur commit.
+  Diperbaiki dengan satu mux: `branch_taken_w ? branch_target_w : if_pc`.
+  `tb_hcpu_branch_trap_race.v` mereproduksinya sesuai permintaan, dengan
+  menyapu tenggat timer sampai bertepatan persis dengan siklus Execute —
+  bukan menunggu 1-dari-532 keberuntungan.
 
 ---
 
@@ -101,7 +130,7 @@ Dua, dan keduanya dinamai supaya centang di atas berarti sesuatu.
 
 | | apa | keadaan |
 |---|---|---|
-| ⬜ | `python3 rtl/scripts/lint_hcpu.py` | **0 error struktural** (dulu 1), sisa **74 peringatan** — keluar bukan-nol |
+| ⬜ | `python3 rtl/scripts/lint_hcpu.py` | **0 error struktural** (dulu 1), sisa **76 peringatan** — keluar bukan-nol |
 | 🔴 | `make -C rtl/fpga/gowin bitstream` | **gagal**: 13.948 / 8.640 LUT4 = **161%** |
 
 Error Verilator hilang justru karena `default:` ganda itu diperbaiki — jadi
@@ -119,7 +148,7 @@ Sebabnya satu komit dan sudah dibisect — lihat [OFF.md](OFF.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.300 lulus, 4 dilewati
-make -C rtl/tb all               # 234 asersi, 15 bench, 0 gagal
+make -C rtl/tb all               # 234 asersi, 16 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← merah, dan memang seharusnya terlihat
 ```
 

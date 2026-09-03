@@ -138,7 +138,7 @@ sebagai **co-processor ISA** atau **domain-specific ISA** yang:
 │                                             │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
 │  │ GPR      │  │ H-Reg    │  │ FLAGS    │  │
-│  │ R0–R17   │  │ H0–H3   │  │ G Z O    │  │
+│  │ R0–R15   │  │ H0–H3   │  │ G Z O    │  │
 │  └──────────┘  └──────────┘  └──────────┘  │
 │                                             │
 │  ┌──────────┐  ┌──────────┐                │
@@ -166,7 +166,7 @@ sebagai **co-processor ISA** atau **domain-specific ISA** yang:
 |---|---|
 | Word size | 32 bit |
 | Instruction width | 32 bit (fixed) |
-| GPR count | 18 (R0–R17) |
+| GPR count | 16 (R0–R15) — the book's own §IIIJ.3.3.1 says 18 (R0–R17); its instruction word (§IIIF.3.3.1) gives each register field 4 bits, which cannot address past 15. See §4.1's note. |
 | Codex register count | 4 (H0–H3) |
 | GPR width | 32 bit |
 | Codex register width | 18 × 32 bit = 576 bit |
@@ -201,11 +201,23 @@ sebagai **co-processor ISA** atau **domain-specific ISA** yang:
 | R13 | `r13` | general purpose |
 | R14 | `r14` | general purpose |
 | R15 | `r15` | general purpose |
-| R16 | `r16` | general purpose |
-| R17 | `r17` | general purpose |
 
-**Catatan:** 18 GPR dipilih agar setiap komponen codex 18D
-dapat dimuat ke register individual jika diperlukan.
+**Enam belas, bukan delapan belas.** §IIIJ.3.3.1 (hal. 133) memberi GPR bank
+18 register, R0–R17, dan bahkan memberi R17 peran: register tautan, menurut
+konvensi. Tapi §IIIF.3.3.1 (hal. 127), format word instruksi `.hbc`, memberi
+DST/S1/S2 masing-masing **4 bit** — `[23:20] [19:16] [15:12]` — yang tidak
+bisa menamai lebih dari 15. Buku berkontradiksi dengan dirinya sendiri di
+sini; RTL dan assembler mengikuti klaim field 4-bit, karena itulah yang
+benar-benar dienkode setiap opcode di repositori ini. R16/R17 dulu bisa
+ditulis di teks `.hasm` dan dialiaskan diam-diam ke R0/R1 (assembler memangkas
+dengan `& 0xF`, bukan memeriksa); assembler sekarang menolaknya, dengan
+kutipan kedua bagian buku dalam pesan galatnya. Lihat komentar `MAX_GPR` di
+`src/hijaiyyah/hisa/assembler.py`.
+
+**Catatan sejarah:** alasan buku memilih 18 tercatat di §IIIJ.3.3.1 — "agar
+setiap komponen codex 18D dapat dimuat ke register individual jika
+diperlukan." Alasan itu sah; field 4-bit yang dipesan di §IIIF.3.3.1 tidak
+pernah bisa mewujudkannya.
 
 ### 4.2 Codex Registers (H-Reg)
 
@@ -236,8 +248,11 @@ Akses ke komponen individual dilakukan melalui instruksi
 | R0 | return value / accumulator |
 | R1–R5 | argument passing |
 | R6–R15 | caller-saved temporaries |
-| R16 | frame pointer (opsional) |
-| R17 | link register (return address) |
+
+R16 (frame pointer) dan R17 (link register) ada di rencana buku, bukan di
+mesin ini — lihat §4.1. `CALL`/`RET` (0x2E/0x2F) yang sekarang membawa peran
+"tautan" itu memakai stack alamat-kembali khusus di perangkat keras, bukan
+sebuah register bernama, persis karena R17 tidak bisa dialamatkan.
 | H0 | primary codex operand |
 | H1 | secondary codex operand |
 | H2 | codex result |
@@ -1091,7 +1106,7 @@ label:
 
 | Tipe | Syntax | Contoh |
 |---|---|---|
-| GPR | `R0`–`R17` | `R3` |
+| GPR | `R0`–`R15` | `R3` |
 | H-Reg | `H0`–`H3` | `H0` |
 | Immediate | `#value` | `#42`, `#0xFF` |
 | Label | `name` | `loop:` |

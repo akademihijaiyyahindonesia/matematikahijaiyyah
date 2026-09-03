@@ -26,8 +26,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io \
-        sim_letters sim_subroutine sim_syscall_io sim_subroutine clean
+     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race \
+        sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_subroutine clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -38,7 +38,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io
+     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -108,6 +108,16 @@ syscall_io.hex: $(RTL_DIR)/programs/syscall_io.hasm
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
 
 tb_hcpu_syscall_io.vvp: $(TB_DIR)/tb_hcpu_syscall_io.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+# A taken branch and a maskable interrupt resolving the same Execute cycle.
+# Direct hcpu_top instantiation, like tb_hcpu_top.v -- this is about the wire
+# between Execute's branch resolution and the trap unit's own input, not
+# about the board wrapper.
+sim_branch_trap_race: tb_hcpu_branch_trap_race.vvp
+	$(VVP) $<
+
+tb_hcpu_branch_trap_race.vvp: $(TB_DIR)/tb_hcpu_branch_trap_race.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
 tb_hcpu_subroutine.vvp: $(TB_DIR)/tb_hcpu_subroutine.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
