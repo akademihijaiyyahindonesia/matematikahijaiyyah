@@ -14,7 +14,26 @@ Dua celah, dan **keduanya bukan hal yang sama.**
 
 ---
 
-## H* memang celah
+## H* bukan celah — ia di luar domainnya
+
+**Koreksi.** Halaman ini sebelumnya menyebut H* "memang celah". Buku
+mendefinisikannya, ID.1.3 hal. 74:
+
+```
+  H* : ℋ₂₈ → {0,1}        H*(ك) = 1,   H*(h) = 0  ∀h ≠ ك
+```
+
+**H\* adalah fungsi indikator untuk fitur NON-GEOMETRIS** — marker hamzah,
+berlabel [DP]. Tak ada kendala geometris yang bisa mengikatnya **karena ia
+bukan geometri.** Berada di luar domain guard bukan hal yang sama dengan
+menjadi lubang di dalamnya.
+
+Dan itu menjelaskan relasi `H* = Ka` yang dikembalikan ruang nol: Kaf satu-
+satunya huruf dengan `Ka > 0`, jadi kedua kolom indikator itu berimpit.
+
+Sisa bagian ini tetap berlaku — hanya kerangkanya yang salah.
+
+## Yang terukur tentang H*
 
 Indeks 17 tidak muncul di guard mana pun — `vec[17]` **nol kemunculan** di
 `guards.py`. Setiap korupsinya lolos.
