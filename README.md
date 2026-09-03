@@ -255,7 +255,8 @@ Dinyatakan apa adanya, dengan label epistemik.
 | HCPU sintesis | Berjalan; lihat catatan di bawah | `CC` |
 | Target ASIC | Belum ada pemetaan sel standar | `EH` |
 | Realisasi fotonik | DoF individual terdemonstrasi | `EH` |
-| HOS, HFS, H-Kernel | Terancang | `AT` |
+| H-Kernel | Dua proses, dipreempt, register privat; `rtl/programs/kernel.hasm` | `CC` |
+| HOS, HFS | Terancang | `AT` |
 
 ### Catatan sintesis
 
