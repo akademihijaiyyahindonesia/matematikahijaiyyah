@@ -8,7 +8,6 @@ distinction it turns on is real: LINEAR INDEPENDENCE IS NOT INJECTIVITY.
 """
 from __future__ import annotations
 
-import re
 from fractions import Fraction
 from pathlib import Path
 
