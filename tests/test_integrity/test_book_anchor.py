@@ -508,12 +508,25 @@ def test_rom_carries_the_sealed_letter(row: Row) -> None:
 #  Page 41 — §IA.1.1, the formal definition
 # ══════════════════════════════════════════════════════════════════
 
-PAGE_41 = (ROOT / "Matematika Hijaiyyah"
-           / "Buku Matematika Hijaiyyah Edisi v.1.1.1 @2026 HMCL" / "41.pdf")
+# The book directory is gitignored, so nothing here can pin its name. It was
+# renamed once mid-session and these tests failed with a FileNotFoundError,
+# which read like data loss until it turned out to be a rename. Search for it
+# instead of hard-coding a path, and skip cleanly when it is simply absent --
+# a checkout without the book is a normal state, not a broken one.
+def _find_page(number: int) -> Path | None:
+    for parent in ROOT.glob("*Matematika Hijaiyyah*"):
+        for pdf in parent.rglob(f"{number}.pdf"):
+            return pdf
+    return None
+
+
+PAGE_41 = _find_page(41)
 
 
 def _page_41_text() -> str:
     pymupdf = pytest.importorskip("pymupdf")
+    if PAGE_41 is None:
+        pytest.skip("the book PDFs are not in this checkout")
     with pymupdf.open(PAGE_41) as doc:
         return "\n".join(page.get_text() for page in doc)
 

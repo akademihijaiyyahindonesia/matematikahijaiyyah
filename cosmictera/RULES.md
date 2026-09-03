@@ -70,8 +70,8 @@ dengan **sengaja merusak** apa yang ia jaga dan memastikan ia menyala.
 Dan asersi pada angka harus **memparse tempatnya, bukan mencari di berkas**.
 Angka yang muncul dua kali — di tabel dan di prosa sebelahnya — membuat
 pencarian substring lolos sementara tabelnya berbohong. Lubang ini muncul
-**empat kali** di sesi yang sama: pada biaya, pada geometri, pada hitungan
-opcode, dan pada periode Jim. Setiap kali sabotase yang menemukannya, bukan
+**lima kali** di sesi yang sama: pada biaya, pada geometri, pada hitungan
+opcode, pada periode Jim, dan pada identitas 622 = 2×310 di jejak Ka'bah. Setiap kali sabotase yang menemukannya, bukan
 pembacaan ulang.
 
 Dan penjaganya harus **hash berkas, bukan hitungan kemunculan**. Hitungan

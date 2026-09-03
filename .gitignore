@@ -49,7 +49,10 @@ rtl/mpw/hcpu_synth_netlist.v
 # Naskah buku, dokumen paten, dan proposal — TIDAK dipublikasikan.
 # Repo ini publik (GitHub Pages di hybit.tech), jadi isi folder ini sengaja
 # ditahan di lokal. Cadangkan sendiri; git tidak menyimpannya.
+# Renamed from 'Matematika Hijaiyyah/'. Both spellings stay ignored so a
+# checkout with either name does not offer 25 MB of PDFs to git.
 Matematika Hijaiyyah/
+Buku Matematika Hijaiyyah/
 
 # Coverage report emitted by the CI pytest invocation
 coverage.xml
