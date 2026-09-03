@@ -1,15 +1,20 @@
 """
-Place and route, and the end of the longest-standing [EH] in the project.
+Place and route: the design no longer fits, and how that went unnoticed.
 
-Every per-second figure here carried "if it closes at 27 MHz" because nobody
-had run place-and-route -- the tools were not installed. They are now, and it
-has been run: yosys -> nextpnr-himbaechel -> gowin_pack, producing a bitstream.
+Fmax was measured once, honestly, and the [EH] on it was retired. Five commits
+later the design is 159% of the board's LUT4 and nextpnr stops with "no BELs
+remaining". Nothing caught it, and the reason is worth keeping: the test that
+guarded the numbers compared the header's text against constants retyped here.
+Both are transcriptions. When the DESIGN changed, neither moved, so the guard
+went on passing while the thing it described became false.
 
-Fmax is 90.14 MHz against the board's 27 MHz crystal. That resolves the clock
-assumption FOR THE HCPU. It does not resolve it for hijaiyyah_kabah_top, which
-is a different design with no board wrapper -- and cannot have one until its
-interface narrows, because it presents 1,665 port bits to a device with 276
-IOB. Keeping those two apart is the point of this file.
+Numbers about a design have to be tied to that design. So the header now
+carries a hash of the RTL it was measured from, and the check below recomputes
+it. Change any source file and this fails, asking for a fresh run -- which is
+the one thing a retyped constant can never do.
+
+The Kabah top is still unmeasured for its own separate reason: 1,665 port bits
+against 276 IOB. Keeping the two apart is still the point of this file.
 """
 from __future__ import annotations
 
@@ -23,13 +28,39 @@ ROOT = Path(__file__).resolve().parents[2]
 GOWIN = ROOT / "rtl" / "fpga" / "gowin"
 WRAPPER = (GOWIN / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 
-# What place-and-route reported. Retyped here on purpose: this is a record of a
-# run, not a derivation, and it must not drift silently when the design changes.
-FMAX_MHZ = 90.14
 CRYSTAL_MHZ = 27.0
-UTILISATION = {"LUT4": (6746, 8640), "MUX2_LUT5": (714, 4320),
-               "ALU": (1544, 6480), "DFF": (1719, 6480),
-               "BSRAM": (4, 26), "IOB": (10, 276)}
+
+# What place and route reported at THIS commit. It fails, so there is no Fmax.
+UTILISATION = {"LUT4": (13805, 8640), "DFF": (4410, 6480), "BSRAM": (17, 26)}
+
+# The commit the fitting result was taken from, re-run to confirm it still
+# reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.
+LAST_FITTING = "096e392"
+FIRST_FAILING = "348e9c6"
+
+FP_MARK = "// RTL FINGERPRINT: "
+FINGERPRINTED = sorted((ROOT / "rtl").glob("*.v")) + sorted((ROOT / "rtl").glob("*.vh")) + [
+    GOWIN / "hcpu_gowin_top.v",
+    GOWIN / "hcpu_gowin.cst",
+]
+
+
+def _fingerprint() -> str:
+    """A hash of the sources the recorded run was made from.
+
+    The wrapper carries the recorded hash in a comment, so that one line is
+    skipped -- a record cannot hash itself.
+    """
+    import hashlib
+
+    h = hashlib.sha256()
+    for f in FINGERPRINTED:
+        h.update(f.name.encode())
+        for line in f.read_text(encoding="utf-8").splitlines(keepends=True):
+            if line.startswith(FP_MARK):
+                continue
+            h.update(line.encode())
+    return h.hexdigest()
 
 
 def _routed_table() -> dict[str, tuple[int, int]]:
@@ -49,23 +80,51 @@ def _routed_table() -> dict[str, tuple[int, int]]:
     return {n: (int(u.replace(",", "")), int(t.replace(",", ""))) for n, u, t in rows}
 
 
+def test_the_recorded_numbers_belong_to_this_rtl() -> None:
+    """The guard the old one could not be. A retyped constant agrees with a
+    retyped header no matter what the design does; a hash does not."""
+    recorded = re.search(rf"^{re.escape(FP_MARK)}([0-9a-f]{{64}})$", WRAPPER, re.M)
+    assert recorded, "the wrapper no longer records an RTL fingerprint"
+    assert recorded.group(1) == _fingerprint(), (
+        "the RTL has changed since place and route was last run, so the "
+        "numbers in hcpu_gowin_top.v no longer describe this design. Re-run "
+        "`make -C rtl/fpga/gowin hcpu_gowin_top_pnr.json`, put the new figures "
+        "in the header, and restamp the fingerprint."
+    )
+
+
 def test_the_wrapper_header_records_the_routed_result() -> None:
     assert _routed_table() == UTILISATION
 
-    # The Fmax line in the routed block, not any mention of the number.
-    line = re.search(r"^//\s+Fmax\s+([\d.]+) MHz", WRAPPER, re.M)
-    assert line and float(line.group(1)) == FMAX_MHZ
+
+def test_the_header_does_not_claim_an_fmax_it_could_not_measure() -> None:
+    """Routing never completes, so no timing report exists. A number here
+    would be carried over from a design that no longer exists."""
+    assert not re.search(r"^//\s+Fmax\s+[\d.]+ MHz", WRAPPER, re.M)
+    assert "Fmax        unmeasured" in WRAPPER
+    assert "[EH] on Fmax is back" in WRAPPER
 
 
-def test_the_margin_over_the_board_crystal_is_stated_and_real() -> None:
-    margin = FMAX_MHZ / CRYSTAL_MHZ
-    assert margin > 3.0
-    assert f"{margin:.2f}x" in WRAPPER
-    # And it has to fit, which is a separate question from closing timing.
+def test_the_design_does_not_fit_and_says_so() -> None:
     table = _routed_table()
-    for name, (used, total) in table.items():
-        assert used <= total, name
-    assert table["LUT4"][0] / table["LUT4"][1] < 0.90
+    assert table["LUT4"][0] > table["LUT4"][1], (
+        "LUT4 fits again -- re-measure and rewrite this file to match"
+    )
+    assert "PLACE AND ROUTE FAILS AT THIS COMMIT" in WRAPPER
+    assert "no BELs remaining" in WRAPPER
+
+
+def test_the_growth_is_attributed_to_the_commit_that_caused_it() -> None:
+    """One commit doubled it. Naming it is what makes the record actionable
+    rather than just bad news."""
+    assert LAST_FITTING in WRAPPER and FIRST_FAILING in WRAPPER
+    assert "the loader's write port" in WRAPPER
+    fits = re.findall(r"^//\s+([0-9a-f]{7})\s+.+?\s+([\d,]+)\s+\d+%\s+(fits|FAILS)",
+                      WRAPPER, re.M)
+    assert len(fits) == 6, f"the bisection table lost rows: {fits}"
+    verdicts = dict((c, v) for c, _, v in fits)
+    assert verdicts[LAST_FITTING] == "fits"
+    assert verdicts[FIRST_FAILING] == "FAILS"
 
 
 def test_the_kabah_top_is_still_unmeasured_and_the_reason_is_recorded() -> None:

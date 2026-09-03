@@ -112,7 +112,15 @@ module hcpu_decode (
     //   3. LOAD flows from decode → EX (because decode runs, not stalled)
     //   4. Next cycle: ADD enters decode, LOAD at EX → MEM, no stall
     //   5. ADD enters EX, LOAD at MEM → MEM forwarding supplies result
-    assign load_use_hazard = id_mem_read && (id_dst != 0) &&
+    //
+    // POP counts as a load. It writes a register from memory with exactly the
+    // LOAD's latency, but the condition tested `id_mem_read`, which only
+    // OP_LOAD sets -- so `POP Rn` followed by a use of Rn read the previous
+    // value. And `id_dst != 0` was a zero-register assumption this ISA does
+    // not have: R0 is an ordinary register here, MOVI R0, 7 puts 7 in R0.
+    // Exempting it meant the one hazard pattern a context switch is built out
+    // of -- pop a register, store it -- was the one pattern with no interlock.
+    assign load_use_hazard = (id_mem_read || id_is_pop) &&
                              ((id_uses_s1 && (s1 == id_dst)) ||
                               (id_uses_s2 && (s2 == id_dst)));
 

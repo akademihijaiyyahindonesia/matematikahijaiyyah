@@ -1,0 +1,13 @@
+; payload.hasm — the three words tb_gowin_loader sends down the wire.
+;
+; Small on purpose. The boot path is what is under test, not the program: if
+; three words arrive at 64, 65 and 66 and then run, the wire format, the write
+; port and the address auto-advance are all proved at once. Anything longer
+; would only add ways for the test to fail for reasons that are not the boot
+; path's fault.
+;
+; The bench pins the encodings (0x0490002a, 0x04a00007, 0x01000000), so this
+; file and that expectation have to be read together.
+        MOVI  R9, 42
+        MOVI  R10, 7
+        HALT

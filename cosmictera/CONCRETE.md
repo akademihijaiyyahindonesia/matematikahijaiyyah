@@ -149,16 +149,32 @@ yosys 0.68 → nextpnr‑himbaechel 0.11.1 → gowin_pack, GW1NR‑LV9QN88PC6/I5
 
 | Sumber daya | Terpakai | Kapasitas | % |
 |---|---:|---:|---:|
-| LUT4 | 6.746 | 8.640 | **78%** |
-| MUX2_LUT5 | 714 | 4.320 | 16% |
-| ALU | 1.544 | 6.480 | 23% |
-| DFF | 1.719 | 6.480 | 26% |
-| BSRAM | 4 | 26 | 15% |
-| IOB | 10 | 276 | 3% |
+| LUT4 | 13.805 | 8.640 | **159% — tidak muat** |
+| DFF | 4.410 | 6.480 | 68% |
+| BSRAM | 17 | 26 | 65% |
 
-**Fmax 90,14 MHz** terhadap kristal papan 27 MHz — **margin 3,34×**. Setiap durasi
-yang selama ini berskala terbalik terhadap angka tak dikenal sekarang bisa
-dinyatakan, **untuk HCPU**.
+**Tidak ada Fmax.** Routing berhenti pada `no BELs remaining to implement cell
+type 'LUT4'`, jadi tidak ada laporan timing untuk dikutip. Angka per detik untuk
+HCPU membawa asumsi lagi.
+
+Angka 78% / 90,14 MHz di bawah ini jujur ketika ditulis, dan masih tereproduksi
+pada komitnya (`ae83fd2` → 6.753 LUT4, 78%, Fmax 97,94 MHz). Yang terjadi adalah
+lima komit mendarat sesudahnya dan tak satu pun menjalankan ulang place-and-route:
+
+| komit | | LUT4 | |
+|---|---|---:|---|
+| `ae83fd2` | perkakas dan bitstream pertama | 6.753 (78%) | muat |
+| `096e392` | mode supervisor | 6.740 (78%) | muat |
+| `348e9c6` | **jalur boot** | **13.644 (157%)** | **gagal** |
+| `e5bd781` | satu huruf satu instruksi | 13.710 (158%) | gagal |
+| `a606ed5` | proteksi memori | 13.800 (159%) | gagal |
+| `34ca28c` | syscall | 13.817 (159%) | gagal |
+
+Satu komit yang melakukannya. Jalur boot menambahkan port tulis loader ke memori
+instruksi — tiga baris — dan itu mengubah larik hanya-baca menjadi memori
+baca-tulis: BSRAM 4 → 17, dan sisanya jatuh ke fabric, **+5.015 LUT4 dan +2.666
+DFF**. Jembatannya nyata dan testbench-nya lulus; **biayanya yang tidak pernah
+diukur**.
 
 `-nodsp` wajib, dan sebabnya packer bukan desain: `synth_gowin` menyimpulkan
 `MULT9X9` dari perkalian di norma kuadrat `hcpu_codex_alu`, nextpnr menempatkannya
@@ -223,7 +239,7 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 |---|---|---|
 | Spons tahan kriptanalisis | **EH** | terukur, belum dikriptanalisis |
 | Fmax Kabah top | **EH** | 1.665 bit port vs 276 IOB — butuh wrapper sebelum bisa ditempatkan |
-| ~~Fmax HCPU~~ | **CC** | **terukur 90,14 MHz**, margin 3,34× atas 27 MHz |
+| Fmax HCPU | **EH** | pernah 90,14 MHz pada `ae83fd2`; HEAD 159% LUT4, routing tidak selesai |
 | FIFO akan memberi 8,00 clock/byte | **EH** | belum dibangun |
 | Skala tera node‑hertz | **AT** | terukur 43,72 giga; butuh 22,9× |
 | Kerahasiaan | — | **ditolak** — pakai AES‑256‑GCM |

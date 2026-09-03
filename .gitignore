@@ -46,6 +46,14 @@ rtl/mpw/hcpu_synth_netlist.v
 *.vcd
 *.vvp
 
+# Program images the tb Makefile builds from .hasm. Named one by one: most of
+# the .hex files beside them are checked-in test vectors, so a blanket *.hex
+# would ignore the inputs the benches are validated against.
+rtl/tb/program.hex
+rtl/tb/loader.hex
+rtl/tb/kernel.hex
+rtl/tb/payload.txt
+
 # Naskah buku, dokumen paten, dan proposal — TIDAK dipublikasikan.
 # Repo ini publik (GitHub Pages di hybit.tech), jadi isi folder ini sengaja
 # ditahan di lokal. Cadangkan sendiri; git tidak menyimpannya.

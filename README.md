@@ -11,7 +11,7 @@ beserta aljabar, validasi intrinsik, dan arsitektur komputasinya.**
 [![Segel](https://img.shields.io/badge/SHA--256-f82d3859…-8A6714)](#reproduksibilitas)
 [![Test](https://img.shields.io/badge/test-1649%20passed-116B50)](docs/TEST_REPORT.md)
 [![Kerangka verifikasi](https://img.shields.io/badge/verifikasi-1380%20checks-116B50)](#verifikasi)
-[![RTL](https://img.shields.io/badge/RTL-204%20assertions-116B50)](rtl/)
+[![RTL](https://img.shields.io/badge/RTL-219%20assertions-116B50)](rtl/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB)](pyproject.toml)
 [![Lisensi](https://img.shields.io/badge/lisensi-proprietary-A0292A)](LICENSE)
 
@@ -142,11 +142,16 @@ ruff check src/
 **Perangkat keras** (perlu Icarus Verilog):
 
 ```bash
-for tb in tb_guard tb_rom tb_codex_alu tb_hisab tb_hcpu_top; do
-  iverilog -g2012 -I rtl -o /tmp/$tb.vvp rtl/tb/$tb.v rtl/*.v && vvp /tmp/$tb.vvp
-done
-# 207 assertions, 0 gagal
+make -C rtl/tb all
+# 219 assertion, 0 gagal, di dua belas testbench
 ```
+
+Perintahnya satu baris karena daftar testbench dulu ditulis tangan di sini dan
+di `rtl/tb/Makefile`, dan enam bench — termasuk `tb_hcpu_trap`, yang menopang
+trap, mode supervisor, proteksi memori dan syscall — tidak pernah punya target
+sama sekali. Angka 219 adalah jumlah yang dilaporkan bench yang mencacah
+sendiri; empat bench unit (`trap`, `mmio`, `timer`, `uart_rx`) melapor lulus
+atau gagal tanpa cacah, jadi tidak ikut dijumlahkan.
 
 **Sintesis** (perlu Yosys):
 
@@ -246,7 +251,7 @@ Dinyatakan apa adanya, dengan label epistemik.
 | Metrik-vektorial (Bab II) | 683 pemeriksaan, 0 gagal | `VF+CC` |
 | Struktur monoid terkendala | Closure dibuktikan secara aljabar | `VF` |
 | HVM, HC, HCC, HASM | Operasional | `CC` |
-| HCPU RTL | 207 assertion simulasi, 0 gagal | `CC` |
+| HCPU RTL | 219 assertion simulasi, 0 gagal, dua belas bench | `CC` |
 | HCPU sintesis | Berjalan; lihat catatan di bawah | `CC` |
 | Target ASIC | Belum ada pemetaan sel standar | `EH` |
 | Realisasi fotonik | DoF individual terdemonstrasi | `EH` |

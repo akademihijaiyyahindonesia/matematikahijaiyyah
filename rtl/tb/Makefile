@@ -24,9 +24,18 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 # ── Simulation targets ──────────────────────────────────────────
 
-.PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top clean
+.PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
+        sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader clean
 
-all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top
+# Six of these benches existed with no target at all: tb_hcpu_trap,
+# tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
+# tb_gowin_loader could only be run by hand. RTL_SRC was already fixed to glob
+# rather than list, for exactly this reason -- but the LIST OF BENCHES was
+# still hand-written, so the trap unit's own bench was unreachable from `make`
+# while traps, supervisor mode, memory protection and syscall were all built
+# on top of it.
+all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
+     sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -69,4 +78,53 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd
+	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex
+
+# ── H-Kernel on the full pipeline ───────────────────────────────
+# The board wrapper, not hcpu_top, because the wrapper is what holds the
+# instruction memory the kernel is baked into.
+sim_kernel: tb_hcpu_kernel.vvp kernel.hex
+	$(VVP) $<
+
+kernel.hex: $(RTL_DIR)/programs/kernel.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+tb_hcpu_kernel.vvp: $(TB_DIR)/tb_hcpu_kernel.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+# ── unit benches ────────────────────────────────────────────────
+sim_trap: tb_hcpu_trap.vvp
+	$(VVP) $<
+sim_mmio: tb_hcpu_mmio.vvp
+	$(VVP) $<
+sim_timer: tb_hcpu_timer.vvp
+	$(VVP) $<
+sim_uart_rx: tb_hcpu_uart_rx.vvp
+	$(VVP) $<
+
+tb_hcpu_trap.vvp tb_hcpu_mmio.vvp tb_hcpu_timer.vvp tb_hcpu_uart_rx.vvp: \
+  tb_%.vvp: $(TB_DIR)/tb_%.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+# ── board benches ───────────────────────────────────────────────
+sim_board: tb_gowin_top.vvp program.hex
+	$(VVP) $<
+sim_loader: tb_gowin_loader.vvp loader.hex payload.txt
+	$(VVP) $<
+
+tb_gowin_top.vvp tb_gowin_loader.vvp: tb_%.vvp: \
+  $(TB_DIR)/tb_%.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+program.hex: $(RTL_DIR)/programs/test_bsm.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+loader.hex: $(RTL_DIR)/programs/loader.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+# The loader's input is a BYTE stream, not a word image, so it goes through
+# send_program.py -- the same host tool a board would be fed from -- and then
+# into the one-byte-per-token form $readmemh reads. Without this rule the
+# bench could not run from a clean checkout at all: nothing produced its input.
+payload.txt: $(RTL_DIR)/programs/payload.hasm
+	python3 $(RTL_DIR)/scripts/send_program.py $< | od -An -v -tx1 | tr -s ' ' '\n' | grep . > $@

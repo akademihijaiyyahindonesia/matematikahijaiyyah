@@ -91,6 +91,11 @@ menggagalkan tes.
   keamanan yang bertumpu padanya.
 - **Lapis 4 ditolak.** Untuk kerahasiaan, pakai AES‑256‑GCM dari pustaka
   teruji.
-- **Fmax HCPU terukur: 90,14 MHz** (place-and-routed, 3 September 2026) — margin
-  3,34× atas kristal 27 MHz papan. **Fmax Kabah top masih [EH]**: antarmukanya
-  1.665 bit port melawan 276 IOB, jadi ia butuh wrapper sebelum bisa ditempatkan.
+- **Fmax HCPU kembali [EH].** Ia pernah terukur 90,14 MHz pada `ae83fd2`, dan
+  angka itu masih tereproduksi di komit tersebut. Tapi lima komit sesudahnya
+  mengubah RTL tanpa menjalankan ulang place-and-route, dan pada HEAD desainnya
+  **159% dari LUT4 papan — routing tidak selesai**, jadi tidak ada laporan
+  timing sama sekali. Penyebabnya satu komit: jalur boot (`348e9c6`) menambah
+  port tulis loader ke memori instruksi, dan itu menaikkan LUT4 dari 6.740 ke
+  13.644. **Fmax Kabah top masih [EH]** karena sebab lain: 1.665 bit port
+  melawan 276 IOB.

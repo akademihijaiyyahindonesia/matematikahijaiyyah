@@ -112,9 +112,13 @@ def test_the_rtl_assertion_count_is_quoted_correctly() -> None:
     assert match, "§10.1.3 no longer quotes an assertion count"
 
     quoted = int(match.group(1))
+    # Every counting bench is named. Adding one means adding it here too --
+    # deliberately, because a pattern loose enough to absorb a new bench
+    # silently is a pattern that cannot notice when one stops reporting.
     breakdown = re.search(
         r"ROM (\d+), Guard (\d+), Codex ALU (\d+), HISAB (\d+), "
-        r"integrasi _top-level_ (\d+)",
+        r"integrasi _top-level_ (\d+), wrapper papan (\d+), "
+        r"boot lewat kabel (\d+), H-Kernel (\d+)",
         text,
     )
     assert breakdown, "the per-testbench breakdown is missing"

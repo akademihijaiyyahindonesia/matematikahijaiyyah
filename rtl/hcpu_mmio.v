@@ -171,7 +171,20 @@ module hcpu_mmio #(
     end
 
     // ── trap register access ────────────────────────────────────
-    wire is_trap_reg = (reg_sel >= `REG_TRAP_VECTOR) && (reg_sel <= `REG_TRAP_PENDING);
+    // Named one by one, not as a range. The range was `>= REG_TRAP_VECTOR &&
+    // <= REG_TRAP_PENDING`, which silently excluded REG_TRAP_MODE when that
+    // register was added at 0xD -- one past the top of the range. The trap
+    // unit implemented the register, the decoder never routed it, and nothing
+    // caught it: tb_hcpu_trap drives the trap unit directly and the Python
+    // machine decodes the address itself, so both sides agreed with the spec
+    // while the path between them was missing. A range over an enum admits
+    // only what existed when it was written.
+    wire is_trap_reg = (reg_sel == `REG_TRAP_VECTOR)
+                    || (reg_sel == `REG_TRAP_EPC)
+                    || (reg_sel == `REG_TRAP_CAUSE)
+                    || (reg_sel == `REG_TRAP_ENABLE)
+                    || (reg_sel == `REG_TRAP_PENDING)
+                    || (reg_sel == `REG_TRAP_MODE);
     assign trap_reg_we    = we & is_periph & is_trap_reg;
     assign trap_reg_sel   = reg_sel;
     assign trap_reg_wdata = wdata;
@@ -230,7 +243,8 @@ module hcpu_mmio #(
                 `REG_TRAP_EPC,
                 `REG_TRAP_CAUSE,
                 `REG_TRAP_ENABLE,
-                `REG_TRAP_PENDING: periph_rdata <= trap_reg_rdata;
+                `REG_TRAP_PENDING,
+                `REG_TRAP_MODE:    periph_rdata <= trap_reg_rdata;
                 `REG_IMEM_ADDR:    periph_rdata <= {{(`XLEN-`CODE_ADDR_W){1'b0}},
                                                    imem_waddr};
                 `REG_MEM_BASE:     periph_rdata <= {{(`XLEN-`DATA_ADDR_W){1'b0}},

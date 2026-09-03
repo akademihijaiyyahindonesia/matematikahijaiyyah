@@ -1,0 +1,284 @@
+; kernel.hasm — H-Kernel: two processes, preempted, each with its own registers.
+;
+; The book lists H-Kernel as "terdesain". This is the build. It needs no new
+; hardware: every piece it stands on was put there by the six prerequisites,
+; and the one thing a context switch cannot do without — a writable epc —
+; already existed because traps were made to nest.
+;
+; ── the problem a context switch has to solve ────────────────────
+; The handler starts running with the register file still holding the user's
+; values. Saving them needs a base register, and setting up a base register
+; destroys the value it was meant to save. There is no zero register here:
+; MOVI R0, 7 puts 7 in R0.
+;
+; PUSH is the way out. It takes no base — the stack pointer lives in hardware,
+; not in a GPR — so eighteen pushes get the whole file off the CPU without
+; touching any of it. After that every register is free scratch, and the saved
+; values can be moved from the stack into the process block at leisure.
+;
+; ── memory map ──────────────────────────────────────────────────
+;   0x100-0x1FF  process A's window        0x200-0x2FF  process B's window
+;   0xF00        current pid              0xF01        ticks taken
+;   0xF10        PCB[0]                   0xF30        PCB[1]
+;
+; PCB layout, in words from its base:
+;   +0..+17  R0..R17        +18  pc        +19  mem_base   +20  mem_limit
+;
+; ── the two causes arrive differently ───────────────────────────
+; A timer interrupt (cause 0) leaves epc at the NEXT instruction: resuming
+; there is correct. A syscall (cause 5) leaves epc AT the SYSCALL, because an
+; exception names its own instruction. Saving that unchanged would make the
+; process yield forever. So the kernel advances epc by one for cause 5 — that
+; single ADDI is what "serving the call" means here.
+;
+; ── the timer is one-shot, and armed last on purpose ────────────
+; `expired` is set by counter == compare, an equality rather than a threshold,
+; and writing COMPARE also clears it. So one store both acknowledges the
+; interrupt and sets the next deadline -- and WHERE that store sits decides
+; whether the kernel works at all. It is the last thing dispatch does before
+; handing the registers back, so the quantum is measured from the moment user
+; code resumes. See the note above it for what happened when it was first.
+
+boot:
+        MOVI  R5, 0
+        MOVI  R1, vector
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+
+; ── process A's block ───────────────────────────────────────────
+        MOVI  R7, 0xF10
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        STORE R1, R7, 16
+        STORE R1, R7, 17
+        MOVI  R1, procA
+        STORE R1, R7, 18
+        MOVI  R1, 0x100
+        STORE R1, R7, 19
+        MOVI  R1, 0x200
+        STORE R1, R7, 20
+
+; ── process B's block ───────────────────────────────────────────
+        MOVI  R7, 0xF30
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        STORE R1, R7, 16
+        STORE R1, R7, 17
+        MOVI  R1, procB
+        STORE R1, R7, 18
+        MOVI  R1, 0x200
+        STORE R1, R7, 19
+        MOVI  R1, 0x300
+        STORE R1, R7, 20
+
+        MOVI  R1, 0
+        STORE R1, R5, 0xF01     ; ticks = 0
+        MOVI  R1, 1
+        STORE R1, R5, 0xF00     ; pid = 1, so the first dispatch picks 0
+
+        MOVI  R1, 1
+        STORE R1, R5, 0xFFB     ; TRAP_ENABLE — timer. Syscall needs no bit:
+                                ; it is an exception, and exceptions cannot be
+                                ; masked. One bit buys preemption and yield.
+        JMP   dispatch
+
+; ── trap entry ──────────────────────────────────────────────────
+; Eighteen pushes before anything else. Nothing above this line may use a
+; register, because every register still belongs to the process.
+vector:
+        PUSH  R0
+        PUSH  R1
+        PUSH  R2
+        PUSH  R3
+        PUSH  R4
+        PUSH  R5
+        PUSH  R6
+        PUSH  R7
+        PUSH  R8
+        PUSH  R9
+        PUSH  R10
+        PUSH  R11
+        PUSH  R12
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+        PUSH  R16
+        PUSH  R17
+
+; From here every register is scratch: the values are all on the stack.
+        MOVI  R5, 0
+        LOAD  R6, R5, 0xF00
+        CMPI  R6, 0
+        JEQ   sv_a
+        MOVI  R7, 0xF30
+        JMP   sv_pc
+sv_a:   MOVI  R7, 0xF10
+
+sv_pc:  LOAD  R8, R5, 0xFF9     ; TRAP_EPC
+        LOAD  R9, R5, 0xFFA     ; TRAP_CAUSE
+        CMPI  R9, 5
+        JNE   sv_st
+        ADDI  R8, R8, 1         ; a syscall names its own instruction: serve it
+sv_st:  STORE R8, R7, 18
+
+; The stack gives them back newest first, so R17 comes off first. Only R0 is
+; used as the landing register, so R7 survives all eighteen stores.
+        POP   R0
+        STORE R0, R7, 17
+        POP   R0
+        STORE R0, R7, 16
+        POP   R0
+        STORE R0, R7, 15
+        POP   R0
+        STORE R0, R7, 14
+        POP   R0
+        STORE R0, R7, 13
+        POP   R0
+        STORE R0, R7, 12
+        POP   R0
+        STORE R0, R7, 11
+        POP   R0
+        STORE R0, R7, 10
+        POP   R0
+        STORE R0, R7, 9
+        POP   R0
+        STORE R0, R7, 8
+        POP   R0
+        STORE R0, R7, 7
+        POP   R0
+        STORE R0, R7, 6
+        POP   R0
+        STORE R0, R7, 5
+        POP   R0
+        STORE R0, R7, 4
+        POP   R0
+        STORE R0, R7, 3
+        POP   R0
+        STORE R0, R7, 2
+        POP   R0
+        STORE R0, R7, 1
+        POP   R0
+        STORE R0, R7, 0
+
+; ── dispatch ────────────────────────────────────────────────────
+; boot jumps straight in here, which is why there is no second copy of it.
+dispatch:
+        MOVI  R5, 0
+        LOAD  R9, R5, 0xF01
+        ADDI  R9, R9, 1
+        STORE R9, R5, 0xF01     ; ticks++
+
+        LOAD  R6, R5, 0xF00
+        CMPI  R6, 0
+        JEQ   dp_b
+        MOVI  R6, 0
+        JMP   dp_st
+dp_b:   MOVI  R6, 1
+dp_st:  STORE R6, R5, 0xF00
+
+        CMPI  R6, 0
+        JEQ   dg_a
+        MOVI  R7, 0xF30
+        JMP   dg_go
+dg_a:   MOVI  R7, 0xF10
+
+dg_go:  LOAD  R8, R7, 19
+        STORE R8, R5, 0xFFE     ; MEM_BASE  — the window moves with the process
+        LOAD  R8, R7, 20
+        STORE R8, R5, 0xFFF     ; MEM_LIMIT
+        LOAD  R8, R7, 18
+        STORE R8, R5, 0xFF9     ; TRAP_EPC  — this is the switch itself
+        MOVI  R8, 0
+        STORE R8, R5, 0xFFD     ; previous mode = USER
+
+; The deadline is set here, last, and that placement is the whole difference
+; between a kernel and a machine that interrupts itself. Armed at the top of
+; dispatch instead, the quantum expired while the handler was still saving
+; registers -- and boot reaches dispatch without a trap, so trap_active was 0
+; and nothing blocked it. The kernel trapped itself, wrote its own PC into a
+; process block as that process's pc, and from the next ERET onward "process
+; A" was executing kernel code: 175, 179, 177, 0, reboot.
+;
+; Measured from here the deadline is counted from when user code starts, not
+; from when the handler started, and only the eighteen restore loads and the
+; return stand between the two.
+;
+; 2047 and not 2048: the immediate is twelve bits SIGNED, so 2048 assembles to
+; -2048 and the deadline lands in the past. The assembler took it without a
+; word and the counter, being an equality, then never matched again -- the
+; timer simply stopped, and every process but the first starved.
+        LOAD  R1, R5, 0xFF4     ; COUNTER
+        ADDI  R1, R1, 2047      ; quantum — see below for why not 2048
+        STORE R1, R5, 0xFF5     ; COMPARE — acknowledges and re-arms at once
+
+; R7 is the pointer, so it is restored last, out of itself.
+        LOAD  R0, R7, 0
+        LOAD  R1, R7, 1
+        LOAD  R2, R7, 2
+        LOAD  R3, R7, 3
+        LOAD  R4, R7, 4
+        LOAD  R5, R7, 5
+        LOAD  R6, R7, 6
+        LOAD  R8, R7, 8
+        LOAD  R9, R7, 9
+        LOAD  R10, R7, 10
+        LOAD  R11, R7, 11
+        LOAD  R12, R7, 12
+        LOAD  R13, R7, 13
+        LOAD  R14, R7, 14
+        LOAD  R15, R7, 15
+        LOAD  R16, R7, 16
+        LOAD  R17, R7, 17
+        LOAD  R7, R7, 7
+        ERET
+
+; ── the two processes ───────────────────────────────────────────
+; Both count in R1. That is the point: if the switch did not save and restore
+; registers, one process would inherit the other's count. A counts by 1 and B
+; by 100, so the two sequences cannot be mistaken for each other — B's total
+; stays an exact multiple of 100 only if it never absorbed one of A's steps.
+;
+; A is preempted; B yields. That is deliberate: it puts both entry paths under
+; test. If the kernel did not advance epc for cause 5, B would re-execute its
+; own SYSCALL forever and its counter would stop at 100.
+procA:  MOVI  R1, 0
+        MOVI  R3, 0x100
+pa_lp:  ADDI  R1, R1, 1
+        STORE R1, R3, 0
+        JMP   pa_lp
+
+procB:  MOVI  R1, 0
+        MOVI  R3, 0x200
+pb_lp:  ADDI  R1, R1, 100
+        STORE R1, R3, 0
+        SYSCALL                 ; B gives the rest of its quantum back
+        JMP   pb_lp

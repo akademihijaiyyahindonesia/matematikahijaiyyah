@@ -36,23 +36,52 @@
 `include "hcpu_pkg.vh"
 
 // ============================================================================
-// PLACED AND ROUTED, 3 September 2026 -- and this is where Fmax stopped being
-// [EH]. Every per-second figure in this project carried "if it closes at
-// 27 MHz" because nobody had run place-and-route. Now it has been run:
-// yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW1NR-LV9QN88PC6/I5.
+// PLACE AND ROUTE FAILS AT THIS COMMIT. The design is 159% of the board's
+// LUT4 and nextpnr stops with "no BELs remaining to implement cell type
+// 'LUT4'". Measured 3 September 2026 with yosys 0.68 -> nextpnr-himbaechel
+// 0.11.1, GW1NR-LV9QN88PC6/I5:
 //
-//     LUT4        6,746 / 8,640    78%
-//     MUX2_LUT5     714 / 4,320    16%
-//     ALU         1,544 / 6,480    23%
-//     DFF         1,719 / 6,480    26%
-//     BSRAM           4 /    26    15%     <- the data RAM, not flip-flops
-//     IOB            10 /   276     3%
+//     LUT4       13,805 / 8,640   159%    <- does not fit
+//     DFF         4,410 / 6,480    68%
+//     BSRAM          17 /    26    65%
 //
-//     Fmax        90.14 MHz        board crystal 27 MHz -> 3.34x margin
+//     Fmax        unmeasured -- routing never completes, so there is no
+//                 timing report. The [EH] on Fmax is back.
 //
-// So 27 MHz is met with room, and the durations that scaled inversely with an
-// unknown can now be stated. THIS IS THE HCPU ONLY. hijaiyyah_kabah_top is a
-// different design with no board wrapper, and its Fmax is still unmeasured.
+// It used to fit, and the earlier numbers in this header were honest when
+// they were written. Re-running the commit they were taken from reproduces
+// them: ae83fd2 gives LUT4 6,753 (78%), Fmax 97.94 MHz. What happened is that
+// five commits landed afterwards and none of them re-ran place and route --
+// the same drift this file already recorded once for the cell count, repeated
+// for the routed result.
+//
+// Bisected, one synthesis run per commit:
+//
+//     ae83fd2  the toolchain and the first bitstream    6,753   78%   fits
+//     096e392  supervisor mode                          6,740   78%   fits
+//     348e9c6  the boot path                           13,644  157%   FAILS
+//     e5bd781  one letter is the whole instruction     13,710  158%   FAILS
+//     a606ed5  memory protection                       13,800  159%   FAILS
+//     34ca28c  syscall                                 13,817  159%   FAILS
+//
+// One commit did it. The boot path added the loader's write port to
+// instruction memory -- three lines, `if (imem_we) imem[imem_waddr] <= ...` --
+// and that turned a read-only initialised array into a read-write memory.
+// BSRAM went 4 -> 17 and the rest landed in fabric: +5,015 LUT4 and +2,666
+// DFF for a port that carries a program in from the wire. The bridge is real
+// and its testbench passes; what it costs had simply never been measured.
+//
+// So the board cannot be flashed from this commit, and the per-second figures
+// that were resolved by 90.14 MHz are unresolved again until either the
+// memory is inferred cleanly or the instruction memory is made smaller.
+//
+// RTL FINGERPRINT: cbb7370db3ea3798936e5e8945d078f021697abeb343498391a565ec6e4be741
+//
+// The numbers above are pinned to the RTL they describe by a hash of the
+// source, not by a date and not by whoever remembers to look. Change any
+// file in the fingerprint and tests/test_integrity/test_place_and_route.py
+// fails, saying to re-run place and route rather than letting the record and
+// the design drift apart again.
 //
 // -nodsp IS REQUIRED, and the reason is the packer rather than the design.
 // synth_gowin infers MULT9X9 from the multiplies in hcpu_codex_alu's squared
