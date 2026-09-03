@@ -273,6 +273,11 @@ module hcpu_decode (
                 // never run through the actual pipeline.
                 `OP_ERET:   ;
 
+                // SYSCALL likewise sets nothing up: the trap it raises is
+                // resolved in Execute. But it MUST be here, because default
+                // is HALT_ERR -- the same trap OP_ERET fell into.
+                `OP_SYSCALL: ;
+
                 default: begin
                     if (opcode >= `LETTER_OP_FIRST && opcode <= `LETTER_OP_LAST) begin
                         // A letter instruction. The ROM index is the opcode's

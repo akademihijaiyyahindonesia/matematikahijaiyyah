@@ -325,6 +325,16 @@ EXTENSIONS: Dict[str, int] = {
     # empty there, so nothing is displaced.
     "ERET": 0x08,
 
+    # ECALL, 0x09. The other half of the same absence: §IIIM.3.1 has no way to
+    # return from an interrupt because it has no interrupts, and no way to
+    # ASK for one either. Without it a user program cannot reach the
+    # supervisor at all -- every peripheral is refused and there is no
+    # sanctioned crossing, so the boundary is a wall rather than a door.
+    #
+    # No operand field. The call number and arguments travel in registers by
+    # convention, so the ABI can be changed without touching the encoding.
+    "SYSCALL": 0x09,
+
     # Bitwise and shift, 0xB0-0xBA. §IIIM.3.1 freezes 28 opcodes and not one
     # of them touches a bit: no AND, no OR, no XOR, no NOT, no shift, no
     # divide, no modulo. The gap was already recorded in this file when CGET

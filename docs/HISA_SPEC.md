@@ -399,7 +399,7 @@ memicu `HALT_ERR` (0xFF).
 | 0x04 | `MOVI` | I | ✅ | `DST ← IMM` |
 | 0x06 | `HNRM2` | C | ✅ | `GPR[DST] ← ‖v₁₄(H[S1])‖²` |
 | 0x07 | `HDIST` | C | ✅ | `GPR[DST] ← ‖H[S1] − H[S2]‖²₁₄` |
-| 0x09 | `SYSCALL` | I | — | System call IMM |
+| 0x09 | `SYSCALL` | — | ✅ | Trap disengaja: minta layanan supervisor (cause 5). Operand `—`, bukan `I`: handler tak bisa membaca immediate — memori instruksi Harvard dan hanya-tulis dari sisi CPU, dan keenam belas slot periferal sudah terpakai. Nomor panggilan lewat register. |
 | 0x05, 0x08, 0x0A–0x0F | — | — | — | Reserved |
 
 > **Perubahan v1.0.** `PUSH` dan `POP` sebelumnya tercantum di 0x05/0x06 dan

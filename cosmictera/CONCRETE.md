@@ -193,10 +193,10 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 | Marjin ronde | 27,4× di bawah periode | 768 / 28 |
 | Deserialiser | 8 clock/byte | `kabah.DESERIAL_CLOCKS_PER_BYTE` |
 | Lapis otoritatif | 3 | `kabah.AUTHORITATIVE_LAYER` |
-| Opcode H‑ISA | 95 terdefinisi | `program.defined_opcodes()` |
-| Opcode berencoding RTL | 73 | `OP_*` di `rtl/` |
+| Opcode H‑ISA | 96 terdefinisi | `program.defined_opcodes()` |
+| Opcode berencoding RTL | 74 | `OP_*` di `rtl/` |
 | Instruksi huruf | 28 (0xE0–0xFB) | satu huruf, tanpa operand |
-| Penyebab trap | 3 terdefinisi, 2 bersumber | `TRAP_CAUSES` di `hcpu_pkg.vh` |
+| Penyebab trap | 6 terdefinisi, 5 bersumber | `TRAP_CAUSES` di `hcpu_pkg.vh` |
 | Pola sumber sistem | 12 | `program.SYSTEM_PATTERNS` |
 | Produk build dikecualikan | 5 | `program.BUILD_PRODUCTS` |
 

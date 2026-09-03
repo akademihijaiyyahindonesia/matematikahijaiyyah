@@ -95,6 +95,7 @@ class HISAMachine:
         self.mem_base: int = 0
         self.mem_limit: int = 0xFFF
         self._mem_fault: bool = False
+        self._syscall: bool = False
         self.trace: List[TraceEntry] = []
         self.cycle: int = 0
         self._halted: bool = False
@@ -230,7 +231,8 @@ class HISAMachine:
     TRAP_ILLEGAL = 2
     TRAP_PRIV = 3
     TRAP_MEM = 4
-    TRAP_CAUSES = 5
+    TRAP_SYSCALL = 5
+    TRAP_CAUSES = 6
     TRAP_MASK_W = 8
 
     MODE_USER = 0
@@ -240,7 +242,9 @@ class HISAMachine:
     # protection is not a protection: user code would clear one bit and the
     # privilege check would stop firing.
     # Both are exceptions. A maskable memory boundary is not a boundary.
-    NONMASKABLE = (1 << TRAP_PRIV) | (1 << TRAP_MEM)
+    # A maskable syscall does not fault, it does NOTHING -- user code would
+    # call, get no answer, and continue on a return value never written.
+    NONMASKABLE = (1 << TRAP_PRIV) | (1 << TRAP_MEM) | (1 << TRAP_SYSCALL)
 
     def _mem_read(self, addr: int) -> int:
         masked = addr & self.DATA_ADDR_MASK
@@ -351,6 +355,8 @@ class HISAMachine:
             bits |= 1 << self.TRAP_PRIV
         if self._mem_fault:
             bits |= 1 << self.TRAP_MEM
+        if self._syscall:
+            bits |= 1 << self.TRAP_SYSCALL
         # TRAP_ILLEGAL is defined but nothing raises it, in the RTL or here.
         return bits
 
@@ -371,7 +377,7 @@ class HISAMachine:
         # An exception names the instruction that caused it -- which has
         # already advanced the PC -- while an interrupt returns to the
         # instruction that has not run yet.
-        exception = cause in (self.TRAP_PRIV, self.TRAP_MEM)
+        exception = cause >= self.TRAP_PRIV
         self.trap_epc = (self.regs.pc - 1) if exception else self.regs.pc
         self.trap_cause = cause
         self.trap_active = True
@@ -380,6 +386,7 @@ class HISAMachine:
         self.mem_base = 0
         self.mem_limit = 0xFFF
         self._mem_fault = False
+        self._syscall = False
         self.trap_prev = self.mode
         self.mode = self.MODE_SUPER
         self.regs.pc = self.trap_vector
@@ -583,6 +590,15 @@ class HISAMachine:
             acc = self.regs.hreg[0]
             self.regs.hreg[0] = [acc[i] + v[i] for i in range(18)]
             return f"{letter.char} → H0 += {letter.name}"
+
+        # ── SYSCALL: the one crossing user mode may make ────────
+        # Not a fault, so not gated on mode: a supervisor may call itself.
+        # epc points AT this instruction, so a handler that serves the
+        # call must advance it by one -- pointing past it would remove the
+        # handler's only chance to refuse.
+        if op == OpCode.SYSCALL:
+            self._syscall = True
+            return "SYSCALL → trap"
 
         # ── ERET: return from a trap ────────────────────────────
         # Clearing the latch and redirecting have to happen together. As a
@@ -941,3 +957,4 @@ class HISAMachine:
         self.mem_base = 0
         self.mem_limit = 0xFFF
         self._mem_fault = False
+        self._syscall = False

@@ -103,6 +103,10 @@ module hcpu_execute #(
     input  wire [`DATA_ADDR_W-1:0] mem_limit,
     output wire                    mem_fault,
 
+    // SYSCALL is the one boundary crossing user mode may make. It is not a
+    // fault, so it is not gated on in_user: a supervisor may call itself.
+    output wire                    is_syscall,
+
     // ── Data RAM control (passed through to memory stage) ──────
     input  wire                    id_mem_read,
     input  wire                    id_mem_write,
@@ -236,6 +240,7 @@ module hcpu_execute #(
                              current_flags;                      // Register file
 
     wire eret_decoded = (id_opcode == `OP_ERET);
+    assign is_syscall = (id_opcode == `OP_SYSCALL);
 
     // The address this instruction would touch, computed the same way the
     // pipeline register below computes it. One truth would be better, but the

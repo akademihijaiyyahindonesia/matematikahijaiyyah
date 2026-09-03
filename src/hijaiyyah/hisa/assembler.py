@@ -80,6 +80,7 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "NOP":      (),
     "HALT":     (),
     "ERET":     (),
+    "SYSCALL":  (),
 
     # One letter, no operands.
     "L_ALIF":     (),

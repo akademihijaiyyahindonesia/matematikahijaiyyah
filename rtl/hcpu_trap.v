@@ -50,6 +50,7 @@ module hcpu_trap (
     input  wire                     src_illegal,
     input  wire                     src_priv,      // privileged act in user mode
     input  wire                     src_mem,       // data access out of bounds
+    input  wire                     src_syscall,   // ECALL retired
 
     // ── The PC a trap would return to ───────────────────────────
     input  wire [`XLEN-1:0]         pc_now,
@@ -92,7 +93,8 @@ module hcpu_trap (
     // ── Pending: raw sources, one bit each ──────────────────────
     wire [`TRAP_MASK_W-1:0] pending;
     assign pending = { {(`TRAP_MASK_W-`TRAP_CAUSES){1'b0}},
-                       src_mem, src_priv, src_illegal, src_uart_rx, src_timer };
+                       src_syscall, src_mem, src_priv, src_illegal,
+                       src_uart_rx, src_timer };
 
     // Exceptions ignore the mask; interrupts obey it. A timer or a UART byte
     // arrives from outside and software may say "not now". A privilege
@@ -103,7 +105,7 @@ module hcpu_trap (
     // A maskable memory boundary is not a boundary, for the same reason a
     // maskable privilege check is not a check.
     localparam [`TRAP_MASK_W-1:0] NONMASKABLE =
-        (1 << `TRAP_PRIV) | (1 << `TRAP_MEM);
+        (1 << `TRAP_PRIV) | (1 << `TRAP_MEM) | (1 << `TRAP_SYSCALL);
 
     wire [`TRAP_MASK_W-1:0] armed = (pending & enable) | (pending & NONMASKABLE);
 

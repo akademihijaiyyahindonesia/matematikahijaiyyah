@@ -117,8 +117,12 @@ def test_a_memory_fault_fires_with_every_enable_bit_clear() -> None:
     assert m._maybe_trap() is not None
     assert m.trap_cause == m.TRAP_MEM
 
-    assert "(1 << `TRAP_PRIV) | (1 << `TRAP_MEM)" in TRAP
-    assert m.NONMASKABLE == (1 << m.TRAP_PRIV) | (1 << m.TRAP_MEM)
+    # The set grew when SYSCALL joined; what matters is that TRAP_MEM is in
+    # it, not that it is the whole of it.
+    assert "`TRAP_MEM" in TRAP.split("NONMASKABLE")[1].split(";")[0]
+    assert m.NONMASKABLE >> m.TRAP_MEM & 1
+    assert m.NONMASKABLE >> m.TRAP_PRIV & 1
+    assert not (m.NONMASKABLE >> m.TRAP_TIMER & 1), "an interrupt became non-maskable"
 
 
 def test_the_fault_names_its_own_instruction() -> None:

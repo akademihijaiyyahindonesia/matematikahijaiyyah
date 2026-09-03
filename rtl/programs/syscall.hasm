@@ -1,0 +1,65 @@
+; syscall.hasm — the one crossing user mode may make.
+;
+; Every peripheral is refused to user mode and every address outside its
+; window is refused too. Without a sanctioned crossing the boundary is a wall,
+; not a door: a user program could compute, and nothing else.
+;
+; SYSCALL is the door. It raises a trap deliberately, and epc points AT the
+; SYSCALL rather than past it, so the handler decides whether to serve the call
+; or refuse it. Serving means advancing epc by one; refusing means not.
+;
+; ABI here, by convention rather than encoding:
+;   R1  call number in, result out
+;   R2  argument
+;
+; Call 1 is "add seven", which is enough to show the crossing works: the
+; argument comes from user memory the supervisor may read, and the result
+; goes back to user memory the supervisor may write.
+;
+;   R7   set by user before the call
+;   R1   call number, then result
+;   R9   set by the handler
+;   R10  the cause the handler saw
+
+        MOVI  R5, 0
+        MOVI  R9, 0
+
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT
+
+        MOVI  R1, usercode
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0             ; drop to USER
+        STORE R1, R5, 0xFFD
+        ERET
+
+; ── user mode ───────────────────────────────────────────────────
+usercode:
+        MOVI  R7, 5
+        MOVI  R1, 1             ; call 1
+        MOVI  R2, 35            ; argument
+        SYSCALL                 ; → supervisor
+        MOVI  R8, 1             ; reached only if the handler advanced epc
+        HALT                    ; privileged — faults, and that is expected
+
+; ── handler ─────────────────────────────────────────────────────
+handler:
+        LOAD  R10, R5, 0xFFA    ; TRAP_CAUSE
+        CMPI  R10, 5            ; CMPI sets the flags; SUB does not
+        JNE   refuse            ; not a syscall → do not serve it
+
+        ADDI  R1, R2, 7         ; serve call 1: result = arg + 7
+        MOVI  R9, 1
+
+        LOAD  R11, R5, 0xFF9    ; advance epc past the SYSCALL
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+
+refuse: MOVI  R6, 2             ; return to SUPERVISOR so the program can end
+        STORE R6, R5, 0xFFD
+        ERET

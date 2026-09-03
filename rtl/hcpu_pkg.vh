@@ -94,6 +94,7 @@
 `define OP_MOV          8'h03       // DST ← S1
 `define OP_MOVI         8'h04       // DST ← zero_ext(IMM)
 `define OP_ERET         8'h08       // PC ← trap epc; leave trap
+`define OP_SYSCALL      8'h09       // deliberate trap: ask supervisor
 
 // Arithmetic & Logic (0x10–0x1F)
 `define OP_ADD          8'h10       // DST ← S1 + S2
@@ -210,8 +211,9 @@
 `define TRAP_ILLEGAL      3'd2
 `define TRAP_PRIV         3'd3       // privileged act attempted in user mode
 `define TRAP_MEM          3'd4       // data access outside [base, limit)
-`define TRAP_CAUSES       5           // how many are defined
-// 5..7 are reserved for syscall and what follows it. The
+`define TRAP_SYSCALL      3'd5       // SYSCALL — user asking, not user failing
+`define TRAP_CAUSES       6           // how many are defined
+// 6..7 remain reserved. The
 // width is 8 so those can be added without moving anything.
 
 // ── Privilege ───────────────────────────────────────────────────
@@ -230,6 +232,20 @@
 // the protection by writing one register -- which is exactly the thing being
 // protected against.
 `define TRAP_MASK_W       8
+
+// ── The syscall boundary ────────────────────────────────────────
+// SYSCALL is the ONE crossing user mode is allowed to make. Everything else in
+// the peripheral window is refused; this is refused too, and then served.
+//
+// It is NON-MASKABLE with the other two exceptions, and for a sharper reason
+// than theirs: a maskable syscall does not fault, it does NOTHING. User code
+// would call, get no answer, and continue on a return value that was never
+// written. A privilege violation that cannot fire is a hole; a syscall that
+// cannot fire is a silent wrong answer.
+//
+// epc points AT the SYSCALL, like the other exceptions, so a handler must
+// advance it by one to resume past the call. That is deliberate: pointing
+// past it would remove the handler's only chance to refuse.
 
 
 // ── Letter instructions, 0xE0-0xFB ──────────────────────────────

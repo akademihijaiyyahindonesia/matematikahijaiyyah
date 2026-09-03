@@ -74,7 +74,7 @@ module hcpu_top #(
     // loses to a trap is re-fetched from epc on return, but a trap that loses
     // to a branch is simply gone.
     wire trap_redirect_w, trap_in_trap_w, trap_is_eret_w;
-    wire trap_in_user_w, trap_priv_fault_w, trap_mem_fault_w;
+    wire trap_in_user_w, trap_priv_fault_w, trap_mem_fault_w, trap_syscall_w;
     wire [`DATA_ADDR_W-1:0] mem_base_w, mem_limit_w;
     wire [`XLEN-1:0] trap_target_w;
     wire trap_reg_we_w, trap_src_timer_w, trap_src_rx_w;
@@ -426,6 +426,7 @@ module hcpu_top #(
         .mem_base       (mem_base_w),
         .mem_limit      (mem_limit_w),
         .mem_fault      (trap_mem_fault_w),
+        .is_syscall     (trap_syscall_w),
         // Data RAM
         .id_mem_read    (id_mem_read),
         .id_mem_write   (id_mem_write),
@@ -643,6 +644,7 @@ module hcpu_top #(
         .src_illegal   (1'b0),
         .src_priv      (trap_priv_fault_w),
         .src_mem       (trap_mem_fault_w),
+        .src_syscall   (trap_syscall_w),
         .pc_now        (if_pc),
         .pc_valid      (1'b1),
         .pc_fault      (id_pc),

@@ -58,6 +58,18 @@ class OpCode(IntEnum):
     # software reaches through the peripheral window, so no CSR instruction
     # had to be invented for it.
     ERET = 0x08     # Return from trap
+    # The one crossing user mode may make. No operand field: the call number
+    # and its arguments travel in registers, by convention rather than by
+    # encoding, so the ABI can change without touching the instruction.
+    # docs/HISA_SPEC.md already reserved 0x09 for SYSCALL, with an immediate
+    # operand -- `SYSCALL #code`. The slot and the name are kept; the operand
+    # is not, and the reason is mechanical: the handler cannot read the
+    # immediate. Instruction memory is Harvard and write-only from the CPU's
+    # side, so nothing can fetch the calling instruction, and all sixteen
+    # peripheral slots are taken so there is nowhere to latch it. The call
+    # number travels in a register instead, by convention rather than
+    # encoding, which also lets the ABI change without touching the opcode.
+    SYSCALL = 0x09  # Deliberate trap — ask the supervisor
     HNRM2 = 0x06    # Squared norm: ‖v₁₄‖² → GPR
     HDIST = 0x07    # Squared Euclidean distance → GPR
 
@@ -250,7 +262,7 @@ class OpCode(IntEnum):
 # the HVM and the HISA machine, and must not appear in a program intended for
 # hardware. Kept as data so tests can check it against hcpu_pkg.vh directly.
 RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
-    OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI, OpCode.ERET,
+    OpCode.NOP, OpCode.HALT, OpCode.MOV, OpCode.MOVI, OpCode.ERET, OpCode.SYSCALL,
     OpCode.L_ALIF, OpCode.L_BA, OpCode.L_TA, OpCode.L_TSA, OpCode.L_JIM, OpCode.L_HA, OpCode.L_KHA,
     OpCode.L_DAL, OpCode.L_DZAL, OpCode.L_RA, OpCode.L_ZAY,
     OpCode.L_SIN, OpCode.L_SYIN, OpCode.L_SHAD,
