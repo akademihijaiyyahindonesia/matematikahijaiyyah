@@ -24,7 +24,7 @@ Font (sealed) → Ψ-Compiler → .hgeo → HAR ────────┘
 | HCHECK | Periodic integrity monitor | SPECIFIED |
 | HOS | Operating system | DESIGNED |
 | HFS | File system (guard-on-write) | DESIGNED |
-| H-Kernel | Kernel (18-wide alignment) | PARTIAL (3 of 4: process, memory, I/O) |
+| H-Kernel | Kernel (18-wide alignment) | OPERATIONAL (4 of 4; three fixed slots) |
 
 ## Principle: No Overlap
 

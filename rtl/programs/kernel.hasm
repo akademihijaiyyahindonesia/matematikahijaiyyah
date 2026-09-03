@@ -1,9 +1,12 @@
-; kernel.hasm — H-Kernel: two processes, preempted, each with its own registers.
+; kernel.hasm — three processes, preempted, each with its own registers,
+; and the third of them is the guard daemon.
 ;
-; The book lists H-Kernel as "terdesain". This is the build. It needs no new
-; hardware: every piece it stands on was put there by the six prerequisites,
-; and the one thing a context switch cannot do without — a writable epc —
-; already existed because traps were made to nest.
+; The book gives H-Kernel four responsibilities: process, memory, I/O, guard
+; daemon. This is the fourth. HCHECK is defined there as the periodic half of
+; a pair -- Guard catches a constraint inconsistency per operation, HCHECK
+; catches bit flips and accumulated drift by re-validating full state on a
+; schedule (Proposisi IIIH.3.2.1). The scheduling is what was missing, and a
+; scheduler is what arrived last.
 ;
 ; ── the problem a context switch has to solve ────────────────────
 ; The handler starts running with the register file still holding the user's
@@ -11,25 +14,40 @@
 ; destroys the value it was meant to save. There is no zero register here:
 ; MOVI R0, 7 puts 7 in R0.
 ;
-; PUSH is the way out. It takes no base — the stack pointer lives in hardware,
-; not in a GPR — so eighteen pushes get the whole file off the CPU without
-; touching any of it. After that every register is free scratch, and the saved
-; values can be moved from the stack into the process block at leisure.
+; PUSH is the way out. It takes no base -- the stack pointer lives in hardware,
+; not in a GPR -- so eighteen pushes get the whole file off the CPU without
+; touching any of it.
 ;
 ; ── memory map ──────────────────────────────────────────────────
-;   0x100-0x1FF  process A's window        0x200-0x2FF  process B's window
-;   0xF00        current pid              0xF01        ticks taken
-;   0xF10        PCB[0]                   0xF30        PCB[1]
+;   0x100-0x1FF  A's window      0x200-0x2FF  B's window
+;   0x300-0x3FF  C's window      0xF00 pid    0xF01 ticks
+;   0xF10 PCB[0]                 0xF30 PCB[1]     0xF50 PCB[2]
 ;
 ; PCB layout, in words from its base:
 ;   +0..+17  R0..R17        +18  pc        +19  mem_base   +20  mem_limit
 ;
+; ── the three ───────────────────────────────────────────────────
+;   A  counts by 1, never yields; only the timer takes it away
+;   B  counts by 100 and yields by SYSCALL after each step
+;   C  the guard daemon: HLOAD each of the 28 letters, HGRD it, count the
+;      sweeps and count any failure. It never yields either -- a monitor that
+;      has to be asked to run is not a monitor.
+;
+; A and B count in the same register, R1, by different strides, so B's total
+; stays an exact multiple of 100 only if it never inherited one of A's steps.
+; C makes that a three-way test rather than a two-way one.
+;
+; ── what is NOT saved ───────────────────────────────────────────
+; The return-address stack is not part of a context. None of the three uses
+; CALL, so nothing depends on it today, but a process that did would see
+; another's return addresses. Recorded in cosmictera-build/OFF.md rather than
+; left to be discovered.
+;
 ; ── the two causes arrive differently ───────────────────────────
-; A timer interrupt (cause 0) leaves epc at the NEXT instruction: resuming
-; there is correct. A syscall (cause 5) leaves epc AT the SYSCALL, because an
-; exception names its own instruction. Saving that unchanged would make the
-; process yield forever. So the kernel advances epc by one for cause 5 — that
-; single ADDI is what "serving the call" means here.
+; A timer interrupt (cause 0) leaves epc at the NEXT instruction. A syscall
+; (cause 5) leaves it AT the SYSCALL, because an exception names its own
+; instruction, so the kernel advances it by one -- that single ADDI is what
+; serving the call means.
 ;
 ; ── the timer is one-shot, and armed last on purpose ────────────
 ; `expired` is set by counter == compare, an equality rather than a threshold,
@@ -37,14 +55,21 @@
 ; interrupt and sets the next deadline -- and WHERE that store sits decides
 ; whether the kernel works at all. It is the last thing dispatch does before
 ; handing the registers back, so the quantum is measured from the moment user
-; code resumes. See the note above it for what happened when it was first.
+; code resumes rather than from when the handler started. Armed at the top
+; instead, the deadline fell while the handler was still saving registers, and
+; boot reaches dispatch without a trap, so nothing blocked it: the kernel
+; trapped itself and wrote its own PC into a process block.
+;
+; 2047 and not 2048: the immediate is twelve bits SIGNED, so 2048 assembles to
+; -2048 and the deadline lands in the past. The assembler took it without a
+; word and the counter, being an equality, never matched again.
 
 boot:
         MOVI  R5, 0
         MOVI  R1, vector
         STORE R1, R5, 0xFF8     ; TRAP_VECTOR
 
-; ── process A's block ───────────────────────────────────────────
+; ── process A's block ─────────────────────────────────────────
         MOVI  R7, 0xF10
         MOVI  R1, 0
         STORE R1, R7, 0
@@ -72,7 +97,7 @@ boot:
         MOVI  R1, 0x200
         STORE R1, R7, 20
 
-; ── process B's block ───────────────────────────────────────────
+; ── process B's block ─────────────────────────────────────────
         MOVI  R7, 0xF30
         MOVI  R1, 0
         STORE R1, R7, 0
@@ -100,10 +125,38 @@ boot:
         MOVI  R1, 0x300
         STORE R1, R7, 20
 
+; ── process C's block ─────────────────────────────────────────
+        MOVI  R7, 0xF50
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        STORE R1, R7, 16
+        STORE R1, R7, 17
+        MOVI  R1, procC
+        STORE R1, R7, 18
+        MOVI  R1, 0x300
+        STORE R1, R7, 19
+        MOVI  R1, 0x400
+        STORE R1, R7, 20
+
         MOVI  R1, 0
         STORE R1, R5, 0xF01     ; ticks = 0
-        MOVI  R1, 1
-        STORE R1, R5, 0xF00     ; pid = 1, so the first dispatch picks 0
+        MOVI  R1, 2
+        STORE R1, R5, 0xF00     ; pid = 2, so the first dispatch wraps to 0
 
         MOVI  R1, 1
         STORE R1, R5, 0xFFB     ; TRAP_ENABLE — timer. Syscall needs no bit:
@@ -137,13 +190,9 @@ vector:
 ; From here every register is scratch: the values are all on the stack.
         MOVI  R5, 0
         LOAD  R6, R5, 0xF00
-        CMPI  R6, 0
-        JEQ   sv_a
-        MOVI  R7, 0xF30
-        JMP   sv_pc
-sv_a:   MOVI  R7, 0xF10
+        CALL  pcb_of            ; R6 -> R7
 
-sv_pc:  LOAD  R8, R5, 0xFF9     ; TRAP_EPC
+        LOAD  R8, R5, 0xFF9     ; TRAP_EPC
         LOAD  R9, R5, 0xFFA     ; TRAP_CAUSE
         CMPI  R9, 5
         JNE   sv_st
@@ -198,20 +247,15 @@ dispatch:
         STORE R9, R5, 0xF01     ; ticks++
 
         LOAD  R6, R5, 0xF00
-        CMPI  R6, 0
-        JEQ   dp_b
+        ADDI  R6, R6, 1
+        CMPI  R6, 3
+        JNE   dp_st
         MOVI  R6, 0
-        JMP   dp_st
-dp_b:   MOVI  R6, 1
 dp_st:  STORE R6, R5, 0xF00
 
-        CMPI  R6, 0
-        JEQ   dg_a
-        MOVI  R7, 0xF30
-        JMP   dg_go
-dg_a:   MOVI  R7, 0xF10
+        CALL  pcb_of            ; R6 -> R7
 
-dg_go:  LOAD  R8, R7, 19
+        LOAD  R8, R7, 19
         STORE R8, R5, 0xFFE     ; MEM_BASE  — the window moves with the process
         LOAD  R8, R7, 20
         STORE R8, R5, 0xFFF     ; MEM_LIMIT
@@ -220,24 +264,10 @@ dg_go:  LOAD  R8, R7, 19
         MOVI  R8, 0
         STORE R8, R5, 0xFFD     ; previous mode = USER
 
-; The deadline is set here, last, and that placement is the whole difference
-; between a kernel and a machine that interrupts itself. Armed at the top of
-; dispatch instead, the quantum expired while the handler was still saving
-; registers -- and boot reaches dispatch without a trap, so trap_active was 0
-; and nothing blocked it. The kernel trapped itself, wrote its own PC into a
-; process block as that process's pc, and from the next ERET onward "process
-; A" was executing kernel code: 175, 179, 177, 0, reboot.
-;
-; Measured from here the deadline is counted from when user code starts, not
-; from when the handler started, and only the eighteen restore loads and the
-; return stand between the two.
-;
-; 2047 and not 2048: the immediate is twelve bits SIGNED, so 2048 assembles to
-; -2048 and the deadline lands in the past. The assembler took it without a
-; word and the counter, being an equality, then never matched again -- the
-; timer simply stopped, and every process but the first starved.
+; Armed last: the deadline is counted from when user code resumes, and only
+; the eighteen restore loads and the return stand between here and there.
         LOAD  R1, R5, 0xFF4     ; COUNTER
-        ADDI  R1, R1, 2047      ; quantum — see below for why not 2048
+        ADDI  R1, R1, 2047      ; quantum — see the header for why not 2048
         STORE R1, R5, 0xFF5     ; COMPARE — acknowledges and re-arms at once
 
 ; R7 is the pointer, so it is restored last, out of itself.
@@ -261,15 +291,21 @@ dg_go:  LOAD  R8, R7, 19
         LOAD  R7, R7, 7
         ERET
 
-; ── the two processes ───────────────────────────────────────────
-; Both count in R1. That is the point: if the switch did not save and restore
-; registers, one process would inherit the other's count. A counts by 1 and B
-; by 100, so the two sequences cannot be mistaken for each other — B's total
-; stays an exact multiple of 100 only if it never absorbed one of A's steps.
-;
-; A is preempted; B yields. That is deliberate: it puts both entry paths under
-; test. If the kernel did not advance epc for cause 5, B would re-execute its
-; own SYSCALL forever and its counter would stop at 100.
+; ── pid in R6 -> block base in R7 ───────────────────────────────
+; A subroutine, which this kernel could not have had until CALL and RET were
+; built. Two callers, one table.
+pcb_of: CMPI  R6, 0
+        JEQ   po_a
+        CMPI  R6, 1
+        JEQ   po_b
+        MOVI  R7, 0xF50
+        RET
+po_a:   MOVI  R7, 0xF10
+        RET
+po_b:   MOVI  R7, 0xF30
+        RET
+
+; ── the three processes ─────────────────────────────────────────
 procA:  MOVI  R1, 0
         MOVI  R3, 0x100
 pa_lp:  ADDI  R1, R1, 1
@@ -282,3 +318,159 @@ pb_lp:  ADDI  R1, R1, 100
         STORE R1, R3, 0
         SYSCALL                 ; B gives the rest of its quantum back
         JMP   pb_lp
+
+; ── C: the guard daemon ─────────────────────────────────────────
+; Twenty-eight HLOAD/HGRD pairs, unrolled because HLOAD names its ROM index in
+; the immediate and cannot take it from a register. One sweep re-validates
+; every letter the machine knows.
+;
+;   R1  sweeps completed      -> 0x300
+;   R2  failures seen         -> 0x301
+procC:  MOVI  R4, 0x300
+        MOVI  R1, 0
+        MOVI  R2, 0
+pc_lp:
+        HLOAD H0, 1
+        HGRD  H0
+        JGD   ok1
+        ADDI  R2, R2, 1
+ok1:  NOP
+        HLOAD H0, 2
+        HGRD  H0
+        JGD   ok2
+        ADDI  R2, R2, 1
+ok2:  NOP
+        HLOAD H0, 3
+        HGRD  H0
+        JGD   ok3
+        ADDI  R2, R2, 1
+ok3:  NOP
+        HLOAD H0, 4
+        HGRD  H0
+        JGD   ok4
+        ADDI  R2, R2, 1
+ok4:  NOP
+        HLOAD H0, 5
+        HGRD  H0
+        JGD   ok5
+        ADDI  R2, R2, 1
+ok5:  NOP
+        HLOAD H0, 6
+        HGRD  H0
+        JGD   ok6
+        ADDI  R2, R2, 1
+ok6:  NOP
+        HLOAD H0, 7
+        HGRD  H0
+        JGD   ok7
+        ADDI  R2, R2, 1
+ok7:  NOP
+        HLOAD H0, 8
+        HGRD  H0
+        JGD   ok8
+        ADDI  R2, R2, 1
+ok8:  NOP
+        HLOAD H0, 9
+        HGRD  H0
+        JGD   ok9
+        ADDI  R2, R2, 1
+ok9:  NOP
+        HLOAD H0, 10
+        HGRD  H0
+        JGD   ok10
+        ADDI  R2, R2, 1
+ok10:  NOP
+        HLOAD H0, 11
+        HGRD  H0
+        JGD   ok11
+        ADDI  R2, R2, 1
+ok11:  NOP
+        HLOAD H0, 12
+        HGRD  H0
+        JGD   ok12
+        ADDI  R2, R2, 1
+ok12:  NOP
+        HLOAD H0, 13
+        HGRD  H0
+        JGD   ok13
+        ADDI  R2, R2, 1
+ok13:  NOP
+        HLOAD H0, 14
+        HGRD  H0
+        JGD   ok14
+        ADDI  R2, R2, 1
+ok14:  NOP
+        HLOAD H0, 15
+        HGRD  H0
+        JGD   ok15
+        ADDI  R2, R2, 1
+ok15:  NOP
+        HLOAD H0, 16
+        HGRD  H0
+        JGD   ok16
+        ADDI  R2, R2, 1
+ok16:  NOP
+        HLOAD H0, 17
+        HGRD  H0
+        JGD   ok17
+        ADDI  R2, R2, 1
+ok17:  NOP
+        HLOAD H0, 18
+        HGRD  H0
+        JGD   ok18
+        ADDI  R2, R2, 1
+ok18:  NOP
+        HLOAD H0, 19
+        HGRD  H0
+        JGD   ok19
+        ADDI  R2, R2, 1
+ok19:  NOP
+        HLOAD H0, 20
+        HGRD  H0
+        JGD   ok20
+        ADDI  R2, R2, 1
+ok20:  NOP
+        HLOAD H0, 21
+        HGRD  H0
+        JGD   ok21
+        ADDI  R2, R2, 1
+ok21:  NOP
+        HLOAD H0, 22
+        HGRD  H0
+        JGD   ok22
+        ADDI  R2, R2, 1
+ok22:  NOP
+        HLOAD H0, 23
+        HGRD  H0
+        JGD   ok23
+        ADDI  R2, R2, 1
+ok23:  NOP
+        HLOAD H0, 24
+        HGRD  H0
+        JGD   ok24
+        ADDI  R2, R2, 1
+ok24:  NOP
+        HLOAD H0, 25
+        HGRD  H0
+        JGD   ok25
+        ADDI  R2, R2, 1
+ok25:  NOP
+        HLOAD H0, 26
+        HGRD  H0
+        JGD   ok26
+        ADDI  R2, R2, 1
+ok26:  NOP
+        HLOAD H0, 27
+        HGRD  H0
+        JGD   ok27
+        ADDI  R2, R2, 1
+ok27:  NOP
+        HLOAD H0, 28
+        HGRD  H0
+        JGD   ok28
+        ADDI  R2, R2, 1
+ok28:  NOP
+        ADDI  R1, R1, 1
+        STORE R1, R4, 0
+        STORE R2, R4, 1
+        JMP   pc_lp

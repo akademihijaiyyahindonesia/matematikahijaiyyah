@@ -85,13 +85,13 @@ Label: `CC`.
 | 5 Proteksi memori | jendela `[base, limit)` per proses | `rtl/hcpu_mmio.v` |
 | 6 Syscall | `0x09`, non-maskable, epc menunjuk dirinya | `rtl/programs/syscall.hasm` |
 | **I/O lewat kernel** | `PRINT` istimewa; user meminta, supervisor mencetak | `rtl/tb/tb_hcpu_syscall_io.v` |
-| **H-Kernel** | **dua proses, dipreempt, register masing-masing** | `rtl/programs/kernel.hasm` |
+| **H-Kernel** | **tiga proses, dipreempt, register masing-masing** | `rtl/programs/kernel.hasm` |
 
 H-Kernel berjalan di **dua tempat**: penafsir Python dan pipeline RTL.
 
 ```
 make -C rtl/tb sim_kernel
-  ticks 2550   A (dipreempt) 1012   B (menyerah) 127400 = 1274 × 100
+  A (dipreempt)  B (menyerah, kelipatan bersih 100)  C (daemon: sapuan, 0 gagal)
 ```
 
 Angka B itu buktinya. Kedua proses menghitung di **R1** — A menambah 1, B
@@ -103,23 +103,24 @@ teruji sekaligus: tanpa `epc` dimajukan untuk cause 5, B akan mengulang
 `SYSCALL`-nya sendiri selamanya.
 
 Ruang lingkupnya jujur, dan buku menetapkan ukurannya. H-Kernel di sana punya
-**empat** tanggung jawab — proses, memori, I/O, daemon guard. Yang berjalan
-**tiga**:
+**empat** tanggung jawab — proses, memori, I/O, daemon guard. **Keempatnya
+berjalan:**
 
 | tanggung jawab | keadaan |
 |---|---|
-| proses | dua slot tetap, round-robin — tanpa pembuatan dinamis |
+| proses | tiga slot tetap, round-robin — tanpa pembuatan dinamis |
 | memori | jendela `[base, limit)` per proses — tanpa heap |
 | I/O | **ada, dimediasi** — `PRINT` istimewa, keluaran lewat `SYSCALL` |
-| daemon guard | **belum** — tak ada yang menjadwalkan HCHECK |
+| daemon guard | proses C: menyapu 28 huruf lewat `HLOAD`+`HGRD` tiap giliran |
 
 Klaim lama di baris I/O salah, dan kenyataannya lebih buruk daripada yang
 ditulis: `PRINT` **tidak** istimewa, jadi mode user menulis ke jalur serial
 tanpa perantara — bukan *tanpa* I/O, tapi I/O *tanpa wasit*. Sekarang ia
 istimewa dan keluaran melewati kernel.
 
-Karena itu spec pipeline menyebutnya `PARTIAL (2 of 4)`, bukan `OPERATIONAL`.
-Rinciannya di [OFF.md](OFF.md).
+Yang tersisa bukan tanggung jawabnya, melainkan skalanya: tiga slot tetap,
+tanpa pembuatan proses dinamis, dan **stack alamat-kembali tidak ikut
+disimpan** saat pergantian konteks. Rinciannya di [OFF.md](OFF.md).
 
 Label: `CC`.
 
@@ -173,6 +174,6 @@ Label: `CC` dalam simulasi, `EH` di silikon.
 
 ```bash
 python3 -m pytest -q          # 4.279 lulus, 4 dilewati
-make -C rtl/tb all            # 232 asersi, 15 bench, 0 gagal
+make -C rtl/tb all            # 234 asersi, 15 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

@@ -130,7 +130,7 @@ eksplisit dibedakan dari Linux dan Windows:
 | validasi berkas saat menulis (guard-on-write) | butuh HFS |
 | penjajaran 18-wide | ✅ ada di mesin — `GPR_COUNT 18`, H-Reg 18×8 = 144 bit |
 | HAR sebagai layanan sistem (tingkat kernel) | **belum** — HAR ada di Python, bukan layanan |
-| daemon guard (HCHECK periodik) | **belum dijadwalkan** |
+| daemon guard (HCHECK periodik) | ✅ **terjadwal** — proses C di `kernel.hasm` |
 
 Baris terakhir kini paling dekat. Buku memisahkan dua kelas error
 (Proposisi IIIH.3.2.1, `DP`):
@@ -150,7 +150,7 @@ daemon justru butuh penjadwal — dan penjadwal itulah yang baru saja ada.
 
 1. ~~**`CALL`/`RET`**~~ — **selesai**, 0x2E/0x2F, empat asersi di `tb_hcpu_subroutine`.
 2. ~~**Syscall I/O**~~ — **selesai**, enam asersi di `tb_hcpu_syscall_io`.
-3. **HCHECK sebagai daemon** — proses ketiga di penjadwal; tanggung jawab keempat.
+3. ~~**HCHECK sebagai daemon**~~ — **selesai**, proses C menyapu 28 huruf tiap giliran.
 4. **HAL** — sebelum papan kedua, bukan sesudah.
 5. **Heap** — prasyarat HFS.
 6. **HFS**, lalu **HOS**.
@@ -164,7 +164,8 @@ Kernelnya berjalan, dan ruang lingkupnya sempit dengan sengaja:
 
 | ada | belum |
 |---|---|
-| dua proses tetap | pembuatan proses dinamis |
+| tiga proses tetap | pembuatan proses dinamis |
+| register per proses | **stack alamat-kembali tidak disimpan** — proses yang memakai `CALL` akan melihat alamat kembali milik proses lain |
 | round-robin | prioritas atau kuantum per proses |
 | preemption timer + yield | tidur, tunggu, atau sinyal |
 | jendela memori per proses | memori bersama antar proses |

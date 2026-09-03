@@ -37,9 +37,13 @@ CUR_PID = 0xF00
 TICKS = 0xF01
 A_COUNT = 0x100
 B_COUNT = 0x200
-# The quantum is 2047 counter ticks, so a run has to be long enough to hold
-# a few dozen switches -- a handful proves nothing about privacy.
-STEPS = 80_000
+C_SWEEP = 0x300
+C_FAIL = 0x301
+N_PROC = 3
+# The quantum is 2047 counter ticks, and the guard daemon's sweep is 28
+# HLOAD/HGRD pairs, so a run has to be long enough to hold a few dozen
+# switches -- a handful proves nothing about privacy.
+STEPS = 200_000
 
 
 def _run(source: str, steps: int = STEPS) -> HISAMachine:
@@ -101,6 +105,9 @@ def test_registers_are_private_to_each_process() -> None:
     b = _at(m, B_COUNT)
     assert b % 100 == 0, f"B's count {b} absorbed a step of A's: registers leaked"
     assert b // 100 > 20, "too few switches to conclude anything"
+    # And the daemon's registers survive too: its sweep counter only ever
+    # increments by one, so a leak from A or B would show as a jump.
+    assert _at(m, C_SWEEP) > 0
 
 
 def test_a_is_preempted_without_asking() -> None:
@@ -110,15 +117,38 @@ def test_a_is_preempted_without_asking() -> None:
     assert _run(SOURCE).data_mem[A_COUNT] > 100
 
 
-def test_scheduler_alternates() -> None:
-    """B is dispatched exactly once per yield, so its count divided by 100
-    is its share of the ticks. Round robin over two makes that half."""
+def test_the_scheduler_goes_round_all_three() -> None:
+    """B is dispatched exactly once per yield, so its count divided by 100 is
+    its share of the ticks. Round robin over three makes that a third."""
     m = _run(SOURCE)
     ticks = _at(m, TICKS)
     b_dispatches = _at(m, B_COUNT) // 100
-    assert abs(ticks / 2 - b_dispatches) <= 1.0, (
-        f"{b_dispatches} B dispatches against {ticks} ticks is not alternation"
+    assert abs(ticks / N_PROC - b_dispatches) <= 1.0, (
+        f"{b_dispatches} B dispatches against {ticks} ticks is not a third"
     )
+
+
+def test_the_guard_daemon_runs_and_finds_nothing_wrong() -> None:
+    """H-Kernel's fourth responsibility. HCHECK is the periodic half of the
+    pair the book defines -- Guard per operation, HCHECK on a schedule -- and
+    periodic is precisely what nothing could provide until there was a
+    scheduler. Each sweep re-validates all 28 letters."""
+    m = _run(SOURCE)
+    assert _at(m, C_SWEEP) > 10, "the daemon barely ran"
+    assert _at(m, C_FAIL) == 0, "a letter failed its guard"
+
+
+def test_the_daemon_does_not_have_to_be_asked() -> None:
+    """A monitor that only runs when something calls it is not a monitor. C
+    contains no SYSCALL: the timer takes it away like it takes A."""
+    body = SOURCE.split("procC:")[1]
+    assert "SYSCALL" not in body
+
+
+def test_all_three_run_together() -> None:
+    m = _run(SOURCE)
+    for name, addr in (("A", A_COUNT), ("B", B_COUNT), ("C", C_SWEEP)):
+        assert _at(m, addr) > 0, f"process {name} never ran"
 
 
 def test_the_two_causes_are_entered_differently() -> None:
@@ -201,7 +231,7 @@ def test_the_pointer_register_is_restored_last() -> None:
     """R7 addresses the block being restored, so it cannot be restored from
     the middle of the sequence -- it has to come out of itself, at the end."""
     # split on the instruction, not the word: the file's comments name ERET
-    tail = SOURCE.split("dg_go:")[1].split("\n        ERET")[0]
+    tail = SOURCE.split("previous mode = USER")[1].split("\n        ERET")[0]
     loads = [ln for ln in tail.splitlines() if ln.strip().startswith("LOAD  R")]
     assert loads[-1].split()[1].rstrip(",") == "R7", "R7 is not restored last"
 

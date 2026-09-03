@@ -56,7 +56,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **232 asersi, 15 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **234 asersi, 15 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -64,7 +64,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | Integrasi top-level | `make -C rtl/tb sim_top` |
 | ✅ | Unit trap, 6 penyebab | `make -C rtl/tb sim_trap` |
 | ✅ | MMIO, timer, UART RX | `make -C rtl/tb sim_mmio sim_timer sim_uart_rx` |
-| ✅ | **H-Kernel: dua proses** | `make -C rtl/tb sim_kernel` |
+| ✅ | **H-Kernel: tiga proses + daemon guard** | `make -C rtl/tb sim_kernel` |
 | ✅ | **28 instruksi huruf** | `make -C rtl/tb sim_letters` |
 | ✅ | **`CALL`/`RET`, sarang 8 tingkat** | `make -C rtl/tb sim_subroutine` |
 | ✅ | **I/O lewat kernel, dua sisi** | `make -C rtl/tb sim_syscall_io` |
@@ -119,7 +119,7 @@ Sebabnya satu komit dan sudah dibisect — lihat [OFF.md](OFF.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.300 lulus, 4 dilewati
-make -C rtl/tb all               # 232 asersi, 15 bench, 0 gagal
+make -C rtl/tb all               # 234 asersi, 15 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← merah, dan memang seharusnya terlihat
 ```
 

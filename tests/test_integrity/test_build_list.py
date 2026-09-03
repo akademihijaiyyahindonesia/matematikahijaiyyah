@@ -190,13 +190,21 @@ def test_the_kernels_own_limits_are_stated_where_it_is_claimed() -> None:
     assert "OFF.md" in ON
     # The book gives H-Kernel four responsibilities. Two run. Claiming the
     # component without naming the split is the overstatement this catches.
-    for missing in ("daemon guard",):
-        assert missing in ON, f"ON.md stops naming what the kernel lacks: {missing}"
     assert "**empat** tanggung jawab" in ON
-    assert "3 of 4" in (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
+    assert "Keempatnya" in ON, "ON.md must say which of the four run"
+    # Four of four is the responsibilities, not the scale. What is still
+    # missing has to stay named where the component is claimed.
+    for limit in ("tiga slot tetap", "tanpa pembuatan proses dinamis",
+                  "stack alamat-kembali tidak ikut"):
+        assert limit in ON, f"ON.md stops naming a limit: {limit}"
+    spec = (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
+    assert "4 of 4" in spec and "three fixed slots" in spec
     spec = (ROOT / "docs" / "hybit_pipeline_spec.md").read_text(encoding="utf-8")
     row = next(ln for ln in spec.splitlines() if ln.startswith("| H-Kernel"))
-    assert "PARTIAL" in row and "OPERATIONAL" not in row, row
+    # The four responsibilities run, so the row may say OPERATIONAL -- but it
+    # has to carry the scale beside it, because "operational" over three fixed
+    # slots is not the same claim as "operational" over a process table.
+    assert "4 of 4" in row and "three fixed slots" in row, row
     assert "`PUSH` tidak dibatasi mode user" in OFF
 
 
@@ -251,12 +259,12 @@ def test_nothing_blocked_is_ticked_green() -> None:
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
     reads them together."""
-    for figure in ("232 asersi", "15 bench"):
+    for figure in ("234 asersi", "15 bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
     # The pytest count is the one figure here nothing can verify -- checking it
     # would mean running pytest inside pytest -- so what is guarded is that the
     # checklist says so, rather than presenting it as though it were checked.
     assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
     assert "tidak dijaga" in CHECKLIST
-    assert "232 asersi RTL di 15 testbench" in README
-    assert "232 asersi, 15 bench, 0 gagal" in ON
+    assert "234 asersi RTL di 15 testbench" in README
+    assert "234 asersi, 15 bench, 0 gagal" in ON
