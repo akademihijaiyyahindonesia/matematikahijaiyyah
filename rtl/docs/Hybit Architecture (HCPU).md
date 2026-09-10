@@ -803,4 +803,4 @@ Critical path: 84 logic levels through the divide/modulo-by-10 at
 
 ---
 
-*© 2026 HMCL — Hybit Technology. Document identifier HCPU-SPEC-2.3.0. All signal names and behaviors verified against committed RTL sources. BUG-01 through BUG-08 patched in source.*
+*© 2026 Maulana Amratulloh — Hybit Technology. Document identifier HCPU-SPEC-2.3.0. All signal names and behaviors verified against committed RTL sources. BUG-01 through BUG-08 patched in source.*

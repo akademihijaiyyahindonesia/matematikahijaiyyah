@@ -36,4 +36,4 @@ If results differ, at least one of:
 - `certificate.json` — release certificate with SHA-256
 - `MANIFEST.json` — all artifact hashes
 
-© 2026 HMCL
+© 2026 Maulana Amratulloh

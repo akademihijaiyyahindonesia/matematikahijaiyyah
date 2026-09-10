@@ -31,4 +31,4 @@ Font (sealed) → Ψ-Compiler → .hgeo → HAR ────────┘
 Every component has exactly ONE function.
 See README for the full non-overlap table.
 
-© 2026 HMCL
+© 2026 Maulana Amratulloh

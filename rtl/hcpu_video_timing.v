@@ -7,7 +7,7 @@
 // positions. Wiring actual panel pins and picking a pixel clock the 27 MHz
 // crystal (or the board's rPLL) can actually generate is a separate,
 // hardware-specific step, not done here.
-// (c) 2026 HMCL — HM-28-v1.2-HC18D / Tier 1.5
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D / Tier 1.5
 // ============================================================================
 //
 // Parameterized VESA-style timing: H_ACTIVE/H_FRONT/H_SYNC/H_BACK and the

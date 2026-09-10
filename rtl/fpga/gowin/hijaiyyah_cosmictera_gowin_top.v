@@ -1,7 +1,7 @@
 // ============================================================================
 // Cosmictera combined top — hijaiyyah_cosmictera_gowin_top.v
 // Target: Tang Nano 20K (GW2AR-LV18QN88C8/I7)
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 //
 // HCPU and Ka'bah on one chip, which cosmictera-build/ROADMAP.md's Fase 4

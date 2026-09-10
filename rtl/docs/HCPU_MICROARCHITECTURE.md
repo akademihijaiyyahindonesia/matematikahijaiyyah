@@ -164,4 +164,4 @@ both Gowin GW1NR-9 and Xilinx XC7A35T.
 
 ---
 
-*© 2026 HMCL — HCPU Microarchitecture v1.0*
+*© 2026 Maulana Amratulloh — HCPU Microarchitecture v1.0*

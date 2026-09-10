@@ -2,7 +2,7 @@
 // HCPU HISAB Serializer — hcpu_hisab.v
 // Hardware HISAB nibble-packer + CRC32 engine
 // Implements §4.6.1 (LETTER frame) nibble-packing and CRC32 digest
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // HISAB = Hijaiyyah Inter-System Standard for Auditable Bridging

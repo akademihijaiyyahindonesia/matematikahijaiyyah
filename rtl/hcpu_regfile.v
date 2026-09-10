@@ -2,7 +2,7 @@
 // HCPU Register File — hcpu_regfile.v
 // 18 GPR (32-bit) + 16 H-Reg (144-bit) + FLAGS + PC + SP
 // Dual read ports, single write port per bank
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 
 `include "hcpu_pkg.vh"

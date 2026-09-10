@@ -12,7 +12,7 @@ Usage:
     python gen_rom.py > rom_init.hex
     python gen_rom.py --format verilog > hcpu_rom_data.vh
 
-(c) 2026 HMCL
+(c) 2026 Maulana Amratulloh
 """
 
 from __future__ import annotations

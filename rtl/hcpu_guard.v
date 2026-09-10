@@ -2,7 +2,7 @@
 // HCPU Guard Checker — hcpu_guard.v  (v2.0)
 // Hardware implementation of G1–G4 structural guards + T1–T2 topology
 // Single-cycle combinational with optional pipeline register
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // Guard checks (from Bab I, Matematika Hijaiyyah):

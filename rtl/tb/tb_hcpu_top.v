@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Integration Testbench — tb_hcpu_top.v (Tier 1.5)
 // Tests forwarding, Data RAM, and zero-NOP programs
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 
 `include "hcpu_pkg.vh"

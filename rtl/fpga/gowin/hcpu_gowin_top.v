@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Gowin FPGA Wrapper — hcpu_gowin_top.v
 // Target: Tang Nano 20K (GW2AR-LV18QN88C8/I7)
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 //
 // Board resources:
@@ -99,7 +99,15 @@
 // of the boot path's jump, and irrelevant to whether this fits -- the 20K
 // was never close to its own ceiling.
 //
-// RTL FINGERPRINT: 3345dbdc5894719923acfd27ecf74aaeaa7cee4dee431f98bc9cf89cbffddde5
+// Fingerprint restamped 2026-09-10 WITHOUT a new place-and-route run, and the
+// justification is mechanical rather than a promise: the institution changed
+// (HMCL became a research unit under Yayasan Akademi Hijaiyyah Indonesia, and
+// the rights line became the inventor personally), which rewrote one comment
+// line in every fingerprinted source. Reversing only those copyright lines in
+// memory reproduces the previously recorded hash exactly, for this wrapper and
+// for Ka'bah's -- so the sweep is provably the entire delta and no design byte
+// moved. The measured figures above still describe this RTL.
+// RTL FINGERPRINT: ccfa947db20ad682fdaee0110f1d86b4332ec63dad21ea3359e853206133e549
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

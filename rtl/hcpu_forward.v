@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Forwarding Unit — hcpu_forward.v
 // Data hazard resolution via EX→ID and MEM→ID bypass MUXes
-// (c) 2026 HMCL — HM-28-v1.2-HC18D / Tier 1.5
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D / Tier 1.5
 // ============================================================================
 //
 // Forwarding paths:

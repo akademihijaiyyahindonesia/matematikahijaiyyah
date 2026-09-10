@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Codex ALU — hcpu_codex_alu.v
 // 18-wide parallel vector ALU for hybit codex operations
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 //
 // Operations (all single-cycle, combinational):

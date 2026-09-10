@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Memory Stage — hcpu_memory.v
 // Stack operations (PUSH/POP) + Data RAM (LOAD/STORE)
-// (c) 2026 HMCL — HM-28-v1.2-HC18D / Tier 1.5
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D / Tier 1.5
 // ============================================================================
 
 `include "hcpu_pkg.vh"

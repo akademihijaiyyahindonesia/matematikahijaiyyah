@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Xilinx FPGA Wrapper — hcpu_xilinx_top.v
 // Target: Digilent Arty A7-35T (XC7A35T-1CPG236C)
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 //
 // Board resources:

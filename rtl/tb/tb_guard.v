@@ -1,7 +1,7 @@
 // ============================================================================
 // Testbench: Guard Checker — tb_guard.v
 // Verifies G1–G4, T1–T2 for all 28 letters + corruption injection
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 
 `timescale 1ns/1ps

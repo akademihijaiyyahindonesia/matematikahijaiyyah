@@ -1,6 +1,6 @@
 // ============================================================================
 // Ka'bah Gowin FPGA Wrapper — hijaiyyah_kabah_gowin_top.v
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 //
 // hijaiyyah_kabah_top.v cannot be placed on any board in this class as a raw
@@ -110,7 +110,15 @@
 // HCPU uses should not demand this wrapper be re-measured, and touching
 // hijaiyyah_sponge.v should not demand HCPU's own numbers be re-measured.
 //
-// RTL FINGERPRINT: 6c94dcb4d8b24385dc92eff00d5547aaa717a700cbda17e970d750faf91c180b
+// Fingerprint restamped 2026-09-10 WITHOUT a new place-and-route run, and the
+// justification is mechanical rather than a promise: the institution changed
+// (HMCL became a research unit under Yayasan Akademi Hijaiyyah Indonesia, and
+// the rights line became the inventor personally), which rewrote one comment
+// line in every fingerprinted source. Reversing only those copyright lines in
+// memory reproduces the previously recorded hash exactly, for this wrapper and
+// for Ka'bah's -- so the sweep is provably the entire delta and no design byte
+// moved. The measured figures above still describe this RTL.
+// RTL FINGERPRINT: d8a098d55bac0d88fcdbcb0acdd9888ab0785a8fa9b76c59873616877bbb7f76
 //
 `include "hcpu_pkg.vh"
 

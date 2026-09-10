@@ -256,4 +256,4 @@ Ketiga paradigma diperlukan dan tak dapat mereduksi satu sama lain. Hybit telah 
 
 ---
 *Seluruh hasil Bab III diverifikasi dari MasterTable HM-28-v1.0-HC18D, spesifikasi arsitektur RTL HCPU Phase 2.0, dan bukti formal matematis.*
-*© 2026 HMCL — Maulana Amratulloh*
+*© 2026 Maulana Amratulloh*

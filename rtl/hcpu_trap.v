@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Trap Unit — hcpu_trap.v
 // Interrupt and exception entry, and the return from it
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // A trap is a branch the program did not write. Everything else follows from

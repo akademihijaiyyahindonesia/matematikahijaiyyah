@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU MPW Top-Level Wrapper — hcpu_mpw_top.v  (v2.0)
 // Caravel user_project_wrapper compatible for Efabless Open MPW (SKY130)
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // This module is the top-level for the Caravel User Project Area.

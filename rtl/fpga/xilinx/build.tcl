@@ -1,7 +1,7 @@
 # ==============================================================================
 # Vivado Batch Synthesis Script for HCPU (Arty A7-35T)
 # Target: XC7A35T-1CPG236C
-# (c) 2026 HMCL
+# (c) 2026 Maulana Amratulloh
 # ==============================================================================
 
 set PROJECT_NAME "hcpu_fpga"

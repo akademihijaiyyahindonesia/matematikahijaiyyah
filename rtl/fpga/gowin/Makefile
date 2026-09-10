@@ -1,6 +1,6 @@
 # ============================================================================
 # HCPU on the Tang Nano 20K — open-source Gowin flow
-# (c) 2026 HMCL
+# (c) 2026 Maulana Amratulloh
 # ============================================================================
 #
 # Mirrors rtl/fpga/xilinx/Makefile. Two targets matter:

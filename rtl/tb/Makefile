@@ -1,6 +1,6 @@
 # ============================================================================
 # HCPU Testbench Makefile — iverilog + vvp
-# (c) 2026 HMCL
+# (c) 2026 Maulana Amratulloh
 # ============================================================================
 
 # -g2012 enables $fatal, which is how a failing testbench exits non-zero.
@@ -26,8 +26,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
-        sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos sim_subroutine clean
+        sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_nui_embedding sim_loader_nui sim_video_timing clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -38,7 +38,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos
+     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+     sim_nui_embedding sim_loader_nui sim_video_timing
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -81,7 +82,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex
+	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -130,6 +131,17 @@ hos_demo.hex: $(RTL_DIR)/programs/hos_demo.hasm
 tb_hcpu_hos.vvp: $(TB_DIR)/tb_hcpu_hos.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
+# NUI's physics embedding sum (titik/garis/lengkung/theta/rho), on the real
+# pipeline -- letter accumulation + CGET + ADD/SUB, no new opcode.
+sim_nui_embedding: tb_hcpu_nui_embedding.vvp nui_embedding.hex
+	$(VVP) $<
+
+nui_embedding.hex: $(RTL_DIR)/programs/nui_embedding.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+tb_hcpu_nui_embedding.vvp: $(TB_DIR)/tb_hcpu_nui_embedding.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
 tb_hcpu_subroutine.vvp: $(TB_DIR)/tb_hcpu_subroutine.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
@@ -154,8 +166,11 @@ sim_timer: tb_hcpu_timer.vvp
 	$(VVP) $<
 sim_uart_rx: tb_hcpu_uart_rx.vvp
 	$(VVP) $<
+sim_video_timing: tb_hcpu_video_timing.vvp
+	$(VVP) $<
 
-tb_hcpu_trap.vvp tb_hcpu_mmio.vvp tb_hcpu_timer.vvp tb_hcpu_uart_rx.vvp: \
+tb_hcpu_trap.vvp tb_hcpu_mmio.vvp tb_hcpu_timer.vvp tb_hcpu_uart_rx.vvp \
+tb_hcpu_video_timing.vvp: \
   tb_%.vvp: $(TB_DIR)/tb_%.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
@@ -164,8 +179,10 @@ sim_board: tb_gowin_top.vvp program.hex
 	$(VVP) $<
 sim_loader: tb_gowin_loader.vvp loader.hex payload.txt
 	$(VVP) $<
+sim_loader_nui: tb_gowin_loader_nui.vvp loader.hex nui_payload.txt
+	$(VVP) $<
 
-tb_gowin_top.vvp tb_gowin_loader.vvp: tb_%.vvp: \
+tb_gowin_top.vvp tb_gowin_loader.vvp tb_gowin_loader_nui.vvp: tb_%.vvp: \
   $(TB_DIR)/tb_%.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
@@ -180,4 +197,10 @@ loader.hex: $(RTL_DIR)/programs/loader.hasm
 # into the one-byte-per-token form $readmemh reads. Without this rule the
 # bench could not run from a clean checkout at all: nothing produced its input.
 payload.txt: $(RTL_DIR)/programs/payload.hasm
+	python3 $(RTL_DIR)/scripts/send_program.py $< | od -An -v -tx1 | tr -s ' ' '\n' | grep . > $@
+
+# Same wire format as payload.txt, different program: nui_embedding.hasm's
+# own 48 words (L_JIM, L_KHA, CGET/ADD/SUB, five PRINTs), sent as something
+# the loader delivers rather than something synthesised into the bitstream.
+nui_payload.txt: $(RTL_DIR)/programs/nui_embedding.hasm
 	python3 $(RTL_DIR)/scripts/send_program.py $< | od -An -v -tx1 | tr -s ' ' '\n' | grep . > $@

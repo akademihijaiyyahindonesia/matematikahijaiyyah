@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Writeback Stage — hcpu_writeback.v
 // Final stage: drives register file write ports and FLAGS update
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 
 `include "hcpu_pkg.vh"

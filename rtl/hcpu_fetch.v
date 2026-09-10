@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Fetch Stage — hcpu_fetch.v  (v2.0 — FPGA-safe)
 // Instruction fetch with BRAM latency compensation
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // FPGA BRAM returns data 1 cycle AFTER address is presented.

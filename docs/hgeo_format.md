@@ -32,4 +32,4 @@ canonical font to v₁₈ codex vector:
 Every value in v₁₈ can be traced back through the .hgeo
 to its geometric origin in the skeleton.
 
-© 2026 HMCL
+© 2026 Maulana Amratulloh

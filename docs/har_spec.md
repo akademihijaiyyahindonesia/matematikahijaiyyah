@@ -39,4 +39,4 @@ har/
 - R1–R5: 100% PASS
 - rank(M₁₄) = number of core dimensions
 
-© 2026 HMCL
+© 2026 Maulana Amratulloh

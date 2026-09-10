@@ -1,6 +1,6 @@
 // ============================================================================
-// Tang Nano 9K wrapper testbench — tb_gowin_top.v
-// (c) 2026 HMCL
+// Tang Nano 20K wrapper testbench — tb_gowin_top.v
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 //
 // Runs the board wrapper exactly as the FPGA would: 27 MHz oscillator, program
@@ -117,7 +117,7 @@ module tb_gowin_top;
         #(BIT_NS * 10 * 6 + 200_000);
 
         $display("=======================================");
-        $display("Tang Nano 9K wrapper — UART at %0d baud from %0d Hz", BAUD, OSC_HZ);
+        $display("Tang Nano 20K wrapper — UART at %0d baud from %0d Hz", BAUD, OSC_HZ);
         $display("=======================================");
         $display("Characters received: %0d", count);
         text = 0;

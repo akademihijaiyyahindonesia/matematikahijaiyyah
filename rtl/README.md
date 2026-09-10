@@ -49,11 +49,16 @@ make wave_top
 
 ## FPGA Targets
 
-### Gowin Tang Nano 9K (~$15)
-- Device: GW1NR-LV9QN88PC6/I5
+### Gowin Tang Nano 20K (~$25)
+- Device: GW2AR-LV18QN88C8/I7
 - Clock: 27 MHz → PLL → 50 MHz
 - Files: `fpga/gowin/hcpu_gowin_top.v`, `fpga/gowin/hcpu_gowin.cst`
 - Load program: `$readmemh("program.hex")`
+
+Targeted the Tang Nano 9K (GW1NR-LV9QN88PC6/I5) through an earlier commit.
+The design outgrew its 8,640 LUT4 — see `cosmictera-build/OFF.md`'s
+bisection table for which commit did it, and `cosmictera-build/ROADMAP.md`
+for how the 20K was verified instead.
 
 ### Xilinx Arty A7-35T (~$129)
 - Device: XC7A35T-1CPG236C
@@ -70,13 +75,16 @@ make wave_top
 
 ## Resource Utilization (Estimated)
 
-| Resource | Gowin GW1NR-9 | Xilinx XC7A35T |
+| Resource | Gowin GW2AR-18 | Xilinx XC7A35T |
 |---|---|---|
-| LUTs available | 8,640 | 20,800 |
+| LUTs available | 20,736 | 20,800 |
 | LUTs used (est.) | ~3,000 | ~3,000 |
 | Registers | ~1,500 | ~1,500 |
 | BRAM used | 2–4 blocks | 2–4 blocks |
 | Fmax target | 50 MHz | 100 MHz |
+
+The "est." row predates measurement and is well out of date — the real
+figure, from an actual synthesis+PNR run, is in `cosmictera-build/ON.md`.
 
 ## Supported Instructions (Tier 1)
 
@@ -118,7 +126,7 @@ rtl/
 │   ├── tb_hisab.v       #   HISAB pack + CRC32
 │   └── tb_hcpu_top.v    #   Integration (7 programs)
 ├── programs/            # Assembly test programs
-├── fpga/gowin/          # Gowin Tang Nano 9K
+├── fpga/gowin/          # Gowin Tang Nano 20K
 ├── fpga/xilinx/         # Xilinx Arty A7
 ├── mpw/                 # MPW Shuttle plan
 ├── scripts/             # Support scripts
@@ -132,4 +140,4 @@ Priority: Efabless Open MPW (SKY130) → TinyTapeout → Europractice.
 
 ---
 
-*© 2026 HMCL — HM-28-v1.2-HC18D*
+*© 2026 Maulana Amratulloh — HM-28-v1.2-HC18D*

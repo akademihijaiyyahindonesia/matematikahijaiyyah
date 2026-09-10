@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU UART Transmitter — hcpu_uart_tx.v
 // Simple 8N1 UART TX for PRINT/EMIT instructions
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 //
 // Baud rate configurable via parameter (default 115200 @ 50 MHz).

@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU MPW Firmware — hcpu_firmware.h
 // C header for Caravel management SoC to control HCPU via Wishbone
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // Usage (from Caravel management SoC firmware):

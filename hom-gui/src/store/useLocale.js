@@ -21,7 +21,7 @@ const dict = {
     'landing.hero.conclusion': 'Thus, Hijaiyyah Mathematics forms a scientific architecture bridging the heritage of letterforms, formal mathematical formulation, metric-vector systems, and the development of next-generation computing technologies.',
     'landing.hero.quote': '"Hijaiyyah Mathematics proves that the 28 Hijaiyyah letters encoding the Quran also encrypt formal mathematics and the computational codex of Hybit — the third paradigm after bit and qubit."',
     'Contact': 'Contact',
-    'layout.footer': 'Hijaiyyah Operating Machine · v1.2.0 · © 2026 HMCL',
+    'layout.footer': 'Hijaiyyah Operating Machine · v1.2.0 · © 2026 Maulana Amratulloh',
   },
   id: {
     // Navbar & Layout
@@ -31,7 +31,7 @@ const dict = {
     'nav.system': 'Hybit',
     'nav.docs': 'Dokumentasi',
     'layout.title': 'Mesin Operasi Hijaiyyah',
-    'layout.footer': 'Mesin Operasi Hijaiyyah · v1.2.0 · © 2026 HMCL',
+    'layout.footer': 'Mesin Operasi Hijaiyyah · v1.2.0 · © 2026 Maulana Amratulloh',
 
     // Hero Redesign
     'landing.hero.intro.part1': 'Matematika Hijaiyyah adalah suatu sistem matematika formal berbasis 28 huruf Hijaiyyah kanonikal yang direpresentasikan sebagai objek ukur, objek hitung, dan objek komputasi dalam satu kerangka terpadu. Sistem ini mengekstraksi struktur morfologis huruf secara geometris melalui empat invarian diskret — Inḥinā\' (total belokan), Nuqṭah (distribusi titik), Khaṭṭ (komponen garis), dan Qaws (komponen lengkung) — kemudian memetakannya ke dalam codex bilangan bulat multidimensi:',

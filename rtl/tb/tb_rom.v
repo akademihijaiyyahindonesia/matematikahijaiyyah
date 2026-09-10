@@ -1,7 +1,7 @@
 // ============================================================================
 // Testbench: Master Table ROM — tb_rom.v
 // Verifies all 28 letter vectors match hm28.json golden values
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 
 `timescale 1ns/1ps

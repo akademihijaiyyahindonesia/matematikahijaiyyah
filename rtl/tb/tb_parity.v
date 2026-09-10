@@ -1,6 +1,6 @@
 // ============================================================================
 // HCPU Execution Parity Harness — tb_parity.v
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 //
 // Runs an arbitrary program on the HCPU and prints the final architectural

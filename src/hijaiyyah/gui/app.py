@@ -233,7 +233,7 @@ class HOMApp:
         # Right: copyright
         tk.Label(
             bar,
-            text="© 2026 HMCL  ",
+            text="© 2026 Maulana Amratulloh  ",
             font=("Consolas", 9),
             fg=THEME.dim_fg,
             bg=THEME.surface,

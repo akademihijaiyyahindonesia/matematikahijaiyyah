@@ -1,7 +1,7 @@
 // ============================================================================
 // Testbench: Codex ALU — tb_codex_alu.v
 // Verifies HCADD, HNRM2, HDIST operations
-// (c) 2026 HMCL
+// (c) 2026 Maulana Amratulloh
 // ============================================================================
 
 `timescale 1ns/1ps

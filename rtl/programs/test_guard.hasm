@@ -11,7 +11,7 @@
 ; whole life loading ROM index 0 twenty-eight times over, R0 never moved past
 ; 0, and nothing ran it and checked. The assembler refuses a register operand
 ; for HLOAD now.
-; (c) 2026 HMCL
+; (c) 2026 Maulana Amratulloh
 ; ============================================================================
 
         MOVI R0, 0        ; R0 = pass counter

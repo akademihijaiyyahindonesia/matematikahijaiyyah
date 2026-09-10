@@ -23,7 +23,12 @@ ROOT = Path(__file__).resolve().parents[2]
 CANONICAL_NAME = "Maulana Amratulloh"
 CANONICAL_ROLE = "Inventor & Chief Architect"
 CANONICAL_KEY_ID = "MA-SIG"
-INSTITUTION = "Hijaiyyah Mathematics Computational Laboratory (HMCL)"
+# The foundation is the legal entity of record; HMCL is its research unit, so
+# the canonical form names both and in that order. The rights holder is
+# deliberately NOT the institution -- patents are held by the inventor
+# personally, and AUTHORS says so under its own heading.
+INSTITUTION = ("Yayasan Akademi Hijaiyyah Indonesia — HMCL "
+               "(Hijaiyyah Mathematics Computational Laboratory)")
 DATASET_SEAL = "f82d385917ffe32ae2b5711409b1341e90934c52172ae9d0fa68888e3b9c51c8"
 
 # Directories that are vendored, generated, or otherwise not ours to police.
@@ -109,14 +114,40 @@ def test_no_variant_spelling_of_the_canonical_name() -> None:
 
 # ── legal instruments carry name and role ────────────────────────
 
+
+def book_relative(tail: str) -> Path:
+    """Resolve a path under the book folder, whichever name it carries.
+
+    The folder was renamed 'Matematika Hijaiyyah/' -> 'Buku Matematika
+    Hijaiyyah/' and .gitignore deliberately ignores BOTH spellings, so this
+    list went on naming the old one and four tests skipped themselves as
+    "not present" while the documents sat on disk the whole time. A skip
+    reads like an absent file; it was an absent PATH. tests/test_integrity/
+    test_bab_satu.py already globbed for the folder rather than naming it,
+    which is the idiom this now borrows -- a legal instrument that stops
+    being checked because a directory was renamed is the failure mode these
+    tests exist to prevent.
+    """
+    for parent in sorted(ROOT.glob("*Matematika Hijaiyyah*")):
+        candidate = parent / tail
+        if candidate.exists():
+            return candidate
+    return ROOT / "Matematika Hijaiyyah" / tail
+
+
 LEGAL_DOCS = [
     "LICENSE",
     "NOTICE",
     "AUTHORS",
-    "Matematika Hijaiyyah/OFFICIAL_PATENT_RELEASE/PATENT_RELEASE_DECLARATION_ID.md",
-    "Matematika Hijaiyyah/OFFICIAL_PATENT_RELEASE/PATENT_RELEASE_DECLARATION_EN.md",
-    "Matematika Hijaiyyah/OFFICIAL_PATENT_RELEASE/README.md",
     "release/HL-18E-v1.0/PATENT_RELEASE.md",
+]
+
+# Under the book folder, which is gitignored and whose name changed -- see
+# book_relative. These are the patent instruments themselves.
+BOOK_LEGAL_DOCS = [
+    "OFFICIAL_PATENT_RELEASE/PATENT_RELEASE_DECLARATION_ID.md",
+    "OFFICIAL_PATENT_RELEASE/PATENT_RELEASE_DECLARATION_EN.md",
+    "OFFICIAL_PATENT_RELEASE/README.md",
 ]
 
 
@@ -126,6 +157,17 @@ def test_legal_document_names_the_inventor(relpath: str) -> None:
     if not path.exists():                                     # pragma: no cover
         pytest.skip(f"{relpath} not present")
     assert CANONICAL_NAME in read(path), f"{relpath} does not name the inventor"
+
+
+@pytest.mark.parametrize("tail", BOOK_LEGAL_DOCS)
+def test_book_legal_document_names_the_inventor(tail: str) -> None:
+    """The book folder is not in git, so a checkout without it skips here --
+    but a checkout WITH it must be checked, and until book_relative existed
+    these three skipped even then."""
+    path = book_relative(tail)
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip(f"{tail} not present under any *Matematika Hijaiyyah* folder")
+    assert CANONICAL_NAME in read(path), f"{tail} does not name the inventor"
 
 
 def test_license_states_the_role() -> None:
@@ -163,10 +205,22 @@ def test_release_tab_key_id_constant() -> None:
 # ── machine-readable records carry name and role ─────────────────
 
 CERTIFICATES = [
-    ("Matematika Hijaiyyah/OFFICIAL_PATENT_RELEASE/CERTIFICATE.json", "inventor"),
     ("release/HL-18E-v1.0/CERTIFICATE.json", "author"),
     ("release/HL-18E-v1.0/MANIFEST.json", "author"),
 ]
+
+BOOK_CERTIFICATES = [("OFFICIAL_PATENT_RELEASE/CERTIFICATE.json", "inventor")]
+
+
+@pytest.mark.parametrize("tail,key", BOOK_CERTIFICATES)
+def test_book_certificate_records_name_and_role(tail: str, key: str) -> None:
+    """Same rename, same silent skip -- see book_relative."""
+    path = book_relative(tail)
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip(f"{tail} not present under any *Matematika Hijaiyyah* folder")
+    doc = json.loads(read(path))
+    assert doc.get(key) == CANONICAL_NAME, f"{tail}: {key} drifted"
+    assert doc.get(f"{key}_role") == CANONICAL_ROLE, f"{tail}: {key}_role drifted"
 
 
 @pytest.mark.parametrize("relpath,key", CERTIFICATES)

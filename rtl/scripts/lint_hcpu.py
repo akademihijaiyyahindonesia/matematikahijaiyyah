@@ -2,7 +2,7 @@
 """
 HCPU Verilator Lint Runner — lint_hcpu.py
 Runs Verilator --lint-only on the full HCPU RTL design.
-(c) 2026 HMCL — Hybit Technology
+(c) 2026 Maulana Amratulloh — Hybit Technology
 
 Usage:
     python lint_hcpu.py                # Auto-detect verilator

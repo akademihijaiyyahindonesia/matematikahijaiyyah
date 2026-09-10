@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Top-Level — hcpu_top.v
 // Hijaiyyah Core Processing Unit — 5-stage pipeline with forwarding
-// (c) 2026 HMCL — HM-28-v1.2-HC18D / Tier 1.5
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D / Tier 1.5
 // ============================================================================
 //
 // Architecture: Fetch → Decode → Execute → Memory → Writeback

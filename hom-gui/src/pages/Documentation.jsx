@@ -734,7 +734,7 @@ hak cipta.
 
 *bit ⊕ qubit ⊕ hybit*
 
-*© 2026 HMCL — HM-28-v1.2-HC18D*
+*© 2026 Maulana Amratulloh — HM-28-v1.2-HC18D*
 `;
 
 /* ─── Custom Markdown Components for dark theme ─── */

@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Parameter Header — hcpu_pkg.vh
 // Hijaiyyah Core Processing Unit — Verilog-2001 Compatible
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 //
 // Usage: `include "hcpu_pkg.vh" at the top of every module.

@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Shift-Add Multiplier — hcpu_mul.v
 // ASIC-safe 32×32→32 unsigned multiplier (lower 32 bits only)
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // Replaces Verilog `*` operator which infers DSP48 on FPGA but causes

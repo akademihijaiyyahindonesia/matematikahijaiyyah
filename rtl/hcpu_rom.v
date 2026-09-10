@@ -2,7 +2,7 @@
 // HCPU Master Table ROM — hcpu_rom.v
 // 28 letters × 18 components × 8 bits = 28 × 144-bit entries
 // Pre-unpacked from hm28.rom for single-cycle HLOAD
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 //
 // Data source: data/hm28.json (SHA-256 sealed)

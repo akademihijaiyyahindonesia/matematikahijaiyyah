@@ -222,7 +222,7 @@ Signed:     Maulana Amratulloh
 Key ID:     MA-SIG
 Release:    HM-28-v1.0-HC18D-B84D025
 Seal:       VERIFIED & SEALED
-Copyright:  © 2026 HMCL
+Copyright:  © 2026 Maulana Amratulloh
 ```
 
 ---

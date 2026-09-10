@@ -2,7 +2,7 @@
 ; test_bsm.hasm — BSM (بسم) String Integral Computation
 ; Computes I(BSM) = Ba + Sin + Mim and verifies guard + norm
 ; Expected: Theta=10, ||BSM||^2 = 112
-; (c) 2026 HMCL
+; (c) 2026 Maulana Amratulloh
 ; ============================================================================
 
     ; Load three letters

@@ -32,4 +32,4 @@ protocol for hybit data across systems.
 
 All HISAB frames start with `0x4842` ("HB").
 
-© 2026 HMCL
+© 2026 Maulana Amratulloh

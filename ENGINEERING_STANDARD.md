@@ -18,7 +18,7 @@
 | **Bahasa** | Python 3.11+ · Verilog-2001 (RTL) · JavaScript (GUI web) |
 | **Layout** | `src/` layout (PEP 517 / PEP 621) |
 | **Entry Point** | `hom` · `hc` · `hybit-ai` |
-| **Lisensi** | Proprietary — All Rights Reserved (© 2026 HMCL) |
+| **Lisensi** | Proprietary — All Rights Reserved (© 2026 Maulana Amratulloh) |
 
 Repositori ini bersifat **publik** (dipublikasikan sebagai GitHub Pages di
 hybit.tech). Naskah buku, dokumen paten, dan proposal ditahan di lokal melalui
@@ -207,6 +207,15 @@ hijaiyyah-mathematics/
 │       │   ├── __main__.py
 │       │   └── runtime.py
 │       │
+│       ├── nui/                    ← trained side of NUI; needs `pip install .[nui]`
+│       │   ├── __init__.py
+│       │   ├── features.py         ← titik/garis/lengkung + Theta-hat/rho per letter
+│       │   ├── dataset.py          ← accumulation examples, real and synthetic
+│       │   ├── model.py            ← physics vs. baseline embedding, sum-pooled
+│       │   ├── train.py            ← `python3 -m hijaiyyah.nui.train`
+│       │   ├── claims.py           ← tests external "Codex NUI" doc claims against sealed data
+│       │   └── pattern_language.py ← tests order effects on GF(2) exomatrix composition
+│       │
 │       └── gui/
 │           ├── __init__.py
 │           ├── app.py
@@ -239,7 +248,7 @@ hijaiyyah-mathematics/
 │   ├── hcpu_hisab.v
 │   ├── hcpu_*.v                    ← fetch, decode, memory, regfile, …
 │   ├── tb/                         ← testbench + Makefile
-│   ├── fpga/gowin/                 ← Tang Nano 9K
+│   ├── fpga/gowin/                 ← Tang Nano 20K
 │   └── mpw/                        ← sintesis dan laporan
 │
 ├── data/

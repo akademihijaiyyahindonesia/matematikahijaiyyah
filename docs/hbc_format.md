@@ -50,4 +50,4 @@ See `docs/hisa_spec.md` for the complete opcode table.
 2. Verify CRC32 of header bytes 0–27 matches byte 28–31
 3. Verify HAR-ID corresponds to a loaded registry
 
-© 2026 HMCL
+© 2026 Maulana Amratulloh

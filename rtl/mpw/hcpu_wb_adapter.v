@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Wishbone Bus Adapter — hcpu_wb_adapter.v
 // Wishbone B4 Slave interface for Caravel SoC ↔ HCPU integration
-// (c) 2026 HMCL — Hybit Technology
+// (c) 2026 Maulana Amratulloh — Hybit Technology
 // ============================================================================
 //
 // Memory Map (relative to user project base address):

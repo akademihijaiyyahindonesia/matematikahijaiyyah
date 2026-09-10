@@ -533,7 +533,7 @@ export default function System() {
 
       {/* Footer */}
       <div className="text-center py-4 text-[10px] text-hom-muted font-mono">
-        PIPELINE HYBIT · HOM v1.2.0 · HM-28-v1.2-HC18D · © 2026 HMCL
+        PIPELINE HYBIT · HOM v1.2.0 · HM-28-v1.2-HC18D · © 2026 Maulana Amratulloh
       </div>
     </div>
   );

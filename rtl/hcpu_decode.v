@@ -1,7 +1,7 @@
 // ============================================================================
 // HCPU Decode Stage — hcpu_decode.v
 // Instruction field extraction, register read, control signal generation
-// (c) 2026 HMCL — HM-28-v1.2-HC18D
+// (c) 2026 Maulana Amratulloh — HM-28-v1.2-HC18D
 // ============================================================================
 
 `include "hcpu_pkg.vh"

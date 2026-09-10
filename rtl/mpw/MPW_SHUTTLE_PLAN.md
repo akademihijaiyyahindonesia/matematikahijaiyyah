@@ -15,7 +15,7 @@ as an ASIC via Multi-Project Wafer shuttle services.
 
 ## Prerequisite: FPGA Validation
 
-> **CRITICAL**: HCPU must be fully verified on FPGA (Tang Nano 9K or Arty A7)
+> **CRITICAL**: HCPU must be fully verified on FPGA (Tang Nano 20K or Arty A7)
 > before any MPW submission. This includes:
 > - All 28 ROM entries verified
 > - All guard checks passing on hardware
@@ -76,7 +76,7 @@ as an ASIC via Multi-Project Wafer shuttle services.
 
 | Phase | Duration | Description |
 |---|---|---|
-| FPGA validation | 2–4 weeks | Complete bring-up on Tang Nano 9K |
+| FPGA validation | 2–4 weeks | Complete bring-up on Tang Nano 20K |
 | Wishbone adapter | 1–2 weeks | Write `hcpu_wb_adapter.v` |
 | OpenLane synthesis | 1–2 weeks | Clock tree, P&R, DRC/LVS |
 | Submission | 1 week | Apply to Open MPW shuttle |
@@ -166,6 +166,81 @@ eight 2 KB ones, which is several mm2 against a 700x700 um die of 0.49 mm2. The
 Caravel user area is 2.92 x 3.52 mm = 10.28 mm2 — twenty-one times larger — so
 16 KB is a shuttle decision, not an RTL one.
 
+`rtl/mpw/sky130_sram_macros/` (efabless/sky130_sram_macros, vendored) has four
+COMPLETE macros (.gds/.lef/.v/.lib all present) and two INCOMPLETE ones (log
+file only, no layout):
+
+| Macro | Words | Word size | Bytes | Complete |
+|---|---:|---:|---:|:---:|
+| `sky130_sram_1kbyte_1rw1r_32x256_8` | 256 | 32 | 1024 | yes |
+| `sram_1rw1r_32_256_8_sky130` | 256 | 32 | 1024 | yes (same spec, older name) |
+| `sky130_sram_1kbyte_1rw1r_8x1024_8` | 1024 | 8 | 1024 | yes |
+| `sky130_sram_2kbyte_1rw1r_32x512_8` | 512 | 32 | 2048 | yes |
+| `sky130_sram_4kbyte_1rw1r_128x256_128` | 256 | 128 | 4096 | no -- log only |
+| `sky130_sram_16kbyte_1rw1r_32x4096_8` | 4096 | 32 | 16384 | no -- log only |
+
+No single macro covers `hcpu_dataram`'s 4096x32 (the 16 KB attempt did not
+complete); building it needs sixteen `32x256_8` macros or eight `32x512_8`
+macros, address-decoded across the set -- the count this document already
+gave, now backed by which specific parts exist to assemble it from.
+`hcpu_memory`'s 256x32 stack (8 Kbit) needs eight `32x256_8` macros or four
+`32x512_8` ones. `configs/` carries OpenRAM generator configs for sizes not
+included as built macros here (8kbyte_1rw1r_32x2048_8 among them), for
+generating additional sizes with OpenRAM directly rather than assembling from
+what is already built.
+
+**Port protocol, measured directly.** Every macro's own name carries
+"1rw1r": port 0 read-write (`clk0/csb0/web0/wmask0/addr0/din0/dout0`),
+port 1 read-only (`clk1/csb1/addr1/dout1`) -- two ports, not one.
+Compiling `sky130_sram_1kbyte_1rw1r_32x256_8`'s own behavioural Verilog
+into Icarus and running write-then-read-back sequences directly (not
+read off its comments) gives the exact contract:
+
+- inputs are registered on the clock edge presented before them -- a
+  write on tick N is only readable from tick N+1, never tick N itself.
+- `wmask0` is byte-lane: bit N gates bits `[8N+7:8N]` of `din0`. Checked
+  on a seeded word (`0x11223344`): `wmask0=0b0001` landed on
+  `0x112233AA` (low byte only changed); `wmask0=0b0100` on that result
+  landed on `0x119933AA` (bits `[23:16]` only).
+- `dout0` during a write cycle is not meaningful -- the real macro drives
+  it to X.
+
+`src/hijaiyyah/nui/sram_mock.py`'s `TwinPortSRAM` mocks exactly this
+contract in Python (`tick()` = one clock cycle), the same freeze-mode
+discipline `nui/freeze.py` already applies to the loader's UART wire,
+applied here to the memory macro instead. 10 tests in
+`tests/test_ai/test_nui_sram_mock.py` reproduce each measured scenario
+above directly, not re-derived from assumption.
+
+**A first attempt at wiring sixteen macros into `hcpu_dataram` exists —
+`rtl/mpw/hcpu_dataram_sky130.v` — and does NOT work.** Not referenced by
+`config.json` (still `dir::../../hcpu_dataram.v`), and must not be until
+this is fixed. What IS measured correct: address decoding across all
+sixteen macros, byte write-masking, and an isolated read-after-write with
+an idle cycle either side. What is measured BROKEN:
+
+- Read latency does not match `../hcpu_dataram.v`'s own documented
+  one-cycle contract ("rdata valid the cycle AFTER addr is presented") —
+  a direct side-by-side comparison (both modules, same stimulus) shows
+  the sky130 version still `X` at the exact edge the original is already
+  correct. It needs a second cycle.
+- Even measured at its own two-cycle latency, continuous zero-gap access
+  — a new LOAD or STORE every single cycle landing on different macros,
+  ordinary back-to-back code, not a corner case — produces wrong results
+  most of the time: a 500-cycle random differential test against
+  `../hcpu_dataram.v` showed >95% mismatches. A new request overwrites the
+  single `sel_r`/`re_r` register pair before the previous request's
+  two-cycle-delayed data has been captured.
+
+Fixing the second point needs something that tracks more than one
+in-flight access (a short shift register of pending macro selects) — not
+designed. Fixing the first point, if even possible with this specific
+macro's own timing (registered input, negedge-triggered registered
+output), means HCPU's pipeline needs a real change — a stall cycle for
+LOAD/STORE, or restructuring which stage issues the memory request — not
+a drop-in swap. **This is the real remaining blocker for tapeout, not the
+macro availability question Section 1's table already answered.**
+
 Shrinking is measured and cheap. Nothing in rtl/programs/ or rtl/programs/bench/
 touches the data RAM at all; the only accesses anywhere in the tree are two
 testbench programs at addresses 0 and 10. Cells scale linearly with depth:
@@ -202,6 +277,7 @@ rtl/mpw/
 ├── config.json           ← OpenLane synthesis configuration         ✅ CREATED
 ├── pin_order.cfg         ← Pin placement order                      ✅ CREATED
 ├── Makefile              ← Build targets (harden, lint, clean)      ✅ CREATED
+├── sky130_sram_macros/   ← efabless/sky130_sram_macros, vendored    ✅ CLONED
 └── MPW_SHUTTLE_PLAN.md   ← This document
 ```
 
@@ -220,5 +296,5 @@ rtl/mpw/
 
 ---
 
-*© 2026 HMCL — HCPU MPW Shuttle Plan v2.0 — Hybit Technology*
+*© 2026 Maulana Amratulloh — HCPU MPW Shuttle Plan v2.0 — Hybit Technology*
 
