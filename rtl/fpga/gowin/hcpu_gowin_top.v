@@ -38,33 +38,33 @@
 // ============================================================================
 // PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// re-run because rtl/hcpu_video_timing.v (unused by this wrapper, pruned
-// from the netlist by synth_gowin's own hierarchy check -- DFF and BSRAM
-// below are unchanged from the prior measurement) joined the fingerprinted
-// source set, which is the fingerprint's whole job: any file added under
-// rtl/*.v forces a re-measurement whether or not it ends up instantiated:
+// re-measured 2026-09-10 after the first real board bring-up, which changed
+// the reset synchroniser and added a clk_sys heartbeat on LED[5]:
 //
-//     LUT4       13,969 / 20,736   67%
-//     DFF         4,453 / 15,552   28%
+//     LUT4       14,005 / 20,736   67%
+//     DFF         4,480 / 15,552   28%
 //     BSRAM          17 /     46   36%
 //
-//     Fmax       114.65 MHz (PASS at the 12.00 MHz constraint), down from
-//                127.94 MHz at the prior measurement -- confirmed twice,
-//                same figure both runs, on RTL unchanged apart from the
-//                pruned addition above.
-//     Bitstream  7,261,470 bytes, gowin_pack exits 0 -- re-invoked and
-//                identical to the prior measurement byte for byte
+//     Fmax       118.43 MHz (PASS at the 12.00 MHz constraint), up from
+//                114.65 -- taken after routing, not the 71.63 MHz figure
+//                nextpnr prints after placement. Reset stopped being an
+//                asynchronous level off a generic-routed pin, which is
+//                what shortened the path.
+//     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// LUT4 MOVED +2 AND THIS HEADER CANNOT SAY WHY. The bisection prose below
-// ends its chain at 13,967; this run measures 13,969. Two explanations were
-// not separated: an RTL edit landing between the two runs (rtl/hcpu_controller.v
-// carries uncommitted changes, though its PRINT stall fix is already the
-// +22 the chain below accounts for), or synthesis not being bit-identical
-// run to run. What IS established: hcpu_video_timing.v is not the cause --
-// it is pruned before placement, which is why DFF and BSRAM come back
-// unchanged, and a module contributing no registers contributes no LUT4
-// either. Whoever re-runs this next should resolve the +2 rather than
-// inherit it.
+// +27 DFF is the whole of the addition and it is countable: heartbeat[24:0]
+// is 25 flops and btn_q[1:0] is 2. The +36 LUT4 is the counter's increment
+// and the falling-edge detect. Nothing here is unaccounted for.
+//
+// A +2 LUT4 MOVE FROM AN EARLIER RUN IS STILL UNEXPLAINED, and this run does
+// not resolve it -- it only moves past it. The bisection chain below ends at
+// 13,967; the run before this one measured 13,969 and could not say why.
+// Two explanations were never separated: an RTL edit landing between runs
+// (rtl/hcpu_controller.v still carries uncommitted changes, though its PRINT
+// stall fix is already the +22 the chain accounts for), or synthesis not
+// being bit-identical run to run. What was established: hcpu_video_timing.v
+// is not the cause -- it is pruned before placement. The +36 measured here
+// is separately accounted for above and does not absorb the +2.
 //
 // This is the same RTL that does not fit the Tang Nano 9K -- 161% of its
 // 8,640 LUT4, nextpnr stopping with "no BELs remaining to implement cell
@@ -99,7 +99,7 @@
 // of the boot path's jump, and irrelevant to whether this fits -- the 20K
 // was never close to its own ceiling.
 //
-// RTL FINGERPRINT: 06238a7d418e566bb36ddc1daa1787bf4ef3b12caa78f96434a448d34c1632c5
+// RTL FINGERPRINT: 3345dbdc5894719923acfd27ecf74aaeaa7cee4dee431f98bc9cf89cbffddde5
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

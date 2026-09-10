@@ -1,17 +1,21 @@
 """
-Place and route: the design no longer fits, and how that went unnoticed.
+Place and route: the design fits the Tang Nano 20K, and the story of why it
+no longer targets the 9K it used to.
 
-Fmax was measured once, honestly, and the [EH] on it was retired. Five commits
-later the design is 159% of the board's LUT4 and nextpnr stops with "no BELs
-remaining". Nothing caught it, and the reason is worth keeping: the test that
-guarded the numbers compared the header's text against constants retyped here.
-Both are transcriptions. When the DESIGN changed, neither moved, so the guard
-went on passing while the thing it described became false.
+Fmax was measured once on the 9K, honestly, and the [EH] on it was retired.
+Five commits later the design was 159% of that board's LUT4 and nextpnr
+stopped with "no BELs remaining". Nothing caught it for a while, and the
+reason is worth keeping: the test that guarded the numbers compared the
+header's text against constants retyped here. Both are transcriptions. When
+the DESIGN changed, neither moved, so the guard went on passing while the
+thing it described became false.
 
-Numbers about a design have to be tied to that design. So the header now
-carries a hash of the RTL it was measured from, and the check below recomputes
-it. Change any source file and this fails, asking for a fresh run -- which is
-the one thing a retyped constant can never do.
+Numbers about a design have to be tied to that design. So the header carries
+a hash of the RTL it was measured from, and the check below recomputes it.
+Change any source file and this fails, asking for a fresh run -- which is the
+one thing a retyped constant can never do. That mechanism is what caught the
+9K going stale in the first place, and it is the same mechanism now guarding
+the 20K numbers that replaced it -- not a one-time fix, a standing check.
 
 The Kabah top is still unmeasured for its own separate reason: 1,665 port bits
 against 276 IOB. Keeping the two apart is still the point of this file.
@@ -20,6 +24,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -30,8 +35,9 @@ WRAPPER = (GOWIN / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 
 CRYSTAL_MHZ = 27.0
 
-# What place and route reported at THIS commit. It fails, so there is no Fmax.
-UTILISATION = {"LUT4": (13945, 8640), "DFF": (4454, 6480), "BSRAM": (17, 26)}
+# What place and route reported at THIS commit, on the Tang Nano 20K.
+UTILISATION = {"LUT4": (14005, 20736), "DFF": (4480, 15552), "BSRAM": (17, 46)}
+MEASURED_FMAX_MHZ = 118.43
 
 # The commit the fitting result was taken from, re-run to confirm it still
 # reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.
@@ -44,8 +50,33 @@ FINGERPRINTED = sorted((ROOT / "rtl").glob("*.v")) + sorted((ROOT / "rtl").glob(
     GOWIN / "hcpu_gowin.cst",
 ]
 
+# Ka'bah's own dependency set, not HCPU's -- deliberately not the same list.
+# Touching hijaiyyah_sponge.v should not demand HCPU be re-measured, and
+# touching hcpu_execute.v should not demand Ka'bah be re-measured either.
+# This is exactly rtl/fpga/gowin/Makefile's KABAH_SOURCES: not
+# rtl/*.v's wildcard, because that would pull in hijaiyyah_ramal_core.v,
+# hijaiyyah_sbox_router.v and hijaiyyah_wave.v -- retired/alternate designs
+# this wrapper does not instantiate.
+KABAH_WRAPPER_PATH = GOWIN / "hijaiyyah_kabah_gowin_top.v"
+KABAH_FINGERPRINTED = [
+    KABAH_WRAPPER_PATH,
+    ROOT / "rtl" / "hijaiyyah_kabah_top.v",
+    ROOT / "rtl" / "hijaiyyah_deserialiser.v",
+    ROOT / "rtl" / "hijaiyyah_jamrah_gate.v",
+    ROOT / "rtl" / "hijaiyyah_node_counter.v",
+    ROOT / "rtl" / "hijaiyyah_sponge.v",
+    ROOT / "rtl" / "hijaiyyah_ramal_impulse.v",
+    ROOT / "rtl" / "hijaiyyah_rotate_core.v",
+    ROOT / "rtl" / "hijaiyyah_linear.v",
+    ROOT / "rtl" / "hijaiyyah_sbox.v",
+    ROOT / "rtl" / "hijaiyyah_round_constants.v",
+    ROOT / "rtl" / "hcpu_uart_rx.v",
+    ROOT / "rtl" / "hcpu_uart_tx.v",
+    GOWIN / "hcpu_gowin.cst",
+]
 
-def _fingerprint() -> str:
+
+def _fingerprint(sources: list[Path]) -> str:
     """A hash of the sources the recorded run was made from.
 
     The wrapper carries the recorded hash in a comment, so that one line is
@@ -54,7 +85,7 @@ def _fingerprint() -> str:
     import hashlib
 
     h = hashlib.sha256()
-    for f in FINGERPRINTED:
+    for f in sources:
         h.update(f.name.encode())
         for line in f.read_text(encoding="utf-8").splitlines(keepends=True):
             if line.startswith(FP_MARK):
@@ -85,7 +116,7 @@ def test_the_recorded_numbers_belong_to_this_rtl() -> None:
     retyped header no matter what the design does; a hash does not."""
     recorded = re.search(rf"^{re.escape(FP_MARK)}([0-9a-f]{{64}})$", WRAPPER, re.M)
     assert recorded, "the wrapper no longer records an RTL fingerprint"
-    assert recorded.group(1) == _fingerprint(), (
+    assert recorded.group(1) == _fingerprint(FINGERPRINTED), (
         "the RTL has changed since place and route was last run, so the "
         "numbers in hcpu_gowin_top.v no longer describe this design. Re-run "
         "`make -C rtl/fpga/gowin hcpu_gowin_top_pnr.json`, put the new figures "
@@ -93,25 +124,45 @@ def test_the_recorded_numbers_belong_to_this_rtl() -> None:
     )
 
 
+def test_the_kabah_wrapper_records_its_own_fingerprint() -> None:
+    """Same mechanism as HCPU's, and deliberately a separate one -- see
+    KABAH_FINGERPRINTED's own comment for why the two dependency sets are
+    not merged into one hash."""
+    kabah_wrapper = KABAH_WRAPPER_PATH.read_text(encoding="utf-8")
+    recorded = re.search(rf"^{re.escape(FP_MARK)}([0-9a-f]{{64}})$", kabah_wrapper, re.M)
+    assert recorded, "the Ka'bah wrapper no longer records an RTL fingerprint"
+    assert recorded.group(1) == _fingerprint(KABAH_FINGERPRINTED), (
+        "the RTL has changed since the Ka'bah wrapper's place and route was "
+        "last run, so the numbers in hijaiyyah_kabah_gowin_top.v no longer "
+        "describe this design. Re-run `make -C rtl/fpga/gowin "
+        "hijaiyyah_kabah_gowin_top_pnr.json`, put the new figures in the "
+        "header, and restamp the fingerprint."
+    )
+
+
 def test_the_wrapper_header_records_the_routed_result() -> None:
     assert _routed_table() == UTILISATION
 
 
-def test_the_header_does_not_claim_an_fmax_it_could_not_measure() -> None:
-    """Routing never completes, so no timing report exists. A number here
-    would be carried over from a design that no longer exists."""
-    assert not re.search(r"^//\s+Fmax\s+[\d.]+ MHz", WRAPPER, re.M)
-    assert "Fmax        unmeasured" in WRAPPER
-    assert "[EH] on Fmax is back" in WRAPPER
+def test_the_header_records_the_measured_fmax() -> None:
+    """Routing completes on the 20K, so a timing report exists -- and the
+    number in the header has to be the one that report gave, not a carried-
+    over figure from a design that no longer matches this RTL."""
+    match = re.search(r"^//\s+Fmax\s+([\d.]+) MHz", WRAPPER, re.M)
+    assert match, "the header does not record a measured Fmax"
+    assert float(match.group(1)) == MEASURED_FMAX_MHZ
 
 
-def test_the_design_does_not_fit_and_says_so() -> None:
+def test_the_design_fits_and_says_so() -> None:
     table = _routed_table()
-    assert table["LUT4"][0] > table["LUT4"][1], (
-        "LUT4 fits again -- re-measure and rewrite this file to match"
+    assert table["LUT4"][0] <= table["LUT4"][1], (
+        "LUT4 no longer fits -- re-measure and rewrite this file to match"
     )
-    assert "PLACE AND ROUTE FAILS AT THIS COMMIT" in WRAPPER
-    assert "no BELs remaining" in WRAPPER
+    assert "PLACES AND ROUTES on the Tang Nano 20K" in WRAPPER
+    # "no BELs remaining" may still appear -- it is the 9K's own historical
+    # error message, kept as the record of why that board was dropped. What
+    # must NOT appear is the current-tense claim that routing fails now.
+    assert "PLACE AND ROUTE FAILS AT THIS COMMIT" not in WRAPPER
 
 
 def test_the_growth_is_attributed_to_the_commit_that_caused_it() -> None:
@@ -144,6 +195,55 @@ def test_the_kabah_top_is_still_unmeasured_and_the_reason_is_recorded() -> None:
     assert "1.665 bit port" in concrete
     assert "276 IOB" in concrete
     assert "Fmax Kabah top | **EH**" in concrete
+
+
+def test_the_kabah_wrapper_narrows_the_interface_and_says_so() -> None:
+    """
+    hijaiyyah_kabah_top.v itself stays wide -- the test above keeps that
+    honest. hijaiyyah_kabah_gowin_top.v is the wrapper hcpu_gowin_top.v's own
+    precedent said this needed: out_state stays internal, and the pins are
+    clk, reset, UART in/out and six LEDs.
+    """
+    wrapper = (GOWIN / "hijaiyyah_kabah_gowin_top.v").read_text(encoding="utf-8")
+    head = wrapper[wrapper.index("module hijaiyyah_kabah_gowin_top"):wrapper.index(");")]
+    bits = sum(int(hi) + 1 for hi in
+               re.findall(r"(?:input|output)\s+(?:wire|reg)?\s*\[\s*(\d+)\s*:\s*0\]", head))
+    bits += len(re.findall(r"(?:input|output)\s+wire\s+\w", head))  # scalar ports
+    assert bits <= 20, f"the wrapper interface grew to {bits} bits"
+    assert "out_state" not in head
+    assert "1,665" in wrapper and "276 IOB" in wrapper
+
+
+def test_the_kabah_wrapper_dumps_exactly_cube_pys_state_over_simulated_uart() -> None:
+    """
+    The wrapper's own logic -- UART framing, the bit-serial feed, the
+    permute-wait, the 200-byte dump -- is new code the RTL-direct kabah_top
+    bench never exercised. This drives it the only way a board ever will: as
+    bytes in on uart_rxd, bytes out on uart_txd, nothing touching bit_in or
+    out_state directly. It caught a real bug before this test existed --
+    tx_data raced dump_idx and byte 0 of every dump was skipped -- so it
+    stays here as the thing that would catch it coming back.
+    """
+    sources = [
+        "rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.v",
+        "rtl/hijaiyyah_kabah_top.v", "rtl/hijaiyyah_deserialiser.v",
+        "rtl/hijaiyyah_jamrah_gate.v", "rtl/hijaiyyah_node_counter.v",
+        "rtl/hijaiyyah_sponge.v", "rtl/hijaiyyah_ramal_impulse.v",
+        "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
+        "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
+        "rtl/hcpu_uart_rx.v", "rtl/hcpu_uart_tx.v",
+        "rtl/tb/tb_hijaiyyah_kabah_gowin_top.v",
+    ]
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-I", "rtl",
+         "-s", "tb_hijaiyyah_kabah_gowin_top", "-o", "/tmp/tb_kabah_gowin_top", *sources],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["/tmp/tb_kabah_gowin_top"], cwd=ROOT,
+                         capture_output=True, text=True, timeout=60)
+    assert "PASS:" in run.stdout, run.stdout
+    assert "400/400 bytes" in run.stdout
 
 
 def test_nodsp_is_required_and_the_reason_is_the_packer() -> None:
