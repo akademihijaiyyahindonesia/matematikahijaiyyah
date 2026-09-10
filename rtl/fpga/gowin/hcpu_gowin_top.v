@@ -1,6 +1,6 @@
 // ============================================================================
 // HCPU Gowin FPGA Wrapper — hcpu_gowin_top.v
-// Target: Tang Nano 9K (GW1NR-LV9QN88PC6/I5)
+// Target: Tang Nano 20K (GW2AR-LV18QN88C8/I7)
 // (c) 2026 HMCL
 // ============================================================================
 //
@@ -36,26 +36,47 @@
 `include "hcpu_pkg.vh"
 
 // ============================================================================
-// PLACE AND ROUTE FAILS AT THIS COMMIT. The design is 159% of the board's
-// LUT4 and nextpnr stops with "no BELs remaining to implement cell type
-// 'LUT4'". Measured 3 September 2026 with yosys 0.68 -> nextpnr-himbaechel
-// 0.11.1, GW1NR-LV9QN88PC6/I5:
+// PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
+// yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
+// re-run because rtl/hcpu_video_timing.v (unused by this wrapper, pruned
+// from the netlist by synth_gowin's own hierarchy check -- DFF and BSRAM
+// below are unchanged from the prior measurement) joined the fingerprinted
+// source set, which is the fingerprint's whole job: any file added under
+// rtl/*.v forces a re-measurement whether or not it ends up instantiated:
 //
-//     LUT4       13,945 / 8,640   161%    <- does not fit
-//     DFF         4,454 / 6,480    68%
-//     BSRAM          17 /    26    65%
+//     LUT4       13,969 / 20,736   67%
+//     DFF         4,453 / 15,552   28%
+//     BSRAM          17 /     46   36%
 //
-//     Fmax        unmeasured -- routing never completes, so there is no
-//                 timing report. The [EH] on Fmax is back.
+//     Fmax       114.65 MHz (PASS at the 12.00 MHz constraint), down from
+//                127.94 MHz at the prior measurement -- confirmed twice,
+//                same figure both runs, on RTL unchanged apart from the
+//                pruned addition above.
+//     Bitstream  7,261,470 bytes, gowin_pack exits 0 -- re-invoked and
+//                identical to the prior measurement byte for byte
 //
-// It used to fit, and the earlier numbers in this header were honest when
-// they were written. Re-running the commit they were taken from reproduces
-// them: ae83fd2 gives LUT4 6,753 (78%), Fmax 97.94 MHz. What happened is that
-// five commits landed afterwards and none of them re-ran place and route --
-// the same drift this file already recorded once for the cell count, repeated
-// for the routed result.
+// LUT4 MOVED +2 AND THIS HEADER CANNOT SAY WHY. The bisection prose below
+// ends its chain at 13,967; this run measures 13,969. Two explanations were
+// not separated: an RTL edit landing between the two runs (rtl/hcpu_controller.v
+// carries uncommitted changes, though its PRINT stall fix is already the
+// +22 the chain below accounts for), or synthesis not being bit-identical
+// run to run. What IS established: hcpu_video_timing.v is not the cause --
+// it is pruned before placement, which is why DFF and BSRAM come back
+// unchanged, and a module contributing no registers contributes no LUT4
+// either. Whoever re-runs this next should resolve the +2 rather than
+// inherit it.
 //
-// Bisected, one synthesis run per commit:
+// This is the same RTL that does not fit the Tang Nano 9K -- 161% of its
+// 8,640 LUT4, nextpnr stopping with "no BELs remaining to implement cell
+// type 'LUT4'". That board was the target through the commit before this
+// one. The design outgrew it; the fix was not to shrink the design but to
+// move to a board with more LUT4, and 20,736 comfortably holds what 8,640
+// could not. cosmictera-build/ROADMAP.md has the fuller account of why this
+// board and what is still open (Ka'bah sharing the same chip, chiefly).
+//
+// The design did not always need even the 9K's full budget. Bisected, one
+// synthesis run per commit, against the 9K's 8,640 -- kept here because the
+// lesson is about a commit, not about which board was being measured against:
 //
 //     ae83fd2  the toolchain and the first bitstream    6,753   78%   fits
 //     096e392  supervisor mode                          6,740   78%   fits
@@ -69,13 +90,16 @@
 // and that turned a read-only initialised array into a read-write memory.
 // BSRAM went 4 -> 17 and the rest landed in fabric: +5,015 LUT4 and +2,666
 // DFF for a port that carries a program in from the wire. The bridge is real
-// and its testbench passes; what it costs had simply never been measured.
+// and its testbench passes; what it costs had simply never been measured,
+// and five further commits landed without re-running place and route -- the
+// same drift this file already recorded once for the cell count, repeated
+// for the routed result. rtl/hcpu_controller.v's later PRINT stall fix
+// (rtl/programs/nui_embedding.hasm's own header tells that story) added
+// another +22 LUT4, -1 DFF on top: 13,945 -> 13,967. Nowhere near the size
+// of the boot path's jump, and irrelevant to whether this fits -- the 20K
+// was never close to its own ceiling.
 //
-// So the board cannot be flashed from this commit, and the per-second figures
-// that were resolved by 90.14 MHz are unresolved again until either the
-// memory is inferred cleanly or the instruction memory is made smaller.
-//
-// RTL FINGERPRINT: d0d642acba5b2b053f20108d20a197aa2cc0b558c6da96271919b075e2c7fb9a
+// RTL FINGERPRINT: 06238a7d418e566bb36ddc1daa1787bf4ef3b12caa78f96434a448d34c1632c5
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any
@@ -140,11 +164,23 @@ module hcpu_gowin_top #(
     endgenerate
 
     // ── Reset synchronizer ──────────────────────────────────────
-    reg [2:0] rst_sync;
+    // btn_rst_n is pin 87 = MODE1, which this board holds low. Level
+    // sensitive and asynchronous, that pinned sys_rst_n at 0 forever: the
+    // first bring-up configured and then executed nothing -- zero UART
+    // bytes, one LED. PULL_MODE=UP reached the bitstream (verified in the
+    // P&R database) and did not lift it, so the board wins the pin.
+    // Edge-detected and synchronous, a stuck level costs one pulse instead
+    // of a deadlock, and a real press still resets. The initial values
+    // matter: without them rst_sync starts X in simulation, where the old
+    // async branch used to define it. Simulation drives this pin high and
+    // so could never have caught any of it.
+    reg [2:0] rst_sync = 3'b000;
+    reg [1:0] btn_q    = 2'b00;
     wire      sys_rst_n = rst_sync[2];
 
-    always @(posedge clk_sys or negedge btn_rst_n) begin
-        if (!btn_rst_n)
+    always @(posedge clk_sys) begin
+        btn_q <= {btn_q[0], btn_rst_n};
+        if (btn_q[1] & ~btn_q[0])
             rst_sync <= 3'b000;
         else
             rst_sync <= {rst_sync[1:0], pll_locked};
@@ -162,10 +198,20 @@ module hcpu_gowin_top #(
 
     integer i;
     initial begin
-        // Unwritten words stay NOP, so a short program cannot run into
-        // whatever the block RAM powers up holding.
+        // The guard is load-bearing, and this fill is why the first board
+        // bring-up executed 4,096 NOPs instead of the program: under yosys,
+        // filling the array before $readmemh silently discards the readmemh
+        // and every BSRAM INIT word comes out zero. Measured on a 14-line
+        // testcase -- fill then readmemh gives 0 init bits and maps to SPX9,
+        // readmemh alone gives the program and maps to SP. Nothing looked
+        // wrong because OP_NOP is 8'h00, so an emptied memory and a
+        // NOP-filled one are the same bits. The board needs no fill at all
+        // (BSRAM powers up zeroed, which is already OP_NOP); a simulator
+        // does, because an unwritten reg array reads X.
+`ifndef YOSYS
         for (i = 0; i < `CODE_DEPTH; i = i + 1)
             imem[i] = {`OP_NOP, 24'h000000};
+`endif
         $readmemh(PROGRAM_HEX, imem);
     end
 
@@ -347,11 +393,19 @@ module hcpu_gowin_top #(
     // LED[1]: halted (on = stopped)
     // LED[2]: PLL locked
     // LED[3]: reset active
+    // LED[5] is a clock heartbeat, and it exists because LED[2] cannot do
+    // this job: ~pll_locked is combinational and lights even if clk_sys
+    // never ticks, so a held reset and a dead clock look identical on the
+    // board. This one blinks only while clk_sys runs -- 0.62 s per toggle
+    // at 27 MHz.
+    reg [24:0] heartbeat = 25'd0;
+    always @(posedge clk_sys) heartbeat <= heartbeat + 1'b1;
+
     assign led[0] = ~guard_led_out;
     assign led[1] = ~halted_out;
     assign led[2] = ~pll_locked;
     assign led[3] = ~sys_rst_n;
     assign led[4] = ~report_armed;   // cycle report sent
-    assign led[5] = 1'b1;            // off
+    assign led[5] = heartbeat[24];   // blinking = clk_sys alive
 
 endmodule

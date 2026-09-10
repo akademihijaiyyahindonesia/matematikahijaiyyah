@@ -1,37 +1,67 @@
 //Copyright (C)2026 HMCL — HCPU Gowin Constraint File
-//Target: Tang Nano 9K (GW1NR-LV9QN88PC6/I5)
+//Target: Tang Nano 20K (GW2AR-LV18QN88C8/I7)
+//
+// Verified pinout, cross-checked against the official schematic
+// (PIN87_MODE1_KEY2, PIN88_MODE0_KEY1, PIN15..20_SYS_LED0..5) and a working
+// open-source .cst (uart_tx=69, uart_rx=70). Pin 4 is the 27 MHz crystal
+// input; it is not a dedicated clock pin, so nextpnr's "generic routing used
+// for the clock" warning is expected and not a fault.
+//
+// This board replaced the Tang Nano 9K as of the commit that added this
+// comment -- the design no longer fits the 9K's 8,640 LUT4 (see
+// cosmictera-build/OFF.md for the bisection). The 9K's old pin map (clk=52,
+// uart_txd=17, uart_rxd=18, btn_rst_n=4, led=10..16) is gone with it; it
+// described different silicon and would silently mis-map every pin here.
 
 // ── Clock ───────────────────────────────────────────────────────
-IO_LOC  "clk_27m"   52;
+IO_LOC  "clk_27m"   4;
 IO_PORT "clk_27m"   IO_TYPE=LVCMOS33;
 
-// ── Reset button (S2) ───────────────────────────────────────────
-IO_LOC  "btn_rst_n" 4;
-IO_PORT "btn_rst_n" IO_TYPE=LVCMOS18;
+// ── Reset button (S2, "MODE1_KEY2") ─────────────────────────────
+// PULL_MODE=UP is load-bearing, and the board is what proves it. As
+// LVCMOS18 with no pull, this pin floated and settled low, so the async
+// branch of hcpu_gowin_top.v's rst_sync held sys_rst_n at 0 forever: the
+// first flash configured (LED2 lit) and then executed nothing at all --
+// zero UART bytes, and pressing the button changed nothing because the pin
+// was already low. Simulation cannot see this; it drives btn_rst_n high.
+// hcpu_hdmi.cst and kabah_hdmi.cst already constrain the same pin this way.
+IO_LOC  "btn_rst_n" 87;
+IO_PORT "btn_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 
-// ── UART TX ─────────────────────────────────────────────────────
-// Pin 17 = UART TX on Tang Nano 9K via USB-C bridge
-IO_LOC  "uart_txd"  17;
+// ── UART TX/RX, via the USB-C bridge ────────────────────────────
+IO_LOC  "uart_txd"  69;
 IO_PORT "uart_txd"  IO_TYPE=LVCMOS33 DRIVE=8;
-// Pin 18 is the bridge's RX on the Tang Nano 9K, the pair to 17. Without it
-// the receiver, the timer's interrupt and every trap that depends on them are
+// The bridge's RX on the Tang Nano 20K, the pair to 69. Without it the
+// receiver, the timer's interrupt and every trap that depends on them are
 // dead on the board while simulating perfectly.
-IO_LOC  "uart_rxd"  18;
+IO_LOC  "uart_rxd"  70;
 IO_PORT "uart_rxd"  IO_TYPE=LVCMOS33 PULL_MODE=UP;
 
-// ── LEDs (active low) ───────────────────────────────────────────
-// LED[0] = Guard   LED[1] = Halted  LED[2] = PLL
-// LED[3] = Reset   LED[4] = Rsv     LED[5] = Rsv
-IO_LOC  "led[0]"    10;
-IO_LOC  "led[1]"    11;
-IO_LOC  "led[2]"    13;
-IO_LOC  "led[3]"    14;
-IO_LOC  "led[4]"    15;
-IO_LOC  "led[5]"    16;
+// ── LEDs (active low) ────────────────────────────────────────────
+// This one .cst is shared by both top levels this board builds (see
+// rtl/fpga/gowin/Makefile's KABAH_TOP vs TOP) -- what each LED means
+// depends on which is flashed, and is assigned in that wrapper's own
+// `assign led[n] = ...` lines, not here:
+//
+//   hcpu_gowin_top.v:            LED[4] = cycle report sent
+//     [0] guard  [1] halted  [2] PLL locked  [5] clk_sys heartbeat
+//     [3] lit means reset RELEASED -- led[3] = ~sys_rst_n, so it reports
+//     the CPU running, not the CPU held. The old "reset" label here read
+//     exactly backwards during the first bring-up.
+//
+//   hijaiyyah_kabah_gowin_top.v:
+//     [0] absorbing  [1] permuting  [2] dumping  [3] reset
+//     [4] PLL locked  [5] frame error (sticky)
+IO_LOC  "led[0]"    15;
+IO_LOC  "led[1]"    16;
+IO_LOC  "led[2]"    17;
+IO_LOC  "led[3]"    18;
+IO_LOC  "led[4]"    19;
+IO_LOC  "led[5]"    20;
 
-IO_PORT "led[0]"    IO_TYPE=LVCMOS18 DRIVE=8;
-IO_PORT "led[1]"    IO_TYPE=LVCMOS18 DRIVE=8;
-IO_PORT "led[2]"    IO_TYPE=LVCMOS18 DRIVE=8;
-IO_PORT "led[3]"    IO_TYPE=LVCMOS18 DRIVE=8;
-IO_PORT "led[4]"    IO_TYPE=LVCMOS18 DRIVE=8;
-IO_PORT "led[5]"    IO_TYPE=LVCMOS18 DRIVE=8;
+IO_PORT "led[0]"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[1]"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[2]"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[3]"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[4]"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[5]"    IO_TYPE=LVCMOS33 DRIVE=8;

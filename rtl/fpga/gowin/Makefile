@@ -1,5 +1,5 @@
 # ============================================================================
-# HCPU on the Tang Nano 9K — open-source Gowin flow
+# HCPU on the Tang Nano 20K — open-source Gowin flow
 # (c) 2026 HMCL
 # ============================================================================
 #
@@ -16,10 +16,17 @@
 #   # nextpnr-himbaechel: build from source, or use a prebuilt oss-cad-suite
 #
 # The vendor Gowin IDE is the alternative; point it at the same sources.
+#
+# This targeted the Tang Nano 9K (GW1NR-LV9QN88PC6/I5) through the commit
+# before this one. The design outgrew it -- 161% of 8,640 LUT4, place and
+# route never completing (see cosmictera-build/OFF.md's bisection table for
+# which commit did it). The 20K (GW2AR-LV18QN88C8/I7) has 20,736: the same
+# design routes there at 67%. See cosmictera-build/ROADMAP.md for how this
+# board was chosen and what is still open.
 
-DEVICE   = GW1NR-LV9QN88PC6/I5
-FAMILY   = GW1N-9C
-BOARD    = tangnano9k
+DEVICE   = GW2AR-LV18QN88C8/I7
+FAMILY   = GW2A-18C
+BOARD    = tangnano20k
 
 RTL_DIR  = ../..
 TOP      = hcpu_gowin_top
@@ -51,7 +58,12 @@ LOADER     ?= openFPGALoader
 # and would have failed on the day the board arrived, not before.
 SOURCES  = hcpu_gowin_top.v $(wildcard $(RTL_DIR)/hcpu_*.v)
 
-.PHONY: all sim synth bitstream flash bridge send clean
+.PHONY: all sim synth bitstream flash bridge send clean \
+        sim_kabah kabah_synth kabah_bitstream kabah_flash
+
+# HDMI wrappers are compile/synthesis experiments only. They are deliberately
+# not part of `bitstream` or `flash` until nextpnr can pack the GW2AR
+# differential TLVDS outputs without aborting.
 
 all: sim
 
@@ -97,6 +109,57 @@ bitstream: $(TOP)_pnr.json
 
 flash: bitstream
 	$(LOADER) -b $(BOARD) $(TOP).fs
+
+# ── Ka'bah wrapper: same board, different top ───────────────────
+# hijaiyyah_kabah_gowin_top.v narrows hijaiyyah_kabah_top.v's 1,665-bit
+# interface to the same 10 pins hcpu_gowin_top.v uses -- clk_27m, btn_rst_n,
+# uart_rxd, uart_txd, led[5:0] -- so it shares this Makefile's DEVICE,
+# FAMILY, BOARD and even hcpu_gowin.cst verbatim; only TOP and its sources
+# differ, no wrapper is written for a second board.
+KABAH_TOP     = hijaiyyah_kabah_gowin_top
+# Not $(wildcard $(RTL_DIR)/hijaiyyah_*.v): that would also pull in
+# hijaiyyah_ramal_core.v, hijaiyyah_sbox_router.v and hijaiyyah_wave.v --
+# retired or alternate implementations this wrapper does not instantiate
+# (see their own file headers -- ramal_core and sbox_router are the designs
+# ramal_impulse and sbox replaced). hcpu_gowin_top.v's own wildcard is safe
+# because HCPU has no such retired siblings under hcpu_*.v; Ka'bah's family
+# does, so this list is written out instead, matching exactly what
+# tests/test_integrity/test_place_and_route.py already builds and runs.
+KABAH_SOURCES = $(KABAH_TOP).v $(RTL_DIR)/hijaiyyah_kabah_top.v \
+                $(RTL_DIR)/hijaiyyah_deserialiser.v $(RTL_DIR)/hijaiyyah_jamrah_gate.v \
+                $(RTL_DIR)/hijaiyyah_node_counter.v $(RTL_DIR)/hijaiyyah_sponge.v \
+                $(RTL_DIR)/hijaiyyah_ramal_impulse.v $(RTL_DIR)/hijaiyyah_rotate_core.v \
+                $(RTL_DIR)/hijaiyyah_linear.v $(RTL_DIR)/hijaiyyah_sbox.v \
+                $(RTL_DIR)/hijaiyyah_round_constants.v \
+                $(RTL_DIR)/hcpu_uart_rx.v $(RTL_DIR)/hcpu_uart_tx.v
+
+# No program.hex: the wrapper's protocol is fixed (128 bytes in, 200 out),
+# not a loaded program. But the testbench does $readmemh two want-vectors by
+# a path relative to the repo root ("rtl/tb/kabah_uart_want.hex") -- it was
+# only ever run that way, from test_place_and_route.py's subprocess with
+# cwd=ROOT. This Makefile runs from rtl/fpga/gowin/, so the vvp step has to
+# change to the repo root itself rather than leave the path broken.
+sim_kabah:
+	iverilog -g2012 -I $(RTL_DIR) -o tb_kabah_gowin_top.vvp \
+	    $(RTL_DIR)/tb/tb_hijaiyyah_kabah_gowin_top.v $(KABAH_SOURCES)
+	cd $(RTL_DIR)/.. && vvp rtl/fpga/gowin/tb_kabah_gowin_top.vvp
+
+kabah_synth:
+	yosys -p "read_verilog -I $(RTL_DIR) $(KABAH_SOURCES); \
+	          synth_gowin $(YOSYS_FLAGS) -top $(KABAH_TOP) -json $(KABAH_TOP).json"
+
+$(KABAH_TOP)_pnr.json: kabah_synth
+	@test -n "$(NEXTPNR)" || { echo "nextpnr-himbaechel not found."; \
+	    echo "Set OSS_CAD=<path to oss-cad-suite> or put it on PATH."; exit 1; }
+	$(NEXTPNR) --json $(KABAH_TOP).json --write $@ \
+	    --device $(DEVICE) --vopt cst=hcpu_gowin.cst \
+	    --vopt family=$(FAMILY)
+
+kabah_bitstream: $(KABAH_TOP)_pnr.json
+	$(GOWIN_PACK) -d $(FAMILY) -o $(KABAH_TOP).fs $<
+
+kabah_flash: kabah_bitstream
+	$(LOADER) -b $(BOARD) $(KABAH_TOP).fs
 
 # What is installed, and what is not. Run this first on a new machine.
 .PHONY: tools
