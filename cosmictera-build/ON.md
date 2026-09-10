@@ -200,6 +200,46 @@ deserialiser bit-serial 8 clock/byte menentukan hasilnya.
 
 Label: `CC` untuk angka, `EH` untuk ketahanan kriptanalisis.
 
+### Wrapper papan Ka'bah: antarmuka 1.665 bit jadi 10 pin
+
+`hijaiyyah_kabah_top` sendiri tak pernah bisa jadi top level papan — 1.665
+bit port, dan `out_state` sendirian 1.600 bit (96%) darinya, satu-satunya
+pemakainya adalah perbandingan testbench sendiri. `hijaiyyah_kabah_gowin_top.v`
+adalah wrapper yang menyempitkannya, persis seperti `hcpu_gowin_top` untuk
+HCPU: `out_state` tetap internal (diakses lewat hierarki, seperti biasa), dan
+yang keluar ke pin papan hanya clk, reset, UART RX/TX, 6 LED — **10 pin**.
+
+Protokolnya: host kirim 128 byte lewat UART (satu blok rate penuh), wrapper
+mengembalikan 200 byte (`out_state`, MSB dulu). `load` menyala sekali saja
+sesudah reset, jadi host yang terus mengirim blok mendapat penyerapan
+multi-blok sungguhan, bukan 128 byte yang di-hash ulang terisolasi tiap kali.
+
+Diukur 4 September 2026, direproduksi 5 September 2026 lewat
+`make -C rtl/fpga/gowin kabah_bitstream` (bukan lagi command manual),
+yosys 0.68 (`-nodsp`) → nextpnr-himbaechel 0.11.1 → `gowin_pack`,
+GW2AR-LV18QN88C8/I7 (Tang Nano 20K, papan target — lihat [OFF.md](OFF.md)
+untuk kenapa 9K ditinggalkan):
+
+```
+IOB     10 / 384    2%
+LUT4    12.102 / 20.736   58%
+Fmax    117,91 MHz, terrout, bitstream 4,6 MB
+```
+
+Fingerprint RTL-nya sendiri, terpisah dari fingerprint HCPU — lihat
+`KABAH_FINGERPRINTED` di `tests/test_integrity/test_place_and_route.py`.
+
+Diverifikasi bukan lewat `bit_in`/`out_state` langsung, tapi lewat framing
+UART sungguhan (start bit, 8 bit data, stop bit) di `tb_hijaiyyah_kabah_gowin_top.v`
+— dua blok 128 byte berturut-turut tanpa reset di antaranya, cocok 400/400
+byte dengan `cube.py`. Testbench itu menemukan bug nyata sebelum lolos:
+`tx_data` balapan dengan `dump_idx` pada tepi clock yang sama, jadi byte
+pertama dari setiap dump selalu terlewat.
+
+Label: `CC`. Bukti: `rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.v`,
+`rtl/tb/tb_hijaiyyah_kabah_gowin_top.v`,
+`tests/test_integrity/test_place_and_route.py`.
+
 ---
 
 ## 6 — Jembatan papan
@@ -210,17 +250,39 @@ Label: `CC` untuk angka, `EH` untuk ketahanan kriptanalisis.
 | Format kawir | 4 byte cacah + 4N byte, MSB dulu | `rtl/scripts/send_program.py` |
 | Bench boot | tiga kata mendarat di 64, 65, 66 lalu berjalan | `rtl/tb/tb_gowin_loader.v` |
 | Wrapper papan | 27 MHz, UART pada pin papan | `rtl/fpga/gowin/hcpu_gowin_top.v` |
+| **Bitstream, Tang Nano 20K** | **muat, terrout, Fmax terukur** | `rtl/fpga/gowin/Makefile`, `hcpu_gowin.cst` |
 
-Ini menyala **dalam simulasi**. Bitstream-nya tidak — lihat [OFF.md](OFF.md).
+Ini menyala **dalam simulasi, dan sekarang di bitstream juga**. Diukur ulang
+7 September 2026 (rtl/hcpu_video_timing.v bergabung ke set sumber yang
+di-fingerprint, memaksa pengukuran ulang), yosys 0.68 (`-nodsp`) →
+nextpnr-himbaechel 0.11.1 → `gowin_pack`, GW2AR-LV18QN88C8/I7 (Tang Nano 20K):
 
-Label: `CC` dalam simulasi, `EH` di silikon.
+```
+LUT4    13.969 / 20.736   67%
+DFF      4.453 / 15.552   28%
+BSRAM       17 /     46   36%
+Fmax    114,65 MHz (PASS pada batas 12,00 MHz)
+```
+
+Papan target sampai commit sebelumnya adalah Tang Nano 9K, yang desain ini
+**tidak muat** (161% dari 8.640 LUT4) — lihat [OFF.md](OFF.md) untuk bisect
+komit yang membuatnya tumbuh sebesar itu. Bukan diperbaiki di 9K; dipindah ke
+papan dengan LUT4 lebih besar.
+
+`make -C rtl/fpga/gowin bitstream` belum berarti "sudah dinyalakan di
+perangkat keras nyata" — `gowin_pack` sukses dan hash RTL terikat di header
+`hcpu_gowin_top.v`, tapi belum ada papan fisik yang benar-benar di-flash dan
+dibaca lewat serial sungguhan. Itu langkah berikutnya, di
+[ROADMAP.md](ROADMAP.md).
+
+Label: `CC` untuk sintesis+PNR+pack; `AT` untuk flash ke papan fisik.
 
 ---
 
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.279 lulus, 4 dilewati
-make -C rtl/tb all            # 240 asersi, 17 bench, 0 gagal
+python3 -m pytest -q          # 4.570 lulus, 0 dilewati
+make -C rtl/tb all            # 253 asersi, 20 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

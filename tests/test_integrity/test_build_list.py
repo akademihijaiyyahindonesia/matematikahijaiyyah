@@ -17,6 +17,8 @@ list does not, these fail.
 from __future__ import annotations
 
 import re
+import sys
+import subprocess
 from pathlib import Path
 
 from hijaiyyah.core.master_table import MASTER_TABLE
@@ -28,6 +30,7 @@ README = (FOLDER / "README.md").read_text(encoding="utf-8")
 ON = (FOLDER / "ON.md").read_text(encoding="utf-8")
 CHECKLIST = (FOLDER / "CHECKLIST.md").read_text(encoding="utf-8")
 OFF = (FOLDER / "OFF.md").read_text(encoding="utf-8")
+PAPAN = (FOLDER / "PAPAN.md").read_text(encoding="utf-8")
 PKG = (ROOT / "rtl" / "hcpu_pkg.vh").read_text(encoding="utf-8")
 WRAPPER = (ROOT / "rtl" / "fpga" / "gowin" / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 TB_MAKEFILE = (ROOT / "rtl" / "tb" / "Makefile").read_text(encoding="utf-8")
@@ -134,13 +137,17 @@ def test_the_bench_count_matches_the_makefile() -> None:
 # ── the board, which is the part that is off ────────────────────
 
 
-def test_fmax_is_not_claimed_as_on() -> None:
-    """It was measured once and the design has since outgrown the board. The
-    list must not carry the old number forward -- that is precisely the drift
-    that put it here."""
-    assert "90,14" not in ON, "ON.md quotes an Fmax that no longer holds"
-    assert "Fmax HCPU kembali `EH`" in README
-    assert "`EH`. Turun dari `CC`" in OFF
+def test_fmax_is_measured_again_with_new_evidence() -> None:
+    """It was measured once on the 9K, then went unmeasured when the design
+    outgrew that board -- EH is the honest label for "no longer verified",
+    not "false". Now it is measured again, on the Tang Nano 20K that
+    replaced the 9K as the target. A label does not rise without new
+    evidence (R2); the evidence here is a real PNR run against a bigger
+    board, not the old 9K number reasserted."""
+    assert "90,14" not in ON, "ON.md must not carry the 9K's old Fmax forward"
+    assert "114,65" in ON, "ON.md must carry the Tang Nano 20K's measured Fmax"
+    assert "Fmax HCPU adalah `CC` lagi" in README
+    assert "Tang Nano 9K" in OFF and "Tang Nano 20K" in OFF
 
 
 def test_the_utilisation_in_off_is_the_wrappers_own() -> None:
@@ -239,15 +246,15 @@ def test_the_checklist_ticks_every_bench_the_makefile_runs() -> None:
     assert not missing, f"benches that run but are not on the checklist: {sorted(missing)}"
 
 
-def test_the_bitstream_is_red_not_absent() -> None:
-    """The one row that must never quietly disappear. A checklist that stops
-    before the red line is not a checklist."""
-    row = [ln for ln in CHECKLIST.splitlines() if "bitstream" in ln]
-    assert row, "the bitstream row is gone from the checklist"
-    assert "🔴" in row[0] and "✅" not in row[0]
-    # The percentage is read back from the wrapper, not typed twice: it moves
-    # every time the design does, and a hard-coded copy here would be one more
-    # transcription to drift.
+def test_the_bitstream_row_is_green_and_matches_the_wrapper() -> None:
+    """Bitstream moved from red to green the day the design started fitting
+    a board -- the Tang Nano 20K, not the 9K it used to target (OFF.md's
+    "Papan 9K" section keeps why). The percentage is read back from the
+    wrapper, not typed twice: it moves every time the design does, and a
+    hard-coded copy here would be one more transcription to drift."""
+    row = [ln for ln in CHECKLIST.splitlines()
+           if ln.startswith("| ✅") and "bitstream" in ln]
+    assert row, "the bitstream row is gone from the checklist, or not green"
     pct = re.search(r"LUT4\s+[\d,]+ / [\d,]+\s+(\d+)%", WRAPPER).group(1)
     assert f"{pct}%" in row[0], f"the checklist says {row[0]}, the wrapper says {pct}%"
     assert "make -C rtl/fpga/gowin bitstream" in CHECKLIST.split("Satu tarikan napas")[1]
@@ -261,7 +268,13 @@ def test_nothing_blocked_is_ticked_green() -> None:
     below, not as a blanket word-ban."""
     green = [ln for ln in CHECKLIST.splitlines() if ln.startswith("| ✅")]
     assert len(green) > 20, f"only {len(green)} green rows -- the list shrank"
-    for word in ("bitstream", "flash", "Fmax"):
+    # "bitstream" moved out of this ban the day it started fitting the board
+    # (see cosmictera-build/OFF.md's "Papan 9K" section for why 9K stays
+    # blocked while the Tang Nano 20K does not) -- it is checked as its own
+    # claim below, in test_the_bitstream_row_is_green_and_matches_the_wrapper.
+    # "flash" and "Fmax" stay banned: gowin_pack succeeding is not a board
+    # being flashed, and no green row here claims a routed Fmax on its own.
+    for word in ("flash", "Fmax"):
         assert not [ln for ln in green if word in ln], f"{word} is ticked green"
     hfs_rows = [ln for ln in green if "HFS" in ln]
     assert hfs_rows, "HOS's HFS row went missing from the checklist"
@@ -271,13 +284,93 @@ def test_nothing_blocked_is_ticked_green() -> None:
 
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
-    reads them together."""
-    for figure in ("240 asersi", "17 bench"):
+    reads them together.
+
+    Agreeing with each other is NOT the same as being right, and this test
+    used to check only the first. It read "269 asersi" out of three files,
+    found them identical, and passed -- while no run of `make -C rtl/tb all`
+    had ever produced 269. cosmictera-build/PAPAN.md carried the same class of
+    error independently ("160 pemeriksaan" beside its own detail row summing
+    to 308), which is what prompted counting the log instead of the files.
+    The measured figure is 253: one summary line per testbench, with
+    tb_hisab's 28-letter sweep of 112 recognised as a SUB-TOTAL inside its own
+    124 rather than an addition to it, and tb_gowin_top's "1" then "2" as one
+    cumulative pass_count printed twice (tb_gowin_top.v:137,194) rather than
+    two separate summaries. Both of those are exactly the double-counts that
+    produced 308. A transcription can agree with another transcription
+    forever; only the log can say what ran."""
+    for figure in ("253 asersi", "20 bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
-    # The pytest count is the one figure here nothing can verify -- checking it
-    # would mean running pytest inside pytest -- so what is guarded is that the
-    # checklist says so, rather than presenting it as though it were checked.
-    assert re.search(r"\*\*[\d.]+ tes lulus\*\*, \d+ dilewati †", CHECKLIST)
-    assert "tidak dijaga" in CHECKLIST
-    assert "240 asersi RTL di 17 testbench" in README
-    assert "240 asersi, 17 bench, 0 gagal" in ON
+    assert "253 asersi RTL di 20 testbench" in README
+    assert "253 asersi, 20 bench, 0 gagal" in ON
+
+
+def _quoted_pytest_counts() -> dict[str, tuple[int, int]]:
+    """The passed/skipped pair each file quotes, as ints."""
+    out: dict[str, tuple[int, int]] = {}
+    for name, text in (("CHECKLIST", CHECKLIST), ("ON", ON),
+                       ("README", README), ("PAPAN", PAPAN)):
+        m = re.search(r"([\d.]+) (?:tes )?(?:tes Python )?lulus\*{0,2},? "
+                      r"(\d+) dilewati", text)
+        assert m, f"{name} no longer quotes a pytest passed/skipped pair"
+        out[name] = (int(m.group(1).replace(".", "")), int(m.group(2)))
+    return out
+
+
+def test_the_quoted_pytest_counts_agree_with_each_other() -> None:
+    """They drifted apart the moment nothing read them together.
+
+    The guard this replaces checked only that CHECKLIST matched the SHAPE
+    `**<number> tes lulus**, <n> dilewati` -- and the number sub-pattern
+    matched any number at all. ON.md and README.md were not read for this figure whatsoever. All
+    three were free to drift independently, and did: CHECKLIST said 4.565
+    while ON.md and README.md sat at 4.454, a figure no run had produced for
+    weeks. Same class of defect as the "269 asersi" above, and found the same
+    way -- by measuring instead of comparing transcriptions.
+    """
+    counts = _quoted_pytest_counts()
+    distinct = set(counts.values())
+    assert len(distinct) == 1, f"the folder disagrees with itself: {counts}"
+
+
+def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
+    """Not pytest inside pytest -- collection, which runs no test at all.
+
+    CHECKLIST.md's footnote used to say this figure "cannot be checked without
+    running pytest inside pytest". Half true: what CANNOT be checked is how
+    many PASS. How many EXIST is `--collect-only`, ~9 seconds, executing
+    nothing.
+
+    But `passed + skipped == collected` was one term short, and the missing
+    term cost a real investigation: the run reported 12 skipped while only 9
+    SKIPPED lines existed, and the totals disagreed by exactly 3 no matter
+    which figure the folder quoted. A module skipped at import -- three of
+    them here, `pytest.importorskip("torch")` at the top of test_nui.py,
+    test_nui_atom.py and test_nui_multitask.py -- counts once in the summary's
+    skipped total and yields no collected item at all. The nine pymupdf skips
+    sit inside their files, so those ARE collected and do appear per test.
+
+    So the identity is: quoted passed + quoted skipped == collected + the
+    skips that happen during collection. Both halves come from the same
+    ~9-second run, because -rs lists them there too.
+
+    -p no:cacheprovider keeps the child from writing the parent's cache.
+    """
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-rs",
+         "-p", "no:cacheprovider", str(ROOT / "tests")],
+        cwd=ROOT, capture_output=True, text=True, timeout=300,
+    )
+    m = re.search(r"(\d+) tests? collected", proc.stdout)
+    assert m, f"could not read a collected count:\n{proc.stdout[-2000:]}"
+    collected = int(m.group(1))
+    module_skips = len(re.findall(r"^SKIPPED ", proc.stdout, re.M))
+
+    passed, skipped = _quoted_pytest_counts()["CHECKLIST"]
+    assert passed + skipped == collected + module_skips, (
+        f"the folder quotes {passed} passed + {skipped} skipped = "
+        f"{passed + skipped}, but pytest collects {collected} and skips "
+        f"{module_skips} more module(s) at import, for {collected + module_skips}. "
+        f"Re-run `python3 -m pytest -q` and update CHECKLIST.md, ON.md, "
+        f"README.md and PAPAN.md together."
+    )

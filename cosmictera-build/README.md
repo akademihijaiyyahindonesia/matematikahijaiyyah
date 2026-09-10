@@ -9,6 +9,7 @@ janji: setiap baris menyebut tempatnya di pohon ini dan apa yang membuktikannya.
 | [CHECKLIST.md](CHECKLIST.md) | daftar cek — tiap centang punya perintahnya |
 | [ON.md](ON.md) | yang menyala — enam lapis, dengan bukti per baris |
 | [OFF.md](OFF.md) | yang belum, dan yang terbangun tapi terhalang |
+| [ROADMAP.md](ROADMAP.md) | dari Tang Nano 20K ke HCPU fisik, berfase — bukan daftar cek, peta |
 
 ## Cara membaca
 
@@ -26,23 +27,29 @@ Label epistemik proyek tetap berlaku dan mengikat:
 | `EH` | hipotesis; belum terukur |
 | `AT` | terarah, belum dibangun |
 
-Tidak ada baris yang naik label tanpa bukti baru. Yang turun, turun — dan bulan
-ini ada satu yang turun: **Fmax HCPU kembali `EH`** karena desainnya tidak lagi
-muat di papan. Itu ada di [OFF.md](OFF.md), bukan disembunyikan.
+Tidak ada baris yang naik label tanpa bukti baru. Sebelumnya ada satu yang
+turun — Fmax HCPU jadi `EH` karena desainnya tidak lagi muat di Tang Nano 9K —
+dan sekarang naik lagi dengan bukti baru sungguhan, bukan diklaim balik begitu
+saja: **Fmax HCPU adalah `CC` lagi, 114,65 MHz di Tang Nano 20K**, papan yang
+menggantikan 9K. Riwayatnya ada di [OFF.md](OFF.md), bukan disembunyikan.
 
 ## Angka utuh, hari ini
 
 ```
-4.279 tes Python lulus, 4 dilewati          ruff bersih, mypy bersih
-  240 asersi RTL di 17 testbench, 0 gagal
+4.570 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
+  253 asersi RTL di 20 testbench, 0 gagal
    72 dari 96 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
     6 penyebab trap, 6 prasyarat OS tertutup, H-Kernel 4 dari 4
-    0 bitstream yang bisa di-flash — place-and-route gagal di 159% LUT4
+    2 bitstream muat & terrout (HCPU 67% LUT4, Ka'bah 58%, Tang Nano 20K)
+    0 dari keduanya pernah benar-benar di-flash ke papan fisik
 ```
 
-Baris terakhir sengaja ada di sini. Lima lapis pertama menyala; lapis papannya
-tidak. Daftar yang hanya memuat kabar baik bukan daftar build.
+Baris terakhir sengaja ada di sini. Enam lapis menyala termasuk bitstream-nya
+sekarang, tapi tak satu pun pernah dinyalakan di perangkat keras yang
+benar-benar dipegang — `gowin_pack` sukses bukan papan menyala. Daftar yang
+hanya memuat kabar baik bukan daftar build; lihat [ROADMAP.md](ROADMAP.md)
+untuk langkah yang masih belum diambil.
 
 ## Apa yang menjaga daftar ini
 

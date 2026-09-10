@@ -464,14 +464,37 @@ secara native. Target:
 
 ### 8.3 Status
 
-**DESIGNED** — arsitektur dipetakan, target FPGA/Verilog masa depan.
+**BERJALAN DI SILIKON** — bukan lagi rancangan. Diukur 10 September 2026 di
+Tang Nano 20K (GW2AR-LV18QN88C8/I7):
+
+```
+LUT4   14.005 / 20.736   67%
+DFF     4.480 / 15.552   28%
+BSRAM      17 /     46   36%
+Fmax   118,43 MHz (pasca perutean)
+```
+
+HCPU mengeksekusi programnya dan UART membalas 23 byte yang cocok
+**byte-per-byte** dengan simulasi — `112`, lalu `CYCLES=00001B89`, 7.049
+siklus, angka yang sama dengan testbench. Sapuan 28 huruf mengembalikan
+nilai Θ̂ yang **identik** dengan `MASTER_TABLE` kanonik, memenuhi syarat
+"28 entri ROM terverifikasi" di `rtl/mpw/MPW_SHUTTLE_PLAN.md`.
+
+Rekaman lengkapnya, termasuk yang gagal: `cosmictera-build/PAPAN.md`.
 
 ### 8.4 Jalur Realisasi
 
 ```
-Fase 1: Soft-HCPU on FPGA
-Fase 2: ASIC (jangka panjang)
+Fase 1: Soft-HCPU on FPGA         SELESAI — 10 September 2026
+Fase 2: ASIC (jangka panjang)     belum dimulai
 ```
+
+Papan itu juga menemukan tiga cacat yang tidak akan pernah terlihat di
+simulasi: reset yang digerbangi level pin MODE1 (muncul empat kali di tiga
+wrapper), memori instruksi yang kosong di **setiap** bitstream yang pernah
+dibangun — tak terlihat karena `OP_NOP` kebetulan `8'h00` — dan driver
+diferensial TMDS yang dibuang nextpnr sebelum sampai ke pad. Ketiganya lolos
+20 testbench RTL dan 4.570 tes Python.
 
 ---
 
@@ -921,7 +944,7 @@ gui/           ← import semua (layer teratas)
 | L1 | HL-18E | **SPECIFIED** |
 | L2 | H-ISA | **OPERATIONAL** |
 | L3 | CMM-18C | **SPECIFIED** |
-| L4 | HCPU | **DESIGNED** |
+| L4 | HCPU | **SILICON** |
 | L5 | HCVM | **OPERATIONAL** |
 | L6 | HGSS | **OPERATIONAL** |
 | L7 | HC18DC | **SPECIFIED** |
@@ -935,13 +958,15 @@ gui/           ← import semua (layer teratas)
 | **OPERATIONAL** | berjalan dan dapat dipakai |
 | **SPECIFIED** | spesifikasi ada, implementasi sedang/belum penuh |
 | **DESIGNED** | arsitektur dipetakan, belum diimplementasi |
+| **SILICON** | berjalan di perangkat keras fisik, dan keluarannya cocok dengan simulasi — bukan "disintesis" atau "muat di papan", melainkan dieksekusi dan dibaca balik |
 
 ### 18.3 Status Agregat
 
 ```
 OPERATIONAL:  6 dari 11
 SPECIFIED:    3 dari 11
-DESIGNED:     1 dari 11
+SILICON:      1 dari 11     ← HCPU, sejak 10 September 2026
+DESIGNED:     0 dari 11
 SEALED:       1 dari 11
 ```
 
@@ -1017,7 +1042,10 @@ Tag format:    v1.0.0
 ### 20.3 Fase 3 — Hardware dan Skalabilitas (2029–2030)
 
 ```
-□ HCPU softcore on FPGA
+☑ HCPU softcore on FPGA        SELESAI 2026 — empat tahun lebih awal
+                               dari jadwal fase ini, dan diukur di papan
+                               fisik, bukan disimulasikan. Ka'bah juga:
+                               2/2 frame, 400/400 byte cocok cube.py.
 □ H-ISA benchmark published
 □ Network protocol operational
 □ Web interface (hybit-web)
@@ -1054,6 +1082,11 @@ yang signifikan harus:
 
 *Core Computational System for Hijaiyyah Mathematics*
 
-© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+© 2026 Maulana Amratulloh
+
+*Yayasan Akademi Hijaiyyah Indonesia — HMCL
+(Hijaiyyah Mathematics Computational Laboratory)*
+
+*Yayasan menerbitkan dan menaungi; hak paten dipegang pencipta pribadi.*
 
 </div>

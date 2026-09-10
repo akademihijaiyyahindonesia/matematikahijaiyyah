@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.300 tes lulus**, 4 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.570 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 108 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -38,11 +38,24 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 | ✅ | ROM cocok dengan tabel | `python3 rtl/scripts/cross_verify_rom.py` |
 | ✅ | Suite deterministik | 40 jalan berturut `test_memscan`, 0 gagal |
 
-† Satu-satunya angka di halaman ini yang **tidak dijaga**. Cacah bench dan
-asersi dibaca ulang dari Makefile oleh
-[`test_build_list.py`](../tests/test_integrity/test_build_list.py), tapi cacah
-pytest tidak bisa diperiksa tanpa menjalankan pytest di dalam pytest. Ia
-cuplikan 3 September 2026; perintah di sebelahnya yang menjadi kebenarannya.
+† Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
+pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
+tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
+`pytest --collect-only -q` mencacah 4.569 dalam 9 detik tanpa menjalankan satu
+tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
+mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
+di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
+sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
+harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
+
+**Angka "0 dilewati" itu sendiri sebuah koreksi.** Empat tes dulu melewati diri
+sendiri dengan pesan `not present` — dokumen paten di
+`Matematika Hijaiyyah/OFFICIAL_PATENT_RELEASE/`, folder yang sudah berganti nama
+jadi `Buku Matematika Hijaiyyah/`. Berkasnya ada sepanjang waktu; yang tidak ada
+adalah jalurnya. Sebuah instrumen hukum berhenti diperiksa karena sebuah
+direktori diganti nama — persis kegagalan yang `test_authorship.py` ada untuk
+mencegahnya. Kini jalurnya di-glob, bukan disebut, seperti `test_bab_satu.py`
+sudah lakukan.
 
 Baris terakhir bukan hiasan. `test_every_clue_is_distinctive_enough_to_be_worth_having`
 mengambil `os.urandom` lalu menuntut penanda tidak muncul di dalamnya — dua
@@ -56,7 +69,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **240 asersi, 17 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **253 asersi, 20 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -72,6 +85,9 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | Boot lewat kabel | `make -C rtl/tb sim_loader` |
 | ✅ | **Cabang & interupsi bertabrakan** | `make -C rtl/tb sim_branch_trap_race` |
 | ✅ | **HOS: heap, HFS guard-on-write, HAR** | `make -C rtl/tb sim_hos` |
+| ✅ | NUI: penjumlahan embedding fisika (titik/garis/lengkung/theta/rho) | `make -C rtl/tb sim_nui_embedding` |
+| ✅ | NUI: opcode huruf (L_JIM/L_KHA) dimuat lewat kabel loader, bukan disintesis langsung | `make -C rtl/tb sim_loader_nui` |
+| ✅ | Video timing generator (hsync/vsync/de) cocok persis standar VESA 640x480@60Hz | `make -C rtl/tb sim_video_timing` |
 
 Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
@@ -129,8 +145,29 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
   interlock load-use pada dua LOAD berurutan) untuk menaruh pembacaan
   cabang itu tepat di siklus tabrakan. Diperbaiki dengan satu baris,
   menyalin pola GPR persis: `assign flags_out = flags_we ? flags_in : flags;`
-  Direproduksi minimal di `tb_hcpu_hos.v` dan seluruh 17 bench tetap hijau
+  Direproduksi minimal di `tb_hcpu_hos.v` dan seluruh 18 bench tetap hijau
   sesudahnya.
+
+---
+
+## Perangkat keras — sintesis
+
+| | apa | perintah |
+|---|---|---|
+| ✅ | **Bitstream HCPU, Tang Nano 20K: 67% LUT4, 118,43 MHz** | `make -C rtl/fpga/gowin bitstream` |
+| ✅ | **Bitstream Ka'bah, Tang Nano 20K: 58% LUT4, 165,98 MHz** | `make -C rtl/fpga/gowin kabah_bitstream` |
+
+**Kalimat ini dulu berbunyi "belum ada `openFPGALoader` yang benar-benar
+dijalankan terhadap perangkat keras dalam sejarah repositori ini". Itu tidak
+lagi benar sejak 10 September 2026.** Kedua bitstream dipanggang ke papan
+fisik dan dijalankan: HCPU mencetak `112` lalu `CYCLES=00001B89` di kabel
+serial — 7.049 siklus, byte-per-byte identik dengan `make sim` — dan Ka'bah
+mengembalikan 2/2 frame, 400/400 byte cocok dengan `cube.py`. Kedua angka
+Fmax di atas adalah pengukuran ulang **pasca** bring-up, bukan angka pra-papan
+yang digantikannya (114,65 dan 117,91): keduanya naik karena penyerempak reset
+berhenti menggerbangi level pin 87 (MODE1) yang ditahan rendah oleh papan.
+Apa yang benar-benar keluar dari papan dicatat di [PAPAN.md](PAPAN.md); yang
+masih belum ada di [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -148,19 +185,21 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 ## Belum hijau
 
-Dua, dan keduanya dinamai supaya centang di atas berarti sesuatu.
+Satu, dan itu dinamai supaya centang di atas berarti sesuatu.
 
 | | apa | keadaan |
 |---|---|---|
 | ⬜ | `python3 rtl/scripts/lint_hcpu.py` | **0 error struktural** (dulu 1), sisa **76 peringatan** — keluar bukan-nol |
-| 🔴 | `make -C rtl/fpga/gowin bitstream` | **gagal**: 13.945 / 8.640 LUT4 = **161%** |
 
 Error Verilator hilang justru karena `default:` ganda itu diperbaiki — jadi
 lint yang selama ini merah sebenarnya sedang menunjuk cacat huruf, dan tak ada
 yang membacanya. Peringatan yang tersisa soal bit yang tak terpakai.
 
-Bitstream merah, bukan kosong: **papan tidak bisa di-flash dari komit ini.**
-Sebabnya satu komit dan sudah dibisect — lihat [OFF.md](OFF.md).
+Bitstream pindah dari baris ini ke bagian hijau di bawah: desain yang sama
+tidak muat 9K (161% LUT4), tapi muat dan terrout di Tang Nano 20K
+(67% LUT4, 114,65 MHz) — lihat [OFF.md](OFF.md) untuk kenapa 9K ditinggalkan
+alih-alih diperbaiki. `make bitstream` berhasil belum berarti papan fisik
+sudah di-flash — itu masih [belum terjadi](ROADMAP.md), bukan disembunyikan.
 
 ---
 
@@ -169,10 +208,7 @@ Sebabnya satu komit dan sudah dibisect — lihat [OFF.md](OFF.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.300 lulus, 4 dilewati
-make -C rtl/tb all               # 240 asersi, 17 bench, 0 gagal
-make -C rtl/fpga/gowin bitstream # ← merah, dan memang seharusnya terlihat
+python3 -m pytest -q             # 4.570 lulus, 0 dilewati
+make -C rtl/tb all               # 253 asersi, 20 bench, 0 gagal
+make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```
-
-Perintah terakhir sengaja ikut. Daftar cek yang berhenti sebelum baris merah
-bukan daftar cek.
