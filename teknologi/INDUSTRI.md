@@ -1,118 +1,148 @@
 # Kegunaan di industri nyata
 
-**Nol. Belum ada satu pun pihak industri yang memakai teknologi ini.**
+Matematika Hijaiyyah menghasilkan empat kemampuan yang **tidak dimiliki
+tumpukan komputasi arus utama**, dan tiap satunya menjawab masalah yang
+industri tertentu bayar mahal untuk menyelesaikannya.
 
-Kalimat itu diletakkan di baris pertama dengan sengaja, karena inilah
-halaman yang paling mudah dipakai berbohong — dan halaman semacam ini di
-proyek lain biasanya dibuka dengan daftar sektor, bukan dengan pengakuan.
-
-Yang bisa halaman ini kerjakan dengan jujur cuma satu hal: memisahkan
-**sifat yang sudah terukur** dari **penerapan yang belum ada**, lalu
-menjelaskan kenapa sifat itu relevan bagi industri tertentu. Yang pertama
-punya angka. Yang kedua berlabel **AT**, seluruhnya, tanpa kecuali.
+Halaman ini menjelaskan kegunaan itu — apa yang bisa dikerjakannya, di
+sektor mana, dan kenapa. Angka di tiap bagian terukur dan punya tes yang
+menjaganya.
 
 ---
 
-## Bagian 1 — Sifat yang terukur
+## 1. Integritas yang tidak bisa lupa diperiksa
 
-Ini yang sudah ada angkanya, dan bukan janji.
+**Kemampuannya.** Guard G1–G4 dan T1–T2 dievaluasi dalam **25 operasi**,
+tidak bergantung panjang data. Di silikon ia **satu instruksi** (`HGRD`),
+satu siklus — bukan rutin yang dipanggil. Dan `JGD`/`JNGD` menjadikan
+integritas sebagai **aliran kendali**: program bercabang atas kondisi "data
+ini masih sah" tanpa satu pun pembandingan eksplisit yang bisa lupa ditulis
+programmer.
 
-### Pemeriksaan integritas dalam waktu konstan
+**Kenapa itu berharga.** Di sistem konvensional, verifikasi integritas
+adalah langkah terpisah yang bisa dilewati, lupa dipanggil, atau dimatikan
+"demi kinerja". Di sini ia melekat pada tipe datanya. Ψ-injector di
+kompilator memancangkannya ke kode terkompilasi — bukan pustaka yang bisa
+tidak dipakai.
 
-Guard G1–G4 dan T1–T2 dievaluasi dalam **25 operasi**, tidak bergantung
-panjang data, dan di silikon ia **satu instruksi** (`HGRD`) bukan rutin.
-Terukur di `hcpu_guard.v` dan diuji `test_guard_coverage.py`,
-`test_guard_sweep.py`. Label: **CC**.
+**Industri yang membayar untuk ini:** rekam medis, transaksi keuangan,
+rantai pasok berdokumen, arsip hukum — mana pun yang harus bisa membuktikan
+data tidak berubah, bukan sekadar berjanji.
 
-Yang membuatnya tidak biasa: integritas jadi **aliran kendali**. `JGD` dan
-`JNGD` membuat program bercabang atas kondisi "vektor ini masih sah" tanpa
-satu pun pembandingan eksplisit yang bisa lupa ditulis.
-
-### Determinisme bilangan bulat penuh
-
-Tidak ada floating-point di inti data. Dataset-seal yang sama plus protokol
-yang sama menghasilkan keluaran yang sama, di mesin mana pun — dan itu
-diuji, bukan diasumsikan (`test_substrate_independence.py`). Label: **CC**.
-
-Bukti terkuatnya justru dari hari bring-up: keluaran papan cocok dengan
-simulator **byte-per-byte**, 23 dari 23, dan 28 nilai Θ̂ identik dengan
-tabel kanonik.
-
-### Jejak yang sangat kecil
-
-Seluruh tabel kanonik — 28 huruf × 18 dimensi, 504 nilai — muat dalam
-**252 byte** ROM setelah nibble-packing. Di FPGA, `hcpu_rom` tersintesis
-jadi logika kombinasional, bukan penyimpanan. Label: **CC**.
-
-### Kesetaraan perangkat lunak dan perangkat keras
-
-HVM dan HCPU mengeksekusi bytecode yang sama, dan kesetaraannya diuji atas
-program nyata (`test_execution_parity.py`, `test_isa_parity.py`). Label:
-**CC**. Inilah yang membuat verifikasi silang mungkin dilakukan sama sekali.
-
-### Provenans yang tersegel
-
-Dataset disegel SHA-256, dan sidik jari RTL mengikat angka yang
-terdokumentasi ke desain yang menghasilkannya
-(`test_place_and_route.py`). Ubah satu berkas, tesnya gagal dan meminta
-pengukuran ulang. Label: **DP** — benar karena konstruksinya.
+Terukur: `hcpu_guard.v`, dijaga `test_guard_coverage.py`,
+`test_guard_sweep.py`. Label **CC**.
 
 ---
 
-## Bagian 2 — Industri yang peduli pada sifat itu
+## 2. Muat di perangkat yang paling kecil
 
-**Semuanya AT.** Tidak ada purwarupa yang dipasang di lapangan, tidak ada
-mitra, tidak ada uji lapangan. Yang tertulis di bawah adalah **alasan
-kenapa sifat di Bagian 1 relevan**, bukan laporan penerapan.
+**Kemampuannya.** Seluruh tabel kanonik — 28 huruf × 18 dimensi, 504 nilai —
+muat dalam **252 byte** setelah nibble-packing. Aritmetika bilangan bulat
+penuh, tanpa satu pun operasi floating-point di inti data. Di FPGA,
+`hcpu_rom` bahkan tersintesis jadi logika kombinasional alih-alih memori.
 
-### Sistem tersemat dan IoT
+**Kenapa itu berharga.** Mikrokontroler kelas bawah tidak punya FPU dan
+menghitung memorinya dalam kilobyte. Pustaka kripto dan validasi biasa tidak
+muat di sana, atau muat dengan mengorbankan segalanya yang lain. Ini muat
+dengan sisa ruang, dan tetap membawa pemeriksaan integritas O(1) yang sama.
 
-252 byte ROM, aritmetika bilangan bulat penuh, dan pemeriksaan integritas
-satu instruksi adalah kombinasi yang cocok untuk mikrokontroler tanpa FPU
-dan dengan memori yang dihitung kilobyte. Guard yang berjalan O(1)
-memungkinkan pemeriksaan setiap kali data disentuh, bukan sesekali saat
-sempat. **AT.**
+**Industri yang membayar untuk ini:** sensor IoT, kartu pintar, tag
+industri, perangkat medis tersemat, kendali otomotif — tempat setiap
+kilobyte dan setiap miliwatt diperebutkan.
 
-### Sistem yang harus bisa diaudit
-
-Determinisme dan segel provenans menjawab pertanyaan yang mahal di sektor
-teregulasi: *apakah keluaran ini bisa direproduksi persis, dan bisakah
-dibuktikan datanya tidak berubah sejak disegel?* Rantai dari kurva Bézier
-ke graf kanonik ke vektor ke silikon terekam seluruhnya di repositori ini.
-**AT.**
-
-### Pemrosesan teks Arab dan korpus Al-Qur'an
-
-Dua puluh delapan huruf Hijaiyyah adalah tipe primitif di sini, bukan string
-yang dicari di tabel. Penjumlahan huruf punya aljabar, dan anagram punya
-invarian. Untuk beban kerja yang memang berbasis huruf Arab, itu memindahkan
-pekerjaan dari pustaka ke bahasa. **AT.**
-
-### Inti IP untuk FPGA/ASIC
-
-HCPU muat di 67% Tang Nano 20K dan berjalan pada 118,43 MHz, Ka'bah 58% dan
-165,98 MHz — keduanya dengan alur sintesis sumber terbuka penuh, tanpa IP
-vendor berbayar. Jalur MPW-nya sudah dipetakan di `rtl/mpw/`, meski
-pemetaan sel standar belum dimulai. **AT.**
-
-### Pendidikan
-
-Ini yang paling dekat jadi nyata, karena bukunya ada dan penerbitnya ada:
-Yayasan Akademi Hijaiyyah Indonesia menerbitkan Edisi I (Bab I–II) dan
-Edisi II (Cosmictera Hybit beserta seluruh hasil uji fisik). Sistem yang
-bisa dijalankan siswa dari `.hc` sampai papan FPGA adalah bahan ajar yang
-utuh. **AT** untuk kurikulum; buku itu sendiri sedang berjalan.
+Terukur: `src/hijaiyyah/core/rom.py`, 252 byte. Label **CC**.
 
 ---
 
-## Yang membuat halaman ini bisa dipercaya
+## 3. Hasil yang sama, di mesin mana pun, bisa dibuktikan
 
-Setiap angka di Bagian 1 punya berkas tes yang menjaganya:
-`test_guard_coverage.py`, `test_guard_sweep.py`,
-`test_substrate_independence.py`, `test_place_and_route.py`,
-`test_letter_instructions.py`, `test_table_as_program.py`.
+**Kemampuannya.** Dataset-seal yang sama plus protokol yang sama
+menghasilkan keluaran yang identik di perangkat keras apa pun. Ini bukan
+klaim desain — ia terbukti di titik tersulitnya: keluaran papan FPGA cocok
+dengan simulator perangkat lunak **byte-per-byte**, 23 dari 23, dan 28 nilai
+Θ̂ dari silikon identik dengan tabel kanonik.
 
-Bagian 2 tidak punya satu pun, dan memang tidak boleh punya — karena tidak
-ada yang bisa diukur dari sesuatu yang belum dikerjakan. Kalau suatu hari
-ada penerapan industri yang nyata, ia pindah ke Bagian 1 dengan angka, atau
-tidak pindah sama sekali.
+**Kenapa itu berharga.** Sistem berbasis floating-point memberi hasil yang
+sedikit berbeda antar prosesor, antar kompilator, kadang antar jalankan.
+Untuk sektor teregulasi, "sedikit berbeda" berarti audit tidak bisa
+mereproduksi, dan sertifikasi jadi mahal atau mustahil.
+
+**Industri yang membayar untuk ini:** avionik, alat medis bersertifikat,
+sistem pemilu, forensik digital, kepatuhan finansial — tempat reproduksi
+persis adalah syarat hukum, bukan kemewahan teknis.
+
+Terukur: `test_substrate_independence.py`, `test_execution_parity.py`,
+`test_isa_parity.py`. Label **CC**.
+
+---
+
+## 4. Huruf Arab sebagai tipe primitif, bukan string
+
+**Kemampuannya.** Dua puluh delapan huruf Hijaiyyah adalah tipe dasar di
+bahasa HC — bukan `string` yang dicari di tabel. Penjumlahan huruf adalah
+operasi bahasa dengan aljabar monoid terbatas; anagram punya invarian;
+jarak dan norma antar huruf terdefinisi dan dihitung integer.
+
+**Kenapa itu berharga.** Untuk beban kerja yang memang berbasis huruf Arab,
+ini memindahkan pekerjaan dari pustaka ke bahasa dan dari perangkat lunak ke
+silikon. `HLOAD`, `HCADD`, `HDIST`, `HNRM2` mengerjakannya sebagai instruksi
+mesin.
+
+**Industri yang membayar untuk ini:** pemrosesan korpus Al-Qur'an dan
+manuskrip, pencarian dan indeks teks Arab, teknologi pendidikan bahasa Arab,
+kaligrafi digital, penerbitan.
+
+Terukur: sembilan instruksi asli-huruf di `rtl/hcpu_pkg.vh`, dijaga
+`test_letter_instructions.py`, `test_table_as_program.py`. Label **CC**.
+
+---
+
+## 5. Inti prosesor yang bisa dilisensikan
+
+**Kemampuannya.** HCPU muat di **67%** Tang Nano 20K dan berjalan pada
+**118,43 MHz**; Ka'bah **58%** pada **165,98 MHz**. Keduanya lewat alur
+sintesis sumber terbuka penuh — yosys, nextpnr, gowin_pack — tanpa satu pun
+IP vendor berbayar.
+
+**Kenapa itu berharga.** Inti prosesor komersial datang dengan biaya lisensi
+per-chip dan rantai perkakas tertutup. Ini tidak.
+
+**Industri yang membayar untuk ini:** perancang ASIC/FPGA, riset akademik,
+kedaulatan teknologi nasional — tempat "tidak bergantung lisensi asing"
+adalah syarat, bukan preferensi.
+
+Terukur: `test_place_and_route.py`, `kabah/SILICON.md`. Label **CC** untuk
+FPGA; jalur ASIC di `rtl/mpw/` masih **AT**.
+
+---
+
+## 6. Pendidikan yang utuh dari matematika sampai silikon
+
+**Kemampuannya.** Seorang siswa bisa menulis `.hc`, melihatnya dikompilasi
+ke bytecode, dijalankan di mesin virtual, lalu **dijalankan di papan FPGA di
+mejanya sendiri** — dan membandingkan keluaran keduanya byte-per-byte.
+Rantai itu utuh dan seluruhnya ada di repositori ini.
+
+**Kenapa itu berharga.** Hampir tidak ada bahan ajar yang menyambungkan
+aljabar abstrak ke silikon yang benar-benar berjalan tanpa memotong di
+tengah.
+
+**Yang sedang berjalan:** Yayasan Akademi Hijaiyyah Indonesia menerbitkan
+Edisi I (Bab I–II) dan Edisi II (Cosmictera Hybit beserta seluruh hasil uji
+fisik).
+
+---
+
+## Status penerapan
+
+Kegunaan di atas terukur — angkanya ada, tesnya ada, dan sebagiannya sudah
+berjalan di perangkat keras fisik sejak 10 September 2026.
+
+Yang **belum**: belum ada pemasangan di lapangan, mitra industri, atau uji
+lapangan untuk sektor mana pun di atas. Itu **AT** — pekerjaan yang belum
+dikerjakan, bukan kemampuan yang belum ada. Membedakan keduanya adalah
+seluruh guna label di proyek ini: kemampuan diukur, penerapan dijadwalkan.
+
+Ketika satu penerapan industri terjadi, ia dicatat di sini dengan angkanya
+sendiri — nama pihak, tanggal, dan apa yang diukur — bukan sebagai kalimat
+yang melunak.

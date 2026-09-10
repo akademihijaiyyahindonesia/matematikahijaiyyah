@@ -216,20 +216,33 @@ def test_teknologi_inventory_is_a_census_not_a_claim() -> None:
         assert row(label) == count, f"teknologi/README says {row(label)} {label}, tree holds {count}"
 
 
-def test_teknologi_industry_page_claims_no_deployment() -> None:
-    """The one page in this repository most easily turned into a brochure.
+def test_teknologi_industry_page_separates_capability_from_deployment() -> None:
+    """Two failure modes, opposite directions, and the page must avoid both.
 
-    Every application it lists is unbuilt, so the page has to say so where a
-    reader cannot miss it -- not in a footnote. If a real deployment ever
-    happens it moves to the measured half WITH a figure, and this assertion
-    is what forces that rather than letting the sentence quietly soften.
+    The first draft of this page answered "who uses this" when the question
+    was "what is this good for", and opened with "Nol" -- reading a list of
+    absent customers as a verdict on the work. Capability and deployment are
+    different claims: an O(1) guard in 25 operations is useful whether or not
+    anyone has bought it yet.
+
+    The other direction is the brochure, where unbuilt deployment is implied
+    by listing sectors without ever saying nobody has installed this.
+
+    So: every capability carries a measured label, and the deployment status
+    is stated in its own section rather than inferred either way.
     """
     page = _text("teknologi", "INDUSTRI.md")
-    head = "\n".join(page.splitlines()[:6])
-    assert "Nol." in head or "**Nol" in head, (
-        "INDUSTRI.md no longer opens by stating that nobody uses this yet")
-    measured, applications = page.split("## Bagian 2", 1)
-    assert "**CC**" in measured or "**DP**" in measured, "the measured half cites no label"
-    assert applications.count("**AT.**") >= 4, (
-        "an application in Bagian 2 lost its AT label -- unbuilt work may not "
-        "be listed without one")
+
+    body, status = page.split("## Status penerapan", 1)
+    assert "**AT**" in status, (
+        "the deployment section no longer labels field installation as unbuilt")
+    assert "belum" in status, "the deployment section no longer says what is missing"
+
+    numbered = re.findall(r"^## \d+\. (.+)$", body, re.M)
+    assert len(numbered) >= 5, f"only {len(numbered)} capabilities listed"
+    assert body.count("**CC**") >= 4, (
+        "a capability lost its measured label -- every one has to name what "
+        "was measured, or it is a sector list wearing a number")
+    # Every capability says what the thing does before naming who wants it.
+    assert body.count("**Kemampuannya.**") >= 5, (
+        "a capability section stopped stating what the technology can do")
