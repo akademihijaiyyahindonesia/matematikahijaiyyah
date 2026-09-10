@@ -202,3 +202,31 @@ class TestEquality:
         assert h1 is not None and h2 is not None
         s = {h1, h2}
         assert len(s) == 1
+
+
+def test_the_name_expands_and_the_expansion_is_true() -> None:
+    """"Hyperdimensional" names a number, and that number is checkable.
+
+    The expansion sat only in the founder's head until it was written down,
+    which is the ordinary way a project's central term ends up meaning
+    slightly different things to different readers. Recording it is half the
+    fix; the other half is that one word in it makes a factual claim about
+    the vector space, so a hybit that stopped being 18-dimensional would make
+    the docstring wrong -- and that is the kind of wrongness this repository
+    catches by asserting rather than by proofreading.
+    """
+    from pathlib import Path
+
+    from hijaiyyah.core.master_table import MASTER_TABLE
+
+    source = Path(__import__("hijaiyyah.core.hybit", fromlist=["_"]).__file__)
+    text = source.read_text(encoding="utf-8")
+    assert "Hijaiyyah Hyperdimensional Bit Integration" in text, (
+        "hybit.py no longer records what the name expands to")
+
+    dimensions = len(MASTER_TABLE.all_entries()[0].vector)
+    assert dimensions == 18, dimensions
+    assert f"N_0^{dimensions}" in text, (
+        f"the docstring calls the space something other than N_0^{dimensions}, "
+        f"which is what the sealed table actually carries")
+    assert len(MASTER_TABLE.all_entries()) == 28, "the Hijaiyyah half of the name"

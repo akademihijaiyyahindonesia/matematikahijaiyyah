@@ -91,7 +91,7 @@ def main():
             vec = vectors[i]
             name = names[i - 1]
             concat = ", ".join(f"8'd{v}" for v in reversed(vec))
-            print(f"5'd{i:2d}: data_out = {{{concat}}}; // {name} {vec}")
+            print(f"6'd{i:2d}: data_out = {{{concat}}}; // {name} {vec}")
 
     else:
         print(f"Unknown format: {fmt}", file=sys.stderr)

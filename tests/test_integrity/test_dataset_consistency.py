@@ -100,7 +100,7 @@ def test_json_agrees_with_manifest_hash() -> None:
 
 # ── rtl/hcpu_rom.v (what the silicon actually reads) ─────────────
 
-ROM_ENTRY = re.compile(r"5'd(\d+):\s*data_out\s*=\s*\{(.*?)\};", re.S)
+ROM_ENTRY = re.compile(r"\d+'d(\d+):\s*data_out\s*=\s*\{(.*?)\};", re.S)
 
 
 def verilog_rom() -> Dict[int, List[int]]:
@@ -121,9 +121,22 @@ def test_verilog_rom_matches_canonical() -> None:
 
 
 def test_verilog_rom_holds_no_undeclared_letters() -> None:
-    """Index 31 is a deliberate guard-failure vector; nothing else may hide here."""
+    """Indices 31..36 are deliberate guard-failure vectors; nothing else may hide here.
+
+    The set is not hard-coded twice. It comes from machine.py, which is the
+    same table the software machine loads, so an entry appearing in silicon
+    without a modelled counterpart is caught here rather than by a program
+    that passes in Python and fails on the board -- the divergence that put
+    ROM_TEST_INDEX in machine.py to begin with.
+    """
+    from hijaiyyah.hisa.machine import ROM_NEGATIVE_VECTORS
+
+    negatives = set(ROM_NEGATIVE_VECTORS)
     extra = set(verilog_rom()) - set(canonical())
-    assert extra == {31}, f"unexpected ROM addresses: {sorted(extra - {31})}"
+    assert extra == negatives, (
+        f"ROM addresses neither a canonical letter nor a modelled negative "
+        f"vector: {sorted(extra - negatives)}; modelled but absent from "
+        f"silicon: {sorted(negatives - extra)}")
 
 
 # ── hm28.rom (nibble-packed binary) ──────────────────────────────

@@ -28,6 +28,23 @@ from .registers import HREG_COUNT, RegisterFile
 ROM_TEST_INDEX = 31
 ROM_TEST_VECTOR = (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0)
 
+#: One negative vector per guard, mirroring hcpu_rom.v indices 31..36. Index 31
+#: isolates G4 (see above); the five below isolate the rest, each violating
+#: exactly one constraint so a failure names the guard that caught it instead of
+#: only reporting that something did. Verified against full_guard_check in
+#: tests/test_integrity/test_guard_negative_rom.py, which also checks that this
+#: table and the ROM agree -- a corrupt vector modelled here but not carried in
+#: silicon would make the software pass where the board fails, which is the
+#: exact divergence ROM_TEST_INDEX was added to close in the first place.
+ROM_NEGATIVE_VECTORS = {
+    31: ((1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0), "G4"),
+    32: ((0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "G1"),
+    33: ((0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "G2"),
+    34: ((0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0), "G3"),
+    35: ((0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0), "T1"),
+    36: ((0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0), "T2"),
+}
+
 
 
 @dataclass
@@ -435,9 +452,10 @@ class HISAMachine:
                 self.regs.hreg[dst] = list(entry.vector)
                 return f"HLOAD H{dst} ← {entry.char} ({entry.name}) [idx={imm}]"
 
-            if imm == ROM_TEST_INDEX:
-                self.regs.hreg[dst] = list(ROM_TEST_VECTOR)
-                return f"HLOAD H{dst} ← corrupt test vector [idx={imm}]"
+            if imm in ROM_NEGATIVE_VECTORS:
+                vector, guard = ROM_NEGATIVE_VECTORS[imm]
+                self.regs.hreg[dst] = list(vector)
+                return f"HLOAD H{dst} ← corrupt test vector, fails {guard} [idx={imm}]"
 
             # An index naming no entry used to leave the register holding
             # zeros, which is the monoid identity and passes every guard. So

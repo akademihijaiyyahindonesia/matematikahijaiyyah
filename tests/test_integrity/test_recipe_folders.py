@@ -53,7 +53,11 @@ def test_each_folder_names_the_tests_that_anchor_it(folder: str) -> None:
     cited = set(re.findall(r"(test_[a-z_]+\.py)", readme))
     assert cited, f"{folder}/README cites no test file"
     for name in cited:
-        assert (ROOT / "tests" / "test_integrity" / name).is_file(), name
+        # Anywhere under tests/, not only test_integrity/. A folder anchored by
+        # tests/test_core/test_hybit.py is anchored just as well, and the
+        # narrower rule turned a correct citation into a failure.
+        assert list((ROOT / "tests").rglob(name)), (
+            f"{folder} cites {name}, which does not exist")
 
 
 def test_hijrah_prints_the_density_that_was_measured() -> None:

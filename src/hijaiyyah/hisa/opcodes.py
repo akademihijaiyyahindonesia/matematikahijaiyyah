@@ -134,7 +134,7 @@ class OpCode(IntEnum):
     POP = 0x33      # Pop stack into GPR
 
     # ── Codex operations (0x40–0x5F) ─────────────────────────────
-    HLOAD = 0x40    # Load hybit from the sealed ROM by letter index
+    HLOAD = 0x40    # Load hybit from the sealed ROM: 1-28 letters, 31-36 negative
     # Component read. HISA_SPEC.md already assigned 0x44 to CGET with
     # exactly this semantics and never implemented it; this fills that
     # slot rather than inventing a new one. Not HPROJ — 0x80 carries that

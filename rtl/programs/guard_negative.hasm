@@ -1,0 +1,47 @@
+; ============================================================================
+; guard_negative.hasm — keenam guard diuji negatif di silikon
+;
+; Memuat enam vektor rusak dari ROM (indeks 31..36), masing-masing melanggar
+; TEPAT SATU batasan, lalu menghitung berapa yang ditangkap guard.
+;
+;   31 -> G4   32 -> G1   33 -> G2   34 -> G3   35 -> T1   36 -> T2
+;
+; Keluaran 6 berarti keenam guard menangkap di perangkat keras. Angka di bawah
+; 6 adalah kebocoran yang nyata, dan selisihnya menunjuk guard mana yang tidak
+; menangkap -- itulah kenapa tiap vektor mengisolasi satu batasan.
+; (c) 2026 Maulana Amratulloh
+; ============================================================================
+
+        MOVI R0, 0
+        HLOAD H0, 31
+        HGRD  H0
+        JGD   leak0
+        ADDI  R0, R0, 1
+leak0:  NOP
+        HLOAD H0, 32
+        HGRD  H0
+        JGD   leak1
+        ADDI  R0, R0, 1
+leak1:  NOP
+        HLOAD H0, 33
+        HGRD  H0
+        JGD   leak2
+        ADDI  R0, R0, 1
+leak2:  NOP
+        HLOAD H0, 34
+        HGRD  H0
+        JGD   leak3
+        ADDI  R0, R0, 1
+leak3:  NOP
+        HLOAD H0, 35
+        HGRD  H0
+        JGD   leak4
+        ADDI  R0, R0, 1
+leak4:  NOP
+        HLOAD H0, 36
+        HGRD  H0
+        JGD   leak5
+        ADDI  R0, R0, 1
+leak5:  NOP
+        PRINT R0
+        HALT

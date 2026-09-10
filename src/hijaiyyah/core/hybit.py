@@ -1,6 +1,21 @@
 """
 Hybit: the formal unit of structured information.
 
+The name expands to **Hijaiyyah Hyperdimensional Bit Integration**, and each
+part of it names something the code below can be checked against rather than
+a slogan:
+
+  Hijaiyyah        the 28 sealed letters the codex is built from
+  Hyperdimensional N_0^18 -- eighteen integer dimensions, not a scalar
+  Bit              the unit being generalised
+  Integration      closure: (V, + ) is a monoid, so hybits combine and the
+                   result is still a hybit
+
+Integration is closure and nothing else here. How a hybit is carried into any
+particular substrate is not this module's business and is deliberately absent
+-- see teknologi/SILIKON.md. tests/test_integrity/test_substrate_independence.py
+enforces that absence, and caught this docstring naming one.
+
 Definition 3.1.1 (Bab III):
   A hybit is an element of the valid codex set:
     h* ∈ V ⊂ ℕ₀¹⁸

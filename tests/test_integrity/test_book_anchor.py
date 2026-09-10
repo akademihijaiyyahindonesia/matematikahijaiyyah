@@ -473,7 +473,7 @@ def test_hreg_width_is_eighteen_components_of_eight_bits() -> None:
 def _rom_entry(index: int) -> List[int]:
     """Read one entry out of hcpu_rom.v. The literal is {comp17 … comp0}."""
     src = ROM_V.read_text(encoding="utf-8")
-    match = re.search(rf"5'd{index}:\s*data_out\s*=\s*\{{([^}}]*)\}}", src)
+    match = re.search(rf"\d+'d{index}:\s*data_out\s*=\s*\{{([^}}]*)\}}", src)
     assert match, f"hcpu_rom.v has no entry at index {index}"
     return list(reversed([int(x) for x in re.findall(r"8'd(\d+)", match.group(1))]))
 

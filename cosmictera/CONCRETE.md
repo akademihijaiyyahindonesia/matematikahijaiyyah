@@ -137,29 +137,72 @@ Keduanya muat. Margin di SLICE=25 adalah **544 LUT4**.
 > `bits_ready` — dan sintesis tidak pernah dijalankan ulang. Biayanya **+670
 > LUT4**, dan margin turun dari 15% ke 6%. Lihat R4.
 
-**Pemetaan 4‑LUT generik, bukan laporan fitting vendor.** Kabah top belum bisa
-di‑place‑and‑route: antarmukanya **1.665 bit port** melawan **276 IOB** papan,
-jadi ia butuh wrapper yang menyempitkan antarmuka sebelum bisa ditempatkan sama
-sekali. Fmax‑nya tetap **[EH]**.
+**Pemetaan 4‑LUT generik, bukan laporan fitting vendor.** `hijaiyyah_kabah_top`
+sendiri tidak bisa di‑place‑and‑route sebagai top level: antarmukanya **1.665
+bit port** melawan **276 IOB** papan, dan itu memang tujuannya, bukan sesuatu
+yang belum sempat — persis seperti `hcpu_top` bukan top level. Fmax‑nya tetap
+**[EH]**.
 
-### HCPU di Tang Nano 9K — ini sudah place‑and‑routed
+### Wrapper Ka'bah — antarmuka selesai di kedua papan, LUT hanya di 20K
 
-Dan di sinilah Fmax berhenti jadi [EH]. Rantai penuh dijalankan 3 September 2026:
-yosys 0.68 → nextpnr‑himbaechel 0.11.1 → gowin_pack, GW1NR‑LV9QN88PC6/I5.
+`hijaiyyah_kabah_gowin_top.v` adalah wrapper itu — `out_state` tetap internal
+(diakses testbench lewat hierarki, seperti biasa), dan yang keluar ke pin
+papan hanya clk, reset, UART RX/TX, 6 LED: **10 pin**. Diukur 4 September
+2026, yosys 0.68 (`-nodsp`) → nextpnr‑himbaechel 0.11.1 → `gowin_pack`,
+GW2AR‑LV18QN88C8/I7 (Tang Nano 20K, papan target):
+
+| | terpakai / kapasitas | % |
+|---|---:|---:|
+| IOB | 10 / 384 | **2%** |
+| LUT4 | 12.102 / 20.736 | **58%** |
+| DFF | 1.963 / 15.552 | 12% |
+| Fmax | **117,91 MHz** — terrout, `gowin_pack` sukses, bitstream 4,6 MB | |
+
+Papan target sampai commit sebelumnya adalah Tang Nano 9K (GW1NR‑9C), tempat
+wrapper ini **gagal**: 12.102 / 8.640 LUT4 = **140%**, dan nextpnr tidak
+sampai menempatkan ("no legal placement after 54.925.681 attempts"). Sebabnya
+tercatat sebelum wrapper ini ada: `hijaiyyah_kabah_top` sendirian sudah
+**94%** dari 9K di SLICE_BYTES=25 (lihat tabel di atas); menambah UART dan
+FSM umpan/dump tidak punya tempat lagi. Pin 10 tidak berubah menurut ukuran
+chip — masalahnya selalu LUT, dan pindah papan menyelesaikannya, bukan
+menciutkan desain.
+
+Wrapper ini diverifikasi lewat framing UART sungguhan — bukan `bit_in` atau
+`out_state` langsung — dua blok 128 byte berturut‑turut tanpa reset di antara
+keduanya, cocok 400/400 byte dengan `cube.py`. Testbench itu menemukan bug
+nyata sebelum lolos: `tx_data` balapan dengan `dump_idx` pada tepi clock yang
+sama, jadi byte pertama dari setiap dump selalu terlewat.
+
+### HCPU di Tang Nano 20K — ini sudah place‑and‑routed
+
+Fmax HCPU berhenti jadi [EH] sekali, di Tang Nano 9K, lalu naik lagi dengan
+bukti baru: papan yang berbeda. Rantai penuh dijalankan ulang 7 September
+2026 (rtl/hcpu_video_timing.v bergabung ke set sumber yang di-fingerprint,
+memaksa pengukuran ulang meski tidak dipakai wrapper ini):
+yosys 0.68 → nextpnr‑himbaechel 0.11.1 → gowin_pack, GW2AR‑LV18QN88C8/I7.
 
 | Sumber daya | Terpakai | Kapasitas | % |
 |---|---:|---:|---:|
-| LUT4 | 13.805 | 8.640 | **159% — tidak muat** |
-| DFF | 4.410 | 6.480 | 68% |
-| BSRAM | 17 | 26 | 65% |
+| LUT4 | 13.969 | 20.736 | **67%** |
+| DFF | 4.453 | 15.552 | 28% |
+| BSRAM | 17 | 46 | 36% |
 
-**Tidak ada Fmax.** Routing berhenti pada `no BELs remaining to implement cell
-type 'LUT4'`, jadi tidak ada laporan timing untuk dikutip. Angka per detik untuk
-HCPU membawa asumsi lagi.
+**Fmax 114,65 MHz** (turun dari 127,94 MHz — dikonfirmasi dua kali, angka
+sama kedua run, pada RTL yang tidak berubah selain penambahan yang
+di-prune di atas), PASS pada batas 12,00 MHz. Bitstream 7.261.470 byte,
+`gowin_pack` keluar 0 — identik byte-demi-byte dengan pengukuran sebelumnya.
 
-Angka 78% / 90,14 MHz di bawah ini jujur ketika ditulis, dan masih tereproduksi
-pada komitnya (`ae83fd2` → 6.753 LUT4, 78%, Fmax 97,94 MHz). Yang terjadi adalah
-lima komit mendarat sesudahnya dan tak satu pun menjalankan ulang place-and-route:
+Papan target sampai commit sebelumnya adalah Tang Nano 9K, tempat desain yang
+sama **gagal**: 13.969 / 8.640 LUT4 = **161%**, dan nextpnr berhenti pada
+`no BELs remaining to implement cell type 'LUT4'` — tidak ada laporan timing
+untuk dikutip di papan itu. Bukan diperbaiki di sana; dipindah ke papan
+dengan LUT4 dua setengah kali lipat.
+
+Angka 78% / 90,14 MHz di bawah ini jujur ketika ditulis untuk 9K, dan masih
+tereproduksi pada komitnya (`ae83fd2` → 6.753 LUT4, 78%, Fmax 97,94 MHz).
+Yang terjadi adalah lima komit mendarat sesudahnya dan tak satu pun
+menjalankan ulang place-and-route — dijaga di sini karena pelajarannya
+tentang satu komit, bukan tentang papan mana yang sedang diukur:
 
 | komit | | LUT4 | |
 |---|---|---:|---|
@@ -232,14 +275,16 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 | Keadaan RTL ≡ `cube.py` | CC | 3.069 bit ujung ke ujung |
 | Pemisahan rate/capacity | DP | geometri, bukan pemeriksaan |
 | Orde ρ·π = 768 | VF | terhitung |
+| Fmax wrapper Ka'bah, 20K | CC | 165,98 MHz, terrout, `gowin_pack` sukses |
+| Wrapper Ka'bah ≡ `cube.py` lewat UART | CC | dua blok 128 byte, 400/400 byte cocok — **di papan fisik**, 10 Sep 2026, bukan lagi UART tersimulasi |
+| Fmax HCPU, Tang Nano 20K | CC | 118,43 MHz, terrout, dan **dijalankan di papan** 10 Sep 2026 |
 
 ### Tidak terbukti
 
 | | Label | Kenapa |
 |---|---|---|
 | Spons tahan kriptanalisis | **EH** | terukur, belum dikriptanalisis |
-| Fmax Kabah top | **EH** | 1.665 bit port vs 276 IOB — butuh wrapper sebelum bisa ditempatkan |
-| Fmax HCPU | **EH** | pernah 90,14 MHz pada `ae83fd2`; HEAD 159% LUT4, routing tidak selesai |
+| Fmax Kabah top | **EH** | 1.665 bit port vs 276 IOB — butuh wrapper sebelum bisa ditempatkan. Ini modul mentah `hijaiyyah_kabah_top`; yang berjalan di papan 10 Sep 2026 adalah wrapper-nya, dan keduanya tidak boleh tertukar |
 | FIFO akan memberi 8,00 clock/byte | **EH** | belum dibangun |
 | Skala tera node‑hertz | **AT** | terukur 43,72 giga; butuh 22,9× |
 | Kerahasiaan | — | **ditolak** — pakai AES‑256‑GCM |

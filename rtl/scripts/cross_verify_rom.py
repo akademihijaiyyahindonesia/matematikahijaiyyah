@@ -48,8 +48,10 @@ def parse_rom_verilog() -> dict[int, list[int]]:
     
     vectors = {}
     
-    # Match case entries like: 5'd1: data_out = {8'd0,8'd0,...};
-    pattern = r"5'd(\d+):\s*data_out\s*=\s*\{([^}]+)\};"
+    # Match case entries like: 6'd1: data_out = {8'd0,8'd0,...};
+    # Width-agnostic on purpose: ROM_ADDR_W went 5 -> 6 when the negative
+    # vectors were added, and a hard-coded 5 silently matched nothing.
+    pattern = r"\d+'d(\d+):\s*data_out\s*=\s*\{([^}]+)\};"
     
     for match in re.finditer(pattern, rom_text):
         idx = int(match.group(1))

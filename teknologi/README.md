@@ -9,6 +9,14 @@ sebagai program.
 
 Folder ini menjawab pertanyaan lain: **apa yang sudah jadi barang.**
 
+Namanya sendiri sudah menyebutkan isinya. **Hybit — Hijaiyyah
+Hyperdimensional Bit Integration**: 28 huruf sebagai sumber, ℕ₀¹⁸ sebagai
+ruangnya, bit sebagai satuan yang digeneralisasi, dan *integration* dalam dua
+arti sekaligus — ketertutupan monoid `(V, +)`, dan cara ia masuk silikon
+bit-serial, satu kawat dan satu bit keadaan per clock. Kepanjangan itu dicatat
+di `src/hijaiyyah/core/hybit.py`, dan dijaga `test_hybit.py`: kata
+"hyperdimensional" menyebut sebuah angka, dan angka itu harus tetap 18.
+
 Isinya inventaris, bukan katalog klaim. Tiap baris menunjuk kode yang
 mengimplementasikannya, dan tiap angka diperiksa oleh
 `test_recipe_folders.py` terhadap apa yang menghasilkannya — aturan yang
@@ -30,7 +38,7 @@ tidak.
 | Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
 | Testbench RTL | 36 | `rtl/tb/` |
 | Wrapper papan | 8 | `rtl/fpga/` |
-| Program HASM | 33 | `rtl/programs/` |
+| Program HASM | 34 | `rtl/programs/` |
 | Format berkas | 5 | `.hc` `.hasm` `.hbc` `.hgeo` `.hcai` |
 | Alat baris perintah | 4 | `hc` `hom` `hybit-ai` `kabah` |
 | Spesifikasi | 18 | `docs/` |

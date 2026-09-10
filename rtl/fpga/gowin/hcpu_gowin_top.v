@@ -107,7 +107,7 @@
 // memory reproduces the previously recorded hash exactly, for this wrapper and
 // for Ka'bah's -- so the sweep is provably the entire delta and no design byte
 // moved. The measured figures above still describe this RTL.
-// RTL FINGERPRINT: ccfa947db20ad682fdaee0110f1d86b4332ec63dad21ea3359e853206133e549
+// RTL FINGERPRINT: 1a66f6fd0ab02410937ce8cec5c9bb7717c2320ba56c1f7825eca51c09aa1598
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

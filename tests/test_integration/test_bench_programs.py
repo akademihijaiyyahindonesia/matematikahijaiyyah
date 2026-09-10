@@ -1,7 +1,7 @@
 """
 The board experiments, verified in simulation before the board arrives.
 
-rtl/programs/bench/ holds the programs to run on the Tang Nano 9K. Each is
+rtl/programs/bench/ holds the programs to run on the Tang Nano 20K. Each is
 checked here on the H-ISA machine so that what reaches the device is already
 known-good: a wrong program on real hardware costs a flash cycle and a
 debugging session to discover something a second of simulation would have
@@ -129,7 +129,7 @@ def test_the_python_rom_carries_the_same_test_vector_as_the_rtl() -> None:
     source = (ROOT / "rtl" / "hcpu_rom.v").read_text(encoding="utf-8")
     import re
 
-    match = re.search(r"5'd31:\s*data_out\s*=\s*\{([^}]*)\}", source)
+    match = re.search(r"\d+'d31:\s*data_out\s*=\s*\{([^}]*)\}", source)
     assert match, "hcpu_rom.v has no index 31"
     rtl = list(reversed([int(x) for x in re.findall(r"8'd(\d+)", match.group(1))]))
     assert rtl == list(ROM_TEST_VECTOR)

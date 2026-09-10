@@ -205,7 +205,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.574 lulus, 0 dilewati, 0 gagal |
+| `python3 -m pytest -q` | 4.593 lulus, 0 dilewati, 0 gagal |
 | `make -C rtl/tb all` | 20 testbench, 253 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
@@ -233,7 +233,7 @@ testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.574 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.593 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`
