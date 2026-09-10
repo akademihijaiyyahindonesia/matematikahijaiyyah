@@ -1,0 +1,44 @@
+// Tang Nano 20K HDMI wrapper constraints.
+IO_LOC "clk_27m" 4;
+IO_PORT "clk_27m" IO_TYPE=LVCMOS33;
+IO_LOC "btn_rst_n" 87;
+IO_PORT "btn_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "mode_key" 88;
+IO_PORT "mode_key" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "uart_rxd" 70;
+IO_PORT "uart_rxd" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "uart_txd" 69;
+IO_PORT "uart_txd" IO_TYPE=LVCMOS33 DRIVE=8;
+// Differential TMDS pairs: one IOB per lane, both pads in one IO_LOC.
+//
+// The names are the synthesised OBUF cell names, not the port names -- yosys
+// inserts an OBUF on every top-level output, so what reaches the placer is
+// `tmds_clk_p_OBUF_O`. Constraining the port name instead fails outright:
+// `ERROR: Unconstrained IO:tmds_clk_p_OBUF_O`.
+//
+// The "33,34" form is what makes the pair differential. The previous version
+// constrained each half separately against its own OBUF, which routed but
+// produced eight single-ended drivers and no TMDS -- the monitor stayed dark.
+// With both pads named here, one IOB drives the pair and the N half needs no
+// port and no logic in hcpu_hdmi_top.v.
+IO_LOC "tmds_clk_p_OBUF_O" 33,34;
+IO_PORT "tmds_clk_p_OBUF_O" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "tmds_data_p_OBUF_O" 35,36;
+IO_PORT "tmds_data_p_OBUF_O" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "tmds_data_p_OBUF_O_1" 37,38;
+IO_PORT "tmds_data_p_OBUF_O_1" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "tmds_data_p_OBUF_O_2" 39,40;
+IO_PORT "tmds_data_p_OBUF_O_2" IO_TYPE=LVCMOS33D DRIVE=3.5;
+
+IO_LOC "led[0]" 15;
+IO_LOC "led[1]" 16;
+IO_LOC "led[2]" 17;
+IO_LOC "led[3]" 18;
+IO_LOC "led[4]" 19;
+IO_LOC "led[5]" 20;
+IO_PORT "led[0]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[1]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[2]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[3]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[4]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[5]" IO_TYPE=LVCMOS33 DRIVE=8;
