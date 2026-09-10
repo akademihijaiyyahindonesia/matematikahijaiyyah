@@ -89,7 +89,7 @@ module tb_rom;
 
         $display("=== HCPU ROM Verification (28 letters) ===");
 
-        //                    idx  Θ  Na Nb Nd Kp Kx Ks Ka Kc Qp Qx Qs Qa Qc AN AK AQ  Ψ
+        //                    idx  Θ  Na Nb Nd Kp Kx Ks Ka Kc Qp Qx Qs Qa Qc AN AK AQ  H*
         check_letter( 5'd1,   0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0); // Alif
         check_letter( 5'd2,   2, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0); // Ba
         check_letter( 5'd3,   2, 2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 2, 1, 1, 0); // Ta

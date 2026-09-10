@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.593 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.606 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 108 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -208,7 +208,7 @@ sudah di-flash — itu masih [belum terjadi](ROADMAP.md), bukan disembunyikan.
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.593 lulus, 0 dilewati
+python3 -m pytest -q             # 4.606 lulus, 0 dilewati
 make -C rtl/tb all               # 253 asersi, 20 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

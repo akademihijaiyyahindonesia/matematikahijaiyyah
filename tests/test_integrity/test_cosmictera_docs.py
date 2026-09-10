@@ -19,7 +19,7 @@ from hijaiyyah.crypto.program import BUILD_PRODUCTS, SYSTEM_PATTERNS, defined_op
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "cosmictera"
-NAMES = ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md")
+NAMES = ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md", "COMPUTING.md", "CODEX.md")
 
 
 def _text(name: str) -> str:
@@ -198,9 +198,12 @@ def test_the_sealing_counts_come_from_program_not_from_prose() -> None:
     cells = _row(_text("CONCRETE.md"), "Opcode H‑ISA", 3)
     assert cells[1].split()[0] == str(len(defined_opcodes())), cells
 
-    rtl_ops = set(re.findall(r"OP_[A-Z0-9_]+",
-                             "\n".join(p.read_text(encoding="utf-8")
-                                        for p in (ROOT / "rtl").glob("hcpu_*.v*"))))
+    # The lookbehind matters: without it `LETTER_OP_FIRST` and `LETTER_OP_LAST`
+    # match on their tails and two range bounds get counted as opcodes. That is
+    # the same class of error as OP_MSB/OP_LSB, arriving by regex rather than by
+    # name -- so the count is of things actually defined as 8-bit opcodes.
+    rtl_ops = set(re.findall(r"(?<![A-Z0-9_])OP_[A-Z0-9_]+\s+8'h",
+                             (ROOT / "rtl" / "hcpu_pkg.vh").read_text(encoding="utf-8")))
     cells = _row(_text("CONCRETE.md"), "Opcode berencoding RTL", 3)
     assert cells[1] == str(len(rtl_ops)), (cells, len(rtl_ops))
 

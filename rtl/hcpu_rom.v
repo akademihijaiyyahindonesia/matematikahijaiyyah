@@ -7,7 +7,7 @@
 //
 // Data source: data/hm28.json (SHA-256 sealed)
 // Component layout: comp[i] = data_out[8*i +: 8]
-//   comp[0]=Θ̂, comp[1]=Na, ..., comp[17]=Ψ
+//   comp[0]=Θ̂, comp[1]=Na, ..., comp[17]=H*
 //
 // Usage: addr = letter index (1–28) or negative vector (31–36),
 //        data_out = 144-bit codex vector
@@ -31,7 +31,7 @@ module hcpu_rom (
         case (addr)
             // ── Index 1: Alif (ا) ──
             //  [Θ̂=0, Na=0, Nb=0, Nd=0, Kp=1, Kx=0, Ks=0, Ka=0, Kc=0,
-            //   Qp=0, Qx=0, Qs=0, Qa=0, Qc=0, AN=0, AK=1, AQ=0, Ψ=0]
+            //   Qp=0, Qx=0, Qs=0, Qa=0, Qc=0, AN=0, AK=1, AQ=0, H*=0]
             6'd1:  data_out = {8'd0,8'd0,8'd1,8'd0,8'd0,8'd0,8'd0,8'd0,
                                8'd0,8'd0,8'd0,8'd0,8'd0,8'd1,8'd0,8'd0,
                                8'd0,8'd0};
@@ -200,7 +200,7 @@ module hcpu_rom (
 
             // ── Index 31: Test Negative (Corrupt Vector) ──
             //  [Θ̂=1, Na=0, Nb=0, Nd=0, Kp=0, Kx=0, Ks=0, Ka=0, Kc=0,
-            //   Qp=0, Qx=0, Qs=0, Qa=0, Qc=2, AN=0, AK=0, AQ=2, Ψ=0]
+            //   Qp=0, Qx=0, Qs=0, Qa=0, Qc=2, AN=0, AK=0, AQ=2, H*=0]
             //
             // Fails G4 and only G4, per Bab III §IIIK.3.1: U = 4·Qc = 8,
             // so rho = 1 - 8 = -7 and (theta >= u_val) is FALSE.

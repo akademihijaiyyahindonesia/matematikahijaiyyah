@@ -66,7 +66,7 @@ module hcpu_decode (
     output wire                    store_load_hazard // Store-load address conflict
 );
 
-    wire [7:0]  opcode = if_instruction[`OP_MSB:`OP_LSB];
+    wire [7:0]  opcode = if_instruction[`OPCODE_MSB:`OPCODE_LSB];
     wire [3:0]  dst    = if_instruction[`DST_MSB:`DST_LSB];
     wire [3:0]  s1     = if_instruction[`S1_MSB:`S1_LSB];
     wire [3:0]  s2     = if_instruction[`S2_MSB:`S2_LSB];

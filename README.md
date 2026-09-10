@@ -182,7 +182,7 @@ build gagal bila salah satu menyimpang.
 L0  CSGI            citra glyph → skeleton graph
 L1  Codex           v₁₄ / v₁₈, guard G1–G4 + T1–T2
 L2  Metrik-Vektorial VTM · NMV · AGM · ITM · EXM
-L3  H-ISA           44 opcode unik (28 diimplementasikan di RTL)
+L3  H-ISA           72 opcode di RTL (44 umum + 28 asli-huruf)
 L4  Toolchain       .hc → HCC → .hasm → HASM → .hbc
 L5  Runtime         HVM (perangkat lunak) · HCPU (perangkat keras)
 ```

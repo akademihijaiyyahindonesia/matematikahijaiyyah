@@ -31,7 +31,7 @@ tidak.
 |---|---:|---|
 | Huruf × dimensi | 28 × 18 | `src/hijaiyyah/core/master_table.py` |
 | Nilai tersegel | 504 | ROM 252 byte, nibble-packed |
-| Opcode H-ISA | 74 | `rtl/hcpu_pkg.vh` |
+| Opcode H-ISA | 72 | `rtl/hcpu_pkg.vh` |
 | — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |
 | Paket Python | 19 | `src/hijaiyyah/` |
 | Modul RTL HCPU | 21 | `rtl/hcpu_*.v` |
@@ -48,6 +48,10 @@ Empat halaman berikut membagi inventaris itu menurut apa yang dikerjakannya.
 ---
 
 ## Halaman
+
+**[ISTILAH.md](ISTILAH.md)** — glosarium. Kepanjangan tiap singkatan, apa yang
+dikerjakannya, berkas mana yang mengimplementasikannya, dan labelnya. Termasuk
+dua istilah yang pernah tertukar dan kini dijaga tes.
 
 **[BAHASA.md](BAHASA.md)** — tumpukan bahasa dan runtime. Dari `.hc` yang
 ditulis manusia sampai bytecode yang dieksekusi mesin virtual: lexer, parser,

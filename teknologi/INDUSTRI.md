@@ -97,7 +97,41 @@ Terukur: sembilan instruksi asli-huruf di `rtl/hcpu_pkg.vh`, dijaga
 
 ---
 
-## 5. Inti prosesor yang bisa dilisensikan
+## 5. Kripto yang keluarannya bisa dibuktikan, bukan dipercaya
+
+**Kemampuannya.** Ka'bah berjalan di silikon sejak 10 September 2026.
+Dua bingkai 128 byte dikirim berturut **tanpa reset di antaranya**, dan 400
+byte balasan papan cocok **seluruhnya** dengan referensi perangkat lunak
+`cube.py` — bukan satu blok yang kebetulan benar, melainkan penyerapan
+berantai lintas blok. **165,98 MHz, nol BSRAM**: seluruh keadaan spons ada
+di flip-flop dan logika.
+
+**Kenapa itu berharga.** Perangkat keras kripto biasanya diuji terhadap
+vektor uji tetap. Di sini padanan perangkat lunaknya berjalan penuh, jadi
+implementasi silikon bisa dibandingkan **byte-per-byte terhadap keadaan
+internalnya sendiri**, bukan hanya terhadap keluaran akhir. Jalurnya
+bilangan bulat penuh dan alur sintesisnya sumber terbuka seluruhnya —
+tidak ada blok tertutup yang harus dipercaya begitu saja.
+
+**Industri yang peduli:** modul keamanan perangkat keras, elemen aman,
+kedaulatan kripto nasional — tempat "kami tidak bisa memeriksa isi cip itu"
+adalah masalah, bukan detail.
+
+**Dan batasnya, yang harus dibaca bersama yang di atas:** ini klaim tentang
+**kebenaran implementasi**, bukan tentang keamanan. Spons berlabel **EH** dan
+tetap **EH** — terukur, belum dikriptanalisis. Avalanche 0,5007 dan 20.000
+keadaan tanpa tabrakan **bukan bukti**. Tidak ada analisis diferensial atau
+linear independen yang pernah dijalankan terhadap konstruksi ini, dan sampai
+ada, ia tidak boleh dipakai melindungi apa pun yang nyata. Untuk kerahasiaan,
+proyek ini sendiri menolak Ka'bah dan menunjuk AES-256-GCM
+([CONCRETE.md](../cosmictera/CONCRETE.md)).
+
+Terukur: `rtl/scripts/kabah_uart_test.py`, dijaga `test_kabah_folder.py`,
+`test_crypto.py`. Label **CC** untuk kesetaraan; **EH** untuk keamanan.
+
+---
+
+## 6. Inti prosesor yang bisa dilisensikan
 
 **Kemampuannya.** HCPU muat di **67%** Tang Nano 20K dan berjalan pada
 **118,43 MHz**; Ka'bah **58%** pada **165,98 MHz**. Keduanya lewat alur
@@ -116,7 +150,7 @@ FPGA; jalur ASIC di `rtl/mpw/` masih **AT**.
 
 ---
 
-## 6. Pendidikan yang utuh dari matematika sampai silikon
+## 7. Pendidikan yang utuh dari matematika sampai silikon
 
 **Kemampuannya.** Seorang siswa bisa menulis `.hc`, melihatnya dikompilasi
 ke bytecode, dijalankan di mesin virtual, lalu **dijalankan di papan FPGA di

@@ -29,7 +29,7 @@ FOLDERS = {
     "cosmic-codex-jim": ("README.md", "MACHINE.md", "WAVE.md", "LIMITS.md"),
     "hijrah": ("README.md", "UNIT.md", "INSTRUCTION.md", "JUMP.md"),
     "matematika-hijaiyyah": ("README.md", "GUARD.md", "ALGEBRA.md", "LINEAGE.md"),
-    "teknologi": ("README.md", "BAHASA.md", "SILIKON.md", "KRIPTO.md", "INDUSTRI.md"),
+    "teknologi": ("README.md", "ISTILAH.md", "BAHASA.md", "SILIKON.md", "KRIPTO.md", "INDUSTRI.md"),
 }
 
 

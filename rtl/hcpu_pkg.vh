@@ -48,8 +48,12 @@
 
 // ── Instruction field positions ─────────────────────────────────
 // [31:24] OP  [23:20] DST  [19:16] S1  [15:12] S2  [11:0] IMM
-`define OP_MSB          31
-`define OP_LSB          24
+// Named OPCODE_*, not OP_*: everything else spelled `OP_<NAME>` in this file
+// is an opcode, so these two -- which are bit positions of the opcode FIELD --
+// were counted as opcodes by every tool that greps for `define OP_`. That put
+// 74 in an inventory table where the answer is 72.
+`define OPCODE_MSB      31
+`define OPCODE_LSB      24
 `define DST_MSB         23
 `define DST_LSB         20
 `define S1_MSB          19
@@ -99,7 +103,11 @@
 `define C_AN            14          // A_N — aggregate nuqtah
 `define C_AK            15          // A_K — aggregate khatt
 `define C_AQ            16          // A_Q — aggregate qaws
-`define C_PSI           17          // Ψ   — chi/psi
+`define C_HSTAR         17          // H*  — the free tag no guard constrains.
+                                    // Named H* and not psi: psi is taken, and it means
+                                    // the compiler that injects guards (Psi-Injector),
+                                    // which is a different thing entirely. constants.py
+                                    // has always called this slot H*; the RTL had not.
 
 // ────────────────────────────────────────────────────────────────
 // OPCODES — Tier 1 (Fase 1 FPGA)

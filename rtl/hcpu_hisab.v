@@ -78,7 +78,7 @@ module hcpu_hisab (
     // ── Nibble-packing (§4.6.1) ─────────────────────────────────
     // 18 components → 9 nibble-packed bytes
     // Pair layout: (Θ̂|Na), (Nb|Nd), (Kp|Kx), (Ks|Ka), (Kc|Qp),
-    //              (Qx|Qs), (Qa|Qc), (A_N|A_K), (A_Q|Ψ)
+    //              (Qx|Qs), (Qa|Qc), (A_N|A_K), (A_Q|H*)
     wire [7:0] nb [0:8];
     assign nb[0] = {c[0][3:0],  c[1][3:0]};   // Θ̂  | Na
     assign nb[1] = {c[2][3:0],  c[3][3:0]};   // Nb | Nd
@@ -88,7 +88,7 @@ module hcpu_hisab (
     assign nb[5] = {c[10][3:0], c[11][3:0]};   // Qx | Qs
     assign nb[6] = {c[12][3:0], c[13][3:0]};   // Qa | Qc
     assign nb[7] = {c[14][3:0], c[15][3:0]};   // A_N| A_K
-    assign nb[8] = {c[16][3:0], c[17][3:0]};   // A_Q| Ψ
+    assign nb[8] = {c[16][3:0], c[17][3:0]};   // A_Q| H*
 
     // Pack into 3 words
     assign pack_word0 = {nb[3], nb[2], nb[1], nb[0]};   // bytes 0-3

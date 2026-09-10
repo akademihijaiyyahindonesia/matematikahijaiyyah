@@ -45,11 +45,11 @@ flips are caught exhaustively:
 
     G1–G4, T1–T2                         89.68%
     + the decomposition identity          94.44%
-    + excluding the unconstrained Ψ tag  100.00% over payload components
+    + excluding the unconstrained H* tag  100.00% over payload components
 
 That figure describes :func:`detection_rate`, not this record format, and
 conflating the two overstates the system. The gaps behind it are structural:
-Ψ is a free tag no guard constrains — the same fact as rank(M18) = 14 — and
+H* is a free tag no guard constrains — the same fact as rank(M18) = 14 — and
 G4 is an *inequality*, Θ̂ ≥ U, so raising Θ̂ never violates it. Carrying ρ turns
 §IC.1.24's identity Θ̂ = U + ρ into an equality and closes it. Both fixes come
 from Bab I; neither is invented here.
@@ -513,7 +513,7 @@ def detection_rate(hardened: bool = True, skip_unconstrained: bool = True) -> Di
 
     Args:
         hardened: Apply §IC.1.24's identity as well as the guards.
-        skip_unconstrained: Exclude Ψ, which no guard constrains.
+        skip_unconstrained: Exclude H*, which no guard constrains.
     """
     tested = caught = 0
     missed: Dict[int, int] = {}
