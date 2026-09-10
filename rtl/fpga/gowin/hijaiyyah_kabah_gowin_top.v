@@ -6,8 +6,8 @@
 // hijaiyyah_kabah_top.v cannot be placed on any board in this class as a raw
 // top level: its interface is 1,665 port bits, of which out_state alone is
 // 1,600 (96%) — a single verification-only port, read by nothing but a
-// testbench's own comparison, that outnumbers the Tang Nano 9K's 276 IOB by
-// 6x and the 20K's 384 by 4x. No board this size will ever have that many
+// testbench's own comparison, that outnumbers the Tang Nano 20K's 384 IOB
+// by 4x. No board this size will ever have that many
 // pins; pin count does not scale with LUT capacity, so a bigger chip does not
 // fix this. It needs exactly what hcpu_gowin_top.v is for the HCPU core: a
 // wrapper that keeps the wide internal signal internal and pins out only
@@ -65,23 +65,14 @@
 // ── MEASURED, 4 September 2026 ──────────────────────────────────────────
 //
 // yosys 0.68 (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack. The IOB
-// problem this wrapper exists to solve is solved on both boards -- 10 pins
-// is 10 pins regardless of device:
+// problem this wrapper exists to solve is what it solves: 1,665 port bits
+// down to 10 pins.
 //
-//     GW1NR-9C  (Tang Nano 9K)    IOB   10/  276    3%
 //     GW2AR-18C (Tang Nano 20K)   IOB   10/  384    2%
 //
-// The LUT problem is not solved on the 9K, and the reason was already on
-// record before this wrapper existed: hijaiyyah_kabah_top.v alone measures
-// 8,096 LUT4 (94% of the 9K) at SLICE_BYTES=25 -- see this module's own
-// header. Adding UART RX/TX and the feed/dump FSM on top of that has
-// nowhere to go:
-//
-//     GW1NR-9C   (Tang Nano 9K)   LUT4  12,102/  8,640  140%   FAILS
-//                                  DFF   1,963/  6,480   30%
-//         nextpnr: "Unable to find legal placement... after 54,925,681
-//         attempts" -- no route, no Fmax, same failure mode
-//         hcpu_gowin_top.v already hit at 161%.
+// hijaiyyah_kabah_top.v alone measures 8,096 LUT4 at SLICE_BYTES=25 -- see
+// this module's own header -- and the UART RX/TX plus feed/dump FSM sit on
+// top of that:
 //
 //     GW2AR-18C  (Tang Nano 20K)  LUT4  12,061/ 20,736   58%   fits, routed
 //                                  DFF   1,965/ 15,552   12%
@@ -98,9 +89,8 @@
 //         -41 LUT4 / +2 DFF, the +2 being btn_q. Fmax is the post-routing
 //         number, not the 70.48 MHz nextpnr prints after placement.
 //
-// This is the same board split "persiapan-20k" already established for the
-// HCPU core, arrived at independently from the Ka'bah side: the 9K is too
-// small for this design with room for anything else, the 20K is not.
+// Same board as the HCPU core, arrived at independently from the Ka'bah
+// side.
 //
 // Reproduced 5 September 2026 as `make -C rtl/fpga/gowin kabah_bitstream`,
 // not a remembered command -- same figures, confirming they were never a
@@ -118,7 +108,7 @@
 // memory reproduces the previously recorded hash exactly, for this wrapper and
 // for Ka'bah's -- so the sweep is provably the entire delta and no design byte
 // moved. The measured figures above still describe this RTL.
-// RTL FINGERPRINT: d8a098d55bac0d88fcdbcb0acdd9888ab0785a8fa9b76c59873616877bbb7f76
+// RTL FINGERPRINT: 03d865fa15c91f287ae4f1da98f4613dff04277247eed54303d19f85df2ed1a6
 //
 `include "hcpu_pkg.vh"
 

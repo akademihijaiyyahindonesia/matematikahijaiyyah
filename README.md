@@ -235,7 +235,7 @@ src/hijaiyyah/
   gui/           aplikasi desktop HOM (Tkinter, 14 tab)
 rtl/             HCPU — Verilog, testbench, target MPW/FPGA
 hom-gui/         aplikasi web (React + Vite) → hybit.tech
-tests/           1.649 test
+tests/           4.628 test
 docs/            spesifikasi format dan protokol
 ```
 
@@ -270,8 +270,8 @@ Angka itu turun dari 480.795 sel setelah `hcpu_dataram` dan stack `hcpu_memory`
 diubah ke baca teregistrasi. Yang perlu dibaca adalah selisihnya: sel turun 20%
 sementara flip-flop nyaris tak bergerak — pohon multiplexer baca yang hilang,
 bukan penyimpanannya. Terhadap pustaka memori sungguhan efeknya terlihat penuh:
-disintesis untuk Tang Nano 9K, desainnya memakai **3.053 LUT dari 8.640** dan
-**1.646 flip-flop dari 6.480**, dengan array-nya di block RAM.
+terhadap pustaka block RAM sungguhan array-nya terpetakan ke block RAM,
+bukan ke flip-flop — dan itulah selisih yang perlu dibaca.
 
 Karena itu klaim luas die dan kesiapan MPW **ditahan** sampai data RAM dipetakan
 ke makro SRAM dan sintesis dijalankan ulang terhadap PDK sungguhan. Angka

@@ -8,7 +8,8 @@
 //
 // THE SCALE THAT DECIDES THE SHAPE. The state is 25 lanes of 64 bits = 200
 // BYTES, so a fully parallel substitution needs 200 S-boxes at 15,200 LUT4
-// and does not fit a Tang Nano 9K's 8,640. What fits is a 25-byte slice at
+// which is 73% of a Tang Nano 20K on substitution alone. What leaves room
+// for the rest of the system is a 25-byte slice at
 // ~1,900 LUT4, run eight times. So a substitution costs EIGHT clocks and a
 // linear layer costs ONE, and `stall` is how the impulser learns that.
 //
@@ -48,10 +49,10 @@
 // past a point the mux grows faster than the S-boxes shrink. There is a
 // minimum near SLICE=8 and it is a mux minimum, not an arithmetic one.
 //
-// And NONE of these fit a Tang Nano 9K. The device has 8,640 LUT4; the
-// cheapest configuration here is 8,673 before the impulser, the UART or
-// anything else. So this core is verified and not yet deployable, which is
-// said here rather than discovered on the board.
+// On the Tang Nano 20K (20,736 LUT4) the cheapest configuration here is
+// 8,673 -- 42% -- before the impulser, the UART or anything else. It fits;
+// what does not fit is HCPU and Ka'bah as one top level, measured at 105%,
+// over by 960 cells. That is the constraint that actually binds.
 //
 // The fix that follows from the finding: stop random-accessing the state.
 // Rotate it through a fixed substitution position instead, so the mux

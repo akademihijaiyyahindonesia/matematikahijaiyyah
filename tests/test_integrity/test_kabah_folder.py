@@ -149,10 +149,9 @@ def test_the_silicon_page_carries_the_wrapper_numbers_too() -> None:
         encoding="utf-8")
 
     assert "hijaiyyah_kabah_gowin_top" in silicon
-    for needle in ("140% — FAILS", "58%", "165,98 MHz", "4,6 MB",
-                   "54.925.681"):
+    for needle in ("58%", "165,98 MHz", "4,6 MB", "105%"):
         assert needle in silicon, needle
-    for needle in ("140%", "58%", "165.98 MHz", "4.6 MB", "54,925,681"):
+    for needle in ("58%", "165.98 MHz", "4.6 MB"):
         assert needle in wrapper, needle
 
     # The gap this wrapper closes is the pin count, not the LUT count -- both
@@ -160,14 +159,14 @@ def test_the_silicon_page_carries_the_wrapper_numbers_too() -> None:
     assert "3%" in silicon and "2%" in silicon
 
     silicon = _text("SILICON.md")
-    assert "1.665 bit port" in silicon and "276 IOB" in silicon
+    assert "1.665 bit port" in silicon and "384 IOB" in silicon
     assert "[EH]" in silicon
-    # And that Kabah and the HCPU cannot share the board. HCPU's own figure
-    # here used to be 78% (rtl/hcpu_gowin_top.v's LAST_FITTING commit,
-    # 096e392) -- the loader's write port pushed it to 161% several commits
-    # later (see rtl/fpga/gowin/hcpu_gowin_top.v's bisection table) and this
-    # page went on quoting the old number until ROADMAP.md's review caught it.
-    assert "161%" in silicon and "94%" in silicon
+    # And the measured relationship between the two: each fits alone, the
+    # naive sum does not, and the combined top level was actually measured
+    # rather than extrapolated from the sum.
+    assert "67%" in silicon and "58%" in silicon
+    assert "125%" in silicon, "the naive sum has to stay visible next to 105%"
+    assert "105%" in silicon and "960 sel" in silicon
 
 
 def test_the_sealing_counts_come_from_program() -> None:

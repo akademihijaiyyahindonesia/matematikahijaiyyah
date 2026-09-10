@@ -217,8 +217,8 @@ multi-blok sungguhan, bukan 128 byte yang di-hash ulang terisolasi tiap kali.
 Diukur 4 September 2026, direproduksi 5 September 2026 lewat
 `make -C rtl/fpga/gowin kabah_bitstream` (bukan lagi command manual),
 yosys 0.68 (`-nodsp`) → nextpnr-himbaechel 0.11.1 → `gowin_pack`,
-GW2AR-LV18QN88C8/I7 (Tang Nano 20K, papan target — lihat [OFF.md](OFF.md)
-untuk kenapa 9K ditinggalkan):
+GW2AR-LV18QN88C8/I7 (Tang Nano 20K, papan target
+):
 
 ```
 IOB     10 / 384    2%
@@ -264,18 +264,16 @@ BSRAM       17 /     46   36%
 Fmax    114,65 MHz (PASS pada batas 12,00 MHz)
 ```
 
-Papan target sampai commit sebelumnya adalah Tang Nano 9K, yang desain ini
-**tidak muat** (161% dari 8.640 LUT4) — lihat [OFF.md](OFF.md) untuk bisect
-komit yang membuatnya tumbuh sebesar itu. Bukan diperbaiki di 9K; dipindah ke
-papan dengan LUT4 lebih besar.
+Angka di atas dari build bitstream pada komit ini. Angka **papan** diambil
+dari run pasca-perutean yang lain — 14.005 LUT4 (67%), Fmax 118,43 MHz — dan
+itulah yang berlaku sebagai hasil fisik, tercatat di [PAPAN.md](PAPAN.md).
 
-`make -C rtl/fpga/gowin bitstream` belum berarti "sudah dinyalakan di
-perangkat keras nyata" — `gowin_pack` sukses dan hash RTL terikat di header
-`hcpu_gowin_top.v`, tapi belum ada papan fisik yang benar-benar di-flash dan
-dibaca lewat serial sungguhan. Itu langkah berikutnya, di
-[ROADMAP.md](ROADMAP.md).
+Papan sudah di-flash dan dibaca: UART membalas **23 byte** yang cocok
+byte-per-byte dengan simulasi, `e3_sweep28` mengembalikan **28 nilai Θ̂**
+identik dengan `MASTER_TABLE`, dan satu bitstream membawa video, loader dan
+HCPU sekaligus.
 
-Label: `CC` untuk sintesis+PNR+pack; `AT` untuk flash ke papan fisik.
+Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 
 ---
 

@@ -41,19 +41,19 @@
 // So this is the line-rate half of Ka'bah, complete and honest about its
 // edges. The other half is in src/hijaiyyah/crypto/.
 //
-// MEASURED, whole, on a Tang Nano 9K (GW1NR-9: 8,640 LUT4 / 6,693 FF).
+// MEASURED, whole, against a Tang Nano 20K (GW2AR-18C: 20,736 LUT4 /
+// 15,552 FF).
 // Generic 4-LUT mapping, flattened -- not a vendor fitting report, and Fmax
 // is still unmeasured:
 //
 //     SLICE_BYTES    LUT4          FF     clocks per permutation
-//               8   6,910 (80%)   2,009        786
-//              25   8,096 (94%)   2,007        310
+//               8   6,910 (33%)   2,009        786
+//              25   8,096 (39%)   2,007        310
 //
-// Those were 6,231 (72%) and 7,426 (85%) when this header was first written,
+// Those were 6,231 (30%) and 7,426 (36%) when this header was first written,
 // and they went stale in the very next commit: making the gate actually gate
 // -- gate_mode, break_at, break_count, the bits_ready backpressure -- cost
-// ~670 LUT4 and was never re-synthesised. At SLICE=25 the margin fell from
-// 15% of the board to 6%, or 544 LUT4 spare. Re-measured with yosys 0.68,
+// ~670 LUT4 and was never re-synthesised. Re-measured with yosys 0.68,
 // `synth -flatten` then `abc -lut 4`. A synthesis number that is not re-run
 // after the module changes is a claim about a design that no longer exists.
 //

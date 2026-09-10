@@ -30,12 +30,12 @@ flow, because no memory primitive exists to map it to. Generic gates
 offer flip-flops and nothing else.
 
 The same change measured against a real memory library tells the other
-half. Synthesised for the Tang Nano 9K (synth_gowin, top =
-hcpu_gowin_top), the design now maps its arrays to block RAM:
+half. Synthesised with synth_gowin (top = hcpu_gowin_top), the design maps
+its arrays to block RAM rather than to fabric flip-flops:
 
-  LUT           3,053  of  8,640
-  Flip-flops    1,646  of  6,480
-  BSRAM blocks      4  of     26
+  LUT           3,053
+  Flip-flops    1,646
+  BSRAM blocks      4
 
 So the fix works; this report simply cannot see it. Any ASIC number
 below carries the same caveat until the design is synthesised against a

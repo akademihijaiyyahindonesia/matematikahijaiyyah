@@ -55,10 +55,8 @@ make wave_top
 - Files: `fpga/gowin/hcpu_gowin_top.v`, `fpga/gowin/hcpu_gowin.cst`
 - Load program: `$readmemh("program.hex")`
 
-Targeted the Tang Nano 9K (GW1NR-LV9QN88PC6/I5) through an earlier commit.
-The design outgrew its 8,640 LUT4 — see `cosmictera-build/OFF.md`'s
-bisection table for which commit did it, and `cosmictera-build/ROADMAP.md`
-for how the 20K was verified instead.
+Measured on the board: 14,005 LUT4 (67%), 4,480 DFF (28%), 17 BSRAM,
+Fmax 118.43 MHz post-routing. See `cosmictera-build/PAPAN.md`.
 
 ### Xilinx Arty A7-35T (~$129)
 - Device: XC7A35T-1CPG236C

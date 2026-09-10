@@ -27,9 +27,7 @@ ulang dengan satu perintah.
 **Yang sudah dikerjakan:**
 1. `rtl/fpga/gowin/Makefile` diganti total ke
    `DEVICE=GW2AR-LV18QN88C8/I7`, `FAMILY=GW2A-18C`, `BOARD=tangnano20k` —
-   bukan ditambah di samping 9K, karena 9K tidak lagi jadi target sama
-   sekali (lihat [OFF.md](OFF.md#papan-9k-bukan-diperbaiki-diganti) untuk
-   kenapa diganti, bukan diperbaiki di tempat).
+   satu-satunya papan target.
 2. `rtl/fpga/gowin/hcpu_gowin.cst` ditulis ulang dengan pinout 20K yang
    diverifikasi terhadap skema resmi (clk=4, uart_txd=69, uart_rxd=70,
    btn_rst_n=87, led=15..20) — pola yang sama yang sudah dites untuk
@@ -162,8 +160,7 @@ Keduanya sudah dijalankan.
 **Ini pertanyaan terbuka yang jujur belum terjawab.** 67% + 58% = 125% dari
 LUT4 20K kalau dijumlah naif — mereka mungkin **tidak** muat berdampingan
 bahkan di 20K tanpa perubahan. Ini bukan pesimisme, ini aritmetika yang
-sama yang sudah membuktikan HCPU-sendirian-plus-Ka'bah-sendirian tidak
-muat di 9K ([kabah/SILICON.md](../kabah/SILICON.md#dan-kabah-tidak-muat-berdampingan-hcpu-di-9k)).
+sama yang berlaku di sini ([kabah/SILICON.md](../kabah/SILICON.md)).
 
 **DIUKUR 10 September 2026 — dan ketiga penghematan yang pernah dinamai di
 sini ternyata tidak ada isinya.** `rtl/fpga/gowin/hijaiyyah_cosmictera_gowin_top.v`
@@ -217,8 +214,8 @@ pertama yang membuat Ka'bah benar-benar "layanan Hybit" (lapis 5 di tabel
 7-lapis) alih-alih dua sistem terpisah yang kebetulan berbagi repositori.
 
 **Cara memeriksa:** PNR pertama yang benar-benar menyasar top level
-gabungan. Kalau gagal, dibisect sama seperti 9K: LUT4 keluar berapa,
-apa yang paling boros, urutan pengurangan mana yang dicoba lebih dulu.
+gabungan. Kalau gagal, dibisect: LUT4 keluar berapa, apa yang paling
+boros, urutan pengurangan mana yang dicoba lebih dulu.
 
 ### Fase 5 — Tutup celah yang membuat "komputasi" belum lengkap
 
@@ -317,7 +314,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.606
+software_tests      1611/1611     ← sekarang 4.628
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 

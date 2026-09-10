@@ -137,42 +137,42 @@ def test_the_bench_count_matches_the_makefile() -> None:
 # ── the board, which is the part that is off ────────────────────
 
 
-def test_fmax_is_measured_again_with_new_evidence() -> None:
-    """It was measured once on the 9K, then went unmeasured when the design
-    outgrew that board -- EH is the honest label for "no longer verified",
-    not "false". Now it is measured again, on the Tang Nano 20K that
-    replaced the 9K as the target. A label does not rise without new
-    evidence (R2); the evidence here is a real PNR run against a bigger
-    board, not the old 9K number reasserted."""
-    assert "90,14" not in ON, "ON.md must not carry the 9K's old Fmax forward"
+def test_fmax_is_measured_on_the_board_not_synthesised() -> None:
+    """A label does not rise without new evidence (R2), and the evidence
+    here is the board itself: place-and-route completed, the bitstream was
+    flashed, and the UART answered. Synthesis alone would not earn CC."""
     assert "114,65" in ON, "ON.md must carry the Tang Nano 20K's measured Fmax"
-    assert "Fmax HCPU adalah `CC` lagi" in README
-    assert "Tang Nano 9K" in OFF and "Tang Nano 20K" in OFF
+    assert "118,43" in README, "the board's post-routing Fmax is the headline"
+    assert "Tang Nano 20K" in OFF
 
 
-def test_the_utilisation_in_off_is_the_wrappers_own() -> None:
-    rows = dict(
-        (name, int(used.replace(",", "")))
-        for name, used, _total in re.findall(
-            r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", WRAPPER, re.M
-        )
-    )
-    for name, used in rows.items():
-        quoted = f"{used:,}".replace(",", ".")
-        assert quoted in OFF, f"{name} {quoted} is not the figure OFF.md carries"
-    assert "no BELs remaining" in OFF and "no BELs remaining" in WRAPPER
+def test_the_bisection_lives_in_one_place_only() -> None:
+    """The wrapper header carries it; OFF.md must not carry a copy.
+
+    Both files used to hold the table and a test compared them. Two copies
+    that agree is still two transcriptions, and the cheaper guarantee is one
+    source: the header sits next to the design it measures, so it is the one
+    that gets re-run. A copy in OFF.md could only ever drift.
+    """
+    wrapper_commits = re.findall(
+        r"\b([0-9a-f]{7})\b", WRAPPER.split("Bisected")[1].split("One commit did it")[0])
+    assert len(wrapper_commits) == 6, f"the wrapper's bisection is {wrapper_commits}"
+
+    for sha in wrapper_commits:
+        assert sha not in OFF, (
+            f"OFF.md carries commit {sha} again -- the bisection was copied back")
 
 
-def test_the_bisection_in_off_matches_the_wrappers_record() -> None:
-    """Two places carry the table; they have to agree, and the wrapper is the
-    one written next to the design."""
-    def commits(text: str) -> list[str]:
-        return re.findall(r"\b([0-9a-f]{7})\b", text)
+def test_off_names_what_is_actually_blocked_on_this_board() -> None:
+    """OFF.md is for what does not run, measured on the board that exists.
 
-    from_wrapper = commits(WRAPPER.split("Bisected")[1].split("One commit did it")[0])
-    from_off = commits(OFF.split("Bisect, satu run")[1].split("**Satu komit")[0])
-    assert from_wrapper == from_off, f"{from_wrapper} vs {from_off}"
-    assert len(from_wrapper) == 6
+    It must not describe obstructions on hardware that was never built
+    against -- a synthesis estimate against a board nobody owns is not an
+    obstruction, it is arithmetic.
+    """
+    assert "105%" in OFF, "the combined top level is the real measured blocker"
+    assert "1.665 bit port" in OFF, "the raw Ka'bah module's IOB limit"
+    assert "nol byte" in OFF, "the five trap/supervisor programs"
 
 
 # ── scope honesty ───────────────────────────────────────────────
@@ -247,11 +247,10 @@ def test_the_checklist_ticks_every_bench_the_makefile_runs() -> None:
 
 
 def test_the_bitstream_row_is_green_and_matches_the_wrapper() -> None:
-    """Bitstream moved from red to green the day the design started fitting
-    a board -- the Tang Nano 20K, not the 9K it used to target (OFF.md's
-    "Papan 9K" section keeps why). The percentage is read back from the
-    wrapper, not typed twice: it moves every time the design does, and a
-    hard-coded copy here would be one more transcription to drift."""
+    """Bitstream is green because the design fits the Tang Nano 20K and the
+    board ran it. The percentage is read back from the wrapper, not typed
+    twice: it moves every time the design does, and a hard-coded copy here
+    would be one more transcription to drift."""
     row = [ln for ln in CHECKLIST.splitlines()
            if ln.startswith("| ✅") and "bitstream" in ln]
     assert row, "the bitstream row is gone from the checklist, or not green"
@@ -268,12 +267,11 @@ def test_nothing_blocked_is_ticked_green() -> None:
     below, not as a blanket word-ban."""
     green = [ln for ln in CHECKLIST.splitlines() if ln.startswith("| ✅")]
     assert len(green) > 20, f"only {len(green)} green rows -- the list shrank"
-    # "bitstream" moved out of this ban the day it started fitting the board
-    # (see cosmictera-build/OFF.md's "Papan 9K" section for why 9K stays
-    # blocked while the Tang Nano 20K does not) -- it is checked as its own
-    # claim below, in test_the_bitstream_row_is_green_and_matches_the_wrapper.
-    # "flash" and "Fmax" stay banned: gowin_pack succeeding is not a board
-    # being flashed, and no green row here claims a routed Fmax on its own.
+    # "bitstream" is checked as its own claim below, in
+    # test_the_bitstream_row_is_green_and_matches_the_wrapper.
+    # "flash" and "Fmax" stay banned from the green ROWS: both are real now
+    # (PAPAN.md), but they belong to the board record, not to a checklist
+    # tick that a build could satisfy on its own.
     for word in ("flash", "Fmax"):
         assert not [ln for ln in green if word in ln], f"{word} is ticked green"
     hfs_rows = [ln for ln in green if "HFS" in ln]

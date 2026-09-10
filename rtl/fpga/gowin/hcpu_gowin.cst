@@ -6,12 +6,7 @@
 // open-source .cst (uart_tx=69, uart_rx=70). Pin 4 is the 27 MHz crystal
 // input; it is not a dedicated clock pin, so nextpnr's "generic routing used
 // for the clock" warning is expected and not a fault.
-//
-// This board replaced the Tang Nano 9K as of the commit that added this
-// comment -- the design no longer fits the 9K's 8,640 LUT4 (see
-// cosmictera-build/OFF.md for the bisection). The 9K's old pin map (clk=52,
-// uart_txd=17, uart_rxd=18, btn_rst_n=4, led=10..16) is gone with it; it
-// described different silicon and would silently mis-map every pin here.
+
 
 // ── Clock ───────────────────────────────────────────────────────
 IO_LOC  "clk_27m"   4;

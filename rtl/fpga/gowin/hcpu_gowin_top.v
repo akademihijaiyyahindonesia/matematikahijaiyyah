@@ -66,24 +66,16 @@
 // is not the cause -- it is pruned before placement. The +36 measured here
 // is separately accounted for above and does not absorb the +2.
 //
-// This is the same RTL that does not fit the Tang Nano 9K -- 161% of its
-// 8,640 LUT4, nextpnr stopping with "no BELs remaining to implement cell
-// type 'LUT4'". That board was the target through the commit before this
-// one. The design outgrew it; the fix was not to shrink the design but to
-// move to a board with more LUT4, and 20,736 comfortably holds what 8,640
-// could not. cosmictera-build/ROADMAP.md has the fuller account of why this
-// board and what is still open (Ka'bah sharing the same chip, chiefly).
+// The design was not always this large. Bisected, one synthesis run per
+// commit -- the lesson is about a commit, and the LUT4 counts are what
+// carry it:
 //
-// The design did not always need even the 9K's full budget. Bisected, one
-// synthesis run per commit, against the 9K's 8,640 -- kept here because the
-// lesson is about a commit, not about which board was being measured against:
-//
-//     ae83fd2  the toolchain and the first bitstream    6,753   78%   fits
-//     096e392  supervisor mode                          6,740   78%   fits
-//     348e9c6  the boot path                           13,644  157%   FAILS
-//     e5bd781  one letter is the whole instruction     13,710  158%   FAILS
-//     a606ed5  memory protection                       13,800  159%   FAILS
-//     34ca28c  syscall                                 13,817  159%   FAILS
+//     ae83fd2  the toolchain and the first bitstream    6,753
+//     096e392  supervisor mode                          6,740
+//     348e9c6  the boot path                           13,644
+//     e5bd781  one letter is the whole instruction     13,710
+//     a606ed5  memory protection                       13,800
+//     34ca28c  syscall                                 13,817
 //
 // One commit did it. The boot path added the loader's write port to
 // instruction memory -- three lines, `if (imem_we) imem[imem_waddr] <= ...` --
@@ -107,7 +99,7 @@
 // memory reproduces the previously recorded hash exactly, for this wrapper and
 // for Ka'bah's -- so the sweep is provably the entire delta and no design byte
 // moved. The measured figures above still describe this RTL.
-// RTL FINGERPRINT: 5fb6dfc22edff8b89cec22d1677450d31ab694ceb8311b3cae39b5d6d5f14b34
+// RTL FINGERPRINT: 7ba2ec8ca1ee35a82e1e33742d4301d7aeea1f85c981cc6575996e66700669bf
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

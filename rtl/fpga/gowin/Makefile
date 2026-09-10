@@ -17,10 +17,7 @@
 #
 # The vendor Gowin IDE is the alternative; point it at the same sources.
 #
-# This targeted the Tang Nano 9K (GW1NR-LV9QN88PC6/I5) through the commit
-# before this one. The design outgrew it -- 161% of 8,640 LUT4, place and
-# route never completing (see cosmictera-build/OFF.md's bisection table for
-# which commit did it). The 20K (GW2AR-LV18QN88C8/I7) has 20,736: the same
+# The board is the Tang Nano 20K (GW2AR-LV18QN88C8/I7), 20,736 LUT4: the
 # design routes there at 67%. See cosmictera-build/ROADMAP.md for how this
 # board was chosen and what is still open.
 

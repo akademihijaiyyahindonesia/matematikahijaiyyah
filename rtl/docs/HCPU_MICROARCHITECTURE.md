@@ -159,8 +159,8 @@ pipeline latency (3 cycles from write to read without forwarding).
 2. **Guard checker**: 5-input adder + comparator ≈ 4 LUT levels
 3. **Branch resolution**: CMP result → FLAGS → branch decision ≈ 3 LUT levels
 
-All paths should meet 50 MHz timing (20 ns period) comfortably on
-both Gowin GW1NR-9 and Xilinx XC7A35T.
+Measured on the board: **Fmax 118.43 MHz** post-routing on the Tang Nano
+20K (GW2AR-18C). See `cosmictera-build/PAPAN.md`.
 
 ---
 

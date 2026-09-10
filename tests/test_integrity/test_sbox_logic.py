@@ -180,7 +180,7 @@ def test_the_verilog_matches_the_sealed_table() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_hijaiyyah_sbox"], capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_hijaiyyah_sbox"], capture_output=True, text=True)
     assert "PASS: 256/256" in run.stdout, run.stdout
 
 
@@ -206,7 +206,7 @@ def test_the_router_keeps_every_lane_on_its_own_byte() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_hijaiyyah_router"], capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_hijaiyyah_router"], capture_output=True, text=True)
     assert "PASS:" in run.stdout, run.stdout
 
 
@@ -218,7 +218,7 @@ def test_the_router_documents_measured_area_not_an_estimate() -> None:
     """
     source = (ROOT / "rtl" / "hijaiyyah_sbox_router.v").read_text(encoding="utf-8")
     assert "MEASURED, not estimated" in source
-    for figure in ("76 LUT4", "274 LUT4", "2023 LUT4", "6743 LUT4", "8640 LUT4"):
+    for figure in ("76 LUT4", "274 LUT4", "2023 LUT4", "6743 LUT4", "20,736 LUT4"):
         assert figure in source, f"{figure} missing from the router header"
 
 
@@ -228,19 +228,22 @@ def test_the_face_is_two_hundred_bytes_not_twenty_five() -> None:
 
     The cube face is 25 *lanes* of 64 bits — 1600 bits, 200 bytes — so a
     router at WIDTH=25 covers one eighth of a face, not all of it. A fully
-    parallel face needs 200 S-boxes: 15,200 LUT4 in logic, which does not fit
-    a Tang Nano 9K's 8,640. The header has to keep saying so.
+    parallel face needs 200 S-boxes: 15,200 LUT4 in logic -- 73% of the Tang
+    Nano 20K's 20,736 on substitution alone, before the impulser, the UART or
+    the HCPU. The header has to keep saying so.
     """
     from hijaiyyah.crypto import cube
 
     face_bytes = cube.STATE_LANES * cube.LANE_BITS // 8
     assert face_bytes == 200
-    assert face_bytes * 76 > 8640, "a full parallel face would fit after all"
+    assert face_bytes * 76 == 15_200
+    assert face_bytes * 76 / 20_736 > 0.70, (
+        "a full parallel face stopped dominating the board")
 
     source = (ROOT / "rtl" / "hijaiyyah_sbox_router.v").read_text(encoding="utf-8")
     assert "SCALE, CORRECTED" in source
     assert "200 BYTES" in source
-    assert "does NOT fit" in source
+    assert "73% of a Tang Nano 20K" in source
 
 
 def test_the_area_figures_name_their_mapping_and_their_limit() -> None:
@@ -289,7 +292,7 @@ def test_the_linear_verilog_matches_cube_linear_layer() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_linear"], cwd=ROOT, capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_linear"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS: 64/64" in run.stdout, run.stdout
 
 
@@ -335,6 +338,69 @@ def test_substitution_is_position_independent_across_the_flat_state() -> None:
 
 
 @pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
+def test_the_impulser_is_paced_on_its_own_and_not_only_through_a_datapath() -> None:
+    """
+    `tb_hijaiyyah_ramal_impulse.v` was on disk, compiled, passed — and was run
+    by nothing at all. Thirty-six testbench files exist; twenty have a `make`
+    target and twenty-two are handed to iverilog by a Python test. The union is
+    thirty-five. This was the one outside it, for as long as it has existed.
+
+    It matters more than an orphan usually would, because the test below it
+    drives this same generator through the full core. That test passing was
+    read as covering the pacing — but a datapath test compares final state, and
+    a generator can reach the right state while emitting the wrong number of
+    pulses along the way, which is exactly the class of bug the two handshake
+    faults documented there turned out to be. This bench counts the pulses
+    themselves: ROUNDS substitutions each carrying its own round index, the
+    opening wide stride costing one extra linear pulse (28 + 1 = 29), and
+    `done` asserted exactly once rather than merely at least once.
+    """
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-o", "/tmp/tb_ramal_impulse",
+         "rtl/hijaiyyah_ramal_impulse.v",
+         "rtl/tb/tb_hijaiyyah_ramal_impulse.v"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["vvp", "/tmp/tb_ramal_impulse"], cwd=ROOT,
+                         capture_output=True, text=True)
+    assert "MISMATCH" not in run.stdout, run.stdout
+    assert "PASS: 28 substitutions, 29 linear pulses, one wide stride" in run.stdout, (
+        run.stdout
+    )
+
+
+def test_every_testbench_on_disk_is_run_by_something() -> None:
+    """The guard that would have caught the orphan above.
+
+    A `.v` file under `rtl/tb/` that no `make` target and no Python test ever
+    hands to iverilog is not a passing test; it is an unrun file that reads as
+    one in every count of "36 testbenches". Two docs quoted 36 while two others
+    quoted 20, and both figures were defensible -- 20 is `make all`, 36 is the
+    directory listing -- but neither was the number that runs.
+    """
+    import re
+
+    tbs = sorted(p.stem for p in (ROOT / "rtl" / "tb").glob("tb_*.v"))
+    makefile = (ROOT / "rtl" / "tb" / "Makefile").read_text(encoding="utf-8")
+    by_make = set(re.findall(r"(tb_[a-z0-9_]+)\.vvp", makefile))
+
+    sources = "".join(
+        p.read_text(encoding="utf-8", errors="replace")
+        for p in (ROOT / "tests").rglob("*.py")
+    )
+    by_pytest = {t for t in tbs if f"rtl/tb/{t}.v" in sources}
+
+    orphans = [t for t in tbs if t not in by_make and t not in by_pytest]
+    assert not orphans, (
+        f"{len(orphans)} testbench(es) under rtl/tb/ are run by nothing -- not "
+        f"by `make -C rtl/tb all`, not by any test: {orphans}. Give each one a "
+        f"make target or a Python caller, or delete it; a bench nobody runs is "
+        f"not coverage."
+    )
+
+
+@pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
 @pytest.mark.parametrize("slice_bytes", [4, 8, 25, 50, 100])
 def test_the_core_reproduces_the_python_at_every_slice_width(slice_bytes: int) -> None:
     """
@@ -357,7 +423,7 @@ def test_the_core_reproduces_the_python_at_every_slice_width(slice_bytes: int) -
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run([f"/tmp/tb_core_{slice_bytes}"], cwd=ROOT,
+    run = subprocess.run(["vvp", f"/tmp/tb_core_{slice_bytes}"], cwd=ROOT,
                          capture_output=True, text=True)
     assert "PASS: 28 rounds" in run.stdout, run.stdout
 
@@ -366,13 +432,14 @@ def test_the_core_header_reports_that_nothing_fits_the_board_yet() -> None:
     """
     Narrowing the slice does not keep shrinking the design — SLICE=4 costs
     more than SLICE=8, because the cost is the 1600-bit slice multiplexer and
-    not the S-boxes. And the cheapest configuration is already over a Tang
-    Nano 9K's 8,640 LUT4. Both belong in the header, not in a surprise on the
-    board.
+    not the S-boxes. The header has to say so there, not leave it as a
+    surprise on the board.
     """
     source = (ROOT / "rtl" / "hijaiyyah_ramal_core.v").read_text(encoding="utf-8")
     assert "CONTRADICTS THE OBVIOUS EXPECTATION" in source
-    assert "NONE of these fit a Tang Nano 9K" in source
+    assert "105%" in source, (
+        "the real binding constraint -- HCPU and Ka'bah as one top level -- "
+        "is no longer named in the header")
     assert "not built yet" in source
 
 
@@ -394,7 +461,7 @@ def test_the_rotating_core_is_bit_identical_to_the_sliced_one(slice_bytes: int) 
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run([f"/tmp/tb_rot_{slice_bytes}"], cwd=ROOT,
+    run = subprocess.run(["vvp", f"/tmp/tb_rot_{slice_bytes}"], cwd=ROOT,
                          capture_output=True, text=True)
     assert "PASS: 28 rounds" in run.stdout, run.stdout
 
@@ -409,9 +476,9 @@ def test_the_rotating_core_reports_that_it_fits_and_how_that_was_measured() -> N
     # Comment prose wraps across lines, so match against normalised text —
     # the first version of this asserted a phrase that a line break had split.
     source = " ".join(raw.replace("//", " ").split())
-    assert "6,229 LUT4" in source and "72%" in source
+    assert "6,229 LUT4" in source and "30%" in source
     assert "not a vendor fitting report" in source
-    assert "Fmax has no value until the board arrives" in source
+    assert "This module's OWN Fmax is still unmeasured" in source
 
 
 @pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")
@@ -441,7 +508,7 @@ def test_standby_holds_the_core_at_both_moments_it_can_be_asserted() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_standby"], cwd=ROOT, capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_standby"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS: two holds" in run.stdout, run.stdout
 
 
@@ -499,7 +566,7 @@ def test_the_sponge_absorbs_two_rate_blocks_exactly_like_cube_py() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_sponge"], cwd=ROOT, capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_sponge"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS:" in run.stdout, run.stdout
 
 
@@ -538,7 +605,7 @@ def test_standby_and_load_outrank_an_absorb() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_priority"], cwd=ROOT, capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_priority"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS: standby holds an absorb" in run.stdout, run.stdout
 
 
@@ -580,7 +647,7 @@ def test_the_whole_system_runs_from_raw_bits_to_the_python_state() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_kabah_top"], cwd=ROOT,
+    run = subprocess.run(["vvp", "/tmp/tb_kabah_top"], cwd=ROOT,
                          capture_output=True, text=True)
     assert "PASS:" in run.stdout, run.stdout
     assert "clocks held" in run.stdout
@@ -637,6 +704,6 @@ def test_the_gate_actually_gates_and_the_break_point_is_joined() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_gate_mode"], cwd=ROOT,
+    run = subprocess.run(["vvp", "/tmp/tb_gate_mode"], cwd=ROOT,
                          capture_output=True, text=True)
     assert "PASS: break at byte 37" in run.stdout, run.stdout

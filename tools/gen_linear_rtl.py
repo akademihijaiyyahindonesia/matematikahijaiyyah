@@ -110,8 +110,8 @@ _TEMPLATE = '''// hijaiyyah_linear.v — theta then rho-pi, the round's linear l
 //     walk  [1,1,1]   3 linear + 3 sub   =  7,680 + 45,600 = 53,280 LUT4
 //     ramal [2,1]     3 linear + 2 sub   =  7,680 + 30,400 = 38,080 LUT4
 //
-// a 28.5% saving. Time-multiplexed -- which is what actually fits a Tang Nano
-// 9K, at 25 bytes per clock -- the same trade reads in clocks: 3 + 3x8 = 27
+// a 28.5% saving. Time-multiplexed -- 25 bytes per clock, which is the shape
+// that leaves room for the rest -- the same trade reads in clocks: 3 + 3x8 = 27
 // against 3 + 2x8 = 19, a 30% saving. Buying a linear layer to sell a
 // substitution layer is a good trade because the two are an order of
 // magnitude apart, not because one of them is free.

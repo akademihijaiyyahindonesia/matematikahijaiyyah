@@ -175,7 +175,7 @@ luas FPGA berbasis LUT4), bukan ditaksir:
 | per S-box | **76 LUT4** | 274 LUT4 |
 | router WIDTH=8 | **605 LUT4** | 2209 LUT4 |
 | router WIDTH=25 | **2023 LUT4** | 6743 LUT4 |
-| — di Tang Nano 9K (8640 LUT4) | **23%** | 78% |
+| — di Tang Nano 20K (20.736 LUT4) | **10%** | 33% |
 
 **Koreksi skala.** Versi awal dokumen ini menyebut WIDTH=25 sebagai "seluruh
 muka cube 5×5 dalam satu clock". Itu **salah delapan kali lipat**, dan
@@ -188,7 +188,7 @@ Muka yang sepenuhnya paralel butuh 200 S-box:
 
 | | | |
 |---|---:|---|
-| logika | 200 × 76 = **15.200 LUT4** | **tidak muat** di Tang Nano 9K (8.640) |
+| logika | 200 × 76 = **15.200 LUT4** | 73% dari Tang Nano 20K (20.736) |
 | tabel | 200 × 274 = **54.800 LUT4** | jauh dari muat |
 
 Jadi desain yang muat adalah seperdelapan muka per clock — dan justru di situ

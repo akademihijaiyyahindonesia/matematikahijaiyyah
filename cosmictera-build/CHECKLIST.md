@@ -195,11 +195,10 @@ Error Verilator hilang justru karena `default:` ganda itu diperbaiki — jadi
 lint yang selama ini merah sebenarnya sedang menunjuk cacat huruf, dan tak ada
 yang membacanya. Peringatan yang tersisa soal bit yang tak terpakai.
 
-Bitstream pindah dari baris ini ke bagian hijau di bawah: desain yang sama
-tidak muat 9K (161% LUT4), tapi muat dan terrout di Tang Nano 20K
-(67% LUT4, 114,65 MHz) — lihat [OFF.md](OFF.md) untuk kenapa 9K ditinggalkan
-alih-alih diperbaiki. `make bitstream` berhasil belum berarti papan fisik
-sudah di-flash — itu masih [belum terjadi](ROADMAP.md), bukan disembunyikan.
+Bitstream pindah dari baris ini ke bagian hijau di bawah: desain muat dan
+terrout di Tang Nano 20K (**67% LUT4, 118,43 MHz**), papan di-flash, dan
+UART membalas 23 byte yang cocok byte-per-byte dengan simulasi.
+Rekamannya di [PAPAN.md](PAPAN.md).
 
 ---
 

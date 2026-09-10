@@ -74,6 +74,8 @@ Determinisme harus struktural, bukan empiris.
 | [`RULES.md`](RULES.md) | Aturan yang mengikat. Setiap aturan punya bekas luka — insiden yang melahirkannya. |
 | [`SYSTEM.md`](SYSTEM.md) | Penjelasan sistem teknis: geometri, lipatan, rotasi, impulser, segel. |
 | [`CONCRETE.md`](CONCRETE.md) | Penjelasan konkret lengkap: jalur satu aliran dari bit sampai segel, dengan setiap angka dan asalnya. |
+| [`COMPUTING.md`](COMPUTING.md) | Apa itu "Cosmictera Computing" secara program: empat program nyata (HCPU, Ka'bah, tumpukan tujuh lapis, NUI) dan disiplin yang sama-sama mereka taati. |
+| [`CODEX.md`](CODEX.md) | Bab I & II buku *Matematika Hijaiyyah* dipetakan ke modul kode (`core/`, `algebra/`, `skeleton/`) dan tes yang memverifikasinya — lapis matematika di bawah keempat program itu. |
 
 Angka di ketiganya diikat oleh
 [`tests/test_integrity/test_cosmictera_docs.py`](../tests/test_integrity/test_cosmictera_docs.py).
@@ -91,11 +93,12 @@ menggagalkan tes.
   keamanan yang bertumpu padanya.
 - **Lapis 4 ditolak.** Untuk kerahasiaan, pakai AES‑256‑GCM dari pustaka
   teruji.
-- **Fmax HCPU kembali [EH].** Ia pernah terukur 90,14 MHz pada `ae83fd2`, dan
-  angka itu masih tereproduksi di komit tersebut. Tapi lima komit sesudahnya
-  mengubah RTL tanpa menjalankan ulang place-and-route, dan pada HEAD desainnya
-  **159% dari LUT4 papan — routing tidak selesai**, jadi tidak ada laporan
-  timing sama sekali. Penyebabnya satu komit: jalur boot (`348e9c6`) menambah
-  port tulis loader ke memori instruksi, dan itu menaikkan LUT4 dari 6.740 ke
-  13.644. **Fmax Kabah top masih [EH]** karena sebab lain: 1.665 bit port
-  melawan 276 IOB.
+- **Fmax HCPU [CC].** Tang Nano 20K menjalankannya: **14.005 LUT4 (67%),
+  4.480 DFF (28%), 17 BSRAM, Fmax 118,43 MHz pasca-perutean**, dan UART
+  membalas 23 byte yang cocok byte-per-byte dengan simulasi. Ka'bah terpisah
+  juga terukur: **12.061 LUT4 (58%), Fmax 165,98 MHz**.
+- **Fmax HCPU + Ka'bah satu top level tetap [EH]**, karena sebab yang berbeda
+  dan masih berlaku: gabungannya diukur **105% — lewat 960 sel**, jadi tidak
+  ada laporan timing untuk top level gabungan. Modul Ka'bah mentah juga masih
+  tak bisa ditempatkan: 1.665 bit port melawan 276 IOB. Yang berjalan di papan
+  adalah wrapper-nya, bukan modul mentah itu.

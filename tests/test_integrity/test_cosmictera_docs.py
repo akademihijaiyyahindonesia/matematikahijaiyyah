@@ -260,7 +260,7 @@ def test_the_silicon_figures_agree_with_the_rtl_header() -> None:
     for lut in ("6,910", "8,096"):
         assert lut in header, lut
         assert lut.replace(",", ".") in concrete, lut
-    assert "8,640" in header and "8.640" in concrete
+    assert "20,736" in header and "20.736" in concrete
     # And the stale pair must be recorded as stale in both places.
     assert "7,426" in header and "7.426" in concrete
 

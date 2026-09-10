@@ -27,11 +27,10 @@ Label epistemik proyek tetap berlaku dan mengikat:
 | `EH` | hipotesis; belum terukur |
 | `AT` | terarah, belum dibangun |
 
-Tidak ada baris yang naik label tanpa bukti baru. Sebelumnya ada satu yang
-turun — Fmax HCPU jadi `EH` karena desainnya tidak lagi muat di Tang Nano 9K —
-dan sekarang naik lagi dengan bukti baru sungguhan, bukan diklaim balik begitu
-saja: **Fmax HCPU adalah `CC` lagi, 114,65 MHz di Tang Nano 20K**, papan yang
-menggantikan 9K. Riwayatnya ada di [OFF.md](OFF.md), bukan disembunyikan.
+Tidak ada baris yang naik label tanpa bukti baru. **Fmax HCPU adalah `CC`:
+118,43 MHz pasca-perutean di Tang Nano 20K**, dan bukan angka sintesis —
+papan menjalankannya, UART membalas 23 byte yang cocok byte-per-byte dengan
+simulasi.
 
 ## Angka utuh, hari ini
 

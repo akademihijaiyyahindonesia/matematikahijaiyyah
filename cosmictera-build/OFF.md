@@ -7,81 +7,44 @@ Keduanya dipisah karena jaraknya ke "menyala" sangat berbeda.
 
 ## Terhalang — terbangun, tidak bisa dijalankan
 
-### Papan 9K: bukan diperbaiki, diganti
+### HCPU + Ka'bah sebagai satu top level
 
-Tang Nano 9K adalah papan target sampai commit sebelum ini. Place-and-route
-di sana **gagal**: desainnya **162% dari 8.640 LUT4** papan itu dan nextpnr
-berhenti pada `no BELs remaining to implement cell type 'LUT4'`.
+Keduanya berjalan di papan **sendiri-sendiri** — HCPU 14.005 LUT4 (67%),
+Ka'bah 12.061 LUT4 (58%). Digabung jadi satu top level: **105% — lewat 960
+sel.** Diukur, bukan diperkirakan.
 
-```
-LUT4    14.005 / 8.640   162%   ← tidak muat di 9K
-DFF      4.480 / 6.480    69%
-BSRAM       17 /    26    65%
-```
+Dan rinciannya membatalkan tiga penghematan yang sempat direncanakan:
 
-Ia pernah muat di 9K, dan angka lamanya jujur saat ditulis. Bisect, satu run
-sintesis per komit, terhadap budget 9K:
+| Rencana | Yang sebenarnya terjadi |
+|---|---|
+| kecilkan memori instruksi 4096 → 1024 | hemat **15 sel** |
+| berbagi satu UART | tidak masuk empat belas besar pemakai LUT |
+| pangkas modul kecil | `hcpu_execute` + `hijaiyyah_sponge` sudah **91%** desain |
 
-| komit | | LUT4 | |
-|---|---|---:|---|
-| `ae83fd2` | perkakas dan bitstream pertama | 6.753 (78%) | muat |
-| `096e392` | mode supervisor | 6.740 (78%) | muat |
-| **`348e9c6`** | **jalur boot** | **13.644 (157%)** | **gagal** |
-| `e5bd781` | satu huruf satu instruksi | 13.710 (158%) | gagal |
-| `a606ed5` | proteksi memori | 13.800 (159%) | gagal |
-| `34ca28c` | syscall | 13.817 (159%) | gagal |
+Jadi 960 sel itu tidak ada di tempat yang mudah. Peta jalannya di
+[ROADMAP.md](ROADMAP.md) Fase 4. Label: **AT**.
 
-**Satu komit yang melakukannya.** Jalur boot menambah tiga baris port tulis
-loader ke memori instruksi, dan itu mengubah larik hanya-baca menjadi memori
-baca-tulis: BSRAM 4 → 17, sisanya jatuh ke fabric — **+5.015 LUT4, +2.666 DFF**.
+### Modul Ka'bah mentah masih tak bisa ditempatkan
 
-Jembatannya nyata dan bench-nya lulus. **Biayanya yang tidak pernah diukur**,
-karena lima komit mendarat setelah pengukuran dan tak satu pun menjalankan ulang
-tools.
+`hijaiyyah_kabah_top` sendirian: **1.665 bit port melawan 276 IOB.** Yang
+berjalan di papan adalah wrapper-nya (`hijaiyyah_kabah_gowin_top.v`), yang
+menyempitkan antarmuka ke 10 pin. Modul mentahnya belum pernah, dan
+perbedaan itu bukan rincian: wrapper yang lulus tidak menjadikan modul di
+dalamnya sudah teruji ditempatkan.
 
-Ada dua jalan yang tidak mengubah papan — kecilkan memori instruksi (4096 kata
-→ 1024), atau tulis ulang port tulisnya agar terinfer bersih ke BSRAM — dan
-satu yang mengubahnya. Yang diambil: **ganti papan.** Tang Nano 20K
-(GW2AR-LV18QN88C8/I7) punya 20.736 LUT4, bukan 8.640, dan desain yang sama
-tidak perlu dikecilkan sama sekali untuk masuk ke sana — lihat
-[ON.md](ON.md#6--jembatan-papan) untuk angka rutenya. `no BELs remaining`
-tetap dikutip di atas karena itu pesan nyata nextpnr terhadap 9K, bukan
-klaim tentang keadaan sekarang.
+Label: **EH**.
 
-Rekamannya ada di header `rtl/fpga/gowin/hcpu_gowin_top.v`, terikat pada **hash
-isi RTL** — bukan pada tanggal, dan bukan pada siapa yang ingat memeriksanya.
-Sentuh berkas RTL mana pun dan `tests/test_integrity/test_place_and_route.py`
-jatuh, meminta pengukuran ulang — mekanisme yang sama yang menemukan 9K basi
-sekarang menjaga angka 20K yang menggantikannya.
+### Lima program trap/supervisor
 
-Label: `CC` di 20K. 9K sendiri ditinggalkan, bukan diperbaiki — lihat
-[ROADMAP.md](ROADMAP.md) untuk apa yang masih terbuka (Ka'bah berbagi chip
-yang sama, terutama).
+`mem_protect`, `syscall`, `syscall_io`, `trap_timer`, `user_mode` —
+kelimanya mengembalikan **nol byte** di papan, dan kelimanya **lulus di
+testbench masing-masing**. Sebabnya loader: program dimuat mulai alamat 64,
+tetapi `MOVI Rx, label` dirakit sebagai alamat **absolut** dengan asumsi
+basis 0 dan tidak direlokasi. Program yang memasang vektor trap dari sebuah
+label memasangnya ke alamat yang salah.
 
-### Fmax Kabah top di Tang Nano 9K
-
-Bukan lagi soal port. `hijaiyyah_kabah_gowin_top.v` menyempitkan antarmukanya
-ke 10 pin dan itu menyelesaikan **1.665 bit port vs 276 IOB** di kedua
-papan — lihat [ON.md](ON.md#5--kripto-kabah). Yang tersisa di 9K sekarang
-sebabnya sama seperti HCPU di atas: **LUT4**, bukan pin.
-
-```
-LUT4    12.102 / 8.640   140%   ← tidak muat
-DFF      1.963 / 6.480    30%
-Fmax    tidak ada — nextpnr: "Unable to find legal placement... after
-        54.925.681 attempts" — tidak sampai routing, sama seperti HCPU di atas
-```
-
-Sebabnya sudah tercatat sebelum wrapper ini ada: `hijaiyyah_kabah_top`
-sendirian sudah **94%** dari 9K di SLICE_BYTES=25. Menambah UART RX/TX dan
-FSM umpan/dump di atas itu tidak punya tempat lagi.
-
-Di GW2AR-18C (Tang Nano 20K) desain yang sama muat dan terrout: **58% LUT4,
-117,91 MHz, `gowin_pack` sukses**. 9K bukan papan yang cukup besar untuk
-Ka'bah plus jembatan UART-nya sekaligus; 20K sudah.
-
-Label: `EH` untuk 9K. Turun dari `AT` — dulu tidak bisa ditempatkan sama
-sekali, sekarang gagal sesudah tempat, penyebabnya bernama dan bisa diukur.
+Persis program yang paling butuh relokasi. Label: **EH** — sebabnya bernama
+dan bisa diukur, perbaikannya belum dikerjakan.
 
 ---
 
@@ -186,7 +149,7 @@ Label: `EH`.
 ```
 menyala   matematika, bahasa, mesin, sistem operasi, kripto,
           jembatan (simulasi + bitstream HCPU di Tang Nano 20K)
-terhalang Fmax Kabah top (9K), HFS baca (tanpa CSET), penyimpanan persisten
+terhalang top level gabungan, HFS baca (tanpa CSET), penyimpanan persisten
 belum ada 24 opcode, proses dinamis, ASIC
 ```
 

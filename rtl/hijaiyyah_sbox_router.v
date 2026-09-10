@@ -38,7 +38,7 @@
 // clocks at this width.
 //
 // A fully parallel face needs 200 S-boxes:
-//     logic  200 x  76 = 15,200 LUT4   does NOT fit a Tang Nano 9K (8,640)
+//     logic  200 x  76 = 15,200 LUT4   73% of a Tang Nano 20K (20,736)
 //     table  200 x 274 = 54,800 LUT4   not close
 //
 // So the design that fits is one eighth of a face per clock, and the choice of
@@ -48,8 +48,8 @@
 // WHAT IS AND IS NOT VERIFIED. The ratio -- 3.6x per S-box, and 2023 against
 // 6743 for the full face -- is solid: both sides went through one mapping,
 // so the comparison is method-independent even if the absolute numbers move.
-// Against a Tang Nano 9K's 8640 LUT4 those figures read as 23% and 78% for
-// one eighth of a face per clock, and
+// Against a Tang Nano 20K's 20,736 LUT4 those figures read as 10% and 33%
+// for one eighth of a face per clock, and
 // THAT step assumes generic LUT4 count tracks Gowin LUT4 count. Vendor
 // synthesis (`synth_gowin`) did not complete on this module here, and
 // nextpnr is not installed, so no placed-and-routed number exists yet. The

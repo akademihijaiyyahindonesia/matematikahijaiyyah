@@ -183,13 +183,13 @@ Selisihnya didominasi satu modul: `hcpu_dataram` menyumbang 270.568 sel karena 4
 
 Angka ini turun dari 480.795 sel pada run 26 Agustus. Pembacaan yang benar ada pada **perbandingan dua kolomnya**: sel turun 20% sementara flip-flop nyaris tak bergerak (143.309 → 143.112). Sebabnya `hcpu_dataram` dan stack `hcpu_memory` diubah dari baca kombinasional ke baca teregistrasi. Baca asinkron menuntut pohon multiplexer selebar seluruh array; meregistrasinya menghapus pohon itu — itulah 96.000 sel — tetapi penyimpanannya tidak punya tujuan yang lebih baik di alur ini.
 
-Terhadap pustaka memori sungguhan, perubahan yang sama memberi separuh cerita yang lain. Disintesis untuk Tang Nano 9K (`synth_gowin`, top `hcpu_gowin_top`), array-nya kini terpetakan ke block RAM:
+Terhadap pustaka memori sungguhan, perubahan yang sama memberi separuh cerita yang lain. Disintesis dengan `synth_gowin` (top `hcpu_gowin_top`), array-nya kini terpetakan ke block RAM, bukan ke flip-flop fabric:
 
-| Sumber daya | Terpakai | Kapasitas |
-|---|---|---|
-| LUT | 3.053 | 8.640 |
-| Flip-flop | 1.646 | 6.480 |
-| Blok BSRAM | 4 | 26 |
+| Sumber daya | Terpakai |
+|---|---|
+| LUT | 3.053 |
+| Flip-flop | 1.646 |
+| Blok BSRAM | 4 |
 
 Jadi perbaikannya bekerja; laporan gerbang generik hanya tidak bisa melihatnya. Setiap angka ASIC membawa peringatan yang sama sampai desainnya disintesis terhadap PDK dengan makro SRAM.
 

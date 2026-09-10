@@ -1,24 +1,21 @@
 """
-Place and route: the design fits the Tang Nano 20K, and the story of why it
-no longer targets the 9K it used to.
+Place and route: the design fits the Tang Nano 20K, and the mechanism that
+keeps its numbers honest.
 
-Fmax was measured once on the 9K, honestly, and the [EH] on it was retired.
-Five commits later the design was 159% of that board's LUT4 and nextpnr
-stopped with "no BELs remaining". Nothing caught it for a while, and the
-reason is worth keeping: the test that guarded the numbers compared the
-header's text against constants retyped here. Both are transcriptions. When
+A measurement went stale once and nothing caught it for a while. The reason
+is worth keeping: the test that guarded the numbers compared the header's
+text against constants retyped here. Both are transcriptions. When
 the DESIGN changed, neither moved, so the guard went on passing while the
 thing it described became false.
 
 Numbers about a design have to be tied to that design. So the header carries
 a hash of the RTL it was measured from, and the check below recomputes it.
 Change any source file and this fails, asking for a fresh run -- which is the
-one thing a retyped constant can never do. That mechanism is what caught the
-9K going stale in the first place, and it is the same mechanism now guarding
-the 20K numbers that replaced it -- not a one-time fix, a standing check.
+one thing a retyped constant can never do. Not a one-time fix, a standing
+check.
 
-The Kabah top is still unmeasured for its own separate reason: 1,665 port bits
-against 276 IOB. Keeping the two apart is still the point of this file.
+The raw Kabah top is still unplaceable for its own separate reason: 1,665
+port bits against 384 IOB. Keeping the two apart is the point of this file.
 """
 from __future__ import annotations
 
@@ -77,10 +74,19 @@ KABAH_FINGERPRINTED = [
 
 
 def _fingerprint(sources: list[Path]) -> str:
-    """A hash of the sources the recorded run was made from.
+    """A hash of the DESIGN the recorded run was made from.
 
-    The wrapper carries the recorded hash in a comment, so that one line is
-    skipped -- a record cannot hash itself.
+    Whole-line comments and blank lines are skipped, because synthesis does
+    not see them. The first version hashed every byte, and that made every
+    prose fix in a header demand a fresh place-and-route -- which nobody can
+    supply for a comment, so the pressure went the other way: restamp the
+    hash without measuring. A guard that is expensive to satisfy honestly
+    and cheap to satisfy dishonestly teaches the wrong habit, and this one
+    was about to.
+
+    Only *whole-line* comments are dropped, never a trailing `//`: a Verilog
+    string can legally contain one, and stripping mid-line would risk
+    changing a hash over something synthesis does see.
     """
     import hashlib
 
@@ -88,7 +94,8 @@ def _fingerprint(sources: list[Path]) -> str:
     for f in sources:
         h.update(f.name.encode())
         for line in f.read_text(encoding="utf-8").splitlines(keepends=True):
-            if line.startswith(FP_MARK):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("//"):
                 continue
             h.update(line.encode())
     return h.hexdigest()
@@ -159,9 +166,7 @@ def test_the_design_fits_and_says_so() -> None:
         "LUT4 no longer fits -- re-measure and rewrite this file to match"
     )
     assert "PLACES AND ROUTES on the Tang Nano 20K" in WRAPPER
-    # "no BELs remaining" may still appear -- it is the 9K's own historical
-    # error message, kept as the record of why that board was dropped. What
-    # must NOT appear is the current-tense claim that routing fails now.
+    # What must NOT appear is a current-tense claim that routing fails.
     assert "PLACE AND ROUTE FAILS AT THIS COMMIT" not in WRAPPER
 
 
@@ -170,12 +175,16 @@ def test_the_growth_is_attributed_to_the_commit_that_caused_it() -> None:
     rather than just bad news."""
     assert LAST_FITTING in WRAPPER and FIRST_FAILING in WRAPPER
     assert "the loader's write port" in WRAPPER
-    fits = re.findall(r"^//\s+([0-9a-f]{7})\s+.+?\s+([\d,]+)\s+\d+%\s+(fits|FAILS)",
-                      WRAPPER, re.M)
-    assert len(fits) == 6, f"the bisection table lost rows: {fits}"
-    verdicts = dict((c, v) for c, _, v in fits)
-    assert verdicts[LAST_FITTING] == "fits"
-    assert verdicts[FIRST_FAILING] == "FAILS"
+    rows = re.findall(r"^//\s+([0-9a-f]{7})\s+\S.*?\s{2,}([\d,]+)\s*$", WRAPPER, re.M)
+    assert len(rows) == 6, f"the bisection table lost rows: {rows}"
+
+    lut = {c: int(n.replace(",", "")) for c, n in rows}
+    # The verdict columns are gone: "fits" / "FAILS" were relative to a
+    # device this project never had. The LUT4 counts are the measurement,
+    # and the jump is what the table exists to show.
+    assert lut[FIRST_FAILING] - lut[LAST_FITTING] > 6_000, (
+        f"the boot path's cost is no longer visible: {lut}")
+    assert lut[LAST_FITTING] == 6_740 and lut[FIRST_FAILING] == 13_644
 
 
 def test_the_kabah_top_is_still_unmeasured_and_the_reason_is_recorded() -> None:
@@ -211,7 +220,7 @@ def test_the_kabah_wrapper_narrows_the_interface_and_says_so() -> None:
     bits += len(re.findall(r"(?:input|output)\s+wire\s+\w", head))  # scalar ports
     assert bits <= 20, f"the wrapper interface grew to {bits} bits"
     assert "out_state" not in head
-    assert "1,665" in wrapper and "276 IOB" in wrapper
+    assert "1,665" in wrapper and "384 IOB" in wrapper
 
 
 def test_the_kabah_wrapper_dumps_exactly_cube_pys_state_over_simulated_uart() -> None:
@@ -240,7 +249,7 @@ def test_the_kabah_wrapper_dumps_exactly_cube_pys_state_over_simulated_uart() ->
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_kabah_gowin_top"], cwd=ROOT,
+    run = subprocess.run(["vvp", "/tmp/tb_kabah_gowin_top"], cwd=ROOT,
                          capture_output=True, text=True, timeout=60)
     assert "PASS:" in run.stdout, run.stdout
     assert "400/400 bytes" in run.stdout

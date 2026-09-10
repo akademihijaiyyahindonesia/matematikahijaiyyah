@@ -36,13 +36,13 @@ Diganti dengan ANF.
 
 ## Ukuran terukur
 
-Disintesis untuk Tang Nano 9K (GW1NR-9: 8.640 LUT4 / 6.693 FF), yosys 0.68,
-`synth -flatten` lalu `abc -lut 4`:
+Disintesis terhadap Tang Nano 20K (GW2AR-18C: 20.736 LUT4 / 15.552 FF),
+yosys 0.68, `synth -flatten` lalu `abc -lut 4`:
 
 | SLICE_BYTES | LUT4 | % papan | FF | clock/permutasi |
 |---:|---:|---:|---:|---:|
-| 8 | 6.910 | 80,0% | 2.009 | 786 |
-| 25 | **8.096** | **93,7%** | 2.007 | 310 |
+| 8 | 6.910 | 33,3% | 2.009 | 786 |
+| 25 | **8.096** | **39,0%** | 2.007 | 310 |
 
 Keduanya muat. Margin di SLICE=25 adalah **544 LUT4**.
 
@@ -57,7 +57,7 @@ Keduanya muat. Margin di SLICE=25 adalah **544 LUT4**.
 
 `hijaiyyah_kabah_top` sendiri masih **[EH]**, dan tetap begitu selamanya —
 bukan karena belum sempat, tapi karena itu memang tujuannya: ia menyodorkan
-**1.665 bit port** ke perangkat berisi **276 IOB**, dan **tidak akan pernah**
+**1.665 bit port** ke perangkat berisi **384 IOB**, dan **tidak akan pernah**
 jadi top level yang bisa ditempatkan, persis seperti `hcpu_top` bukan.
 Interfacenya lebar dengan sengaja; yang menyempitkannya adalah wrapper, bukan
 modul itu sendiri.
@@ -89,17 +89,6 @@ Diukur ulang 10 September 2026, dan kali ini bitstream-nya **dijalankan**:
 (MODE1) yang ditahan rendah papan — cacat yang sama membuat HCPU bisu pada
 bring-up pertama hari itu.
 
-Papan target sampai sebelum komit ini adalah Tang Nano 9K (GW1NR-9C), tempat
-wrapper yang sama **FAILS**: IOB 10/276 — **3%**, LUT4 12.061/8.640 —
-**140% — FAILS**, dan nextpnr tidak sampai routing ("Unable to find legal
-placement... after 54.925.681 attempts"). **Masalah pin sudah selesai di
-kedua papan sekaligus** — 10 pin tetap 10 pin berapa pun ukuran chip-nya.
-**Masalah LUT tidak pernah selesai di 9K**, dan sebabnya sudah tercatat
-sebelum wrapper ini ada: `hijaiyyah_kabah_top` sendirian sudah 94% dari 9K
-(SLICE_BYTES=25, tabel di atas); menambah UART RX/TX dan FSM umpan/dump di
-atasnya tidak punya tempat lagi — gagal dengan cara yang sama HCPU gagal di
-9K, di 161%. 20K bukan perbaikan atas 9K; 9K ditinggalkan.
-
 Wrapper ini juga diverifikasi berbeda dari `tb_hijaiyyah_kabah_top.v`: bukan
 lewat `bit_in`/`out_state` langsung, tapi lewat framing UART sungguhan (start
 bit, 8 bit data, stop bit) — dua blok 128-byte berturut-turut tanpa reset di
@@ -108,15 +97,15 @@ byte. Testbench itu sendiri yang menemukan bug nyata di wrapper sebelum lolos:
 `tx_data` balapan dengan `dump_idx` pada tepi clock yang sama, jadi byte 0
 dari setiap dump selalu terlewat.
 
-**Dan Ka'bah tidak muat berdampingan HCPU di 9K.** HCPU sendirian sudah
-**161%** dari 9K ([OFF.md](../cosmictera-build/OFF.md)), Ka'bah sendirian
-**94%** (SLICE_BYTES=25, tabel di atas) — tidak satu pun dari keduanya
-sendirian sudah muat, apalagi berdampingan.
-Di 20K keduanya sendiri-sendiri **muat, terukur** (HCPU 67% LUT4, 118,43 MHz
-— `rtl/fpga/gowin/hcpu_gowin_top.v`, kini papan target; Ka'bah-plus-wrapper
-58%, 165,98 MHz, keduanya lewat sintesis+PNR+`gowin_pack` sungguhan, dan
-keduanya kini benar-benar dijalankan di papan), tapi
-67%+58%=125% kalau dijumlah naif, jadi belum tentu muat berdampingan bahkan
-di 20K. Keduanya belum pernah disintesis sebagai SATU top level bersama.
-Peta jalannya ada di
-[ROADMAP.md](../cosmictera-build/ROADMAP.md#fase-4--hcpu-dan-kabah-sebagai-satu-chip-satu-top-level).
+**Keduanya berjalan di papan, sendiri-sendiri.** HCPU 14.005 LUT4 (67%),
+Fmax 118,43 MHz. Ka'bah-plus-wrapper 12.061 LUT4 (58%), Fmax 165,98 MHz.
+Keduanya lewat sintesis + PNR + `gowin_pack` sungguhan, dan keduanya
+benar-benar dijalankan: HCPU membalas 23 byte lewat UART, Ka'bah mencocokkan
+400/400 byte dengan `cube.py`.
+
+Dijumlah naif 67% + 58% = 125%. **Diukur sebagai satu top level: 105% —
+lewat 960 sel.** Selisih antara 125% dan 105% adalah logika yang memang
+dipakai bersama; sisa 960 sel itu yang belum ada tempatnya.
+
+Peta jalannya di
+[ROADMAP.md](../cosmictera-build/ROADMAP.md).

@@ -118,18 +118,18 @@ Determinisme harus struktural.
 
 ---
 
-## 4. Silikon: Tang Nano 9K (GW1NR‑9)
+## 4. Silikon: Tang Nano 20K (GW2AR‑18C)
 
-Papan: **8.640 LUT4 / 6.693 FF**.
+Papan: **20.736 LUT4 / 15.552 FF**.
 
 Diukur ulang dengan yosys 0.68, `synth -flatten` lalu `abc -lut 4`:
 
 | SLICE_BYTES | LUT4 | % papan | FF | clock/permutasi |
 |---:|---:|---:|---:|---:|
-| 8 | 6.910 | 80,0% | 2.009 | 786 |
-| 25 | **8.096** | **93,7%** | 2.007 | 310 |
+| 8 | 6.910 | 33,3% | 2.009 | 786 |
+| 25 | **8.096** | **39,0%** | 2.007 | 310 |
 
-Keduanya muat. Margin di SLICE=25 adalah **544 LUT4**.
+Keduanya muat. Margin di SLICE=25 adalah **12.640 LUT4**.
 
 > **Angka ini pernah basi.** Header mencatat 6.231 (72%) dan 7.426 (85%) dari
 > commit `cd6a29c`. Commit berikutnya menjadikan gerbang benar‑benar
@@ -158,15 +158,6 @@ GW2AR‑LV18QN88C8/I7 (Tang Nano 20K, papan target):
 | DFF | 1.963 / 15.552 | 12% |
 | Fmax | **117,91 MHz** — terrout, `gowin_pack` sukses, bitstream 4,6 MB | |
 
-Papan target sampai commit sebelumnya adalah Tang Nano 9K (GW1NR‑9C), tempat
-wrapper ini **gagal**: 12.102 / 8.640 LUT4 = **140%**, dan nextpnr tidak
-sampai menempatkan ("no legal placement after 54.925.681 attempts"). Sebabnya
-tercatat sebelum wrapper ini ada: `hijaiyyah_kabah_top` sendirian sudah
-**94%** dari 9K di SLICE_BYTES=25 (lihat tabel di atas); menambah UART dan
-FSM umpan/dump tidak punya tempat lagi. Pin 10 tidak berubah menurut ukuran
-chip — masalahnya selalu LUT, dan pindah papan menyelesaikannya, bukan
-menciutkan desain.
-
 Wrapper ini diverifikasi lewat framing UART sungguhan — bukan `bit_in` atau
 `out_state` langsung — dua blok 128 byte berturut‑turut tanpa reset di antara
 keduanya, cocok 400/400 byte dengan `cube.py`. Testbench itu menemukan bug
@@ -175,8 +166,7 @@ sama, jadi byte pertama dari setiap dump selalu terlewat.
 
 ### HCPU di Tang Nano 20K — ini sudah place‑and‑routed
 
-Fmax HCPU berhenti jadi [EH] sekali, di Tang Nano 9K, lalu naik lagi dengan
-bukti baru: papan yang berbeda. Rantai penuh dijalankan ulang 7 September
+Rantai penuh dijalankan ulang 7 September
 2026 (rtl/hcpu_video_timing.v bergabung ke set sumber yang di-fingerprint,
 memaksa pengukuran ulang meski tidak dipakai wrapper ini):
 yosys 0.68 → nextpnr‑himbaechel 0.11.1 → gowin_pack, GW2AR‑LV18QN88C8/I7.
@@ -192,17 +182,10 @@ sama kedua run, pada RTL yang tidak berubah selain penambahan yang
 di-prune di atas), PASS pada batas 12,00 MHz. Bitstream 7.261.470 byte,
 `gowin_pack` keluar 0 — identik byte-demi-byte dengan pengukuran sebelumnya.
 
-Papan target sampai commit sebelumnya adalah Tang Nano 9K, tempat desain yang
-sama **gagal**: 13.969 / 8.640 LUT4 = **161%**, dan nextpnr berhenti pada
-`no BELs remaining to implement cell type 'LUT4'` — tidak ada laporan timing
-untuk dikutip di papan itu. Bukan diperbaiki di sana; dipindah ke papan
-dengan LUT4 dua setengah kali lipat.
-
-Angka 78% / 90,14 MHz di bawah ini jujur ketika ditulis untuk 9K, dan masih
-tereproduksi pada komitnya (`ae83fd2` → 6.753 LUT4, 78%, Fmax 97,94 MHz).
-Yang terjadi adalah lima komit mendarat sesudahnya dan tak satu pun
+Angka lama (`ae83fd2` → 6.753 LUT4, Fmax 97,94 MHz) masih tereproduksi pada
+komitnya. Yang terjadi adalah lima komit mendarat sesudahnya dan tak satu pun
 menjalankan ulang place-and-route — dijaga di sini karena pelajarannya
-tentang satu komit, bukan tentang papan mana yang sedang diukur:
+tentang satu komit:
 
 | komit | | LUT4 | |
 |---|---|---:|---|

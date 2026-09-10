@@ -4,8 +4,7 @@
 // variable part-select, and measuring it showed the cost was almost all in
 // that multiplexer rather than in the S-boxes: SLICE=4 came out *more*
 // expensive than SLICE=8 (9,517 against 8,673 LUT4), because halving the
-// width doubles the slice count and therefore the mux. Nothing fit a Tang
-// Nano 9K's 8,640.
+// width doubles the slice count and therefore the mux.
 //
 // THE FIX IS TO STOP ADDRESSING THE STATE. Rotate it instead: the bottom
 // SLICE_BITS always feed the substitution, and the result is shifted in at
@@ -38,20 +37,21 @@
 // the addressing is gone. Under the sliced design it was not, and that
 // inversion was the evidence that pointed here.
 //
-// FULL SYSTEM, impulser and core together at SLICE_BYTES=25, on a Tang Nano
-// 9K (GW1NR-9, 8,640 LUT4 / 6,693 FF):
+// FULL SYSTEM, impulser and core together at SLICE_BYTES=25, against the
+// Tang Nano 20K (GW2AR-18C, 20,736 LUT4 / 15,552 FF):
 //
-//     6,229 LUT4   72%       2,411 LUT4 left for the UART and the HCPU
-//     1,623 FF     24%
+//     6,229 LUT4   30%      14,507 LUT4 left for the UART and the HCPU
+//     1,623 FF     10%
 //     310 clocks per permutation
 //
 // Generic 4-LUT mapping, not a vendor fitting report: synth_gowin does not
 // complete here and nextpnr is not installed, so this is a strong indication
-// that it fits and not a placed-and-routed proof. Fmax has no value until the
-// board arrives.
+// that it fits and not a placed-and-routed proof. This module's OWN Fmax is
+// still unmeasured -- it has never been placed standalone. What has been
+// placed and run is the wrapper that contains it, at 165.98 MHz.
 //
 // THROUGHPUT PER SECOND -- AT AN ASSUMED CLOCK, WHICH IS THE WHOLE CAVEAT.
-// The Tang Nano 9K carries a 27 MHz crystal, so 27 MHz is what the board
+// The Tang Nano 20K carries a 27 MHz crystal, so 27 MHz is what the board
 // offers, NOT what this design has been shown to close timing at. The
 // achievable Fmax is unmeasured -- that is E1, and it still has no value.
 // Every figure below therefore reads "if it closes at 27 MHz":
