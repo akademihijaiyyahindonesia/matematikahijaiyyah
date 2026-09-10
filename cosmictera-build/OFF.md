@@ -7,20 +7,20 @@ Keduanya dipisah karena jaraknya ke "menyala" sangat berbeda.
 
 ## Terhalang — terbangun, tidak bisa dijalankan
 
-### Papan tidak bisa di-flash
+### Papan 9K: bukan diperbaiki, diganti
 
-Place-and-route **gagal**. Desainnya **159% dari LUT4** papan dan nextpnr
+Tang Nano 9K adalah papan target sampai commit sebelum ini. Place-and-route
+di sana **gagal**: desainnya **162% dari 8.640 LUT4** papan itu dan nextpnr
 berhenti pada `no BELs remaining to implement cell type 'LUT4'`.
 
 ```
-LUT4    13.945 / 8.640   161%   ← tidak muat
-DFF      4.454 / 6.480    68%
+LUT4    14.005 / 8.640   162%   ← tidak muat di 9K
+DFF      4.480 / 6.480    69%
 BSRAM       17 /    26    65%
-Fmax    tidak terukur — routing tidak selesai, jadi tak ada laporan timing
 ```
 
-Ia pernah muat, dan angka lamanya jujur saat ditulis. Bisect, satu run sintesis
-per komit:
+Ia pernah muat di 9K, dan angka lamanya jujur saat ditulis. Bisect, satu run
+sintesis per komit, terhadap budget 9K:
 
 | komit | | LUT4 | |
 |---|---|---:|---|
@@ -39,25 +39,49 @@ Jembatannya nyata dan bench-nya lulus. **Biayanya yang tidak pernah diukur**,
 karena lima komit mendarat setelah pengukuran dan tak satu pun menjalankan ulang
 tools.
 
-Dua jalan keluar, dan pilihannya bukan milik saya:
-
-- **Kecilkan memori instruksi.** Sekarang 4096 kata; loader menulis dari alamat
-  64. Memotongnya ke 1024 memotong empat kali lipat.
-- **Tulis ulang port tulisnya** agar terinfer bersih ke BSRAM. Lebih tepat kalau
-  jembatan itu mau dipertahankan utuh.
+Ada dua jalan yang tidak mengubah papan — kecilkan memori instruksi (4096 kata
+→ 1024), atau tulis ulang port tulisnya agar terinfer bersih ke BSRAM — dan
+satu yang mengubahnya. Yang diambil: **ganti papan.** Tang Nano 20K
+(GW2AR-LV18QN88C8/I7) punya 20.736 LUT4, bukan 8.640, dan desain yang sama
+tidak perlu dikecilkan sama sekali untuk masuk ke sana — lihat
+[ON.md](ON.md#6--jembatan-papan) untuk angka rutenya. `no BELs remaining`
+tetap dikutip di atas karena itu pesan nyata nextpnr terhadap 9K, bukan
+klaim tentang keadaan sekarang.
 
 Rekamannya ada di header `rtl/fpga/gowin/hcpu_gowin_top.v`, terikat pada **hash
 isi RTL** — bukan pada tanggal, dan bukan pada siapa yang ingat memeriksanya.
 Sentuh berkas RTL mana pun dan `tests/test_integrity/test_place_and_route.py`
-jatuh, meminta pengukuran ulang.
+jatuh, meminta pengukuran ulang — mekanisme yang sama yang menemukan 9K basi
+sekarang menjaga angka 20K yang menggantikannya.
 
-Label: `EH`. Turun dari `CC`, dan itu memang arah yang benar.
+Label: `CC` di 20K. 9K sendiri ditinggalkan, bukan diperbaiki — lihat
+[ROADMAP.md](ROADMAP.md) untuk apa yang masih terbuka (Ka'bah berbagi chip
+yang sama, terutama).
 
-### Fmax Kabah top
+### Fmax Kabah top di Tang Nano 9K
 
-Belum pernah ditempatkan sama sekali, karena sebab berbeda: **1.665 bit port
-melawan 276 IOB**. Ia butuh wrapper yang mempersempit antarmukanya sebelum bisa
-ditempatkan. Label: `EH`.
+Bukan lagi soal port. `hijaiyyah_kabah_gowin_top.v` menyempitkan antarmukanya
+ke 10 pin dan itu menyelesaikan **1.665 bit port vs 276 IOB** di kedua
+papan — lihat [ON.md](ON.md#5--kripto-kabah). Yang tersisa di 9K sekarang
+sebabnya sama seperti HCPU di atas: **LUT4**, bukan pin.
+
+```
+LUT4    12.102 / 8.640   140%   ← tidak muat
+DFF      1.963 / 6.480    30%
+Fmax    tidak ada — nextpnr: "Unable to find legal placement... after
+        54.925.681 attempts" — tidak sampai routing, sama seperti HCPU di atas
+```
+
+Sebabnya sudah tercatat sebelum wrapper ini ada: `hijaiyyah_kabah_top`
+sendirian sudah **94%** dari 9K di SLICE_BYTES=25. Menambah UART RX/TX dan
+FSM umpan/dump di atas itu tidak punya tempat lagi.
+
+Di GW2AR-18C (Tang Nano 20K) desain yang sama muat dan terrout: **58% LUT4,
+117,91 MHz, `gowin_pack` sukses**. 9K bukan papan yang cukup besar untuk
+Ka'bah plus jembatan UART-nya sekaligus; 20K sudah.
+
+Label: `EH` untuk 9K. Turun dari `AT` — dulu tidak bisa ditempatkan sama
+sekali, sekarang gagal sesudah tempat, penyebabnya bernama dan bisa diukur.
 
 ---
 
@@ -160,10 +184,11 @@ Label: `EH`.
 ## Ringkas
 
 ```
-menyala   matematika, bahasa, mesin, sistem operasi, kripto, jembatan (simulasi)
-terhalang bitstream papan (159% LUT4), Fmax HCPU, Fmax Kabah top
-belum ada 26 opcode, HFS, HOS, proses dinamis, ASIC
+menyala   matematika, bahasa, mesin, sistem operasi, kripto,
+          jembatan (simulasi + bitstream HCPU di Tang Nano 20K)
+terhalang Fmax Kabah top (9K), HFS baca (tanpa CSET), penyimpanan persisten
+belum ada 24 opcode, proses dinamis, ASIC
 ```
 
-Lima lapis berjalan. Yang keenam berhenti di gerbang silikon, dan sebabnya
-sudah punya nama, komit, dan angka.
+Enam lapis berjalan. Silikon dedikasi (ASIC, bukan FPGA) belum dimulai, dan
+sebabnya sudah punya nama dan angka — lihat [ROADMAP.md](ROADMAP.md).

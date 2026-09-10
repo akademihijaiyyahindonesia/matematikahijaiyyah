@@ -10,6 +10,8 @@ is not in the RTL at all.
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -134,11 +136,38 @@ def test_the_silicon_page_states_why_kabah_fmax_is_unmeasurable() -> None:
         r"(?:input|output)\s+(?:wire|reg)?\s*\[\s*(\d+)\s*:\s*0\]", head))
     assert bits > 276
 
+
+def test_the_silicon_page_carries_the_wrapper_numbers_too() -> None:
+    """
+    Not "the wrapper exists" as a claim -- the same measured-numbers
+    discipline as everywhere else in this file: routed Fmax on the board it
+    actually routes on, and the FAILS case named as a failure rather than
+    left out.
+    """
+    silicon = _text("SILICON.md")
+    wrapper = (ROOT / "rtl" / "fpga" / "gowin" / "hijaiyyah_kabah_gowin_top.v").read_text(
+        encoding="utf-8")
+
+    assert "hijaiyyah_kabah_gowin_top" in silicon
+    for needle in ("140% — FAILS", "58%", "165,98 MHz", "4,6 MB",
+                   "54.925.681"):
+        assert needle in silicon, needle
+    for needle in ("140%", "58%", "165.98 MHz", "4.6 MB", "54,925,681"):
+        assert needle in wrapper, needle
+
+    # The gap this wrapper closes is the pin count, not the LUT count -- both
+    # papers say so, not just one.
+    assert "3%" in silicon and "2%" in silicon
+
     silicon = _text("SILICON.md")
     assert "1.665 bit port" in silicon and "276 IOB" in silicon
     assert "[EH]" in silicon
-    # And that Kabah and the HCPU cannot share the board.
-    assert "78%" in silicon and "94%" in silicon
+    # And that Kabah and the HCPU cannot share the board. HCPU's own figure
+    # here used to be 78% (rtl/hcpu_gowin_top.v's LAST_FITTING commit,
+    # 096e392) -- the loader's write port pushed it to 161% several commits
+    # later (see rtl/fpga/gowin/hcpu_gowin_top.v's bisection table) and this
+    # page went on quoting the old number until ROADMAP.md's review caught it.
+    assert "161%" in silicon and "94%" in silicon
 
 
 def test_the_sealing_counts_come_from_program() -> None:
@@ -161,3 +190,37 @@ def test_no_page_promotes_layer_two_above_its_label(name: str) -> None:
     if "Absorption" in text or "spons" in text.lower():
         assert not re.search(r"spons.{0,40}(terbukti|aman secara)", text, re.I)
     assert "[VF]" not in text or "HMAC" in text
+
+
+# ══════════════════════════════════════════════════════════════════
+#  The host tool -- rtl/scripts/kabah_uart_test.py
+# ══════════════════════════════════════════════════════════════════
+#
+# send_program.py has its own host-tool test in test_boot_path.py, right next
+# to the loader it talks to; this is the same pattern for the wrapper Ka'bah
+# is missing a host tool for until now. No board in a test run, so what is
+# checked is that the computed expected bytes agree with the golden vectors
+# rtl/tb/gen_kabah_uart_want.py already produced and tb_hijaiyyah_kabah_gowin_top.v
+# already checked in simulation -- the same claim, verified a second way.
+
+TOOL = ROOT / "rtl" / "scripts" / "kabah_uart_test.py"
+
+
+def test_the_kabah_host_tool_reproduces_the_testbenchs_own_golden_vectors() -> None:
+    out = subprocess.run([sys.executable, str(TOOL)],
+                         cwd=ROOT, capture_output=True, text=True, check=True).stderr
+
+    want1 = (ROOT / "rtl" / "tb" / "kabah_uart_want.hex").read_text().strip()
+    want2 = (ROOT / "rtl" / "tb" / "kabah_uart_want2.hex").read_text().strip()
+    assert f"frame1 want: {want1}" in out
+    assert f"frame2 want: {want2}" in out
+
+
+def test_the_kabah_host_tool_default_message_is_two_full_frames() -> None:
+    sys.path.insert(0, str(ROOT / "rtl" / "scripts"))
+    import kabah_uart_test
+
+    assert kabah_uart_test.RATE == cube.RATE == 128
+    assert kabah_uart_test.STATE_BYTES == 200
+    with pytest.raises(ValueError, match="multiple of 128"):
+        kabah_uart_test.expected_states(bytes(127))
