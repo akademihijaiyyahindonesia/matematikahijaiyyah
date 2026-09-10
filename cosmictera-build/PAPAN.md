@@ -128,6 +128,46 @@ menguji penyerapan berantai lintas blok — bukan satu blok yang kebetulan
 benar sendirian. Terukur: 12.061 LUT4 (58%), 1.965 DFF (12%), 0 BSRAM,
 Fmax 165,98 MHz.
 
+## Rack bitstream — slot berurutan
+
+**11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
+sebagai satu top level, diukur **105% — lewat 960 sel**, lalu dicatat sebagai
+penghalang. Itu asumsi, bukan syarat: tidak ada yang menuntut keduanya
+menempati fabric pada saat yang sama.
+
+Rack tidak menuntut itu. Tiap slot satu bitstream, FPGA direkonfigurasi di
+antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
+berubah bentuk:
+
+```
+  berdampingan   sum(slot)   harus muat serentak   14.005 + 12.061 = 125%
+  berurutan      max(slot)   satu per satu                  14.005 =  67%
+```
+
+Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
+
+| # | slot | dimuat | hasil |
+|---:|---|---|---|
+| 1 | `hcpu_gowin_top` | SRAM, exit 0 | **23 byte** — `112`, lalu `CYCLES=…` |
+| 2 | `hijaiyyah_kabah_gowin_top` | SRAM, exit 0 | **2/2 frame, 400/400 byte cocok `cube.py`** |
+| 3 | `hcpu_hdmi_top` | SRAM, exit 0 | **23 byte** — `112`, layar 1280×720 menyala |
+
+Tiga desain berbeda, fabric yang sama, dalam satu sesi. `112` di slot 1 dan
+slot 3 adalah angka yang sama yang dihitung testbench.
+
+**Pencacah siklus tidak sama antar-lari** (`02785D53`, `035BF689`) dan itu
+benar: ia berjalan bebas sejak konfigurasi, bukan direset per program. Yang
+harus cocok adalah hasilnya, dan hasilnya cocok.
+
+Rekaman rack: [`rtl/scripts/rack.py`](../rtl/scripts/rack.py) — `python3
+rtl/scripts/rack.py --detect`.
+
+**Biaya HDMI belum pernah diukur.** Wrapper-nya tidak membawa blok utilisasi
+seperti dua yang lain, jadi kolomnya kosong di rack, bukan diisi nol. Nol
+akan berarti "gratis"; yang benar adalah "belum dihitung".
+
+---
+
 ## Video
 
 `hcpu_hdmi_top` menghasilkan 1280x720 lewat TMDS pada pasangan diferensial
@@ -206,7 +246,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.780 lulus, 0 dilewati, 0 gagal |
+| `python3 -m pytest -q` | 4.791 lulus, 0 dilewati, 0 gagal |
 | `make -C rtl/tb all` | 20 testbench, 253 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
@@ -234,7 +274,7 @@ testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.780 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.791 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`
