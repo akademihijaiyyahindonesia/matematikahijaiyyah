@@ -296,6 +296,55 @@ harfiah. "Utuh" berarti setiap baris ✅, diukur di perangkat keras fisik
 
 ---
 
+## Belum dikerjakan: buku dan sertifikat
+
+Dicatat di sini karena sudah diputuskan tapi belum dikerjakan, dan hal yang
+diputuskan-tapi-belum-dikerjakan adalah yang paling mudah dikira sudah beres.
+
+### Struktur buku
+
+| | Isi | Keadaan |
+|---|---|---|
+| **Edisi I** | BAB I + BAB II sebagai satu buku utuh | **AT** |
+| **BAB III** | dirombak menyesuaikan hasil akhir Tang Nano 20K | **AT** |
+| **Edisi II** | penuh Cosmictera/Hybit + seluruh hasil uji fisik | **AT** |
+
+Penerbitnya Yayasan Akademi Hijaiyyah Indonesia untuk keduanya.
+
+### `verification_summary` di CERTIFICATE.json masih angka lama
+
+Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
+dengan hasil papan.
+
+```
+software_tests      1611/1611     ← sekarang 4.606
+rtl_hardware_tests   174/174      ← lihat catatan di bawah
+```
+
+**Dan labelnya sendiri keliru, sejak sebelum ada papan.** Angka 174 itu asersi
+**simulasi** RTL di Icarus Verilog, bukan uji perangkat keras. Sekarang hasil
+perangkat keras yang sungguhan benar-benar ada — 23 byte UART cocok
+byte-per-byte, 28 nilai Θ̂ identik dengan tabel kanonik, Ka'bah 400/400 byte,
+keenam guard menangkap di silikon — sehingga satu label kini menutupi dua
+hal yang berbeda. Sinkronisasinya harus memisahkan keduanya, bukan sekadar
+mengganti angkanya.
+
+Sertifikat itu ada di folder ter-gitignore, jadi perubahannya lokal dan tidak
+pernah ter-commit; catatan ini yang membuatnya tidak terlupakan.
+
+### Yang sudah beres di sertifikat
+
+Segelnya. `master_table.sha256` dulu berisi `f85251e0…`, yang ternyata hash
+artefak perkakas `MH-28-v.1.0-HC18D.hb` (`data/hm28_manifest.json` →
+`artifacts.hb.hash`), bukan segel dataset kanonik `f82d3859…`. Sertifikat
+paten menyegel **benda yang salah dengan label yang benar**, dan bertahan
+lama justru karena keduanya hash sungguhan di repositori ini — tidak ada yang
+tampak salah, dan tidak ada tes yang membaca keduanya berdampingan.
+Sekarang dipatok ke konstanta yang sama dengan `NOTICE`, dijaga
+`test_authorship.py`.
+
+---
+
 ## Ringkasan
 
 | Fase | Apa | Label sekarang | Bergantung pada |

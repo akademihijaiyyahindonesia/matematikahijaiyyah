@@ -85,6 +85,89 @@ def test_notice_file_exists_and_carries_attribution() -> None:
 SUPERSEDED = re.compile(r"Firman\s+Arief|Hidayatullah")
 
 
+# The publisher of record changed once the foundation's notarial deed was
+# issued: PT Puri Pertiwi International no longer publishes this work, and
+# Yayasan Akademi Hijaiyyah Indonesia does. A superseded PUBLISHER on a patent
+# instrument misstates who holds the publishing right -- the same class of
+# defect as a superseded author, and it survived in five files (both research
+# proposals, twice each, plus a scratch draft) after the folder's own
+# certificate had been corrected. The optional "PT." catches "PT. Puri
+# Pertiwi" as well.
+#
+# IGNORECASE is not cosmetic: the first version of this guard was
+# case-sensitive, swept the whole repo, reported clean -- and two React
+# footers were rendering "PT PURI PERTIWI INTERNATIONAL" in upper case the
+# entire time, on the landing page no less. A guard that passes while the
+# string is on screen is the exact defect this file exists to catch.
+SUPERSEDED_PUBLISHER = re.compile(r"(?:PT\.?\s+)?Puri\s+Pertiwi", re.IGNORECASE)
+
+
+def test_no_superseded_publisher_remains() -> None:
+    """A patent document naming the wrong publisher names the wrong party.
+
+    Rights stay with the inventor personally either way -- see AUTHORS -- but
+    the publisher line is a factual claim about a legal entity, and it must
+    track the deed rather than whichever draft it was copied from.
+    """
+    offenders = [
+        str(p.relative_to(ROOT))
+        for p in repo_text_files()
+        if p.name != Path(__file__).name and SUPERSEDED_PUBLISHER.search(read(p))
+    ]
+    assert not offenders, (
+        f"superseded publisher (PT Puri Pertiwi International) still present "
+        f"in: {offenders}. The publisher of record is "
+        f"Yayasan Akademi Hijaiyyah Indonesia."
+    )
+
+
+# The website of record moved with the publisher. hybit.tech remains valid as
+# the technology brand; what may not survive is a legal instrument presenting
+# it as the official site of the publishing institution.
+CANONICAL_WEBSITE = "www.akademihijaiyyahindonesia.com"
+
+PATENT_INSTRUMENTS = [
+    "OFFICIAL_PATENT_RELEASE/CERTIFICATE.json",
+    "OFFICIAL_PATENT_RELEASE/PATENT_RELEASE_DECLARATION_ID.md",
+    "OFFICIAL_PATENT_RELEASE/PATENT_RELEASE_DECLARATION_EN.md",
+    "OFFICIAL_PATENT_RELEASE/README.md",
+]
+
+
+def test_patent_certificate_seals_the_canonical_dataset() -> None:
+    """The seal on the patent certificate must be the seal of the dataset.
+
+    It was not. `master_table.sha256` carried
+    f85251e0daf5bb977a381738accaeb599a05445484158fc158e3ea279902302c, which is
+    a real hash in this repo -- `artifacts.hb.hash` in data/hm28_manifest.json,
+    the MH-28-v.1.0-HC18D.hb tooling artifact. A tooling artifact is not the
+    canonical dataset, so the certificate was sealing the wrong object under
+    the right label, and nothing read the two together to notice. NOTICE is
+    already pinned to DATASET_SEAL above; this pins the patent instrument to
+    the same constant.
+    """
+    path = book_relative("OFFICIAL_PATENT_RELEASE/CERTIFICATE.json")
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip("CERTIFICATE.json not present under any *Matematika Hijaiyyah* folder")
+    doc = json.loads(read(path))
+    assert doc["master_table"]["sha256"] == DATASET_SEAL, (
+        "the patent certificate seals a hash that is not the canonical dataset seal")
+
+
+@pytest.mark.parametrize("tail", PATENT_INSTRUMENTS)
+def test_patent_instrument_names_the_foundation_and_its_website(tail: str) -> None:
+    """Each instrument must name the publisher of record and its live site."""
+    path = book_relative(tail)
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip(f"{tail} not present under any *Matematika Hijaiyyah* folder")
+    text = read(path)
+    assert "Yayasan Akademi Hijaiyyah Indonesia" in text, (
+        f"{tail} does not name the publisher of record")
+    assert CANONICAL_WEBSITE in text, (
+        f"{tail} does not carry the live website {CANONICAL_WEBSITE}")
+
+
+
 def test_no_superseded_author_name_remains() -> None:
     offenders = [
         str(p.relative_to(ROOT))
@@ -222,6 +305,62 @@ def test_book_certificate_records_name_and_role(tail: str, key: str) -> None:
     assert doc.get(key) == CANONICAL_NAME, f"{tail}: {key} drifted"
     assert doc.get(f"{key}_role") == CANONICAL_ROLE, f"{tail}: {key}_role drifted"
 
+
+# The release folder seals the dataset too, and it sealed a value that
+# measured nothing at all. Both files carried
+# 81af756ba05a47940e45c6d2958c2a6af92eeb8cc4542b344e4a4889435e3af2 while
+# PATENT_RELEASE.md beside them quoted the canonical seal -- three files in one
+# directory, two of them wrong, and no test read any two of them together.
+# Unlike the book certificate's f85251e0 (which was at least a real hash of a
+# real artifact, just the wrong object), 81af756b matches nothing: not the
+# dataset seal, not the SHA-256 of data/hm28.json as bytes
+# (38338183d2005be624cb1cbe965e0ac360624af6301c3e9e3ef413e61d0c891e), not any
+# file under 5 MB in this repository. It was a number, not a measurement.
+RELEASE_SEALS = [
+    ("release/HL-18E-v1.0/CERTIFICATE.json", "master_table_sha256"),
+    ("release/HL-18E-v1.0/MANIFEST.json", "sha256"),
+]
+
+def test_the_canonical_seal_constant_is_what_the_table_actually_hashes() -> None:
+    """DATASET_SEAL is a transcription until something measures it.
+
+    Every other test in this file compares one transcription against another:
+    NOTICE quotes the seal, the certificates quote the seal, and they are
+    asserted equal to a string literal at the top of this file. If the table
+    itself ever changed, all of those would agree with each other and all of
+    them would be wrong together -- which is precisely how three different
+    values came to claim the same label. This test is the one place the
+    constant meets the object it names.
+    """
+    from hijaiyyah.core.master_table import MASTER_TABLE
+
+    assert MASTER_TABLE.compute_sha256() == DATASET_SEAL, (
+        "the Master Table no longer hashes to the seal every legal instrument "
+        "in this repository quotes -- either the table changed or the seal did, "
+        "and both need a deliberate decision, not a test edit")
+
+@pytest.mark.parametrize("relpath,key", RELEASE_SEALS)
+def test_release_record_seals_the_canonical_dataset(relpath: str, key: str) -> None:
+    """A patent release that seals an unmeasurable number seals nothing."""
+    path = ROOT / relpath
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip(f"{relpath} not present")
+    doc = json.loads(read(path))
+    assert doc.get(key) == DATASET_SEAL, (
+        f"{relpath}: {key} is not the canonical dataset seal")
+
+def test_the_release_folder_agrees_with_itself_about_the_seal() -> None:
+    """PATENT_RELEASE.md sat beside two JSONs disagreeing with it.
+
+    It was the only one of the three that was right, and being right in
+    isolation is worth nothing when the two machine-readable files a verifier
+    would actually parse said something else.
+    """
+    md = ROOT / "release/HL-18E-v1.0/PATENT_RELEASE.md"
+    if not md.exists():                                       # pragma: no cover
+        pytest.skip("PATENT_RELEASE.md not present")
+    assert DATASET_SEAL in read(md), (
+        "PATENT_RELEASE.md no longer quotes the canonical dataset seal")
 
 @pytest.mark.parametrize("relpath,key", CERTIFICATES)
 def test_certificate_records_name_and_role(relpath: str, key: str) -> None:
