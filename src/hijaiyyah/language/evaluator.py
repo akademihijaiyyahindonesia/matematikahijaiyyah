@@ -646,16 +646,23 @@ class HCEvaluator:
             return _norm2_v14(vec)
         if method == "norm":
             return math.sqrt(_norm2_v14(vec))
+        # A missing argument used to return 0 here, and 0 is a legitimate dot
+        # product -- so `h.dot()` written by mistake was indistinguishable
+        # from two genuinely perpendicular hybits. Both now say so.
         if method == "dot":
-            return _inner_v14(vec, _vec(args[0])) if args else 0
+            if not args:
+                raise EBNFSemanticError("dot() needs a hybit to measure against")
+            return _inner_v14(vec, _vec(args[0]))
         if method == "cosine":
             if not args:
-                return 0.0
+                raise EBNFSemanticError("cosine() needs a hybit to measure against")
             other = _vec(args[0])
             n1 = math.sqrt(_norm2_v14(vec))
             n2 = math.sqrt(_norm2_v14(other))
             if n1 == 0 or n2 == 0:
-                return 0.0
+                raise EBNFSemanticError(
+                    "cosine is undefined against a zero vector: "
+                    f"norms are {n1} and {n2}")
             return max(0.0, _inner_v14(vec, other) / (n1 * n2))
 
         # ── [D] Metric ──

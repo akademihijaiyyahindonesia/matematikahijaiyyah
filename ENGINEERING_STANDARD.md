@@ -196,7 +196,14 @@ hijaiyyah-mathematics/
 │       │   ├── __init__.py
 │       │   ├── codec.py
 │       │   ├── json_format.py
-│       │   └── server.py
+│       │   └── server.py         ← alias tipis ke receiver/rx.py
+│       │
+│       ├── receiver/             ← jalur terima: sinyal → rung → kandidat
+│       │   ├── __init__.py
+│       │   ├── lock.py           ← PhaseLock, tangga perempat-putaran Θ̂
+│       │   ├── rx.py             ← RangeReceiver, mode-kunci (dulu HCServer)
+│       │   ├── identify.py       ← fase × frekuensi, penyempitan kandidat
+│       │   └── tabulate.py       ← bank osilator diturunkan + rekonsiliasi dokumen
 │       │
 │       ├── release/
 │       │   ├── __init__.py
@@ -664,6 +671,7 @@ Bukan `raise Exception(...)`.
 | `skeleton/` | CSGI | `core/` |
 | `crypto/` | hash, sign | `core/` |
 | `net/` | data exchange | `core/`, `crypto/` |
+|  `receiver/` | fase → rung, frekuensi → periode, penerima mode-kunci | `core/` |
 | `release/` | versioning | `core/`, `crypto/` |
 | `gui/` | tampilan | semua layer |
 

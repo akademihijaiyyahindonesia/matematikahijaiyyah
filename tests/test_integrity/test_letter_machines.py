@@ -327,23 +327,45 @@ def test_the_two_maximal_letters_are_not_a_preferred_pair() -> None:
     assert 31 / max(abs(c) for c in cross) > 2.5
 
 
-def test_the_alphabet_is_an_oscillator_bank_and_most_of_it_is_silent() -> None:
+def test_the_matrix_orders_fall_into_five_classes() -> None:
     """
-    Clocked, a letter's period is a frequency. At the board's 27 MHz the
-    alphabet gives four tones and a lot of silence: sixteen letters have
-    period 1 and emit nothing at all.
+    Order of M, M^2, M^3, ... over GF(2), for each letter. Five values.
+
+    **These are not frequencies**, and the name of this test used to say
+    they were -- it read "the alphabet is an oscillator bank" and its body
+    described sixteen letters that "emit nothing at all". The assertions
+    below were right; the sentence around them was not. Matrix order is a
+    property of the matrix, and for six letters -- ba, ha, ta, zha, lam,
+    mim -- the bit the machine actually puts on the wire has a shorter
+    period than the matrix does. Ba cycles at 4 and emits `0000`.
+
+    The receivable bank is {1: 22, 3: 4, 31: 2}: twenty-two letters silent,
+    not sixteen, and two tones rather than four. It is measured in
+    `hijaiyyah.receiver.identify` and enforced against the document by
+    `test_wave_tabulation.py`, so the two quantities can no longer be
+    confused for one another in either direction.
     """
-    tones: dict[int, int] = {}
+    orders: dict[int, int] = {}
     for e in ENTRIES:
         p = _orbit(build_exomatrix(e))[1]
-        tones[p] = tones.get(p, 0) + 1
+        orders[p] = orders.get(p, 0) + 1
 
-    assert tones[1] == 16, "the silent majority moved"
-    assert set(tones) == {1, 2, 3, 4, 31}
+    assert orders[1] == 16, "the trivial-order class moved"
+    assert set(orders) == {1, 2, 3, 4, 31}
+    assert sum(orders.values()) == len(ENTRIES)
 
-    hz = 27_000_000 / 31
-    assert abs(hz - 870_967.7) < 1.0          # Jim and Kha, the longest wave
-    assert 27_000_000 / 2 > hz, "period 31 must be the lowest tone"
+    # Order 31 is the one case where matrix and wire agree, so it is also the
+    # only row here that may be read as a frequency.
+    from hijaiyyah.receiver.identify import WIRE_PERIODS, tone_hz
+
+    maximal = [e.char for e in ENTRIES if _orbit(build_exomatrix(e))[1] == 31]
+    assert len(maximal) == 2
+    for char in maximal:
+        assert WIRE_PERIODS[char] == 31, "the maximal letters stopped agreeing"
+        assert abs(tone_hz(char) - 870_967.7) < 1.0
+
+    # And the one that does not: ba's matrix cycles, its output does not.
+    assert WIRE_PERIODS["ب"] == 1 and tone_hz("ب") == 0.0
 
 
 # ══════════════════════════════════════════════════════════════════

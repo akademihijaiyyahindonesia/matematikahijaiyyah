@@ -58,13 +58,19 @@ kemajuannya.
 | Istilah | Kepanjangan | Peran yang disediakan | Di mana |
 |---|---|---|---|
 | **HL18E** | Hijaiyyah Lang 18 vektor dimensi EBNF | Slot **modul mesin-bahasa** — bukan bahasanya, melainkan mesin yang menjalankannya | `hisa/compiler.py` |
-| **HCServer** | — (penamaan belum disesuaikan) | **Modul penerima rentang keluaran**, yang nanti menangkap *wave ground switch* | `net/server.py` |
 
-`HCServer` membawa satu masalah yang nyata dan terpisah dari perannya:
-**namanya menyesatkan**. Ia berbunyi seperti server HTTP — dan `net/server.py`
-memang menuliskannya begitu — padahal perannya penerima rentang, bukan
-pelayan permintaan. Kelas cacat yang sama dengan `OP_MSB` dan Ψ: nama yang
-memberi tahu pembaca peran yang keliru. Penyesuaiannya belum dikerjakan.
+`HCServer` **sudah terisi.** Ia memang penerima rentang, bukan pelayan
+permintaan, dan sekarang perannya punya implementasi: `RangeReceiver` di
+`receiver/rx.py` — fase terbungkus masuk, barisan rung keluar, dengan
+keadaan kunci yang bisa hilang. Nama lamanya dipertahankan sebagai alias
+(`HCServer is RangeReceiver`, satu kelas, bukan turunan) karena nama yang
+sudah masuk glosarium tidak dihapus diam-diam; tetapi implementasinya
+tunggal, jadi tidak ada versi kedua yang menyimpang di balik nama lama.
+
+| Istilah | Kepanjangan | Fungsi | Di mana | Label |
+|---|---|---|---|---|
+| **RangeReceiver** | — (dulu `HCServer`) | Penerima rentang mode-kunci: gelombang → barisan rung; jangkar kalibrasi di puncak putaran | `receiver/rx.py` | CC |
+| **PhaseLock** | — | Akumulator fase: membuka lipatan 0/360/720 yang detektor terbungkus rautkan jadi satu | `receiver/lock.py` | CC |
 
 Catatan serupa untuk paket **`net/`** sendiri: isinya HC18DC, format data
 kanonik Lapis 7, bukan jaringan. Hanya `server.py` di dalamnya yang benar-benar
@@ -80,6 +86,57 @@ menyangkut jalur penerimaan.
 | **HGSS** | Hybit Guard + Signature System | Lapis keamanan (L6) | `crypto/` | EH |
 | **HFS** | Hybit File System | Sistem berkas *Guard-on-Write*: setiap operasi tulis divalidasi guard sebelum disimpan | — | **AT** |
 | **HOS** | Hybit Operating System | Arsitektur sistem operasi 7 lapis berbasis *Guard-on-the-fly* | — | **AT** |
+
+---
+
+## Titik, garis, lengkung, lingkaran — nama tiga blok itu
+
+Tiga blok vektor 18D bukan label abstrak. Ketiganya bernama Arab untuk
+unsur pembentuk huruf, dan urutannya adalah urutan konstruksi:
+**titik → garis → lengkung → lingkaran**.
+
+| Blok | Nama | Artinya | Slot |
+|---|---|---|---|
+| **N** | *nuqṭah* | titik | Na, Nb, Nd |
+| **K** | *khaṭṭ* | garis lurus | Kp, Kx, Ks, Ka, Kc |
+| **Q** | *qaws* | lengkung | Qp, Qx, Qs, Qa, Qc |
+
+`docs/csgi_algorithm_spec.md` §4.1 memutuskannya persis begitu: tiap edge
+diukur simpangannya dari garis lurus, lalu ditandai `KHATT` atau `QAWS`.
+
+**Lingkaran bukan blok keempat.** Ia adalah lengkung yang menutup, dan
+masuk ke aljabar sebagai **koefisien**: Definisi 11.1.1 menulis
+`U = Qx + Qs + Qa + 4·Qc`, dan angka 4 itu harga satu kurva tertutup dalam
+perempat putaran. Dari sanalah kuantum 90° berasal — 360/4 — jadi grid
+gelombang di `receiver/lock.py` memakai angka yang sama dengan yang diperiksa
+guard, bukan angka yang dipilih sendiri. `test_the_quantum_comes_from_the_closed_curve_coefficient`
+mengikat keduanya.
+
+Dan G4 (`ρ = Θ̂ − U ≥ 0`) adalah rantai itu yang menutup jadi hukum
+kekekalan: putaran total harus setidaknya menutupi putaran yang dituntut
+lengkungnya.
+
+---
+
+## Satu kata, tiga arti — dan mengapa paketnya bukan `wave/`
+
+Kata **wave** sudah dipakai dua kali di repo ini, untuk hal yang berbeda:
+
+| Di mana | "Wave" berarti | "Periode" di sana berarti |
+|---|---|---|
+| `crypto/wave.py` | pipeline CMASS → penghitung node → laporan → segel Ka'bah | **periode pembingkaian byte** yang ditemukan dari aliran bit tak selaras |
+| `cosmic-codex-jim/WAVE.md` | barisan bit yang dipancarkan mesin huruf | **panjang orbit** eksomatriks atas GF(2) |
+| `receiver/` | — (sengaja tidak memakai kata itu) | — |
+
+Paket penerima yang baru **tidak** diberi nama `wave/` justru karena itu.
+Pemakaian ketiga akan membuat ketiganya lebih sulit dibaca sekaligus, dan
+kelas cacatnya sama persis dengan Ψ/H\* dan `OP_MSB`: satu simbol yang
+memberi tahu pembaca peran yang keliru. Namanya `receiver/` — peran yang
+memang dikerjakannya, dan peran yang dulu dicadangkan untuk `HCServer`.
+
+Fase juga dua arti: `crypto/wave.py` menyebut fase batas byte;
+`receiver/lock.py` menyebut sudut putaran. Keduanya dicatat di docstring
+masing-masing supaya tidak ada yang membacanya sebagai satu besaran.
 
 ---
 

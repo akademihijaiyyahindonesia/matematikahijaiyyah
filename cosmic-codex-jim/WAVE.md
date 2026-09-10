@@ -41,7 +41,7 @@ Jadi "code bip" harfiah: **hurufnya memancarkan satu.**
 
 ## Frekuensi
 
-Didetak pada kristal 27 MHz papan Tang Nano 9K:
+Didetak pada kristal 27 MHz papan Tang Nano 20K:
 
 ```
   27.000.000 / 31 = 870,97 kHz
@@ -51,14 +51,65 @@ Itu **gelombang terpanjang di seluruh abjad**. Bank osilatornya:
 
 | periode | frekuensi | n | huruf |
 |---:|---:|---:|---|
-| 1 | **diam** | 16 | ا ت ث د ر س ش ص ض ع ق ك ن و هـ ي |
-| 2 | 13,500 MHz | 2 | ح ل |
-| 3 | 9,000 MHz | 7 | ذ ز ط ظ غ ف م |
-| 4 | 6,750 MHz | 1 | ب |
-| **31** | **0,871 MHz** | 2 | **ج خ** |
+| 1 | **diam** | 22 | ا ب ت ث ح د ر س ش ص ض ط ظ ع ق ك ل م ن و هـ ي |
+| 3 | 9,000 MHz | 4 | ذ ز غ ف |
+| **31** | 0,871 MHz | 2 | **ج خ** |
 
-Enam belas huruf berperiode 1 — **mereka tidak memancarkan apa pun**. Pemisahan
-itulah yang membuat kedua yang maksimum berarti sesuatu.
+**Dua puluh dua huruf tidak memancarkan apa pun** — bukan enam belas.
+Pemisahan itulah yang membuat kedua yang maksimum berarti sesuatu.
+
+### Koreksi: orde matriks bukan periode kawat
+
+Versi sebelumnya menabulasikan **orde matriks** — periode M, M², M³… atas
+GF(2) — lalu menyebutnya frekuensi yang dipancarkan. Untuk enam huruf itu
+angka yang berbeda:
+
+| orde | n | huruf |
+|---:|---:|---|
+| 1 | 16 | ا ت ث د ر س ش ص ض ع ق ك ن و هـ ي |
+| 2 | 2 | ح ل |
+| 3 | 7 | ذ ز ط ظ غ ف م |
+| 4 | 1 | ب |
+| **31** | 2 | **ج خ** |
+
+Yang berbeda: **ب ح ط ظ ل م**. `ب` berorde 4 dan memancarkan `0000` —
+matriksnya berputar, keluarannya konstan. `ح` dan `ل` berorde 2 dan
+memancarkan `11`. `ط ظ م` berorde 3 dan memancarkan konstan.
+
+Tiga besaran yang sempat terbaca sebagai satu:
+
+| Besaran | Apa itu | Terlihat penerima |
+|---|---|:--:|
+| orde matriks | periode M, M², M³… | tidak |
+| siklus keadaan | periode lintasan keadaan | tidak |
+| **periode kawat** | periode fundamental bit yang keluar | **ya** |
+
+Hanya yang ketiga boleh disebut frekuensi. Perhitungannya tidak salah —
+`test_letter_machines.py` menghitung orde matriks dengan benar. Yang salah
+adalah kalimat yang menempelkan orde itu pada apa yang **dipancarkan**.
+
+Tabel di halaman ini sekarang **diturunkan, bukan disalin**:
+`hijaiyyah.receiver.tabulate` menghasilkannya dari eksomatriks dan
+`test_wave_md_table_is_derived_not_transcribed` menggagalkan suite kalau
+halaman ini menyimpang lagi. Untuk mencetak ulang:
+
+```bash
+PYTHONPATH=src python3 -m hijaiyyah.receiver.tabulate
+```
+
+### Fase memisahkan yang frekuensi tidak bisa
+
+Keempat huruf 9 MHz tidak identik di kawat:
+
+```
+  ذ ز ف  ->  110
+  غ      ->  101
+```
+
+`101` adalah `110` yang bergeser satu — nada yang sama, fase berbeda.
+Penerima yang hanya mengukur frekuensi mengembalikan keempatnya; yang
+mengukur fase memisahkan `غ`. Itu sebabnya `receiver/identify.py` menyimpan
+motifnya, bukan hanya periodenya.
 
 ## Dua node di satu kanal
 

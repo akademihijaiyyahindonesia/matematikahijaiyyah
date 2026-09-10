@@ -33,7 +33,7 @@ tidak.
 | Nilai tersegel | 504 | ROM 252 byte, nibble-packed |
 | Opcode H-ISA | 72 | `rtl/hcpu_pkg.vh` |
 | — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |
-| Paket Python | 19 | `src/hijaiyyah/` |
+| Paket Python | 20 | `src/hijaiyyah/` |
 | Modul RTL HCPU | 21 | `rtl/hcpu_*.v` |
 | Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
 | Testbench RTL | 36 | `rtl/tb/` |

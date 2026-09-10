@@ -74,10 +74,22 @@ def inner(h1, h2) -> int:
 
 
 def cosine(h1, h2) -> float:
+    """Cosine of the angle between two hybits.
+
+    **A zero vector is refused, not answered with 0.0.** There is no angle
+    to a vector of length zero, so the old return said "orthogonal" about a
+    case where nothing can be said -- and 0.0 is simultaneously the correct
+    answer for 54 genuinely orthogonal pairs in the sealed table, so the
+    undefined case and a real measurement produced the same number. No
+    sealed letter has zero norm, but the function is exposed to the HC
+    language as `h.cosine(other)`, where a caller can construct one.
+    """
     v1, v2 = _v(h1), _v(h2)
     n1, n2_ = math.sqrt(_n2(v1)), math.sqrt(_n2(v2))
     if n1 == 0 or n2_ == 0:
-        return 0.0
+        raise ValueError(
+            "cosine is undefined against a zero vector: "
+            f"norms are {n1} and {n2_}")
     return max(0.0, _ip(v1, v2) / (n1 * n2_))
 
 

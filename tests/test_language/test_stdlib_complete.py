@@ -96,3 +96,23 @@ def test_a_missing_implementation_fails_at_construction() -> None:
 
     # And the real table still builds cleanly afterwards.
     HCEvaluator(print_func=lambda *a: None)
+
+
+# ── a missing argument is not a measurement ──────────────────────
+
+def test_dot_and_cosine_refuse_a_missing_argument() -> None:
+    """`h.dot()` used to return 0, and 0 is a real dot product.
+
+    A method written without its argument produced a number no different
+    from two perpendicular hybits, so the mistake reached the result instead
+    of the caller. Both now raise, in the language as well as the library.
+    """
+    import pytest
+
+    from hijaiyyah.core.exceptions import EBNFSemanticError
+
+    for method in ("dot", "cosine"):
+        source = f"let h = '\u0628'; let r = h.{method}();"
+        ast = Parser(Lexer(source).tokenize()).parse()
+        with pytest.raises(EBNFSemanticError, match="needs a hybit"):
+            HCEvaluator(print_func=lambda *a: None).evaluate(ast)

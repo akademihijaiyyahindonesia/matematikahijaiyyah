@@ -34,7 +34,7 @@ from typing import Callable, List, NamedTuple, Sequence
 
 from ..core.guards import full_guard_check, guard_check
 
-__all__ = ["LatticeResult", "hybit_meet", "hybit_join", "recompute_aggregates"]
+__all__ = ["LatticeResult", "hybit_join", "hybit_meet", "recompute_aggregates"]
 
 #: The three aggregate slots and the component ranges each one sums.
 _AGGREGATES = ((14, slice(1, 4)), (15, slice(4, 9)), (16, slice(9, 14)))
@@ -78,7 +78,7 @@ def _apply(op: Callable[[int, int], int], a, b) -> LatticeResult:
     va, vb = _vec(a), _vec(b)
     if len(va) != 18 or len(vb) != 18:
         raise ValueError(f"hybits are 18 components, got {len(va)} and {len(vb)}")
-    result = recompute_aggregates([op(x, y) for x, y in zip(va, vb)])
+    result = recompute_aggregates([op(x, y) for x, y in zip(va, vb, strict=True)])
     if guard_check(result):
         return LatticeResult(result, True, ())
     detail = full_guard_check(result)
