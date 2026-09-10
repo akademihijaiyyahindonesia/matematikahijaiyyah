@@ -47,6 +47,31 @@ Kolom **Label** memakai konvensi [RULES.md](../cosmictera/RULES.md).
 | **HGEO** | — (format geometri) | Keluaran Ψ-Compiler, masukan perakitan HAR. Ekstensi `.hgeo` | `core/hgeo.py` | CC |
 | **CSGI** | Canonical Skeleton Graph Interface | Jalur dari bentuk huruf ke graf kanonik | `skeleton/csgi.py` | CC |
 
+## Slot arsitektural — terbuka, menunggu uji fisik
+
+Modul di bawah ini **sengaja belum terisi**. Dalam arsitektur yang masih
+dijelajahi, slot terbuka adalah afordansi, bukan cacat: uji fisik yang
+memutuskan mana yang ditambal, diperkuat, ditambah, atau dipangkas. Menyempit
+sebelum data itu ada berarti memotong kemungkinan yang justru jadi dasar
+kemajuannya.
+
+| Istilah | Kepanjangan | Peran yang disediakan | Di mana |
+|---|---|---|---|
+| **HL18E** | Hijaiyyah Lang 18 vektor dimensi EBNF | Slot **modul mesin-bahasa** — bukan bahasanya, melainkan mesin yang menjalankannya | `hisa/compiler.py` |
+| **HCServer** | — (penamaan belum disesuaikan) | **Modul penerima rentang keluaran**, yang nanti menangkap *wave ground switch* | `net/server.py` |
+
+`HCServer` membawa satu masalah yang nyata dan terpisah dari perannya:
+**namanya menyesatkan**. Ia berbunyi seperti server HTTP — dan `net/server.py`
+memang menuliskannya begitu — padahal perannya penerima rentang, bukan
+pelayan permintaan. Kelas cacat yang sama dengan `OP_MSB` dan Ψ: nama yang
+memberi tahu pembaca peran yang keliru. Penyesuaiannya belum dikerjakan.
+
+Catatan serupa untuk paket **`net/`** sendiri: isinya HC18DC, format data
+kanonik Lapis 7, bukan jaringan. Hanya `server.py` di dalamnya yang benar-benar
+menyangkut jalur penerimaan.
+
+---
+
 ## Sistem
 
 | Istilah | Kepanjangan | Fungsi | Di mana | Label |
