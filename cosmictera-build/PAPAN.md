@@ -162,7 +162,8 @@ ke bitstream**, bukan dikirim lewat loader. Itu belum dilakukan.
 
 ## Tiga cacat yang hanya papan bisa temukan
 
-Ketiganya lolos 20 testbench RTL dan 4.500-an tes Python. Simulasi bukan
+Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
+langsung dari pytest — dan 4.628 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -205,7 +206,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.606 lulus, 0 dilewati, 0 gagal |
+| `python3 -m pytest -q` | 4.703 lulus, 0 dilewati, 0 gagal |
 | `make -C rtl/tb all` | 20 testbench, 253 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
@@ -233,7 +234,7 @@ testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.606 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.703 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`
@@ -249,6 +250,13 @@ testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
 > 4.525 + 12 = 4.534 + 3. Penjaganya di `test_build_list.py` sudah dibetulkan
 > untuk menghitung suku yang hilang itu, dan tetap murah — `-rs` melaporkannya
 > pada koleksi yang sama, tanpa menjalankan satu tes pun.
+>
+> Suku itu kini **nol**, dan bukan karena penjaganya dicabut: `torch` dan
+> `pymupdf` keduanya terpasang, jadi tidak satu pun berkas melewati dirinya
+> saat impor dan `-rs` pada koleksi melaporkan nol skip-modul. Identitasnya
+> tetap berlaku, sukunya saja yang sedang kosong — dan penjaganya tetap
+> menghitungnya, supaya hari ketika salah satu paket itu hilang dari mesin
+> tidak lagi tampak sebagai angka yang tiba-tiba tidak cocok tanpa sebab.
 
 ---
 

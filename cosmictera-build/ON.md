@@ -282,7 +282,7 @@ Label: `CC` untuk sintesis+PNR+pack; `AT` untuk flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.606 lulus, 0 dilewati
+python3 -m pytest -q          # 4.703 lulus, 0 dilewati
 make -C rtl/tb all            # 253 asersi, 20 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```
