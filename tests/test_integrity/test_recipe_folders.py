@@ -1,10 +1,15 @@
 """
-Four folders, one per named recipe, and the numbers in them bound to the code.
+Five folders, one per named recipe, and the numbers in them bound to the code.
 
     cosmictera/            the folding, the rotation, the seal
     cosmic-codex-jim/      one letter's machine, in two fields
     hijrah/                the letter as the unit of counting
     matematika-hijaiyyah/  the table read as a program
+    teknologi/             what the mathematics actually produced
+
+The last one answers a different question from the other four -- not how the
+system works but what exists because of it -- so its figures are a census of
+the tree rather than a property of the table, and are recounted as such.
 
 Prose drifts and code does not, so every figure a folder prints is checked
 against what produces it. The failure mode this guards against is specific and
@@ -20,10 +25,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 FOLDERS = {
-    "cosmictera": ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md"),
+    "cosmictera": ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md", "COMPUTING.md", "CODEX.md"),
     "cosmic-codex-jim": ("README.md", "MACHINE.md", "WAVE.md", "LIMITS.md"),
     "hijrah": ("README.md", "UNIT.md", "INSTRUCTION.md", "JUMP.md"),
     "matematika-hijaiyyah": ("README.md", "GUARD.md", "ALGEBRA.md", "LINEAGE.md"),
+    "teknologi": ("README.md", "BAHASA.md", "SILIKON.md", "KRIPTO.md", "INDUSTRI.md"),
 }
 
 
@@ -164,3 +170,66 @@ def test_the_guard_page_keeps_the_ceiling_honest() -> None:
     assert "dicabut" in page, "the G5 retraction was removed"
     assert "empiris dengan satu titik data" in page
     assert detection([17]) == (85, 0), "H* became detectable — G5 is back"
+
+
+def test_teknologi_inventory_is_a_census_not_a_claim() -> None:
+    """
+    An inventory is the easiest document to let drift: adding a module breaks
+    nothing when the table that counts modules is not updated, so the table
+    quietly becomes false while every other test stays green. Each row is
+    therefore recounted from the tree it describes, not compared against a
+    constant retyped here -- the same reason the other folders parse their
+    figures instead of searching for them.
+    """
+    import sys
+    sys.path.insert(0, str(ROOT / "src"))
+    from hijaiyyah.core.master_table import MASTER_TABLE
+
+    readme = _text("teknologi", "README.md")
+
+    def row(label: str) -> int:
+        m = re.search(rf"^\| {re.escape(label)} \| ([\d.]+) \|", readme, re.M)
+        assert m, f"teknologi/README has no counted row for {label!r}"
+        return int(m.group(1).replace(".", ""))
+
+    entries = MASTER_TABLE.all_entries()
+    pkg = ROOT / "src" / "hijaiyyah"
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    scripts = re.search(r"\[project\.scripts\]\n((?:.+\n)+?)\n", pyproject)
+    assert scripts, "pyproject no longer declares [project.scripts]"
+
+    actual = {
+        "Nilai tersegel":            len(entries) * len(entries[0].vector),
+        "Opcode H-ISA":              len(re.findall(r"^`define OP_", (ROOT / "rtl" / "hcpu_pkg.vh")
+                                                    .read_text(encoding="utf-8"), re.M)),
+        "Paket Python":              len([d for d in pkg.iterdir()
+                                          if d.is_dir() and d.name != "__pycache__"]),
+        "Modul RTL HCPU":            len(list((ROOT / "rtl").glob("hcpu_*.v"))),
+        "Modul RTL Ka'bah":          len(list((ROOT / "rtl").glob("hijaiyyah_*.v"))),
+        "Testbench RTL":             len(list((ROOT / "rtl" / "tb").glob("tb_*.v"))),
+        "Program HASM":              len(list((ROOT / "rtl" / "programs").glob("*.hasm"))
+                                         + list((ROOT / "rtl" / "programs" / "bench").glob("*.hasm"))),
+        "Spesifikasi":               len(list((ROOT / "docs").glob("*.md"))),
+        "Alat baris perintah":       len([ln for ln in scripts.group(1).splitlines() if "=" in ln]),
+    }
+    for label, count in actual.items():
+        assert row(label) == count, f"teknologi/README says {row(label)} {label}, tree holds {count}"
+
+
+def test_teknologi_industry_page_claims_no_deployment() -> None:
+    """The one page in this repository most easily turned into a brochure.
+
+    Every application it lists is unbuilt, so the page has to say so where a
+    reader cannot miss it -- not in a footnote. If a real deployment ever
+    happens it moves to the measured half WITH a figure, and this assertion
+    is what forces that rather than letting the sentence quietly soften.
+    """
+    page = _text("teknologi", "INDUSTRI.md")
+    head = "\n".join(page.splitlines()[:6])
+    assert "Nol." in head or "**Nol" in head, (
+        "INDUSTRI.md no longer opens by stating that nobody uses this yet")
+    measured, applications = page.split("## Bagian 2", 1)
+    assert "**CC**" in measured or "**DP**" in measured, "the measured half cites no label"
+    assert applications.count("**AT.**") >= 4, (
+        "an application in Bagian 2 lost its AT label -- unbuilt work may not "
+        "be listed without one")
