@@ -51,11 +51,11 @@ tidak bisa dipakai, dan sebabnya ada di bagian [cacat](#tiga-cacat-yang-hanya-pa
 | `payload` | 3 | halt, lapor siklus |
 | `subroutine` | 51 | halt, lapor siklus |
 | `timer_poll` | 9 | halt, lapor siklus |
-| `mem_protect` | 28 | **nol byte** |
-| `syscall` | 30 | **nol byte** |
-| `syscall_io` | 46 | **nol byte** |
-| `trap_timer` | 19 | **nol byte** |
-| `user_mode` | 22 | **nol byte** |
+| `mem_protect` | 28 | halt, lapor siklus |
+| `syscall` | 30 | halt, lapor siklus |
+| `syscall_io` | 46 | `42` — dan `99` tidak pernah sampai ke kabel |
+| `trap_timer` | 19 | halt, lapor siklus — trap menyala, ERET kembali |
+| `user_mode` | 22 | halt, lapor siklus |
 
 ## Bench: 11 program
 
@@ -263,28 +263,6 @@ ulang lewat `make hdmi_bitstream` dan identik byte-demi-byte dengan yang
 di-flash. Satu bitstream membawa ketiganya sekaligus — video, loader, dan
 HCPU — dibuktikan dengan mengirim `e3_sweep28` lewat kabel saat layar
 menyala dan menerima 28 nilai yang sama.
-
----
-
-## Lima program yang tidak berjalan, dan sebabnya bukan CPU
-
-`mem_protect`, `syscall`, `syscall_io`, `trap_timer`, `user_mode` —
-kelimanya program mode-terproteksi atau trap, dan kelimanya mengembalikan
-nol byte.
-
-Kelimanya **lulus di testbench masing-masing**. Sebabnya ada di jalur
-loader: program dimuat mulai alamat 64, tetapi `MOVI Rx, label` dirakit
-sebagai alamat **absolut** dengan asumsi basis 0 dan tidak direlokasi.
-Program yang memasang vektor trap dari sebuah label —
-`rtl/programs/trap_timer.hasm:22`, `rtl/programs/user_mode.hasm:28` —
-mengarahkan trap ke wilayah kode loader; CPU tersesat, tidak pernah halt,
-tidak pernah mencetak.
-
-Cabang relatif tidak terpengaruh, dan itu sebabnya `test_guard` (143 kata,
-penuh cabang) berjalan normal.
-
-**Untuk mengujinya di papan, program-program ini harus dipanggang langsung
-ke bitstream**, bukan dikirim lewat loader. Itu belum dilakukan.
 
 ---
 
