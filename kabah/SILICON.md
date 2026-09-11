@@ -108,5 +108,5 @@ lewat 960 sel.** Selisih antara 125% dan 105% adalah logika yang memang
 dipakai bersama. Tapi 960 sel itu **tidak perlu dicarikan tempat**: tak ada
 yang menuntut keduanya menempati fabric bersamaan. Papan memuatnya sebagai
 slot bitstream berurutan (`rtl/scripts/rack.py`), jadi biaya rack adalah
-slot terbesar, 67%, bukan jumlahnya — ketiga slot sudah dijalankan
+slot terbesar (HDMI, 70%), bukan jumlahnya — ketiga slot sudah dijalankan
 berurutan dalam satu sesi ([PAPAN.md](../cosmictera-build/PAPAN.md)).

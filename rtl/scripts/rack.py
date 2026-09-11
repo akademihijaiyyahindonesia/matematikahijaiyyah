@@ -10,20 +10,24 @@ A rack does not. Each slot is its own bitstream, and the FPGA is
 reconfigured between them, so the fabric is spent **in sequence**. The
 budget question changes shape with it:
 
-    side by side   sum(slots)   must fit at once   14,005 + 12,061 = 125%
-    in sequence    max(slots)   one at a time              14,005 =  67%
+    side by side   sum(slots)   must fit at once   14,005 + 12,061 + 14,528 = 195%
+    in sequence    max(slots)   one at a time                      14,528 =  70%
 
 So the rack costs what its **largest** slot costs, and the 105% has nothing
 to fit into. What each slot does not use is not waste either: it is the
 budget a comparator can occupy alongside that slot, and it is largest
 exactly where the slot is smallest.
 
-**Nothing here is simulated.** Every bitstream listed exists on disk, every
+**Nothing here is simulated.** Every bitstream listed is one the gowin
+Makefile builds (`bitstream`, `kabah_bitstream`, `hdmi_bitstream`), every
 figure is nextpnr's own post-routing report copied from the wrapper that
-records it, and `openFPGALoader` is what loads them. Where a figure has not
-been measured it is None, not a guess -- `hcpu_hdmi_top` is built and has
-run on the board, but its utilisation was never recorded, and the rack says
-so rather than filling the column in.
+records it, and `openFPGALoader` is what loads them. The .fs files are
+build outputs git does not carry, so a clean checkout has none until built. Where a figure has not
+been measured it is None, not a guess. The HDMI slot was exactly that
+until 11 September -- it had run on the board and nothing recorded its
+cost -- and while it was, the rack quoted 67%: the maximum of the two slots
+that had numbers, true of them and false of the rack. Measured, the video
+slot is the largest, and the rack costs 70%.
 
     python3 rtl/scripts/rack.py            # print the rack
     python3 rtl/scripts/rack.py --detect   # is a board attached
@@ -116,11 +120,10 @@ SLOTS: Tuple[Slot, ...] = (
         bitstream="rtl/fpga/gowin/hcpu_hdmi_top.fs",
         runs="1280x720 over TMDS, carrying loader and HCPU in the same "
              "bitstream",
-        verified="a program was sent over the wire while the screen was lit "
-                 "and e3_sweep28 came back identical",
-        # Never recorded. The wrapper carries no utilisation block, unlike
-        # the other two, so there is nothing honest to put here.
-        lut4=None, dff=None, bsram=None, fmax_mhz=None,
+        verified="rebuilt by the Makefile byte-identical to the bitstream the "
+                 "board ran with the monitor lit; answered test_bsm over the "
+                 "wire, 23 bytes, 112",
+        lut4=14_528, dff=4_551, bsram=17, fmax_mhz=121.24,
     ),
 )
 

@@ -73,6 +73,32 @@ KABAH_FINGERPRINTED = [
 ]
 
 
+# The HDMI slot's own dependency set -- exactly the Makefile's HDMI_SOURCES
+# (hcpu_hdmi_top.v, dvi_tx_open.v, tmds_rpll.v, hcpu_gowin_top.v and every
+# rtl/hcpu_*.v), the include files, and the constraint it is placed with.
+HDMI_WRAPPER_PATH = GOWIN / "hcpu_hdmi_top.v"
+HDMI_FINGERPRINTED = [
+    HDMI_WRAPPER_PATH,
+    GOWIN / "dvi_tx_open.v",
+    GOWIN / "tmds_rpll.v",
+    GOWIN / "hcpu_gowin_top.v",
+    GOWIN / "hcpu_hdmi.cst",
+    *sorted((ROOT / "rtl").glob("hcpu_*.v")),
+    *sorted((ROOT / "rtl").glob("*.vh")),
+]
+
+# Ka'bah over HDMI -- exactly the Makefile's KABAH_HDMI_SOURCES, placed with
+# kabah_hdmi.cst instead of hcpu_gowin.cst.
+KABAH_HDMI_WRAPPER_PATH = GOWIN / "kabah_hdmi_top.v"
+KABAH_HDMI_FINGERPRINTED = [
+    KABAH_HDMI_WRAPPER_PATH,
+    GOWIN / "dvi_tx_open.v",
+    GOWIN / "tmds_rpll.v",
+    ROOT / "rtl" / "hcpu_video_timing.v",
+    GOWIN / "kabah_hdmi.cst",
+    *(f for f in KABAH_FINGERPRINTED if f.name != "hcpu_gowin.cst"),
+]
+
 def _fingerprint(sources: list[Path]) -> str:
     """A hash of the DESIGN the recorded run was made from.
 
@@ -146,6 +172,50 @@ def test_the_kabah_wrapper_records_its_own_fingerprint() -> None:
         "header, and restamp the fingerprint."
     )
 
+
+def test_the_hdmi_wrapper_records_its_own_fingerprint() -> None:
+    """The third slot, measured on 11 September and held the same way."""
+    hdmi = HDMI_WRAPPER_PATH.read_text(encoding="utf-8")
+    recorded = re.search(rf"^{re.escape(FP_MARK)}([0-9a-f]{{64}})$", hdmi, re.M)
+    assert recorded, "hcpu_hdmi_top.v no longer records an RTL fingerprint"
+    assert recorded.group(1) == _fingerprint(HDMI_FINGERPRINTED), (
+        "the RTL has changed since the HDMI wrapper's place and route was last "
+        "run, so the numbers in hcpu_hdmi_top.v no longer describe this design. "
+        "Re-run `make -C rtl/fpga/gowin PROGRAM=../../programs/loader.hasm "
+        "hdmi_bitstream`, put the new figures in the header, and restamp."
+    )
+
+
+def test_the_hdmi_wrapper_records_its_routed_result() -> None:
+    hdmi = HDMI_WRAPPER_PATH.read_text(encoding="utf-8")
+    rows = {name: (int(used.replace(",", "")), int(total.replace(",", "")))
+            for name, used, total in re.findall(
+                r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", hdmi, re.M)}
+    assert rows == {"IOB": (15, 384), "LUT4": (14528, 20736),
+                    "DFF": (4551, 15552), "BSRAM": (17, 46)}
+    assert re.search(r"^//\s+Fmax\s+121\.24 MHz", hdmi, re.M)
+
+def test_the_kabah_hdmi_wrapper_records_its_own_fingerprint() -> None:
+    """Built for the first time on 11 September, and held like the others."""
+    wrapper = KABAH_HDMI_WRAPPER_PATH.read_text(encoding="utf-8")
+    recorded = re.search(rf"^{re.escape(FP_MARK)}([0-9a-f]{{64}})$", wrapper, re.M)
+    assert recorded, "kabah_hdmi_top.v no longer records an RTL fingerprint"
+    assert recorded.group(1) == _fingerprint(KABAH_HDMI_FINGERPRINTED), (
+        "the RTL has changed since the Ka'bah HDMI wrapper was last placed and "
+        "routed, so the numbers in kabah_hdmi_top.v no longer describe this "
+        "design. Re-run `make -C rtl/fpga/gowin kabah_hdmi_bitstream`, put the "
+        "new figures in the header, and restamp."
+    )
+
+
+def test_the_kabah_hdmi_wrapper_records_its_routed_result() -> None:
+    wrapper = KABAH_HDMI_WRAPPER_PATH.read_text(encoding="utf-8")
+    rows = {name: (int(used.replace(",", "")), int(total.replace(",", "")))
+            for name, used, total in re.findall(
+                r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", wrapper, re.M)}
+    assert rows == {"IOB": (15, 384), "LUT4": (12142, 20736),
+                    "DFF": (2035, 15552), "BSRAM": (0, 46)}
+    assert re.search(r"^//\s+Fmax\s+94\.16 MHz", wrapper, re.M)
 
 def test_the_wrapper_header_records_the_routed_result() -> None:
     assert _routed_table() == UTILISATION

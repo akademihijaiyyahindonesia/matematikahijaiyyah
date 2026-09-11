@@ -36,7 +36,10 @@ PYTHON  ?= python3
 # The three tools the bitstream needs, overridable so the build does not care
 # where they were installed:
 #
-#   gowin_pack        pip install apycula      (lands in the project venv)
+#   gowin_pack        pip install apycula, or the copy oss-cad-suite ships --
+#                     found the same way as nextpnr below. Looking only on
+#                     PATH made `make tools` report it MISSING on the machine
+#                     that built every bitstream this repo has flashed.
 #   openFPGALoader    brew install openfpgaloader
 #   nextpnr-himbaechel  not in Homebrew and not quick to build -- it comes from
 #                     a prebuilt oss-cad-suite, referenced by path rather than
@@ -45,7 +48,8 @@ PYTHON  ?= python3
 OSS_CAD  ?= $(HOME)/opt/oss-cad-suite
 NEXTPNR  ?= $(firstword $(wildcard $(OSS_CAD)/bin/nextpnr-himbaechel) \
                         $(shell command -v nextpnr-himbaechel 2>/dev/null))
-GOWIN_PACK ?= gowin_pack
+GOWIN_PACK ?= $(firstword $(shell command -v gowin_pack 2>/dev/null) \
+                          $(wildcard $(OSS_CAD)/bin/gowin_pack))
 LOADER     ?= openFPGALoader
 
 # The wrapper plus every hcpu_*.v, found rather than listed. The hand-written
@@ -56,7 +60,9 @@ LOADER     ?= openFPGALoader
 SOURCES  = hcpu_gowin_top.v $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim synth bitstream flash bridge send clean \
-        sim_kabah kabah_synth kabah_bitstream kabah_flash
+        sim_kabah kabah_synth kabah_bitstream kabah_flash \
+        hdmi_synth hdmi_bitstream hdmi_flash hdmi_bridge \
+        kabah_hdmi_synth kabah_hdmi_bitstream kabah_hdmi_flash
 
 # HDMI wrappers are compile/synthesis experiments only. They are deliberately
 # not part of `bitstream` or `flash` until nextpnr can pack the GW2AR
@@ -68,8 +74,21 @@ all: sim
 # Written as plain ASCII. The Xilinx copy of this file was UTF-16, which
 # $readmemh refuses outright — the instruction memory stayed uninitialised and
 # nothing said so.
-program.hex: $(PROGRAM)
+# program.hex follows the VALUE of PROGRAM, not only its mtime. With only
+# `program.hex: $(PROGRAM)`, `make bridge` compared a test_bsm image against
+# loader.hasm's timestamp, found the image newer, and called it up to date --
+# so the "loader" bitstream would have baked test_bsm and ignored the wire.
+# Measured: `make -n PROGRAM=../../programs/loader.hasm program.hex` answered
+# "up to date" over a 9-word test_bsm image. The stamp changes only when the
+# path does, which is exactly when the image has to be rebuilt.
+program.stamp: FORCE
+	@echo "$(PROGRAM)" | cmp -s - $@ || echo "$(PROGRAM)" > $@
+
+program.hex: $(PROGRAM) program.stamp
 	$(PYTHON) $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+.PHONY: FORCE
+FORCE:
 
 # ── Simulation ──────────────────────────────────────────────────
 # Runs the wrapper at the board's real 27 MHz and decodes the serial pin at
@@ -158,6 +177,68 @@ kabah_bitstream: $(KABAH_TOP)_pnr.json
 kabah_flash: kabah_bitstream
 	$(LOADER) -b $(BOARD) $(KABAH_TOP).fs
 
+# ── HDMI: HCPU + loader + 1280x720 over TMDS, one bitstream ─────
+# The recipe that built the bitstream the board ran with a monitor lit --
+# rack slot 3, rtl/scripts/rack.py. It existed only as a remembered command
+# (it wrote hdmi.json and hdmi_pnr.json, and those names are kept), and
+# `make clean` deletes *.fs, so until this target a clean tree could not
+# rebuild the one slot that drives a screen. Same tools and flags as
+# `bitstream`; only the top, its extra sources and the constraint differ.
+# The slot takes programs over the wire, so it is normally built with the
+# loader baked in: `make hdmi_bridge`.
+HDMI_TOP     = hcpu_hdmi_top
+HDMI_SOURCES = $(HDMI_TOP).v dvi_tx_open.v tmds_rpll.v $(SOURCES)
+
+hdmi_synth: program.hex
+	yosys -p "read_verilog -I $(RTL_DIR) $(HDMI_SOURCES); \
+	          synth_gowin $(YOSYS_FLAGS) -top $(HDMI_TOP) -json hdmi.json"
+
+hdmi_pnr.json: hdmi_synth
+	@test -n "$(NEXTPNR)" || { echo "nextpnr-himbaechel not found."; \
+	    echo "Set OSS_CAD=<path to oss-cad-suite> or put it on PATH."; exit 1; }
+	$(NEXTPNR) --json hdmi.json --write $@ \
+	    --device $(DEVICE) --vopt cst=hcpu_hdmi.cst \
+	    --vopt family=$(FAMILY)
+
+hdmi_bitstream: hdmi_pnr.json
+	$(GOWIN_PACK) -d $(FAMILY) -o $(HDMI_TOP).fs $<
+
+hdmi_flash: hdmi_bitstream
+	$(LOADER) -b $(BOARD) $(HDMI_TOP).fs
+
+hdmi_bridge:
+	$(MAKE) PROGRAM=$(RTL_DIR)/programs/loader.hasm hdmi_flash
+	$(MAKE) PROGRAM=$(RTL_DIR)/programs/test_bsm.hasm program.hex
+
+# ── Ka'bah over HDMI ────────────────────────────────────────────
+# Never built until this target existed. First build, 11 September 2026:
+# placed, routed and packed in 944 s, zero TLVDS cells, and the four TMDS
+# IO cells carried exactly the names kabah_hdmi.cst constrains. Flashed, it
+# ran Ka'bah correctly over the wire -- 2/2 frames, 400/400 bytes matching
+# cube.py. Same video path as hcpu_hdmi_top.v around the Ka'bah wrapper
+# instead of the HCPU one; no program.hex, for the same reason
+# kabah_bitstream has none.
+KABAH_HDMI_TOP     = kabah_hdmi_top
+KABAH_HDMI_SOURCES = $(KABAH_HDMI_TOP).v dvi_tx_open.v tmds_rpll.v \
+                     $(RTL_DIR)/hcpu_video_timing.v $(KABAH_SOURCES)
+
+kabah_hdmi_synth:
+	yosys -p "read_verilog -I $(RTL_DIR) $(KABAH_HDMI_SOURCES); \
+	          synth_gowin $(YOSYS_FLAGS) -top $(KABAH_HDMI_TOP) -json kabah_hdmi.json"
+
+kabah_hdmi_pnr.json: kabah_hdmi_synth
+	@test -n "$(NEXTPNR)" || { echo "nextpnr-himbaechel not found."; \
+	    echo "Set OSS_CAD=<path to oss-cad-suite> or put it on PATH."; exit 1; }
+	$(NEXTPNR) --json kabah_hdmi.json --write $@ \
+	    --device $(DEVICE) --vopt cst=kabah_hdmi.cst \
+	    --vopt family=$(FAMILY)
+
+kabah_hdmi_bitstream: kabah_hdmi_pnr.json
+	$(GOWIN_PACK) -d $(FAMILY) -o $(KABAH_HDMI_TOP).fs $<
+
+kabah_hdmi_flash: kabah_hdmi_bitstream
+	$(LOADER) -b $(BOARD) $(KABAH_HDMI_TOP).fs
+
 # What is installed, and what is not. Run this first on a new machine.
 .PHONY: tools
 tools:
@@ -170,8 +251,18 @@ tools:
 # ── The bridge ──────────────────────────────────────────────────
 # Build and flash a bitstream whose baked program is the loader. After this,
 # changing a program costs a second instead of a synthesis run.
+# program.hex is a sealed, tracked board image (see .gitignore beside this
+# file): the CosmicTera manifest seals it and check_board_hex re-assembles it
+# from PROGRAM's default. Baking the loader rewrites it, so every target that
+# does puts the sealed image back after flashing -- asm2hex is deterministic,
+# and regenerating the default program was measured byte-identical to the
+# committed file. This never came up while `make bridge` was broken: with
+# only an mtime to go on it called program.hex up to date and baked test_bsm
+# instead. Fixed, it really wrote the loader image -- and the wrapper
+# simulation read that and printed nothing.
 bridge:
 	$(MAKE) PROGRAM=$(RTL_DIR)/programs/loader.hasm flash
+	$(MAKE) PROGRAM=$(RTL_DIR)/programs/test_bsm.hasm program.hex
 
 # Send a program to a board already running the loader:
 #     make send PORT=/dev/tty.usbserial-X PROG=../../programs/trap_timer.hasm
@@ -182,4 +273,4 @@ send:
 	$(PYTHON) $(RTL_DIR)/scripts/send_program.py $(PORT) $(PROG)
 
 clean:
-	rm -f program.hex loader.hex payload.txt *.json *.fs *.vvp *.vcd
+	rm -f program.hex program.stamp loader.hex payload.txt *.json *.fs *.vvp *.vcd

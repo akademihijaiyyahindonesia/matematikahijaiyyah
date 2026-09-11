@@ -43,15 +43,17 @@ def test_the_rack_costs_its_largest_slot_not_their_sum() -> None:
     making disappears and it looks like the design simply got smaller.
     """
     top = rack.largest()
-    assert top.name == "hcpu" and top.lut4 == 14_005
+    assert top.name == "hdmi" and top.lut4 == 14_528, (
+        "the video slot -- HCPU plus TMDS -- is the largest, and that only "
+        "became visible once its cost was measured")
 
-    assert rack.naive_sum_lut4() == 14_005 + 12_061 == 26_066
+    assert rack.naive_sum_lut4() == 14_005 + 12_061 + 14_528 == 40_594
     assert rack.naive_sum_lut4() > rack.BOARD_LUT4, (
         "the slots would still fit side by side, so sequencing buys nothing")
     assert top.lut4 < rack.BOARD_LUT4, "the largest slot no longer fits alone"
 
-    assert int(top.lut4 / rack.BOARD_LUT4 * 100) == 67
-    assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 125
+    assert int(top.lut4 / rack.BOARD_LUT4 * 100) == 70
+    assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 195
 
 
 def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
@@ -65,32 +67,55 @@ def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
     smallest = min(measured, key=lambda s: s.lut4)
     largest = max(measured, key=lambda s: s.lut4)
     assert smallest.spare_lut4 > largest.spare_lut4
-    assert largest.spare_lut4 == 6_731, "the tightest comparator budget moved"
+    assert largest.spare_lut4 == 6_208, "the tightest comparator budget moved"
 
 
 def test_percentages_truncate_the_way_nextpnr_does() -> None:
     """67%, not 68%. A third number next to two that agree is a bug."""
-    top = rack.largest()
-    assert round(top.lut4 / rack.BOARD_LUT4 * 100) == 68, (
+    hcpu = next(s for s in rack.SLOTS if s.name == "hcpu")
+    assert round(hcpu.lut4 / rack.BOARD_LUT4 * 100) == 68, (
         "the rounding hazard this test exists for is gone -- check the render")
-    assert f"{int(top.occupancy * 100)}%" == "67%"
+    assert f"{int(hcpu.occupancy * 100)}%" == "67%"
     assert "67%" in rack.render() and "68%" not in rack.render()
 
 
 # ── the manifest describes things that exist ─────────────────────
 
-def test_every_slot_names_a_bitstream_that_is_built() -> None:
+def _makefile_products() -> set[str]:
+    """Every .fs the gowin Makefile's pack steps write, with variables expanded."""
+    text = (GOWIN / "Makefile").read_text(encoding="utf-8")
+    assigns = dict(re.findall(r"^([A-Z_]+)\s*\??=\s*(\S+)\s*$", text, re.M))
+    return {f"{assigns[var]}.fs" for var in re.findall(r"-o\s+\$\((\w+)\)\.fs", text)}
+
+
+def test_every_slot_is_a_bitstream_the_makefile_builds() -> None:
+    """A slot has to be rebuildable from a clean tree, not merely on disk here.
+
+    The first version asserted each .fs existed. They are build outputs that
+    git ignores, so it passed on the machine that built them and failed on
+    every clean checkout -- measured, in a worktree at 81fbd2e. And the HDMI
+    slot had no Makefile target at all: it existed only as a remembered
+    command, and `make clean` deletes *.fs.
+    """
     assert len(rack.SLOTS) == 3
+    products = _makefile_products()
     for slot in rack.SLOTS:
-        assert slot.built, f"{slot.name}: {slot.bitstream} is not on disk"
-        assert slot.path.stat().st_size > 1_000_000, f"{slot.name} looks empty"
+        assert slot.path.parent == GOWIN, slot.bitstream
+        assert slot.path.name in products, (
+            f"{slot.name}: no Makefile target writes {slot.path.name}")
 
 
-def test_the_three_bitstreams_are_distinct_designs() -> None:
-    """Two of them are byte-for-byte the same SIZE, which is not the same
-    thing -- the device's frame count is fixed, so size proves nothing."""
+def test_built_bitstreams_are_real_and_distinct() -> None:
+    """Where the slots have been built. Two are the same SIZE, which proves
+    nothing -- the device's frame count is fixed -- so the hash is the check."""
     import hashlib
 
+    missing = [s.name for s in rack.SLOTS if not s.built]
+    if missing:
+        pytest.skip(f"bitstreams not built on this checkout: {missing} "
+                    f"(the gowin Makefile's bitstream targets build them)")
+    for slot in rack.SLOTS:
+        assert slot.path.stat().st_size > 1_000_000, f"{slot.name} looks empty"
     digests = {s.name: hashlib.sha256(s.path.read_bytes()).hexdigest()
                for s in rack.SLOTS}
     assert len(set(digests.values())) == 3, f"two slots share a bitstream: {digests}"
@@ -111,6 +136,11 @@ def test_the_figures_come_from_the_wrapper_that_measured_them() -> None:
     assert slots["kabah"].lut4 == 12_061 and slots["kabah"].dff == 1_965
     assert slots["kabah"].fmax_mhz == 165.98 and "165.98 MHz" in kabah
 
+    hdmi = (GOWIN / "hcpu_hdmi_top.v").read_text(encoding="utf-8")
+    assert re.search(r"LUT4\s+14,528 /\s+20,736\s+70%", hdmi)
+    assert slots["hdmi"].lut4 == 14_528 and slots["hdmi"].dff == 4_551
+    assert slots["hdmi"].fmax_mhz == 121.24 and "121.24 MHz" in hdmi
+
 
 def test_the_board_constants_are_the_board() -> None:
     assert (rack.BOARD_LUT4, rack.BOARD_DFF, rack.BOARD_BSRAM) == (20_736, 15_552, 46)
@@ -118,36 +148,31 @@ def test_the_board_constants_are_the_board() -> None:
 
 # ── an unmeasured column stays unmeasured ────────────────────────
 
-def test_the_hdmi_slot_is_unmeasured_and_says_so() -> None:
-    """It runs. Its cost was never recorded, and zero is not "unknown".
+def test_the_hdmi_slot_is_measured_and_it_sets_the_rack_cost() -> None:
+    """It was None until 11 September, and while it was the rack quoted 67%.
 
-    This is the same defect class as `OP_NOP = 8'h00` and a frequency of 0.0
-    for silence: a legal-looking value standing in for an absent one. The
-    slot is real, the bitstream is built and has run on the board -- only the
-    utilisation was never captured, so the column is None.
+    That figure was the maximum of the two slots that had numbers -- true of
+    them, false of the rack. Measured, the video slot is the largest and the
+    rack costs 70%. The None was still the right call: a zero in its place
+    would have kept the 67% and called the video path free, the same defect
+    class as OP_NOP = 8'h00 and a frequency of 0.0 for silence.
     """
     hdmi = next(s for s in rack.SLOTS if s.name == "hdmi")
-    assert hdmi.built, "the HDMI bitstream is missing"
-    assert not hdmi.measured
-    assert hdmi.lut4 is None and hdmi.dff is None
-    assert hdmi.bsram is None and hdmi.fmax_mhz is None
-    assert hdmi.occupancy is None and hdmi.spare_lut4 is None
-
-    rendered = rack.render()
-    assert "—" in rendered, "the unmeasured columns were filled in"
-    assert "Belum terukur: hdmi" in rendered
-
-    # And it must not be counted as a zero-cost slot in either figure.
-    assert rack.naive_sum_lut4() == sum(
-        s.lut4 for s in rack.SLOTS if s.measured)
-    assert rack.largest().name != "hdmi"
+    assert hdmi.measured
+    assert (hdmi.lut4, hdmi.dff, hdmi.bsram, hdmi.fmax_mhz) == (14_528, 4_551, 17, 121.24)
+    assert rack.largest() is hdmi
+    assert "Belum terukur" not in rack.render()
 
 
-def test_an_unmeasured_slot_cannot_win_the_maximum() -> None:
-    """A None must never sort as small and let the rack understate itself."""
-    measured = [s for s in rack.SLOTS if s.measured]
-    assert rack.largest() in measured
-    assert all(rack.largest().lut4 >= s.lut4 for s in measured)
+def test_an_unmeasured_slot_cannot_move_the_rack_cost(monkeypatch) -> None:
+    """A None must never sort as small or large and change what the rack costs."""
+    ghost = rack.Slot(name="ghost", bitstream="rtl/fpga/gowin/ghost.fs",
+                      runs="nothing", verified="nothing")
+    monkeypatch.setattr(rack, "SLOTS", (*rack.SLOTS, ghost))
+    assert not ghost.measured
+    assert rack.largest().name == "hdmi"
+    assert rack.naive_sum_lut4() == 40_594
+    assert "Belum terukur: ghost" in rack.render()
 
 
 # ── refusals ─────────────────────────────────────────────────────

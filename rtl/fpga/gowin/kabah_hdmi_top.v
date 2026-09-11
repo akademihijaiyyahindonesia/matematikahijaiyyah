@@ -1,13 +1,34 @@
 // Hijaiyyah Ka'bah HDMI wrapper for Tang Nano 20K.
 //
-// NEVER BUILT. Not synthesised, not placed, not flashed -- label AT. The
-// video path is copied from hcpu_hdmi_top.v, which the board did prove:
-// 1280x720 over TMDS on pins 33..40 while the HCPU answered over UART.
-// This copy still carried that file's first, broken output stage -- a
-// hand-placed TLVDS_TBUF per lane and LVDS25 in the .cst -- until it was
-// brought in line with the fix below. Nothing has run it since, so the fix
-// is inherited, not measured: build it and count TLVDS cells in the PNR
-// JSON before reading anything into a dark monitor, either way.
+// ── MEASURED, 11 September 2026 — built, run, and seen ──────────────────
+//
+// `make kabah_hdmi_bitstream` -- yosys 0.68 (-nodsp) -> nextpnr-himbaechel
+// 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7. The first build this wrapper
+// ever had: 944 s, zero TLVDS cells, and the four TMDS IO cells carry exactly
+// the names kabah_hdmi.cst constrains.
+//
+//     IOB           15 /    384    3%
+//     LUT4      12,142 / 20,736   58%
+//     DFF        2,035 / 15,552   13%
+//     BSRAM          0 /     46    0%
+//     Fmax       94.16 MHz  u_kabah.clk_27m (PASS at the 12.00 MHz constraint)
+//               186.85 MHz  pixel_clk
+//
+// On the board: Ka'bah answered over the wire with 2/2 frames, 400/400 bytes
+// matching cube.py; and a person watching the monitor saw the 1280x720
+// picture and saw the frame colour toggle on the mode button (S1, pin 88).
+// The last two are an observation, not an instrument reading, and are
+// recorded as what they are.
+//
+// Ka'bah alone routes at 165.98 MHz (hijaiyyah_kabah_gowin_top.v); sharing
+// the fabric with the video path, 94.16 MHz -- still far above the 12 MHz
+// constraint, and the real price of the neighbour.
+//
+// Until this build it carried hcpu_hdmi_top.v's first, broken output stage --
+// a hand-placed TLVDS_TBUF per lane and LVDS25 constraints -- and nothing
+// compared the two wrappers, so nothing noticed.
+//
+// RTL FINGERPRINT: 6205f7dcf2a7be8152cb89a74d72c6b2a226cca2a598c53073d0ae9dc444b829
 
 module kabah_hdmi_top (
     input wire        clk_27m,

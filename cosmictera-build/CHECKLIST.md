@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.810 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.815 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,7 +41,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 4.810 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 4.815 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -56,6 +56,15 @@ adalah jalurnya. Sebuah instrumen hukum berhenti diperiksa karena sebuah
 direktori diganti nama — persis kegagalan yang `test_authorship.py` ada untuk
 mencegahnya. Kini jalurnya di-glob, bukan disebut, seperti `test_bab_satu.py`
 sudah lakukan.
+
+**Dan "0 dilewati" hanya benar di mesin yang memegang naskahnya.** Pada
+checkout bersih repositori ini — diukur di worktree terpisah pada `81fbd2e`
+— **22 tes melewati diri sendiri**, semuanya karena alasan yang disengaja:
+9 membutuhkan PDF buku (`test_book_anchor.py`, `test_bab_satu.py`,
+`test_bab_dua.py`) dan 13 membutuhkan `CERTIFICATE.json` serta dokumen
+`OFFICIAL_PATENT_RELEASE/` (`test_authorship.py`). Keduanya tinggal di
+`Buku Matematika Hijaiyyah/`, yang `.gitignore` tahan dari riwayat publik.
+Tak satu pun menandakan cacat — yang berbeda hanya apa yang ada di disk.
 
 Baris terakhir bukan hiasan. `test_every_clue_is_distinctive_enough_to_be_worth_having`
 mengambil `os.urandom` lalu menuntut penanda tidak muncul di dalamnya — dua
@@ -207,7 +216,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.810 lulus, 0 dilewati
+python3 -m pytest -q             # 4.815 lulus, 0 dilewati
 make -C rtl/tb all               # 260 asersi, 20 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

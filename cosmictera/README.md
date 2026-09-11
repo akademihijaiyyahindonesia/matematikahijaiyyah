@@ -101,6 +101,6 @@ menggagalkan tes.
   diukur **105% — lewat 960 sel** — tapi tak ada yang menuntut keduanya
   menempati fabric bersamaan. Papan memuatnya sebagai **slot bitstream
   berurutan** (`rtl/scripts/rack.py`), jadi biaya rack adalah slot
-  terbesar, 67%, bukan jumlahnya. Modul Ka'bah mentah tetap tak bisa
+  terbesar (HDMI, 70%), bukan jumlahnya. Modul Ka'bah mentah tetap tak bisa
   ditempatkan: 1.665 bit port melawan 384 IOB. Yang berjalan di papan
   adalah wrapper-nya.

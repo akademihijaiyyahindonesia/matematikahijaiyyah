@@ -114,7 +114,7 @@ sampai ada papan yang selalu terhubung ke CI, jadi ia dicatat manual di
 berkas ini/`ON.md` dengan tanggal, sama seperti pengukuran Fmax lain di
 proyek ini.
 
-### Fase 3 — SELESAI (sebagian): Ka'bah masuk ke alur build yang sama
+### Fase 3 — SELESAI: Ka'bah masuk ke alur build yang sama
 
 **Kenapa ini sebelum digabung, dan kenapa sebagian sudah beres.** Angka
 Ka'bah-di-20K (58%, 117,91 MHz — kini 165,98 MHz sesudah penyerempak reset diperbaiki) dulu nyata tapi tidak bisa dijalankan ulang
@@ -147,8 +147,9 @@ angka yang gampang basi diam-diam — dan sekarang tidak lagi begitu.
    dari `rtl/fpga/gowin/`, jadi jalurnya pecah sampai target itu sendiri
    pindah direktori ke root sebelum memanggil `vvp`.
 
-**Yang belum:** flash sungguhan ke papan fisik (butuh Fase 2 duluan — belum
-ada papan yang terhubung untuk mengujinya).
+**Yang belum:** tidak ada lagi di fase ini. Bitstream-nya di-flash dan
+dijalankan 10 September: 2/2 frame, 400/400 byte cocok `cube.py`
+([PAPAN.md](PAPAN.md)).
 
 **Cara memeriksa:** `make -C rtl/fpga/gowin sim_kabah` dan `kabah_bitstream`
 keluar 0; `pytest tests/test_integrity/test_place_and_route.py` lulus
@@ -157,10 +158,13 @@ Keduanya sudah dijalankan.
 
 ### Fase 4 — HCPU dan Ka'bah sebagai satu chip, satu top level
 
-**Ini pertanyaan terbuka yang jujur belum terjawab.** 67% + 58% = 125% dari
-LUT4 20K kalau dijumlah naif — mereka mungkin **tidak** muat berdampingan
-bahkan di 20K tanpa perubahan. Ini bukan pesimisme, ini aritmetika yang
-sama yang berlaku di sini ([kabah/SILICON.md](../kabah/SILICON.md)).
+**Terjawab — dan bukan dengan cara yang fase ini rancang.** Fase ini
+mengandaikan HCPU dan Ka'bah harus menempati fabric bersamaan. Tidak harus:
+papan memuatnya sebagai slot bitstream berurutan (`rtl/scripts/rack.py`),
+jadi biayanya adalah slot terbesar — HDMI, 70% — bukan jumlah naif
+67% + 58% = 125%. Ketiga slot sudah dijalankan berurutan dalam satu sesi
+([PAPAN.md](PAPAN.md)). Pengukuran top level gabungan di bawah tetap nyata
+dan tetap dicatat; ia berhenti menjadi penghalang.
 
 **DIUKUR 10 September 2026 — dan ketiga penghematan yang pernah dinamai di
 sini ternyata tidak ada isinya.** `rtl/fpga/gowin/hijaiyyah_cosmictera_gowin_top.v`
@@ -314,7 +318,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.810
+software_tests      1611/1611     ← sekarang 4.815
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 
@@ -349,17 +353,16 @@ Sekarang dipatok ke konstanta yang sama dengan `NOTICE`, dijaga
 | 1 | HCPU di-PNR sungguhan ke 20K, jadi target `make` | **CC — selesai**, `make bitstream` hijau, 67% LUT4, 118,43 MHz | tidak ada |
 | 2 | Flash + baca UART papan fisik, pertama kalinya | **VF — selesai 10 Sep 2026**, 23 byte cocok byte-per-byte dengan simulasi, 7.049 siklus; 28 nilai Θ̂ identik dengan `MASTER_TABLE` | Fase 1 (selesai) |
 | 3 | Ka'bah jadi target `make` yang direproduksi | **VF — selesai 10 Sep 2026**, 58% LUT4, 165,98 MHz, dan dijalankan di papan: 2/2 frame, 400/400 byte cocok `cube.py` | tidak ada, paralel ke 2 |
-| 4 | HCPU + Ka'bah satu chip | **DP — diukur, 105%**: lewat 960 sel, dan 91% desain ada di `hcpu_execute` + `hijaiyyah_sponge`; ketiga penghematan yang pernah dinamai terbukti kosong | Fase 1, 3 (keduanya selesai) |
+| 4 | HCPU + Ka'bah satu chip | **Dijawab rack** — slot berurutan, biaya 70%; top level gabungan **DP, diukur 105%**: lewat 960 sel, dan 91% desain ada di `hcpu_execute` + `hijaiyyah_sponge`; ketiga penghematan yang pernah dinamai terbukti kosong | Fase 1, 3 (keduanya selesai) |
 | 5 | ISA lengkap, H-Kernel matang, HFS baca, HISAB sebagai layanan | AT, per-baris — sebagian bisa mulai sekarang di simulator | tidak ada, paralel |
 | 6 | Silikon dedikasi (ASIC), ada tape-out | AT — pemetaan sel standar belum dimulai | keputusan PDK milik pengguna |
 | 7 | Tujuh lapis ✅ di perangkat keras fisik | AT — definisi konkretnya di atas | 1, 3 (selesai), 2, 4–6 |
 
-Dua baris naik jadi CC sejauh ini, dan itu persis bagaimana baris di tabel
-ini seharusnya naik: bukti baru (nextpnr menyasar 20K sungguhan, `gowin_pack`
-sungguhan, direproduksi lewat `make`, bukan command yang diingat atau rasio
-dihitung), bukan ditulis ulang begitu saja (R2). Fase 2 dan 4–7 tetap AT —
-Fase 4 khususnya belum bergerak sama sekali: HCPU dan Ka'bah masing-masing
-selesai fase mereka sendiri, tapi belum pernah disintesis bersama, dan
-67%+58%=125% kalau dijumlah naif tetap pertanyaan terbuka. Yang sudah VF/CC
+Baris-baris itu naik persis dengan cara yang seharusnya: bukti baru —
+nextpnr menyasar 20K sungguhan, `gowin_pack` sungguhan, direproduksi lewat
+`make`, lalu dijalankan di papan — bukan ditulis ulang begitu saja (R2).
+Fase 1–3 selesai di papan. Fase 4 dijawab oleh rack, bukan oleh
+penggabungan: top level gabungan diukur 105%, dan slot berurutan membuat
+angka itu tak perlu dipenuhi. Fase 5–7 tetap AT. Yang sudah VF/CC
 lainnya ada di [CHECKLIST.md](CHECKLIST.md), dan peta jalan ini berhenti
 berguna kalau berhenti mengacu ke sana setiap kali sebuah fase selesai.

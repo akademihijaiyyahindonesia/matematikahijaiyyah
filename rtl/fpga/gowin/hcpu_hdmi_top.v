@@ -1,5 +1,27 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
+//
+// ── MEASURED, 11 September 2026 ──────────────────────────────────────────
+//
+// `make hdmi_bridge` recipe -- yosys 0.68 (-nodsp) -> nextpnr-himbaechel
+// 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7, loader baked in (331 INIT bits
+// survived place and route; zero TLVDS cells). The .fs it packed is
+// byte-identical to the bitstream the board ran with the monitor lit, and
+// flashed again it answered test_bsm over the wire: 23 bytes, 112.
+//
+//     IOB           15 /    384    3%
+//     LUT4      14,528 / 20,736   70%
+//     DFF        4,551 / 15,552   29%
+//     BSRAM         17 /     46   36%
+//     Fmax      121.24 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               502.51 MHz  pixel_clk
+//
+// The largest slot in the sequential rack (rtl/scripts/rack.py): the video
+// path costs 523 LUT4 over hcpu_gowin_top.v's recorded 14,005, so this --
+// not the bare HCPU -- sets the rack's cost. Until it was measured the rack
+// quoted 67%, the maximum of the two slots that had numbers.
+//
+// RTL FINGERPRINT: 241672411dd90509f2e8f79c1ec60338392793c01bc3e74d6c20f10cdd17c90b
 
 `include "hcpu_pkg.vh"
 

@@ -295,6 +295,33 @@ def test_the_load_address_has_one_source_and_it_is_the_loader() -> None:
     assert loader_base == LOAD_BASE == send_program.LOAD_BASE == FREEZE_BASE == 64
 
 
+def test_the_bridge_targets_put_the_sealed_board_image_back() -> None:
+    """Baking the loader rewrites program.hex, and program.hex is sealed.
+
+    rtl/fpga/gowin/program.hex is tracked on purpose: the CosmicTera manifest
+    seals it and check_board_hex re-assembles it from the Makefile's PROGRAM.
+    `make bridge` left it alone only because of a bug -- program.hex was newer
+    than loader.hasm, so make called it up to date and baked test_bsm into the
+    "loader" bitstream. With that fixed the bridge targets really do write the
+    loader image, and the wrapper simulation then read it and printed nothing.
+    So every target that bakes the loader must put the sealed image back, from
+    the same default PROGRAM check_board_hex uses.
+    """
+    import re
+
+    makefile = (ROOT / "rtl" / "fpga" / "gowin" / "Makefile").read_text(encoding="utf-8")
+    default = re.search(r"^PROGRAM\s*\?=\s*(\S+)\s*$", makefile, re.M)
+    assert default, "the Makefile no longer names a default PROGRAM"
+
+    for target, flash in (("bridge", "flash"), ("hdmi_bridge", "hdmi_flash")):
+        recipe = re.search(rf"^{target}:\n((?:\t.*\n)+)", makefile, re.M)
+        assert recipe, f"no {target} target"
+        lines = [ln.strip() for ln in recipe.group(1).splitlines()]
+        assert lines[0] == f"$(MAKE) PROGRAM=$(RTL_DIR)/programs/loader.hasm {flash}", lines
+        assert f"$(MAKE) PROGRAM={default.group(1)} program.hex" in lines[1:], (
+            f"{target} bakes the loader and leaves the sealed program.hex overwritten")
+
+
 def test_the_wire_order_is_most_significant_byte_first() -> None:
     """
     The loader assembles each word with `SHLI 8` then `OR`, so the first byte

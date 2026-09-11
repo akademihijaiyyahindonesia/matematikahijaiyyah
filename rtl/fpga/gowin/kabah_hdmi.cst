@@ -1,4 +1,4 @@
-// Tang Nano 20K HDMI constraints for kabah_hdmi_top.v -- never built (AT).
+// Tang Nano 20K HDMI constraints for kabah_hdmi_top.v -- built and run, 11 Sep 2026.
 IO_LOC "clk_27m" 4;
 IO_PORT "clk_27m" IO_TYPE=LVCMOS33;
 IO_LOC "btn_rst_n" 87;
@@ -13,9 +13,10 @@ IO_PORT "uart_txd" IO_TYPE=LVCMOS33 DRIVE=8;
 // IO_TYPE=LVCMOS33D -- the form hcpu_hdmi.cst proved on the board. The
 // earlier true-LVDS lines matched the TLVDS_TBUF that nextpnr discarded.
 //
-// The names are yosys's synthesised OBUF cells, not the ports. They are
-// assumed to match hcpu_hdmi.cst's because the port names are identical;
-// that is unverified until this wrapper is actually synthesised.
+// The names are yosys's synthesised OBUF cells, not the ports. They were
+// assumed to match hcpu_hdmi.cst's because the port names are identical,
+// and the first build confirmed it: kabah_hdmi_pnr.json carries exactly
+// these four cells, with zero TLVDS cells beside them.
 IO_LOC "tmds_clk_p_OBUF_O" 33,34;
 IO_PORT "tmds_clk_p_OBUF_O" IO_TYPE=LVCMOS33D DRIVE=3.5;
 IO_LOC "tmds_data_p_OBUF_O" 35,36;

@@ -6,14 +6,15 @@ own OBUF behind each one, nextpnr discarded all four, and eight single-ended
 drivers reached pins 33..40. The fix moved the differential pairing into the
 constraint file -- LVCMOS33D, both pads of a pair in one IO_LOC.
 
-kabah_hdmi_top.v was copied from the first version and never built, so it
-kept the broken stage for exactly as long as nothing compared the two. This
-file is that comparison.
+kabah_hdmi_top.v was copied from the first version and not built until 11
+September, so it kept the broken stage for exactly as long as nothing
+compared the two. This file is that comparison.
 
 It reads source structure only, with comments stripped -- prose describing
 why TLVDS_TBUF was removed must not count as an instance of it. It says
 nothing about whether either wrapper puts a picture on a screen; only a
-board can say that, and kabah_hdmi_top.v has not been on one.
+board can say that. Both have now been on one -- hcpu_hdmi_top.v since 10
+September, kabah_hdmi_top.v since its first build on 11 September.
 """
 from __future__ import annotations
 
@@ -70,7 +71,12 @@ def test_both_wrappers_constrain_the_same_cells_the_same_way() -> None:
     assert len(_tmds_lines("hcpu_hdmi.cst")) == 8, "four lanes, IO_LOC and IO_PORT each"
 
 
-def test_the_unbuilt_wrapper_says_it_is_unbuilt() -> None:
-    """Sharing a proven stage is not the same as having been proven."""
-    header = (GOWIN / "kabah_hdmi_top.v").read_text(encoding="utf-8")[:1500]
-    assert "NEVER BUILT" in header and "AT" in header
+def test_the_kabah_wrapper_says_what_was_measured_and_what_was_seen() -> None:
+    """It was labelled NEVER BUILT until its first build, and the label had to
+    move with the evidence. The instrument readings and the human observation
+    of the screen are both evidence, and are recorded as different kinds."""
+    header = (GOWIN / "kabah_hdmi_top.v").read_text(encoding="utf-8")
+    assert "NEVER BUILT" not in header, "the label outlived the build"
+    assert "MEASURED" in header and "RTL FINGERPRINT" in header
+    assert "400/400" in header, "the board result belongs next to the figures"
+    assert "an observation, not an instrument reading" in header

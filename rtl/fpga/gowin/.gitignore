@@ -4,6 +4,8 @@
 *.fs
 *.vvp
 *.vcd
+# The value stamp that makes program.hex follow PROGRAM, not just its mtime.
+program.stamp
 
 # program.hex is NOT here. It is a board artifact the manifest seals -- pattern
 # `rtl/fpga/*/program.hex` in SYSTEM_PATTERNS -- and check_board_hex

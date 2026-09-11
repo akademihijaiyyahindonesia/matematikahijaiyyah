@@ -4,10 +4,15 @@
 // (c) 2026 Maulana Amratulloh
 // ============================================================================
 //
-// HCPU and Ka'bah on one chip, which cosmictera-build/ROADMAP.md's Fase 4
-// calls an open question rather than a plan: 67% + 58% = 125% of the 20K's
-// 20,736 LUT4 if the two are simply added, so they may not fit side by side
-// at all without the design changing.
+// HCPU and Ka'bah on one chip. Measured on 10 September 2026: 105% of the
+// 20K's 20,736 LUT4, over by 960 cells (cosmictera-build/ROADMAP.md, Fase 4)
+// -- less than the naive 67% + 58% = 125%, and still not a fit.
+//
+// The question this was built to answer turned out not to need answering.
+// Nothing requires the two to occupy the fabric at the same instant: the
+// board loads them as sequential bitstream slots (rtl/scripts/rack.py), so
+// the rack costs its largest slot, 70%, not a sum. This file stays as the
+// measurement it is, not as a blocker.
 //
 // THIS VERSION EXISTS TO MEASURE, NOT TO SHIP. It instantiates the two
 // existing board wrappers whole, which means it also duplicates everything

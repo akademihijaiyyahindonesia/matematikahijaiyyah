@@ -178,8 +178,8 @@ antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
 berubah bentuk:
 
 ```
-  berdampingan   sum(slot)   harus muat serentak   14.005 + 12.061 = 125%
-  berurutan      max(slot)   satu per satu                  14.005 =  67%
+  berdampingan   sum(slot)   harus muat serentak   14.005 + 12.061 + 14.528 = 195%
+  berurutan      max(slot)   satu per satu                           14.528 =  70%
 ```
 
 Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
@@ -200,17 +200,67 @@ harus cocok adalah hasilnya, dan hasilnya cocok.
 Rekaman rack: [`rtl/scripts/rack.py`](../rtl/scripts/rack.py) — `python3
 rtl/scripts/rack.py --detect`.
 
-**Biaya HDMI belum pernah diukur.** Wrapper-nya tidak membawa blok utilisasi
-seperti dua yang lain, jadi kolomnya kosong di rack, bukan diisi nol. Nol
-akan berarti "gratis"; yang benar adalah "belum dihitung".
+**Biaya HDMI kini terukur, dan ia slot terbesar.** Kolomnya sempat kosong —
+`None`, bukan nol — dan selama itu rack mengutip **67%**: maksimum dari dua
+slot yang punya angka, benar untuk keduanya dan salah untuk rack. Dibangun
+ulang lewat target Makefile baru (`hdmi_bitstream`, loader dipanggang), hasil
+pak-nya **identik byte-demi-byte** dengan bitstream yang menyala di papan, dan
+di-flash lagi ia menjawab `test_bsm` lewat kabel: 23 byte, `112`.
+
+```
+  LUT4    14.528 / 20.736   70%
+  DFF      4.551 / 15.552   29%
+  BSRAM       17 /     46   36%
+  IOB         15 /    384    3%
+  Fmax    121,24 MHz (HCPU), 502,51 MHz (pixel)
+```
+
+Jalur video menambah 523 LUT4 di atas HCPU sendiri, jadi biaya rack **70%**,
+bukan 67%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
+tercatat gratis.
+
+---
+
+## Ka'bah lewat HDMI — dibangun pertama kali, dijalankan, dilihat
+
+**11 September 2026.** `kabah_hdmi_top.v` belum pernah dibangun sampai hari ini,
+dan ia masih membawa tahap keluaran TMDS yang rusak dari versi pertama
+`hcpu_hdmi_top.v`. Setelah disamakan dengan pola yang terbukti, target baru
+`make kabah_hdmi_bitstream` membangunnya untuk pertama kali:
+
+```
+  IOB       15 /    384    3%
+  LUT4  12.142 / 20.736   58%
+  DFF    2.035 / 15.552   13%
+  BSRAM      0 /     46    0%
+  Fmax  94,16 MHz (Ka'bah), 186,85 MHz (pixel) — pasca-perutean
+```
+
+Nol sel TLVDS, dan keempat sel IO TMDS bernama persis seperti yang
+dikonstrain `kabah_hdmi.cst` — asumsi yang sebelumnya diwarisi, kini terbukti.
+
+| Di papan | Hasil | Jenis bukti |
+|---|---|---|
+| Ka'bah lewat UART | **2/2 frame, 400/400 byte cocok `cube.py`** | instrumen |
+| Monitor | **gambar 1280×720 muncul** | pengamatan pengguna |
+| Tombol mode (S1, pin 88) | **warna bingkai berganti** | pengamatan pengguna |
+
+Pin 88 (MODE0) ternyata bisa dipakai sebagai tombol — berbeda dengan pin 87
+(MODE1), yang papan tahan rendah dan yang dulu mengunci reset.
+
+Ka'bah sendirian terrout di 165,98 MHz; di sini, berbagi fabric dengan jalur
+video, 94,16 MHz. Masih jauh di atas batas 12 MHz — itu harga nyata
+tetangganya.
 
 ---
 
 ## Video
 
 `hcpu_hdmi_top` menghasilkan 1280x720 lewat TMDS pada pasangan diferensial
-pin 33–40, `pixel_clk` 477,78 MHz dan `u_hcpu.clk_27m` 124,61 MHz pasca
-perutean. Satu bitstream membawa ketiganya sekaligus — video, loader, dan
+pin 33–40, `pixel_clk` 502,51 MHz dan `u_hcpu.clk_27m` 121,24 MHz pasca
+perutean — laporan timing bitstream yang berjalan hari ini, dibangun
+ulang lewat `make hdmi_bitstream` dan identik byte-demi-byte dengan yang
+di-flash. Satu bitstream membawa ketiganya sekaligus — video, loader, dan
 HCPU — dibuktikan dengan mengirim `e3_sweep28` lewat kabel saat layar
 menyala dan menerima 28 nilai yang sama.
 
@@ -241,7 +291,7 @@ ke bitstream**, bukan dikirim lewat loader. Itu belum dilakukan.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.810 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.815 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -284,7 +334,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.810 lulus, 0 dilewati, 0 gagal |
+| `python3 -m pytest -q` | 4.815 lulus, 0 dilewati, 0 gagal |
 | `make -C rtl/tb all` | 20 testbench, 260 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
@@ -324,7 +374,7 @@ semuanya 0 FAIL.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.810 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.815 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

@@ -54,7 +54,7 @@
 // HCPU and Ka'bah as ONE top level measured 105%, over by 960 cells -- but
 // nothing requires them to coexist: the board loads them as sequential
 // bitstream slots (rtl/scripts/rack.py), so the rack costs its largest
-// slot, 67%, not the sum.
+// slot -- the HDMI one, 70% -- not the sum.
 //
 // The fix that follows from the finding: stop random-accessing the state.
 // Rotate it through a fixed substitution position instead, so the mux

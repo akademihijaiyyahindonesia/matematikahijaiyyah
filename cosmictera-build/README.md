@@ -35,7 +35,7 @@ simulasi.
 ## Angka utuh, hari ini
 
 ```
-4.810 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
+4.815 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
   260 asersi RTL di 20 testbench, 0 gagal
    72 dari 96 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
