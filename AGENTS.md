@@ -246,6 +246,9 @@ di sana. Daftar di bawah hanya penunjuk bab.
 - `0a910f0` rack bisa dibangun dari checkout bersih, dan slot HDMI bisa
   dibangun ulang.
 - `cf2edcb` tes yang terlewati di checkout bersih, diukur.
+- `b3662f0` catatan kerja ini sendiri, beserta tes penjaganya.
+- `f0dd0f8` `CSET` (0x45) — separuh tulis dari `CGET`, dan `hos_fs_read`
+  mengembalikan H-Reg hidup. Dijalankan di papan: `5 6 2 0` dan `1 1 1 2 1`.
 
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
@@ -257,8 +260,14 @@ memutuskan:
    demi peringatan lint.
 2. **Fase 5, opcode.** Ikuti `docs/HISA_SPEC.md`: kerjakan yang didefinisikan
    spesifikasi dan tidak bertanda "perangkat lunak saja".
-   - Mulai dari `CSET` 0x45, H[DST][IMM] ← GPR[S1], sesuai spesifikasi.
-   - Ikuti pola `730b47f`.
+   - `CSET` 0x45 **sudah selesai** (`f0dd0f8`), termasuk di papan.
+   - Berikutnya dari daftar yang sama, mengikuti pola `730b47f` dan `f0dd0f8`:
+     `CSUB` 0x43, `CMOV` 0x46, `CZERO` 0x47, `CEQ` 0x48, `CDOT` 0x49,
+     `CNORM` 0x4A, `CDIST` 0x4B, `CRHO` 0x4C.
+   - `VPROJ_T`, `VPROJ_N`, `VPROJ_K`, `VPROJ_Q` dan `HCHK` **tidak ada di
+     spesifikasi** — tanyakan pemilik
+     sebelum menyentuhnya. `CHASH`/`CSIGN` (0x70/0x72) menyentuh aturan R10
+     (tak ada inti SHA-256 di RTL), jadi juga ditanyakan dulu.
 3. **Fase 6, PDK:** Efabless SKY130 (`rtl/mpw/MPW_SHUTTLE_PLAN.md`).
 
 ---
