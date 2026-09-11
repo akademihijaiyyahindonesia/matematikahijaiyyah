@@ -57,14 +57,16 @@ direktori diganti nama — persis kegagalan yang `test_authorship.py` ada untuk
 mencegahnya. Kini jalurnya di-glob, bukan disebut, seperti `test_bab_satu.py`
 sudah lakukan.
 
-**Dan "0 dilewati" hanya benar di mesin yang memegang naskahnya.** Pada
-checkout bersih repositori ini — diukur di worktree terpisah pada `81fbd2e`
-— **22 tes melewati diri sendiri**, semuanya karena alasan yang disengaja:
-9 membutuhkan PDF buku (`test_book_anchor.py`, `test_bab_satu.py`,
-`test_bab_dua.py`) dan 13 membutuhkan `CERTIFICATE.json` serta dokumen
-`OFFICIAL_PATENT_RELEASE/` (`test_authorship.py`). Keduanya tinggal di
-`Buku Matematika Hijaiyyah/`, yang `.gitignore` tahan dari riwayat publik.
-Tak satu pun menandakan cacat — yang berbeda hanya apa yang ada di disk.
+**Dan "0 dilewati" hanya benar di mesin yang memegang naskah dan
+bitstream-nya.** Pada checkout bersih repositori ini — diukur di worktree
+terpisah pada `0a910f0` — **0 gagal dan 23 dilewati**, dan setiap yang
+dilewati disengaja: 9 membutuhkan PDF buku (`test_book_anchor.py`,
+`test_bab_satu.py`, `test_bab_dua.py`), 13 membutuhkan `CERTIFICATE.json`
+serta dokumen `OFFICIAL_PATENT_RELEASE/` (`test_authorship.py`) — keduanya
+di `Buku Matematika Hijaiyyah/`, yang `.gitignore` tahan dari riwayat
+publik — dan 1 membutuhkan bitstream yang sudah dibangun (`test_rack.py`),
+karena berkas `.fs` adalah keluaran build, bukan isi repositori. Tak satu
+pun menandakan cacat; yang berbeda hanya apa yang ada di disk.
 
 Baris terakhir bukan hiasan. `test_every_clue_is_distinctive_enough_to_be_worth_having`
 mengambil `os.urandom` lalu menuntut penanda tidak muncul di dalamnya — dua
