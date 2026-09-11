@@ -318,7 +318,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.815
+software_tests      1611/1611     ← sekarang 4.821
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 
