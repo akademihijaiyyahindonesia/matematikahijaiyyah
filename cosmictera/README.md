@@ -93,8 +93,8 @@ menggagalkan tes.
   keamanan yang bertumpu padanya.
 - **Lapis 4 ditolak.** Untuk kerahasiaan, pakai AES‑256‑GCM dari pustaka
   teruji.
-- **Fmax HCPU [CC].** Tang Nano 20K menjalankannya: **14.005 LUT4 (67%),
-  4.480 DFF (28%), 17 BSRAM, Fmax 118,43 MHz pasca-perutean**, dan UART
+- **Fmax HCPU [CC].** Tang Nano 20K menjalankannya: **14.231 LUT4 (68%),
+  4.480 DFF (28%), 17 BSRAM, Fmax 84,26 MHz pasca-perutean**, dan UART
   membalas 23 byte yang cocok byte-per-byte dengan simulasi. Ka'bah terpisah
   juga terukur: **12.061 LUT4 (58%), Fmax 165,98 MHz**.
 - **HCPU dan Ka'bah tidak perlu jadi satu top level.** Digabung, keduanya

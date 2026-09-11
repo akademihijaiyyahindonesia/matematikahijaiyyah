@@ -54,6 +54,7 @@ module hcpu_execute #(
     output wire [11:0]             calu_index,
     output wire [`HREG_W-1:0]      calu_src1,
     output wire [`HREG_W-1:0]      calu_src2,
+    output wire [`XLEN-1:0]        calu_scl,
     input  wire [`HREG_W-1:0]      calu_result_vec,
     input  wire [`XLEN-1:0]        calu_result_scl,
 
@@ -194,14 +195,23 @@ module hcpu_execute #(
     assign calu_op   = (id_opcode == `OP_HCADD || is_letter) ? 3'd0 :
                        (id_opcode == `OP_HNRM2) ? 3'd1 :
                        (id_opcode == `OP_HDIST) ? 3'd2 :
-                       (id_opcode == `OP_CGET) ? 3'd3 : 3'd0;
-    // CGET names its component in the immediate.
+                       (id_opcode == `OP_CGET) ? 3'd3 :
+                       (id_opcode == `OP_CSET) ? 3'd4 : 3'd0;
+    // CGET and CSET both name their component in the immediate.
     assign calu_index = id_imm;
     assign calu_src1 = id_hreg_s1;
     // The letter itself is the second operand, straight off the ROM. This is
     // the one new path the instruction needed: everything else -- the adder,
     // the H-Reg write, the accumulator -- was already here.
+    //
+    // For CSET the second operand is H[DST]: decode points the second H-Reg
+    // read port at DST and latches id_s2 <= dst, so the forwarding unit --
+    // which compares ex_dst/mem_dst against id_s2 -- bypasses the right
+    // register when the previous instruction has just written it.
     assign calu_src2 = is_letter ? rom_data : id_hreg_s2;
+    // CSET writes GPR[S1] into one component. The truncation to the
+    // component's eight bits happens in the ALU, where that width is stated.
+    assign calu_scl = id_gpr_s1;
 
     // Codex result mux
     reg [`HREG_W-1:0] codex_hvec;
@@ -216,6 +226,10 @@ module hcpu_execute #(
             `OP_HNRM2: codex_gpr  = calu_result_scl;
             `OP_HDIST: codex_gpr  = calu_result_scl;
             `OP_CGET: codex_gpr  = calu_result_scl;
+            // CSET is the write half: the ALU hands back the whole codex with
+            // one component replaced, and the H-Reg write enable carries it to
+            // the register file.
+            `OP_CSET: codex_hvec = calu_result_vec;
             // HISAB word select. §IIIM.3.1 gives HPACK as
             // GPR[DST] <- nibble_pack(H[S1])[S2], words 0-2. Only word 0 was
             // ever selected: pack_word1 and pack_word2 were wired up to the

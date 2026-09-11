@@ -269,6 +269,16 @@ EXTENSIONS: Dict[str, int] = {
     # to CGET with exactly this semantics and never implemented it.
     "CGET": 0x44,
 
+    # CSET, the write half of the same gap. §IIIM.3.1 can build a codex two
+    # ways only — load a sealed letter, or add two of them — and neither can
+    # put a computed number into one component. So hos_fs_read could hand a
+    # stored file back as eighteen raw words and never as a live H-Reg, which
+    # cosmictera-build/OFF.md records as the HFS gap CSET would close.
+    #
+    # The name and the slot are the spec's own: HISA_SPEC.md assigns 0x45 to
+    # CSET as H[DST][IMM] ← GPR[S1] and never implemented it.
+    "CSET": 0x45,
+
     # CALL and RET. The book puts them at 0x07/0x08, which HCPU cannot: 0x06
     # and 0x07 carry HNRM2 and HDIST, and 0x08 is ERET. HISA_SPEC.md records
     # the move -- PUSH/POP to the Memory block at 0x32/0x33, CALL/RET to the

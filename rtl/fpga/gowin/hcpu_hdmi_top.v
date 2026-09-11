@@ -1,27 +1,37 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
 //
-// ── MEASURED, 11 September 2026 ──────────────────────────────────────────
+// ── MEASURED, 11 September 2026, re-measured the same day after CSET ──────
 //
-// `make hdmi_bridge` recipe -- yosys 0.68 (-nodsp) -> nextpnr-himbaechel
-// 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7, loader baked in (331 INIT bits
-// survived place and route; zero TLVDS cells). The .fs it packed is
-// byte-identical to the bitstream the board ran with the monitor lit, and
-// flashed again it answered test_bsm over the wire: 23 bytes, 112.
+// `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68
+// (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
+// loader baked in. Re-run because CSET (0x45) changed five hcpu_*.v sources
+// this slot carries; the figures below are that run's, not the earlier one's.
 //
 //     IOB           15 /    384    3%
-//     LUT4      14,528 / 20,736   70%
+//     LUT4      14,713 / 20,736   70%
 //     DFF        4,551 / 15,552   29%
 //     BSRAM         17 /     46   36%
-//     Fmax      121.24 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               502.51 MHz  pixel_clk
+//     Fmax       60.34 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               496.28 MHz  pixel_clk
+//
+// +185 LUT4 and +0 DFF against this slot's previous 14,528 / 4,551 -- the same
+// combinational merge hcpu_gowin_top.v's header accounts for, in the same
+// pipeline, carried here because this bitstream instantiates the whole HCPU.
+// The HCPU clock's Fmax moved 121.24 -> 60.34 for the same reason the bare
+// slot's did, and is recorded rather than explained away: the board's clock is
+// 27 MHz, and both figures pass the constraint the flow places against.
 //
 // The largest slot in the sequential rack (rtl/scripts/rack.py): the video
-// path costs 523 LUT4 over hcpu_gowin_top.v's recorded 14,005, so this --
-// not the bare HCPU -- sets the rack's cost. Until it was measured the rack
-// quoted 67%, the maximum of the two slots that had numbers.
+// path costs 482 LUT4 over hcpu_gowin_top.v's 14,231, so this -- not the bare
+// HCPU -- sets the rack's cost. Until it was measured the rack quoted 67%, the
+// maximum of the two slots that had numbers.
 //
-// RTL FINGERPRINT: 241672411dd90509f2e8f79c1ec60338392793c01bc3e74d6c20f10cdd17c90b
+// The bitstream this recipe packed before CSET was byte-identical to the one
+// the board ran with the monitor lit, and answered test_bsm over the wire: 23
+// bytes, 112. THIS bitstream carries the new RTL and has not been flashed yet.
+//
+// RTL FINGERPRINT: e3bc5df9afd6e668779f7cb45bfa83be95a5e422ab9cbb1aa2e70f657b21e1b3
 
 `include "hcpu_pkg.vh"
 

@@ -192,6 +192,7 @@ module hcpu_top #(
     wire [2:0]  calu_op;
     wire [11:0] calu_index;
     wire [`HREG_W-1:0] calu_src1, calu_src2;
+    wire [`XLEN-1:0]   calu_scl;
     wire [`HREG_W-1:0] calu_result_vec;
     wire [`XLEN-1:0]   calu_result_scl;
     wire               calu_done;
@@ -433,6 +434,7 @@ module hcpu_top #(
         .calu_index     (calu_index),
         .calu_src1      (calu_src1),
         .calu_src2      (calu_src2),
+        .calu_scl       (calu_scl),
         .calu_result_vec(calu_result_vec),
         .calu_result_scl(calu_result_scl),
         // HISAB serializer
@@ -586,6 +588,7 @@ module hcpu_top #(
         .index      (calu_index),
         .src1       (calu_src1),
         .src2       (calu_src2),
+        .src_scl    (calu_scl),
         .result_vec (calu_result_vec),
         .result_scl (calu_result_scl),
         .done       (calu_done)

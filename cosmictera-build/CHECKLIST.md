@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.821 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.855 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,7 +41,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 4.821 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 4.855 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -80,7 +80,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **260 asersi, 20 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **262 asersi, 20 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -165,8 +165,10 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **Bitstream HCPU, Tang Nano 20K: 67% LUT4, 118,43 MHz** | `make -C rtl/fpga/gowin bitstream` |
+| ✅ | **Bitstream HCPU, Tang Nano 20K: 68% LUT4, 84,26 MHz** | `make -C rtl/fpga/gowin bitstream` |
 | ✅ | **Bitstream Ka'bah, Tang Nano 20K: 58% LUT4, 165,98 MHz** | `make -C rtl/fpga/gowin kabah_bitstream` |
+| ✅ | **`CSET` (0x45) dijalankan di papan: `5 6 2 0`** | `make -C rtl/fpga/gowin bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_cset.hasm` |
+| ✅ | **HFS baca mengembalikan H-Reg hidup di papan: `1 1 1 2 1`** | `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_hfs.hasm` |
 
 **Kalimat ini dulu berbunyi "belum ada `openFPGALoader` yang benar-benar
 dijalankan terhadap perangkat keras dalam sejarah repositori ini". Itu tidak
@@ -177,6 +179,13 @@ mengembalikan 2/2 frame, 400/400 byte cocok dengan `cube.py`. Kedua angka
 Fmax di atas adalah pengukuran ulang **pasca** bring-up, bukan angka pra-papan
 yang digantikannya (114,65 dan 117,91): keduanya naik karena penyerempak reset
 berhenti menggerbangi level pin 87 (MODE1) yang ditahan rendah oleh papan.
+
+**Angka HCPU diukur ulang sekali lagi pada 11 September, setelah `CSET` masuk**,
+dan kali ini turun: 118,43 → 84,26 MHz, 14.005 → 14.231 LUT4, DFF tidak
+bergerak sama sekali. Jalur kritis yang dilaporkan nextpnr berangkat dari
+`ex_hreg_result` dan lewat mux nilai codex di Execute — tempat penggabungan
+komponen CSET berada. Yang tidak berubah: papan menjalankannya, dan clock papan
+27 MHz.
 Apa yang benar-benar keluar dari papan dicatat di [PAPAN.md](PAPAN.md); yang
 masih belum ada di [ROADMAP.md](ROADMAP.md).
 
@@ -190,7 +199,7 @@ masih belum ada di [ROADMAP.md](ROADMAP.md).
 | ✅ | Closure monoid dibuktikan, bukan disampel | `tests/test_algebra/` |
 | ✅ | Cakupan guard **93,1%**, dan itu langit-langitnya | `matematika-hijaiyyah/GUARD.md` |
 | ✅ | Throughput **2,59 MB/s**, hambatan = deserialiser | `src/hijaiyyah/crypto/kabah.py` |
-| ✅ | 72 dari 96 opcode di RTL, 24 sisanya dinamai | [OFF.md](OFF.md) |
+| ✅ | 73 dari 97 opcode di RTL, 24 sisanya dinamai | [OFF.md](OFF.md) |
 
 ---
 
@@ -218,7 +227,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.821 lulus, 0 dilewati
-make -C rtl/tb all               # 260 asersi, 20 bench, 0 gagal
+python3 -m pytest -q             # 4.855 lulus, 0 dilewati
+make -C rtl/tb all               # 262 asersi, 20 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

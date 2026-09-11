@@ -467,6 +467,73 @@ module tb_hcpu_top;
         end
 
         // ═══════════════════════════════════════════════════════
+        //  Program 10: CSET — write one codex component
+        // ═══════════════════════════════════════════════════════
+        //  The write half of CGET. What can go wrong is not the component it
+        //  names but the seventeen it does not: CSET reads the register it
+        //  writes, so a stale copy would carry back whatever H0 held before.
+        //  Two CSETs to the same H-Reg back to back put that on the
+        //  forwarding path, where the register file still holds the old
+        //  value -- the write is two stages from committing.
+        //
+        //  Ba is [2,0,0,1,0,1,0,0,0,1,0,0,0,0,1,1,1,0]: component 4 is Kp = 0
+        //  and component 5 is Kx = 1, so both writes change what was there.
+        //  H2 rather than H0 on purpose -- with DST = 0 the forwarding
+        //  comparison would be right by accident, since the unused S2 field
+        //  is zero too, and a broken bypass would look correct.
+        for (i = 0; i < `CODE_DEPTH; i = i + 1)
+            imem[i] = {`OP_NOP, 24'h000000};
+
+        imem[0]  = enc(`OP_HLOAD, 4'd2, 4'd0, 4'd0, 12'd2);   // H2 <- Ba
+        imem[1]  = enc(`OP_MOVI,  4'd1, 4'd0, 4'd0, 12'd5);   // R1 <- 5
+        imem[2]  = enc(`OP_MOVI,  4'd2, 4'd0, 4'd0, 12'd6);   // R2 <- 6
+        imem[3]  = enc(`OP_CSET,  4'd2, 4'd1, 4'd0, 12'd4);   // H2[Kp] <- 5
+        imem[4]  = enc(`OP_CSET,  4'd2, 4'd2, 4'd0, 12'd5);   // H2[Kx] <- 6
+        imem[5]  = enc(`OP_CGET,  4'd3, 4'd2, 4'd0, 12'd4);   // R3 <- 5
+        imem[6]  = enc(`OP_CGET,  4'd4, 4'd2, 4'd0, 12'd5);   // R4 <- 6
+        imem[7]  = enc(`OP_CGET,  4'd5, 4'd2, 4'd0, 12'd0);   // R5 <- Theta = 2
+        imem[8]  = enc(`OP_CGET,  4'd6, 4'd2, 4'd0, 12'd3);   // R6 <- Nd    = 1
+        // An index past 17 names no component, and 99 is the sharp probe: its
+        // low five bits are 3, so a machine that truncated first would write
+        // Sin's component 3 instead of writing nothing. Same trap CGET fell
+        // into, from the other side.
+        imem[9]  = enc(`OP_HLOAD, 4'd1, 4'd0, 4'd0, 12'd12);  // H1 <- Sin
+        imem[10] = enc(`OP_MOVI,  4'd7, 4'd0, 4'd0, 12'd9);   // R7 <- 9
+        imem[11] = enc(`OP_CSET,  4'd1, 4'd7, 4'd0, 12'd99);  // writes nothing
+        imem[12] = enc(`OP_CGET,  4'd8, 4'd1, 4'd0, 12'd3);   // R8 <- 0, not 9
+        imem[13] = enc(`OP_CGET,  4'd9, 4'd1, 4'd0, 12'd0);   // R9 <- Sin Theta = 4
+        imem[14] = enc(`OP_HALT,  4'd0, 4'd0, 4'd0, 12'd0);
+
+        rst_n = 0;
+        repeat (5) @(posedge clk);
+        rst_n = 1;
+
+        cycle_count = 0;
+        while (!halted && cycle_count < 80) begin
+            @(posedge clk);
+            cycle_count = cycle_count + 1;
+        end
+
+        $display("\nProgram 10 (CSET) halted after %0d cycles", cycle_count);
+        $display("R3=%0d R4=%0d R5=%0d R6=%0d R8=%0d R9=%0d (expected 5, 6, 2, 1, 0, 4)",
+                 u_dut.u_regfile.gpr[3], u_dut.u_regfile.gpr[4],
+                 u_dut.u_regfile.gpr[5], u_dut.u_regfile.gpr[6],
+                 u_dut.u_regfile.gpr[8], u_dut.u_regfile.gpr[9]);
+
+        if (u_dut.u_regfile.gpr[3] == 32'd5 &&
+            u_dut.u_regfile.gpr[4] == 32'd6 &&
+            u_dut.u_regfile.gpr[5] == 32'd2 &&
+            u_dut.u_regfile.gpr[6] == 32'd1 &&
+            u_dut.u_regfile.gpr[8] == 32'd0 &&
+            u_dut.u_regfile.gpr[9] == 32'd4) begin
+            $display("PASS: CSET wrote the components it named and kept the rest");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("FAIL: CSET lost a component or wrote the wrong one");
+            fail_count = fail_count + 1;
+        end
+
+        // ═══════════════════════════════════════════════════════
         $display("\n=============================");
         $display("Total: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("=============================");

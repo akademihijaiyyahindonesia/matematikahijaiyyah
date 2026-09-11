@@ -195,6 +195,46 @@ PROGRAMS: Dict[str, List[int]] = {
         enc(OpCode.HALT),
     ],
 
+    # ── CSET: the write half of CGET ────────────────────────────
+    # CSET reads the register it writes, which is the part that can diverge:
+    # the seventeen components it does not name have to arrive unchanged in
+    # both machines, and the byte it does name has to be the same byte.
+    "cset_writes_one_component": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.MOVI, dst=1, imm=5),
+        enc(OpCode.CSET, dst=0, s1=1, imm=4),
+        enc(OpCode.HALT),
+    ],
+    "cset_then_reads_it_back": [
+        enc(OpCode.HLOAD, dst=0, imm=MIM),
+        enc(OpCode.MOVI, dst=2, imm=7),
+        enc(OpCode.CSET, dst=0, s1=2, imm=17),
+        enc(OpCode.CGET, dst=3, s1=0, imm=17),
+        enc(OpCode.CGET, dst=4, s1=0, imm=0),
+        enc(OpCode.HALT),
+    ],
+    "cset_past_seventeen_names_nothing": [
+        enc(OpCode.HLOAD, dst=1, imm=SIN),
+        enc(OpCode.MOVI, dst=4, imm=9),
+        enc(OpCode.CSET, dst=1, s1=4, imm=18),
+        enc(OpCode.HALT),
+    ],
+    "cset_takes_the_low_byte": [
+        enc(OpCode.MOVI, dst=5, imm=300),
+        enc(OpCode.CSET, dst=2, s1=5, imm=2),
+        enc(OpCode.HALT),
+    ],
+    # Two CSETs to the same H-Reg back to back. The second must see what the
+    # first wrote, which on hardware means the forwarding bypass rather than
+    # the register file -- the write is still two stages away from committing.
+    "cset_twice_into_the_same_register": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.MOVI, dst=1, imm=3),
+        enc(OpCode.CSET, dst=0, s1=1, imm=1),
+        enc(OpCode.CSET, dst=0, s1=1, imm=2),
+        enc(OpCode.HALT),
+    ],
+
     # ── The twelve opcodes the HVM gained ───────────────────────
 
     "move_and_immediate": [

@@ -177,7 +177,7 @@ Program H‑ISA disegel oleh `seal_program`, dan opcode dibaca **dari
 - **Tidak ada kerahasiaan.** Lapis 4 ditolak, disengaja.
 - **HCPU tidak dilebur dengan blok kripto.** CosmicTera **membungkus** program
   yang berjalan di H‑ISA; ia tidak menyuntikkan kripto ke datapath.
-- **Fmax HCPU [CC].** 118,43 MHz pasca-perutean di Tang Nano 20K, 67% LUT4,
+- **Fmax HCPU [CC].** 84,26 MHz pasca-perutean di Tang Nano 20K, 68% LUT4,
   dan papan menjalankannya — UART membalas byte-per-byte sama dengan
   simulasi. **Kabah top sendiri** (`hijaiyyah_kabah_top.v`) tetap tidak bisa
   jadi top level papan mana pun — 1.665 bit port melawan 384 IOB, dan itu

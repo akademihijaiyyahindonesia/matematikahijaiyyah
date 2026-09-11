@@ -23,7 +23,7 @@ Label: **EH**.
 
 ### 24 opcode belum di RTL
 
-72 dari 96 terimplementasi. Yang belum:
+73 dari 97 terimplementasi. Yang belum:
 
 ```
 VMOV VCMP VDOT VDIST VNORM      vektor
@@ -49,7 +49,7 @@ Buku menetapkan tumpukan tujuh lapis:
 7  Aplikasi          program HC, alat analisis                 ✅
 6  HVM / HCPU        eksekusi bytecode (perangkat lunak/keras)  ✅
 5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ◐  HAR ada, HISAB belum layanan
-4  HFS               sistem berkas yang sadar hybit             ◐  tulis ada, baca setengah
+4  HFS               sistem berkas yang sadar hybit             ◐  tulis dan baca ada, penyimpanan persisten belum
 3  H-Kernel          manajemen proses, memori, dan I/O          ✅  4 dari 4
 2  HAL               lapisan abstraksi perangkat keras          ✅
 1  Perangkat keras   CPU/HCPU, memori, I/O                      ✅
@@ -57,19 +57,20 @@ Buku menetapkan tumpukan tujuh lapis:
 
 Enam dari tujuh lapis kini punya sesuatu yang nyata. Yang tersisa, berurutan:
 
-#### HFS — dua celah bersisa, keduanya bernama
+#### HFS — satu celah bersisa
 
 Jalur tulis (`hos_fs_write` di `rtl/programs/hos.hasm`) nyata: `HGRD`
-dijalankan sebelum berkomitmen, vektor korup ditolak. Dua hal masih hilang:
+dijalankan sebelum berkomitmen, vektor korup ditolak. Jalur bacanya kini utuh
+juga: `CSET` (0x45) ada di RTL, jadi `hos_fs_read` membangun ulang vektor
+tersimpan ke H0 komponen demi komponen — bukan lagi sekadar penunjuk ke 18
+kata mentah. Yang masih hilang satu:
 
 | butuh | keadaan |
 |---|---|
-| `CSET` (tulis satu komponen GPR ke H-Reg) | **tak ada di ISA** — `CGET` (0x44) hanya membaca. Tanpa ini, `hos_fs_read` tak bisa merekonstruksi H-Reg hidup dari kata tersimpan, hanya penunjuk ke 18 kata mentah |
 | penyimpanan persisten | **belum diverifikasi** — HFS sekarang murni RAM data (`0xE00`+), hilang saat reset. Tang Nano 20K punya jalur SDRAM/PSRAM di chipdb-nya (`IO_sdram_dq[0:31]` muncul saat PNR), tapi belum dipastikan papan fisiknya benar-benar memasang chip PSRAM |
 
-`CSET` adalah keputusan desain ISA (menambah opcode, jalur RTL, bench, PNR
-ulang) — di luar cakupan kerja hari ini. Verifikasi PSRAM Tang Nano 20K adalah
-pertanyaan perangkat keras yang bisa dijawab lebih cepat.
+Verifikasi PSRAM Tang Nano 20K adalah pertanyaan perangkat keras: apakah chip
+itu benar-benar terpasang di papan yang dipegang, bukan hanya ada di chipdb.
 
 #### Layanan Hybit — HAR ada, HISAB belum
 

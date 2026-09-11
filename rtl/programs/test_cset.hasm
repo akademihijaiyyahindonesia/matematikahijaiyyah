@@ -1,0 +1,37 @@
+; ============================================================================
+; test_cset.hasm — CSET (0x45) on the board
+; Writes two components into a codex, reads them back, and asks the guard what
+; the result is. Expected over UART: 5, 6, 2, 0
+; (c) 2026 Maulana Amratulloh
+; ============================================================================
+;
+; Ba is (2, 0,0,1, 0,1,0,0,0, 1,0,0,0,0, 1,1,1, 0): component 4 is Kp = 0 and
+; component 5 is Kx = 1, so both writes change what was there. H2 rather than
+; H0 deliberately -- with DST = 0 the forwarding comparison would be right by
+; accident, because the unused S2 field is zero too.
+;
+; The last line is the interesting one. A codex whose Khatt components say 5
+; and 6 while its A_K summary still says 1 is NOT a hybit: G2 is a sum-check,
+; and it fails. So CSET can build an invalid vector and the guard says so --
+; which is the same reason hos_fs_write runs HGRD before it persists anything.
+
+    HLOAD H2, 2       ; H2 <- Ba
+    MOVI  R1, 5
+    MOVI  R2, 6
+    CSET  H2, R1, 4   ; H2[Kp] <- 5
+    CSET  H2, R2, 5   ; H2[Kx] <- 6, straight after, on the forwarding path
+
+    CGET  R3, H2, 4
+    PRINT R3          ; 5
+    CGET  R4, H2, 5
+    PRINT R4          ; 6
+    CGET  R5, H2, 0
+    PRINT R5          ; 2 — Ba's turning survived the two writes
+
+    MOVI  R6, 0
+    HGRD  H2
+    JNGD  cset_end
+    MOVI  R6, 1
+cset_end:
+    PRINT R6          ; 0 — the sum-check G2 refuses the modified vector
+    HALT

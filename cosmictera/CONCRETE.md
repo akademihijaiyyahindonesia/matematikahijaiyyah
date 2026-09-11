@@ -235,8 +235,8 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 | Marjin ronde | 27,4× di bawah periode | 768 / 28 |
 | Deserialiser | 8 clock/byte | `kabah.DESERIAL_CLOCKS_PER_BYTE` |
 | Lapis otoritatif | 3 | `kabah.AUTHORITATIVE_LAYER` |
-| Opcode H‑ISA | 96 terdefinisi | `program.defined_opcodes()` |
-| Opcode berencoding RTL | 72 | `define OP_* … 8'h` di `hcpu_pkg.vh` (44 umum + 28 huruf) |
+| Opcode H‑ISA | 97 terdefinisi | `program.defined_opcodes()` |
+| Opcode berencoding RTL | 73 | `define OP_* … 8'h` di `hcpu_pkg.vh` (45 umum + 28 huruf) |
 | Instruksi huruf | 28 (0xE0–0xFB) | satu huruf, tanpa operand |
 | Penyebab trap | 6 terdefinisi, 5 bersumber | `TRAP_CAUSES` di `hcpu_pkg.vh` |
 | Pola sumber sistem | 12 | `program.SYSTEM_PATTERNS` |
@@ -260,7 +260,7 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 | Orde ρ·π = 768 | VF | terhitung |
 | Fmax wrapper Ka'bah, 20K | CC | 165,98 MHz, terrout, `gowin_pack` sukses |
 | Wrapper Ka'bah ≡ `cube.py` lewat UART | CC | dua blok 128 byte, 400/400 byte cocok — **di papan fisik**, 10 Sep 2026, bukan lagi UART tersimulasi |
-| Fmax HCPU, Tang Nano 20K | CC | 118,43 MHz, terrout, dan **dijalankan di papan** 10 Sep 2026 |
+| Fmax HCPU, Tang Nano 20K | CC | 84,26 MHz, terrout, dan **dijalankan di papan** 11 Sep 2026 (setelah CSET; 118,43 MHz sebelum itu) |
 
 ### Tidak terbukti
 

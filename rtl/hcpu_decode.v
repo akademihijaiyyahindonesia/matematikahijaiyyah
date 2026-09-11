@@ -87,7 +87,7 @@ module hcpu_decode (
             `OP_AND, `OP_OR, `OP_XOR, `OP_NOT, `OP_SHL, `OP_SHR,
             `OP_ANDI, `OP_ORI, `OP_XORI, `OP_SHLI, `OP_SHRI,
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
-            `OP_CGET,
+            `OP_CGET, `OP_CSET,
             `OP_HPACK, `OP_HCRC,
             `OP_PRINT, `OP_PUSH: id_uses_s1 = 1'b1;
             default: ;
@@ -142,7 +142,11 @@ module hcpu_decode (
     assign gpr_raddr1  = {1'b0, s1};
     assign gpr_raddr2  = {1'b0, s2};
     assign hreg_raddr1 = s1;
-    assign hreg_raddr2 = s2;
+    // CSET modifies one component and keeps the other seventeen, so it has to
+    // read the register it writes. S1 is a GPR index for CSET -- the value
+    // being written -- so the codex comes through the second read port, with
+    // its address pointed at DST.
+    assign hreg_raddr2 = (opcode == `OP_CSET) ? dst : s2;
 
     // ── Pipeline register + control decode ──────────────────────
     always @(posedge clk or negedge rst_n) begin
@@ -274,6 +278,18 @@ module hcpu_decode (
                 `OP_HGRD:   begin id_is_codex <= 1'b1; end  // Sets GUARD flag only
                 `OP_HNRM2:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_CGET:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                // CSET writes H[DST] and reads it too. id_s2 is overwritten
+                // with DST here -- the field is unused by this instruction,
+                // and the forwarding unit compares ex_dst/mem_dst against
+                // id_s2, so without it a CSET straight after a write to the
+                // same H-Reg would modify the stale copy. Same shape as the
+                // letter path below, which overwrites id_dst for the same
+                // kind of reason.
+                `OP_CSET:  begin
+                    id_is_codex <= 1'b1;
+                    id_hreg_we  <= 1'b1;
+                    id_s2       <= dst;
+                end
                 `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
 
                 `OP_HPACK:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB nibble-pack

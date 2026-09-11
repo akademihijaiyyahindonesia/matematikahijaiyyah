@@ -36,7 +36,7 @@ itu tidak satu pun bitstream proyek ini pernah dinyalakan di silikon.
 ### HCPU
 
 ```
-LUT4   14.005 / 20.736   67%
+LUT4   14.231 / 20.736   68%
 DFF     4.480 / 15.552   28%
 BSRAM      17 /     46   36%
 Fmax   118,43 MHz
@@ -68,7 +68,7 @@ Rekaman lengkap tiap program beserta keluarannya:
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.821 tes Python. Simulasi bukan lalai
+langsung dari pytest — dan 4.855 tes Python. Simulasi bukan lalai
 — ia secara struktural buta terhadap ketiganya, dan itu justru pelajaran
 yang paling mahal dari hari itu.
 

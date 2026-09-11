@@ -31,7 +31,7 @@ tidak bisa dipakai, dan sebabnya ada di bagian [cacat](#tiga-cacat-yang-hanya-pa
 
 ---
 
-## HCPU: 21 program
+## HCPU: 23 program
 
 | Program | kata | Keluaran |
 |---|---:|---|
@@ -56,6 +56,8 @@ tidak bisa dipakai, dan sebabnya ada di bagian [cacat](#tiga-cacat-yang-hanya-pa
 | `syscall_io` | 46 | `42` — dan `99` tidak pernah sampai ke kabel |
 | `trap_timer` | 19 | halt, lapor siklus — trap menyala, ERET kembali |
 | `user_mode` | 22 | halt, lapor siklus |
+| `test_cset` | 17 | `5 6 2 0` |
+| `test_hfs` | 373 | `1 1 1 2 1` |
 
 ## Bench: 11 program
 
@@ -166,6 +168,44 @@ benar dan yang salah tidak lolos.**
 
 ---
 
+## CSET di papan — 11 September 2026
+
+`CSET` (0x45) menutup separuh yang hilang dari `CGET`: ia menulis satu nilai
+GPR ke dalam satu komponen H-Reg. Setelah jalur RTL-nya masuk, bitstream
+loader dibangun ulang (`make bridge`) dan dinyalakan, lalu program dikirim
+lewat kabel — papan direkonfigurasi sebagai reset di antara program, sama
+seperti seluruh tabel di atas.
+
+| program | kata | keluaran papan | interpreter |
+|---|---:|---|---|
+| `test_bsm` | 9 | `112` | `112` |
+| `test_cset` | 17 | `5 6 2 0` | `5 6 2 0` |
+| `test_hfs` | 373 | `1 1 1 2 1` | `1 1 1 2 1` |
+| `e3_sweep28` | 113 | 28 nilai Θ̂ | identik `MASTER_TABLE` |
+
+**Apa yang dibuktikan tiap baris.**
+
+- `test_cset` menulis dua komponen ke `H2` berurutan, jadi yang kedua harus
+  membaca hasil yang pertama lewat jalur forwarding dan bukan lewat register
+  file — tulisannya masih dua tahap dari commit. Lalu keduanya dibaca kembali
+  dan guard ditanya. Keluaran `0` di akhir bukan kegagalan: vektor yang
+  komponen Khaṭṭ-nya 5 dan 6 sementara ringkasan A_K-nya masih 1 memang bukan
+  hybit, dan G2 menolaknya. CSET bisa membangun vektor tak sah, dan guard yang
+  mengatakannya — alasan yang sama kenapa `hos_fs_write` menjalankan `HGRD`
+  sebelum menyimpan.
+- `test_hfs` menulis Kaf ke berkas, menimpa `H0` dengan Haa, lalu membaca
+  kembali: H\* (komponen 17) kembali **1** dan Θ̂ kembali **2** — keduanya
+  hanya bisa datang dari delapan belas `CSET` di `hos_fs_read` — dan `HGRD`
+  atas hasilnya lulus. Lapis 4 buku, baca dan tulis, di silikon.
+- `e3_sweep28` dijalankan ulang justru karena RTL berubah: 28 nilai Θ̂ dari
+  ROM tersegel masih identik dengan `MASTER_TABLE`, jadi opcode baru tidak
+  menggeser jalur yang lama.
+
+Angka `CYCLES` lewat kabel tetap tidak sebanding dengan yang dipanggang,
+dengan sebab yang sama seperti di bagian atas halaman ini.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -178,8 +218,8 @@ antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
 berubah bentuk:
 
 ```
-  berdampingan   sum(slot)   harus muat serentak   14.005 + 12.061 + 14.528 = 195%
-  berurutan      max(slot)   satu per satu                           14.528 =  70%
+  berdampingan   sum(slot)   harus muat serentak   14.231 + 12.061 + 14.713 = 197%
+  berurutan      max(slot)   satu per satu                           14.713 =  70%
 ```
 
 Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
@@ -208,16 +248,24 @@ pak-nya **identik byte-demi-byte** dengan bitstream yang menyala di papan, dan
 di-flash lagi ia menjawab `test_bsm` lewat kabel: 23 byte, `112`.
 
 ```
-  LUT4    14.528 / 20.736   70%
+  LUT4    14.713 / 20.736   70%
   DFF      4.551 / 15.552   29%
   BSRAM       17 /     46   36%
   IOB         15 /    384    3%
-  Fmax    121,24 MHz (HCPU), 502,51 MHz (pixel)
+  Fmax     60,34 MHz (HCPU), 496,28 MHz (pixel)
 ```
 
-Jalur video menambah 523 LUT4 di atas HCPU sendiri, jadi biaya rack **70%**,
-bukan 67%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
+Jalur video menambah 482 LUT4 di atas HCPU sendiri, jadi biaya rack **70%**,
+bukan 68%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
 tercatat gratis.
+
+**Angka di blok ini diukur ulang 11 September setelah CSET masuk**, karena
+slot ini membawa seluruh HCPU. Sesi rack tiga-slot di atas dijalankan dengan
+bitstream sebelum CSET — yang waktu itu terukur 14.528 LUT4, Fmax 121,24 MHz
+(HCPU) dan 502,51 MHz (pixel) — dan hasil yang dilaporkan di tabel itu adalah
+hasil bitstream tersebut. Slot HDMI versi baru sudah dibangun dan dipak, tapi
+**belum di-flash**; yang sudah dijalankan di papan hari ini adalah slot HCPU
+biasa, di bagian berikut.
 
 ---
 
@@ -269,7 +317,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.821 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.855 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -312,14 +360,15 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.821 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 20 testbench, 260 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.855 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 20 testbench, 262 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
-Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 13, NUI embedding 10, video
-timing 8, H-Kernel 7, syscall I/O 6, HOS 6, subrutin 4, huruf 3, wrapper Gowin
-2, dan tujuh testbench yang melapor satu pernyataan lulus tunggal — 260,
-semuanya 0 FAIL.
+Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 14, NUI embedding 10, video
+timing 8, H-Kernel 7, syscall I/O 6, HOS 7, subrutin 4, huruf 3, wrapper Gowin
+2, dan tujuh testbench yang melapor satu pernyataan lulus tunggal — 262,
+semuanya 0 FAIL. Dua yang baru: Program 10 `tb_hcpu_top` (CSET) dan
+pemeriksaan ketujuh `tb_hcpu_hos` (baca HFS mengembalikan H-Reg hidup).
 
 > **Selisih tujuh dari angka 253 sebelumnya bukan tes baru.** `tb_hcpu_video_timing`
 > menjaga delapan properti VESA — H_TOTAL, lebar dan posisi hsync, rentang `de`,
@@ -352,7 +401,7 @@ semuanya 0 FAIL.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.821 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.855 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

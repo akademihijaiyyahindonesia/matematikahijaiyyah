@@ -468,10 +468,10 @@ secara native. Target:
 Tang Nano 20K (GW2AR-LV18QN88C8/I7):
 
 ```
-LUT4   14.005 / 20.736   67%
+LUT4   14.231 / 20.736   68%
 DFF     4.480 / 15.552   28%
 BSRAM      17 /     46   36%
-Fmax   118,43 MHz (pasca perutean)
+Fmax   84,26 MHz (pasca perutean)
 ```
 
 HCPU mengeksekusi programnya dan UART membalas 23 byte yang cocok
@@ -495,7 +495,7 @@ wrapper), memori instruksi yang kosong di **setiap** bitstream yang pernah
 dibangun — tak terlihat karena `OP_NOP` kebetulan `8'h00` — dan driver
 diferensial TMDS yang dibuang nextpnr sebelum sampai ke pad. Ketiganya lolos
 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil langsung
-dari pytest — dan 4.821 tes Python.
+dari pytest — dan 4.855 tes Python.
 
 ---
 

@@ -533,6 +533,20 @@ memicu `HALT_ERR` (0xFF).
 > Bukan `HPROJ` — 0x80 memakai nama itu untuk proyeksi *lapisan*, yang
 > menghasilkan sub-vektor dan tidak muat di GPR 32-bit.
 
+> **`CSET` (0x45) menutup separuh yang lain.** §IIIM.3.1 hanya bisa membangun
+> codex dengan dua cara — memuat huruf tersegel (`HLOAD`) atau menjumlahkan
+> dua H-Reg (`HCADD`) — dan tidak satu pun menulis angka hasil hitungan ke
+> satu komponen. Akibatnya `hos_fs_read` hanya bisa mengembalikan berkas
+> tersimpan sebagai 18 kata mentah, tidak pernah sebagai H-Reg hidup; itu
+> celah HFS yang dicatat [OFF.md](../cosmictera-build/OFF.md).
+>
+> Nama dan slotnya juga bukan karangan: tabel di bawah sudah menuliskan `CSET`
+> di 0x45 dengan semantik persis itu, jauh sebelum ada yang menjalankannya.
+> Komponen H-Reg selebar 8 bit (`HREG_W` = 18 × 8), jadi yang masuk adalah
+> byte terendah `GPR[S1]`; interpreter menutupnya dengan masker yang sama,
+> karena lebar yang berbeda antara dua mesin adalah persis cara pembagian
+> 0-basis/1-basis `HLOAD` dulu bersembunyi.
+
 | Opcode | Mnemonic | Format | Deskripsi |
 |---|---|---|---|
 | 0x40 | `HLOAD` | C | Load codex dari ROM ke H-Reg: `H[DST] ← ROM[IMM]` |
@@ -542,7 +556,7 @@ memicu `HALT_ERR` (0xFF).
 | 0x42 | `CADD` | C | Alias dari `HCADD` (ejaan spesifikasi lama) |
 | 0x43 | `CSUB` | C | `H[DST] ← H[S1] - H[S2]` (delta 14D) |
 | 0x44 | `CGET` | C | ✅ `GPR[DST] ← H[S1][IMM]` (ambil komponen, IMM 0–17; di luar itu 0) |
-| 0x45 | `CSET` | C | `H[DST][IMM] ← GPR[S1]` (set komponen) |
+| 0x45 | `CSET` | C | ✅ `H[DST][IMM] ← GPR[S1]` (set komponen, IMM 0–17; di luar itu tidak menulis) |
 | 0x46 | `CMOV` | C | `H[DST] ← H[S1]` (copy codex) |
 | 0x47 | `CZERO` | C | `H[DST] ← 0` (zero codex) |
 | 0x48 | `CEQ` | C | Compare H[S1] == H[S2] → FLAGS |

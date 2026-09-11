@@ -140,6 +140,10 @@ class OpCode(IntEnum):
     # slot rather than inventing a new one. Not HPROJ — 0x80 carries that
     # name for layer projection, which yields a sub-vector.
     CGET = 0x44     # GPR[dst] ← H[s1][imm], component 0–17
+    # Component write, the other half of CGET. HISA_SPEC.md assigned 0x45 to
+    # CSET with exactly this semantics and never implemented it either; it is
+    # what hos_fs_read needs to rebuild a live H-Reg out of stored words.
+    CSET = 0x45     # H[dst][imm] ← GPR[s1], component 0–17
     HCADD = 0x42    # Codex addition: dst ← src1 + src2
     CSUB = 0x43     # Component-wise subtract     (software only)
     VMOV = 0x46     # Copy H-register             (software only)
@@ -278,7 +282,7 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.CMP, OpCode.CMPI, OpCode.JMP, OpCode.JEQ, OpCode.JNE,
     OpCode.JGD, OpCode.JNGD,
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,
-    OpCode.HLOAD, OpCode.CGET, OpCode.HCADD,
+    OpCode.HLOAD, OpCode.CGET, OpCode.CSET, OpCode.HCADD,
     OpCode.HPACK, OpCode.HCRC,
     OpCode.HGRD,
     OpCode.PRINT,

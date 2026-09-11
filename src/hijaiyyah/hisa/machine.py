@@ -548,6 +548,23 @@ class HISAMachine:
             self.regs.gpr[dst] = value
             return f"CGET GPR[{dst}] = H{s1}[{imm}] = {value}"
 
+        # ── CSET: write one codex component ────────────────────
+        # The other half of CGET, and the piece hos_fs_read was missing: with
+        # only a read, a stored file could be handed back as eighteen raw
+        # words and never reassembled into a live H-Reg — the HFS gap named in
+        # cosmictera-build/OFF.md.
+        #
+        # A component is eight bits wide on the hardware (HREG_W = 18 × 8), so
+        # the value is masked to the width the silicon actually has. An index
+        # past 17 names no component, and the register keeps what it held —
+        # the same convention CGET follows when it returns zero.
+        if op == OpCode.CSET:
+            if imm > 17:
+                return f"CSET H{dst} unchanged (index {imm} names no component)"
+            value = self.regs.gpr[s1] & 0xFF
+            self.regs.hreg[dst][imm] = value
+            return f"CSET H{dst}[{imm}] = {value}"
+
         # ── HDIST: squared Euclidean distance ───────────────────
         if op == OpCode.HDIST:
             a = self.regs.hreg[s1]

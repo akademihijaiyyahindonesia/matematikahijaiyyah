@@ -25,7 +25,7 @@ bukan dipercaya.
 ### 1. HCPU — CPU sungguhan, dua wujud yang harus setuju
 
 **Yang berjalan:** `rtl/hcpu_top.v` (RTL, dijalankan di Tang Nano 20K —
-67% LUT4, Fmax 118,43 MHz pasca-perutean, UART cocok byte-per-byte dengan
+68% LUT4, Fmax 84,26 MHz pasca-perutean, UART cocok byte-per-byte dengan
 simulasi, [`PAPAN.md`](../cosmictera-build/PAPAN.md)) dan
 `src/hijaiyyah/hisa/machine.py` (interpreter Python, `HISAMachine`) —
 dua mesin yang HARUS memberi hasil identik pada program yang sama. Ini
@@ -36,7 +36,7 @@ mana mereka TIDAK BOLEH beda (register, memori, guard, trap — semua
 diperiksa paritas).
 
 **Cara memeriksa:** `python3 -m pytest tests/test_integrity/` (paritas
-RTL/interpreter), `make -C rtl/tb all` (260 asersi, 20 testbench, Icarus
+RTL/interpreter), `make -C rtl/tb all` (262 asersi, 20 testbench, Icarus
 Verilog, siklus demi siklus).
 
 **Tampilan — dari timing generator ke layar sungguhan.**
@@ -153,6 +153,6 @@ python3 NUI/pipeline.py --quick     # NUI, ujung ke ujung, ~20 detik
 ```
 
 Angka hari ini (bisa berubah — jalankan ulang, jangan dikutip dari sini):
-4.821 tes Python lulus, 0 dilewati; 260 asersi RTL di 20 testbench
+4.855 tes Python lulus, 0 dilewati; 262 asersi RTL di 20 testbench
 `make all`, 0 gagal — dari 36 berkas bench yang seluruhnya dijalankan
 sesuatu, 16 di antaranya lewat pytest dan bukan lewat `make`.

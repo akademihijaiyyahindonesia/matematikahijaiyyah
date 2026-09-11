@@ -166,15 +166,15 @@ hf_bad: MOVI  R1, 0
 ; guard. That is the whole feature the book distinguishes from Linux and
 ; Windows -- neither validates what a write contains before committing it.
 ;
-; The write path is real. The read path is half of what it should be, and
-; that half is a hardware gap rather than a design choice: CGET (0x44) reads
-; ONE component of an H-Reg into a GPR, but there is no CSET -- no instruction
-; writes a GPR value INTO an H-Reg component. HLOAD can only bring in a
-; canonical ROM letter, and HCADD can only combine H-Regs already held in
-; registers; neither can rebuild an arbitrary vector from words sitting in
-; data RAM. So hos_fs_read hands back a pointer to the eighteen stored words
-; for a caller to inspect as plain data -- it cannot hand back a live H-Reg.
-; Recorded in cosmictera-build/OFF.md as what CSET would unlock.
+; Both halves are real now. CGET (0x44) reads one component of an H-Reg into
+; a GPR and CSET (0x45) writes one back, so hos_fs_read rebuilds the stored
+; vector into H0 while it hands back the pointer. Until CSET was implemented
+; the read could only be half of itself: HLOAD brings in a canonical ROM
+; letter and HCADD combines H-Regs already held, and neither can put eighteen
+; words from data RAM back into a register -- so a stored file came back as
+; plain data and never as a live hybit. That is the gap
+; cosmictera-build/OFF.md recorded, and 0x45 is where HISA_SPEC.md had
+; already put the instruction that closes it.
 ;
 ; File table entry, 3 words at 0xE80 + 3*file_id:
 ;   [0] in_use (0/1)   [1] size (18, once written)   [2] heap pointer
@@ -259,8 +259,11 @@ fw_reuse:
         MOVI  R1, 1
         RET
 
-; R1 = file_id -> R1 = 1 (found) or 0 (empty slot); R2 = pointer to 18 raw
-; words if found. See the header above for why this is words, not an H-Reg.
+; R1 = file_id -> R1 = 1 (found) or 0 (empty slot); R2 = pointer to the
+; eighteen stored words if found, and H0 holds the vector itself, rebuilt
+; component by component. The caller's H0 is part of what this routine
+; returns, not something it preserves -- the same register hos_fs_write takes
+; the vector in.
 hos_fs_read:
         MOVI  R10, 3
         MUL   R10, R1, R10
@@ -273,6 +276,45 @@ hos_fs_read:
         RET
 fr_found:
         LOAD  R2, R10, 2
+        ; Unrolled for the same reason hos_fs_write's copy loop is: CSET names
+        ; its component in the immediate (`calu_index = id_imm`), never from a
+        ; register, so eighteen compile-time cases is the only correct form.
+        LOAD  R3, R2, 0
+        CSET  H0, R3, 0
+        LOAD  R3, R2, 1
+        CSET  H0, R3, 1
+        LOAD  R3, R2, 2
+        CSET  H0, R3, 2
+        LOAD  R3, R2, 3
+        CSET  H0, R3, 3
+        LOAD  R3, R2, 4
+        CSET  H0, R3, 4
+        LOAD  R3, R2, 5
+        CSET  H0, R3, 5
+        LOAD  R3, R2, 6
+        CSET  H0, R3, 6
+        LOAD  R3, R2, 7
+        CSET  H0, R3, 7
+        LOAD  R3, R2, 8
+        CSET  H0, R3, 8
+        LOAD  R3, R2, 9
+        CSET  H0, R3, 9
+        LOAD  R3, R2, 10
+        CSET  H0, R3, 10
+        LOAD  R3, R2, 11
+        CSET  H0, R3, 11
+        LOAD  R3, R2, 12
+        CSET  H0, R3, 12
+        LOAD  R3, R2, 13
+        CSET  H0, R3, 13
+        LOAD  R3, R2, 14
+        CSET  H0, R3, 14
+        LOAD  R3, R2, 15
+        CSET  H0, R3, 15
+        LOAD  R3, R2, 16
+        CSET  H0, R3, 16
+        LOAD  R3, R2, 17
+        CSET  H0, R3, 17
         MOVI  R1, 1
         RET
 

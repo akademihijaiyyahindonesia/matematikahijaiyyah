@@ -55,8 +55,8 @@ make wave_top
 - Files: `fpga/gowin/hcpu_gowin_top.v`, `fpga/gowin/hcpu_gowin.cst`
 - Load program: `$readmemh("program.hex")`
 
-Measured on the board: 14,005 LUT4 (67%), 4,480 DFF (28%), 17 BSRAM,
-Fmax 118.43 MHz post-routing. See `cosmictera-build/PAPAN.md`.
+Measured on the board: 14,231 LUT4 (68%), 4,480 DFF (28%), 17 BSRAM,
+Fmax 84.26 MHz post-routing. See `cosmictera-build/PAPAN.md`.
 
 ### Xilinx Arty A7-35T (~$129)
 - Device: XC7A35T-1CPG236C

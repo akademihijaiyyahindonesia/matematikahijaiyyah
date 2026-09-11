@@ -10,8 +10,8 @@ A rack does not. Each slot is its own bitstream, and the FPGA is
 reconfigured between them, so the fabric is spent **in sequence**. The
 budget question changes shape with it:
 
-    side by side   sum(slots)   must fit at once   14,005 + 12,061 + 14,528 = 195%
-    in sequence    max(slots)   one at a time                      14,528 =  70%
+    side by side   sum(slots)   must fit at once   14,231 + 12,061 + 14,713 = 197%
+    in sequence    max(slots)   one at a time                      14,713 =  70%
 
 So the rack costs what its **largest** slot costs, and the 105% has nothing
 to fit into. What each slot does not use is not waste either: it is the
@@ -102,10 +102,10 @@ SLOTS: Tuple[Slot, ...] = (
     Slot(
         name="hcpu",
         bitstream="rtl/fpga/gowin/hcpu_gowin_top.fs",
-        runs="H-ISA pipeline, 72 opcodes, sealed 28-letter ROM",
+        runs="H-ISA pipeline, 73 opcodes, sealed 28-letter ROM",
         verified="UART returned 23 bytes matching simulation byte for byte; "
                  "e3_sweep28 returned 28/28 Theta-hat",
-        lut4=14_005, dff=4_480, bsram=17, fmax_mhz=118.43,
+        lut4=14_231, dff=4_480, bsram=17, fmax_mhz=84.26,
     ),
     Slot(
         name="kabah",
@@ -123,7 +123,7 @@ SLOTS: Tuple[Slot, ...] = (
         verified="rebuilt by the Makefile byte-identical to the bitstream the "
                  "board ran with the monitor lit; answered test_bsm over the "
                  "wire, 23 bytes, 112",
-        lut4=14_528, dff=4_551, bsram=17, fmax_mhz=121.24,
+        lut4=14_713, dff=4_551, bsram=17, fmax_mhz=60.34,
     ),
 )
 

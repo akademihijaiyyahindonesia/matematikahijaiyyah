@@ -311,3 +311,48 @@ def test_the_probe_would_notice_truncation() -> None:
     entry = MASTER_TABLE.get_by_char("ب")
     assert entry is not None
     assert entry.vector[99 & 0x1F] != 0
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CSET, the write half, and the width a component actually has
+# ══════════════════════════════════════════════════════════════════
+
+def test_cset_encodes_the_component_index_in_the_immediate() -> None:
+    assert assemble_line("CSET H0, R1, #4") == encode(0x45, 0, 1, 0, 4)
+
+
+def _run(source: str) -> dict:
+    from hijaiyyah.hisa.machine import HISAMachine
+
+    machine = HISAMachine(MASTER_TABLE)
+    machine.load_program(assemble(source))
+    machine.run()
+    return machine.dump_state()
+
+
+def test_cset_writes_the_component_it_names_and_leaves_the_rest() -> None:
+    """Seventeen components have to survive a write to the eighteenth."""
+    before = _run("HLOAD H0, #2\nHALT\n")["hreg"][0]
+    after = _run("HLOAD H0, #2\nMOVI R1, 5\nCSET H0, R1, #4\nHALT\n")["hreg"][0]
+
+    assert after[4] == 5
+    assert after[:4] == before[:4] and after[5:] == before[5:]
+
+
+def test_cset_takes_the_low_byte_because_a_component_is_a_byte() -> None:
+    """
+    H-Reg components are eight bits wide on the hardware (HREG_W = 18 × 8), so
+    a wider value cannot land in one whole. The interpreter masks to the same
+    width rather than storing a number the silicon could not hold — the
+    divergence class HLOAD's 0-based/1-based split belonged to.
+    """
+    state = _run("MOVI R5, 300\nCSET H2, R5, #2\nHALT\n")
+    assert state["hreg"][2][2] == 300 & 0xFF
+
+
+@pytest.mark.parametrize("index", [18, 31, 99, 4095])
+def test_an_index_past_seventeen_writes_nothing_on_either_machine(index: int) -> None:
+    """CGET returns zero for an index that names nothing; CSET writes nothing."""
+    before = _run("HLOAD H1, #12\nHALT\n")["hreg"][1]
+    after = _run(f"HLOAD H1, #12\nMOVI R4, 9\nCSET H1, R4, #{index}\nHALT\n")["hreg"][1]
+    assert after == before, f"index {index} (low five bits {index & 0x1F}) wrote a component"

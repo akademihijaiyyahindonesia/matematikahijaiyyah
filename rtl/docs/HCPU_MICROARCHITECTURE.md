@@ -159,7 +159,7 @@ pipeline latency (3 cycles from write to read without forwarding).
 2. **Guard checker**: 5-input adder + comparator ≈ 4 LUT levels
 3. **Branch resolution**: CMP result → FLAGS → branch decision ≈ 3 LUT levels
 
-Measured on the board: **Fmax 118.43 MHz** post-routing on the Tang Nano
+Measured on the board: **Fmax 84.26 MHz** post-routing on the Tang Nano
 20K (GW2AR-18C). See `cosmictera-build/PAPAN.md`.
 
 ---

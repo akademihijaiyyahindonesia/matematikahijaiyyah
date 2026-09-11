@@ -97,8 +97,8 @@ byte. Testbench itu sendiri yang menemukan bug nyata di wrapper sebelum lolos:
 `tx_data` balapan dengan `dump_idx` pada tepi clock yang sama, jadi byte 0
 dari setiap dump selalu terlewat.
 
-**Keduanya berjalan di papan, sendiri-sendiri.** HCPU 14.005 LUT4 (67%),
-Fmax 118,43 MHz. Ka'bah-plus-wrapper 12.061 LUT4 (58%), Fmax 165,98 MHz.
+**Keduanya berjalan di papan, sendiri-sendiri.** HCPU 14.231 LUT4 (68%),
+Fmax 84,26 MHz. Ka'bah-plus-wrapper 12.061 LUT4 (58%), Fmax 165,98 MHz.
 Keduanya lewat sintesis + PNR + `gowin_pack` sungguhan, dan keduanya
 benar-benar dijalankan: HCPU membalas 23 byte lewat UART, Ka'bah mencocokkan
 400/400 byte dengan `cube.py`.

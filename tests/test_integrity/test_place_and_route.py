@@ -33,8 +33,8 @@ WRAPPER = (GOWIN / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 CRYSTAL_MHZ = 27.0
 
 # What place and route reported at THIS commit, on the Tang Nano 20K.
-UTILISATION = {"LUT4": (14005, 20736), "DFF": (4480, 15552), "BSRAM": (17, 46)}
-MEASURED_FMAX_MHZ = 118.43
+UTILISATION = {"LUT4": (14231, 20736), "DFF": (4480, 15552), "BSRAM": (17, 46)}
+MEASURED_FMAX_MHZ = 84.26
 
 # The commit the fitting result was taken from, re-run to confirm it still
 # reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.
@@ -191,9 +191,9 @@ def test_the_hdmi_wrapper_records_its_routed_result() -> None:
     rows = {name: (int(used.replace(",", "")), int(total.replace(",", "")))
             for name, used, total in re.findall(
                 r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", hdmi, re.M)}
-    assert rows == {"IOB": (15, 384), "LUT4": (14528, 20736),
+    assert rows == {"IOB": (15, 384), "LUT4": (14713, 20736),
                     "DFF": (4551, 15552), "BSRAM": (17, 46)}
-    assert re.search(r"^//\s+Fmax\s+121\.24 MHz", hdmi, re.M)
+    assert re.search(r"^//\s+Fmax\s+60\.34 MHz", hdmi, re.M)
 
 def test_the_kabah_hdmi_wrapper_records_its_own_fingerprint() -> None:
     """Built for the first time on 11 September, and held like the others."""

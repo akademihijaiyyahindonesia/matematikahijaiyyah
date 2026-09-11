@@ -230,7 +230,6 @@ kerja:
 
 | Celah | Yang dibutuhkan | Menutup lapis |
 |---|---|---|
-| `CSET` tidak ada di ISA | keputusan desain ISA baru — opcode, jalur RTL, bench, PNR ulang | 4 (HFS baca) |
 | Penyimpanan persisten | verifikasi fisik: apakah chip PSRAM benar-benar terpasang di papan 20K yang dipegang | 4 (HFS) |
 | HISAB langsung, bukan `SYSCALL` | bungkus `HPACK`/`HCRC` sebagai layanan kernel bernama, seperti `hos_har_get` | 5 |
 | 24 opcode (vektor, codex, `JGF`/`JGP`/`JNP`/`PRINTH`) | RTL + bench per opcode | 6/7 (dipakai program lengkap) |
@@ -287,10 +286,11 @@ harfiah. "Utuh" berarti setiap baris ✅, diukur di perangkat keras fisik
    terukur, bukan "tidak sampai routing."
 2. HAL: sudah ✅, tidak berubah oleh fase-fase di atas.
 3. H-Kernel: proses dinamis, stack per proses, tabel syscall (Fase 5).
-4. HFS: `CSET` plus penyimpanan persisten terverifikasi fisik (Fase 5).
+4. HFS: penyimpanan persisten terverifikasi fisik (Fase 5) — `CSET` sudah ada,
+   jadi jalur bacanya mengembalikan H-Reg hidup.
 5. Layanan Hybit: HISAB sebagai `SYSCALL`, bukan instruksi langsung
    (Fase 5) — dan Ka'bah bisa dipanggil dari sana (Fase 4).
-6. HVM/HCPU: 96/96 opcode, bukan 72/96 (Fase 5).
+6. HVM/HCPU: 97/97 opcode, bukan 73/97 (Fase 5).
 7. Aplikasi: sudah ✅ — program HC berjalan di atas semua ini begitu
    lapis 1–6 berhenti jadi simulasi dan mulai jadi perangkat keras yang
    benar-benar dinyalakan.
@@ -318,7 +318,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.821
+software_tests      1611/1611     ← sekarang 4.855
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 
@@ -350,7 +350,7 @@ Sekarang dipatok ke konstanta yang sama dengan `NOTICE`, dijaga
 
 | Fase | Apa | Label sekarang | Bergantung pada |
 |---|---|---|---|
-| 1 | HCPU di-PNR sungguhan ke 20K, jadi target `make` | **CC — selesai**, `make bitstream` hijau, 67% LUT4, 118,43 MHz | tidak ada |
+| 1 | HCPU di-PNR sungguhan ke 20K, jadi target `make` | **CC — selesai**, `make bitstream` hijau, 68% LUT4, 84,26 MHz | tidak ada |
 | 2 | Flash + baca UART papan fisik, pertama kalinya | **VF — selesai 10 Sep 2026**, 23 byte cocok byte-per-byte dengan simulasi, 7.049 siklus; 28 nilai Θ̂ identik dengan `MASTER_TABLE` | Fase 1 (selesai) |
 | 3 | Ka'bah jadi target `make` yang direproduksi | **VF — selesai 10 Sep 2026**, 58% LUT4, 165,98 MHz, dan dijalankan di papan: 2/2 frame, 400/400 byte cocok `cube.py` | tidak ada, paralel ke 2 |
 | 4 | HCPU + Ka'bah satu chip | **Dijawab rack** — slot berurutan, biaya 70%; top level gabungan **DP, diukur 105%**: lewat 960 sel, dan 91% desain ada di `hcpu_execute` + `hijaiyyah_sponge`; ketiga penghematan yang pernah dinamai terbukti kosong | Fase 1, 3 (keduanya selesai) |

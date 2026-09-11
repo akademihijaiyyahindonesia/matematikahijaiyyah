@@ -38,33 +38,45 @@
 // ============================================================================
 // PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// re-measured 2026-09-10 after the first real board bring-up, which changed
-// the reset synchroniser and added a clk_sys heartbeat on LED[5]:
+// re-measured 2026-09-11 after CSET (0x45) was added to the codex ALU:
 //
-//     LUT4       14,005 / 20,736   67%
+//     LUT4       14,231 / 20,736   68%
 //     DFF         4,480 / 15,552   28%
 //     BSRAM          17 /     46   36%
 //
-//     Fmax       118.43 MHz (PASS at the 12.00 MHz constraint), up from
-//                114.65 -- taken after routing, not the 71.63 MHz figure
-//                nextpnr prints after placement. Reset stopped being an
-//                asynchronous level off a generic-routed pin, which is
-//                what shortened the path.
+//     Fmax       84.26 MHz (PASS at the 12.00 MHz constraint), down from
+//                118.43 -- taken after routing, not the 88.04 MHz figure
+//                nextpnr prints after placement.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +27 DFF is the whole of the addition and it is countable: heartbeat[24:0]
-// is 25 flops and btn_q[1:0] is 2. The +36 LUT4 is the counter's increment
-// and the falling-edge detect. Nothing here is unaccounted for.
+// +226 LUT4 AND +0 DFF IS WHAT CSET COSTS, and the shape of the instruction is
+// why: it adds no state, only a combinational merge -- one component of a
+// 144-bit codex replaced by a byte the immediate selects. The DFF column not
+// moving at all is the check on that, not a coincidence beside it.
 //
-// A +2 LUT4 MOVE FROM AN EARLIER RUN IS STILL UNEXPLAINED, and this run does
-// not resolve it -- it only moves past it. The bisection chain below ends at
-// 13,967; the run before this one measured 13,969 and could not say why.
-// Two explanations were never separated: an RTL edit landing between runs
-// (rtl/hcpu_controller.v still carries uncommitted changes, though its PRINT
-// stall fix is already the +22 the chain accounts for), or synthesis not
-// being bit-identical run to run. What was established: hcpu_video_timing.v
-// is not the cause -- it is pruned before placement. The +36 measured here
-// is separately accounted for above and does not absorb the +2.
+// THE CRITICAL PATH MOVED WITH IT, and nextpnr's report says where: it starts
+// at ex_hreg_result, runs through the codex value mux in Execute -- which the
+// merge is now part of -- and ends at ex_gpr_result, 7.08 ns of logic plus
+// 4.79 ns of routing. Whether the whole 118.43 -> 84.26 belongs to that merge,
+// or partly to placement moving around it, was NOT separated here and this run
+// does not claim it. What the run does establish: the design still passes the
+// constraint the flow places it against, and the board's own clock is 27 MHz.
+//
+// The block above previously recorded 14,005 / 4,480 / 17 at 118.43 MHz,
+// measured 2026-09-10 after the first board bring-up -- the run that made the
+// reset synchronous and put a clk_sys heartbeat on LED[5], +27 DFF
+// (heartbeat[24:0] and btn_q[1:0]) and +36 LUT4 for the counter and its
+// falling-edge detect.
+//
+// A +2 LUT4 MOVE BETWEEN THE 7 AND 10 SEPTEMBER RUNS IS STILL UNEXPLAINED, and
+// no run since has resolved it -- they only move past it. The bisection chain
+// below ends at 13,967; the run before the 10 September one measured 13,969
+// and could not say why. Two explanations were never separated: an RTL edit
+// landing between runs (rtl/hcpu_controller.v's PRINT stall fix is already the
+// +22 the chain accounts for), or synthesis not being bit-identical run to
+// run. What was established: hcpu_video_timing.v is not the cause -- it is
+// pruned before placement. The +36 of that run and the +226 of this one are
+// separately accounted for above, and neither absorbs the +2.
 //
 // The design was not always this large. Bisected, one synthesis run per
 // commit -- the lesson is about a commit, and the LUT4 counts are what
@@ -91,15 +103,18 @@
 // of the boot path's jump, and irrelevant to whether this fits -- the 20K
 // was never close to its own ceiling.
 //
-// Fingerprint restamped 2026-09-10 WITHOUT a new place-and-route run, and the
-// justification is mechanical rather than a promise: the institution changed
-// (HMCL became a research unit under Yayasan Akademi Hijaiyyah Indonesia, and
-// the rights line became the inventor personally), which rewrote one comment
-// line in every fingerprinted source. Reversing only those copyright lines in
-// memory reproduces the previously recorded hash exactly, for this wrapper and
-// for Ka'bah's -- so the sweep is provably the entire delta and no design byte
-// moved. The measured figures above still describe this RTL.
-// RTL FINGERPRINT: 7ba2ec8ca1ee35a82e1e33742d4301d7aeea1f85c981cc6575996e66700669bf
+// Fingerprint restamped 2026-09-11 WITH a fresh place-and-route run, which is
+// the only honest way to restamp it after a design change: CSET touched
+// hcpu_pkg.vh, hcpu_codex_alu.v, hcpu_decode.v, hcpu_execute.v and hcpu_top.v,
+// so the figures above were re-measured rather than carried over. The stamp
+// before this one was applied WITHOUT a run, and that was justified
+// mechanically rather than by promise: the institution changed (HMCL became a
+// research unit under Yayasan Akademi Hijaiyyah Indonesia, and the rights line
+// became the inventor personally), rewriting one comment line in every
+// fingerprinted source -- reversing only those copyright lines in memory
+// reproduced the recorded hash exactly, so the sweep was provably the entire
+// delta and no design byte moved.
+// RTL FINGERPRINT: 497ebee28c531edd1c9b1be203c2e3c6be36b6acef581008c3eaf3886a451312
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

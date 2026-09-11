@@ -47,9 +47,9 @@ Label: `CC`.
 | menyala | apa persisnya | bukti |
 |---|---|---|
 | Pipeline HCPU | fetch → decode → execute → mem → writeback | `rtl/hcpu_top.v` |
-| Opcode | **72 dari 96** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
+| Opcode | **73 dari 97** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
 | Opcode huruf | **28** (`0xE0`–`0xFB`), dijalankan di pipeline | `rtl/tb/tb_hcpu_letters.v`, `rtl/programs/letters.hasm` |
-| Codex ALU | HCADD, HNRM2, HDIST | `rtl/hcpu_codex_alu.v`, 6 asersi |
+| Codex ALU | HCADD, HNRM2, HDIST, CGET, CSET | `rtl/hcpu_codex_alu.v`, 6 asersi |
 | Hisab | penyapuan 28 huruf, 124 asersi | `rtl/hcpu_hisab.v` |
 | Interlock | load-use, store-load, **termasuk POP** | `rtl/hcpu_decode.v` |
 | Stack perangkat keras | 256 entri, LIFO, PUSH tanpa register basis | `rtl/hcpu_memory.v` |
@@ -265,7 +265,7 @@ Fmax    114,65 MHz (PASS pada batas 12,00 MHz)
 ```
 
 Angka di atas dari build bitstream pada komit ini. Angka **papan** diambil
-dari run pasca-perutean yang lain — 14.005 LUT4 (67%), Fmax 118,43 MHz — dan
+dari run pasca-perutean yang lain — 14.231 LUT4 (68%), Fmax 84,26 MHz — dan
 itulah yang berlaku sebagai hasil fisik, tercatat di [PAPAN.md](PAPAN.md).
 
 Papan sudah di-flash dan dibaca: UART membalas **23 byte** yang cocok
@@ -280,7 +280,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.821 lulus, 0 dilewati
-make -C rtl/tb all            # 260 asersi, 20 bench, 0 gagal
+python3 -m pytest -q          # 4.855 lulus, 0 dilewati
+make -C rtl/tb all            # 262 asersi, 20 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

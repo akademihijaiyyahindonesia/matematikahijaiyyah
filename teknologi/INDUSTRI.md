@@ -133,8 +133,8 @@ Terukur: `rtl/scripts/kabah_uart_test.py`, dijaga `test_kabah_folder.py`,
 
 ## 6. Inti prosesor yang bisa dilisensikan
 
-**Kemampuannya.** HCPU muat di **67%** Tang Nano 20K dan berjalan pada
-**118,43 MHz**; Ka'bah **58%** pada **165,98 MHz**. Keduanya lewat alur
+**Kemampuannya.** HCPU muat di **68%** Tang Nano 20K dan berjalan pada
+**84,26 MHz**; Ka'bah **58%** pada **165,98 MHz**. Keduanya lewat alur
 sintesis sumber terbuka penuh — yosys, nextpnr, gowin_pack — tanpa satu pun
 IP vendor berbayar.
 

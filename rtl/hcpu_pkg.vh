@@ -170,6 +170,7 @@
 // Codex Operations — Hybit Native (0x40–0x5F)
 `define OP_HLOAD        8'h40       // H[DST] ← ROM[IMM]  (huruf 1–28, vektor negatif 31–36)
 `define OP_CGET        8'h44       // GPR[DST] ← H[S1][IMM]   (component 0–17)
+`define OP_CSET        8'h45       // H[DST][IMM] ← GPR[S1]   (component 0–17)
 `define OP_HCADD        8'h42       // H[DST] ← H[S1] + H[S2]  (18×add)
 `define OP_HGRD         8'h60       // Guard G1–G4,T1–T2 on H[S1] → GUARD flag
 `define OP_HNRM2        8'h06       // GPR[DST] ← ‖H[S1]‖²₁₄

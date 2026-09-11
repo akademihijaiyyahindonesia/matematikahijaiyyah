@@ -1,0 +1,41 @@
+; ============================================================================
+; test_hfs.hasm — HFS write and read on the board, over the wire
+; A hybit is persisted, the register it came in is overwritten, and the read
+; rebuilds it component by component with CSET.
+; Expected over UART: 1, 1, 1, 2, 1
+; (c) 2026 Maulana Amratulloh
+; ============================================================================
+;
+; Kaf is the file and Haa is the clobber deliberately: H* (component 17) is 1
+; for Kaf and 0 for every other letter, and Haa's turning is 8 against Kaf's 2.
+; A pair that agreed on a component would hide a missing write there.
+;
+; The last line is the point of a guard-on-write filesystem: what comes back
+; is not eighteen words that look right, it is a vector that passes HGRD --
+; a hybit again.
+
+    CALL  hos_heap_init
+    HLOAD H0, 22          ; Kaf
+    MOVI  R1, 0
+    CALL  hos_fs_write
+    PRINT R1              ; 1 — guard passed, the file is persisted
+
+    HLOAD H0, 27          ; Haa: nothing rebuilt below can come from here
+    MOVI  R1, 0
+    CALL  hos_fs_read
+    PRINT R1              ; 1 — the file was found
+
+    CGET  R2, H0, 17
+    PRINT R2              ; 1 — Kaf's H*, written back through CSET
+    CGET  R2, H0, 0
+    PRINT R2              ; 2 — Kaf's turning
+
+    MOVI  R3, 0
+    HGRD  H0
+    JNGD  hfs_end
+    MOVI  R3, 1
+hfs_end:
+    PRINT R3              ; 1 — the rebuilt vector is a hybit, not just words
+    HALT
+
+    .include "hos.hasm"

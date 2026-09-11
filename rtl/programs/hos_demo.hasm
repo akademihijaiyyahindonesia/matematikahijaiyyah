@@ -96,6 +96,38 @@ c17:    CMPI  R8, 0
 d_hfs_ok:
         STORE R2, R5, 0x103
 
+; ── HFS: the read rebuilds a live H-Reg ─────────────────────────────
+; H0 is clobbered with another letter first, so a pass here cannot come from
+; the value that happened to still be in the register. HGRD on what comes
+; back is the check that matters: a rebuilt vector that passes its own guard
+; is a hybit again, not eighteen words that look right.
+; Kaf is the file and Haa is the clobber, deliberately: H* (component 17) is 1
+; for Kaf and 0 for every other letter, and Haa's turning is 8 against Kaf's 2.
+; A pair that agreed on a component would hide a missing write there -- which
+; is exactly how CGET's first out-of-range probe passed while the bound was
+; broken.
+        HLOAD H0, 22
+        MOVI  R1, 2
+        CALL  hos_fs_write
+        HLOAD H0, 27             ; clobber: nothing rebuilt can come from here
+        MOVI  R1, 2
+        CALL  hos_fs_read        ; H0 <- file 2, component by component
+        MOVI  R2, 0
+        HGRD  H0
+        JNGD  d_rebuild_bad
+        HLOAD H1, 22
+        CGET  R8, H1, 0
+        CGET  R9, H0, 0
+        CMP   R8, R9
+        JNE   d_rebuild_bad
+        CGET  R8, H1, 17
+        CGET  R9, H0, 17
+        CMP   R8, R9
+        JNE   d_rebuild_bad
+        MOVI  R2, 1
+d_rebuild_bad:
+        STORE R2, R5, 0x106
+
 ; ── HFS: a corrupt vector is refused ────────────────────────────────
         HLOAD H0, 31
         MOVI  R1, 5

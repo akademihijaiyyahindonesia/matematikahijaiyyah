@@ -244,16 +244,56 @@ def test_every_sampled_letter_round_trips(letter_index: int) -> None:
     assert stored == list(MASTER_TABLE.all_entries()[letter_index - 1].vector)
 
 
-def test_no_cset_means_no_h_register_reconstruction() -> None:
-    """The read path's real limit, stated where the routine is defined:
-    there is no opcode that writes a GPR value into an H-Reg component, so
-    hos_fs_read can only hand back raw words, never a live H-Reg."""
+def test_the_read_rebuilds_a_live_h_register_not_only_raw_words() -> None:
+    """The read path's other half, and the whole point of CSET.
+
+    Until 0x45 was implemented nothing could write a GPR value into an H-Reg
+    component, so a stored file came back as eighteen words for the caller to
+    read as plain data. Here H0 is deliberately clobbered with another letter
+    between the write and the read, so a pass cannot come from the value that
+    happened to still be in the register. And the rebuilt vector is guarded:
+    passing HGRD is what makes it a hybit again rather than an array that
+    holds the right numbers.
+    """
     from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED, OpCode
 
-    names = {o.name for o in OpCode}
-    assert "CSET" not in names
-    assert OpCode.CGET in RTL_IMPLEMENTED
-    assert "there is no CSET" in HOS
+    assert OpCode.CSET in RTL_IMPLEMENTED
+
+    m = _run(
+        "        HLOAD H0, 22\n        MOVI  R1, 0\n        CALL  hos_fs_write\n"
+        "        MOVI  R5, 0\n        STORE R1, R5, 0x100\n"
+        "        HLOAD H0, 27\n"
+        "        MOVI  R1, 0\n        CALL  hos_fs_read\n"
+        "        STORE R1, R5, 0x101\n"
+        "        MOVI  R6, 0\n        HGRD  H0\n        JNGD  fs_bad\n"
+        "        MOVI  R6, 1\n"
+        "fs_bad: STORE R6, R5, 0x102\n"
+    )
+    kaf = list(MASTER_TABLE.all_entries()[21].vector)
+    haa = list(MASTER_TABLE.all_entries()[26].vector)
+    assert kaf[17] != haa[17] and kaf[0] != haa[0], (
+        "the clobbering letter has to differ where the probe looks, or a "
+        "missing write would pass -- H* is 1 for Kaf and 0 for every other "
+        "letter, which is why this pair was chosen"
+    )
+    assert _at(m, 0x100) == 1, "the write should succeed"
+    assert _at(m, 0x101) == 1, "the read should find the file"
+    assert list(m.regs.hreg[0]) == kaf, (
+        "H0 should hold the stored vector, rebuilt component by component"
+    )
+    assert _at(m, 0x102) == 1, "the rebuilt vector must pass its own guard"
+
+
+def test_the_read_writes_every_one_of_the_eighteen_components() -> None:
+    """Unrolled code is easy to drop a line from, and a behavioural probe
+    cannot see the loss wherever the two letters agree -- most components are
+    zero on most letters. So the list itself is checked: eighteen CSETs,
+    component numbers 0 through 17, in order."""
+    import re
+
+    indices = [int(i) for i in
+               re.findall(r"^\s*CSET\s+H0,\s*R3,\s*(\d+)\s*$", HOS, re.M)]
+    assert indices == list(range(18)), indices
 
 
 # ── HAR ──────────────────────────────────────────────────────────
