@@ -81,6 +81,8 @@ hijaiyyah-mathematics/
 ├── AUTHORS
 ├── NOTICE
 ├── ENGINEERING_STANDARD.md
+├── AGENTS.md                       ← catatan kerja: dasar, nama, alur cerita, aturan
+├── CLAUDE.md                       ← hanya memuat AGENTS.md
 ├── .gitignore
 ├── .editorconfig
 ├── pyproject.toml
