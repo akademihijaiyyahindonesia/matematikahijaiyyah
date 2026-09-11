@@ -188,7 +188,7 @@ def test_the_verilog_agrees_on_class_and_key() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_node_counter"], cwd=ROOT,
+    run = subprocess.run(["vvp", "/tmp/tb_node_counter"], cwd=ROOT,
                          capture_output=True, text=True)
     assert "PASS: 72/72" in run.stdout, run.stdout
 
@@ -350,7 +350,7 @@ def test_the_line_rate_stages_agree_with_the_python() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_wave"], cwd=ROOT, capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_wave"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS: 78/78" in run.stdout, run.stdout
 
 
@@ -423,7 +423,7 @@ def test_the_jamrah_gate_agrees_on_all_256_bytes() -> None:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert build.returncode == 0, build.stderr
-    run = subprocess.run(["/tmp/tb_jamrah"], cwd=ROOT, capture_output=True, text=True)
+    run = subprocess.run(["vvp", "/tmp/tb_jamrah"], cwd=ROOT, capture_output=True, text=True)
     assert "PASS: 256/256" in run.stdout, run.stdout
 
 

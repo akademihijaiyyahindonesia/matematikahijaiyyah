@@ -43,7 +43,7 @@ HCPU is the **hardware realization** of the Hybit computational stack. Every RTL
 
 | Hybit Layer | Software Component | Hardware Module (RTL) | Status |
 |---|---|---|---|
-| **Dataset Seal** | `data/hm28.json` (252 bytes) | [hcpu_rom.v](file:///c:/hijaiyyah-mathematics/rtl/hcpu_rom.v) — 28×144-bit combinational ROM | ✅ Implemented |
+| **Dataset Seal** | `data/hm28.json` (8.068 byte) → `hm28.rom` (252 byte, 9 byte/entri) | [hcpu_rom.v](file:///c:/hijaiyyah-mathematics/rtl/hcpu_rom.v) — 28×144-bit combinational ROM | ✅ Implemented |
 | **Guard System** | `core/guards` — G1–G4, T1–T2 | [hcpu_guard.v](file:///c:/hijaiyyah-mathematics/rtl/hcpu_guard.v) — single-cycle combinational checker | ✅ Implemented |
 | **H-ISA** | `hisa/` — 44 opcodes | [hcpu_pkg.vh](file:///c:/hijaiyyah-mathematics/rtl/hcpu_pkg.vh) — Phase 2.0 subset (28 opcodes) | ✅ Implemented |
 | **HVM Registers** | `vm/HVM` — R0–R15 (18D each) | [hcpu_regfile.v](file:///c:/hijaiyyah-mathematics/rtl/hcpu_regfile.v) — 18 GPR (32-bit) + 16 H-Reg (144-bit) | ✅ Implemented |
@@ -336,7 +336,7 @@ This subsystem is the hardware realization of the Hybit paradigm's core operatio
 | Read latency | Combinational (asynchronous `case` statement) |
 | Address width | 5 bits |
 | Invalid index | Returns `data_out = 0`, `valid = 0` |
-| Data source | `data/hm28.json` (SHA-256: `81af756b...`) |
+| Data source | `data/hm28.json` (segel dataset: `f82d3859...`; SHA-256 berkas: `38338183...`) |
 
 Index 31 contains `{Θ̂=1, Qc=2}`: intentionally fails G4 ($\theta=1$, $U=4 \times Q_c = 8$, $1 \ge 8$ → FALSE). Used exclusively for hardware guard validation.
 

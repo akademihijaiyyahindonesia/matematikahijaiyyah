@@ -128,6 +128,44 @@ menguji penyerapan berantai lintas blok — bukan satu blok yang kebetulan
 benar sendirian. Terukur: 12.061 LUT4 (58%), 1.965 DFF (12%), 0 BSRAM,
 Fmax 165,98 MHz.
 
+## Lima program trap/supervisor — nol byte jadi berjalan
+
+**11 September 2026.** Kelimanya dulu mengembalikan **nol byte** sementara
+lulus di testbench masing-masing. Butuh **dua** cacat berbeda untuk
+menjalankannya, dan keduanya luput dari simulasi karena alasan struktural
+yang sama: **di testbench program mulai di alamat 0 dan pencacah mulai di 0.**
+
+**Cacat 1 — label tak direlokasi.** `send_program.py` merakit dengan basis 0,
+lalu loader menulis program itu ke alamat 64. `MOVI R1, handler` karena itu
+memasang vektor trap ke kata di dalam kode loader sendiri. Sekarang alat itu
+merakit di `LOAD_BASE = 64`. Hanya **satu kata** yang bergeser pada
+`trap_timer` — labelnya — dan alamat periferal tidak tersentuh; itu diperiksa
+`test_relocation_moves_the_absolute_labels_and_nothing_else`.
+
+**Cacat 2 — tenggat absolut pada pencacah bebas.** `trap_timer` memasang
+`COMPARE = 12`. `hcpu_timer.v` adalah pencacah yang tak pernah berhenti,
+dibandingkan dengan **kesamaan**, bukan `>=`. Saat program tiba lewat kabel,
+pencacah sudah lewat empat puluh juta, jadi 12 baru cocok setelah pembungkusan
+32-bit — **sekitar 157 detik pada 27 MHz**. Program sekarang membaca pencacah
+lebih dulu dan membangun tenggat relatif terhadapnya.
+
+Hasil di papan, setelah keduanya:
+
+| program | byte | keluaran |
+|---|---:|---|
+| `mem_protect` | 19 | halt, lapor siklus |
+| `syscall` | 19 | halt, lapor siklus |
+| **`syscall_io`** | **3** | **`42` — dan `99` tidak pernah sampai ke kabel** |
+| `trap_timer` | 19 | halt, lapor siklus — trap menyala, ERET kembali |
+| `user_mode` | 19 | halt, lapor siklus |
+
+`syscall_io` yang paling tajam: testbench-nya menuntut *"the wire must carry
+42 and must never carry 99"*. Papan memberi `42` saja. Itu I/O yang dimediasi
+kernel, terbukti di silikon — bukan "ada keluaran", melainkan **keluaran yang
+benar dan yang salah tidak lolos.**
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -203,7 +241,7 @@ ke bitstream**, bukan dikirim lewat loader. Itu belum dilakukan.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.628 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.810 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -246,13 +284,25 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.791 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 20 testbench, 253 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.810 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 20 testbench, 260 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
-Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 13, NUI embedding 10, H-Kernel
-7, syscall I/O 6, HOS 6, subrutin 4, huruf 3, wrapper Gowin 2, dan delapan
-testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
+Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 13, NUI embedding 10, video
+timing 8, H-Kernel 7, syscall I/O 6, HOS 6, subrutin 4, huruf 3, wrapper Gowin
+2, dan tujuh testbench yang melapor satu pernyataan lulus tunggal — 260,
+semuanya 0 FAIL.
+
+> **Selisih tujuh dari angka 253 sebelumnya bukan tes baru.** `tb_hcpu_video_timing`
+> menjaga delapan properti VESA — H_TOTAL, lebar dan posisi hsync, rentang `de`,
+> x dan y maksimum, lebar vsync, dan satu `frame_tick` per frame — masing-masing
+> menaikkan pencacah `errors` saat gagal. Yang tak pernah ada di sana adalah
+> cacah yang **lulus**: ia mencetak `ALL PASS` tanpa angka, jadi setiap
+> penjumlahan asersi memasukkannya sebagai satu, atau sebagai nol, tergantung
+> cara menghitungnya — dan 253 memilih satu. Delapan properti itu dijaga
+> sepanjang waktu; yang tidak ada hanyalah angkanya. Sekarang bench itu melapor
+> `SEMUA LULUS (8 pemeriksaan)` seperti tujuh bench lain, sehingga totalnya
+> berhenti bergantung pada cara pembacanya menebak.
 
 > **Angka 253 ini mengoreksi dua angka yang tidak konsisten.** Baris ini pernah
 > berbunyi "160 pemeriksaan" sementara rinciannya sendiri berjumlah 308, dan
@@ -274,7 +324,7 @@ testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.791 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.810 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`
@@ -300,12 +350,37 @@ testbench yang melapor satu pernyataan lulus tunggal — 253, semuanya 0 FAIL.
 
 ---
 
-## Yang belum
+## Dua field yang menimpa metode tuple-nya sendiri
 
-- Lima program trap/supervisor belum pernah dipanggang langsung ke
-  bitstream, jadi belum pernah benar-benar diuji di papan.
-- HCPU + Ka'bah sebagai satu top level: **105%, lewat 960 sel** — diukur,
-  belum muat. Rinciannya di [ROADMAP.md](ROADMAP.md) Fase 4.
-- Tombol reset papan tidak berfungsi sebagai reset di ketiga wrapper, dan
-  itu diterima: rekonfigurasi FPGA yang jadi reset. Pin MODE1 tidak akan
-  pernah bisa dipakai sebagai tombol di papan ini.
+**11 September 2026.** `make typecheck` merah dengan enam error di
+`src/hijaiyyah/receiver/`. Empat di antaranya anotasi yang tidak cocok dengan
+badannya — `_all()` bertanda `-> str` sambil mengembalikan `list`,
+`sorted(key=order.get)` yang bisa mengembalikan `None`, satu tuple yang
+disempitkan `START_STATE` jadi lima elemen lalu ditulisi panjang bebas.
+Diperbaiki di anotasinya, karena kodenya yang benar.
+
+Dua sisanya cacat sungguhan, dan bentuknya sama persis:
+
+| kelas | field | yang ditimpanya |
+|---|---|---|
+| `Anchor(NamedTuple)` | `index: int` | `tuple.index` |
+| `BankRow(NamedTuple)` | `count` (properti) | `tuple.count` |
+
+Sebuah `NamedTuple` **adalah** tuple. Field bernama `index` tidak menambah
+atribut di sebelah `tuple.index` — ia **menggantikannya**. `anchor.index(x)`
+berhenti mencari `x` dan mulai mengembalikan nomor sampel, apa pun yang
+ditanyakan; `row.count(x)` mengembalikan jumlah huruf, bukan berapa kali `x`
+muncul. Keduanya `int`, jadi pemanggilnya tidak meledak — ia hanya menjawab
+pertanyaan yang berbeda dari yang diajukan.
+
+Tidak ada yang tergigit karena tidak ada yang memanggil metode itu: tes hanya
+membaca `.rung` dan `.residual_deg`, dan `BankRow.count` hanya dibaca sebagai
+nilai. mypy yang menemukannya, bukan tes — persis jenis cacat yang lolos dari
+setiap tes yang ada dan tetap benar-benar rusak. `index` jadi `sample`, dan
+`count` jadi `n` — nama kolom yang memang sudah dipakai barisnya di
+`render_bank`.
+
+Angka di [CHECKLIST.md](CHECKLIST.md) untuk baris ini juga hanyut: "108
+berkas" sementara mypy memeriksa **128**. Sekarang dijaga oleh
+`test_the_quoted_mypy_file_count_is_what_mypy_actually_checks`, karena cacah
+berkas yang menyusut diam-diam terbaca sama persis dengan lari yang bersih.

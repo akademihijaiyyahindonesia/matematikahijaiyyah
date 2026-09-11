@@ -17,9 +17,11 @@ list does not, these fail.
 from __future__ import annotations
 
 import re
-import sys
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 from hijaiyyah.core.master_table import MASTER_TABLE
 from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED, OpCode
@@ -163,16 +165,40 @@ def test_the_bisection_lives_in_one_place_only() -> None:
             f"OFF.md carries commit {sha} again -- the bisection was copied back")
 
 
-def test_off_names_what_is_actually_blocked_on_this_board() -> None:
-    """OFF.md is for what does not run, measured on the board that exists.
+def test_off_holds_only_what_is_still_blocked() -> None:
+    """OFF.md is for what does not run, on the board that exists.
 
-    It must not describe obstructions on hardware that was never built
-    against -- a synthesis estimate against a board nobody owns is not an
-    obstruction, it is arithmetic.
+    Two entries left it the day they stopped being true, and the test has to
+    move with them or it pins the repository to a stale picture:
+
+      the combined top level (105%)  -- dissolved, not fixed. Slots are
+      loaded in sequence, so their costs never had to add. See rack.py.
+
+      the five trap/supervisor programs -- they run. Relocation to LOAD_BASE
+      and a deadline relative to the free-running counter were what they
+      needed, and PAPAN.md carries the board output.
+
+    What remains is genuinely blocked and measured.
     """
-    assert "105%" in OFF, "the combined top level is the real measured blocker"
     assert "1.665 bit port" in OFF, "the raw Ka'bah module's IOB limit"
-    assert "nol byte" in OFF, "the five trap/supervisor programs"
+    assert "384 IOB" in OFF, "the IOB figure must be this board's"
+
+    assert "105%" not in OFF, (
+        "the combined top level is back in OFF.md -- it is not a blocker, it "
+        "is a question nobody has to ask (rtl/scripts/rack.py)")
+    assert "nol byte" not in OFF, (
+        "the five trap/supervisor programs are listed as blocked again, but "
+        "they run on the board -- see cosmictera-build/PAPAN.md")
+
+
+def test_papan_records_the_five_programs_running() -> None:
+    """The board output has to live somewhere, or "they run" is a claim."""
+    papan = (ROOT / "cosmictera-build" / "PAPAN.md").read_text(encoding="utf-8")
+    for name in ("mem_protect", "syscall_io", "trap_timer", "user_mode"):
+        assert name in papan, name
+    assert "42" in papan and "99" in papan, (
+        "syscall_io's result is the sharp one: 42 on the wire and never 99")
+    assert "157 detik" in papan, "the free-running counter's wrap must be named"
 
 
 # ── scope honesty ───────────────────────────────────────────────
@@ -280,6 +306,62 @@ def test_nothing_blocked_is_ticked_green() -> None:
         assert "guard-on-write" in ln, f"HFS ticked green without its real scope: {ln}"
 
 
+def _measured_rtl_assertions() -> tuple[int, int]:
+    """Run `make -C rtl/tb all` and count what the benches themselves report.
+
+    Two report shapes exist and both must be read, which is how the old
+    hard-coded figure hid its error: a numbered summary
+    (`ROM Tests: 30 PASS, 0 FAIL`, `HISAB Total: 124 PASS, 0 FAIL`) and an
+    Indonesian one (`SEMUA LULUS (7 pemeriksaan)`). A bench that prints
+    neither contributes one -- it ran and said `PASS:` once.
+
+    Two double-counts are excluded deliberately, both documented in PAPAN.md:
+    tb_hisab's 28-letter sweep of 112 is a SUB-TOTAL inside its own 124, and
+    tb_gowin_top prints one cumulative `pass_count` twice. Taking the max per
+    bench handles both.
+    """
+    proc = subprocess.run(
+        ["make", "-C", "rtl/tb", "all"],
+        cwd=ROOT, capture_output=True, text=True, timeout=1800,
+    )
+    assert proc.returncode == 0, f"`make -C rtl/tb all` failed:\n{proc.stdout[-3000:]}"
+    bad = [ln for ln in proc.stdout.splitlines()
+           if "FAIL" in ln and "0 FAIL" not in ln and "FAIL-BRANCHED" not in ln]
+    assert not bad, f"a testbench reported a failure: {bad}"
+
+    per: dict[str, int] = {}
+    cur: str | None = None
+    for line in proc.stdout.splitlines():
+        m = re.match(r"\s*vvp (tb_[a-z0-9_]+)\.vvp", line)
+        if m:
+            cur = m.group(1)
+            per.setdefault(cur, 0)
+            continue
+        if cur is None:
+            continue
+        text = line.strip()
+        numbered = re.search(r"(?:Total|Tests):\s*(\d+) PASS, 0 FAIL", text)
+        semua = re.search(r"SEMUA LULUS \((\d+) pemeriksaan\)", text)
+        gowin = re.search(r"Gowin wrapper:\s*(\d+) PASS", text)
+        if numbered:
+            per[cur] = max(per[cur], int(numbered.group(1)))
+        elif semua:
+            per[cur] = max(per[cur], int(semua.group(1)))
+        elif gowin:
+            per[cur] = max(per[cur], int(gowin.group(1)))
+        elif text.startswith("PASS:") and per[cur] == 0:
+            per[cur] = 1
+
+    assert per, f"no testbench output recognised:\n{proc.stdout[-3000:]}"
+    silent = [b for b, n in per.items() if n == 0]
+    assert not silent, (
+        f"{silent} ran but reported no countable assertion. A bench that "
+        f"prints no number is counted as one or as nothing depending on who "
+        f"is summing -- give it a `SEMUA LULUS (N pemeriksaan)` line."
+    )
+    return sum(per.values()), len(per)
+
+
 def test_the_counts_agree_across_the_folder() -> None:
     """Three files quote the same three numbers. They drift unless something
     reads them together.
@@ -296,11 +378,22 @@ def test_the_counts_agree_across_the_folder() -> None:
     cumulative pass_count printed twice (tb_gowin_top.v:137,194) rather than
     two separate summaries. Both of those are exactly the double-counts that
     produced 308. A transcription can agree with another transcription
-    forever; only the log can say what ran."""
-    for figure in ("253 asersi", "20 bench"):
+    forever; only the log can say what ran.
+
+    And this test then hard-coded 253 as a string, which made it one more
+    transcription -- a fourth copy, in Python, of a number no run produced
+    either. It was wrong by seven for as long as it existed:
+    `tb_hcpu_video_timing` guards eight VESA properties and printed
+    `ALL PASS` with no number beside it, so every sum counted it as one or as
+    nothing depending on how it was read. The figure now comes from the
+    Makefile's own output, so the docstring above finally describes the test
+    below it."""
+    measured, benches = _measured_rtl_assertions()
+    for figure in (f"{measured} asersi", f"{benches} bench"):
         assert figure in CHECKLIST, f"the checklist lost {figure}"
-    assert "253 asersi RTL di 20 testbench" in README
-    assert "253 asersi, 20 bench, 0 gagal" in ON
+    assert f"{measured} asersi RTL di {benches} testbench" in README
+    assert f"{measured} asersi, {benches} bench, 0 gagal" in ON
+    assert f"{benches} testbench, {measured} pemeriksaan, 0 gagal" in PAPAN
 
 
 def _quoted_pytest_counts() -> dict[str, tuple[int, int]]:
@@ -329,6 +422,78 @@ def test_the_quoted_pytest_counts_agree_with_each_other() -> None:
     counts = _quoted_pytest_counts()
     distinct = set(counts.values())
     assert len(distinct) == 1, f"the folder disagrees with itself: {counts}"
+
+
+# Four files outside cosmictera-build/ quote the same suite figure, and the
+# guard above never read one of them. Left unwatched they drifted to four
+# DIFFERENT numbers -- 4.606, 4.570, 4.570 and 4.540 -- none of which any run
+# had produced, plus the root README's tree annotation still at 1.649, roughly
+# three thousand tests stale. The folder guard was doing its job perfectly and
+# the drift simply moved to where it was not looking.
+OUTSIDE_FOLDER = [
+    "README.md",
+    "docs/ARCHITECTURE.md",
+    "teknologi/SILIKON.md",
+    "cosmictera/COMPUTING.md",
+    "cosmictera-build/ROADMAP.md",
+]
+
+@pytest.mark.parametrize("relpath", OUTSIDE_FOLDER)
+def test_a_file_outside_the_folder_quotes_the_same_suite_figure(relpath: str) -> None:
+    """One number, measured once, quoted identically everywhere it appears."""
+    quoted, _ = _quoted_pytest_counts()["CHECKLIST"]
+    grouped = f"{quoted // 1000}.{quoted % 1000:03d}"
+    text = (ROOT / relpath).read_text(encoding="utf-8")
+    assert grouped in text, (
+        f"{relpath} no longer quotes {grouped}, the figure "
+        f"cosmictera-build/CHECKLIST.md carries. If the suite grew, update "
+        f"every file in OUTSIDE_FOLDER together with the four in the folder."
+    )
+
+
+def test_no_document_quotes_a_suite_figure_that_is_not_the_current_one() -> None:
+    """The half a per-file check cannot do: find the ones nobody listed.
+
+    A file added tomorrow with a fresh transcription of today's number would
+    pass every test above by simply not being in any list. This one sweeps
+    every tracked .md instead and demands that any four-digit figure presented
+    as a test count be the current one -- so a new stale figure fails on the
+    commit that introduces it, not months later.
+
+    Figures inside correction notes are exempt by construction: those sentences
+    say what a number USED to be, and rewriting them would erase the record of
+    the drift. They are recognised by the words that mark them as history.
+    """
+    quoted, _ = _quoted_pytest_counts()["CHECKLIST"]
+    grouped = f"{quoted // 1000}.{quoted % 1000:03d}"
+    historical = ("pernah berbunyi", "dulu", "tertinggal", "sementara",
+                  "SUDAH BASI", "per Maret", "sebelumnya", "Maret 2026")
+
+    stale: list[str] = []
+    for path in sorted(ROOT.rglob("*.md")):
+        rel = path.relative_to(ROOT).as_posix()
+        if rel.startswith((".claude/", ".agents/", "node_modules/")):
+            continue
+        if "/node_modules/" in rel or "/.claude/" in rel or "/.agents/" in rel:
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for m in re.finditer(r"(\d\.\d{3})\s+(?:tes|test)\b", text):
+            figure = m.group(1)
+            if figure == grouped:
+                continue
+            start = text.rfind("\n\n", 0, m.start()) + 1
+            end = text.find("\n\n", m.end())
+            para = text[start : end if end != -1 else len(text)]
+            if any(word in para for word in historical):
+                continue
+            line = text[: m.start()].count("\n") + 1
+            stale.append(f"{rel}:{line} quotes {figure}")
+
+    assert not stale, (
+        f"the suite collects {grouped}, but these read as current figures and "
+        f"are not: {stale}. Re-run `python3 -m pytest -q` and update them, or "
+        f"mark the sentence as history if it is describing a past value."
+    )
 
 
 def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
@@ -371,4 +536,37 @@ def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
         f"{module_skips} more module(s) at import, for {collected + module_skips}. "
         f"Re-run `python3 -m pytest -q` and update CHECKLIST.md, ON.md, "
         f"README.md and PAPAN.md together."
+    )
+
+
+def test_the_quoted_mypy_file_count_is_what_mypy_actually_checks() -> None:
+    """The same drift as the pytest figure, one row below it in the same table.
+
+    CHECKLIST.md said "mypy bersih, 108 berkas" while mypy reported 128 --
+    twenty files' worth of stale, in the single place the number appears. It
+    drifted for the ordinary reason: the row is green as long as mypy exits
+    zero, so nobody re-read the count beside it, and `make typecheck` says
+    nothing about whether the table agrees with it.
+
+    The count matters more than a cosmetic figure would. It is the only thing
+    on the page that says how much of the tree mypy is looking at, so a
+    silently shrinking number would read exactly like a clean run -- the same
+    green tick over a narrower sweep.
+    """
+    proc = subprocess.run(
+        [sys.executable, "-m", "mypy", "src/hijaiyyah"],
+        cwd=ROOT, capture_output=True, text=True, timeout=600,
+    )
+    m = re.search(r"no issues found in (\d+) source files?", proc.stdout)
+    assert m, f"mypy did not report a clean sweep:\n{proc.stdout[-2000:]}"
+    measured = int(m.group(1))
+
+    text = (ROOT / "cosmictera-build" / "CHECKLIST.md").read_text(encoding="utf-8")
+    q = re.search(r"mypy bersih, (\d+) berkas", text)
+    assert q, "CHECKLIST.md no longer states a mypy file count at all"
+    quoted = int(q.group(1))
+
+    assert quoted == measured, (
+        f"CHECKLIST.md quotes {quoted} files for `make typecheck`; mypy checks "
+        f"{measured}. Re-run `make typecheck` and put its own number on the row."
     )

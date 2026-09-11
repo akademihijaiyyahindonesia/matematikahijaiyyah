@@ -1,0 +1,110 @@
+; nui_embedding.hasm — NUI's physics embedding sum, on the real pipeline.
+;
+; The winning variant of the four compared in src/hijaiyyah/nui/README.md
+; (calibrated precision 0.970, fewer trainable parameters than a same-size
+; learned baseline) is five numbers per letter: titik, garis, lengkung,
+; theta, rho. Every one of them is a LINEAR function of v18 -- sums of
+; specific components, or Theta-hat directly, or rho = theta - U where U is
+; itself a linear combination -- which is exactly why "sum then extract" and
+; "extract then sum" give the same answer (nui/dataset.py's accumulation
+; docstring proves this for the whole vector; it holds a fortiori for any
+; five linear functions of it).
+;
+; That means the embedding sum needs NO new hardware. It is exactly what
+; happens when rtl/programs/letters.hasm's L_<letter> chain (HREG[0] +=
+; v(letter), one instruction per letter, already synthesised) is followed by
+; five CGET-and-add reductions over the accumulated H-register -- reusing
+; opcodes this ISA has had since HOS. This program is the proof: run it on
+; the pipeline, and the five numbers it stores and prints must equal what
+; nui.features.vector_features() computes in Python for the same letters,
+; summed the same way nui/dataset.py's ground truth is generated.
+;
+; Test set: Jim + Kha, accumulated into H0 -- the two letters
+; cosmic-codex-jim/ already measured as GF(2)-primitive individually, so
+; their sum is a meaningful, non-arbitrary case to check on real silicon.
+;
+; All five values are computed FIRST, into five distinct registers, and only
+; THEN stored and printed. Not required for correctness -- it was written
+; this way while chasing a real bug this program found: nothing before it
+; had ever issued more than one PRINT in a run, and multiple PRINTs close
+; together silently lost every value after the first. The cause was in
+; rtl/hcpu_controller.v, not here -- its own stall condition cleared on a
+; transient dip in the UART's per-byte busy flag between a print's digit
+; and its trailing newline, which is mid-print, not end-of-print. Fixed
+; there (see its own comment); the pipeline now correctly serializes PRINTs
+; regardless of spacing, and this layout is kept only because it is the
+; more direct read.
+;
+;   0x100  titik    = Na+Nb+Nd         (H[1]+H[2]+H[3])
+;   0x101  garis    = Kp+Kx+Ks+Ka+Kc   (H[4..8])
+;   0x102  lengkung = Qp+Qx+Qs+Qa+Qc   (H[9..13])
+;   0x103  theta    = Theta-hat        (H[0])
+;   0x104  rho      = theta - U,  U = Qx+Qs+Qa+4*Qc = H[10]+H[11]+H[12]+4*H[13]
+;
+; Printed over UART (115200 baud, same wire test_bsm.hasm's default board
+; image already uses) as five decimal lines, then the wrapper's own
+; "CYCLES=" report once the core halts.
+
+        L_JIM
+        L_KHA
+        ; H0 now holds Jim + Kha, accumulated by real hardware.
+
+        ; ── titik -> R3 ─────────────────────────────────────
+        CGET  R1, H0, 1
+        CGET  R2, H0, 2
+        ADD   R1, R1, R2
+        CGET  R2, H0, 3
+        ADD   R3, R1, R2
+
+        ; ── garis -> R4 ─────────────────────────────────────
+        CGET  R1, H0, 4
+        CGET  R2, H0, 5
+        ADD   R1, R1, R2
+        CGET  R2, H0, 6
+        ADD   R1, R1, R2
+        CGET  R2, H0, 7
+        ADD   R1, R1, R2
+        CGET  R2, H0, 8
+        ADD   R4, R1, R2
+
+        ; ── lengkung -> R5 ──────────────────────────────────
+        CGET  R1, H0, 9
+        CGET  R2, H0, 10
+        ADD   R1, R1, R2
+        CGET  R2, H0, 11
+        ADD   R1, R1, R2
+        CGET  R2, H0, 12
+        ADD   R1, R1, R2
+        CGET  R2, H0, 13
+        ADD   R5, R1, R2
+
+        ; ── theta -> R6 ─────────────────────────────────────
+        CGET  R6, H0, 0
+
+        ; ── rho -> R8,  U = Qx+Qs+Qa + 4*Qc -> R7 ─────────
+        CGET  R1, H0, 10
+        CGET  R2, H0, 11
+        ADD   R1, R1, R2
+        CGET  R2, H0, 12
+        ADD   R1, R1, R2
+        CGET  R2, H0, 13
+        ADD   R2, R2, R2   ; 2*Qc
+        ADD   R2, R2, R2   ; 4*Qc
+        ADD   R7, R1, R2  ; U
+        SUB   R8, R6, R7
+
+        ; ── store all five, then print all five, adjacent ──
+        MOVI  R10, 0       ; memory anchor -- STORE Rval, R10, addr
+        STORE R3, R10, 0x100
+        STORE R4, R10, 0x101
+        STORE R5, R10, 0x102
+        STORE R6, R10, 0x103
+        STORE R8, R10, 0x104
+
+        PRINT R3
+        PRINT R4
+        PRINT R5
+        PRINT R6
+        PRINT R8
+
+        HALT

@@ -97,8 +97,10 @@ menggagalkan tes.
   4.480 DFF (28%), 17 BSRAM, Fmax 118,43 MHz pasca-perutean**, dan UART
   membalas 23 byte yang cocok byte-per-byte dengan simulasi. Ka'bah terpisah
   juga terukur: **12.061 LUT4 (58%), Fmax 165,98 MHz**.
-- **Fmax HCPU + Ka'bah satu top level tetap [EH]**, karena sebab yang berbeda
-  dan masih berlaku: gabungannya diukur **105% — lewat 960 sel**, jadi tidak
-  ada laporan timing untuk top level gabungan. Modul Ka'bah mentah juga masih
-  tak bisa ditempatkan: 1.665 bit port melawan 276 IOB. Yang berjalan di papan
-  adalah wrapper-nya, bukan modul mentah itu.
+- **HCPU dan Ka'bah tidak perlu jadi satu top level.** Digabung, keduanya
+  diukur **105% — lewat 960 sel** — tapi tak ada yang menuntut keduanya
+  menempati fabric bersamaan. Papan memuatnya sebagai **slot bitstream
+  berurutan** (`rtl/scripts/rack.py`), jadi biaya rack adalah slot
+  terbesar, 67%, bukan jumlahnya. Modul Ka'bah mentah tetap tak bisa
+  ditempatkan: 1.665 bit port melawan 384 IOB. Yang berjalan di papan
+  adalah wrapper-nya.

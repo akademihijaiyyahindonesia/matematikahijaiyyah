@@ -54,7 +54,7 @@ byte-framing period in an unaligned bit stream. Nothing here is that.
 from __future__ import annotations
 
 import collections
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from ..core.exomatrix import build_exomatrix, matrix_order
 from ..core.master_table import MASTER_TABLE
@@ -94,7 +94,8 @@ def emitted_cycle(letter: str) -> Tuple[int, ...]:
     1, because a receiver measuring frequency sees a constant.
     """
     matrix = [[x & 1 for x in row] for row in build_exomatrix(_entry(letter))]
-    state, seen, seq, k = START_STATE, {}, [], 0
+    state: Tuple[int, ...] = START_STATE
+    seen, seq, k = {}, [], 0
     while state not in seen:
         seen[state] = k
         seq.append(state[0])
@@ -122,7 +123,7 @@ def matrix_period(letter: str) -> int:
     return period
 
 
-def _all() -> str:
+def _all() -> List[str]:
     return [e.char for e in MASTER_TABLE.all_entries()]
 
 
@@ -175,4 +176,4 @@ def narrow(rung: int, period: Optional[int] = None,
     found = [c for (r, p, _m), chars in SIGNATURES.items()
              if r == rung and p == period for c in chars]
     order = {c: i for i, c in enumerate(_all())}
-    return tuple(sorted(found, key=order.get))
+    return tuple(sorted(found, key=lambda c: order[c]))

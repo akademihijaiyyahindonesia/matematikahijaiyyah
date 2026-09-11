@@ -1,0 +1,38 @@
+// Tang Nano 20K HDMI constraints for kabah_hdmi_top.v -- never built (AT).
+IO_LOC "clk_27m" 4;
+IO_PORT "clk_27m" IO_TYPE=LVCMOS33;
+IO_LOC "btn_rst_n" 87;
+IO_PORT "btn_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "mode_key" 88;
+IO_PORT "mode_key" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "uart_rxd" 70;
+IO_PORT "uart_rxd" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "uart_txd" 69;
+IO_PORT "uart_txd" IO_TYPE=LVCMOS33 DRIVE=8;
+// Differential TMDS pairs: one IOB per lane, both pads in one IO_LOC,
+// IO_TYPE=LVCMOS33D -- the form hcpu_hdmi.cst proved on the board. The
+// earlier true-LVDS lines matched the TLVDS_TBUF that nextpnr discarded.
+//
+// The names are yosys's synthesised OBUF cells, not the ports. They are
+// assumed to match hcpu_hdmi.cst's because the port names are identical;
+// that is unverified until this wrapper is actually synthesised.
+IO_LOC "tmds_clk_p_OBUF_O" 33,34;
+IO_PORT "tmds_clk_p_OBUF_O" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "tmds_data_p_OBUF_O" 35,36;
+IO_PORT "tmds_data_p_OBUF_O" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "tmds_data_p_OBUF_O_1" 37,38;
+IO_PORT "tmds_data_p_OBUF_O_1" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "tmds_data_p_OBUF_O_2" 39,40;
+IO_PORT "tmds_data_p_OBUF_O_2" IO_TYPE=LVCMOS33D DRIVE=3.5;
+IO_LOC "led[0]" 15;
+IO_LOC "led[1]" 16;
+IO_LOC "led[2]" 17;
+IO_LOC "led[3]" 18;
+IO_LOC "led[4]" 19;
+IO_LOC "led[5]" 20;
+IO_PORT "led[0]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[1]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[2]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[3]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[4]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "led[5]" IO_TYPE=LVCMOS33 DRIVE=8;

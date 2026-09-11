@@ -16,11 +16,17 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 # skeleton.csgi defines CSGIGraph, CSGINode and CSGIEdge — never a
-# CSGIProcessor. The Master Table fallback below is what actually populates a
-# measurement, and it works.
+# CSGIProcessor, which is why nothing here could call it for a long time.
+# PsiCompiler.extract_glyph now takes an optional image and, given one, really
+# runs thinning → contraction → MainPath selection (see _run_csgi). What it
+# still does NOT do is derive the measurement from those pixels: Theta-hat
+# wants curvature integrated along the chosen path, N-K-Q wants nuqtah
+# separation that has no implementation anywhere in this tree. So the Master
+# Table remains the source of v18 on both paths, and the structural fields are
+# the part the image genuinely produces.
 # First-party and always importable — the try/except that used to wrap this
 # guarded against nothing, and assigning None to a class name is what mypy
 # was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
@@ -203,16 +209,61 @@ class PsiCompiler:
         self.font_path = font_path
         self.params = params or ExtractionParams()
 
-    def extract_glyph(self, letter: str) -> HGeoFile:
-        """Extract geometry for a single glyph."""
+    def extract_glyph(self, letter: str, image: Any = None) -> HGeoFile:
+        """Extract geometry for a single glyph.
+
+        Pass ``image`` (a binary numpy array, 1 = ink) to run steps 2 and 3
+        for real: thinning, CSGI contraction, and MainPath selection. Without
+        it the structural fields stay empty and only the Master Table
+        measurement is filled, which is what every caller got before.
+
+        WHAT COMES FROM THE IMAGE AND WHAT DOES NOT. With an image, nodes,
+        edges and mainpath are DERIVED -- the graph is walked and IC.1.13's
+        argmax actually runs. The measurement is NOT: Theta-hat needs
+        curvature integrated along the selected path and quantised (IC.1.1),
+        and N-K-Q needs nuqtah separation, which has no implementation here at
+        all. So v18 still comes from the sealed table even on the image path.
+        A .hgeo carrying derived nodes and an inherited measurement is exactly
+        what this produces, and saying so is the point.
+        """
         hgeo = HGeoFile(
             glyph_name=letter,
             glyph_id=f"U+{ord(letter):04X}",
             extraction_params=self.params,
         )
 
-        # Measurement comes from the Master Table. A CSGi path was sketched
-        # here but never had a processor to call.
+        if image is not None:
+            graph, mainpath = self._run_csgi(image, letter)
+            hgeo.nodes = [
+                SkeletonNode(
+                    id=n.id, x=n.x, y=n.y,
+                    kind=("ENDPOINT" if n.degree == 1
+                          else "JUNCTION" if n.degree >= 3
+                          else "KINK"),
+                )
+                for n in graph.nodes
+            ]
+            hgeo.edges = [
+                SkeletonEdge(
+                    id=e.id, u=e.u, v=e.v,
+                    polyline=[[x, y] for x, y in e.points],
+                    pixel_count=len(e.points),
+                )
+                for e in graph.edges
+            ]
+            if mainpath is not None:
+                hgeo.mainpath = MainPathInfo(
+                    node_sequence=list(mainpath.nodes),
+                    edge_sequence=list(mainpath.edges),
+                    is_closed=mainpath.closed,
+                    total_pixels=sum(
+                        len(e.points) for e in graph.edges
+                        if e.id in set(mainpath.edges)
+                    ),
+                )
+
+        # The measurement is the sealed table's, image or not -- see the
+        # docstring for why the image cannot yet produce one.
         if all(x == 0 for x in hgeo.v18) and MASTER_TABLE:
             entry = MASTER_TABLE.get_by_char(letter)
             if entry and hasattr(entry, 'vector'):
@@ -221,6 +272,21 @@ class PsiCompiler:
         hgeo.guard_status = self._run_guards(hgeo.v18)
         hgeo.compute_digest()
         return hgeo
+
+    def _run_csgi(self, image: Any, letter: str = "") -> Tuple[Any, Any]:
+        """Pipeline steps 2 and 3, run rather than described.
+
+        Zhang-Suen thinning (IC.1.21) -> SkeletonContractor (IC.1.18-1.21) ->
+        MainPathSelector (IC.1.10-1.17). Imported here rather than at module
+        scope so the Master Table path stays importable without numpy.
+        """
+        from hijaiyyah.skeleton.contractor import SkeletonContractor
+        from hijaiyyah.skeleton.mainpath import MainPathSelector
+        from hijaiyyah.skeleton.skeletonizer import zhang_suen_thinness
+
+        skeleton = zhang_suen_thinness(image)
+        graph = SkeletonContractor(letter, letter).contract(skeleton)
+        return graph, MainPathSelector(graph).select()
 
     def extract_alphabet(self,
                          letters: List[str]) -> List[HGeoFile]:

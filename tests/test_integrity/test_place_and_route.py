@@ -190,19 +190,19 @@ def test_the_growth_is_attributed_to_the_commit_that_caused_it() -> None:
 def test_the_kabah_top_is_still_unmeasured_and_the_reason_is_recorded() -> None:
     """
     Not "we have not got to it". It cannot be placed at all: 1,665 port bits
-    against 276 IOB. A wrapper has to narrow the interface first, the way
+    against 384 IOB. A wrapper has to narrow the interface first, the way
     hcpu_gowin_top does for the HCPU.
     """
     top = (ROOT / "rtl" / "hijaiyyah_kabah_top.v").read_text(encoding="utf-8")
     head = top[top.index("module hijaiyyah_kabah_top"):top.index(");")]
     bits = sum(int(hi) + 1 for hi in
                re.findall(r"(?:input|output)\s+(?:wire|reg)?\s*\[\s*(\d+)\s*:\s*0\]", head))
-    assert bits > 276, f"the interface narrowed to {bits} bits -- it can be placed now"
+    assert bits > 384, f"the interface narrowed to {bits} bits -- it can be placed now"
     assert "IOB" not in head
 
     concrete = (ROOT / "cosmictera" / "CONCRETE.md").read_text(encoding="utf-8")
     assert "1.665 bit port" in concrete
-    assert "276 IOB" in concrete
+    assert "384 IOB" in concrete
     assert "Fmax Kabah top | **EH**" in concrete
 
 

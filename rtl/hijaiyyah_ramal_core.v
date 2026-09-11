@@ -50,9 +50,11 @@
 // minimum near SLICE=8 and it is a mux minimum, not an arithmetic one.
 //
 // On the Tang Nano 20K (20,736 LUT4) the cheapest configuration here is
-// 8,673 -- 42% -- before the impulser, the UART or anything else. It fits;
-// what does not fit is HCPU and Ka'bah as one top level, measured at 105%,
-// over by 960 cells. That is the constraint that actually binds.
+// 8,673 -- 42% -- before the impulser, the UART or anything else. It fits.
+// HCPU and Ka'bah as ONE top level measured 105%, over by 960 cells -- but
+// nothing requires them to coexist: the board loads them as sequential
+// bitstream slots (rtl/scripts/rack.py), so the rack costs its largest
+// slot, 67%, not the sum.
 //
 // The fix that follows from the finding: stop random-accessing the state.
 // Rotate it through a fixed substitution position instead, so the mux

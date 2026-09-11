@@ -30,7 +30,16 @@ def _run(top: str, sources: list[str], expect: str) -> None:
          *sources],
         cwd=ROOT, capture_output=True, text=True)
     assert build.returncode == 0, build.stderr
-    run = subprocess.run([f"/tmp/{top}"], cwd=ROOT, capture_output=True, text=True)
+    # `vvp` explicitly, rather than executing the output directly. iverilog
+    # writes the compiled file with a `#!` line pointing at whichever vvp is
+    # on PATH, so it looks executable -- and on oss-cad-suite that vvp is
+    # itself a bash script. A shebang whose interpreter is another shebang
+    # script is not something execve resolves: every one of these tests
+    # failed with `OSError: [Errno 8] Exec format error`, which reads like a
+    # broken build rather than a wrong way to launch a working one. The
+    # testbenches were passing the whole time. Five other test files in this
+    # suite already called vvp by name; these were the four that did not.
+    run = subprocess.run(["vvp", f"/tmp/{top}"], cwd=ROOT, capture_output=True, text=True)
     assert expect in run.stdout, run.stdout
 
 

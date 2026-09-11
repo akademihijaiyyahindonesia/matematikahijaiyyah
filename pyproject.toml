@@ -49,6 +49,21 @@ dev = [
     "mypy>=1.0",
     "hypothesis>=6.0",
 ]
+# hijaiyyah.nui is the only thing in this project that needs a deep-learning
+# framework, and it is a real footprint (800MB+) the rest of the project has
+# deliberately stayed without — see src/hijaiyyah/nui/README.md. Kept as its
+# own extra rather than a base dependency so `pip install hijaiyyah-hom`
+# does not pull it in for anyone who never touches this module.
+nui = [
+    "torch>=2.7",
+]
+# rtl/scripts/send_program.py is the only thing in this project that opens a
+# serial port -- the host half of the loader bridge (rtl/programs/loader.hasm
+# on the board, this on the other end of the USB cable). Same reasoning as
+# nui: no footprint for anyone who never touches physical hardware.
+board = [
+    "pyserial>=3.5",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

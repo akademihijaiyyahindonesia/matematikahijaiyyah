@@ -2,7 +2,7 @@
 
 **Target Dataset:** `Master Table MH-28-v.1.0-HC18D`
 **Date of Release:** March 2026
-**Author & Copyright:** Maulana Amratulloh, © 2026 HMCL
+**Author & Copyright:** Maulana Amratulloh, © 2026
 
 ## 1. Mathematical Seal
 
@@ -13,7 +13,11 @@ The absolute, final, and cryptographically verified SHA-256 footprint is:
 
 ## 2. Artifact Lockdown
 
-By order of this patent release, all underlying data files representing this Master Table have been **permanently locked (Read-Only)** at the filesystem level. This ensures the foundational mathematics cannot be tampered with.
+By order of this patent release, all underlying data files representing this Master Table are sealed by **measurement**, not by file permissions.
+
+This paragraph previously claimed the files were "permanently locked (Read-Only) at the filesystem level". They were not, and never had been: measured on 11 September 2026, all seven were mode 0o644 or 0o700 — writable by the owner, every one of them. A filesystem bit is in any case the wrong instrument here, because it protects nothing a `git checkout` cannot undo and would break the build the moment `make rom` regenerates `hm28.rom`.
+
+What actually holds is stronger and is checked on every run: `MASTER_TABLE.compute_sha256()` is measured against the seal below in `tests/test_integrity/test_authorship.py`, `data/hm28.json` and `data/hm28_manifest.json` are measured against the same in `tests/test_integrity/test_dataset_consistency.py`, and `hm28.rom` decodes 28/28 back to the table. A modification does not need to be prevented to be caught; it needs to be measured.
 
 The following artifacts are sealed under this release:
 - `src/hijaiyyah/core/master_table.py`

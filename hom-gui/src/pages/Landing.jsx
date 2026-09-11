@@ -1342,7 +1342,7 @@ npm run dev
               {t('Unauthorized use, reproduction, or distribution may result in civil and/or criminal penalties under applicable laws.')}
               <br />
               <span className="text-white/60 text-[9px] tracking-[0.3em] font-bold mt-2 block">
-                PT PURI PERTIWI INTERNATIONAL
+                YAYASAN AKADEMI HIJAIYYAH INDONESIA
               </span>
             </p>
             

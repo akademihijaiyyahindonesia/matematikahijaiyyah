@@ -1,5 +1,5 @@
 """
-The Tang Nano 9K board wrapper, simulated as the board would run it.
+The Tang Nano 20K board wrapper, simulated as the board would run it.
 
 Simulating the core alone cannot catch a wrapper bug, because the core behaves
 exactly as it is parameterised. The wrapper handed hcpu_top CLK_HZ = 50_000_000
@@ -125,14 +125,25 @@ def test_the_board_reports_its_own_cycle_count(simulation: str) -> None:
     is the measurement that replaces the count: the wrapper's counter runs
     from reset release to halt, so it sees pipeline fill and every stall.
 
-    test_bsm.hasm retires nine instructions and takes fourteen cycles — the
-    five-stage fill that a static count cannot show.
+    It used to read fourteen — the five-stage fill that a static count
+    cannot show, plus nothing else, because hcpu_controller.v's PRINT stall
+    cleared on uart_busy (the UART TX module's own per-byte busy flag)
+    dropping between test_bsm.hasm's own print's bytes, not at the print's
+    actual end. HALT reached EX while the print was still shifting digits.
+    Fixed (see rtl/hcpu_controller.v, rtl/programs/nui_embedding.hasm),
+    HALT now genuinely waits: 7,049 cycles, three digits ('1','1','2' of
+    printed "112") each stalling the pipeline for its own full UART frame,
+    plus fill. The trailing newline's own transmission is still not waited
+    on — hcpu_top.v's P_NEWLN returns to P_IDLE the same cycle it starts
+    that byte, not after — which is why the wrapper's own report logic
+    watches the line for idle rather than trusting this counter to mark
+    the point all bytes have left the pin.
     """
     match = re.search(r"CYCLES=([0-9A-Fa-f]{8})", simulation)
     assert match, "the board did not report a cycle count"
 
     cycles = int(match.group(1), 16)
-    assert cycles == 14, f"expected 14 cycles for test_bsm.hasm, got {cycles}"
+    assert cycles == 7049, f"expected 7049 cycles for test_bsm.hasm, got {cycles}"
 
 
 def test_the_cycle_count_exceeds_the_instruction_count(simulation: str) -> None:

@@ -177,8 +177,11 @@ Program H‑ISA disegel oleh `seal_program`, dan opcode dibaca **dari
 - **Tidak ada kerahasiaan.** Lapis 4 ditolak, disengaja.
 - **HCPU tidak dilebur dengan blok kripto.** CosmicTera **membungkus** program
   yang berjalan di H‑ISA; ia tidak menyuntikkan kripto ke datapath.
-- **Fmax HCPU tidak lagi terukur.** Angka 90,14 MHz sah pada komit tempat ia
-  diambil, tapi desain HEAD tidak muat di papan (159% LUT4) sehingga routing
-  tidak pernah selesai. Angka per detik untuk HCPU membawa asumsi lagi sampai
-  desainnya muat kembali. **Kabah top** belum terukur karena sebab terpisah:
-  1.665 bit port melawan 276 IOB.
+- **Fmax HCPU [CC].** 118,43 MHz pasca-perutean di Tang Nano 20K, 67% LUT4,
+  dan papan menjalankannya — UART membalas byte-per-byte sama dengan
+  simulasi. **Kabah top sendiri** (`hijaiyyah_kabah_top.v`) tetap tidak bisa
+  jadi top level papan mana pun — 1.665 bit port melawan 384 IOB, dan itu
+  memang tujuannya, persis seperti `hcpu_top` bukan top level. Wrapper-nya
+  (`hijaiyyah_kabah_gowin_top.v`) menyempitkan itu ke 10 pin dan
+  **dijalankan di papan**: 58% LUT4, 165,98 MHz, 400/400 byte cocok
+  `cube.py` — lihat [`CONCRETE.md`](CONCRETE.md#wrapper-kabah--antarmuka-10-pin-dijalankan-di-papan).

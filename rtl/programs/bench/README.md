@@ -1,4 +1,4 @@
-# Percobaan Tang Nano 9K
+# Percobaan Tang Nano 20K
 
 Sembilan program untuk dijalankan di papan. Semuanya sudah diverifikasi di
 simulator (`tests/test_integration/test_bench_programs.py`), jadi yang sampai
@@ -32,9 +32,16 @@ Dari lepas reset sampai `halted`. Termasuk pengisian pipeline, stall load-use,
 stall store-load, dan flush cabang. **Tidak** termasuk waktu UART menguras
 byte terakhir, karena pipeline berhenti sebelum itu.
 
-Contoh terverifikasi: `test_bsm.hasm` pensiun 9 instruksi dalam **14 siklus**.
-Selisih 5 itu isi pipeline lima-tahap — persis yang tidak bisa dilihat oleh
-hitungan instruksi statis di `tools/integrity_benchmark.py`.
+Contoh terverifikasi: `test_bsm.hasm` pensiun 9 instruksi dalam **7.049 siklus**
+— cetak "112", tiga digit, tiap digit menahan seluruh pipeline selama satu
+bingkai UART penuh, plus isi pipeline lima-tahap yang tidak bisa dilihat oleh
+hitungan instruksi statis di `tools/integrity_benchmark.py`. Dulu terbaca 14:
+stall `PRINT` di `hcpu_controller.v` lepas begitu `uart_busy` turun di ANTARA
+byte-byte satu cetakan, bukan di akhirnya — `HALT` sempat mencapai EX saat
+digit masih dikirim. Diperbaiki (lihat `rtl/hcpu_controller.v`,
+`rtl/programs/nui_embedding.hasm`); lihat
+`tests/test_integration/test_fpga_wrapper.py::test_the_board_reports_its_own_cycle_count`
+untuk ceritanya.
 
 ## Percobaan
 
@@ -49,6 +56,25 @@ hitungan instruksi statis di `tools/integrity_benchmark.py`.
 
 `e4_frame` baru mungkin sejak `HPACK` menghormati pemilih katanya; sebelumnya
 hanya kata 0 yang pernah terpilih, jadi 4 byte dari 9.
+
+## HDMI Tang Nano 20K
+
+Port HDMI board sudah diuji secara fisik dengan bitstream test pattern resmi
+Sipeed, dimuat ke SRAM melalui JTAG. Ini membuktikan konektor, pasangan TMDS,
+dan monitor dapat bekerja; uji SRAM tidak mengubah flash program HCPU.
+
+Integrasi lokal tersedia sebagai wrapper terpisah:
+
+- `rtl/fpga/gowin/hcpu_hdmi_top.v` — HCPU + status video 1280x720
+- `rtl/fpga/gowin/kabah_hdmi_top.v` — Ka'bah + status video 1280x720
+- `rtl/fpga/gowin/dvi_tx_open.v` — encoder TMDS dan OSER10
+- `rtl/fpga/gowin/tmds_rpll.v` — PLL 27 MHz ke 371.25 MHz
+
+Kedua wrapper berhasil dikompilasi dan disintesis. Bitstream HDMI belum
+tersedia: `nextpnr-himbaechel` saat ini berhenti ketika mem-pack pasangan
+`TLVDS_TBUF` pada GW2AR-18C (`pack_io.cc:533`). Karena itu jangan menjalankan
+target flash HDMI; target UART di atas tetap merupakan jalur board yang
+terverifikasi.
 
 ## E1 — frekuensi maksimum
 

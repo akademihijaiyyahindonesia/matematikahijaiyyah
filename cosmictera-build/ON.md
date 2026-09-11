@@ -222,8 +222,8 @@ GW2AR-LV18QN88C8/I7 (Tang Nano 20K, papan target
 
 ```
 IOB     10 / 384    2%
-LUT4    12.102 / 20.736   58%
-Fmax    117,91 MHz, terrout, bitstream 4,6 MB
+LUT4    12.061 / 20.736   58%
+Fmax    165,98 MHz, terrout, bitstream 4,6 MB — dijalankan di papan
 ```
 
 Fingerprint RTL-nya sendiri, terpisah dari fingerprint HCPU — lihat
@@ -280,7 +280,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.791 lulus, 0 dilewati
-make -C rtl/tb all            # 253 asersi, 20 bench, 0 gagal
+python3 -m pytest -q          # 4.810 lulus, 0 dilewati
+make -C rtl/tb all            # 260 asersi, 20 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

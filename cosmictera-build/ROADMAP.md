@@ -117,7 +117,7 @@ proyek ini.
 ### Fase 3 — SELESAI (sebagian): Ka'bah masuk ke alur build yang sama
 
 **Kenapa ini sebelum digabung, dan kenapa sebagian sudah beres.** Angka
-Ka'bah-di-20K (58%, 117,91 MHz) dulu nyata tapi tidak bisa dijalankan ulang
+Ka'bah-di-20K (58%, 117,91 MHz — kini 165,98 MHz sesudah penyerempak reset diperbaiki) dulu nyata tapi tidak bisa dijalankan ulang
 dengan satu perintah. R4 berlaku di sini juga: angka yang cuma bisa
 direproduksi lewat command manual yang diingat, bukan Makefile, adalah
 angka yang gampang basi diam-diam — dan sekarang tidak lagi begitu.
@@ -132,7 +132,7 @@ angka yang gampang basi diam-diam — dan sekarang tidak lagi begitu.
    `hijaiyyah_sbox_router.v`, `hijaiyyah_wave.v`) yang wildcard HCPU sendiri
    tidak punya padanannya.
 2. `make -C rtl/fpga/gowin kabah_bitstream` dijalankan sampai selesai dengan
-   sumber hari ini: **58% LUT4, 12% DFF, 0% BSRAM, Fmax 117,91 MHz PASS**,
+   sumber hari ini: **58% LUT4, 12% DFF, 0% BSRAM, Fmax 117,91 MHz PASS** — kini 165,98 MHz, diukur ulang 10 September sesudah penyerempak reset diperbaiki,
    bitstream 4.618.782 byte — angka yang sama persis dengan pengukuran
    4 September, sekarang terverifikasi ulang dan direproduksi, bukan
    diasumsikan tetap benar.
@@ -314,7 +314,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.628
+software_tests      1611/1611     ← sekarang 4.810
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 

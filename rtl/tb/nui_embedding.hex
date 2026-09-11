@@ -1,0 +1,48 @@
+E4000000  // addr    0: L_JIM
+E6000000  // addr    1: L_KHA
+44100001  // addr    2: CGET  R1, H0, 1
+44200002  // addr    3: CGET  R2, H0, 2
+10112000  // addr    4: ADD   R1, R1, R2
+44200003  // addr    5: CGET  R2, H0, 3
+10312000  // addr    6: ADD   R3, R1, R2
+44100004  // addr    7: CGET  R1, H0, 4
+44200005  // addr    8: CGET  R2, H0, 5
+10112000  // addr    9: ADD   R1, R1, R2
+44200006  // addr   10: CGET  R2, H0, 6
+10112000  // addr   11: ADD   R1, R1, R2
+44200007  // addr   12: CGET  R2, H0, 7
+10112000  // addr   13: ADD   R1, R1, R2
+44200008  // addr   14: CGET  R2, H0, 8
+10412000  // addr   15: ADD   R4, R1, R2
+44100009  // addr   16: CGET  R1, H0, 9
+4420000A  // addr   17: CGET  R2, H0, 10
+10112000  // addr   18: ADD   R1, R1, R2
+4420000B  // addr   19: CGET  R2, H0, 11
+10112000  // addr   20: ADD   R1, R1, R2
+4420000C  // addr   21: CGET  R2, H0, 12
+10112000  // addr   22: ADD   R1, R1, R2
+4420000D  // addr   23: CGET  R2, H0, 13
+10512000  // addr   24: ADD   R5, R1, R2
+44600000  // addr   25: CGET  R6, H0, 0
+4410000A  // addr   26: CGET  R1, H0, 10
+4420000B  // addr   27: CGET  R2, H0, 11
+10112000  // addr   28: ADD   R1, R1, R2
+4420000C  // addr   29: CGET  R2, H0, 12
+10112000  // addr   30: ADD   R1, R1, R2
+4420000D  // addr   31: CGET  R2, H0, 13
+10222000  // addr   32: ADD   R2, R2, R2
+10222000  // addr   33: ADD   R2, R2, R2
+10712000  // addr   34: ADD   R7, R1, R2
+12867000  // addr   35: SUB   R8, R6, R7
+04A00000  // addr   36: MOVI  R10, 0
+3103A100  // addr   37: STORE R3, R10, 0x100
+3104A101  // addr   38: STORE R4, R10, 0x101
+3105A102  // addr   39: STORE R5, R10, 0x102
+3106A103  // addr   40: STORE R6, R10, 0x103
+3108A104  // addr   41: STORE R8, R10, 0x104
+A0030000  // addr   42: PRINT R3
+A0040000  // addr   43: PRINT R4
+A0050000  // addr   44: PRINT R5
+A0060000  // addr   45: PRINT R6
+A0080000  // addr   46: PRINT R8
+01000000  // addr   47: HALT

@@ -15,6 +15,16 @@
 ;   R9   the cause the handler read back
 ;   R10  the epc the handler read back
 
+; A DEADLINE HAS TO BE RELATIVE. This program set COMPARE to a bare 12 and it
+; worked in every simulation, because a testbench starts the counter at zero.
+; On the board it returned nothing at all: hcpu_timer.v is a free-running
+; counter matched for EQUALITY, and by the time a program has been flashed and
+; shipped over the wire the counter is past forty million. A compare of 12
+; would next be true after the 32-bit wrap -- about 157 seconds at 27 MHz.
+; So the counter is read first and the deadline built from it. The fix is in
+; the program, not the timer: equality against a counter nobody resets is
+; exactly what makes a deadline relative rather than absolute.
+
         MOVI  R5, 0
         MOVI  R8, 0
         MOVI  R7, 0
@@ -22,8 +32,9 @@
         MOVI  R1, handler
         STORE R1, R5, 0xFF8     ; TRAP_VECTOR
 
-        MOVI  R2, 12
-        STORE R2, R5, 0xFF5     ; COMPARE — the timer expires shortly
+        LOAD  R2, R5, 0xFF4     ; COUNTER — free-running, and NOT zero here
+        ADDI  R2, R2, 12
+        STORE R2, R5, 0xFF5     ; COMPARE — a deadline RELATIVE to now
 
         MOVI  R1, 1
         STORE R1, R5, 0xFFB     ; TRAP_ENABLE, timer only

@@ -134,7 +134,7 @@ def test_the_silicon_page_states_why_kabah_fmax_is_unmeasurable() -> None:
     head = top[top.index("module hijaiyyah_kabah_top"):top.index(");")]
     bits = sum(int(hi) + 1 for hi in re.findall(
         r"(?:input|output)\s+(?:wire|reg)?\s*\[\s*(\d+)\s*:\s*0\]", head))
-    assert bits > 276
+    assert bits > 384
 
 
 def test_the_silicon_page_carries_the_wrapper_numbers_too() -> None:

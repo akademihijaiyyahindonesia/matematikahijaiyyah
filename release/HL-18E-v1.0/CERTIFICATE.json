@@ -5,6 +5,7 @@
   "author_role": "Inventor & Chief Architect",
   "copyright": "(c) 2026 Maulana Amratulloh",
   "seal_status": "VERIFIED_AND_LOCKED",
-  "master_table_sha256": "81af756ba05a47940e45c6d2958c2a6af92eeb8cc4542b344e4a4889435e3af2",
+  "master_table_sha256": "f82d385917ffe32ae2b5711409b1341e90934c52172ae9d0fa68888e3b9c51c8",
+  "master_table_sha256_note": "Segel dataset kanonik Master Table HM-28, direproduksi oleh MASTER_TABLE.compute_sha256() dan dibawa data/hm28.json pada field sha256-nya sendiri. Nilai ini pernah tertulis 81af756ba05a47940e45c6d2958c2a6af92eeb8cc4542b344e4a4889435e3af2, yang tidak cocok dengan SHA-256 berkas mana pun di repositori ini -- bukan segel dataset, bukan hash berkas hm28.json (38338183d2005be624cb1cbe965e0ac360624af6301c3e9e3ef413e61d0c891e), bukan apa pun yang bisa diukur. Sebuah instrumen paten yang menyegel nilai yang tak mengukur apa-apa tidak menyegel apa-apa.",
   "legal_notice": "This artifact contains the fundamental 28x18 geometry of the Hijaiyyah Operating Machine. Under this patent release, no cryptographic hashes or geometry key artifacts shall ever be modified."
 }

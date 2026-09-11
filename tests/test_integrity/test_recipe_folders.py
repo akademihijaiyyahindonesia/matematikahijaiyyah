@@ -211,13 +211,17 @@ def test_teknologi_inventory_is_a_census_not_a_claim() -> None:
         "Modul RTL HCPU":            len(list((ROOT / "rtl").glob("hcpu_*.v"))),
         "Modul RTL Ka'bah":          len(list((ROOT / "rtl").glob("hijaiyyah_*.v"))),
         "Testbench RTL":             len(list((ROOT / "rtl" / "tb").glob("tb_*.v"))),
-        "Program HASM":              len(list((ROOT / "rtl" / "programs").glob("*.hasm"))
-                                         + list((ROOT / "rtl" / "programs" / "bench").glob("*.hasm"))),
+        "Program HASM": (
+            len(list((ROOT / "rtl" / "programs").glob("*.hasm")))
+            + len(list((ROOT / "rtl" / "programs" / "bench").glob("*.hasm")))
+        ),
         "Spesifikasi":               len(list((ROOT / "docs").glob("*.md"))),
         "Alat baris perintah":       len([ln for ln in scripts.group(1).splitlines() if "=" in ln]),
     }
     for label, count in actual.items():
-        assert row(label) == count, f"teknologi/README says {row(label)} {label}, tree holds {count}"
+        assert row(label) == count, (
+            f"teknologi/README says {row(label)} {label}, tree holds {count}"
+        )
 
 
 def test_teknologi_industry_page_separates_capability_from_deployment() -> None:

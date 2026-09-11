@@ -62,7 +62,7 @@ jadi top level yang bisa ditempatkan, persis seperti `hcpu_top` bukan.
 Interfacenya lebar dengan sengaja; yang menyempitkannya adalah wrapper, bukan
 modul itu sendiri.
 
-## Wrapper Ka'bah: antarmuka sudah, papannya tergantung ukuran
+## Wrapper Ka'bah: antarmuka 10 pin, dijalankan di papan
 
 `hijaiyyah_kabah_gowin_top.v` adalah wrapper itu — persis seperti
 `hcpu_gowin_top` untuk HCPU. `out_state` tetap internal (bisa diakses lewat
@@ -105,7 +105,8 @@ benar-benar dijalankan: HCPU membalas 23 byte lewat UART, Ka'bah mencocokkan
 
 Dijumlah naif 67% + 58% = 125%. **Diukur sebagai satu top level: 105% —
 lewat 960 sel.** Selisih antara 125% dan 105% adalah logika yang memang
-dipakai bersama; sisa 960 sel itu yang belum ada tempatnya.
-
-Peta jalannya di
-[ROADMAP.md](../cosmictera-build/ROADMAP.md).
+dipakai bersama. Tapi 960 sel itu **tidak perlu dicarikan tempat**: tak ada
+yang menuntut keduanya menempati fabric bersamaan. Papan memuatnya sebagai
+slot bitstream berurutan (`rtl/scripts/rack.py`), jadi biaya rack adalah
+slot terbesar, 67%, bukan jumlahnya — ketiga slot sudah dijalankan
+berurutan dalam satu sesi ([PAPAN.md](../cosmictera-build/PAPAN.md)).

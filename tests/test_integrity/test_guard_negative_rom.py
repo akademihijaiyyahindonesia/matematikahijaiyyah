@@ -46,7 +46,10 @@ def _rom_vector(index: int) -> list[int]:
     return list(reversed(bytes_))
 
 
-@pytest.mark.parametrize("index,guard", [(i, g) for i, (_, g) in sorted(ROM_NEGATIVE_VECTORS.items())])
+@pytest.mark.parametrize(
+    "index,guard",
+    [(i, g) for i, (_, g) in sorted(ROM_NEGATIVE_VECTORS.items())],
+)
 def test_each_negative_vector_fails_exactly_one_guard(index: int, guard: str) -> None:
     """Attributable, not merely rejected."""
     vector, _ = ROM_NEGATIVE_VECTORS[index]

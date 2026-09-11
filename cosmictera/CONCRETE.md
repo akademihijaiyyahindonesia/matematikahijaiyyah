@@ -139,24 +139,24 @@ Keduanya muat. Margin di SLICE=25 adalah **12.640 LUT4**.
 
 **Pemetaan 4‑LUT generik, bukan laporan fitting vendor.** `hijaiyyah_kabah_top`
 sendiri tidak bisa di‑place‑and‑route sebagai top level: antarmukanya **1.665
-bit port** melawan **276 IOB** papan, dan itu memang tujuannya, bukan sesuatu
+bit port** melawan **384 IOB** papan, dan itu memang tujuannya, bukan sesuatu
 yang belum sempat — persis seperti `hcpu_top` bukan top level. Fmax‑nya tetap
 **[EH]**.
 
-### Wrapper Ka'bah — antarmuka selesai di kedua papan, LUT hanya di 20K
+### Wrapper Ka'bah — antarmuka 10 pin, dijalankan di papan
 
 `hijaiyyah_kabah_gowin_top.v` adalah wrapper itu — `out_state` tetap internal
 (diakses testbench lewat hierarki, seperti biasa), dan yang keluar ke pin
-papan hanya clk, reset, UART RX/TX, 6 LED: **10 pin**. Diukur 4 September
-2026, yosys 0.68 (`-nodsp`) → nextpnr‑himbaechel 0.11.1 → `gowin_pack`,
+papan hanya clk, reset, UART RX/TX, 6 LED: **10 pin**. Diukur ulang 10 September
+2026 (sesudah penyerempak reset berhenti menggerbangi pin 87 — dulu 117,91 MHz), yosys 0.68 (`-nodsp`) → nextpnr‑himbaechel 0.11.1 → `gowin_pack`,
 GW2AR‑LV18QN88C8/I7 (Tang Nano 20K, papan target):
 
 | | terpakai / kapasitas | % |
 |---|---:|---:|
 | IOB | 10 / 384 | **2%** |
-| LUT4 | 12.102 / 20.736 | **58%** |
-| DFF | 1.963 / 15.552 | 12% |
-| Fmax | **117,91 MHz** — terrout, `gowin_pack` sukses, bitstream 4,6 MB | |
+| LUT4 | 12.061 / 20.736 | **58%** |
+| DFF | 1.965 / 15.552 | 12% |
+| Fmax | **165,98 MHz** — terrout, `gowin_pack` sukses, bitstream 4,6 MB, **dijalankan di papan**: 400/400 byte cocok `cube.py` | |
 
 Wrapper ini diverifikasi lewat framing UART sungguhan — bukan `bit_in` atau
 `out_state` langsung — dua blok 128 byte berturut‑turut tanpa reset di antara
@@ -187,14 +187,14 @@ komitnya. Yang terjadi adalah lima komit mendarat sesudahnya dan tak satu pun
 menjalankan ulang place-and-route — dijaga di sini karena pelajarannya
 tentang satu komit:
 
-| komit | | LUT4 | |
-|---|---|---:|---|
-| `ae83fd2` | perkakas dan bitstream pertama | 6.753 (78%) | muat |
-| `096e392` | mode supervisor | 6.740 (78%) | muat |
-| `348e9c6` | **jalur boot** | **13.644 (157%)** | **gagal** |
-| `e5bd781` | satu huruf satu instruksi | 13.710 (158%) | gagal |
-| `a606ed5` | proteksi memori | 13.800 (159%) | gagal |
-| `34ca28c` | syscall | 13.817 (159%) | gagal |
+| komit | | LUT4 |
+|---|---|---:|
+| `ae83fd2` | perkakas dan bitstream pertama | 6.753 |
+| `096e392` | mode supervisor | 6.740 |
+| `348e9c6` | **jalur boot** | **13.644** |
+| `e5bd781` | satu huruf satu instruksi | 13.710 |
+| `a606ed5` | proteksi memori | 13.800 |
+| `34ca28c` | syscall | 13.817 |
 
 Satu komit yang melakukannya. Jalur boot menambahkan port tulis loader ke memori
 instruksi — tiga baris — dan itu mengubah larik hanya-baca menjadi memori
@@ -267,7 +267,7 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 | | Label | Kenapa |
 |---|---|---|
 | Spons tahan kriptanalisis | **EH** | terukur, belum dikriptanalisis |
-| Fmax Kabah top | **EH** | 1.665 bit port vs 276 IOB — butuh wrapper sebelum bisa ditempatkan. Ini modul mentah `hijaiyyah_kabah_top`; yang berjalan di papan 10 Sep 2026 adalah wrapper-nya, dan keduanya tidak boleh tertukar |
+| Fmax Kabah top | **EH** | 1.665 bit port vs 384 IOB — butuh wrapper sebelum bisa ditempatkan. Ini modul mentah `hijaiyyah_kabah_top`; yang berjalan di papan 10 Sep 2026 adalah wrapper-nya, dan keduanya tidak boleh tertukar |
 | FIFO akan memberi 8,00 clock/byte | **EH** | belum dibangun |
 | Skala tera node‑hertz | **AT** | terukur 43,72 giga; butuh 22,9× |
 | Kerahasiaan | — | **ditolak** — pakai AES‑256‑GCM |

@@ -59,7 +59,7 @@ def test_join_is_not_closed_and_g4_is_what_fails() -> None:
 def test_addition_stays_closed_and_meet_matches_it() -> None:
     """The monoid is the reference both are measured against."""
     added = sum(1 for i, j in PAIRS
-                if guard_check([x + y for x, y in zip(VECTORS[i], VECTORS[j])]))
+                if guard_check([x + y for x, y in zip(VECTORS[i], VECTORS[j], strict=True)]))
     assert added == len(PAIRS), f"(V, +) is no longer closed: {added}/{len(PAIRS)}"
     assert _closed(hybit_meet) == added
 
@@ -69,7 +69,7 @@ def test_addition_stays_closed_and_meet_matches_it() -> None:
 def test_without_rebuilding_aggregates_the_sum_checks_fail() -> None:
     """G1-G3 are sums, so the slot cannot carry op() of the old sums."""
     naive = sum(1 for i, j in PAIRS
-                if guard_check([min(x, y) for x, y in zip(VECTORS[i], VECTORS[j])]))
+                if guard_check([min(x, y) for x, y in zip(VECTORS[i], VECTORS[j], strict=True)]))
     assert naive < len(PAIRS), "the sum-checks stopped noticing a stale aggregate"
     assert _closed(hybit_meet) > naive
 
@@ -103,7 +103,7 @@ def test_bitwise_and_is_not_intersection_and_the_numbers_show_it() -> None:
     bitwise_closed = sum(
         1 for i, j in PAIRS
         if guard_check(recompute_aggregates(
-            [x & y for x, y in zip(VECTORS[i], VECTORS[j])])))
+            [x & y for x, y in zip(VECTORS[i], VECTORS[j], strict=True)])))
     assert bitwise_closed < _closed(hybit_meet), (
         "the bit operator is now as closed as the lattice meet, which would "
         "mean the counts have stopped being counts")

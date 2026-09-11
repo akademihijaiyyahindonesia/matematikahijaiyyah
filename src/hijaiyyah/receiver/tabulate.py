@@ -54,7 +54,13 @@ class BankRow(NamedTuple):
         return self.hz == 0.0
 
     @property
-    def count(self) -> int:
+    def n(self) -> int:
+        """Named `n` because that is the column header it fills.
+
+        It was `count`, which overrode `tuple.count` on a NamedTuple --
+        so `row.count(x)` stopped counting occurrences and started
+        returning the number of letters, whatever you asked it about.
+        """
         return len(self.letters)
 
 
@@ -125,7 +131,7 @@ def render_bank(rows: Tuple[BankRow, ...] = (), frequency: bool = True) -> str:
         cells = [f"{em}{row.period}{em}"]
         if frequency:
             cells.append(_hz_text(row.hz))
-        cells += [str(row.count), f"{em}{' '.join(row.letters)}{em}"]
+        cells += [str(row.n), f"{em}{' '.join(row.letters)}{em}"]
         out.append("| " + " | ".join(cells) + " |")
     return "\n".join(out)
 

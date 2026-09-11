@@ -31,9 +31,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from hijaiyyah.hisa.assembler import assemble  # noqa: E402
+from hijaiyyah.hisa.assembler import assemble
 
-MAX_WORDS = 4096 - 64          # CODE_DEPTH minus where the loader puts things
+LOAD_BASE = 64                 # loader.hasm writes IMEM_ADDR = 64 and enters there
+MAX_WORDS = 4096 - LOAD_BASE   # CODE_DEPTH minus where the loader puts things
 
 
 def encode(words: list[int]) -> bytes:
@@ -41,7 +42,8 @@ def encode(words: list[int]) -> bytes:
     if len(words) > MAX_WORDS:
         raise ValueError(
             f"{len(words)} words will not fit: the loader writes from address "
-            f"64 and instruction memory holds 4096, so {MAX_WORDS} is the limit")
+            f"{LOAD_BASE} and instruction memory holds 4096, so {MAX_WORDS} "
+            f"is the limit")
     out = bytearray(struct.pack(">I", len(words)))
     for word in words:
         out += struct.pack(">I", word & 0xFFFFFFFF)
@@ -49,10 +51,25 @@ def encode(words: list[int]) -> bytes:
 
 
 def load(path: Path) -> list[int]:
-    """A .hasm is assembled; a .hex is read as one hex word per line."""
+    """A .hasm is assembled at LOAD_BASE; a .hex is read one word per line.
+
+    The base is not cosmetic. Labels are assigned from zero, but the loader
+    writes this program to address 64 -- so an absolute label named a word
+    inside the loader's own code until the assembler was told where the
+    program would land. `mem_protect`, `syscall`, `syscall_io`, `trap_timer`
+    and `user_mode` all install a trap vector from a label, and all five
+    returned zero bytes from the board while passing their testbenches, where
+    the program does start at zero.
+
+    A `.hex` is already assembled and cannot be relocated here: whoever built
+    it chose its base. `asm2hex.py` emits images for `$readmemh`, which loads
+    at address 0, so those are correct as they stand.
+    """
     if path.suffix == ".hex":
         return [int(line, 16) for line in path.read_text().split() if line.strip()]
-    return assemble(path.read_text(encoding="utf-8"), base_dir=path.parent)
+    return assemble(
+        path.read_text(encoding="utf-8"), base_dir=path.parent, base=LOAD_BASE
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        import serial                       # pyserial, optional
+        import serial  # pyserial, optional
     except ImportError:
         print("pyserial is not installed: pip install pyserial", file=sys.stderr)
         return 2

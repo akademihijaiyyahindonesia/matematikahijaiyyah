@@ -101,8 +101,8 @@ def test_the_matrix_bank_carries_no_frequency_column() -> None:
 
 
 def test_the_two_banks_disagree_on_exactly_six_letters() -> None:
-    wire = {row.period: row.count for row in wire_bank()}
-    matrix = {row.period: row.count for row in matrix_bank()}
+    wire = {row.period: row.n for row in wire_bank()}
+    matrix = {row.period: row.n for row in matrix_bank()}
     assert wire == {1: 22, 3: 4, 31: 2}
     assert matrix == {1: 16, 2: 2, 3: 7, 4: 1, 31: 2}
 

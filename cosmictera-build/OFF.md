@@ -7,44 +7,15 @@ Keduanya dipisah karena jaraknya ke "menyala" sangat berbeda.
 
 ## Terhalang — terbangun, tidak bisa dijalankan
 
-### HCPU + Ka'bah sebagai satu top level
-
-Keduanya berjalan di papan **sendiri-sendiri** — HCPU 14.005 LUT4 (67%),
-Ka'bah 12.061 LUT4 (58%). Digabung jadi satu top level: **105% — lewat 960
-sel.** Diukur, bukan diperkirakan.
-
-Dan rinciannya membatalkan tiga penghematan yang sempat direncanakan:
-
-| Rencana | Yang sebenarnya terjadi |
-|---|---|
-| kecilkan memori instruksi 4096 → 1024 | hemat **15 sel** |
-| berbagi satu UART | tidak masuk empat belas besar pemakai LUT |
-| pangkas modul kecil | `hcpu_execute` + `hijaiyyah_sponge` sudah **91%** desain |
-
-Jadi 960 sel itu tidak ada di tempat yang mudah. Peta jalannya di
-[ROADMAP.md](ROADMAP.md) Fase 4. Label: **AT**.
-
 ### Modul Ka'bah mentah masih tak bisa ditempatkan
 
-`hijaiyyah_kabah_top` sendirian: **1.665 bit port melawan 276 IOB.** Yang
+`hijaiyyah_kabah_top` sendirian: **1.665 bit port melawan 384 IOB.** Yang
 berjalan di papan adalah wrapper-nya (`hijaiyyah_kabah_gowin_top.v`), yang
 menyempitkan antarmuka ke 10 pin. Modul mentahnya belum pernah, dan
 perbedaan itu bukan rincian: wrapper yang lulus tidak menjadikan modul di
 dalamnya sudah teruji ditempatkan.
 
 Label: **EH**.
-
-### Lima program trap/supervisor
-
-`mem_protect`, `syscall`, `syscall_io`, `trap_timer`, `user_mode` —
-kelimanya mengembalikan **nol byte** di papan, dan kelimanya **lulus di
-testbench masing-masing**. Sebabnya loader: program dimuat mulai alamat 64,
-tetapi `MOVI Rx, label` dirakit sebagai alamat **absolut** dengan asumsi
-basis 0 dan tidak direlokasi. Program yang memasang vektor trap dari sebuah
-label memasangnya ke alamat yang salah.
-
-Persis program yang paling butuh relokasi. Label: **EH** — sebabnya bernama
-dan bisa diukur, perbaikannya belum dikerjakan.
 
 ---
 

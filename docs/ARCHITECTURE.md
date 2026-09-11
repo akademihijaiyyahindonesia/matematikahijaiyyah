@@ -494,7 +494,8 @@ simulasi: reset yang digerbangi level pin MODE1 (muncul empat kali di tiga
 wrapper), memori instruksi yang kosong di **setiap** bitstream yang pernah
 dibangun — tak terlihat karena `OP_NOP` kebetulan `8'h00` — dan driver
 diferensial TMDS yang dibuang nextpnr sebelum sampai ke pad. Ketiganya lolos
-20 testbench RTL dan 4.570 tes Python.
+36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil langsung
+dari pytest — dan 4.810 tes Python.
 
 ---
 

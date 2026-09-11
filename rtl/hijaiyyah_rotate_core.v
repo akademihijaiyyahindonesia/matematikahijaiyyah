@@ -26,11 +26,11 @@
 //
 // MEASURED, flattened, yosys abc -lut 4. The mux was the whole problem:
 //
-//     SLICE_BYTES   sliced    rotated   saving   clocks   fits 8,640?
-//               4    9,517      4,603    -52%     1,486   yes
-//               8    8,673      4,927    -43%       786   yes
-//              25   12,074      6,331    -48%       310   yes
-//              50       --      9,438       --      198   no
+//     SLICE_BYTES   sliced    rotated   saving   clocks   rotated/20,736
+//               4    9,517      4,603    -52%     1,486   22%
+//               8    8,673      4,927    -43%       786   23%
+//              25   12,074      6,331    -48%       310   30%
+//              50       --      9,438       --      198   45%
 //
 // And the curve is now monotonic in the right direction -- narrower is
 // smaller, 4,603 < 4,927 < 6,331 -- which is exactly what should happen once

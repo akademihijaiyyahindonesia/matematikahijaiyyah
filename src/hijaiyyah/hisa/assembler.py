@@ -238,6 +238,7 @@ def parse_immediate(
     labels: Optional[Dict[str, int]] = None,
     address: int = 0,
     pc_relative: bool = False,
+    base: int = 0,
 ) -> int:
     """Parse a decimal, ``#``-prefixed, hex, or label immediate.
 
@@ -246,6 +247,9 @@ def parse_immediate(
         labels: Label table from the first pass, if any.
         address: Address of the instruction being assembled.
         pc_relative: True for branches, whose labels resolve to an offset.
+        base: Where the program will be loaded. An absolute label is an
+            address, so it is the one thing that has to move with the
+            program; see :func:`assemble`.
 
     Returns:
         The value masked into the 12-bit immediate field.
@@ -258,7 +262,9 @@ def parse_immediate(
 
     if token in labels:
         target = labels[token]
-        value = target - address if pc_relative else target
+        # A relative branch measures a distance, and a distance does not move
+        # when both ends do. Only the absolute form names a place.
+        value = target - address if pc_relative else target + base
     else:
         try:
             value = int(token, 16) if token.lower().startswith("0x") else int(token, 10)
@@ -294,6 +300,7 @@ def assemble_line(
     line: str,
     labels: Optional[Dict[str, int]] = None,
     address: int = 0,
+    base: int = 0,
 ) -> Optional[int]:
     """Assemble one line into a 32-bit word.
 
@@ -301,6 +308,7 @@ def assemble_line(
         line: Source line, which may carry a label, a comment, or both.
         labels: Label table from the first pass.
         address: Address this instruction will occupy.
+        base: Load address of the program, added to absolute labels only.
 
     Returns:
         The instruction word, or None for a line that holds no instruction.
@@ -339,7 +347,7 @@ def assemble_line(
             slots[kind] = parse_register(raw)
         else:
             slots["imm"] = parse_immediate(
-                raw, labels, address, pc_relative=(kind == "bimm")
+                raw, labels, address, pc_relative=(kind == "bimm"), base=base
             )
 
     return encode(
@@ -409,7 +417,11 @@ def expand_includes(
     return out
 
 
-def assemble(source: str, base_dir: "Optional[Path]" = None) -> List[int]:
+def assemble(
+    source: str,
+    base_dir: "Optional[Path]" = None,
+    base: int = 0,
+) -> List[int]:
     """Assemble a whole program into instruction words.
 
     Args:
@@ -417,6 +429,22 @@ def assemble(source: str, base_dir: "Optional[Path]" = None) -> List[int]:
         base_dir: Where ``.include`` paths resolve from. Callers that read a
             file should pass its directory; without it an include is an error
             rather than a guess.
+        base: The address the program will be loaded at. Labels are assigned
+            from zero in the first pass, so an absolute one names the wrong
+            place unless it is moved with the program; ``base`` is that move.
+            Zero -- baked into the bitstream at address 0 -- is the default
+            and leaves every word byte-identical to before.
+
+            This is what kept five programs dark on the board. The loader
+            writes from address 64, but ``MOVI R1, handler`` assembled the
+            handler's address as if the program began at 0, so
+            ``trap_timer.hasm`` pointed its trap vector at word 13 -- inside
+            the loader's own code -- rather than at word 77. The CPU took the
+            trap, jumped into the loader, and never halted or printed. The
+            five that failed are exactly the five that install a vector from
+            a label; relative branches measure distances, so ``test_guard``
+            (143 words, dense with branches) ran correctly all along and hid
+            how narrow the fault was.
 
     Returns:
         One 32-bit word per instruction, in address order.
@@ -430,7 +458,7 @@ def assemble(source: str, base_dir: "Optional[Path]" = None) -> List[int]:
     words: List[int] = []
     for number, line in enumerate(lines, start=1):
         try:
-            word = assemble_line(line, labels, len(words))
+            word = assemble_line(line, labels, len(words), base=base)
         except AssemblyError as exc:
             raise AssemblyError(str(exc), line_number=number) from None
         if word is not None:

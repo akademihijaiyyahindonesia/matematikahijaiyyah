@@ -372,6 +372,135 @@ def test_certificate_records_name_and_role(relpath: str, key: str) -> None:
     assert doc.get(f"{key}_role") == CANONICAL_ROLE, f"{relpath}: {key}_role drifted"
 
 
+# ── the book certificate's verification summary ──────────────────
+
+# Ten figures sat in `verification_summary` since March 2026 and nothing read
+# any of them. Measured on 11 September 2026, four were exactly right and two
+# were badly stale (software_tests said 1611 against a suite of 4.798;
+# rtl_hardware_tests said 174 against 253 assertions in 20 benches). The four
+# that were right are pinned here, because being right by luck for six months
+# is what every other defect in this file started as.
+#
+# The chapter figures are deliberately NOT pinned: the whole patent release is
+# to be reworked against the final Tang Nano 20K results, with BAB III rebuilt
+# to match, so fixing them to today's values would pin a number that is already
+# scheduled to change.
+CERTIFICATE_MEASURED_FIGURES = [
+    ("guard_g1_g4", "112/112 PASS"),
+    ("guard_t1_t2", "56/56 PASS"),
+    ("exometric_r1_r5", "140/140 PASS"),
+    ("injectivity_pairs", "378/378 UNIQUE"),
+]
+
+@pytest.mark.parametrize("key,value", CERTIFICATE_MEASURED_FIGURES)
+def test_certificate_verification_figure_holds(key: str, value: str) -> None:
+    """Each of these was measured against the code and matched."""
+    path = book_relative("OFFICIAL_PATENT_RELEASE/CERTIFICATE.json")
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip("CERTIFICATE.json not present under any *Matematika Hijaiyyah* folder")
+    summary = json.loads(read(path))["verification_summary"]
+    assert summary.get(key) == value, f"{key} drifted from the measured value"
+
+def test_the_certificate_figures_are_what_the_guards_actually_produce() -> None:
+    """28 letters x 4 structural guards, x 2 turning guards, x 5 exometric.
+
+    Each product is asserted separately rather than as one total, because a
+    total can stay right while two of its terms move in opposite directions --
+    which is how 308 came to be both a sum of the details and wrong.
+    """
+    import itertools
+
+    from hijaiyyah.algebra import exometric
+    from hijaiyyah.core.guards import guard_detail
+    from hijaiyyah.core.master_table import MASTER_TABLE
+
+    entries = MASTER_TABLE.all_entries()
+    details = [guard_detail(e) for e in entries]
+
+    assert sum(1 for d in details for k in ("R1", "R2", "R3", "R4")
+               if d[k] is True) == 112, "guard_g1_g4 is no longer 112/112"
+    assert sum(1 for d in details for k in ("T1", "T2")
+               if d[k] is True) == 56, "guard_t1_t2 is no longer 56/56"
+
+    audits = [exometric.audit(exometric.build(e)) for e in entries]
+    assert sum(1 for a in audits for k in ("R1", "R2", "R3", "R4", "R5")
+               if a[k] is True) == 140, "exometric_r1_r5 is no longer 140/140"
+
+    pairs = list(itertools.combinations(entries, 2))
+    assert len(pairs) == 378 and all(
+        tuple(a.vector) != tuple(b.vector) for a, b in pairs
+    ), "injectivity_pairs is no longer 378/378 unique"
+
+# ── the release notes quote measurable numbers ───────────────────
+
+# Every figure in RELEASE_NOTES.md is measurable, so none of them has any
+# business being a transcription. They were all correct when measured on
+# 11 September 2026 -- but so was PATENT_RELEASE.md's seal while the two JSONs
+# beside it were wrong, and correctness that nothing re-measures is just a
+# number that has not drifted yet.
+#
+# The diameter deserves its own note. `intrametric.diameter_sq()` sums over
+# `range(14)`, not all 18 components -- the intra metric is defined on the
+# first fourteen. Measured across all 18 the diameter is 8.602, not 8.367, so
+# a reader who reimplements it from the vector width alone gets a different
+# number and concludes the release notes are wrong. They are not; the metric
+# is narrower than the vector.
+RELEASE_NOTES_FIGURES = [
+    ("13/13 theorem tests pass", "13/13"),
+    ("28/28 letters guard-verified", "28/28"),
+    ("378/378 injectivity pairs confirmed", "378/378"),
+]
+
+@pytest.mark.parametrize("line,figure", RELEASE_NOTES_FIGURES)
+def test_release_notes_figure_is_present(line: str, figure: str) -> None:
+    path = ROOT / "release/HL-18E-v1.0/RELEASE_NOTES.md"
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip("RELEASE_NOTES.md not present")
+    assert line in read(path), f"RELEASE_NOTES.md no longer states {figure}"
+
+def test_the_release_notes_figures_are_what_the_code_measures() -> None:
+    """The half that matters: the numbers, measured, not read."""
+    import itertools
+
+    from hijaiyyah.algebra import intrametric
+    from hijaiyyah.core.guards import guard_check
+    from hijaiyyah.core.master_table import MASTER_TABLE
+    from hijaiyyah.theorems.test_suite import TheoremTestSuite
+
+    results = TheoremTestSuite().run_all()
+    failed = [f"{r.ref} {r.name}: {r.message}" for r in results if not r.passed]
+    assert len(results) == 13 and not failed, f"not 13/13: {failed}"
+
+    entries = MASTER_TABLE.all_entries()
+    assert sum(1 for e in entries if guard_check(e)) == 28, "not 28/28 guard-verified"
+
+    pairs = list(itertools.combinations(entries, 2))
+    assert len(pairs) == 378, "C(28,2) is not 378 -- the alphabet changed size"
+    assert all(tuple(a.vector) != tuple(b.vector) for a, b in pairs), (
+        "two letters share a vector -- injectivity is broken")
+
+    assert intrametric.diameter_sq() == 70, (
+        "diam^2 is no longer 70, so the release notes' sqrt(70) is now a false claim")
+
+def test_the_patent_release_does_not_claim_a_lockdown_it_does_not_have() -> None:
+    """It claimed one for months, and measurement said otherwise.
+
+    "all underlying data files ... have been **permanently locked (Read-Only)**
+    at the filesystem level" -- measured, all seven sealed paths were mode 0o644
+    or 0o700, every one writable by the owner. The claim was not merely stale;
+    it was never true, and a patent instrument asserting a protection that does
+    not exist is worse than one asserting none. The paragraph now describes the
+    protection that does exist, which is measurement.
+    """
+    path = ROOT / "release/HL-18E-v1.0/PATENT_RELEASE.md"
+    if not path.exists():                                     # pragma: no cover
+        pytest.skip("PATENT_RELEASE.md not present")
+    text = read(path)
+    assert "permanently locked (Read-Only)** at the filesystem" not in text, (
+        "the filesystem-lockdown claim is back, and it is still not true")
+    assert "sealed by **measurement**" in text, (
+        "PATENT_RELEASE.md no longer states how the dataset is actually sealed")
+
 # ── package metadata ─────────────────────────────────────────────
 
 def test_package_author_matches() -> None:

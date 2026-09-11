@@ -1,5 +1,5 @@
 """
-The boot path: what turns the Tang Nano 9K from a device you flash into a
+The boot path: what turns the Tang Nano 20K from a device you flash into a
 bridge you develop on.
 
 Until this existed a program lived inside the bitstream. `$readmemh` put it
@@ -48,7 +48,10 @@ def _stream(words: list[int]) -> list[int]:
 def _boot(payload_src: str, steps: int = 8000) -> HISAMachine:
     m = HISAMachine(MASTER_TABLE)
     m.code = assemble(LOADER.read_text(encoding="utf-8"))
-    m.rx_queue = _stream(assemble(payload_src))
+    # At the loader's base, not zero. Every payload this helper used to get was
+    # label-free, so the base never changed a word and the helper looked right
+    # while carrying the same bug send_program.py had.
+    m.rx_queue = _stream(assemble(payload_src, base=LOAD_BASE))
     for _ in range(steps):
         if m.step() is None:
             break
@@ -195,15 +198,101 @@ def test_the_loaded_program_starts_in_supervisor_and_the_reason_is_recorded() ->
 #  The host tool
 # ══════════════════════════════════════════════════════════════════
 
-def test_the_host_tool_emits_exactly_what_the_loader_expects() -> None:
+def test_the_host_tool_assembles_where_the_loader_will_put_the_program() -> None:
+    """The tool must assemble at LOAD_BASE, and this proves it rather than
+    following it.
+
+    This test used to assemble at base 0 and demand the tool match. It
+    passed for as long as the tool was also wrong. Labels are numbered from
+    zero, but the loader writes the program to address 64, so a program that
+    installs a trap vector from a label installed a pointer into the
+    loader's own code -- `mem_protect`, `syscall`, `syscall_io`, `trap_timer`
+    and `user_mode`, all five returning zero bytes from the board while
+    passing testbenches where the program does start at zero.
+
+    So the base-0 assembly is asserted to DIFFER. A test that only checks
+    the tool against a constant retyped here cannot tell a fixed tool from a
+    broken one; it can only tell that two transcriptions agree.
+    """
+    sys.path.insert(0, str(ROOT / "rtl" / "scripts"))
+    import send_program
+
     tool = ROOT / "rtl" / "scripts" / "send_program.py"
     prog = ROOT / "rtl" / "programs" / "trap_timer.hasm"
     out = subprocess.run([sys.executable, str(tool), str(prog)],
                          cwd=ROOT, capture_output=True, check=True).stdout
 
-    words = assemble(prog.read_text(encoding="utf-8"))
-    assert out == bytes(_stream(words))
-    assert struct.unpack(">I", out[:4])[0] == len(words)
+    source = prog.read_text(encoding="utf-8")
+    relocated = assemble(source, base=send_program.LOAD_BASE)
+    assert out == bytes(_stream(relocated))
+    assert struct.unpack(">I", out[:4])[0] == len(relocated)
+
+    at_zero = assemble(source)
+    assert len(at_zero) == len(relocated), "relocation changed the word count"
+    assert at_zero != relocated, (
+        "assembling at 0 and at 64 produced identical words, so this program "
+        "carries no absolute label and cannot demonstrate relocation -- pick "
+        "one that does, or the tool's base has stopped mattering")
+
+
+def test_relocation_moves_the_absolute_labels_and_nothing_else() -> None:
+    """Exactly the words that name an address move, and they move by 64."""
+    sys.path.insert(0, str(ROOT / "rtl" / "scripts"))
+    import send_program
+
+    source = (ROOT / "rtl" / "programs" / "trap_timer.hasm").read_text(encoding="utf-8")
+    at_zero = assemble(source)
+    relocated = assemble(source, base=send_program.LOAD_BASE)
+
+    moved = [(i, a, b) for i, (a, b) in enumerate(zip(at_zero, relocated, strict=True))
+             if a != b]
+    assert moved, "nothing moved"
+    for _i, a, b in moved:
+        assert b - a == send_program.LOAD_BASE, (
+            f"a word moved by {b - a}, not by {send_program.LOAD_BASE}")
+    assert len(moved) < len(at_zero), "every word moved -- that is not relocation"
+
+
+def test_the_interpreter_boot_path_relocates_like_the_board() -> None:
+    """_boot is this file's own loader path, and it assembled at 0 as well.
+
+    trap_timer.hasm is the payload that tells the difference: its handler
+    address moves with the program. Assembled at 0 through this same path it
+    took 2,120 traps and never halted -- the board's failure, reproduced in
+    the interpreter, invisible for as long as only label-free programs ran.
+    """
+    source = (ROOT / "rtl" / "programs" / "trap_timer.hasm").read_text(encoding="utf-8")
+    m = _boot(source, steps=20000)
+    assert m._halted, "the trap vector pointed into the loader -- the board's bug"
+    assert m.regs.gpr[8] == 1, "the handler never ran"
+    assert sum("TRAP" in t.description for t in m.trace) == 1
+
+
+def test_the_load_address_has_one_source_and_it_is_the_loader() -> None:
+    """64 is written in four places; the loader is the one the board runs.
+
+    hcpu_pkg.vh names the IMEM registers but not where a program lands.
+    loader.hasm decides that, twice -- where it starts writing, and where
+    ERET enters. send_program.py and nui/freeze.py each carry a LOAD_BASE of
+    their own, and the number already agreed everywhere while two of them
+    assembled at 0 anyway. So the value is read out of the loader itself and
+    every copy is held to it, rather than to each other.
+    """
+    import re
+
+    sys.path.insert(0, str(ROOT / "rtl" / "scripts"))
+    import send_program
+
+    from hijaiyyah.nui.freeze import LOAD_BASE as FREEZE_BASE
+
+    text = LOADER.read_text(encoding="utf-8")
+    start = re.search(r"MOVI\s+R7,\s*(\d+)\s*\n\s*STORE\s+R7,\s*R5,\s*0xFF3", text)
+    entry = re.search(r"MOVI\s+R7,\s*(\d+)\s*\n\s*STORE\s+R7,\s*R5,\s*0xFF9", text)
+    assert start and entry, "the loader no longer sets IMEM_ADDR and TRAP_EPC the way this reads"
+    assert start.group(1) == entry.group(1), "the loader writes to one address and enters another"
+
+    loader_base = int(start.group(1))
+    assert loader_base == LOAD_BASE == send_program.LOAD_BASE == FREEZE_BASE == 64
 
 
 def test_the_wire_order_is_most_significant_byte_first() -> None:

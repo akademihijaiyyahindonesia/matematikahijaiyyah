@@ -40,9 +40,15 @@ __all__ = ["Anchor", "RangeReceiver"]
 
 
 class Anchor(NamedTuple):
-    """A loop top: whole turns completed, and how far off the sample sat."""
+    """A loop top: whole turns completed, and how far off the sample sat.
 
-    index: int
+    `sample` was called `index` and that shadowed `tuple.index` -- the
+    method, not just the name. An `Anchor` is a tuple, and asking one
+    where a value sits inside it returned the sample number instead of
+    searching. Nothing read the field, so nothing had yet been bitten.
+    """
+
+    sample: int
     rung: int
     residual_deg: float
 
