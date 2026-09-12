@@ -276,6 +276,21 @@ di sana. Daftar di bawah hanya penunjuk bab.
   - Benchnya menegaskan mesin **apa adanya** — baris terakhirnya menunggu pid 0
     *tidak* maju, supaya cacat yang diketahui tidak diam-diam jadi klaim.
 
+### 13 September — penghalang A diisolasi
+
+- `073b968` interupsi termaskable menyimpan nol di bayangan sebuah redirect.
+  - `rtl/hcpu_fetch.v` menolkan `if_pc` saat redirect dan menurunkan
+    `fetch_valid`; `rtl/hcpu_top.v` membaca `if_pc` **tanpa** menanyakan
+    `fetch_valid`. Selama dua siklus yang dibayar sebuah redirect, `epc`
+    tersimpan **0**.
+  - Perbaikan lama (`rtl/tb/tb_hcpu_branch_trap_race.v`) menutup siklus yang
+    **dibagi** trap dan cabang; dua siklus **sesudahnya** tidak tertutup.
+  - Diukur: 60 fire, 21 menyimpan 0, dan tepat yang di bayangan.
+    Papan menjawab sama: `0 0 88 89 88 0 0 88`.
+  - **Tidak diperbaiki.** Perbaikannya di unit trap — keputusan pemilik.
+  - `cosmictera-build/ON.md` berhenti mengklaim "tiga proses, dipreempt":
+    yang terbukti hanya jalur **masuk** trap, bukan jalur kembalinya.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
