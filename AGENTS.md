@@ -250,6 +250,19 @@ di sana. Daftar di bawah hanya penunjuk bab.
 - `f0dd0f8` `CSET` (0x45) — separuh tulis dari `CGET`, dan `hos_fs_read`
   mengembalikan H-Reg hidup. Dijalankan di papan: `5 6 2 0` dan `1 1 1 2 1`.
 
+### 12 September — blok codex, dan yang tidak muat
+
+- `7eb177a` enam opcode codex di papan, yang ketujuh dikeluarkan oleh
+  pengukuran.
+  - `CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4` jalan di papan: `8 0 0 1 1 0 1 5`.
+  - `U` dan `ρ` dibaca dari `rtl/hcpu_guard.v`, bukan dihitung ulang (R1).
+  - `CDOT` dibangun lalu dicabut: 14 pengali 8×8 membuat slot papan tidak
+    ter-place. Penghalangnya **tempat**, bukan semantik — butir pertama di
+    repo ini yang begitu.
+  - Sabotase menemukan lubangnya sendiri: membandingkan dua register yang
+    sama-sama di-`CZERO` tidak bisa melihat `CZERO` yang salah. Diganti
+    dengan sifat monoid, `HCADD` lalu `CEQ` (R3).
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
