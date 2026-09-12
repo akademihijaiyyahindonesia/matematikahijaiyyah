@@ -27,7 +27,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
         sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
-        sim_nui_embedding sim_loader_nui sim_video_timing sim_shell clean
+        sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
+        sim_redirect_shadow clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -39,7 +40,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
      sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
-     sim_nui_embedding sim_loader_nui sim_video_timing sim_shell
+     sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
+     sim_redirect_shadow
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -93,6 +95,11 @@ sim_kernel: tb_hcpu_kernel.vvp kernel.hex
 # The shell: a user process that reads the serial line, and a kernel that
 # serves the read. Commands go in on uart_rxd as real bytes.
 sim_shell: tb_hcpu_shell.vvp shell.hex
+	$(VVP) $<
+
+# The two cycles after a taken branch, where a maskable interrupt saves zero.
+# sim_branch_trap_race covers the cycle they share; this covers the shadow.
+sim_redirect_shadow: tb_hcpu_trap_redirect_shadow.vvp
 	$(VVP) $<
 
 # The twenty-eight letter opcodes. Nothing executed one until this bench.
@@ -168,6 +175,9 @@ shell.hex: $(RTL_DIR)/programs/shell.hasm $(RTL_DIR)/programs/hal.hasm
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
 
 tb_hcpu_shell.vvp: $(TB_DIR)/tb_hcpu_shell.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+tb_hcpu_trap_redirect_shadow.vvp: $(TB_DIR)/tb_hcpu_trap_redirect_shadow.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
 # ── unit benches ────────────────────────────────────────────────

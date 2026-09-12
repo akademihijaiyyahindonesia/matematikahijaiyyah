@@ -90,7 +90,7 @@ Label: `CC`.
 | 6 Syscall | `0x09`, non-maskable, epc menunjuk dirinya | `rtl/programs/syscall.hasm` |
 | **I/O lewat kernel** | `PRINT` istimewa; user meminta, supervisor mencetak | `rtl/tb/tb_hcpu_syscall_io.v` |
 | **HOS** | heap, HFS guard-on-write, HAR sebagai layanan kernel | `rtl/tb/tb_hcpu_hos.v` |
-| **H-Kernel** | **tiga proses, dipreempt, register masing-masing** | `rtl/programs/kernel.hasm` |
+| **H-Kernel** | tiga proses, register masing-masing, dijadwal bergilir — **proses yang dipreempt timer tidak melanjutkan**, lihat [OFF.md](OFF.md) | `rtl/programs/kernel.hasm` |
 
 H-Kernel berjalan di **dua tempat**: penafsir Python dan pipeline RTL.
 
@@ -103,9 +103,19 @@ Angka B itu buktinya. Kedua proses menghitung di **R1** — A menambah 1, B
 menambah 100 — jadi total B tetap kelipatan bersih 100 **hanya jika** R1-nya
 tak pernah sekali pun memegang nilai A. Itu definisi register privat, diukur.
 
-A dipreempt timer dan B menyerah lewat `SYSCALL`, jadi kedua jalur masuk trap
-teruji sekaligus: tanpa `epc` dimajukan untuk cause 5, B akan mengulang
+A dipreempt timer dan B menyerah lewat `SYSCALL`, jadi kedua jalur **masuk**
+trap teruji sekaligus: tanpa `epc` dimajukan untuk cause 5, B akan mengulang
 `SYSCALL`-nya sendiri selamanya.
+
+**Yang tidak teruji sampai 13 September adalah jalur KEMBALI-nya, dan jalur itu
+rusak.** A membeku pada cacah **337** dan tidak pernah berjalan lagi: tenggat
+timer pertamanya jatuh di dua siklus sesudah lompatan loop-nya, dan di sana
+`epc` tersimpan **0**. Yang terus berjalan adalah proses yang menyerahkan
+CPU-nya sendiri lewat `SYSCALL`. Bench di atas memeriksa kelipatan B dan sapuan
+C, tidak memeriksa bahwa A masih bergerak — jadi angkanya benar dan kalimat
+"dipreempt" terlalu jauh. Sebab, sapuan, dan jawaban papan ada di
+[OFF.md](OFF.md); `make -C rtl/tb sim_redirect_shadow` menjalankan ulang
+pengukurannya.
 
 Ruang lingkupnya jujur, dan buku menetapkan ukurannya. H-Kernel di sana punya
 **empat** tanggung jawab — proses, memori, I/O, daemon guard. **Keempatnya
@@ -285,7 +295,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.912 lulus, 0 dilewati
-make -C rtl/tb all            # 270 asersi, 21 bench, 0 gagal
+python3 -m pytest -q          # 4.915 lulus, 0 dilewati
+make -C rtl/tb all            # 277 asersi, 22 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

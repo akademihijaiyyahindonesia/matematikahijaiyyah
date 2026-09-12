@@ -289,8 +289,9 @@ dijalankan ulang, bukan disalin dari catatan:
 | `trap_timer` | halt, lapor siklus | trap timer menyala, `ERET` kembali |
 | `timer_poll` | halt, lapor siklus | timer terbaca dari program |
 | `hal` | halt, lapor siklus | lapisan HAL merakit dan berjalan |
-| `trap_resume` | **`84` `84`** | timer mengembalikan PC yang benar |
+| `trap_resume` | **`84` `84`** | timer mengembalikan PC yang benar — di tenggat ini |
 | `trap_flags` | **`0`** | FLAGS **tidak** selamat melewati trap |
+| `trap_shadow` | **`0 0 88 89 88 0 0 88`** | delapan tenggat digeser satu siklus; loop di 88, **empat dikembalikan ke alamat 0** |
 
 ### Dua angka yang bukan kabar baik
 
@@ -417,7 +418,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.912 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.915 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -460,15 +461,16 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.912 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 21 testbench, 270 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.915 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 22 testbench, 277 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
 timing 8, H-Kernel 7, **shell 7**, syscall I/O 6, HOS 7, subrutin 4, huruf 3,
-wrapper Gowin 2, dan tujuh testbench yang melapor satu pernyataan lulus
-tunggal — 270, semuanya 0 FAIL. Yang baru: `tb_hcpu_shell`, tujuh pemeriksaan
-atas shell yang membaca perintah dari kabel.
+**bayangan redirect 7**, wrapper Gowin 2, dan tujuh testbench yang melapor
+satu pernyataan lulus tunggal — 277, semuanya 0 FAIL. Dua yang baru:
+`tb_hcpu_shell` dan `tb_hcpu_trap_redirect_shadow`, tujuh pemeriksaan
+masing-masing.
 
 > **Selisih tujuh dari angka 253 sebelumnya bukan tes baru.** `tb_hcpu_video_timing`
 > menjaga delapan properti VESA — H_TOTAL, lebar dan posisi hsync, rentang `de`,
@@ -501,7 +503,7 @@ atas shell yang membaca perintah dari kabel.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.912 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.915 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

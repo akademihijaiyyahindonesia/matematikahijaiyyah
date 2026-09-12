@@ -1,0 +1,82 @@
+; trap_shadow.hasm — the board is asked where a timer sends a process back to.
+;
+; Prints EIGHT numbers: the address the timer handed back, once per sample,
+; with the deadline walked by one cycle between samples so the samples land on
+; different cycles of the loop's own rhythm.
+;
+; The loop lives at a known address and is two instructions long. A sample that
+; prints that address is correct. A sample that prints 0 is the defect, and on
+; this machine some of them do.
+;
+; ── what is being walked ────────────────────────────────────────
+; A taken jump costs the front end a redirect, and rtl/hcpu_fetch.v answers a
+; redirect by setting `if_pc <= 0` and `fetch_valid <= 0` -- Fetch's way of
+; saying it is not presenting an instruction. A maskable interrupt saves
+; `pc_now`, which reads `if_pc` without consulting `fetch_valid`, so for the
+; two cycles a redirect costs it does not read "nothing here": it reads ADDRESS
+; ZERO and saves that as the place to return to.
+;
+; rtl/tb/tb_hcpu_trap_redirect_shadow.v sweeps the same question in simulation
+; and counts it: sixty fires, twenty-one of them save zero. This program asks
+; the board, because a number that has not left simulation is not a result here.
+;
+; ── why the handler puts the process back on its feet ───────────
+; A sample that returns 0 would send the process to address 0 in user mode,
+; where the setup code's first peripheral store faults it and the experiment
+; ends after one sample. So the handler REPORTS what the hardware gave and then
+; writes the loop address into TRAP_EPC itself. What is being measured is what
+; the hardware saved, not whether the process survives it -- kernel.hasm
+; already shows what happens when nothing intervenes: process A freezes at 337.
+;
+; Not repaired here. The repair is in the trap unit; that is the owner's.
+; Recorded in cosmictera-build/OFF.md.
+
+        MOVI  R5, 0
+        MOVI  R6, 0             ; samples taken
+        MOVI  R7, 20            ; the deadline offset, walked by 1 per sample
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT
+        MOVI  R1, 1             ; timer only
+        STORE R1, R5, 0xFFB     ; TRAP_ENABLE
+        MOVI  R1, 1
+        STORE R1, R5, 0xFF6     ; acknowledge before arming
+        LOAD  R1, R5, 0xFF4     ; the counter is free-running and compared by
+        ADD   R1, R1, R7        ; equality, so the deadline must be relative
+        STORE R1, R5, 0xFF5
+        MOVI  R1, spin
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0
+        STORE R1, R5, 0xFFD     ; previous mode = USER
+        NOP
+        NOP
+        NOP
+        ERET
+
+; ── user mode ───────────────────────────────────────────────────
+; Two instructions, and the second is a taken jump every time round -- the
+; shape a scheduler's process loop has.
+spin:   ADDI  R2, R2, 1
+        JMP   spin
+
+; ── handler ─────────────────────────────────────────────────────
+handler:
+        LOAD  R4, R5, 0xFF9
+        PRINT R4                ; where the timer says to go back to
+        ADDI  R6, R6, 1
+        ADDI  R7, R7, 1         ; walk the phase by one cycle
+        LOAD  R1, R5, 0xFF4
+        ADD   R1, R1, R7
+        STORE R1, R5, 0xFF5     ; arming also clears `expired`
+        MOVI  R1, spin
+        STORE R1, R5, 0xFF9     ; put the process back on its feet
+        CMPI  R6, 8
+        JEQ   fin
+        NOP                     ; the store to TRAP_EPC must land before ERET
+        NOP
+        NOP
+        ERET
+fin:    HALT

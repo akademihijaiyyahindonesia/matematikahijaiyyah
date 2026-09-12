@@ -159,12 +159,70 @@ kode boot — dalam mode user, dan simpanan periferal pertama di HAL
 menggagalkannya sebagai **cause 3** selamanya. Sesudah itu `pcb.pc` berisi
 alamat di dalam `hal.hasm`, yang adalah tanda tangan cacat ini.
 
-**Jalur timernya sendiri benar.** `rtl/programs/trap_resume.hasm` menanyakan
-hal yang sama pada program terkecil yang bisa menanyakannya, dan papan
-menjawab `84 84` — alamat loop dan `epc` yang dikembalikan timer **sama**.
-Jadi yang rusak adalah interaksinya, bukan jalur timer sebagai jalur. Di mana
-persisnya **belum diisolasi**, dan mengisolasinya lebih jauh berarti mengubah
-unit trap. Itu keputusan pemilik.
+**Sebabnya sudah diisolasi, 13 September 2026: bayangan redirect.**
+
+Sebuah lompatan yang diambil membuat ujung depan di-redirect, dan
+`rtl/hcpu_fetch.v` menjawab redirect dengan:
+
+```verilog
+end else if (flush || branch_taken) begin
+    if_instruction <= {`OP_NOP, 24'h000000};
+    if_pc          <= {`XLEN{1'b0}};
+    fetch_valid    <= 1'b0;
+```
+
+Menolkan `if_pc` adalah cara Fetch berkata *"saya tidak sedang menyajikan
+instruksi"*, dan `fetch_valid` turun mengatakan hal yang sama untuk siklus
+berikutnya. Tetapi `pc_now` di `rtl/hcpu_top.v` membaca `if_pc` **tanpa
+menanyakan `fetch_valid`**:
+
+```verilog
+.pc_now (branch_taken_w ? branch_target_w : if_pc),
+```
+
+Jadi selama **dua siklus** yang dibayar sebuah redirect, interupsi termaskable
+tidak membaca "tidak ada apa-apa di sini" — ia membaca **alamat nol**, lalu
+menyimpannya sebagai tempat kembali.
+
+**Perbaikan yang sudah ada menutupi siklus yang lain.** `hcpu_top.v` sudah
+memperbaiki kasus trap dan cabang yang **berbagi siklus** (`branch_taken_w ?
+branch_target_w : …`), ditemukan lewat `tb_hcpu_branch_trap_race.v`. Yang tidak
+tertutup adalah dua siklus **sesudahnya**, ketika `branch_taken_w` sudah turun
+lagi sehingga perbaikan itu tidak berlaku.
+
+Terukur, `make -C rtl/tb sim_redirect_shadow`, menyapu tenggat terhadap loop
+tiga instruksi yang berakhir dengan `JMP`:
+
+```
+60 fire: 39 sah, 21 menyimpan 0
+sekelas siklus dengan cabang: 10   bayangan redirect: 21
+```
+
+Setiap fire yang jatuh di bayangan menyimpan 0; tidak ada yang di luar
+bayangan melakukannya. Sepuluh tabrakan sekelas-siklus tetap mengembalikan
+sasaran cabang — perbaikan lama bekerja.
+
+**Dan papan menjawab hal yang sama**, `rtl/programs/trap_shadow.hasm`, delapan
+sampel dengan tenggat digeser satu siklus tiap kali, loop di alamat 88:
+
+```
+0  0  88  89  88  0  0  88
+```
+
+Empat dari delapan dikembalikan ke **alamat 0**.
+
+Ini yang membunuh proses A: loop tiga instruksi memakan enam siklus, **dua di
+antaranya** bayangan itu, jadi satu dari tiga tenggat mengirim prosesnya ke
+alamat 0 — dan alamat 0 adalah kode boot, dalam mode user, tempat simpanan
+periferal pertamanya gagal selamanya.
+
+`rtl/programs/trap_resume.hasm` mengembalikan `84 84` di papan bukan karena
+jalurnya benar, melainkan karena tenggatnya kebetulan jatuh di luar bayangan.
+Itu keberuntungan, dan sekarang bisa dikatakan sebagai fakta terukur, bukan
+dugaan.
+
+**Perbaikannya tidak dikerjakan di sini** — ia ada di unit trap, dan itu
+keputusan pemilik.
 
 Akibatnya untuk M3: penjadwal **bergilir** (ticks naik, kedua blok dipilih
 bergantian) tetapi **tidak melanjutkan** proses yang dipreempt. Yang berjalan
