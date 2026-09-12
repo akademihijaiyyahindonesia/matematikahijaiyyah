@@ -345,6 +345,26 @@ memutuskan:
    pemilik desain dan berjalan di papan fisik. Yang terhalang dicatat di
    `cosmictera-build/OFF.md` dengan alasan terukur, bukan dirapikan.
 
+### Kesimpulan resmi M3 — pemilik, 13 September 2026
+
+> *"akar A sudah ditemukan; belum diperbaiki; B/C/D masih terbuka; M4 belum
+> boleh dimulai."*
+
+Empat kalimat itu adalah keadaan M3, dan yang keempat mengikat: **jangan
+memulai M4.** Yang boleh dikerjakan hanyalah penghalang yang pemilik putuskan,
+satu pada satu waktu, lalu empat gerbang dan uji fisik Tang Nano 20K.
+
+| | penghalang | keadaan |
+|---|---|---|
+| A | resume setelah preemption timer | **akar ditemukan** (`073b968`), belum diperbaiki — perbaikannya di unit trap |
+| B | FLAGS bukan bagian konteks proses | terbuka |
+| C | `STORE` `TRAP_EPC` → `ERET` | terbuka |
+| D | keluaran karakter (`PRINTH`/`EMITS` + bentuk string) | terbuka, **BLOCKED** |
+
+Semuanya di `cosmictera-build/OFF.md` dengan angkanya. M3 tidak boleh disebut
+selesai sampai jalur keluaran karakter disahkan pemilik **dan** berjalan di
+papan fisik.
+
 ---
 
 ## 4. Aturan kerja

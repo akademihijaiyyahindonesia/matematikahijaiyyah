@@ -137,7 +137,7 @@ tidak terjadi diam-diam: menaruh `PRINTH`/`EMITS` di RTL, membuat driver TX
 kedua (`rtl/hcpu_mmio.v` menolaknya: "a second driver on the same port is a bus
 conflict"), memakai `rtl/hcpu_font8x8.hex`, atau mengubah semantik `PRINT`.
 
-#### 2. Proses yang diambil TIMER tidak pernah berjalan lagi
+#### 2. Proses yang diambil TIMER tidak pernah berjalan lagi — akar ditemukan, belum diperbaiki
 
 Ini lebih dalam daripada shell, dan ia **sudah ada sejak penjadwal dibangun**.
 
