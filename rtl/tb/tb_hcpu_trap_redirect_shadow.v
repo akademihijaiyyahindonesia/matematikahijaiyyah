@@ -16,27 +16,36 @@
 //         fetch_valid    <= 1'b0;
 //
 // A redirect discards the in-flight fetch, and zeroing if_pc alongside it is
-// how Fetch says "I am not presenting an instruction". `fetch_valid` going low
-// says the same thing for the next cycle. But `pc_now` reads `if_pc` without
-// consulting `fetch_valid`, so for the two cycles a redirect costs, a maskable
-// interrupt does not read "nothing here" -- it reads the ADDRESS ZERO, and
-// saves it as the place to come back to.
+// how Fetch says "I am not presenting an instruction". For two cycles that is
+// the whole truth of the front end, and `pc_now` used to read `if_pc` through
+// it -- so a maskable interrupt did not read "nothing here", it read the
+// ADDRESS ZERO and saved it as the place to come back to.
 //
-// ── what that costs, in one number ──────────────────────────────
-// A three-instruction loop that ends in JMP takes six cycles. TWO of those six
-// are the shadow. So a process in a tight loop has a one-in-three chance of
-// being sent back to address 0 by its very first preemption, and address 0 is
-// where boot code lives -- in user mode, where boot's first peripheral store
-// faults it for ever. That is exactly what kernel.hasm's process A does: it
-// freezes at 337 and never runs again, and has since the scheduler was built.
+// ── what it cost, in one number ─────────────────────────────────
+// A three-instruction loop that ends in JMP takes six cycles, and TWO of those
+// six were the shadow. A process in a tight loop therefore had one chance in
+// three of being sent back to address 0 by its very first preemption -- and
+// address 0 is boot code, in user mode, where its first peripheral store
+// faults it for ever. kernel.hasm's process A froze at 337 exactly that way,
+// from the day the scheduler was built, and its own bench never asked whether
+// A was still moving.
 //
-// ── this bench asserts the machine as it IS ─────────────────────
-// Twenty-one of the sixty fires below save zero -- every fire that lands in
-// the shadow, and no fire that does not -- and the rows below say so.
-// The day `pc_now` accounts for a redirect, those rows go red and ask to be
-// inverted -- which is the only way a measured defect stays a defect instead
-// of quietly becoming a claim (R3). The repair belongs to the owner of the
-// trap unit; cosmictera-build/OFF.md carries the blocker by name.
+// ── what closed it ──────────────────────────────────────────────
+// hcpu_fetch now carries `if_pc_valid`, written in the same places it writes
+// `if_pc`, and hcpu_top drives the trap unit's `pc_valid` from it instead of
+// from 1'b1. hcpu_top's own comment had asked for exactly that in advance:
+// "if the front end ever gains a state with no meaningful PC, this has to
+// become that state's inverse or a trap will return into a bubble."
+//
+// A trap no longer fires while the front end is empty; it fires a cycle or two
+// later with a real PC to name. Nothing is lost by the wait -- the timer's
+// `expired` is a sticky level, not a pulse -- and this bench measures that the
+// wait actually happens (`held`) rather than assuming it.
+//
+// This bench was written the other way round first, asserting the defect as it
+// measured, so that the day the repair landed these rows would go red and ask
+// to be inverted. That is the day. The rows below now say what they always had
+// to end up saying: a preempted process resumes where it was.
 `timescale 1ns/1ps
 `include "hcpu_pkg.vh"
 
@@ -111,9 +120,14 @@ module tb_hcpu_trap_redirect_shadow;
     endtask
 
     // ── one run at a chosen deadline ────────────────────────────
-    reg        fired, coincide, shadow;
+    // `held` is the direct evidence that the sweep reaches the shadow at all:
+    // cycles where the timer was armed and nothing else stood in the way, and
+    // the fire was suppressed only because the front end had no PC to name.
+    // Without it, a sweep that never came near a redirect would pass this
+    // bench by never testing anything.
+    reg        fired, coincide, in_loop, running;
     reg [31:0] saved_epc, saw_ifpc;
-    integer    since_fire;
+    integer    since_fire, held;
 
     task run_with_compare;
         input [31:0] compare_value;
@@ -121,8 +135,8 @@ module tb_hcpu_trap_redirect_shadow;
         begin
             load_program;
             rst_n = 0;
-            fired = 0; coincide = 0; shadow = 0;
-            saved_epc = 32'hDEAD; saw_ifpc = 0; since_fire = 0;
+            fired = 0; coincide = 0; in_loop = 0; running = 0;
+            saved_epc = 32'hDEAD; saw_ifpc = 0; since_fire = 0; held = 0;
             repeat (4) @(negedge clk);
             rst_n = 1;
 
@@ -135,11 +149,24 @@ module tb_hcpu_trap_redirect_shadow;
 
             for (cyc = 0; cyc < 70; cyc = cyc + 1) begin
                 @(posedge clk);
+                // The loop has been entered once Fetch has presented its
+                // first instruction: before that, address 0 is a legitimate
+                // place for a trap to return to, because the machine has not
+                // started.
+                if (dut.if_pc_valid && dut.if_pc >= LOOP) running = 1;
+                if (!fired && (|dut.u_trap.armed) && !dut.u_trap.trap_active
+                           && !dut.if_pc_valid)
+                    held = held + 1;
                 if (dut.u_trap.fire && !fired) begin
                     fired    = 1;
                     coincide = dut.branch_taken_w;
                     saw_ifpc = dut.if_pc;
-                    shadow   = (!dut.branch_taken_w) && (dut.if_pc == 0);
+                    // Latched AT the fire, not after it: before the machine
+                    // has run its first instruction, address 0 is a
+                    // legitimate place for a trap to return to, and a run
+                    // that reaches the loop later must not make that look
+                    // like a defect.
+                    in_loop  = running;
                 end
                 if (fired) begin
                     since_fire = since_fire + 1;
@@ -151,15 +178,15 @@ module tb_hcpu_trap_redirect_shadow;
         end
     endtask
 
-    integer c, n_fire, n_coincide, n_shadow, n_zero, n_valid, n_shadow_zero;
+    integer c, n_fire, n_coincide, n_held, n_zero_running, n_valid, n_bad_target;
 
     initial begin
         $dumpfile("tb_hcpu_trap_redirect_shadow.vcd");
         $dumpvars(0, tb_hcpu_trap_redirect_shadow);
 
         $display("=== tb_hcpu_trap_redirect_shadow: where a timer saves zero ===");
-        n_fire = 0; n_coincide = 0; n_shadow = 0;
-        n_zero = 0; n_valid = 0; n_shadow_zero = 0;
+        n_fire = 0; n_coincide = 0; n_held = 0;
+        n_zero_running = 0; n_valid = 0; n_bad_target = 0;
 
         // The counter free-runs from reset, so sweeping the deadline across
         // sixty cycles walks the whole six-cycle phase of the loop many times
@@ -168,38 +195,49 @@ module tb_hcpu_trap_redirect_shadow;
             run_with_compare(c);
             // 32'hDEAD means the run ended before epc could be read back --
             // a fact about the observation window, not about the machine.
+            if (held > 0) n_held = n_held + 1;
             if (fired && saved_epc != 32'hDEAD) begin
                 n_fire = n_fire + 1;
-                if (coincide) n_coincide = n_coincide + 1;
-                else if (shadow) begin
-                    n_shadow = n_shadow + 1;
-                    if (saved_epc == 0) n_shadow_zero = n_shadow_zero + 1;
+                if (coincide) begin
+                    n_coincide = n_coincide + 1;
+                    // A trap sharing its cycle with a taken branch resumes at
+                    // the branch's own target -- the fix hcpu_top.v already
+                    // carried, and this sweep keeps it honest.
+                    if (saved_epc != LOOP) n_bad_target = n_bad_target + 1;
                 end
-                if (saved_epc == 0) n_zero = n_zero + 1;
-                else n_valid = n_valid + 1;
+                if (saved_epc == 0 && in_loop) begin
+                    n_zero_running = n_zero_running + 1;
+                    $display("  KEMBALI KE 0 cmp=%0d coincide=%0b if_pc=%0d",
+                             c, coincide, saw_ifpc);
+                end else n_valid = n_valid + 1;
             end
         end
 
-        $display("  %0d fire: %0d sah, %0d menyimpan 0", n_fire, n_valid, n_zero);
-        $display("  sekelas siklus dengan cabang: %0d   bayangan redirect: %0d",
-                 n_coincide, n_shadow);
+        $display("  %0d fire: %0d sah, %0d kembali ke 0 saat berjalan",
+                 n_fire, n_valid, n_zero_running);
+        $display("  sekelas siklus dengan cabang: %0d   lari yang trapnya ditahan: %0d",
+                 n_coincide, n_held);
 
         check(n_fire >= 50, "sapuan memicu timer di hampir setiap tenggat");
         check(n_coincide > 0, "sapuan menutupi siklus cabang itu sendiri");
-        check(n_shadow > 0, "sapuan menutupi bayangan redirect");
 
-        // The fix that IS in place: a trap sharing the cycle with a taken
-        // branch returns to the branch's target, which is LOOP and not zero.
-        check(n_coincide > 0 && n_zero < n_fire,
+        // Coverage, and it has to be measured rather than assumed: a sweep
+        // that never reached a redirect would satisfy every row below by
+        // never testing one.
+        check(n_held > 0,
+              "sapuan benar-benar mencapai bayangan, dan trapnya ditahan di sana");
+        check(n_held * 4 > n_fire,
+              "bayangan itu bukan kasus langka: lebih dari seperempat lari");
+
+        // The fix hcpu_top.v already carried, kept honest.
+        check(n_bad_target == 0,
               "tabrakan sekelas-siklus tetap mengembalikan sasaran cabang");
 
-        // ── the defect, asserted as it measures ─────────────────
-        check(n_shadow_zero == n_shadow,
-              "BLOCKER: setiap fire di bayangan redirect menyimpan epc = 0");
-        check(n_zero > 0,
-              "BLOCKER: sebagian tenggat mengembalikan proses ke alamat 0");
-        check(n_zero * 3 > n_fire,
-              "BLOCKER: lebih dari sepertiga tenggat jatuh di bayangan itu");
+        // ── what the repair had to buy ──────────────────────────
+        check(n_zero_running == 0,
+              "tak satu pun tenggat mengembalikan proses berjalan ke alamat 0");
+        check(n_valid == n_fire,
+              "setiap fire menyimpan PC yang bisa dilanjutkan");
 
         if (errors == 0)
             $display("tb_hcpu_trap_redirect_shadow: SEMUA LULUS (7 pemeriksaan)");

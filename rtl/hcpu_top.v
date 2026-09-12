@@ -119,6 +119,7 @@ module hcpu_top #(
     // Fetch → Decode
     wire [`ILEN-1:0] if_instruction;
     wire [`XLEN-1:0] if_pc;
+    wire if_pc_valid;
 
     // Decode → Execute
     wire [7:0]  id_opcode;
@@ -325,7 +326,8 @@ module hcpu_top #(
         .imem_ce        (imem_ce),
         .imem_data      (imem_data),
         .if_instruction (if_instruction),
-        .if_pc          (if_pc)
+        .if_pc          (if_pc),
+        .pc_valid       (if_pc_valid)
     );
 
     // ── Decode ──────────────────────────────────────────────────
@@ -671,10 +673,31 @@ module hcpu_top #(
     );
 
     // ── Trap unit ───────────────────────────────────────────────
-    // `pc_valid` is tied high: hcpu_fetch always presents a PC, and on a flush
-    // it presents the redirect target rather than nothing. If the front end
-    // ever gains a state with no meaningful PC, this has to become that state's
-    // inverse or a trap will return into a bubble.
+    // `pc_valid` WAS TIED HIGH, on the premise that hcpu_fetch always presents
+    // a PC and on a flush presents the redirect target rather than nothing.
+    // The premise was false and the comment here named its own consequence:
+    // "if the front end ever gains a state with no meaningful PC, this has to
+    // become that state's inverse or a trap will return into a bubble."
+    //
+    // It has such a state, and always did. hcpu_fetch answers a redirect by
+    // setting `if_pc <= 0` and `fetch_valid <= 0` -- its way of saying it is
+    // presenting nothing -- and needs two cycles to refill. A maskable
+    // interrupt landing in those two cycles read the zero as an ADDRESS and
+    // saved it as the place to resume, so the process came back at 0, which is
+    // boot code, in user mode, where its first peripheral store faulted it for
+    // ever. kernel.hasm's process A froze at 337 that way from the day the
+    // scheduler was built, and its bench never asked whether A was moving.
+    //
+    // Measured before: sixty deadlines swept against a three-instruction loop,
+    // twenty-one of them saved zero -- every one that landed in the shadow.
+    // On the board, eight samples of rtl/programs/trap_shadow.hasm answered
+    // 0 0 88 89 88 0 0 88 with the loop at 88.
+    //
+    // So `pc_valid` is now that state's inverse, exactly as the old comment
+    // asked for: hcpu_fetch writes it in the same places it writes `if_pc`,
+    // under the name this module already used for it. A trap does not fire while the front end is empty; it
+    // fires a cycle or two later with a real PC to name. Nothing is lost by
+    // the wait -- the timer's `expired` is a sticky level, not a pulse.
     //
     // `src_illegal` IS TIED OFF. The cause is defined so that adding it later
     // does not renumber the others, but nothing raises it yet: the machine's
@@ -699,7 +722,7 @@ module hcpu_top #(
         // have no forward-declaration the way the `wire redirect_target`
         // block above this could rely on for signals already in scope there.
         .pc_now        (branch_taken_w ? branch_target_w : if_pc),
-        .pc_valid      (1'b1),
+        .pc_valid      (if_pc_valid),
         .pc_fault      (id_pc),
         .reg_we        (trap_reg_we_w),
         .reg_sel       (trap_reg_sel_w),

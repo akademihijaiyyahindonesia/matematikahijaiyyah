@@ -1,27 +1,31 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
 //
-// ── MEASURED, 12 September 2026, after the codex block landed ────────────
+// ── MEASURED, 13 September 2026, after the trap repair ───────────────────
 //
 // `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68
 // (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// loader baked in. Re-run because CMOV, CZERO, CEQ, CRHO, CU and CMOD4
-// changed hcpu_pkg.vh, hcpu_codex_alu.v, hcpu_decode.v, hcpu_execute.v,
-// hcpu_guard.v and hcpu_top.v.
+// loader baked in. Re-run because `pc_valid` stopped being tied high:
+// hcpu_fetch.v now says whether the PC it presents is real, and hcpu_top.v
+// drives the trap unit from that instead of from 1'b1.
 //
 //     IOB           15 /    384    3%
-//     LUT4      15,126 / 20,736   72%
-//     DFF        4,551 / 15,552   29%
+//     LUT4      15,141 / 20,736   73%
+//     DFF        4,552 / 15,552   29%
 //     BSRAM         17 /     46   36%
-//     Fmax       70.80 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               549.15 MHz  pixel_clk
+//     Fmax       63.21 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               476.87 MHz  pixel_clk
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +413 LUT4 and +0 DFF against this slot's previous 14,713 / 4,551. The six
-// opcodes cost almost nothing -- CMOV and CZERO are muxes, CEQ a comparator,
-// CU and CRHO are read out of the guard that already computes them, CMOD4 is
-// a two-bit slice. DFF not moving at all is the check on that: none of the six
-// adds state. The bare hcpu_gowin_top slot measured +483 for the same six.
+// +15 LUT4 and +1 DFF against this slot's previous 15,126 / 4,551, and the DFF
+// column is the check on it: the repair adds exactly one bit of state. The
+// bare hcpu_gowin_top slot measured +12 and the same +1 for the same change.
+//
+// The measurement before it, 12 September, after the codex block: 15,126 LUT4
+// (72%), 4,551 DFF, Fmax 70.80 / 549.15 MHz. That run was +413 LUT4 and +0 DFF
+// over 14,713 -- CMOV and CZERO are muxes, CEQ a comparator, CU and CRHO are
+// read out of the guard that already computes them, CMOD4 is a two-bit slice,
+// and none of the six adds state.
 //
 // A SEVENTH WAS BUILT AND REMOVED, and the number that decided it was
 // measured here. With CDOT (0x49) this slot placed at 16,727 LUT4 (80%) while
@@ -32,17 +36,29 @@
 // The owner's decision and the named blocker are in cosmictera-build/OFF.md;
 // CDOT still runs in the HVM.
 //
-// FLASHED AND RUN, 12 September 2026, over the wire through the baked loader:
+// FLASHED AND RUN, 13 September 2026, over the wire through the baked loader:
 //
-//     test_codex    8 0 0 1 1 0 1 5   the six, matching the interpreter
-//     test_cset     5 6 2 0           CSET still correct on this RTL
-//     test_hfs      1 1 1 2 1         HFS write, clobber, read, guard
+//     trap_resume   86 86 27          eight preemptions, handler never
+//                                     touching epc: every resume correct and
+//                                     the process still counting
+//     trap_shadow   88 88 88 89 88    eight deadlines walked a cycle apart;
+//                   88 88 88 21       before the repair this read
+//                                     0 0 88 89 88 0 0 88
+//     shell         A->65 p->2 0 1    the command path, unchanged
+//                   0->48 z->122
+//     syscall_io    42                and 99 still never reaches the wire
+//     test_codex    8 0 0 1 1 0 1 5   the six codex opcodes, unchanged
+//     test_cset     5 6 2 0
+//     test_hfs      1 1 1 2 1
 //     e3_sweep28    28 Theta values   identical to MASTER_TABLE
 //
-// e3_sweep28 was re-run precisely BECAUSE the RTL changed: the sealed ROM's
-// 28 values still match, so the six new opcodes moved nothing on the old path.
+// mem_protect, user_mode, trap_timer, timer_poll and hal all halt and report
+// their cycles, as they did before. Nothing that worked stopped working: the
+// gate only ever holds the TIMER, and across syscall_io, mem_protect,
+// user_mode, shell, kernel, branch_trap_race and the shadow sweep, the number
+// of cycles an EXCEPTION was held by it is zero.
 //
-// RTL FINGERPRINT: 46e4bc9f8888b3fc31d0a022b8beeb7d4bf91d9ecd671886509cc353185fd411
+// RTL FINGERPRINT: 74f9582fde2333ee1cbe92d3636880860ab34fdc4f1490c4a686fc0bce0fc8b1
 //
 `include "hcpu_pkg.vh"
 

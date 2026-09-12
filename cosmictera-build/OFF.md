@@ -106,6 +106,8 @@ Empat sifat HOS di buku semuanya berjalan sekarang — lihat
 
 ### M3 — shell: jalur keluaran karakter, dan resume setelah preemption
 
+Penghalang 2 **sudah ditutup** 13 September 2026; 1, 3 dan 4 masih terbuka.
+
 **12 September 2026.** Shell-nya berjalan di papan fisik: perintah masuk lewat
 UART, dijawab lewat kernel (`rtl/programs/shell.hasm`, `make -C rtl/tb
 sim_shell`). Dua hal menghalanginya menjadi shell yang digambar pemilik, dan
@@ -137,97 +139,62 @@ tidak terjadi diam-diam: menaruh `PRINTH`/`EMITS` di RTL, membuat driver TX
 kedua (`rtl/hcpu_mmio.v` menolaknya: "a second driver on the same port is a bus
 conflict"), memakai `rtl/hcpu_font8x8.hex`, atau mengubah semantik `PRINT`.
 
-#### 2. Proses yang diambil TIMER tidak pernah berjalan lagi — akar ditemukan, belum diperbaiki
+#### 2. ~~Proses yang diambil TIMER tidak pernah berjalan lagi~~ — DIPERBAIKI 13 September 2026
 
-Ini lebih dalam daripada shell, dan ia **sudah ada sejak penjadwal dibangun**.
+**Akarnya: bayangan sebuah redirect.** Lompatan yang diambil membuat ujung
+depan di-redirect, dan `rtl/hcpu_fetch.v` menjawabnya dengan `if_pc <= 0` dan
+`fetch_valid <= 0` — caranya berkata *"saya tidak sedang menyajikan
+instruksi"*. `rtl/hcpu_top.v` menyambung alamat-kembali interupsi termaskable
+ke `if_pc` **tanpa menanyakan** apakah PC itu nyata, jadi selama dua siklus
+yang dibayar sebuah redirect ia membaca **alamat nol** dan menyimpannya sebagai
+tempat kembali. Prosesnya lalu dilanjutkan di alamat 0 — kode boot, dalam mode
+user — tempat simpanan periferal pertamanya gagal selamanya.
 
-`rtl/programs/kernel.hasm` — sudah di-commit, sudah dijalankan di papan —
-membekukan proses A pada cacah **337**, dengan `pcbA.pc = 0` di bloknya.
-Benchnya sendiri tidak melihatnya: `tb_hcpu_kernel.v` memeriksa kelipatan B dan
-sapuan C, tidak memeriksa bahwa A masih bergerak. `shell.hasm` mewarisi persis
-gejala yang sama untuk pid 0.
+Perbaikan lama menutup siklus yang **dibagi** trap dan cabang
+(`rtl/tb/tb_hcpu_branch_trap_race.v`); dua siklus **sesudahnya** tidak
+tertutup, karena di sana `branch_taken_w` sudah turun lagi.
 
-Yang terukur, pada `fire` timer pertama di kedua kernel:
+**Perbaikannya sudah tertulis di kode itu sendiri**, di komentar `hcpu_top.v`
+yang memasang `pc_valid` ke `1'b1`:
 
-```
-FIRE#1 which=0 pc_now=0 if_pc=0 btaken=0 btarget=0 id_pc=0 stall=0
-```
+> *"if the front end ever gains a state with no meaningful PC, this has to
+> become that state's inverse or a trap will return into a bubble."*
 
-Ujung depan tidak memegang PC apa pun, jadi `epc <= pc_now` menyimpan **0**.
-Kernel menyimpan 0 itu ke blok proses, melanjutkan prosesnya di alamat 0 —
-kode boot — dalam mode user, dan simpanan periferal pertama di HAL
-menggagalkannya sebagai **cause 3** selamanya. Sesudah itu `pcb.pc` berisi
-alamat di dalam `hal.hasm`, yang adalah tanda tangan cacat ini.
+Ujung depan memang punya keadaan itu, dan selalu punya. `hcpu_fetch` sekarang
+membawa `pc_valid` — ditulis di tempat-tempat yang sama dengan `if_pc`, jadi
+tak bisa hanyut darinya — dan `hcpu_top` menyetir unit trap dari situ. Trap
+tidak menyala selagi ujung depan kosong; ia menyala satu-dua siklus kemudian
+dengan PC yang nyata. Namanya bukan istilah baru: `hcpu_trap.v` sudah memanggil
+konsep ini `pc_valid` sejak trap dibangun, dan `tb_hcpu_trap.v` sudah punya
+pemeriksaan **"pc_valid gates entry"** sejak saat itu juga.
 
-**Sebabnya sudah diisolasi, 13 September 2026: bayangan redirect.**
+**Terukur, sebelum dan sesudah:**
 
-Sebuah lompatan yang diambil membuat ujung depan di-redirect, dan
-`rtl/hcpu_fetch.v` menjawab redirect dengan:
+| | sebelum | sesudah |
+|---|---|---|
+| sapuan 60 tenggat (`sim_redirect_shadow`) | 21 menyimpan `epc = 0` | **0** |
+| papan, `trap_shadow` | `0 0 88 89 88 0 0 88` | **`88 88 88 89 88 88 88 88`** |
+| papan, `trap_resume` (handler tak menyentuh epc) | — | **`86 86 27`** — delapan preemption, tiap resume benar, prosesnya masih mencacah |
+| `kernel.hasm` proses A | beku di 337 | **14.491 → 28.982** |
+| `shell.hasm` pid 0 | beku | **2.682 → 21.797** |
 
-```verilog
-end else if (flush || branch_taken) begin
-    if_instruction <= {`OP_NOP, 24'h000000};
-    if_pc          <= {`XLEN{1'b0}};
-    fetch_valid    <= 1'b0;
-```
+Biayanya **+12 LUT4 dan +1 DFF** di slot HCPU, +15/+1 di slot HDMI — satu bit
+keadaan, persis `pc_valid`, dan tidak lebih.
 
-Menolkan `if_pc` adalah cara Fetch berkata *"saya tidak sedang menyajikan
-instruksi"*, dan `fetch_valid` turun mengatakan hal yang sama untuk siklus
-berikutnya. Tetapi `pc_now` di `rtl/hcpu_top.v` membaca `if_pc` **tanpa
-menanyakan `fetch_valid`**:
+**Caveat, dan ia diukur bukan didiamkan.** Sumber exception di mesin ini adalah
+**pulse satu siklus** (`run exc maks = 1`, terukur). Kalau sebuah exception
+pernah bersamaan dengan `pc_valid == 0`, ia akan **hilang**, bukan tertunda.
+Pada cakupan yang diuji itu tidak pernah terjadi — `syscall_io`, `mem_protect`,
+`user_mode`, `shell`, `kernel`, `branch_trap_race` dan sapuan bayangan
+semuanya melaporkan **0** siklus exception tertahan, sementara timer tertahan
+0/0/0/1/13/3/30. Slot yang di-flush berisi NOP, yang tidak memunculkan apa pun
+— tetapi itu penjelasan sesudah pengukuran, bukan pengganti pengukuran, dan
+cakupan bukan bukti universal.
 
-```verilog
-.pc_now (branch_taken_w ? branch_target_w : if_pc),
-```
-
-Jadi selama **dua siklus** yang dibayar sebuah redirect, interupsi termaskable
-tidak membaca "tidak ada apa-apa di sini" — ia membaca **alamat nol**, lalu
-menyimpannya sebagai tempat kembali.
-
-**Perbaikan yang sudah ada menutupi siklus yang lain.** `hcpu_top.v` sudah
-memperbaiki kasus trap dan cabang yang **berbagi siklus** (`branch_taken_w ?
-branch_target_w : …`), ditemukan lewat `tb_hcpu_branch_trap_race.v`. Yang tidak
-tertutup adalah dua siklus **sesudahnya**, ketika `branch_taken_w` sudah turun
-lagi sehingga perbaikan itu tidak berlaku.
-
-Terukur, `make -C rtl/tb sim_redirect_shadow`, menyapu tenggat terhadap loop
-tiga instruksi yang berakhir dengan `JMP`:
-
-```
-60 fire: 39 sah, 21 menyimpan 0
-sekelas siklus dengan cabang: 10   bayangan redirect: 21
-```
-
-Setiap fire yang jatuh di bayangan menyimpan 0; tidak ada yang di luar
-bayangan melakukannya. Sepuluh tabrakan sekelas-siklus tetap mengembalikan
-sasaran cabang — perbaikan lama bekerja.
-
-**Dan papan menjawab hal yang sama**, `rtl/programs/trap_shadow.hasm`, delapan
-sampel dengan tenggat digeser satu siklus tiap kali, loop di alamat 88:
-
-```
-0  0  88  89  88  0  0  88
-```
-
-Empat dari delapan dikembalikan ke **alamat 0**.
-
-Ini yang membunuh proses A: loop tiga instruksi memakan enam siklus, **dua di
-antaranya** bayangan itu, jadi satu dari tiga tenggat mengirim prosesnya ke
-alamat 0 — dan alamat 0 adalah kode boot, dalam mode user, tempat simpanan
-periferal pertamanya gagal selamanya.
-
-`rtl/programs/trap_resume.hasm` mengembalikan `84 84` di papan bukan karena
-jalurnya benar, melainkan karena tenggatnya kebetulan jatuh di luar bayangan.
-Itu keberuntungan, dan sekarang bisa dikatakan sebagai fakta terukur, bukan
-dugaan.
-
-**Perbaikannya tidak dikerjakan di sini** — ia ada di unit trap, dan itu
-keputusan pemilik.
-
-Akibatnya untuk M3: penjadwal **bergilir** (ticks naik, kedua blok dipilih
-bergantian) tetapi **tidak melanjutkan** proses yang dipreempt. Yang berjalan
-penuh adalah proses yang menyerahkan CPU-nya sendiri lewat `SYSCALL yield` —
-dan itulah sebabnya shell-nya berjalan.
+Dijaga oleh `rtl/tb/tb_hcpu_trap_redirect_shadow.v` (tujuh pemeriksaan) dan
+oleh baris baru di `rtl/tb/tb_hcpu_kernel.v` yang menuntut proses A **masih**
+berjalan, bukan sekadar pernah — pemeriksaan yang tak pernah ada, dan itulah
+yang menyembunyikan cacat ini selama itu.
 
 #### 3. FLAGS bukan bagian dari konteks proses, dan tak ada yang bisa menyimpannya
 

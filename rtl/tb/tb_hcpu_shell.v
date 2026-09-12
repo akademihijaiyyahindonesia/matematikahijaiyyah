@@ -147,22 +147,18 @@ module tb_hcpu_shell;
                  p0_before, p0_after, ticks_after);
         check(ticks_after > 2, "the kernel keeps dispatching");
 
-        // ── THE BLOCKER, ASSERTED AS IT MEASURES ────────────────
-        // pid 0 does NOT advance, and this row says so on purpose. A process
-        // taken away by the TIMER never runs again: the first timer fire
-        // happens with the front end empty -- pc_now, if_pc and id_pc all 0,
-        // measured -- so epc is saved as 0, the block is resumed at address 0
-        // in user mode, and the boot code's first peripheral store faults it
-        // (cause 3) for ever. kernel.hasm has the same defect and has had it
-        // since the scheduler was built: its process A freezes at 337 with
-        // pcbA.pc = 0, which its own bench does not look at.
+        // ── PREEMPTION, AND THE ROW THIS ONE REPLACES ───────────
+        // This used to expect pid 0 NOT to advance, with the reason written
+        // beside it: a process taken away by the timer was resumed at address
+        // 0, because a trap landing in a redirect's shadow read Fetch's
+        // "nothing here" as an address. hcpu_fetch now says so in a signal of
+        // its own and hcpu_top drives the trap unit's pc_valid from it, so the
+        // trap waits a cycle for a real PC instead of inventing one.
         //
-        // So this bench asserts the machine as it IS. The day the trap unit
-        // saves a real PC, this row goes red and says to invert it -- which is
-        // the only way a known defect can be kept from quietly becoming a
-        // claim. cosmictera-build/OFF.md carries the blocker by name.
-        check(p0_after == p0_before,
-              "BLOCKER: pid 0 does not resume after a timer preemption");
+        // pid 0 never yields. It can only have advanced because the TIMER took
+        // the CPU away from it and the kernel put it back where it was.
+        check(p0_after > p0_before,
+              "pid 0 berjalan lagi setelah dipreempt timer");
 
         if (errors == 0)
             $display("tb_hcpu_shell: SEMUA LULUS (7 pemeriksaan)");

@@ -10,8 +10,8 @@ A rack does not. Each slot is its own bitstream, and the FPGA is
 reconfigured between them, so the fabric is spent **in sequence**. The
 budget question changes shape with it:
 
-    side by side   sum(slots)   must fit at once   14,714 + 12,061 + 15,126 = 202%
-    in sequence    max(slots)   one at a time                      15,126 =  72%
+    side by side   sum(slots)   must fit at once   14,726 + 12,061 + 15,141 = 202%
+    in sequence    max(slots)   one at a time                      15,141 =  73%
 
 So the rack costs what its **largest** slot costs, and the 105% has nothing
 to fit into. What each slot does not use is not waste either: it is the
@@ -27,7 +27,7 @@ been measured it is None, not a guess. The HDMI slot was exactly that
 until 11 September -- it had run on the board and nothing recorded its
 cost -- and while it was, the rack quoted 67%: the maximum of the two slots
 that had numbers, true of them and false of the rack. Measured, the video
-slot is the largest, and the rack costs 72%.
+slot is the largest, and the rack costs 73%.
 
     python3 rtl/scripts/rack.py            # print the rack
     python3 rtl/scripts/rack.py --detect   # is a board attached
@@ -105,7 +105,7 @@ SLOTS: Tuple[Slot, ...] = (
         runs="H-ISA pipeline, 79 opcodes, sealed 28-letter ROM",
         verified="UART returned 23 bytes matching simulation byte for byte; "
                  "e3_sweep28 returned 28/28 Theta-hat",
-        lut4=14_714, dff=4_480, bsram=17, fmax_mhz=115.66,
+        lut4=14_726, dff=4_481, bsram=17, fmax_mhz=120.31,
     ),
     Slot(
         name="kabah",
@@ -123,7 +123,7 @@ SLOTS: Tuple[Slot, ...] = (
         verified="rebuilt by the Makefile byte-identical to the bitstream the "
                  "board ran with the monitor lit; answered test_bsm over the "
                  "wire, 23 bytes, 112",
-        lut4=15_126, dff=4_551, bsram=17, fmax_mhz=70.80,
+        lut4=15_141, dff=4_552, bsram=17, fmax_mhz=63.21,
     ),
 )
 

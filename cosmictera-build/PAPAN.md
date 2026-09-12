@@ -307,6 +307,62 @@ dibangun. Keduanya di [OFF.md](OFF.md) dengan angka dan tanda tangannya.
 
 ---
 
+## Penghalang A ditutup di papan — 13 September 2026
+
+Interupsi termaskable dulu menyimpan **alamat 0** sebagai tempat kembali
+selama dua siklus yang dibayar sebuah redirect. `pc_valid` berhenti diikat
+tinggi: `hcpu_fetch` sekarang berkata apakah PC yang ia sajikan nyata, dan unit
+trap menunggu kalau tidak. Sebab lengkapnya di [OFF.md](OFF.md).
+
+| program | sebelum | sesudah |
+|---|---|---|
+| `trap_shadow` | `0 0 88 89 88 0 0 88` | **`88 88 88 89 88 88 88 88 21`** |
+| `trap_resume` | `84 84` — satu sampel, kebetulan di luar bayangan | **`86 86 27`** |
+
+`trap_resume` yang menjadi buktinya, bukan `trap_shadow`: handler-nya **tidak
+pernah menyentuh `TRAP_EPC`**, hanya mempersenjatai ulang timer. Jadi tempat
+prosesnya melanjut adalah jawaban perangkat keras dan bukan yang lain. Delapan
+preemption, tiap resume benar, dan pencacah prosesnya sampai **27** — sebuah
+proses yang dilanjutkan di alamat salah akan menjalankan kode boot dalam mode
+user, gagal pada simpanan periferal pertamanya, dan berhenti mencacah.
+
+`trap_shadow` sengaja menaruh prosesnya kembali tiap sampel, karena ia mengukur
+ke mana perangkat keras **menunjuk**; angka ke-sembilannya hanya berkata
+loop-nya hidup.
+
+### Yang tidak boleh rusak, dan tidak rusak
+
+Semua dijalankan ulang di papan sesudah perubahan RTL:
+
+| program | keluaran papan |
+|---|---|
+| `syscall_io` | **`42`** — `99` tetap tidak pernah sampai kabel |
+| `shell` | `A`→`65`, `p`→`2 0 1`, `0`→`48`, `z`→`122` |
+| `test_codex` | `8 0 0 1 1 0 1 5` |
+| `test_cset` | `5 6 2 0` |
+| `test_hfs` | `1 1 1 2 1` |
+| `e3_sweep28` | 28 nilai Θ̂ identik `MASTER_TABLE` |
+| `trap_flags` | `0` — FLAGS tetap bukan bagian konteks (penghalang tersendiri) |
+| `mem_protect`, `user_mode`, `trap_timer`, `timer_poll`, `hal` | halt, lapor siklus |
+| slot HCPU biasa | **23 byte**, `112` |
+
+**Dan gate barunya tidak pernah menelan exception.** Diukur per program, jumlah
+siklus di mana sebuah exception tertunda oleh `pc_valid`:
+
+```
+syscall_io 0   mem_protect 0   user_mode 0   shell 0
+kernel 0       branch_trap_race 0            redirect_shadow 0
+```
+
+Yang tertahan hanya timer: 0, 0, 0, 1, 13, 3, 30. Itu memang maksudnya.
+
+**Caveat yang diukur, bukan didiamkan:** sumber exception di mesin ini adalah
+**pulse satu siklus**. Kalau suatu saat sebuah exception bersamaan dengan
+`pc_valid == 0`, ia akan **hilang**, bukan tertunda. Pada cakupan di atas itu
+tidak pernah terjadi; cakupan bukan bukti universal.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -319,8 +375,8 @@ antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
 berubah bentuk:
 
 ```
-  berdampingan   sum(slot)   harus muat serentak   14.714 + 12.061 + 15.126 = 202%
-  berurutan      max(slot)   satu per satu                           15.126 =  72%
+  berdampingan   sum(slot)   harus muat serentak   14.726 + 12.061 + 15.141 = 202%
+  berurutan      max(slot)   satu per satu                           15.141 =  73%
 ```
 
 Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
@@ -349,15 +405,15 @@ pak-nya **identik byte-demi-byte** dengan bitstream yang menyala di papan, dan
 di-flash lagi ia menjawab `test_bsm` lewat kabel: 23 byte, `112`.
 
 ```
-  LUT4    15.126 / 20.736   72%
-  DFF      4.551 / 15.552   29%
+  LUT4    15.141 / 20.736   73%
+  DFF      4.552 / 15.552   29%
   BSRAM       17 /     46   36%
   IOB         15 /    384    3%
-  Fmax     70,80 MHz (HCPU), 549,15 MHz (pixel)
+  Fmax     63,21 MHz (HCPU), 476,87 MHz (pixel)
 ```
 
-Jalur video menambah 412 LUT4 di atas HCPU sendiri, jadi biaya rack **72%**,
-bukan 70%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
+Jalur video menambah 415 LUT4 di atas HCPU sendiri, jadi biaya rack **73%**,
+bukan 71%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
 tercatat gratis.
 
 **Angka di blok ini diukur ulang 12 September setelah blok codex masuk**,
@@ -462,13 +518,13 @@ membuat pasangannya diferensial.
 | | Hasil |
 |---|---|
 | `python3 -m pytest -q` | 4.915 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 22 testbench, 277 pemeriksaan, 0 gagal |
+| `make -C rtl/tb all` | 22 testbench, 278 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
-timing 8, H-Kernel 7, **shell 7**, syscall I/O 6, HOS 7, subrutin 4, huruf 3,
+timing 8, H-Kernel 8, **shell 7**, syscall I/O 6, HOS 7, subrutin 4, huruf 3,
 **bayangan redirect 7**, wrapper Gowin 2, dan tujuh testbench yang melapor
-satu pernyataan lulus tunggal — 277, semuanya 0 FAIL. Dua yang baru:
+satu pernyataan lulus tunggal — 278, semuanya 0 FAIL. Dua yang baru:
 `tb_hcpu_shell` dan `tb_hcpu_trap_redirect_shadow`, tujuh pemeriksaan
 masing-masing.
 

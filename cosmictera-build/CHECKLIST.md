@@ -80,7 +80,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **277 asersi, 22 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **278 asersi, 22 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -167,7 +167,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **Bitstream HCPU, Tang Nano 20K: 70% LUT4, 115,66 MHz** | `make -C rtl/fpga/gowin bitstream` |
+| ✅ | **Bitstream HCPU, Tang Nano 20K: 71% LUT4, 120,31 MHz** | `make -C rtl/fpga/gowin bitstream` |
 | ✅ | **Bitstream Ka'bah, Tang Nano 20K: 58% LUT4, 165,98 MHz** | `make -C rtl/fpga/gowin kabah_bitstream` |
 | ✅ | **`CSET` (0x45) dijalankan di papan: `5 6 2 0`** | `make -C rtl/fpga/gowin bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_cset.hasm` |
 | ✅ | **HFS baca mengembalikan H-Reg hidup di papan: `1 1 1 2 1`** | `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_hfs.hasm` |
@@ -183,9 +183,11 @@ Fmax di atas adalah pengukuran ulang **pasca** bring-up, bukan angka pra-papan
 yang digantikannya (114,65 dan 117,91): keduanya naik karena penyerempak reset
 berhenti menggerbangi level pin 87 (MODE1) yang ditahan rendah oleh papan.
 
-**Angka HCPU diukur ulang sekali lagi pada 12 September, setelah blok codex
-masuk**: 84,26 → 115,66 MHz, 14.231 → 14.714 LUT4, DFF tidak bergerak sama
-sekali — keenam opcode tidak menambah state. Jalur kritis yang dilaporkan
+**Angka HCPU diukur ulang lagi pada 13 September, setelah `pc_valid` berhenti
+diikat tinggi**: 115,66 → 120,31 MHz, 14.714 → 14.726 LUT4, dan DFF naik
+**satu** — perbaikan itu menambah tepat satu bit keadaan. Sebelumnya, 12
+September setelah blok codex: 84,26 → 115,66 MHz, 14.231 → 14.714 LUT4, DFF
+tidak bergerak sama sekali — keenam opcode tidak menambah state. Jalur kritis yang dilaporkan
 nextpnr masih di dalam Execute: berangkat dari `ex_gpr_we`, lewat `codex_hvec`
 dan `would_addr`, berakhir di `ex_gpr_result`. Kenaikan Fmax tidak dipisah
 antara desain dan penempatan, dan run ini tidak mengklaimnya. Yang tidak
@@ -221,7 +223,7 @@ lint yang selama ini merah sebenarnya sedang menunjuk cacat huruf, dan tak ada
 yang membacanya. Peringatan yang tersisa soal bit yang tak terpakai.
 
 Bitstream pindah dari baris ini ke bagian hijau di bawah: desain muat dan
-terrout di Tang Nano 20K (**70% LUT4, 115,66 MHz**, diukur 12 September),
+terrout di Tang Nano 20K (**71% LUT4, 120,31 MHz**, diukur 13 September),
 papan di-flash, dan UART membalas 23 byte yang cocok byte-per-byte dengan
 simulasi.
 Rekamannya di [PAPAN.md](PAPAN.md).
@@ -234,6 +236,6 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.915 lulus, 0 dilewati
-make -C rtl/tb all               # 277 asersi, 22 bench, 0 gagal
+make -C rtl/tb all               # 278 asersi, 22 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

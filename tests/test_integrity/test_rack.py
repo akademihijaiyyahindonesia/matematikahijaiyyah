@@ -43,16 +43,16 @@ def test_the_rack_costs_its_largest_slot_not_their_sum() -> None:
     making disappears and it looks like the design simply got smaller.
     """
     top = rack.largest()
-    assert top.name == "hdmi" and top.lut4 == 15_126, (
+    assert top.name == "hdmi" and top.lut4 == 15_141, (
         "the video slot -- HCPU plus TMDS -- is the largest, and that only "
         "became visible once its cost was measured")
 
-    assert rack.naive_sum_lut4() == 14_714 + 12_061 + 15_126 == 41_901
+    assert rack.naive_sum_lut4() == 14_726 + 12_061 + 15_141 == 41_928
     assert rack.naive_sum_lut4() > rack.BOARD_LUT4, (
         "the slots would still fit side by side, so sequencing buys nothing")
     assert top.lut4 < rack.BOARD_LUT4, "the largest slot no longer fits alone"
 
-    assert int(top.lut4 / rack.BOARD_LUT4 * 100) == 72
+    assert int(top.lut4 / rack.BOARD_LUT4 * 100) == 73
     assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 202
 
 
@@ -67,16 +67,21 @@ def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
     smallest = min(measured, key=lambda s: s.lut4)
     largest = max(measured, key=lambda s: s.lut4)
     assert smallest.spare_lut4 > largest.spare_lut4
-    assert largest.spare_lut4 == 5_610, "the tightest comparator budget moved"
+    assert largest.spare_lut4 == 5_595, "the tightest comparator budget moved"
 
 
 def test_percentages_truncate_the_way_nextpnr_does() -> None:
-    """70%, not 71%. A third number next to two that agree is a bug."""
+    """14,726 / 20,736 is 71.0%, and truncation and rounding now agree on 71.
+
+    They did not always. The hazard this test exists for was 14,231 reading
+    68% truncated and 69% rounded, and the render must never print a third
+    number beside two that agree. It stays here because the figures move every
+    time the design does -- the next measurement may split them again."""
     hcpu = next(s for s in rack.SLOTS if s.name == "hcpu")
     assert round(hcpu.lut4 / rack.BOARD_LUT4 * 100) == 71, (
         "the rounding hazard this test exists for is gone -- check the render")
-    assert f"{int(hcpu.occupancy * 100)}%" == "70%"
-    assert "70%" in rack.render() and "71%" not in rack.render()
+    assert f"{int(hcpu.occupancy * 100)}%" == "71%"
+    assert "71%" in rack.render()
 
 
 # ── the manifest describes things that exist ─────────────────────
@@ -128,18 +133,18 @@ def test_the_figures_come_from_the_wrapper_that_measured_them() -> None:
     kabah = (GOWIN / "hijaiyyah_kabah_gowin_top.v").read_text(encoding="utf-8")
 
     slots = {s.name: s for s in rack.SLOTS}
-    assert re.search(r"LUT4\s+14,714 /\s+20,736\s+70%", hcpu)
-    assert slots["hcpu"].lut4 == 14_714 and slots["hcpu"].dff == 4_480
-    assert slots["hcpu"].fmax_mhz == 115.66 and "115.66 MHz" in hcpu
+    assert re.search(r"LUT4\s+14,726 /\s+20,736\s+71%", hcpu)
+    assert slots["hcpu"].lut4 == 14_726 and slots["hcpu"].dff == 4_481
+    assert slots["hcpu"].fmax_mhz == 120.31 and "120.31 MHz" in hcpu
 
     assert re.search(r"LUT4\s+12,061/\s+20,736\s+58%", kabah)
     assert slots["kabah"].lut4 == 12_061 and slots["kabah"].dff == 1_965
     assert slots["kabah"].fmax_mhz == 165.98 and "165.98 MHz" in kabah
 
     hdmi = (GOWIN / "hcpu_hdmi_top.v").read_text(encoding="utf-8")
-    assert re.search(r"LUT4\s+15,126 /\s+20,736\s+72%", hdmi)
-    assert slots["hdmi"].lut4 == 15_126 and slots["hdmi"].dff == 4_551
-    assert slots["hdmi"].fmax_mhz == 70.80 and "70.80 MHz" in hdmi
+    assert re.search(r"LUT4\s+15,141 /\s+20,736\s+73%", hdmi)
+    assert slots["hdmi"].lut4 == 15_141 and slots["hdmi"].dff == 4_552
+    assert slots["hdmi"].fmax_mhz == 63.21 and "63.21 MHz" in hdmi
 
 
 def test_the_board_constants_are_the_board() -> None:
@@ -153,13 +158,13 @@ def test_the_hdmi_slot_is_measured_and_it_sets_the_rack_cost() -> None:
 
     That figure was the maximum of the two slots that had numbers -- true of
     them, false of the rack. Measured, the video slot is the largest and the
-    rack costs 72%. The None was still the right call: a zero in its place
+    rack costs 73%. The None was still the right call: a zero in its place
     would have kept the 67% and called the video path free, the same defect
     class as OP_NOP = 8'h00 and a frequency of 0.0 for silence.
     """
     hdmi = next(s for s in rack.SLOTS if s.name == "hdmi")
     assert hdmi.measured
-    assert (hdmi.lut4, hdmi.dff, hdmi.bsram, hdmi.fmax_mhz) == (15_126, 4_551, 17, 70.80)
+    assert (hdmi.lut4, hdmi.dff, hdmi.bsram, hdmi.fmax_mhz) == (15_141, 4_552, 17, 63.21)
     assert rack.largest() is hdmi
     assert "Belum terukur" not in rack.render()
 
@@ -171,7 +176,7 @@ def test_an_unmeasured_slot_cannot_move_the_rack_cost(monkeypatch) -> None:
     monkeypatch.setattr(rack, "SLOTS", (*rack.SLOTS, ghost))
     assert not ghost.measured
     assert rack.largest().name == "hdmi"
-    assert rack.naive_sum_lut4() == 41_901
+    assert rack.naive_sum_lut4() == 41_928
     assert "Belum terukur: ghost" in rack.render()
 
 

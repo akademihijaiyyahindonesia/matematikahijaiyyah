@@ -27,6 +27,7 @@ module tb_hcpu_kernel;
     wire uart_txd;
     integer errors = 0;
     integer a, b, t, dispatches, sweeps, failures;
+    integer a_mid;
 
     always #5 clk = ~clk;
 
@@ -57,7 +58,16 @@ module tb_hcpu_kernel;
         // Long enough for the quantum (256 counter ticks) to expire many
         // times over. Too short and every assertion below reads zero and
         // says nothing.
-        repeat (400000) @(posedge clk);
+        // Sampled TWICE, and the second sample is the point. `a > 0` was the
+        // only thing asked of process A for as long as this bench existed, and
+        // A satisfied it while being dead: it counted to 337 inside its first
+        // quantum, was preempted, and never ran again -- its saved pc had been
+        // written as 0 by a trap that landed in a redirect's shadow, so the
+        // scheduler kept resuming it at boot code in user mode. A count that
+        // is merely non-zero cannot tell a running process from a corpse.
+        repeat (200000) @(posedge clk);
+        a_mid = dut.u_hcpu.u_dataram.mem[A_COUNT];
+        repeat (200000) @(posedge clk);
 
         a = dut.u_hcpu.u_dataram.mem[A_COUNT];
         b = dut.u_hcpu.u_dataram.mem[B_COUNT];
@@ -69,13 +79,15 @@ module tb_hcpu_kernel;
         $display("");
         $display("  H-Kernel di atas pipeline:");
         $display("    ticks        = %0d", t);
-        $display("    A (preempt)  = %0d", a);
+        $display("    A (preempt)  = %0d → %0d", a_mid, a);
         $display("    B (yield)    = %0d  → %0d dispatch", b, dispatches);
         $display("    C (daemon)   = %0d sapuan, %0d kegagalan guard", sweeps, failures);
         $display("");
 
         check(t > 4,  "timer harus mempersenjatai ulang berkali-kali");
         check(a > 0,  "proses A harus berjalan");
+        check(a > a_mid,
+              "proses A harus MASIH berjalan setelah dipreempt, bukan sekadar pernah");
         check(b > 0,  "proses B harus berjalan — dan itu membuktikan epc maju untuk cause 5");
         check((b % 100) == 0,
               "hitungan B harus kelipatan 100: register tiap proses tidak boleh bocor");
@@ -87,7 +99,7 @@ module tb_hcpu_kernel;
               "sapuan 28 huruf tidak boleh menemukan kegagalan guard");
 
         if (errors == 0)
-            $display("tb_hcpu_kernel: SEMUA LULUS (7 pemeriksaan)");
+            $display("tb_hcpu_kernel: SEMUA LULUS (8 pemeriksaan)");
         else begin
             $display("tb_hcpu_kernel: %0d GAGAL", errors);
             $fatal(1);

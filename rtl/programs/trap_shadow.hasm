@@ -1,8 +1,9 @@
 ; trap_shadow.hasm — the board is asked where a timer sends a process back to.
 ;
-; Prints EIGHT numbers: the address the timer handed back, once per sample,
-; with the deadline walked by one cycle between samples so the samples land on
-; different cycles of the loop's own rhythm.
+; Prints EIGHT numbers and then a NINTH: the address the timer handed back,
+; once per sample, with the deadline walked by one cycle between samples so the
+; samples land on different cycles of the loop's own rhythm -- and last, the
+; user process's own counter, which measures whether it kept running.
 ;
 ; The loop lives at a known address and is two instructions long. A sample that
 ; prints that address is correct. A sample that prints 0 is the defect, and on
@@ -79,4 +80,11 @@ handler:
         NOP
         NOP
         ERET
-fin:    HALT
+
+; The ninth number is the user's own counter, and it says only that the loop is
+; alive -- NOT that the repair is what kept it alive. This handler writes the
+; loop address back into TRAP_EPC every sample, so the process would resume
+; here even with a broken epc. What proves the resume path itself is
+; rtl/programs/trap_resume.hasm, whose handler never touches epc.
+fin:    PRINT R2
+        HALT

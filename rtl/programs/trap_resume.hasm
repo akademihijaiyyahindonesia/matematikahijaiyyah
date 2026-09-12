@@ -1,26 +1,33 @@
-; trap_resume.hasm — what PC does a TIMER trap hand back?
+; trap_resume.hasm — does a preempted process come back and keep running?
 ;
-; Prints TWO numbers: the address of the user loop, and the epc the first timer
-; trap actually reported. They have to be the same instruction, or near enough
-; that the process resumes inside its own loop. On this machine they are not.
+; Prints THREE numbers: the address of the user loop, the address the LAST
+; timer trap handed back, and the user's own counter after eight preemptions.
 ;
-; ── why this program exists ─────────────────────────────────────
-; kernel.hasm's process A freezes at count 337 and never runs again, with its
-; saved pc reading 0. That was found in simulation; this is the same question
-; asked of the board, in the smallest program that can ask it.
+; ── what makes this the proof, and trap_shadow not ──────────────
+; This handler NEVER writes TRAP_EPC. It reads it, re-arms the timer, and
+; returns -- so where the process resumes is entirely the hardware's answer.
+; rtl/programs/trap_shadow.hasm puts the process back on its feet each sample
+; on purpose, because it is sampling where the hardware POINTS; this one is
+; measuring whether the process survives being pointed there.
 ;
-; A syscall names its own instruction (epc = pc_fault) and that path works --
-; syscall_io.hasm has answered 42 on the board since 11 September. A TIMER is
-; the other path: epc = pc_now, the instruction that has not run yet. It is
-; that path this program reads out loud.
+; So the third number is the whole question. A process resumed at a wrong
+; address runs boot code in user mode, faults on its first peripheral store,
+; and never increments again -- the counter stops. A process resumed correctly
+; keeps counting through every preemption.
 ;
-; Measured in simulation before the program was written: on the first fire,
-; pc_now, if_pc and id_pc are all 0 -- the front end has no PC, and 0 is what
-; epc keeps. A kernel then resumes the process at address 0, which is boot
-; code, in user mode, where the first peripheral store faults it for ever.
+; ── the history ─────────────────────────────────────────────────
+; This program used to take ONE sample and answered 84 84 on the board, and
+; that was read as "the timer path is fine". It was not: the single deadline
+; happened to land outside the two cycles a redirect costs, where `if_pc` is
+; zero and a maskable interrupt used to save that zero as the return address.
+; Eight samples with the deadline walked by a cycle each time cover the phase
+; instead of sampling one point of it. rtl/tb/tb_hcpu_trap_redirect_shadow.v
+; sweeps the same question sixty ways in simulation.
 ;
-; Not repaired here. The repair is in the trap unit, and that is the owner's.
-; Recorded in cosmictera-build/OFF.md.
+; A syscall names its own instruction (epc = pc_fault) and that path always
+; worked -- syscall_io.hasm has answered 42 on the board since 11 September.
+; A TIMER is the other path: epc = pc_now, the instruction that has not run
+; yet, and that is the one this program reads out loud.
 
         MOVI  R5, 0
         MOVI  R1, handler
@@ -29,12 +36,14 @@
         STORE R1, R5, 0xFFE     ; MEM_BASE
         MOVI  R1, 0x200
         STORE R1, R5, 0xFFF     ; MEM_LIMIT
+        MOVI  R6, 0             ; preemptions taken
+        MOVI  R7, 20            ; deadline offset, walked by 1 per preemption
         MOVI  R1, 1             ; timer only
         STORE R1, R5, 0xFFB     ; TRAP_ENABLE
         MOVI  R1, 1
         STORE R1, R5, 0xFF6     ; acknowledge the expiry that is true at reset
         LOAD  R1, R5, 0xFF4     ; COUNTER — a deadline relative to now, because
-        ADDI  R1, R1, 600       ; the counter is free-running and compared by
+        ADD   R1, R1, R7        ; the counter is free-running and compared by
         STORE R1, R5, 0xFF5     ; equality, never by threshold
         MOVI  R1, usr
         STORE R1, R5, 0xFF9     ; TRAP_EPC
@@ -50,10 +59,20 @@ spin:   ADDI  R2, R2, 1
         JMP   spin
 
 ; ── handler ─────────────────────────────────────────────────────
-; It prints where the loop is, then where the trap says to go back to.
+; Re-arms and returns. It does not touch TRAP_EPC, so the return address is
+; the hardware's own answer and nothing else.
 handler:
-        MOVI  R3, spin
-        PRINT R3                ; the address the process was inside
-        LOAD  R4, R5, 0xFF9
-        PRINT R4                ; the address the timer handed back
+        LOAD  R4, R5, 0xFF9     ; keep the last one for the report
+        ADDI  R6, R6, 1
+        ADDI  R7, R7, 1
+        LOAD  R1, R5, 0xFF4
+        ADD   R1, R1, R7
+        STORE R1, R5, 0xFF5     ; arming also clears `expired`
+        CMPI  R6, 8
+        JEQ   fin
+        ERET
+fin:    MOVI  R3, spin
+        PRINT R3                ; where the loop is
+        PRINT R4                ; where the last trap handed back
+        PRINT R2                ; how far the process got through it all
         HALT

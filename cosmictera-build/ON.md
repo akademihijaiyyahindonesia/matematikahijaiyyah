@@ -90,7 +90,7 @@ Label: `CC`.
 | 6 Syscall | `0x09`, non-maskable, epc menunjuk dirinya | `rtl/programs/syscall.hasm` |
 | **I/O lewat kernel** | `PRINT` istimewa; user meminta, supervisor mencetak | `rtl/tb/tb_hcpu_syscall_io.v` |
 | **HOS** | heap, HFS guard-on-write, HAR sebagai layanan kernel | `rtl/tb/tb_hcpu_hos.v` |
-| **H-Kernel** | tiga proses, register masing-masing, dijadwal bergilir — **proses yang dipreempt timer tidak melanjutkan**, lihat [OFF.md](OFF.md) | `rtl/programs/kernel.hasm` |
+| **H-Kernel** | **tiga proses, dipreempt, register masing-masing** — dan proses yang dipreempt melanjutkan: A 14.491 → 28.982 | `rtl/programs/kernel.hasm` |
 
 H-Kernel berjalan di **dua tempat**: penafsir Python dan pipeline RTL.
 
@@ -107,15 +107,14 @@ A dipreempt timer dan B menyerah lewat `SYSCALL`, jadi kedua jalur **masuk**
 trap teruji sekaligus: tanpa `epc` dimajukan untuk cause 5, B akan mengulang
 `SYSCALL`-nya sendiri selamanya.
 
-**Yang tidak teruji sampai 13 September adalah jalur KEMBALI-nya, dan jalur itu
-rusak.** A membeku pada cacah **337** dan tidak pernah berjalan lagi: tenggat
-timer pertamanya jatuh di dua siklus sesudah lompatan loop-nya, dan di sana
-`epc` tersimpan **0**. Yang terus berjalan adalah proses yang menyerahkan
-CPU-nya sendiri lewat `SYSCALL`. Bench di atas memeriksa kelipatan B dan sapuan
-C, tidak memeriksa bahwa A masih bergerak — jadi angkanya benar dan kalimat
-"dipreempt" terlalu jauh. Sebab, sapuan, dan jawaban papan ada di
-[OFF.md](OFF.md); `make -C rtl/tb sim_redirect_shadow` menjalankan ulang
-pengukurannya.
+**Jalur KEMBALI-nya tidak teruji sampai 13 September, dan ternyata rusak.** A
+membeku pada cacah **337** dan tidak pernah berjalan lagi: tenggat timer
+pertamanya jatuh di dua siklus sesudah lompatan loop-nya, dan di sana `epc`
+tersimpan **0**. Benchnya memeriksa kelipatan B dan sapuan C, tapi hanya
+menuntut `A > 0` — yang dipenuhi sebuah bangkai. Sekarang ia menuntut A
+**masih** bergerak, dan A bergerak: 14.491 → 28.982. Sebab, sapuan, dan
+jawaban papan ada di [OFF.md](OFF.md); `make -C rtl/tb sim_redirect_shadow`
+menjalankan ulang pengukurannya.
 
 Ruang lingkupnya jujur, dan buku menetapkan ukurannya. H-Kernel di sana punya
 **empat** tanggung jawab — proses, memori, I/O, daemon guard. **Keempatnya
@@ -279,8 +278,8 @@ Fmax    114,65 MHz (PASS pada batas 12,00 MHz)
 ```
 
 Angka di atas dari build bitstream pada komit yang lebih lama. Angka **papan**
-diambil dari run pasca-perutean terakhir — 14.714 LUT4 (70%), Fmax 115,66 MHz,
-diukur 12 September setelah blok codex masuk — dan itulah yang berlaku sebagai
+diambil dari run pasca-perutean terakhir — 14.726 LUT4 (71%), Fmax 120,31 MHz,
+diukur 13 September setelah perbaikan trap — dan itulah yang berlaku sebagai
 hasil fisik, tercatat di [PAPAN.md](PAPAN.md).
 
 Papan sudah di-flash dan dibaca: UART membalas **23 byte** yang cocok
@@ -296,6 +295,6 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 
 ```bash
 python3 -m pytest -q          # 4.915 lulus, 0 dilewati
-make -C rtl/tb all            # 277 asersi, 22 bench, 0 gagal
+make -C rtl/tb all            # 278 asersi, 22 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

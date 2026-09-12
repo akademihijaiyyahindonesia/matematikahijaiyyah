@@ -36,7 +36,24 @@ module hcpu_fetch (
 
     // ── Output to Decode ────────────────────────────────────────
     output reg  [`ILEN-1:0]            if_instruction,
-    output reg  [`XLEN-1:0]            if_pc         // PC of this instruction
+    output reg  [`XLEN-1:0]            if_pc,        // PC of this instruction
+    // 1 while `if_pc` names a real instruction. Written in exactly the places
+    // `if_pc` is, so it cannot drift from it: zero wherever if_pc is set to
+    // zero, one where if_pc is set from pc_prev, held where if_pc is held.
+    //
+    // The name is hcpu_trap.v's, not a new one -- that module has called this
+    // `pc_valid` since traps were built, and its comment already said what it
+    // is for: "0 while the front end is empty". Naming it something else here
+    // would put two words on one signal, which is the defect 7582ae5 went
+    // through the tree to remove. hcpu_rom.v sets the shape: its own port is
+    // `valid` and hcpu_top.v's wire is `rom_valid`.
+    //
+    // Why it had to exist: a maskable interrupt saves `if_pc` as its return
+    // address, and without this there was no way to tell "the PC is 0" from
+    // "there is no PC". A redirect sets if_pc to zero to say it is presenting
+    // nothing, and a trap landing in those two cycles read the zero as an
+    // address and sent the process to it.
+    output reg                         pc_valid
 );
 
     // ── PC register ─────────────────────────────────────────────
@@ -58,10 +75,12 @@ module hcpu_fetch (
             fetch_valid    <= 1'b0;
             if_instruction <= {`OP_NOP, 24'h000000};
             if_pc          <= {`XLEN{1'b0}};
+            pc_valid    <= 1'b0;
         end else if (flush || branch_taken) begin
             // ── Redirect: discard in-flight fetch, insert NOP ────
             if_instruction <= {`OP_NOP, 24'h000000};
             if_pc          <= {`XLEN{1'b0}};
+            pc_valid    <= 1'b0;
             fetch_valid    <= 1'b0;  // Next cycle's imem_data will be stale
             if (branch_taken)
                 pc <= branch_target;
@@ -74,6 +93,7 @@ module hcpu_fetch (
                 // ── Normal: BRAM data is valid, latch instruction ─
                 if_instruction <= imem_data;
                 if_pc          <= pc_prev;
+                pc_valid    <= 1'b1;
                 pc             <= pc + 1;
                 pc_prev        <= pc;
                 // fetch_valid stays 1 (continuous fetch)
@@ -82,6 +102,7 @@ module hcpu_fetch (
                 // Insert NOP while waiting for first valid read
                 if_instruction <= {`OP_NOP, 24'h000000};
                 if_pc          <= {`XLEN{1'b0}};
+                pc_valid    <= 1'b0;
                 pc_prev        <= pc;
                 pc             <= pc + 1;
                 fetch_valid    <= 1'b1;  // Next cycle will have valid data
