@@ -34,7 +34,7 @@ Kolom **Label** memakai konvensi [RULES.md](../cosmictera/RULES.md).
 
 | Istilah | Kepanjangan | Fungsi | Di mana | Label |
 |---|---|---|---|---|
-| **H-ISA** | Hybit Instruction Set Architecture | Set instruksi kustom, operasi skalar dan codex secara natif. 73 opcode: 45 umum + 28 asli-huruf | `hisa/`, `hcpu_pkg.vh` | CC |
+| **H-ISA** | Hybit Instruction Set Architecture | Set instruksi kustom, operasi skalar dan codex secara natif. 79 opcode: 51 umum + 28 asli-huruf | `hisa/`, `hcpu_pkg.vh` | CC |
 | **HCPU** | Hijaiyyah Core Processing Unit | Mikroprosesor kustom: ALU Codex natif, pipeline 5 tahap, operasi Hybit di level silikon | `rtl/hcpu_*.v` | CC — berjalan di papan |
 | **HCHECK** | — (monitor runtime) | Pemantau integritas saat program berjalan | `hisa/hcheck.py` | CC |
 

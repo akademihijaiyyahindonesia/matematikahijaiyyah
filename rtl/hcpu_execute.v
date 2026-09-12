@@ -48,6 +48,10 @@ module hcpu_execute #(
     // ── Guard checker interface ─────────────────────────────────
     output wire [`HREG_W-1:0]      guard_vec,
     input  wire                    guard_pass,
+    // CU and CRHO return what the guard already computes over the same vector,
+    // rather than a second copy of U = Qx + Qs + Qa + 4*Qc in the codex ALU.
+    input  wire [`XLEN-1:0]        guard_u,
+    input  wire [`XLEN-1:0]        guard_rho,
 
     // ── Codex ALU interface ─────────────────────────────────────
     output wire [2:0]              calu_op,
@@ -196,7 +200,8 @@ module hcpu_execute #(
                        (id_opcode == `OP_HNRM2) ? 3'd1 :
                        (id_opcode == `OP_HDIST) ? 3'd2 :
                        (id_opcode == `OP_CGET) ? 3'd3 :
-                       (id_opcode == `OP_CSET) ? 3'd4 : 3'd0;
+                       (id_opcode == `OP_CSET) ? 3'd4 :
+                       (id_opcode == `OP_CMOD4) ? 3'd5 : 3'd0;
     // CGET and CSET both name their component in the immediate.
     assign calu_index = id_imm;
     assign calu_src1 = id_hreg_s1;
@@ -230,6 +235,15 @@ module hcpu_execute #(
             // one component replaced, and the H-Reg write enable carries it to
             // the register file.
             `OP_CSET: codex_hvec = calu_result_vec;
+            // CMOV and CZERO need no ALU: one is the source itself, the other
+            // is the identity of the monoid the codex lives in.
+            `OP_CMOV:  codex_hvec = id_hreg_s1;
+            `OP_CZERO: codex_hvec = {`HREG_W{1'b0}};
+            `OP_CMOD4: codex_gpr  = calu_result_scl;
+            // U and rho arrive from the guard, which is already looking at
+            // this same vector: guard_vec is id_hreg_s1.
+            `OP_CU:    codex_gpr  = guard_u;
+            `OP_CRHO:  codex_gpr  = guard_rho;
             // HISAB word select. §IIIM.3.1 gives HPACK as
             // GPR[DST] <- nibble_pack(H[S1])[S2], words 0-2. Only word 0 was
             // ever selected: pack_word1 and pack_word2 were wired up to the
@@ -428,6 +442,8 @@ module hcpu_execute #(
             // GPR result selection
             if (id_is_codex && (id_opcode == `OP_HNRM2 || id_opcode == `OP_HDIST ||
                                 id_opcode == `OP_CGET ||
+                                id_opcode == `OP_CMOD4 ||
+                                id_opcode == `OP_CU   || id_opcode == `OP_CRHO ||
                                 id_opcode == `OP_HPACK || id_opcode == `OP_HCRC))
                 ex_gpr_result <= codex_gpr;
             else if (id_is_pop)
@@ -446,6 +462,17 @@ module hcpu_execute #(
             if (id_opcode == `OP_HGRD) begin
                 // Guard check — update GUARD flag
                 ex_flags_new <= {current_flags[7:1], guard_pass};
+                ex_flags_we  <= 1'b1;
+            end else if (id_opcode == `OP_CEQ) begin
+                // CEQ sets Z and touches nothing else, the way CMP does for
+                // scalars. The comparison is over the WHOLE register, all 144
+                // bits: two codices that agree on the fourteen invariants
+                // agree on the three summaries too, because the summaries are
+                // derived -- but H* is not derived, and a comparison that
+                // dropped it would call Kaf equal to a letter it is not.
+                ex_flags_new <= {current_flags[7:2],
+                                 (id_hreg_s1 == id_hreg_s2),
+                                 current_flags[0]};
                 ex_flags_we  <= 1'b1;
             end else if (alu_flags_we) begin
                 ex_flags_new <= alu_flags;

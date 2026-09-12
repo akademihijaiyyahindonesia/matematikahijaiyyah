@@ -32,7 +32,15 @@ module hcpu_guard #(
     output wire                g3_pass,
     output wire                g4_pass,
     output wire                t1_pass,
-    output wire                t2_pass
+    output wire                t2_pass,
+    // U and rho as values, not verdicts. CU (0x4D) and CRHO (0x4C) return
+    // them, and they are read out of here rather than recomputed in the codex
+    // ALU: U = Qx + Qs + Qa + 4*Qc is one definition (R1), and a second copy
+    // beside it is how the Master Table came to disagree with itself six ways.
+    // Unregistered even when PIPELINE_GUARD is set: the verdicts are what that
+    // parameter delays, and these two are read in the same stage as the ALU's.
+    output wire [`XLEN-1:0]    u_value,
+    output wire [`XLEN-1:0]    rho_value
 );
 
     // ── Extract components ──────────────────────────────────────
@@ -72,6 +80,16 @@ module hcpu_guard #(
     wire [10:0] u_val = qx + qs + qa + ({qc, 2'b00});  // qc << 2 = 4*qc
     // ρ = Θ̂ − U ≥ 0 ⇔ Θ̂ ≥ U, compared at full width so a wide U cannot alias.
     wire g4_comb = ({3'b000, theta} >= u_val);
+
+    // ── U and rho as values ─────────────────────────────────────
+    // rho is SIGNED: G4 is exactly the statement that it is not negative, so a
+    // vector that fails G4 has a negative residue and CRHO has to be able to
+    // say so. Two's complement, sign-extended to the GPR width, and the
+    // interpreter masks to the same width -- a difference there is how HLOAD's
+    // 0-based/1-based split stayed invisible.
+    wire signed [11:0] rho_signed = $signed({4'd0, theta}) - $signed({1'b0, u_val});
+    assign u_value   = {21'd0, u_val};
+    assign rho_value = {{20{rho_signed[11]}}, rho_signed};
 
     // ── T1: Ks > 0 ⇒ Qc ≥ 1 ────────────────────────────────────
     wire t1_comb = (ks == 8'd0) || (qc >= 8'd1);

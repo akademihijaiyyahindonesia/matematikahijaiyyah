@@ -534,6 +534,78 @@ module tb_hcpu_top;
         end
 
         // ═══════════════════════════════════════════════════════
+        //  Program 11: the rest of the codex block -- CMOV, CZERO, CEQ,
+        //  CRHO, CU, CMOD4
+        // ═══════════════════════════════════════════════════════
+        //  Haa is the sharpest single letter for the three derived
+        //  quantities: Theta = 8 and Qc = 2, so U = 4*2 = 8, rho = 0, and
+        //  8 mod 4 = 0 -- the Mod-4 gate's answer for a MainPath that may
+        //  close. CDOT is NOT here: its fourteen multipliers put the bare
+        //  hcpu_gowin_top slot past what nextpnr can place, so it stays
+        //  software-only until the owner decides otherwise (OFF.md).
+        for (i = 0; i < `CODE_DEPTH; i = i + 1)
+            imem[i] = {`OP_NOP, 24'h000000};
+
+        imem[0]  = enc(`OP_HLOAD, 4'd0, 4'd0, 4'd0, 12'd27);  // H0 <- Haa
+        imem[1]  = enc(`OP_HLOAD, 4'd1, 4'd0, 4'd0, 12'd2);   // H1 <- Ba
+        imem[2]  = enc(`OP_CMOV,  4'd2, 4'd0, 4'd0, 12'd0);   // H2 <- H0
+        imem[3]  = enc(`OP_CU,    4'd1, 4'd0, 4'd0, 12'd0);   // R1 <- U    = 8
+        imem[4]  = enc(`OP_CRHO,  4'd2, 4'd0, 4'd0, 12'd0);   // R2 <- rho  = 0
+        imem[5]  = enc(`OP_CMOD4, 4'd3, 4'd0, 4'd0, 12'd0);   // R3 <- 8%4  = 0
+        // CZERO is checked as the IDENTITY OF THE MONOID, not against another
+        // CZERO. Comparing two zeroed registers was the first shape here and
+        // it was blind: a CZERO that writes the same wrong vector twice
+        // compares equal to itself, and a sabotage that put 1 in component 0
+        // passed. Adding zero to a letter cannot hide that -- HCADD touches
+        // all eighteen components and CEQ compares all 144 bits, so any
+        // non-zero component makes H5 differ from H0.
+        imem[6]  = enc(`OP_CZERO, 4'd3, 4'd0, 4'd0, 12'd0);   // H3 <- 0
+        imem[7]  = enc(`OP_HCADD, 4'd5, 4'd0, 4'd3, 12'd0);   // H5 <- Haa + 0
+        // Equality into Z, read back the way the ISA reads any flag: a branch.
+        imem[8]  = enc(`OP_MOVI,  4'd6, 4'd0, 4'd0, 12'd0);
+        imem[9]  = enc(`OP_CEQ,   4'd0, 4'd2, 4'd0, 12'd0);   // H2 == H0 -> Z=1
+        imem[10] = enc(`OP_JNE,   4'd0, 4'd0, 4'd0, 12'd2);   // not taken
+        imem[11] = enc(`OP_MOVI,  4'd6, 4'd0, 4'd0, 12'd1);   // R6 <- 1
+        imem[12] = enc(`OP_MOVI,  4'd7, 4'd0, 4'd0, 12'd0);
+        imem[13] = enc(`OP_CEQ,   4'd0, 4'd0, 4'd1, 12'd0);   // Haa == Ba -> Z=0
+        imem[14] = enc(`OP_JNE,   4'd0, 4'd0, 4'd0, 12'd2);   // taken -> 16
+        imem[15] = enc(`OP_MOVI,  4'd7, 4'd0, 4'd0, 12'd1);   // skipped
+        imem[16] = enc(`OP_MOVI,  4'd4, 4'd0, 4'd0, 12'd0);
+        imem[17] = enc(`OP_CEQ,   4'd0, 4'd5, 4'd0, 12'd0);   // Haa+0 == Haa
+        imem[18] = enc(`OP_JNE,   4'd0, 4'd0, 4'd0, 12'd2);   // not taken
+        imem[19] = enc(`OP_MOVI,  4'd4, 4'd0, 4'd0, 12'd1);   // R4 <- 1
+        imem[20] = enc(`OP_HALT,  4'd0, 4'd0, 4'd0, 12'd0);
+
+        rst_n = 0;
+        repeat (5) @(posedge clk);
+        rst_n = 1;
+
+        cycle_count = 0;
+        while (!halted && cycle_count < 80) begin
+            @(posedge clk);
+            cycle_count = cycle_count + 1;
+        end
+
+        $display("\nProgram 11 (codex block) halted after %0d cycles", cycle_count);
+        $display("R1=%0d R2=%0d R3=%0d R4=%0d R6=%0d R7=%0d (expected 8, 0, 0, 1, 1, 0)",
+                 u_dut.u_regfile.gpr[1], u_dut.u_regfile.gpr[2],
+                 u_dut.u_regfile.gpr[3], u_dut.u_regfile.gpr[4],
+                 u_dut.u_regfile.gpr[6], u_dut.u_regfile.gpr[7]);
+
+        if (u_dut.u_regfile.gpr[1] == 32'd8 &&
+            u_dut.u_regfile.gpr[2] == 32'd0 &&
+            u_dut.u_regfile.gpr[3] == 32'd0 &&
+            u_dut.u_regfile.gpr[4] == 32'd1 &&
+            u_dut.u_regfile.gpr[6] == 32'd1 &&
+            u_dut.u_regfile.gpr[7] == 32'd0) begin
+            $display("PASS: CMOV, CZERO, CEQ, CRHO, CU and CMOD4 agree with the table");
+            pass_count = pass_count + 1;
+        end else begin
+            $display("FAIL: one of the codex-block opcodes returned the wrong value");
+            fail_count = fail_count + 1;
+        end
+
+        // ═══════════════════════════════════════════════════════
         $display("\n=============================");
         $display("Total: %0d PASS, %0d FAIL", pass_count, fail_count);
         $display("=============================");

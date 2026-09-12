@@ -31,7 +31,7 @@ tidak bisa dipakai, dan sebabnya ada di bagian [cacat](#tiga-cacat-yang-hanya-pa
 
 ---
 
-## HCPU: 23 program
+## HCPU: 24 program
 
 | Program | kata | Keluaran |
 |---|---:|---|
@@ -58,6 +58,7 @@ tidak bisa dipakai, dan sebabnya ada di bagian [cacat](#tiga-cacat-yang-hanya-pa
 | `user_mode` | 22 | halt, lapor siklus |
 | `test_cset` | 17 | `5 6 2 0` |
 | `test_hfs` | 373 | `1 1 1 2 1` |
+| `test_codex` | 32 | `8 0 0 1 1 0 1 5` |
 
 ## Bench: 11 program
 
@@ -206,6 +207,49 @@ dengan sebab yang sama seperti di bagian atas halaman ini.
 
 ---
 
+## Blok codex di papan — 12 September 2026
+
+Enam opcode codex yang dinamai spesifikasi dan belum pernah dieksekusi apa pun:
+`CMOV` (0x46), `CZERO` (0x47), `CEQ` (0x48), `CRHO` (0x4C), `CU` (0x4D),
+`CMOD4` (0x4F). Slot yang membawanya ke papan adalah `hcpu_hdmi_top` dengan
+loader dipanggang; papan direkonfigurasi sebagai reset di antara program.
+
+| program | kata | keluaran papan | interpreter |
+|---|---:|---|---|
+| `test_codex` | 32 | `8 0 0 1 1 0 1 5` | `8 0 0 1 1 0 1 5` |
+| `test_cset` | 17 | `5 6 2 0` | `5 6 2 0` |
+| `test_hfs` | 373 | `1 1 1 2 1` | `1 1 1 2 1` |
+| `e3_sweep28` | 113 | 28 nilai Θ̂ | identik `MASTER_TABLE` |
+
+Slot HCPU biasa dijalankan di sesi yang sama, bitstream-nya sendiri:
+**23 byte**, `112` — ‖BSM‖², angka yang sama yang dihitung testbench.
+
+**Apa yang dibuktikan tiap kolom `test_codex`.** Haa dipilih karena ia huruf
+paling tajam untuk tiga besaran turunan sekaligus: Θ̂ = 8 dan Qc = 2, jadi
+`CU` = 4·2 = **8**, `CRHO` = Θ̂ − U = **0**, dan `CMOD4` = 8 mod 4 = **0**.
+Lalu `CZERO` diuji lewat **sifatnya**, bukan lewat dirinya sendiri: `HCADD`
+menambahkan hasilnya ke Haa dan `CEQ` menanyakan apakah jumlahnya masih Haa →
+**1**. Bentuk pertama membandingkan dua register yang sama-sama di-`CZERO`, dan
+itu buta: sabotase yang menaruh 1 di komponen 0 menulis vektor salah yang sama
+dua kali dan tetap lulus. `HCADD` menyentuh delapan belas komponen dan `CEQ`
+membandingkan seluruh 144 bit, jadi komponen tak-nol mana pun terlihat (R3). `CMOV` menyalin Haa dan `CEQ` atas
+salinannya → **1**; `CEQ` antara Haa dan Ba → **0**. Dua kolom terakhir Waw,
+Θ̂ = 5: `CMOD4` = **1** dan `CU` = **5** — Haa sendirian tidak bisa melihat
+kesalahan mod-8, karena 8 mod 4 dan 8 mod 8 dua-duanya 0.
+
+**`CDOT` (0x49) tidak ikut, dan penghalangnya diukur, bukan diduga.** RTL-nya
+benar dan lulus bench; yang tidak muat adalah papannya. Empat belas pengali
+8×8 membawa `hcpu_gowin_top` ke **16.015 LUT4 (77%)** dan nextpnr menjawab
+*"Unable to find legal placement for all cells"* — dua kali, pesan sama, jadi
+bukan variasi placer. Tanpa `CDOT`: **14.714 LUT4 (70%)**, ter-place dan
+ter-route. Pemilik memutuskan mengeluarkannya; `CDOT` tetap berjalan di HVM
+dan tercatat di [OFF.md](OFF.md) dengan penghalang bernama.
+
+Angka `CYCLES` lewat kabel tetap tidak sebanding dengan yang dipanggang,
+dengan sebab yang sama seperti di bagian atas halaman ini.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -218,8 +262,8 @@ antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
 berubah bentuk:
 
 ```
-  berdampingan   sum(slot)   harus muat serentak   14.231 + 12.061 + 14.713 = 197%
-  berurutan      max(slot)   satu per satu                           14.713 =  70%
+  berdampingan   sum(slot)   harus muat serentak   14.714 + 12.061 + 15.126 = 202%
+  berurutan      max(slot)   satu per satu                           15.126 =  72%
 ```
 
 Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
@@ -248,24 +292,24 @@ pak-nya **identik byte-demi-byte** dengan bitstream yang menyala di papan, dan
 di-flash lagi ia menjawab `test_bsm` lewat kabel: 23 byte, `112`.
 
 ```
-  LUT4    14.713 / 20.736   70%
+  LUT4    15.126 / 20.736   72%
   DFF      4.551 / 15.552   29%
   BSRAM       17 /     46   36%
   IOB         15 /    384    3%
-  Fmax     60,34 MHz (HCPU), 496,28 MHz (pixel)
+  Fmax     70,80 MHz (HCPU), 549,15 MHz (pixel)
 ```
 
-Jalur video menambah 482 LUT4 di atas HCPU sendiri, jadi biaya rack **70%**,
-bukan 68%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
+Jalur video menambah 412 LUT4 di atas HCPU sendiri, jadi biaya rack **72%**,
+bukan 70%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
 tercatat gratis.
 
-**Angka di blok ini diukur ulang 11 September setelah CSET masuk**, karena
-slot ini membawa seluruh HCPU. Sesi rack tiga-slot di atas dijalankan dengan
-bitstream sebelum CSET — yang waktu itu terukur 14.528 LUT4, Fmax 121,24 MHz
-(HCPU) dan 502,51 MHz (pixel) — dan hasil yang dilaporkan di tabel itu adalah
-hasil bitstream tersebut. Slot HDMI versi baru sudah dibangun dan dipak, tapi
-**belum di-flash**; yang sudah dijalankan di papan hari ini adalah slot HCPU
-biasa, di bagian berikut.
+**Angka di blok ini diukur ulang 12 September setelah blok codex masuk**,
+karena slot ini membawa seluruh HCPU: 14.713 → 15.126 LUT4, DFF tidak bergerak
+sama sekali. Sesi rack tiga-slot di atas dijalankan dengan bitstream sebelum
+`CSET` — yang waktu itu terukur 14.528 LUT4, Fmax 121,24 MHz (HCPU) dan
+502,51 MHz (pixel) — dan hasil yang dilaporkan di tabel itu adalah hasil
+bitstream tersebut. Slot HDMI versi ini **sudah di-flash dan dijalankan**:
+lihat bagian blok codex di atas.
 
 ---
 
@@ -317,7 +361,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.855 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.903 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -360,13 +404,13 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.855 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 20 testbench, 262 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.903 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 20 testbench, 263 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
-Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 14, NUI embedding 10, video
+Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
 timing 8, H-Kernel 7, syscall I/O 6, HOS 7, subrutin 4, huruf 3, wrapper Gowin
-2, dan tujuh testbench yang melapor satu pernyataan lulus tunggal — 262,
+2, dan tujuh testbench yang melapor satu pernyataan lulus tunggal — 263,
 semuanya 0 FAIL. Dua yang baru: Program 10 `tb_hcpu_top` (CSET) dan
 pemeriksaan ketujuh `tb_hcpu_hos` (baca HFS mengembalikan H-Reg hidup).
 
@@ -401,7 +445,7 @@ pemeriksaan ketujuh `tb_hcpu_hos` (baca HFS mengembalikan H-Reg hidup).
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.855 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.903 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

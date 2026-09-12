@@ -232,7 +232,7 @@ kerja:
 |---|---|---|
 | Penyimpanan persisten | verifikasi fisik: apakah chip PSRAM benar-benar terpasang di papan 20K yang dipegang | 4 (HFS) |
 | HISAB langsung, bukan `SYSCALL` | bungkus `HPACK`/`HCRC` sebagai layanan kernel bernama, seperti `hos_har_get` | 5 |
-| 24 opcode (vektor, codex, `JGF`/`JGP`/`JNP`/`PRINTH`) | RTL + bench per opcode | 6/7 (dipakai program lengkap) |
+| 21 opcode (vektor, codex, `JGF`/`JGP`/`JNP`/`PRINTH`) | RTL + bench per opcode — empat di antaranya menunggu keputusan pemilik, lihat [OFF.md](OFF.md) | 6/7 (dipakai program lengkap) |
 | Proses dinamis, stack per proses, tabel syscall, tidur/tunggu/sinyal | perluasan H-Kernel | 3 |
 
 **Cara memeriksa:** setiap baris dapat bench-nya sendiri mengikuti pola
@@ -290,10 +290,90 @@ harfiah. "Utuh" berarti setiap baris ✅, diukur di perangkat keras fisik
    jadi jalur bacanya mengembalikan H-Reg hidup.
 5. Layanan Hybit: HISAB sebagai `SYSCALL`, bukan instruksi langsung
    (Fase 5) — dan Ka'bah bisa dipanggil dari sana (Fase 4).
-6. HVM/HCPU: 97/97 opcode, bukan 73/97 (Fase 5).
+6. HVM/HCPU: 100/100 opcode, bukan 79/100 (Fase 5).
 7. Aplikasi: sudah ✅ — program HC berjalan di atas semua ini begitu
    lapis 1–6 berhenti jadi simulasi dan mulai jadi perangkat keras yang
    benar-benar dinyalakan.
+
+---
+
+## COSMICTERA COMPUTER M0 — target papan Tang Nano 20K
+
+**Ditetapkan pemilik proyek, 12 September 2026.** Cakupannya dikecilkan dengan
+sengaja: bukan "CosmicTera Computer penuh", melainkan **satu komputer CosmicTera
+minimal yang benar-benar hidup di papan**. GUI penuh, NUI inference, jaringan,
+penyimpanan besar dan jalur ASIC menunggu papan yang lebih besar — itu M1,
+bukan M0.
+
+Papan sudah membuktikan HCPU, Ka'bah, program trap, HDMI, rack/slot, `CGET` dan
+`CSET` ([PAPAN.md](PAPAN.md)). Yang dituju sekarang adalah melengkapi rantainya
+sampai menjadi satu sistem yang bisa dipakai:
+
+```
+             COSMICTERA COMPUTER v1
+                    ON TANG NANO 20K
+                           │
+                    ┌──────▼──────┐
+                    │    HCPU     │
+                    │  H-ISA      │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  H-KERNEL   │
+                    └──────┬──────┘
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+         HFS             HISAB            KA'BAH
+          │                │                │
+          └────────────────┼────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │    HCVM*    │
+                    │ reference   │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │ COSMICTERA  │
+                    │   SHELL     │
+                    └─────────────┘
+
+* HCVM sebagai reference/verification,
+  bukan berarti seluruh runtime Python masuk FPGA.
+```
+
+### Tangga milestone, berurutan
+
+| # | Milestone | Keadaan hari ini | Yang kurang |
+|---|---|---|---|
+| M1 | HCPU + `CGET`/`CSET` | **selesai di papan** — `f0dd0f8`, keluaran `5 6 2 0` dan `1 1 1 2 1` | — |
+| M2 | Batch ISA berikutnya | **selesai di papan** — enam opcode codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`), `test_codex` menjawab `8 0 0 1 1 0 1 5` | — (`CSUB` ditunda, `CDOT` dikeluarkan karena tempat, `CNORM`/`CDIST` duplikat — lihat [OFF.md](OFF.md)) |
+| M3 | H-Kernel boot | tiga proses tetap dengan preemption berjalan (`dc5ae55`) | boot sampai shell, bukan satu program terpanggang |
+| M4 | Proses + syscall + timer | trap, supervisor, proteksi memori, syscall, timer semuanya di RTL dan dijalankan di papan (`81fbd2e`) | proses dinamis, stack per proses, tabel syscall |
+| M5 | HFS baca/tulis | `hos_fs_write`/`hos_fs_read` jalan di papan, guard-on-write, H-Reg dibangun ulang lewat `CSET` | media penyimpanan persisten yang terverifikasi fisik |
+| M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
+| M7 | Ka'bah dipanggil dari HCPU | Ka'bah jalan sendiri di papan, 400/400 byte cocok `cube.py` | jadi co-processor: perintah lewat MMIO, hasil kembali ke HCPU |
+| M8 | JIM/HIJRAH di perangkat keras | 28 opcode huruf `0xE0`–`0xFB` dijalankan di pipeline | instruksi JIM yang dirakit, didekode, dieksekusi, lalu diverifikasi di papan |
+| M9 | Program loader | loader UART menaruh program di alamat 64 | memuat program dari penyimpanan, bukan dari kabel |
+| M10 | Konsol HDMI | 1280×720 menyala bersama HCPU dan loader | framebuffer + perender teks + layanan display di kernel |
+| M11 | Jembatan NUI | `nui_embedding` jalan di papan, `2 2 2 6 6` | protokol PC→papan untuk data inferensi |
+| M12 | **COSMICTERA COMPUTER M0** | — | seluruh rantai di atas dalam satu boot |
+
+### Yang tidak boleh dikerjakan atas inisiatif sendiri
+
+- Opcode yang **tidak ada di** `docs/HISA_SPEC.md` (`VPROJ_K/N/Q/T`, `HCHK`).
+- Semantik perangkat keras yang belum ditetapkan pemilik spesifikasi — `CSUB`
+  dan representasi hasil negatifnya.
+- Encoding kedua untuk operasi yang sudah berjalan (`CNORM` vs `HNRM2`,
+  `CDIST` vs `HDIST`, `CTHETA` vs `CGET` 0).
+- Merapikan tabel spesifikasi sepihak; konflik dicatat, keputusan milik pemilik.
+
+### Definisi selesai — tidak berubah
+
+Bukan "kodenya sudah ada", bukan "testbench hijau", bukan "bitstream jadi".
+**Program CosmicTera yang sama dibangun, disimulasikan, disintesis, diprogram ke
+Tang Nano 20K, lalu mengeluarkan hasil yang benar di papan fisik** — tingkat 4
+pada tangga bukti di `AGENTS.md`.
 
 ---
 
@@ -318,7 +398,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.855
+software_tests      1611/1611     ← sekarang 4.903
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 

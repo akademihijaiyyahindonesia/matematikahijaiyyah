@@ -270,6 +270,30 @@ memutuskan:
      (tak ada inti SHA-256 di RTL), jadi juga ditanyakan dulu.
 3. **Fase 6, PDK:** Efabless SKY130 (`rtl/mpw/MPW_SHUTTLE_PLAN.md`).
 
+### Keputusan pemilik, 12 September 2026
+
+1. **Target papan dikecilkan dan dinamai: COSMICTERA COMPUTER M0.** Bukan
+   desktop penuh — satu komputer CosmicTera minimal yang hidup di papan, dengan
+   tangga M1–M12. Seluruhnya dicatat di `cosmictera-build/ROADMAP.md`; baca
+   bagian itu sebelum mengambil butir berikutnya.
+2. **`CSUB` (0x43) ditunda.** Selisihnya meninggalkan monoid dan bisa negatif,
+   sementara komponen H-Reg adalah byte tak bertanda. *"Jangan mengarang
+   semantik hardware sebelum pemilik spesifikasi menetapkannya."* Statusnya di
+   `cosmictera-build/OFF.md`.
+3. **Konflik di dalam spesifikasi dicatat, bukan dirapikan sepihak.**
+   `AND`/`OR`/`XOR`/`NOT`/`SHL`/`SHR` muncul di dua blok `docs/HISA_SPEC.md`
+   (0x17–0x1C dan 0xB0–0xB5). RTL yang terverifikasi adalah bukti implementasi;
+   dokumen diperbaiki ketika **pemilik** memutuskan begitu.
+4. **Kriteria batch opcode berikutnya:** pilih yang tidak punya ambiguitas
+   representasi dan tidak menduplikasi semantik yang sudah berjalan.
+5. **`CDOT` (0x49) dikeluarkan dari batch.** Batchnya turun dari tujuh ke enam:
+   `CMOV`, `CZERO`, `CEQ`, `CRHO`, `CU`, `CMOD4`. Penghalangnya **tempat, bukan
+   semantik** — RTL-nya benar dan lulus bench, tetapi 14 pengali 8×8 membawa
+   `hcpu_gowin_top` ke 16.015 LUT4 dan nextpnr menolak menempatkannya; tanpa
+   `CDOT` slot yang sama 14.714 LUT4, ter-place, dan dijalankan di papan.
+   `CDOT` tetap berjalan di HVM dan tercatat di `cosmictera-build/OFF.md`
+   dengan penghalang bernama.
+
 ---
 
 ## 4. Aturan kerja

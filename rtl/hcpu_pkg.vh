@@ -171,6 +171,12 @@
 `define OP_HLOAD        8'h40       // H[DST] ← ROM[IMM]  (huruf 1–28, vektor negatif 31–36)
 `define OP_CGET        8'h44       // GPR[DST] ← H[S1][IMM]   (component 0–17)
 `define OP_CSET        8'h45       // H[DST][IMM] ← GPR[S1]   (component 0–17)
+`define OP_CMOV        8'h46       // H[DST] ← H[S1]          (copy codex)
+`define OP_CZERO       8'h47       // H[DST] ← 0              (monoid identity)
+`define OP_CEQ         8'h48       // FLAGS.Z ← (H[S1] == H[S2])
+`define OP_CRHO        8'h4C       // GPR[DST] ← ρ(H[S1]) = Θ̂ − U   (signed)
+`define OP_CU          8'h4D       // GPR[DST] ← U(H[S1]) = Qx+Qs+Qa+4·Qc
+`define OP_CMOD4       8'h4F       // GPR[DST] ← Θ̂(H[S1]) mod 4
 `define OP_HCADD        8'h42       // H[DST] ← H[S1] + H[S2]  (18×add)
 `define OP_HGRD         8'h60       // Guard G1–G4,T1–T2 on H[S1] → GUARD flag
 `define OP_HNRM2        8'h06       // GPR[DST] ← ‖H[S1]‖²₁₄

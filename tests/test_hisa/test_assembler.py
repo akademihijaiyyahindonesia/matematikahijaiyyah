@@ -350,6 +350,46 @@ def test_cset_takes_the_low_byte_because_a_component_is_a_byte() -> None:
     assert state["hreg"][2][2] == 300 & 0xFF
 
 
+def test_the_rest_of_the_codex_block_assembles_to_the_spec_hex() -> None:
+    """Opcodes the spec named and nothing executed until now. Each lands on the
+    hex HISA_SPEC.md prints for it -- none of them is a new assignment.
+
+    Six of them, not the seven the batch started with. CDOT (0x49) is not
+    here because the assembler's dialect is RTL_IMPLEMENTED itself: its
+    fourteen multipliers cost hcpu_gowin_top its placement, so it stays in the
+    HVM with a named blocker in cosmictera-build/OFF.md."""
+    assert assemble_line("CMOV H2, H0") == encode(0x46, 2, 0, 0, 0)
+    assert assemble_line("CZERO H3") == encode(0x47, 3, 0, 0, 0)
+    assert assemble_line("CEQ H0, H1") == encode(0x48, 0, 0, 1, 0)
+    assert assemble_line("CRHO R2, H0") == encode(0x4C, 2, 0, 0, 0)
+    assert assemble_line("CU R1, H0") == encode(0x4D, 1, 0, 0, 0)
+    assert assemble_line("CMOD4 R3, H0") == encode(0x4F, 3, 0, 0, 0)
+
+
+def test_zero_is_the_identity_and_passes_every_guard() -> None:
+    """CZERO is not an erase. Zero is the identity of (V, +): three sum-checks
+    of 0 = 0, rho = 0, and T1/T2 vacuous -- so it is a legitimate place to
+    start building a vector, which is why the spec gives it an opcode."""
+    state = _run("HLOAD H0, 27\n        CZERO H0\n        HGRD  H0\nHALT\n")
+    assert state["hreg"][0] == [0] * 18
+    assert state["sr"]["guard"] is True
+
+
+def test_the_residue_of_a_corrupt_vector_is_negative_on_both_machines() -> None:
+    """G4 IS the statement that rho is not negative, so the vector that exists
+    to fail it has a negative residue -- and a GPR carries that as 32 bits of
+    two's complement, the same on silicon and here."""
+    from hijaiyyah.core.guards import compute_U
+    from hijaiyyah.hisa.machine import ROM_NEGATIVE_VECTORS
+
+    vector, _ = ROM_NEGATIVE_VECTORS[31]
+    expected = (vector[0] - compute_U(list(vector))) & 0xFFFFFFFF
+    assert expected > 0x7FFF_FFFF, "the probe needs a vector whose residue is negative"
+
+    state = _run("HLOAD H0, 31\n        CRHO  R1, H0\nHALT\n")
+    assert state["gpr"][1] == expected
+
+
 @pytest.mark.parametrize("index", [18, 31, 99, 4095])
 def test_an_index_past_seventeen_writes_nothing_on_either_machine(index: int) -> None:
     """CGET returns zero for an index that names nothing; CSET writes nothing."""

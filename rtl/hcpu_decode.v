@@ -88,6 +88,7 @@ module hcpu_decode (
             `OP_ANDI, `OP_ORI, `OP_XORI, `OP_SHLI, `OP_SHRI,
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
             `OP_CGET, `OP_CSET,
+            `OP_CMOV, `OP_CEQ, `OP_CRHO, `OP_CU, `OP_CMOD4,
             `OP_HPACK, `OP_HCRC,
             `OP_PRINT, `OP_PUSH: id_uses_s1 = 1'b1;
             default: ;
@@ -97,7 +98,8 @@ module hcpu_decode (
         case (opcode)
             `OP_ADD, `OP_SUB, `OP_MUL, `OP_CMP,
             `OP_AND, `OP_OR, `OP_XOR, `OP_SHL, `OP_SHR,
-            `OP_STORE, `OP_HCADD, `OP_HDIST: id_uses_s2 = 1'b1;
+            `OP_STORE, `OP_HCADD, `OP_HDIST,
+            `OP_CEQ: id_uses_s2 = 1'b1;
             default: ;
         endcase
     end
@@ -290,6 +292,19 @@ module hcpu_decode (
                     id_hreg_we  <= 1'b1;
                     id_s2       <= dst;
                 end
+                // CMOV and CZERO write a whole codex; CZERO reads nothing at
+                // all, which is why it is absent from both usage lists above.
+                // Zero is the monoid's identity and passes every guard --
+                // three sum-checks of 0 = 0, rho = 0, and T1/T2 vacuous -- so
+                // it is a legitimate starting point for building a vector with
+                // CSET, not merely an erase.
+                `OP_CMOV:  begin id_is_codex <= 1'b1; id_hreg_we <= 1'b1; end
+                `OP_CZERO: begin id_is_codex <= 1'b1; id_hreg_we <= 1'b1; end
+                // CEQ writes no register: its whole result is the Z flag.
+                `OP_CEQ:   begin id_is_codex <= 1'b1; end
+                `OP_CRHO:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_CU:    begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_CMOD4: begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
 
                 `OP_HPACK:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB nibble-pack

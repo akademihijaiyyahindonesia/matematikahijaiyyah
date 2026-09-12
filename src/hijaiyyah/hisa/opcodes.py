@@ -145,15 +145,36 @@ class OpCode(IntEnum):
     # what hos_fs_read needs to rebuild a live H-Reg out of stored words.
     CSET = 0x45     # H[dst][imm] ← GPR[s1], component 0–17
     HCADD = 0x42    # Codex addition: dst ← src1 + src2
-    CSUB = 0x43     # Component-wise subtract     (software only)
-    VMOV = 0x46     # Copy H-register             (software only)
-    # The spec's C-prefixed scalar extractors. These read a hybit and return an
-    # integer, so they share the codex block rather than vector math.
-    VCMP = 0x48     # Compare two hybits          (software only)
-    VDOT = 0x49     # Inner product → GPR         (software only)
-    VNORM = 0x4A    # Squared norm → GPR          (software only)
-    VDIST = 0x4B    # Squared distance → GPR      (software only)
-    VRHO = 0x4C     # Turning residue ρ → GPR     (software only)
+    # CSUB is DEFERRED rather than merely unimplemented, and the reason is not
+    # effort: a difference leaves the monoid -- Domain C in Bab I §IA.1.11 --
+    # so components can be negative, while an H-Reg component is an unsigned
+    # byte on the hardware. What silicon should store there is the spec owner's
+    # decision. Recorded in cosmictera-build/OFF.md.
+    CSUB = 0x43     # Component-wise subtract     (software only, deferred)
+    # The spec's C-names are canonical for everything the RTL executes: the
+    # encoding's source of truth is hcpu_pkg.vh (HISA_SPEC.md §6.0), and it
+    # spells them OP_CMOV, OP_CZERO, OP_CEQ, OP_CRHO, OP_CU, OP_CMOD4. The
+    # V-spellings stay below as enum aliases, so code that already names them
+    # keeps working; the assembler's dialect is the spec's.
+    CMOV = 0x46     # H[dst] ← H[s1]
+    CZERO = 0x47    # H[dst] ← 0, the identity of the monoid
+    CEQ = 0x48      # FLAGS.Z ← (H[s1] == H[s2])
+    # Software-only for a measured reason, not an unfinished one. An inner
+    # product over fourteen components is fourteen 8×8 multipliers, and with
+    # them hcpu_gowin_top reaches 16,015 LUT4 (77%) where nextpnr answers
+    # "Unable to find legal placement for all cells". Without it the same slot
+    # is 14,714 LUT4 (70%) and places. The blocker is named in
+    # cosmictera-build/OFF.md; the decision to leave it out was the owner's.
+    CDOT = 0x49     # ⟨H[s1], H[s2]⟩₁₄ → GPR   (software only; see OFF.md)
+    # Left software-only on purpose: the RTL already executes these operations
+    # under the names the book froze, HNRM2 (0x06) and HDIST (0x07). A second
+    # encoding for one operation is the defect 7582ae5 went through the tree to
+    # remove, so the decision belongs to the spec owner, not here.
+    VNORM = 0x4A    # Squared norm → GPR          (software only; RTL: HNRM2)
+    VDIST = 0x4B    # Squared distance → GPR      (software only; RTL: HDIST)
+    CRHO = 0x4C     # GPR[dst] ← ρ(H[s1]) = Θ̂ − U, signed
+    CU = 0x4D       # GPR[dst] ← U(H[s1]) = Qx + Qs + Qa + 4·Qc
+    CMOD4 = 0x4F    # GPR[dst] ← Θ̂(H[s1]) mod 4
 
     HPACK = 0x50    # Nibble-pack a hybit into words
     HCRC = 0x51     # CRC32 over a packed frame
@@ -245,12 +266,12 @@ class OpCode(IntEnum):
 
     # This file's names for opcodes the spec reached first. Same operation,
     # different prefix convention; both spellings assemble.
-    CMOV = 0x46     # → VMOV
-    CEQ = 0x48      # → VCMP
-    CDOT = 0x49     # → VDOT
+    VMOV = 0x46     # → CMOV
+    VCMP = 0x48     # → CEQ
+    VDOT = 0x49     # → CDOT
     CNORM = 0x4A    # → VNORM
     CDIST = 0x4B    # → VDIST
-    CRHO = 0x4C     # → VRHO
+    VRHO = 0x4C     # → CRHO
     VPROJ = 0x80    # → HPROJ
     EMITC = 0xA1    # → PRINTH
 
@@ -283,6 +304,8 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.JGD, OpCode.JNGD,
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,
     OpCode.HLOAD, OpCode.CGET, OpCode.CSET, OpCode.HCADD,
+    OpCode.CMOV, OpCode.CZERO, OpCode.CEQ,
+    OpCode.CRHO, OpCode.CU, OpCode.CMOD4,
     OpCode.HPACK, OpCode.HCRC,
     OpCode.HGRD,
     OpCode.PRINT,

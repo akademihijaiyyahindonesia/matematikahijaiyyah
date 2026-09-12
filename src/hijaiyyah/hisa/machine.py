@@ -602,10 +602,28 @@ class HISAMachine:
             self.regs.hreg[dst] = [a[i] - b[i] for i in range(14)] + [0] * 4
             return f"CSUB H{dst} = H{s1} - H{s2} (14D)"
 
-        # ── VMOV: copy register ─────────────────────────────────
-        if op == OpCode.VMOV:
+        # ── CMOV: copy register ─────────────────────────────────
+        if op == OpCode.CMOV:
             self.regs.hreg[dst] = list(self.regs.hreg[s1])
-            return f"VMOV H{dst} = H{s1}"
+            return f"CMOV H{dst} = H{s1}"
+
+        # ── CZERO: the identity, not an erase ───────────────────
+        # Zero passes every guard -- three sum-checks of 0 = 0, ρ = 0, and
+        # T1/T2 vacuous -- because it is the identity of (V, +). So it is a
+        # legitimate place to start building a vector with CSET, which is the
+        # reason the spec gives it an opcode rather than leaving it to CSUB.
+        if op == OpCode.CZERO:
+            self.regs.hreg[dst] = [0] * 18
+            return f"CZERO H{dst} = 0"
+
+        # ── CEQ: equality into the Z flag ───────────────────────
+        # All eighteen components, not the fourteen invariants: the three
+        # summaries are derived and would agree anyway, but H* is not derived,
+        # and dropping it would call Kaf equal to a letter it is not.
+        if op == OpCode.CEQ:
+            same = self.regs.hreg[s1] == self.regs.hreg[s2]
+            self.regs.sr.zero = same
+            return f"CEQ H{s1} == H{s2} → Z={same}"
 
         # ── PRINT: the machine's one output path ────────────────
         # GPR[S1], as the spec and the RTL both say. This printed hreg[dst],
@@ -796,12 +814,34 @@ class HISAMachine:
             self.regs.gpr[dst] = d2
             return f"VDIST GPR[{dst}] = ‖H{s1} - H{s2}‖² = {d2}"
 
-        if op == OpCode.VRHO:
+        if op == OpCode.CRHO:
             h = self.regs.hreg[s1]
             U = compute_U(h)
             rho = h[0] - U
-            self.regs.gpr[dst] = rho
-            return f"VRHO GPR[{dst}] = ρ(H{s1}) = Θ̂({h[0]}) - U({U}) = {rho}"
+            # Wrapped to 32 bits, two's complement, because that is what the
+            # GPR holds on the hardware: hcpu_guard.v sign-extends the same
+            # difference. A vector that fails G4 has a negative residue, and
+            # both machines have to say so the same way.
+            self.regs.gpr[dst] = self._u32(rho)
+            return f"CRHO GPR[{dst}] = ρ(H{s1}) = Θ̂({h[0]}) - U({U}) = {rho}"
+
+        # ── CU: the turning budget itself ───────────────────────
+        # One definition of U, called rather than restated -- core.guards owns
+        # it in Python and hcpu_guard.v owns it in silicon (R1).
+        if op == OpCode.CU:
+            h = self.regs.hreg[s1]
+            u = compute_U(h)
+            self.regs.gpr[dst] = self._u32(u)
+            return f"CU GPR[{dst}] = U(H{s1}) = {u}"
+
+        # ── CMOD4: the Mod-4 gate's key ─────────────────────────
+        # Θ̂ mod 4. IC.1.27 makes it a topological classifier: a MainPath that
+        # closes has Θ̂ ≡ 0 (mod 4), so a non-zero answer proves the path is
+        # open without looking at the skeleton at all.
+        if op == OpCode.CMOD4:
+            theta = self.regs.hreg[s1][0]
+            self.regs.gpr[dst] = theta % 4
+            return f"CMOD4 GPR[{dst}] = Θ̂(H{s1}) mod 4 = {theta % 4}"
 
         if op == OpCode.VNORM:
             h = self.regs.hreg[s1]
@@ -809,12 +849,12 @@ class HISAMachine:
             self.regs.gpr[dst] = n2
             return f"VNORM GPR[{dst}] = ‖H{s1}‖² = {n2}"
 
-        if op == OpCode.VDOT:
+        if op == OpCode.CDOT:
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             ip = sum(a[i] * b[i] for i in range(14))
-            self.regs.gpr[dst] = ip
-            return f"VDOT GPR[{dst}] = ⟨H{s1}, H{s2}⟩ = {ip}"
+            self.regs.gpr[dst] = self._u32(ip)
+            return f"CDOT GPR[{dst}] = ⟨H{s1}, H{s2}⟩₁₄ = {ip}"
 
         # ── Subroutines ─────────────────────────────────────────
         # A return stack of their own, matching hcpu_execute.v. The data stack

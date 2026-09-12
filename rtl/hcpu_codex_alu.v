@@ -10,6 +10,7 @@
 //   HDIST: GPR[dst] ← ‖H[s1]−H[s2]‖²₁₄  (sq. Euclidean distance)
 //   CGET: GPR[dst] ← H[s1][index]      (one codex component)
 //   CSET: H[dst][index] ← GPR[s1]      (one codex component, written back)
+//   CMOD4: GPR[dst] ← Θ̂(H[s1]) mod 4   (the Mod-4 gate's key)
 //
 // CSET is the write half of CGET, and it reads the register it writes: the
 // other seventeen components have to survive, so the codex being modified
@@ -27,7 +28,8 @@
 
 module hcpu_codex_alu (
     // Inputs
-    input  wire [2:0]              op,         // 0=HCADD 1=HNRM2 2=HDIST 3=CGET 4=CSET
+    input  wire [2:0]              op,         // 0=HCADD 1=HNRM2 2=HDIST 3=CGET
+                                               // 4=CSET 5=CMOD4
     input  wire [11:0]             index,      // CGET/CSET: component 0–17
     input  wire [`HREG_W-1:0]     src1,       // H-Reg source 1 (144-bit)
     input  wire [`HREG_W-1:0]     src2,       // H-Reg source 2 (144-bit), CSET: H[dst]
@@ -43,6 +45,7 @@ module hcpu_codex_alu (
     localparam ALU_HDIST = 3'd2;
     localparam ALU_CGET = 3'd3;
     localparam ALU_CSET = 3'd4;
+    localparam ALU_CMOD4 = 3'd5;
 
     assign done = 1'b1;  // All ops are single-cycle
 
@@ -130,6 +133,10 @@ module hcpu_codex_alu (
             // value it had -- the same convention CGET uses when it returns
             // zero for an index that names nothing.
             ALU_CSET: result_vec = (index <= 12'd17) ? packed_set : src2;
+            // Theta-hat mod 4 is the low two bits of component 0, read off the
+            // register rather than computed: the Mod-4 gate of IC.1.27 is a
+            // congruence, and a congruence modulo a power of two is a slice.
+            ALU_CMOD4: result_scl = {30'd0, s1[0][1:0]};
             // CGET reads one component out of the codex. An index past
             // 17 has no component to name, so it yields zero rather than
             // whatever the wider bus happens to carry.

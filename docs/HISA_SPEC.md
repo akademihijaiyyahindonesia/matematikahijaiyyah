@@ -557,16 +557,16 @@ memicu `HALT_ERR` (0xFF).
 | 0x43 | `CSUB` | C | `H[DST] ← H[S1] - H[S2]` (delta 14D) |
 | 0x44 | `CGET` | C | ✅ `GPR[DST] ← H[S1][IMM]` (ambil komponen, IMM 0–17; di luar itu 0) |
 | 0x45 | `CSET` | C | ✅ `H[DST][IMM] ← GPR[S1]` (set komponen, IMM 0–17; di luar itu tidak menulis) |
-| 0x46 | `CMOV` | C | `H[DST] ← H[S1]` (copy codex) |
-| 0x47 | `CZERO` | C | `H[DST] ← 0` (zero codex) |
-| 0x48 | `CEQ` | C | Compare H[S1] == H[S2] → FLAGS |
+| 0x46 | `CMOV` | C | ✅ `H[DST] ← H[S1]` (copy codex) |
+| 0x47 | `CZERO` | C | ✅ `H[DST] ← 0` (zero codex) |
+| 0x48 | `CEQ` | C | ✅ Compare H[S1] == H[S2] → FLAGS |
 | 0x49 | `CDOT` | C | `GPR[DST] ← ⟨H[S1], H[S2]⟩₁₄` (inner product) |
 | 0x4A | `CNORM` | C | `GPR[DST] ← ‖H[S1]‖²₁₄` (norm squared) |
 | 0x4B | `CDIST` | C | `GPR[DST] ← ‖H[S1] - H[S2]‖²₁₄` (distance sq) |
-| 0x4C | `CRHO` | C | `GPR[DST] ← ρ(H[S1])` (residu turning) |
-| 0x4D | `CU` | C | `GPR[DST] ← U(H[S1])` (turning budget) |
+| 0x4C | `CRHO` | C | ✅ `GPR[DST] ← ρ(H[S1])` (residu turning) |
+| 0x4D | `CU` | C | ✅ `GPR[DST] ← U(H[S1])` (turning budget) |
 | 0x4E | `CTHETA` | C | `GPR[DST] ← Θ̂(H[S1])` (extract theta) |
-| 0x4F | `CMOD4` | C | `GPR[DST] ← Θ̂(H[S1]) mod 4` |
+| 0x4F | `CMOD4` | C | ✅ `GPR[DST] ← Θ̂(H[S1]) mod 4` |
 | 0x50 | `HPACK` | C | Nibble-pack H[S1] ke kata HISAB |
 | 0x51 | `HCRC` | C | CRC32 atas frame terpaket |
 | 0x53 | `CPHI` | C | `GPR[DST] ← Φ(H[S1])` (Frobenius energy) |

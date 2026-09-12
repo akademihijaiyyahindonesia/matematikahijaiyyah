@@ -38,29 +38,40 @@
 // ============================================================================
 // PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// re-measured 2026-09-11 after CSET (0x45) was added to the codex ALU:
+// re-measured 2026-09-12 after the codex block -- CMOV, CZERO, CEQ, CRHO, CU
+// and CMOD4 -- landed beside CGET/CSET:
 //
-//     LUT4       14,231 / 20,736   68%
+//     LUT4       14,714 / 20,736   70%
 //     DFF         4,480 / 15,552   28%
 //     BSRAM          17 /     46   36%
 //
-//     Fmax       84.26 MHz (PASS at the 12.00 MHz constraint), down from
-//                118.43 -- taken after routing, not the 88.04 MHz figure
+//     Fmax      115.66 MHz (PASS at the 12.00 MHz constraint), up from
+//                84.26 -- taken after routing, not the 69.18 MHz figure
 //                nextpnr prints after placement.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +226 LUT4 AND +0 DFF IS WHAT CSET COSTS, and the shape of the instruction is
-// why: it adds no state, only a combinational merge -- one component of a
-// 144-bit codex replaced by a byte the immediate selects. The DFF column not
-// moving at all is the check on that, not a coincidence beside it.
+// +483 LUT4 AND +0 DFF IS WHAT THE SIX COST, and the shape of them is why:
+// none adds state. CMOV and CZERO are muxes into the codex writeback, CEQ a
+// 144-bit comparator feeding one flag bit, CU and CRHO are read out of
+// hcpu_guard.v -- which already computes both -- rather than recomputed, and
+// CMOD4 is a two-bit slice of component 0. The DFF column not moving at all is
+// the check on that, not a coincidence beside it.
 //
-// THE CRITICAL PATH MOVED WITH IT, and nextpnr's report says where: it starts
-// at ex_hreg_result, runs through the codex value mux in Execute -- which the
-// merge is now part of -- and ends at ex_gpr_result, 7.08 ns of logic plus
-// 4.79 ns of routing. Whether the whole 118.43 -> 84.26 belongs to that merge,
-// or partly to placement moving around it, was NOT separated here and this run
-// does not claim it. What the run does establish: the design still passes the
-// constraint the flow places it against, and the board's own clock is 27 MHz.
+// SEVEN WERE BUILT AND SIX ARE HERE. CDOT (0x49) was measured on this same
+// slot and removed: an inner product over fourteen components is fourteen 8x8
+// multipliers, and with them this wrapper reaches 16,015 LUT4 (77%) where
+// nextpnr answers "Unable to find legal placement for all cells" -- twice,
+// same message, so it is not placer variance. The decision to ship six was the
+// owner's; the blocker is named in cosmictera-build/OFF.md, and CDOT still
+// runs in the HVM.
+//
+// THE CRITICAL PATH IS STILL INSIDE EXECUTE and nextpnr's report says where:
+// it leaves ex_gpr_we, crosses codex_hvec, passes through would_addr -- the
+// memory-protection compare -- and ends at ex_gpr_result, 3.98 ns of logic
+// plus 4.66 ns of routing. The 84.26 -> 115.66 rise was NOT separated into
+// design and placement here, and this run does not claim it. What the run does
+// establish: the design still passes the constraint the flow places it
+// against, and the board's own clock is 27 MHz.
 //
 // The block above previously recorded 14,005 / 4,480 / 17 at 118.43 MHz,
 // measured 2026-09-10 after the first board bring-up -- the run that made the
@@ -103,18 +114,19 @@
 // of the boot path's jump, and irrelevant to whether this fits -- the 20K
 // was never close to its own ceiling.
 //
-// Fingerprint restamped 2026-09-11 WITH a fresh place-and-route run, which is
-// the only honest way to restamp it after a design change: CSET touched
-// hcpu_pkg.vh, hcpu_codex_alu.v, hcpu_decode.v, hcpu_execute.v and hcpu_top.v,
-// so the figures above were re-measured rather than carried over. The stamp
-// before this one was applied WITHOUT a run, and that was justified
+// Fingerprint restamped 2026-09-12 WITH a fresh place-and-route run, which is
+// the only honest way to restamp it after a design change: the codex block
+// touched hcpu_pkg.vh, hcpu_codex_alu.v, hcpu_decode.v, hcpu_execute.v,
+// hcpu_guard.v and hcpu_top.v, so the figures above were re-measured rather
+// than carried over. The same was true of the 2026-09-11 stamp, for CSET.
+// The 2026-09-10 stamp was applied WITHOUT a run, and that was justified
 // mechanically rather than by promise: the institution changed (HMCL became a
 // research unit under Yayasan Akademi Hijaiyyah Indonesia, and the rights line
 // became the inventor personally), rewriting one comment line in every
 // fingerprinted source -- reversing only those copyright lines in memory
 // reproduced the recorded hash exactly, so the sweep was provably the entire
 // delta and no design byte moved.
-// RTL FINGERPRINT: 497ebee28c531edd1c9b1be203c2e3c6be36b6acef581008c3eaf3886a451312
+// RTL FINGERPRINT: 58ff062a58ba987026ddc920a4cd28187a474f9629d3340b988f027437473689
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

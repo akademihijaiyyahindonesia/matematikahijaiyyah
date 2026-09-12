@@ -187,6 +187,9 @@ module hcpu_top #(
     // Guard
     wire [`HREG_W-1:0] guard_vec;
     wire guard_pass, g1, g2, g3, g4, t1, t2;
+    // U and rho come out of the guard as values, so CU and CRHO read the one
+    // definition the guard already holds instead of a second copy (R1).
+    wire [`XLEN-1:0] guard_u, guard_rho;
 
     // Codex ALU
     wire [2:0]  calu_op;
@@ -430,6 +433,8 @@ module hcpu_top #(
         .rom_valid      (rom_valid),
         .guard_vec      (guard_vec),
         .guard_pass     (guard_pass),
+        .guard_u        (guard_u),
+        .guard_rho      (guard_rho),
         .calu_op        (calu_op),
         .calu_index     (calu_index),
         .calu_src1      (calu_src1),
@@ -579,7 +584,9 @@ module hcpu_top #(
         .g3_pass    (g3),
         .g4_pass    (g4),
         .t1_pass    (t1),
-        .t2_pass    (t2)
+        .t2_pass    (t2),
+        .u_value    (guard_u),
+        .rho_value  (guard_rho)
     );
 
     // ── Codex ALU ───────────────────────────────────────────────

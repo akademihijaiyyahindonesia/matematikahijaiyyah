@@ -279,6 +279,36 @@ EXTENSIONS: Dict[str, int] = {
     # CSET as H[DST][IMM] ← GPR[S1] and never implemented it.
     "CSET": 0x45,
 
+    # The rest of the codex block the spec defines and the book does not.
+    # §IIIM.3.1 gives the Hybit Engine two ways to make a codex -- load a
+    # sealed letter, add two registers -- and one way to look at one, once
+    # CGET existed. Everything else a program needs to work with codices as
+    # values was named in HISA_SPEC.md and never encoded: copy one (CMOV),
+    # start from the monoid's identity (CZERO), ask whether two are the same
+    # (CEQ), and read the three quantities Bab I defines over a single vector
+    # -- the turning budget U (CU), its residue ρ = Θ̂ − U (CRHO), and Θ̂ mod 4,
+    # the Mod-4 gate of IC.1.27 (CMOD4).
+    #
+    # Slots and names are the spec's own, not invented here, and each lands on
+    # the hex HISA_SPEC.md already prints for it. Four neighbours in the same
+    # block are deliberately NOT taken: CNORM (0x4A) and CDIST (0x4B) are
+    # operations the RTL already executes as HNRM2 and HDIST, and CTHETA
+    # (0x4E) is CGET with IMM 0 -- a second encoding for one operation is the
+    # defect 7582ae5 removed, so that call is the spec owner's. CSUB (0x43) is
+    # deferred for a different reason: its result leaves the monoid and can be
+    # negative, and how an unsigned 8-bit component should carry that has not
+    # been decided. CDOT (0x49) for a third: it fits and it works, but the
+    # fourteen multipliers an inner product needs cost hcpu_gowin_top its
+    # placement -- 16,015 LUT4 against 14,714 without -- so it stays
+    # software-only by the owner's decision. All four are in
+    # cosmictera-build/OFF.md with their blockers named.
+    "CMOV": 0x46,
+    "CZERO": 0x47,
+    "CEQ": 0x48,
+    "CRHO": 0x4C,
+    "CU": 0x4D,
+    "CMOD4": 0x4F,
+
     # CALL and RET. The book puts them at 0x07/0x08, which HCPU cannot: 0x06
     # and 0x07 carry HNRM2 and HDIST, and 0x08 is ERET. HISA_SPEC.md records
     # the move -- PUSH/POP to the Memory block at 0x32/0x33, CALL/RET to the

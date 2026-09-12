@@ -1,0 +1,64 @@
+; ============================================================================
+; test_codex.hasm — blok codex di papan: CMOV, CZERO, CEQ, CRHO, CU, CMOD4
+; Expected over UART: 8, 0, 0, 1, 1, 0, 1, 5
+; (c) 2026 Maulana Amratulloh
+; ============================================================================
+;
+; Haa adalah huruf paling tajam untuk tiga besaran turunan: Theta = 8 dan
+; Qc = 2, jadi U = 4*2 = 8, rho = 0, dan 8 mod 4 = 0 — jawaban gerbang Mod-4
+; untuk MainPath yang mungkin tertutup.
+;
+; CDOT tidak ada di sini. Hasil-kali dalam atas empat belas komponen berarti
+; empat belas pengali 8x8, dan dengan itu hcpu_gowin_top tidak lagi ter-place
+; (16.015 LUT4, "Unable to find legal placement for all cells"; tanpa itu
+; 14.714 LUT4). Ia tinggal di perangkat lunak, dengan penghalang bernama di
+; cosmictera-build/OFF.md. Yang menguji CZERO di sini adalah sifatnya, bukan
+; dirinya sendiri: 0 ditambahkan ke Haa harus mengembalikan Haa. Membandingkan
+; dua register yang sama-sama di-CZERO tidak bisa melihat CZERO yang menulis
+; vektor salah yang sama dua kali; HCADD menyentuh delapan belas komponen dan
+; CEQ membandingkan seluruh 144 bit.
+;
+; Waw ada di baris terakhir karena Haa sendirian tidak bisa melihat kesalahan:
+; 8 mod 4 dan 8 mod 8 dua-duanya 0. Theta Waw 5, di situ keduanya berbeda.
+
+    HLOAD H0, 27      ; Haa
+    HLOAD H1, 2       ; Ba
+
+    CMOV  H2, H0      ; salinan untuk CEQ di bawah
+    CU    R1, H0
+    PRINT R1          ; 8
+    CRHO  R2, H0
+    PRINT R2          ; 0
+    CMOD4 R3, H0
+    PRINT R3          ; 0
+
+    CZERO H3
+    HCADD H5, H0, H3  ; Haa + 0
+    MOVI  R4, 0
+    CEQ   H5, H0      ; Haa + 0 == Haa -> Z=1
+    JNE   czero_beda
+    MOVI  R4, 1
+czero_beda:
+    PRINT R4          ; 1 — 0 adalah identitas monoid (V, +)
+
+    MOVI  R6, 0
+    CEQ   H2, H0      ; sama -> Z=1
+    JNE   ceq_beda
+    MOVI  R6, 1
+ceq_beda:
+    PRINT R6          ; 1
+
+    MOVI  R7, 0
+    CEQ   H0, H1      ; beda -> Z=0
+    JNE   ceq_sama
+    MOVI  R7, 1
+ceq_sama:
+    PRINT R7          ; 0
+
+    HLOAD H5, 26      ; Waw, Theta = 5
+    CMOD4 R8, H5
+    PRINT R8          ; 1 — bukan 5, jadi mod 8 akan ketahuan
+    CU    R9, H5
+    PRINT R9          ; 5
+
+    HALT

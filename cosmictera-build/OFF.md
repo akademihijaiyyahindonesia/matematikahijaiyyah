@@ -21,23 +21,41 @@ Label: **EH**.
 
 ## Belum ada
 
-### 24 opcode belum di RTL
+### 21 opcode belum di RTL
 
-73 dari 97 terimplementasi. Yang belum:
+79 dari 100 terimplementasi. Yang belum:
 
 ```
-VMOV VCMP VDOT VDIST VNORM      vektor
-VSCL VRHO VPROJ_K VPROJ_N
-VPROJ_Q VPROJ_T
-CSUB CHASH CSIGN                codex
+VDIST VNORM VSCL                vektor
+VPROJ_K VPROJ_N VPROJ_Q VPROJ_T
+CSUB CDOT CHASH CSIGN           codex
 HCHK HDCMP HDES HEXMT
 HPROJ HSER
 JGF JGP JNP PRINTH              lompatan dan cetak
 ```
 
 `CALL`/`RET` dulu yang paling menghalangi dan **sudah tidak**: keduanya kini di
-perangkat keras, di 0x2E/0x2F tempat spec memesannya. Sisanya vektor dan codex —
-tak ada yang menghalangi HFS atau HOS.
+perangkat keras, di 0x2E/0x2F tempat spec memesannya. Blok codex juga sudah
+sebagian besar turun ke silikon — `CGET`, `CSET`, `CMOV`, `CZERO`, `CEQ`,
+`CRHO`, `CU`, `CMOD4`.
+
+**Lima dari sisanya bukan sekadar "belum dikerjakan", dan sebabnya dicatat di
+sini supaya tidak dikerjakan diam-diam:**
+
+| butir | kenapa menunggu |
+|---|---|
+| `CSUB` (0x43) | **Tunda — keputusan pemilik spesifikasi.** Selisihnya meninggalkan monoid (Domain C, §IA.1.11) dan bisa negatif, sementara komponen H-Reg adalah byte tak bertanda di perangkat keras. Representasi hasil negatif belum ditetapkan, dan semantik perangkat keras tidak boleh dikarang lebih dulu |
+| `CDOT` (0x49) | **Dikeluarkan dari batch atas keputusan pemilik — penghalangnya tempat, bukan semantik.** RTL-nya benar dan lulus bench; yang tidak muat adalah papannya. Hasil-kali dalam atas 14 komponen adalah **14 pengali 8×8**. Dengan `CDOT`, `hcpu_gowin_top` mencapai **16.015 LUT4 (77%)** dan nextpnr menjawab *"Unable to find legal placement for all cells"* — dua kali, pesan sama, jadi bukan variasi placer. Tanpa `CDOT`: **14.714 LUT4 (70%)**, ter-place, terrout, dan dijalankan di papan (12 September 2026). Tetap berjalan di HVM; naik ke RTL ketika ada tempat (papan lebih besar, atau ASIC Fase 6) |
+| `VNORM` (0x4A), `VDIST` (0x4B) | RTL **sudah** menjalankan operasinya dengan nama yang dibekukan buku: `HNRM2` (0x06) dan `HDIST` (0x07). Menambah encoding kedua untuk satu operasi adalah cacat yang `7582ae5` bersihkan dari seluruh pohon |
+| `VPROJ_K/N/Q/T`, `HCHK` | **tidak ada di `docs/HISA_SPEC.md`**. Tidak dikerjakan atas inisiatif sendiri |
+| `CHASH` (0x70), `CSIGN` (0x72) | menaruh inti hash/tanda tangan di RTL, bersinggungan langsung dengan R10 (lapis 3 satu-satunya pemikul keamanan) |
+
+**Satu konflik di dalam spesifikasi, dicatat bukan dirapikan.**
+`docs/HISA_SPEC.md` §6.2 menaruh `AND`/`OR`/`XOR`/`NOT`/`SHL`/`SHR` di dua
+tempat: blok Arithmetic & Logic 0x17–0x1C dan blok Bitwise 0xB0–0xB5. Yang
+berjalan di perangkat keras adalah 0xB0–0xB5 (`8e92825`), dan `hcpu_pkg.vh`
+adalah sumber kebenaran encoding menurut §6.0 dokumen itu sendiri. Perbaikan
+dokumennya menunggu keputusan pemilik proyek; tidak disentuh sepihak.
 
 Label: `AT`.
 

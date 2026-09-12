@@ -1,38 +1,49 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
 //
-// ── MEASURED, 11 September 2026, re-measured the same day after CSET ──────
+// ── MEASURED, 12 September 2026, after the codex block landed ────────────
 //
 // `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68
 // (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// loader baked in. Re-run because CSET (0x45) changed five hcpu_*.v sources
-// this slot carries; the figures below are that run's, not the earlier one's.
+// loader baked in. Re-run because CMOV, CZERO, CEQ, CRHO, CU and CMOD4
+// changed hcpu_pkg.vh, hcpu_codex_alu.v, hcpu_decode.v, hcpu_execute.v,
+// hcpu_guard.v and hcpu_top.v.
 //
 //     IOB           15 /    384    3%
-//     LUT4      14,713 / 20,736   70%
+//     LUT4      15,126 / 20,736   72%
 //     DFF        4,551 / 15,552   29%
 //     BSRAM         17 /     46   36%
-//     Fmax       60.34 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               496.28 MHz  pixel_clk
+//     Fmax       70.80 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               549.15 MHz  pixel_clk
+//     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +185 LUT4 and +0 DFF against this slot's previous 14,528 / 4,551 -- the same
-// combinational merge hcpu_gowin_top.v's header accounts for, in the same
-// pipeline, carried here because this bitstream instantiates the whole HCPU.
-// The HCPU clock's Fmax moved 121.24 -> 60.34 for the same reason the bare
-// slot's did, and is recorded rather than explained away: the board's clock is
-// 27 MHz, and both figures pass the constraint the flow places against.
+// +413 LUT4 and +0 DFF against this slot's previous 14,713 / 4,551. The six
+// opcodes cost almost nothing -- CMOV and CZERO are muxes, CEQ a comparator,
+// CU and CRHO are read out of the guard that already computes them, CMOD4 is
+// a two-bit slice. DFF not moving at all is the check on that: none of the six
+// adds state. The bare hcpu_gowin_top slot measured +483 for the same six.
 //
-// The largest slot in the sequential rack (rtl/scripts/rack.py): the video
-// path costs 482 LUT4 over hcpu_gowin_top.v's 14,231, so this -- not the bare
-// HCPU -- sets the rack's cost. Until it was measured the rack quoted 67%, the
-// maximum of the two slots that had numbers.
+// A SEVENTH WAS BUILT AND REMOVED, and the number that decided it was
+// measured here. With CDOT (0x49) this slot placed at 16,727 LUT4 (80%) while
+// hcpu_gowin_top on its own reached 16,015 (77%) and nextpnr refused: "Unable
+// to find legal placement for all cells" -- twice, same message, so it was not
+// placer variance. An inner product over fourteen components is fourteen 8x8
+// multipliers. Without CDOT both slots place: 15,126 here and 14,714 there.
+// The owner's decision and the named blocker are in cosmictera-build/OFF.md;
+// CDOT still runs in the HVM.
 //
-// The bitstream this recipe packed before CSET was byte-identical to the one
-// the board ran with the monitor lit, and answered test_bsm over the wire: 23
-// bytes, 112. THIS bitstream carries the new RTL and has not been flashed yet.
+// FLASHED AND RUN, 12 September 2026, over the wire through the baked loader:
 //
-// RTL FINGERPRINT: e3bc5df9afd6e668779f7cb45bfa83be95a5e422ab9cbb1aa2e70f657b21e1b3
-
+//     test_codex    8 0 0 1 1 0 1 5   the six, matching the interpreter
+//     test_cset     5 6 2 0           CSET still correct on this RTL
+//     test_hfs      1 1 1 2 1         HFS write, clobber, read, guard
+//     e3_sweep28    28 Theta values   identical to MASTER_TABLE
+//
+// e3_sweep28 was re-run precisely BECAUSE the RTL changed: the sealed ROM's
+// 28 values still match, so the six new opcodes moved nothing on the old path.
+//
+// RTL FINGERPRINT: 46e4bc9f8888b3fc31d0a022b8beeb7d4bf91d9ecd671886509cc353185fd411
+//
 `include "hcpu_pkg.vh"
 
 module hcpu_hdmi_top (

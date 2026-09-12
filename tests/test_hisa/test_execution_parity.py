@@ -146,7 +146,10 @@ def run_rtl(sim: Path, program: List[int], tmp_path: Path) -> State:
 # ── Programs ─────────────────────────────────────────────────────
 # Letter indices are 1-based, matching the ROM and CodexEntry.index.
 
-BA, SIN, MIM = 2, 12, 24
+BA, SIN, MIM, HAA, WAW = 2, 12, 24, 27, 26
+#: The deliberately corrupt ROM entry every guard bench already uses. It fails
+#: G4, which is exactly the statement that its residue is negative.
+CORRUPT = 31
 
 PROGRAMS: Dict[str, List[int]] = {
     "load_one_letter": [
@@ -232,6 +235,59 @@ PROGRAMS: Dict[str, List[int]] = {
         enc(OpCode.MOVI, dst=1, imm=3),
         enc(OpCode.CSET, dst=0, s1=1, imm=1),
         enc(OpCode.CSET, dst=0, s1=1, imm=2),
+        enc(OpCode.HALT),
+    ],
+
+    # ── The rest of the codex block ─────────────────────────────
+    # CEQ's result is a flag, and this harness compares registers, so each
+    # equality is read back the way the ISA reads any flag: with a branch that
+    # writes one.
+    "codex_copy_and_zero": [
+        enc(OpCode.HLOAD, dst=0, imm=HAA),
+        enc(OpCode.CMOV, dst=2, s1=0),
+        enc(OpCode.HLOAD, dst=3, imm=BA),
+        enc(OpCode.CZERO, dst=3),
+        enc(OpCode.HALT),
+    ],
+    "codex_equality_sets_zero": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.CMOV, dst=1, s1=0),
+        enc(OpCode.MOVI, dst=6, imm=0),
+        enc(OpCode.CEQ, s1=0, s2=1),
+        enc(OpCode.JNE, imm=2),
+        enc(OpCode.MOVI, dst=6, imm=1),
+        enc(OpCode.HALT),
+    ],
+    "codex_inequality_clears_zero": [
+        enc(OpCode.HLOAD, dst=0, imm=BA),
+        enc(OpCode.HLOAD, dst=1, imm=SIN),
+        enc(OpCode.MOVI, dst=6, imm=0),
+        enc(OpCode.CEQ, s1=0, s2=1),
+        enc(OpCode.JNE, imm=2),
+        enc(OpCode.MOVI, dst=6, imm=1),
+        enc(OpCode.HALT),
+    ],
+    # Haa and Waw together, because one of them alone cannot see a mistake:
+    # Haa's turning is 8, and 8 mod 4 and 8 mod 8 are both 0. Waw's is 5, where
+    # the two answers differ.
+    "codex_turning_budget_and_residue": [
+        enc(OpCode.HLOAD, dst=0, imm=HAA),
+        enc(OpCode.CU, dst=1, s1=0),
+        enc(OpCode.CRHO, dst=2, s1=0),
+        enc(OpCode.CMOD4, dst=3, s1=0),
+        enc(OpCode.HLOAD, dst=1, imm=WAW),
+        enc(OpCode.CU, dst=4, s1=1),
+        enc(OpCode.CRHO, dst=5, s1=1),
+        enc(OpCode.CMOD4, dst=6, s1=1),
+        enc(OpCode.HALT),
+    ],
+    # A vector that fails G4 has a NEGATIVE residue, and the two machines have
+    # to agree about how a negative lands in a 32-bit register.
+    "codex_negative_residue": [
+        enc(OpCode.HLOAD, dst=0, imm=CORRUPT),
+        enc(OpCode.CU, dst=1, s1=0),
+        enc(OpCode.CRHO, dst=2, s1=0),
+        enc(OpCode.HGRD, s1=0),
         enc(OpCode.HALT),
     ],
 
