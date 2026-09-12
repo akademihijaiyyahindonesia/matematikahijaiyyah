@@ -263,6 +263,19 @@ di sana. Daftar di bawah hanya penunjuk bab.
     sama-sama di-`CZERO` tidak bisa melihat `CZERO` yang salah. Diganti
     dengan sifat monoid, `HCADD` lalu `CEQ` (R3).
 
+- `0d63a7e` M3 — shell menjawab kabel serial, dan empat penghalang dinamai.
+  - `A`→`65`, `p`→`2 0 1` di papan; rute `shell → SYSCALL → kernel → HAL → UART`
+    adalah satu-satunya yang ada.
+  - Tabel syscall di memori data, bukan tabel lompat: ISA ini tidak punya
+    lompatan terhitung.
+  - **Tidak ada RTL yang disentuh.** Empat penghalang diukur lalu dicatat:
+    tidak ada jalur keluaran karakter; proses yang dipreempt timer tidak pernah
+    berjalan lagi (cacat lama di `rtl/programs/kernel.hasm`, benchnya tidak
+    melihat); FLAGS
+    bukan bagian konteks; `STORE` ke `TRAP_EPC` tepat sebelum `ERET`.
+  - Benchnya menegaskan mesin **apa adanya** — baris terakhirnya menunggu pid 0
+    *tidak* maju, supaya cacat yang diketahui tidak diam-diam jadi klaim.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
