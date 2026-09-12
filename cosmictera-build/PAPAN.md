@@ -250,6 +250,62 @@ dengan sebab yang sama seperti di bagian atas halaman ini.
 
 ---
 
+## M3 — shell menjawab kabel serial, 12 September 2026
+
+Perintah masuk lewat UART, dilayani kernel, dan jawabannya keluar lewat kabel
+yang sama. Slot `hcpu_hdmi_top` dengan loader dipanggang; `shell.hasm` (305 kata) dikirim lewat kabel, lalu diketik satu byte per perintah.
+
+| diketik | keluar dari papan | apa yang dibuktikan |
+|---|---|---|
+| `A` | `65` | ASCII `A`. Byte menyeberang kabel ke register RX, **shell** memintanya lewat `SYSCALL` — ia tidak bisa menjangkau 0xFF0 sendiri, alamat itu di luar jendelanya — kernel membacanya lewat `hal_uart_rx_get`, mengembalikannya di blok proses, lalu shell meminta kernel mencetaknya |
+| `p` | `2` `0` `1` | `ps`. Cacah **dibaca** dari kata yang kernel terbitkan ke jendela shell sendiri, lalu setiap pid di bawahnya |
+| `0` | `48` | ASCII `0` — bukan angka nol; gemanya byte, bukan nilainya |
+| `z` | `122` | ASCII `z` |
+
+Rute itu satu-satunya yang ada, bukan sekadar yang dianjurkan: setiap alamat
+periferal tinggal di `hal.hasm`, di dalam jendela yang ditolak untuk mode user.
+
+```
+shell → SYSCALL → kernel → HAL → UART
+```
+
+**Tabel syscall** ada di memori data pada 0xF08+n — 1 `write`, 2 `read`,
+3 `yield`, 4 `exit` — satu kata per panggilan, dan tiap lengan membaca katanya
+sendiri lebih dulu. Ia **tabel, bukan tabel lompat**: ISA ini tidak punya
+lompatan terhitung, setiap sasaran di §6.2 adalah immediate. Menolkan satu kata
+mematikan tepat satu panggilan.
+
+### Mekanisme M3 lainnya, diukur ulang di papan hari ini
+
+RTL berubah dua kali sejak 11 September (`CSET`, lalu blok codex), jadi semua
+dijalankan ulang, bukan disalin dari catatan:
+
+| program | keluaran papan | apa |
+|---|---|---|
+| `user_mode` | halt, lapor siklus | batas supervisor/user nyata |
+| `mem_protect` | halt, lapor siklus | jendela memori ditegakkan |
+| `syscall` | halt, lapor siklus | masuk dan kembali dari syscall |
+| `syscall_io` | **`42` saja** | I/O dimediasi kernel; `99` tidak pernah sampai kabel |
+| `trap_timer` | halt, lapor siklus | trap timer menyala, `ERET` kembali |
+| `timer_poll` | halt, lapor siklus | timer terbaca dari program |
+| `hal` | halt, lapor siklus | lapisan HAL merakit dan berjalan |
+| `trap_resume` | **`84` `84`** | timer mengembalikan PC yang benar |
+| `trap_flags` | **`0`** | FLAGS **tidak** selamat melewati trap |
+
+### Dua angka yang bukan kabar baik
+
+`trap_flags` mencetak `0`, dan itu jawaban yang benar dari mesin ini: FLAGS
+bukan bagian dari konteks proses dan tak ada instruksi yang bisa membacanya ke
+register. `shell.hasm` menjaga disiplin yang satu-satunya mungkin — tiap `CMP`
+diikuti langsung oleh cabang yang membacanya — dan itu hanya menutup trap yang
+ia pilih sendiri, bukan timer.
+
+Dan **proses yang diambil timer tidak pernah berjalan lagi**: pid 0 membeku,
+seperti proses A di `kernel.hasm` yang membeku pada 337 sejak penjadwal
+dibangun. Keduanya di [OFF.md](OFF.md) dengan angka dan tanda tangannya.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -361,7 +417,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.903 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.912 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -404,15 +460,15 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.903 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 20 testbench, 263 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.912 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 21 testbench, 270 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
-timing 8, H-Kernel 7, syscall I/O 6, HOS 7, subrutin 4, huruf 3, wrapper Gowin
-2, dan tujuh testbench yang melapor satu pernyataan lulus tunggal — 263,
-semuanya 0 FAIL. Dua yang baru: Program 10 `tb_hcpu_top` (CSET) dan
-pemeriksaan ketujuh `tb_hcpu_hos` (baca HFS mengembalikan H-Reg hidup).
+timing 8, H-Kernel 7, **shell 7**, syscall I/O 6, HOS 7, subrutin 4, huruf 3,
+wrapper Gowin 2, dan tujuh testbench yang melapor satu pernyataan lulus
+tunggal — 270, semuanya 0 FAIL. Yang baru: `tb_hcpu_shell`, tujuh pemeriksaan
+atas shell yang membaca perintah dari kabel.
 
 > **Selisih tujuh dari angka 253 sebelumnya bukan tes baru.** `tb_hcpu_video_timing`
 > menjaga delapan properti VESA — H_TOTAL, lebar dan posisi hsync, rentang `de`,
@@ -445,7 +501,7 @@ pemeriksaan ketujuh `tb_hcpu_hos` (baca HFS mengembalikan H-Reg hidup).
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.903 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.912 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

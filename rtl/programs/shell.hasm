@@ -1,0 +1,437 @@
+; shell.hasm — H-Kernel boots, schedules two processes, and the second of them
+; is a shell that takes commands off the serial line.
+;
+; kernel.hasm proved the scheduler with three processes that only counted.
+; This is the same machinery with the piece M3 asks for added: a process that
+; READS, and a kernel that serves it. The route is the one the owner drew, and
+; it is the only route there is -- every peripheral address lives in hal.hasm,
+; inside the window user mode is refused:
+;
+;     shell -> SYSCALL -> kernel -> HAL -> UART
+;
+; ── what a command looks like, and why ──────────────────────────
+; ONE BYTE IS ONE COMMAND. Not a line, and this is a consequence of the
+; machine rather than a taste: PRINT is the only output path and it emits a
+; DECIMAL NUMBER followed by a newline (rtl/hcpu_top.v, P_CONV). There is no
+; way to put a character on the wire, so a prompt cannot be printed, a typed
+; line cannot be echoed, and a line editor has nothing to show. A shell that
+; cannot echo is a shell that reads one byte and answers.
+;
+;   'p' (0x70)   ps -- the process count, then each pid
+;   anything     echo -- the byte's own code, in decimal
+;
+; So typing A answers 65, typing 0 answers 48, and typing p answers 2, 0, 1.
+; The ASCII table is the check: this program invents no encoding of its own.
+;
+; PRINTH (0xA1) and EMITS (0xA2) are the spec's own names for printing a codex
+; and a string, both marked "perangkat lunak saja", and neither is implemented
+; here. Recorded in cosmictera-build/OFF.md as the blocker between this and
+; the banner M3 actually wants.
+;
+; ── the syscall table ───────────────────────────────────────────
+;   1 write    R2 -> the wire, through the kernel's PRINT
+;   2 read     -> R1, one byte, or 0 when none is waiting
+;   3 yield    give up the rest of the quantum
+;   4 exit     stop being scheduled
+;
+; The table lives in data memory at 0xF08+n, one word per call, 1 meaning
+; implemented. It is a TABLE AND NOT A JUMP TABLE, because this ISA has no
+; computed jump: every target in §6.2 is an immediate, CALL included. So the
+; arms are still comparisons, and what the table decides is whether an arm may
+; run at all. Zeroing one word turns off exactly one call, which is what makes
+; it testable by breaking it.
+;
+; ── two things user code here must not do ───────────────────────
+; NO CALL IN A USER PROCESS. The return-address stack is not part of a
+; context -- a process that used CALL would return through another's address.
+; Recorded in cosmictera-build/OFF.md since the kernel was built.
+;
+; NO COMPARISON LEFT LIVE ACROSS A SYSCALL. FLAGS is not part of a context
+; either, and nothing can save it: no instruction reads FLAGS into a register.
+; rtl/programs/trap_flags.hasm measures it -- the answer is 0, on the board.
+; Every CMP here is followed immediately by the branch that reads it. That
+; discipline covers the traps this code CHOOSES; it does not cover the timer,
+; which can still land in the one-instruction window. That residue is the
+; blocker, and it is named rather than hidden.
+;
+; ── memory map ──────────────────────────────────────────────────
+;   0x100-0x1FF  pid 0's window       0x200-0x2FF  pid 1's window (shell)
+;   0xF00 current pid                 0xF01 ticks
+;   0xF08+n      syscall table, n = 1..4
+;   0xF10 PCB[0]                      0xF30 PCB[1]
+;
+; PCB, in words from its base:
+;   +0..+15  R0..R15   +16 pc   +17 mem_base   +18 mem_limit   +19 runnable
+;
+; The kernel publishes the process count into the shell's OWN window at 0x200
+; before it starts it. That is how `ps` reads real data without a syscall of
+; its own: user code may read its window, and the kernel may write into it.
+
+boot:
+        MOVI  R5, 0
+        MOVI  R1, vector
+        CALL  hal_vector_set
+
+; ── pid 0's block ─────────────────────────────────────────────
+        MOVI  R7, 0xF10
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        MOVI  R1, proc0
+        STORE R1, R7, 16
+        MOVI  R1, 0x100
+        STORE R1, R7, 17
+        MOVI  R1, 0x200
+        STORE R1, R7, 18
+        MOVI  R1, 1
+        STORE R1, R7, 19        ; runnable
+
+; ── pid 1's block: the shell ──────────────────────────────────
+        MOVI  R7, 0xF30
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        MOVI  R1, shell
+        STORE R1, R7, 16
+        MOVI  R1, 0x200
+        STORE R1, R7, 17
+        MOVI  R1, 0x300
+        STORE R1, R7, 18
+        MOVI  R1, 1
+        STORE R1, R7, 19
+
+; ── the syscall table ─────────────────────────────────────────
+        MOVI  R1, 1
+        STORE R1, R5, 0xF09     ; 1 write
+        STORE R1, R5, 0xF0A     ; 2 read
+        STORE R1, R5, 0xF0B     ; 3 yield
+        STORE R1, R5, 0xF0C     ; 4 exit
+
+; ── what the shell is allowed to know ─────────────────────────
+        MOVI  R1, 2
+        STORE R1, R5, 0x200     ; process count, inside the shell's window
+
+        MOVI  R1, 0
+        STORE R1, R5, 0xF01     ; ticks = 0
+        MOVI  R1, 1
+        STORE R1, R5, 0xF00     ; pid = 1, so the first dispatch wraps to 0
+
+; THE STALE EXPIRY IS ACKNOWLEDGED BEFORE THE TIMER IS ALLOWED TO INTERRUPT.
+; `expired` is counter == compare, and at reset both are 0 -- so it is already
+; true before any deadline has been set. Enabling the timer on top of that
+; takes a trap the kernel never asked for, at a moment when the front end has
+; no user PC to name: measured, epc came out 0, the first save wrote 0 into pid
+; 0's block, and pid 0 then ran the boot code in user mode until the HAL's
+; first peripheral store faulted it (cause 3) forever.
+;
+; Acknowledged and not armed. Arming here would clear the bit too, but it would
+; also plant a deadline that lands during the first dispatch -- measured, that
+; simply moved the same failure a few hundred cycles later. The deadline that
+; matters is the one dispatch sets, last, just before user code resumes.
+        CALL  hal_timer_ack
+        MOVI  R1, 1             ; timer only. A syscall is an exception and
+        CALL  hal_trap_enable   ; cannot be masked.
+        JMP   dispatch
+
+; ── trap entry ──────────────────────────────────────────────────
+; Sixteen pushes before anything else. Nothing above this line may use a
+; register, because every register still belongs to the process.
+vector:
+        PUSH  R0
+        PUSH  R1
+        PUSH  R2
+        PUSH  R3
+        PUSH  R4
+        PUSH  R5
+        PUSH  R6
+        PUSH  R7
+        PUSH  R8
+        PUSH  R9
+        PUSH  R10
+        PUSH  R11
+        PUSH  R12
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+
+; From here every register is scratch: the values are all on the stack.
+;
+; THE TIMER IS MASKED FIRST, and this kernel needs that where kernel.hasm did
+; not. Serving `write` means PRINT, and PRINT BLOCKS until the byte is on the
+; wire: 10 bits at 115200 baud is about 2,344 clocks at 27 MHz, and a
+; three-digit answer with its newline is four of them -- roughly 9,400, against
+; a quantum of 2,047. So the deadline armed before user code resumed expires
+; while the handler is still inside PRINT, and a trap is not masked by
+; supervisor mode. Measured before it was masked: pid 0 froze at count 337
+; with cause 3 and its saved pc at 260, which is an address inside hal.hasm --
+; the kernel had written its OWN pc into a process block, exactly the failure
+; kernel.hasm's header describes from the other direction.
+;
+; Re-enabled in dispatch, after the next deadline is set, so the window is two
+; instructions wide and the deadline is already 2,047 away.
+        MOVI  R5, 0
+        LOAD  R6, R5, 0xF00
+        CALL  pcb_of            ; R6 -> R7
+
+        CALL  hal_epc_get
+        MOV   R8, R1
+        CALL  hal_cause_get
+        MOV   R13, R1           ; the cause outlives the save loop
+        CMPI  R1, 5
+        JNE   sv_st
+        ADDI  R8, R8, 1         ; a syscall names its own instruction: serve it
+sv_st:  STORE R8, R7, 16
+
+; The stack gives them back newest first, so R15 comes off first. Only R0 is
+; used as the landing register, so R7 and R13 survive all sixteen stores.
+        POP   R0
+        STORE R0, R7, 15
+        POP   R0
+        STORE R0, R7, 14
+        POP   R0
+        STORE R0, R7, 13
+        POP   R0
+        STORE R0, R7, 12
+        POP   R0
+        STORE R0, R7, 11
+        POP   R0
+        STORE R0, R7, 10
+        POP   R0
+        STORE R0, R7, 9
+        POP   R0
+        STORE R0, R7, 8
+        POP   R0
+        STORE R0, R7, 7
+        POP   R0
+        STORE R0, R7, 6
+        POP   R0
+        STORE R0, R7, 5
+        POP   R0
+        STORE R0, R7, 4
+        POP   R0
+        STORE R0, R7, 3
+        POP   R0
+        STORE R0, R7, 2
+        POP   R0
+        STORE R0, R7, 1
+        POP   R0
+        STORE R0, R7, 0
+
+; Serving happens AFTER the save, never before: the arguments are read out of
+; the block and the result is written back into it, so a call that is answered
+; and a process that is preempted leave the machine in the same shape.
+        CMPI  R13, 5
+        JNE   dispatch
+        CALL  serve
+
+; ── dispatch ────────────────────────────────────────────────────
+; boot jumps straight in here, which is why there is no second copy of it.
+dispatch:
+        MOVI  R5, 0
+        LOAD  R9, R5, 0xF01
+        ADDI  R9, R9, 1
+        STORE R9, R5, 0xF01     ; ticks++
+
+        LOAD  R6, R5, 0xF00
+        MOVI  R10, 0            ; how many blocks have been looked at
+dp_nx:  ADDI  R6, R6, 1
+        CMPI  R6, 2
+        JNE   dp_ck
+        MOVI  R6, 0
+dp_ck:  CALL  pcb_of            ; R6 -> R7
+        LOAD  R3, R7, 19
+        CMPI  R3, 0
+        JNE   dp_st             ; runnable: take it
+        ADDI  R10, R10, 1
+        CMPI  R10, 2
+        JNE   dp_nx
+        HALT                    ; every process has exited
+dp_st:  STORE R6, R5, 0xF00
+
+        LOAD  R1, R7, 17
+        LOAD  R2, R7, 18
+        CALL  hal_window_set    ; the window moves with the process
+        LOAD  R1, R7, 16
+        CALL  hal_epc_set       ; this is the switch itself
+        CALL  hal_mode_user
+
+; Armed last: the deadline is counted from when user code resumes, and only
+; the sixteen restore loads and the return stand between here and there.
+        MOVI  R1, 2047          ; quantum — see hal.hasm for why not 2048
+        CALL  hal_timer_arm
+        MOVI  R1, 1             ; and only now may the timer interrupt again
+        CALL  hal_trap_enable
+
+; R7 is the pointer, so it is restored last, out of itself.
+        LOAD  R0, R7, 0
+        LOAD  R1, R7, 1
+        LOAD  R2, R7, 2
+        LOAD  R3, R7, 3
+        LOAD  R4, R7, 4
+        LOAD  R5, R7, 5
+        LOAD  R6, R7, 6
+        LOAD  R8, R7, 8
+        LOAD  R9, R7, 9
+        LOAD  R10, R7, 10
+        LOAD  R11, R7, 11
+        LOAD  R12, R7, 12
+        LOAD  R13, R7, 13
+        LOAD  R14, R7, 14
+        LOAD  R15, R7, 15
+        LOAD  R7, R7, 7
+        ERET
+
+; ── serve one call ──────────────────────────────────────────────
+; R7 is the caller's block. The call number and its argument are the caller's
+; saved R1 and R2; the result goes back into saved R1, which is how the user
+; sees it after the restore.
+serve:  LOAD  R1, R7, 1
+        LOAD  R2, R7, 2
+        CMPI  R1, 1
+        JEQ   sc_wr
+        CMPI  R1, 2
+        JEQ   sc_rd
+        CMPI  R1, 3
+        JEQ   sc_yl
+        CMPI  R1, 4
+        JEQ   sc_ex
+        MOVI  R1, 0             ; no such call
+        JMP   sc_ret
+
+; Each arm reads ITS OWN table word first, so zeroing one word disables one
+; call and nothing else.
+sc_wr:  MOVI  R5, 0
+        LOAD  R3, R5, 0xF09
+        CMPI  R3, 0
+        JEQ   sc_off
+        PRINT R2                ; privileged: this is why write is a call
+        MOVI  R1, 1
+        JMP   sc_ret
+
+; Non-blocking. A kernel that spun here would stop scheduling, so an empty
+; line returns 0 and the caller yields. 0 is safe as "nothing": a terminal
+; sending NUL is not a command this shell has, and a NUL would simply be
+; echoed as 0 if one ever arrived.
+sc_rd:  MOVI  R5, 0
+        LOAD  R3, R5, 0xF0A
+        CMPI  R3, 0
+        JEQ   sc_off
+        CALL  hal_uart_rx_ready
+        CMPI  R1, 0
+        JEQ   sc_none
+        CALL  hal_uart_rx_get   ; R1 = the byte
+        JMP   sc_ret
+sc_none: MOVI R1, 0
+        JMP   sc_ret
+
+; Yield needs no body. Returning from here falls into dispatch, which moves to
+; the next process -- giving up the rest of the quantum IS the whole call.
+sc_yl:  MOVI  R5, 0
+        LOAD  R3, R5, 0xF0B
+        CMPI  R3, 0
+        JEQ   sc_off
+        MOVI  R1, 1
+        JMP   sc_ret
+
+sc_ex:  MOVI  R5, 0
+        LOAD  R3, R5, 0xF0C
+        CMPI  R3, 0
+        JEQ   sc_off
+        MOVI  R1, 0
+        STORE R1, R7, 19        ; no longer runnable
+        MOVI  R1, 1
+        JMP   sc_ret
+
+sc_off: MOVI  R1, 0             ; the table says this call is not here
+sc_ret: STORE R1, R7, 1
+        RET
+
+; ── pid in R6 -> block base in R7 ───────────────────────────────
+pcb_of: CMPI  R6, 0
+        JEQ   po_0
+        MOVI  R7, 0xF30
+        RET
+po_0:   MOVI  R7, 0xF10
+        RET
+
+; ── pid 0 ───────────────────────────────────────────────────────
+; It counts, it stores, and it never yields. Only the timer takes it away, so
+; a counter that keeps climbing while the shell sits at its prompt is the
+; proof that preemption is real rather than cooperative.
+proc0:  MOVI  R1, 0
+        MOVI  R3, 0x100
+p0_lp:  ADDI  R1, R1, 1
+        STORE R1, R3, 0
+        JMP   p0_lp
+
+; ── pid 1: the shell ────────────────────────────────────────────
+; Every CMP below is followed immediately by the branch that reads it, and no
+; SYSCALL stands between the two. See the note at the top: FLAGS does not
+; survive a trap, and this is the only defence software has.
+shell:
+sh_lp:  MOVI  R1, 2             ; read
+        SYSCALL
+        CMPI  R1, 0
+        JEQ   sh_idle           ; nothing waiting
+        CMPI  R1, 0x70          ; 'p' -- ps
+        JEQ   sh_ps
+
+; echo: the byte's own code, in decimal.
+        MOV   R2, R1
+        MOVI  R1, 1             ; write
+        SYSCALL
+        JMP   sh_lp
+
+sh_idle: MOVI R1, 3             ; yield
+        SYSCALL
+        JMP   sh_lp
+
+; ps: the count the kernel published into this window, then every pid below
+; it. The count is READ, not assumed -- changing the published word changes
+; what ps says.
+sh_ps:  MOVI  R5, 0
+        LOAD  R4, R5, 0x200
+        MOV   R2, R4
+        MOVI  R1, 1
+        SYSCALL
+        MOVI  R3, 0
+sh_pl:  MOV   R2, R3
+        MOVI  R1, 1
+        SYSCALL
+        ADDI  R3, R3, 1
+        CMP   R3, R4
+        JNE   sh_pl
+        JMP   sh_lp
+
+; ── the layer underneath ────────────────────────────────────────
+; At the end, so nothing falls into it: the shell's loop never exits. Every
+; peripheral address this kernel touches lives in there.
+        .include "hal.hasm"

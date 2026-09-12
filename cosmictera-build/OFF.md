@@ -104,6 +104,105 @@ Empat sifat HOS di buku semuanya berjalan sekarang — lihat
 [ON.md](ON.md#hos-heap-hfs-har). Yang tertulis di sini adalah sisa di bawahnya
 (HFS lapis 4, layanan HISAB lapis 5), bukan HOS-nya sendiri.
 
+### M3 — shell: jalur keluaran karakter, dan resume setelah preemption
+
+**12 September 2026.** Shell-nya berjalan di papan fisik: perintah masuk lewat
+UART, dijawab lewat kernel (`rtl/programs/shell.hasm`, `make -C rtl/tb
+sim_shell`). Dua hal menghalanginya menjadi shell yang digambar pemilik, dan
+keduanya diukur, bukan diduga.
+
+#### 1. Tidak ada jalur keluaran karakter — `PRINTH`/`EMITS` ditunda pemilik
+
+`PRINT` adalah satu-satunya jalan keluar dan ia mencetak **angka desimal**
+diikuti newline (`rtl/hcpu_top.v`, keadaan `P_CONV`: `8'h30 + val % 10`).
+Tidak ada cara menaruh satu karakter di kabel, jadi tidak ada prompt, tidak ada
+gema baris yang diketik, dan tidak ada editor baris. Karena itu **satu byte
+adalah satu perintah**, dan jawabannya angka.
+
+Spesifikasi menamai dua slot yang relevan dan **keduanya bertanda "perangkat
+lunak saja"**:
+
+| slot | apa | status |
+|---|---|---|
+| `PRINTH` 0xA1 | cetak codex | **BLOCKED** — perintah pemilik, 12 September |
+| `EMITS` 0xA2 | cetak string di alamat IMM | **BLOCKED** — perintah pemilik, 12 September |
+
+Dan `EMITS` punya penghalang kedua di atas itu: **spesifikasi tidak menetapkan
+bentuk string di RAM 32-bit**. Satu karakter per kata, empat karakter per kata,
+atau panjang di depan — ketiganya mungkin, dan memilihnya berarti mengarang
+semantik perangkat keras. Pemilik spesifikasi yang menetapkan.
+
+Yang **tidak boleh** dikerjakan atas inisiatif sendiri, tercatat di sini supaya
+tidak terjadi diam-diam: menaruh `PRINTH`/`EMITS` di RTL, membuat driver TX
+kedua (`rtl/hcpu_mmio.v` menolaknya: "a second driver on the same port is a bus
+conflict"), memakai `rtl/hcpu_font8x8.hex`, atau mengubah semantik `PRINT`.
+
+#### 2. Proses yang diambil TIMER tidak pernah berjalan lagi
+
+Ini lebih dalam daripada shell, dan ia **sudah ada sejak penjadwal dibangun**.
+
+`rtl/programs/kernel.hasm` — sudah di-commit, sudah dijalankan di papan —
+membekukan proses A pada cacah **337**, dengan `pcbA.pc = 0` di bloknya.
+Benchnya sendiri tidak melihatnya: `tb_hcpu_kernel.v` memeriksa kelipatan B dan
+sapuan C, tidak memeriksa bahwa A masih bergerak. `shell.hasm` mewarisi persis
+gejala yang sama untuk pid 0.
+
+Yang terukur, pada `fire` timer pertama di kedua kernel:
+
+```
+FIRE#1 which=0 pc_now=0 if_pc=0 btaken=0 btarget=0 id_pc=0 stall=0
+```
+
+Ujung depan tidak memegang PC apa pun, jadi `epc <= pc_now` menyimpan **0**.
+Kernel menyimpan 0 itu ke blok proses, melanjutkan prosesnya di alamat 0 —
+kode boot — dalam mode user, dan simpanan periferal pertama di HAL
+menggagalkannya sebagai **cause 3** selamanya. Sesudah itu `pcb.pc` berisi
+alamat di dalam `hal.hasm`, yang adalah tanda tangan cacat ini.
+
+**Jalur timernya sendiri benar.** `rtl/programs/trap_resume.hasm` menanyakan
+hal yang sama pada program terkecil yang bisa menanyakannya, dan papan
+menjawab `84 84` — alamat loop dan `epc` yang dikembalikan timer **sama**.
+Jadi yang rusak adalah interaksinya, bukan jalur timer sebagai jalur. Di mana
+persisnya **belum diisolasi**, dan mengisolasinya lebih jauh berarti mengubah
+unit trap. Itu keputusan pemilik.
+
+Akibatnya untuk M3: penjadwal **bergilir** (ticks naik, kedua blok dipilih
+bergantian) tetapi **tidak melanjutkan** proses yang dipreempt. Yang berjalan
+penuh adalah proses yang menyerahkan CPU-nya sendiri lewat `SYSCALL yield` —
+dan itulah sebabnya shell-nya berjalan.
+
+#### 3. FLAGS bukan bagian dari konteks proses, dan tak ada yang bisa menyimpannya
+
+`rtl/programs/trap_flags.hasm` mencetak **`0`** di papan: perbandingan yang
+dibuat di mode user tidak selamat melewati trap, karena handler harus
+membandingkan `TRAP_CAUSE` dan perbandingannya menimpa yang milik user.
+
+Enam belas GPR, PC, dan jendela memori semuanya disimpan oleh context switch.
+FLAGS bukan salah satunya, dan **tidak ada instruksi di ISA ini yang membaca
+FLAGS ke register** (§6.2 punya `CMP`/`CMPI` untuk menulisnya dan bentuk-J
+untuk membacanya, tidak ada yang lain). Jadi ini bukan kernel yang lupa satu
+field — ini field yang tak terjangkau perangkat lunak.
+
+Trap sukarela bisa diatur: program cukup tidak meninggalkan perbandingan hidup
+melewati `SYSCALL`-nya sendiri, dan `shell.hasm` menjaga disiplin itu di setiap
+`CMP`. Trap **timer** tidak bisa diatur.
+
+#### 4. `STORE` ke `TRAP_EPC` tepat sebelum `ERET` kembali ke epc lama
+
+Terukur di papan saat menulis `trap_flags.hasm`: `SYSCALL` yang sama di PC 80
+menjebak **tiga kali berturut-turut**, mencetak 80 setiap kali, sampai tiga
+`NOP` disisipkan antara simpanan dan `ERET`.
+
+`rtl/hcpu_trap.v` sudah membawa bypass untuk bahaya yang **sama persis** pada
+`TRAP_MODE` (`prev_at_eret`), dan komentarnya menutup dengan kalimat *"One NOP
+in between was enough to hide it; the fix is not to require one."*
+`TRAP_EPC` tidak mendapat perlakuan itu: `trap_target = eret ? epc : vector`
+membaca registernya. Sepuluh instruksi `hal_epc_set` → `hal_mode_user` →
+`hal_timer_arm` → enam belas `LOAD` memberi jarak yang cukup, jadi kernel yang
+ada tidak terkena — tetapi handler yang ringkas terkena, diam-diam.
+
+Label: `AT`.
+
 ### Yang H-Kernel belum punya
 
 Kernelnya berjalan, dan ruang lingkupnya sempit dengan sengaja:

@@ -348,7 +348,7 @@ sampai menjadi satu sistem yang bisa dipakai:
 |---|---|---|---|
 | M1 | HCPU + `CGET`/`CSET` | **selesai di papan** — `f0dd0f8`, keluaran `5 6 2 0` dan `1 1 1 2 1` | — |
 | M2 | Batch ISA berikutnya | **selesai di papan** — enam opcode codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`), `test_codex` menjawab `8 0 0 1 1 0 1 5` | — (`CSUB` ditunda, `CDOT` dikeluarkan karena tempat, `CNORM`/`CDIST` duplikat — lihat [OFF.md](OFF.md)) |
-| M3 | H-Kernel boot | tiga proses tetap dengan preemption berjalan (`dc5ae55`) | boot sampai shell, bukan satu program terpanggang |
+| M3 | H-Kernel boot → shell | **sebagian di papan** — shell membaca perintah dari UART dan dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | banner/prompt teks (`PRINTH`/`EMITS` **BLOCKED** — keputusan pemilik) dan **resume setelah preemption timer**, yang rusak sejak penjadwal dibangun — lihat [OFF.md](OFF.md) |
 | M4 | Proses + syscall + timer | trap, supervisor, proteksi memori, syscall, timer semuanya di RTL dan dijalankan di papan (`81fbd2e`) | proses dinamis, stack per proses, tabel syscall |
 | M5 | HFS baca/tulis | `hos_fs_write`/`hos_fs_read` jalan di papan, guard-on-write, H-Reg dibangun ulang lewat `CSET` | media penyimpanan persisten yang terverifikasi fisik |
 | M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
@@ -398,7 +398,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.903
+software_tests      1611/1611     ← sekarang 4.912
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 

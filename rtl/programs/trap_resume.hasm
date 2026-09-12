@@ -1,0 +1,59 @@
+; trap_resume.hasm — what PC does a TIMER trap hand back?
+;
+; Prints TWO numbers: the address of the user loop, and the epc the first timer
+; trap actually reported. They have to be the same instruction, or near enough
+; that the process resumes inside its own loop. On this machine they are not.
+;
+; ── why this program exists ─────────────────────────────────────
+; kernel.hasm's process A freezes at count 337 and never runs again, with its
+; saved pc reading 0. That was found in simulation; this is the same question
+; asked of the board, in the smallest program that can ask it.
+;
+; A syscall names its own instruction (epc = pc_fault) and that path works --
+; syscall_io.hasm has answered 42 on the board since 11 September. A TIMER is
+; the other path: epc = pc_now, the instruction that has not run yet. It is
+; that path this program reads out loud.
+;
+; Measured in simulation before the program was written: on the first fire,
+; pc_now, if_pc and id_pc are all 0 -- the front end has no PC, and 0 is what
+; epc keeps. A kernel then resumes the process at address 0, which is boot
+; code, in user mode, where the first peripheral store faults it for ever.
+;
+; Not repaired here. The repair is in the trap unit, and that is the owner's.
+; Recorded in cosmictera-build/OFF.md.
+
+        MOVI  R5, 0
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT
+        MOVI  R1, 1             ; timer only
+        STORE R1, R5, 0xFFB     ; TRAP_ENABLE
+        MOVI  R1, 1
+        STORE R1, R5, 0xFF6     ; acknowledge the expiry that is true at reset
+        LOAD  R1, R5, 0xFF4     ; COUNTER — a deadline relative to now, because
+        ADDI  R1, R1, 600       ; the counter is free-running and compared by
+        STORE R1, R5, 0xFF5     ; equality, never by threshold
+        MOVI  R1, usr
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0
+        STORE R1, R5, 0xFFD     ; previous mode = USER
+        ERET
+
+; ── user mode ───────────────────────────────────────────────────
+; Three instructions that touch nothing privileged, so the only trap that can
+; arrive here is the timer.
+usr:    MOVI  R2, 0
+spin:   ADDI  R2, R2, 1
+        JMP   spin
+
+; ── handler ─────────────────────────────────────────────────────
+; It prints where the loop is, then where the trap says to go back to.
+handler:
+        MOVI  R3, spin
+        PRINT R3                ; the address the process was inside
+        LOAD  R4, R5, 0xFF9
+        PRINT R4                ; the address the timer handed back
+        HALT

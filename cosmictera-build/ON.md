@@ -52,6 +52,9 @@ Label: `CC`.
 | Codex ALU | HCADD, HNRM2, HDIST, CGET, CSET, CMOD4 | `rtl/hcpu_codex_alu.v`, 6 asersi |
 | Blok codex | CMOV, CZERO, CEQ, CRHO, CU, CMOD4 — `U` dan `ρ` dibaca dari guard, bukan dihitung ulang; `CDOT` tinggal di perangkat lunak, lihat [OFF.md](OFF.md) | `rtl/tb/tb_hcpu_top.v` Program 11 |
 | Hisab | penyapuan 28 huruf, 124 asersi | `rtl/hcpu_hisab.v` |
+| Shell | perintah satu byte dari UART, dilayani kernel: `A`→`65`, `p`→`2 0 1` di papan | `rtl/programs/shell.hasm`, `make -C rtl/tb sim_shell` |
+| Tabel syscall | `write` `read` `yield` `exit` di 0xF08+n, tiap lengan membaca katanya sendiri | `rtl/programs/shell.hasm` |
+| HAL UART | `hal_uart_rx_ready`, `hal_uart_rx_get`, `hal_uart_tx_busy`, `hal_timer_ack` | `rtl/programs/hal.hasm` |
 | Interlock | load-use, store-load, **termasuk POP** | `rtl/hcpu_decode.v` |
 | Stack perangkat keras | 256 entri, LIFO, PUSH tanpa register basis | `rtl/hcpu_memory.v` |
 | **Subrutin** | `CALL`/`RET`, stack kembali 32 tingkat terpisah | `rtl/tb/tb_hcpu_subroutine.v`, `rtl/programs/subroutine.hasm` |
@@ -282,7 +285,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.903 lulus, 0 dilewati
-make -C rtl/tb all            # 263 asersi, 20 bench, 0 gagal
+python3 -m pytest -q          # 4.912 lulus, 0 dilewati
+make -C rtl/tb all            # 270 asersi, 21 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

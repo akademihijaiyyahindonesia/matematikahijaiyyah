@@ -62,6 +62,36 @@ hal_window_set:                 ; R1 = base, R2 = one past the top
         STORE R2, R12, 0xFFF
         RET
 
+; ── UART ────────────────────────────────────────────────────────
+; The RECEIVE half only, and the missing half is a design decision rather than
+; an omission: rtl/hcpu_mmio.v records that transmit has no data register
+; because PRINT already drives hcpu_uart_tx, and a second driver on the same
+; port is a bus conflict. So the HAL offers the byte that arrived and whether
+; a transmission is still going out; the write path stays the PRINT
+; instruction, which is privileged, so it is the kernel's either way.
+;
+; Every address here is inside the window user mode is refused, which is what
+; makes `shell -> syscall -> kernel -> HAL -> UART` the only route there is,
+; not merely the recommended one.
+hal_uart_rx_ready:              ; -> R1 = 1 if a byte is waiting
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFF1
+        ANDI  R1, R1, 1
+        RET
+
+; Reading consumes the byte: the same read clears `ready`, so a caller that
+; reads twice loses one. Call hal_uart_rx_ready first.
+hal_uart_rx_get:                ; -> R1 = the byte
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFF0
+        RET
+
+hal_uart_tx_busy:               ; -> R1 = 1 while a PRINT is still on the wire
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFF2
+        ANDI  R1, R1, 1
+        RET
+
 ; ── timer ───────────────────────────────────────────────────────
 ; Deadline = now + R1. Writing COMPARE also clears `expired`, so this both
 ; acknowledges the interrupt and sets the next deadline -- which is why the
@@ -70,6 +100,18 @@ hal_window_set:                 ; R1 = base, R2 = one past the top
 ; `expired` is an equality, not a threshold: a deadline that has already gone
 ; past is never met again. R1 must stay under 2048, because the immediate the
 ; caller loads it with is twelve bits SIGNED.
+; Acknowledge without setting a deadline. `expired` is counter == compare, and
+; at RESET both are zero -- so it is already true before any deadline has ever
+; been set. A kernel that enables the timer trap before clearing that takes an
+; interrupt it never asked for. Writing TIMER_STATUS clears the bit and leaves
+; COMPARE alone, which is what "acknowledge" means here; arming would also
+; clear it but would plant a deadline the caller did not choose.
+hal_timer_ack:                  ; clears `expired`
+        MOVI  R12, 0
+        MOVI  R1, 1
+        STORE R1, R12, 0xFF6
+        RET
+
 hal_timer_arm:                  ; R1 = quantum; clobbers R2
         MOVI  R12, 0
         LOAD  R2, R12, 0xFF4

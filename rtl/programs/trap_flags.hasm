@@ -1,0 +1,86 @@
+; trap_flags.hasm — FLAGS is not part of a process context.
+;
+; Prints ONE value: 1 if a comparison survived a trap, 0 if it did not.
+; This machine prints 0, and that number is the point of the program.
+;
+; ── what it asks ────────────────────────────────────────────────
+; User code compares, takes a trap before the branch that reads the result,
+; and then asks the branch which way it went. The handler cannot avoid
+; comparing -- it has to read TRAP_CAUSE and decide -- so the handler's Z is
+; the one the user's JEQ sees.
+;
+; Sixteen GPRs, the PC and the memory window are all saved by kernel.hasm's
+; context switch. FLAGS is none of those, and NOTHING CAN SAVE IT: no
+; instruction in this ISA reads FLAGS into a register (§6.2 has CMP/CMPI to
+; write it and the J-forms to read it, and nothing else). So this is not a
+; kernel that forgot a field -- it is a field software cannot reach.
+;
+; ── what that costs ─────────────────────────────────────────────
+; A voluntary trap is placeable: a program simply does not leave a comparison
+; live across its own SYSCALL. A TIMER trap is not. Any preemptively scheduled
+; process whose next instruction is a conditional branch can have its
+; comparison replaced by the kernel's. kernel.hasm's own procC is in that
+; shape -- HGRD then JGD -- and passes only because the deadline has never yet
+; landed in the one-instruction window between them.
+;
+; Recorded in cosmictera-build/OFF.md. Not repaired here: repairing it means
+; changing the trap hardware, and that is the owner's call.
+;
+; ── found while writing this ────────────────────────────────────
+; A `STORE R, TRAP_EPC` IMMEDIATELY followed by `ERET` returns to the OLD epc.
+; Measured on the board: the same SYSCALL at PC 80 trapped three times in a
+; row, printing 80 each time, until three NOPs were put between the store and
+; the ERET. rtl/hcpu_trap.v already carries the bypass for the same hazard on
+; TRAP_MODE, and its comment says of that one "the fix is not to require one
+; [NOP]" -- TRAP_EPC did not get the same treatment. Also in OFF.md.
+
+        MOVI  R5, 0
+        MOVI  R14, 0
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT
+        MOVI  R1, usr
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0
+        STORE R1, R5, 0xFFD     ; previous mode = USER
+        ERET
+
+; ── user mode ───────────────────────────────────────────────────
+; R1 and R2 are loaded BEFORE the comparison, so nothing between CMPI and the
+; branch touches FLAGS except the trap itself.
+usr:    MOVI  R4, 0
+        MOVI  R1, 1             ; call 1 = write
+        MOVI  R2, 9             ; a value the handler will not print
+        CMPI  R4, 0             ; Z = 1
+        SYSCALL                 ; the handler compares; whose Z survives?
+        JEQ   kept              ; taken only if the user's Z is still there
+        MOVI  R2, 0             ; fell through: the comparison was lost
+        JMP   say
+kept:   MOVI  R2, 1
+say:    MOVI  R1, 1
+        SYSCALL                 ; the kernel prints the verdict
+spin:   JMP   spin
+
+; ── handler ─────────────────────────────────────────────────────
+; The first call is silent so only the verdict reaches the wire; the second
+; prints it and stops the machine.
+handler:
+        LOAD  R9, R5, 0xFFA     ; TRAP_CAUSE
+        CMPI  R9, 5             ; TRAP_SYSCALL -- and this is the comparison
+        JEQ   h_call            ; that overwrites the user's
+        HALT
+h_call: ADDI  R14, R14, 1
+        CMPI  R14, 2
+        JEQ   h_say
+        LOAD  R11, R5, 0xFF9
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+        NOP                     ; the store must land before ERET reads epc
+        NOP
+        NOP
+        ERET
+h_say:  PRINT R2
+        HALT

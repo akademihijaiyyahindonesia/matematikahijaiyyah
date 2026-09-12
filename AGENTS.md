@@ -306,6 +306,16 @@ memutuskan:
    `CDOT` slot yang sama 14.714 LUT4, ter-place, dan dijalankan di papan.
    `CDOT` tetap berjalan di HVM dan tercatat di `cosmictera-build/OFF.md`
    dengan penghalang bernama.
+6. **M3 dijalankan dari implementasi yang ada, tanpa desain baru.** *"Jangan
+   membuat desain baru. Jangan mengubah ISA, RTL, matematika, atau menambah
+   opcode yang belum diperintahkan."* Yang **BLOCKED** dan tidak boleh
+   dikerjakan atas inisiatif sendiri: `PRINTH` 0xA1 dan `EMITS` 0xA2 di RTL,
+   driver TX kedua, `rtl/hcpu_font8x8.hex`, dan mengubah semantik `PRINT`.
+   Bentuk string `EMITS` di RAM 32-bit juga **tidak** boleh ditetapkan sendiri
+   — spesifikasi belum menetapkannya.
+   **M3 belum boleh disebut selesai** sampai jalur keluaran karakter disahkan
+   pemilik desain dan berjalan di papan fisik. Yang terhalang dicatat di
+   `cosmictera-build/OFF.md` dengan alasan terukur, bukan dirapikan.
 
 ---
 
