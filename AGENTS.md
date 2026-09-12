@@ -291,6 +291,22 @@ di sana. Daftar di bawah hanya penunjuk bab.
   - `cosmictera-build/ON.md` berhenti mengklaim "tiga proses, dipreempt":
     yang terbukti hanya jalur **masuk** trap, bukan jalur kembalinya.
 
+  - `e7b5a2d` `pc_valid` berhenti diikat tinggi, dan proses yang dipreempt
+    kembali ke tempatnya.
+    - Resepnya sudah tertulis di komentar `rtl/hcpu_top.v` sendiri, dan
+      `rtl/tb/tb_hcpu_trap.v` sudah punya pemeriksaan "pc_valid gates entry"
+      sejak trap dibangun. Nama portnya juga bukan istilah baru.
+    - Papan: `trap_resume` `86 86 27` — delapan preemption, handler tak
+      menyentuh `TRAP_EPC`, tiap resume benar. Proses A di
+      `rtl/programs/kernel.hasm`: 14.491 → 28.982.
+    - Biayanya **+1 DFF** per slot: tepat satu bit keadaan.
+    - Caveat terukur: sumber exception adalah pulse satu siklus, jadi kalau
+      ia pernah bersamaan dengan `pc_valid` rendah ia **hilang**. Pada
+      cakupan yang diuji nol kali. Cakupan bukan bukti universal.
+    - Pemeriksaan yang menyembunyikan cacat ini dihapus:
+      `rtl/tb/tb_hcpu_kernel.v` dulu hanya menuntut `A > 0`, yang dipenuhi
+      sebuah bangkai.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
@@ -356,7 +372,7 @@ satu pada satu waktu, lalu empat gerbang dan uji fisik Tang Nano 20K.
 
 | | penghalang | keadaan |
 |---|---|---|
-| A | resume setelah preemption timer | **akar ditemukan** (`073b968`), belum diperbaiki — perbaikannya di unit trap |
+| A | resume setelah preemption timer | **selesai** — akar `073b968`, perbaikan `e7b5a2d`, terbukti di papan; caveat pulse exception tercatat |
 | B | FLAGS bukan bagian konteks proses | terbuka |
 | C | `STORE` `TRAP_EPC` → `ERET` | terbuka |
 | D | keluaran karakter (`PRINTH`/`EMITS` + bentuk string) | terbuka, **BLOCKED** |
