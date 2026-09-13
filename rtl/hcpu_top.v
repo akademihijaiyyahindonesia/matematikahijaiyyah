@@ -132,6 +132,7 @@ module hcpu_top #(
     wire id_is_branch, id_is_jump, id_is_codex;
     wire id_is_call, id_is_ret;
     wire id_is_halt, id_is_print, id_is_push, id_is_pop;
+    wire id_is_emits;
 
     // Forwarded values (from forwarding unit)
     wire [`XLEN-1:0]   fwd_gpr_s1, fwd_gpr_s2;
@@ -150,6 +151,8 @@ module hcpu_top #(
     wire [7:0] ex_flags_new;
     wire ex_flags_we, ex_is_halt, ex_is_print;
     wire [`XLEN-1:0] ex_print_data;
+    wire ex_is_emits;
+    wire [`DATA_ADDR_W-1:0] ex_emits_addr;
     wire ex_is_push, ex_is_pop;
     wire [`XLEN-1:0] ex_push_data;
     wire ex_mem_read, ex_mem_write;
@@ -213,6 +216,15 @@ module hcpu_top #(
     wire [`XLEN-1:0]        dram_wdata;
     wire [`XLEN-1:0]        dram_rdata;
 
+    // Declared here rather than beside hcpu_mmio's instantiation, which is
+    // where they used to sit: the EMITS state machine above reads `ram_rdata`,
+    // and Verilog wants a wire declared before it is used.
+    wire                    ram_re;
+    wire                    ram_we;
+    wire [`DATA_ADDR_W-1:0] ram_addr;
+    wire [`XLEN-1:0]        ram_wdata;
+    wire [`XLEN-1:0]        ram_rdata;
+
     // ════════════════════════════════════════════════════════════
     //  UART TX — print handling
     // ════════════════════════════════════════════════════════════
@@ -239,6 +251,24 @@ module hcpu_top #(
     localparam P_WAIT   = 3'd3;
     localparam P_NEWLN  = 3'd4;
 
+    // ── EMITS: the character path ───────────────────────────────
+    // Three more states on the SAME state machine, driving the SAME
+    // transmitter. hcpu_mmio.v refuses a second driver on this port -- "a
+    // second driver on the same port is a bus conflict rather than a feature"
+    // -- and that refusal is respected here: nothing new reaches
+    // hcpu_uart_tx, the machine that already did just learned another source.
+    //
+    // One ASCII byte per 32-bit word, a zero word ends it, and the address is
+    // a WORD address so the next character is at addr + 1 (§13.1.1). The read
+    // is registered, so S_ADDR presents the address and S_CHAR reads it back
+    // the cycle after -- the same one-cycle shape LOAD has.
+    localparam P_S_ADDR = 3'd5;
+    localparam P_S_CHAR = 3'd6;
+    localparam P_S_WAIT = 3'd7;
+
+    reg [`DATA_ADDR_W-1:0] str_addr;
+    reg                    emits_busy;
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             print_state <= P_IDLE;
@@ -248,17 +278,25 @@ module hcpu_top #(
             digit_cnt   <= 4'd0;
             digit_idx   <= 4'd0;
             print_val   <= 0;
+            str_addr    <= {`DATA_ADDR_W{1'b0}};
+            emits_busy  <= 1'b0;
         end else begin
             uart_start <= 1'b0;
 
             case (print_state)
                 P_IDLE: begin
                     print_active <= 1'b0;
+                    emits_busy   <= 1'b0;
                     if (ex_is_print && !ex_stall) begin
                         print_val    <= ex_print_data;
                         print_active <= 1'b1;
                         digit_cnt    <= 4'd0;
                         print_state  <= P_CONV;
+                    end else if (ex_is_emits && !ex_stall) begin
+                        str_addr     <= ex_emits_addr;
+                        print_active <= 1'b1;   // the pipeline waits, as for PRINT
+                        emits_busy   <= 1'b1;   // and the RAM port is ours
+                        print_state  <= P_S_ADDR;
                     end
                 end
 
@@ -302,6 +340,33 @@ module hcpu_top #(
                         uart_data   <= 8'h0A;  // '\n'
                         uart_start  <= 1'b1;
                         print_state <= P_IDLE;
+                    end
+                end
+
+                // ── EMITS, one word at a time ───────────────────
+                P_S_ADDR: begin
+                    // The address is out this cycle; the word arrives next.
+                    print_state <= P_S_CHAR;
+                end
+
+                P_S_CHAR: begin
+                    if (ram_rdata == {`XLEN{1'b0}}) begin
+                        // The terminator. No trailing newline: PRINT adds one
+                        // because it prints a number, but a string carries its
+                        // own ending if it wants one -- which is what lets a
+                        // prompt sit and wait on the same line.
+                        print_state <= P_IDLE;
+                    end else if (!uart_busy) begin
+                        uart_data   <= ram_rdata[7:0];
+                        uart_start  <= 1'b1;
+                        print_state <= P_S_WAIT;
+                    end
+                end
+
+                P_S_WAIT: begin
+                    if (!uart_busy && !uart_start) begin
+                        str_addr    <= str_addr + 1'b1;   // the next WORD
+                        print_state <= P_S_ADDR;
                     end
                 end
 
@@ -373,6 +438,7 @@ module hcpu_top #(
         .id_is_codex    (id_is_codex),
         .id_is_halt     (id_is_halt),
         .id_is_print    (id_is_print),
+        .id_is_emits    (id_is_emits),
         .id_is_push     (id_is_push),
         .id_is_pop      (id_is_pop)
     );
@@ -427,6 +493,7 @@ module hcpu_top #(
         .id_is_codex    (id_is_codex),
         .id_is_halt     (id_is_halt),
         .id_is_print    (id_is_print),
+        .id_is_emits    (id_is_emits),
         .id_is_push     (id_is_push),
         .id_is_pop      (id_is_pop),
         .current_flags  (flags_out),
@@ -459,6 +526,8 @@ module hcpu_top #(
         .ex_flags_we    (ex_flags_we),
         .ex_is_halt     (ex_is_halt),
         .ex_is_print    (ex_is_print),
+        .ex_is_emits    (ex_is_emits),
+        .ex_emits_addr  (ex_emits_addr),
         .ex_print_data  (ex_print_data),
         .ex_is_push     (ex_is_push),
         .ex_is_pop      (ex_is_pop),
@@ -637,11 +706,6 @@ module hcpu_top #(
     // beside it: the top sixteen words of the data space are peripherals and
     // everything below is memory, so `LOAD` and `STORE` reach the receiver
     // and the timer with no new instruction.
-    wire                    ram_re;
-    wire                    ram_we;
-    wire [`DATA_ADDR_W-1:0] ram_addr;
-    wire [`XLEN-1:0]        ram_wdata;
-    wire [`XLEN-1:0]        ram_rdata;
     wire                    uart_rx_pulled = (uart_rx === 1'b0) ? 1'b0 : 1'b1;
 
     hcpu_mmio #(.CLK_HZ(CLK_HZ), .BAUD(BAUD)) u_mmio (
@@ -735,11 +799,16 @@ module hcpu_top #(
         .in_user       (trap_in_user_w)
     );
 
+    // The RAM port is multiplexed, not duplicated. While EMITS runs the
+    // pipeline is stalled exactly as it is for PRINT, so the memory stage is
+    // issuing nothing and the port is free -- `emits_busy` is what says so.
+    // A write is forced off in that window for the same reason: the only
+    // thing EMITS does to memory is read it.
     hcpu_dataram u_dataram (
         .clk   (clk),
-        .re    (ram_re),
-        .we    (ram_we),
-        .addr  (ram_addr),
+        .re    (emits_busy ? 1'b1    : ram_re),
+        .we    (emits_busy ? 1'b0    : ram_we),
+        .addr  (emits_busy ? str_addr : ram_addr),
         .wdata (ram_wdata),
         .rdata (ram_rdata)
     );

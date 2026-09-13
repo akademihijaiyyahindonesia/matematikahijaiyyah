@@ -405,7 +405,7 @@ satu pada satu waktu, lalu empat gerbang dan uji fisik Tang Nano 20K.
 | A | resume setelah preemption timer | **selesai** — akar `073b968`, perbaikan `e7b5a2d`, terbukti di papan; caveat pulse exception tercatat |
 | B | FLAGS bukan bagian konteks proses | **selesai** — H-ISA v1.1: `FRD` 0x0A, `FWR` 0x0B, keputusan pemilik 13 September. Papan menjawab `5 10 1 1` |
 | C | `STORE` `TRAP_EPC` → `ERET` | **selesai** — `epc_at_eret` mengikuti bentuk `prev_at_eret`; papan menjawab `1 1 1` pada jarak 0, 1, 2 instruksi. Biaya +20 LUT4, +0 DFF |
-| D | keluaran karakter (`PRINTH`/`EMITS` + bentuk string) | terbuka, **BLOCKED** |
+| D | keluaran karakter | **selesai** — `EMITS` 0xA2, satu karakter per word, penutup nol; keputusan pemilik 13 September. Papan mencetak `Hijaiyyah`, shell punya banner dan prompt |
 
 Semuanya di `cosmictera-build/OFF.md` dengan angkanya. M3 tidak boleh disebut
 selesai sampai jalur keluaran karakter disahkan pemilik **dan** berjalan di

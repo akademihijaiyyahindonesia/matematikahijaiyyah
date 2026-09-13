@@ -153,6 +153,7 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "CMP":      ("s1", "s2"),
     "FRD":      ("dst",),
     "FWR":      ("s1",),
+    "EMITS":    ("imm",),
     "CMPI":     ("s1", "imm"),
     "JMP":      ("imm",),
     "CALL":     ("imm",),   # absolute, like JMP

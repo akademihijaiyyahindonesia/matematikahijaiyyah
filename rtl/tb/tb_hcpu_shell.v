@@ -13,15 +13,23 @@
 // timing wrong.
 //
 // ── what each command proves ────────────────────────────────────
-//   'A' -> 65    the whole route. The byte crossed the wire into the RX
-//                register, the SHELL asked for it by SYSCALL (it cannot reach
-//                0xFF0 itself -- that address is outside its window), the
-//                kernel read it through hal_uart_rx_get, handed it back in
-//                the block, and the shell asked the kernel to print it. 65 is
-//                ASCII 'A', which this program did not choose.
-//   'p' -> 2 0 1 the process model. The count is READ from the word the
-//                kernel published into the shell's own window, then every pid
-//                below it.
+//   banner       HIJAIYYAH and a newline, once, before anything is typed.
+//                Nine characters through EMITS -- the same acceptance string
+//                tb_hcpu_emits.v prints, arriving here by the whole route
+//                instead of straight from a testbench.
+//   prompt       "> " with NO newline, so the cursor waits where the typing
+//                goes. PRINT could never do this: it ends every number with a
+//                newline, which is why a prompt was impossible before EMITS.
+//   'A' -> A     the whole route, and now in characters. The byte crossed the
+//                wire into the RX register, the SHELL asked for it by SYSCALL
+//                (it cannot reach 0xFF0 itself -- that address is outside its
+//                window), the kernel read it through hal_uart_rx_get, handed
+//                it back in the block, and the shell asked the kernel to print
+//                it as a character. This bench used to expect 65.
+//   'p' -> 2 0 1 the process model, still as NUMBERS. PRINT for integers,
+//                EMITS for characters, and the two do not borrow from each
+//                other. The count is READ from the word the kernel published
+//                into the shell's own window, then every pid below it.
 //
 // And the counter at 0x100 is pid 0, which never yields: it can only have
 // advanced because the TIMER took the CPU away from it. Preemption, measured
@@ -113,27 +121,41 @@ module tb_hcpu_shell;
         repeat (20) @(posedge clk_27m);
         btn_rst_n = 1'b1;
 
-        // Boot, then long enough for the scheduler to be running both blocks.
-        repeat (20000) @(posedge clk_27m);
+        // Boot, then long enough for the banner, the first prompt, and the
+        // scheduler to be running both blocks.
+        repeat (40000) @(posedge clk_27m);
         p0_before = u_board.u_hcpu.u_dataram.mem[P0_COUNT];
 
-        // ── 'A' -> 65 ───────────────────────────────────────────
+        // ── the banner, before anything is typed ────────────────
+        check(count >= 12, "banner lalu prompt keluar sendiri");
+        if (count >= 12) begin
+            check(got[0] == "H" && got[1] == "I" && got[2] == "J"
+               && got[3] == "A" && got[4] == "I" && got[5] == "Y"
+               && got[6] == "Y" && got[7] == "A" && got[8] == "H"
+               && got[9] == 8'h0A, "banner HIJAIYYAH dan newline");
+            check(got[10] == ">" && got[11] == " ",
+                  "prompt tanpa newline sesudahnya");
+        end
+
+        // ── 'A' -> A, then the prompt again ─────────────────────
+        count = 0;
         send_byte(8'h41);
         repeat (60000) @(posedge clk_27m);
 
-        check(count == 3, "echo: three bytes back");
-        if (count >= 3) begin
-            check(got[0] == 8'h36 && got[1] == 8'h35 && got[2] == 8'h0A,
-                  "'A' came back as 65");
+        check(count == 4, "echo: karakter, newline, prompt");
+        if (count >= 4) begin
+            check(got[0] == "A" && got[1] == 8'h0A,
+                  "'A' kembali sebagai A, bukan 65");
+            check(got[2] == ">" && got[3] == " ", "prompt kembali");
         end
 
-        // ── 'p' -> 2 0 1 ────────────────────────────────────────
+        // ── 'p' -> 2 0 1, still numbers ─────────────────────────
         count = 0;
         send_byte(8'h70);
         repeat (90000) @(posedge clk_27m);
 
-        check(count == 6, "ps: six bytes back");
-        if (count >= 6) begin
+        check(count == 8, "ps: enam byte angka lalu prompt");
+        if (count >= 8) begin
             check(got[0] == 8'h32 && got[1] == 8'h0A, "ps: two processes");
             check(got[2] == 8'h30 && got[3] == 8'h0A, "ps: pid 0");
             check(got[4] == 8'h31 && got[5] == 8'h0A, "ps: pid 1");
@@ -160,7 +182,7 @@ module tb_hcpu_shell;
         check(p0_after > p0_before, "pid 0 jalan lagi sesudah preempt");
 
         if (errors == 0)
-            $display("tb_hcpu_shell: SEMUA LULUS (7 pemeriksaan)");
+            $display("tb_hcpu_shell: SEMUA LULUS (12 pemeriksaan)");
         else
             $display("tb_hcpu_shell: %0d GAGAL", errors);
         $finish;

@@ -9,30 +9,40 @@
 ;
 ;     shell -> SYSCALL -> kernel -> HAL -> UART
 ;
-; ── what a command looks like, and why ──────────────────────────
-; ONE BYTE IS ONE COMMAND. Not a line, and this is a consequence of the
-; machine rather than a taste: PRINT is the only output path and it emits a
-; DECIMAL NUMBER followed by a newline (rtl/hcpu_top.v, P_CONV). There is no
-; way to put a character on the wire, so a prompt cannot be printed, a typed
-; line cannot be echoed, and a line editor has nothing to show. A shell that
-; cannot echo is a shell that reads one byte and answers.
+; ── what a command looks like ───────────────────────────────────
+; ONE BYTE IS ONE COMMAND, and it is echoed as the CHARACTER it is:
 ;
-;   'p' (0x70)   ps -- the process count, then each pid
-;   anything     echo -- the byte's own code, in decimal
+;   'p' (0x70)   ps -- the process count, then each pid, as numbers
+;   anything     echo -- the character itself, then the prompt again
 ;
-; So typing A answers 65, typing 0 answers 48, and typing p answers 2, 0, 1.
-; The ASCII table is the check: this program invents no encoding of its own.
+; So typing A answers A, and typing p answers 2, 0, 1. A number is still
+; printed as a number: PRINT for integers, EMITS for characters, and the two
+; do not borrow from each other.
 ;
-; PRINTH (0xA1) and EMITS (0xA2) are the spec's own names for printing a codex
-; and a string, both marked "perangkat lunak saja", and neither is implemented
-; here. Recorded in cosmictera-build/OFF.md as the blocker between this and
-; the banner M3 actually wants.
+; This program used to answer 65 for A, and said so in a paragraph explaining
+; that no character could reach the wire. H-ISA v1.1 gave EMITS (0xA2) its
+; string shape -- one ASCII byte per 32-bit word, a zero word ends it, §13.1.1
+; -- so the paragraph is gone and the banner is here.
+;
+; PRINTH (0xA1) stays software-only and stays out of this: it prints a codex.
+; PRINT integers, PRINTH codices, EMITS characters.
 ;
 ; ── the syscall table ───────────────────────────────────────────
-;   1 write    R2 -> the wire, through the kernel's PRINT
+;   1 write    R2 -> the wire as a NUMBER, through the kernel's PRINT
 ;   2 read     -> R1, one byte, or 0 when none is waiting
 ;   3 yield    give up the rest of the quantum
 ;   4 exit     stop being scheduled
+;   5 puts     the string in the caller's BUFFER -> the wire, via EMITS
+;
+; Five is this kernel's own numbering, not the spec's: §13.3's table is marked
+; [PLANNED] and this one already diverged from it at call 1.
+;
+; `puts` takes no argument, and that is EMITS's shape rather than a choice:
+; §6.2 gives it format I, so its address is an IMMEDIATE and there is no
+; computed jump or computed immediate in this ISA to make it a register. So
+; the kernel prints ONE fixed address, 0x210, and the caller writes whatever
+; it wants printed there. The buffer is inside the shell's own window, which is
+; the only memory the shell may write anyway.
 ;
 ; The table lives in data memory at 0xF08+n, one word per call, 1 meaning
 ; implemented. It is a TABLE AND NOT A JUMP TABLE, because this ISA has no
@@ -141,6 +151,7 @@ boot:
         STORE R1, R5, 0xF0A     ; 2 read
         STORE R1, R5, 0xF0B     ; 3 yield
         STORE R1, R5, 0xF0C     ; 4 exit
+        STORE R1, R5, 0xF0D     ; 5 puts
 
 ; ── what the shell is allowed to know ─────────────────────────
         MOVI  R1, 2
@@ -348,6 +359,8 @@ serve:  LOAD  R1, R7, 1
         JEQ   sc_yl
         CMPI  R1, 4
         JEQ   sc_ex
+        CMPI  R1, 5
+        JEQ   sc_pu
         MOVI  R1, 0             ; no such call
         JMP   sc_ret
 
@@ -395,6 +408,16 @@ sc_ex:  MOVI  R5, 0
         MOVI  R1, 1
         JMP   sc_ret
 
+; EMITS is privileged for the same reason PRINT is, so a string reaches the
+; wire the same way a number does: by asking.
+sc_pu:  MOVI  R5, 0
+        LOAD  R3, R5, 0xF0D
+        CMPI  R3, 0
+        JEQ   sc_off
+        EMITS 0x210             ; the one address; the caller fills it
+        MOVI  R1, 1
+        JMP   sc_ret
+
 sc_off: MOVI  R1, 0             ; the table says this call is not here
 sc_ret: STORE R1, R7, 1
         RET
@@ -421,7 +444,52 @@ p0_lp:  ADDI  R1, R1, 1
 ; Every CMP below is followed immediately by the branch that reads it, and no
 ; SYSCALL stands between the two. See the note at the top: FLAGS does not
 ; survive a trap, and this is the only defence software has.
-shell:
+; Everything printed as text goes through the one buffer at 0x210, written a
+; character at a time. That is verbose and it is the point: the shape of the
+; string in memory is one ASCII byte per word with a zero word after it, and
+; writing it out longhand is the same shape the spec fixes in §13.1.1.
+;
+; The banner runs once. HIJAIYYAH is nine characters and the tenth word ends
+; it -- exactly the acceptance string rtl/tb/tb_hcpu_emits.v prints.
+shell:  MOVI  R5, 0
+        MOVI  R1, 0x48
+        STORE R1, R5, 0x210     ; H
+        MOVI  R1, 0x49
+        STORE R1, R5, 0x211     ; I
+        MOVI  R1, 0x4A
+        STORE R1, R5, 0x212     ; J
+        MOVI  R1, 0x41
+        STORE R1, R5, 0x213     ; A
+        MOVI  R1, 0x49
+        STORE R1, R5, 0x214     ; I
+        MOVI  R1, 0x59
+        STORE R1, R5, 0x215     ; Y
+        MOVI  R1, 0x59
+        STORE R1, R5, 0x216     ; Y
+        MOVI  R1, 0x41
+        STORE R1, R5, 0x217     ; A
+        MOVI  R1, 0x48
+        STORE R1, R5, 0x218     ; H
+        MOVI  R1, 0x0A
+        STORE R1, R5, 0x219     ; newline -- the banner ends its own line
+        MOVI  R1, 0
+        STORE R1, R5, 0x21A
+        MOVI  R1, 5
+        SYSCALL
+
+; The prompt: '>' and a space, and NO newline, so the cursor waits where the
+; typing will go. PRINT could never do this -- it ends every number with a
+; newline, which is why a prompt was impossible before EMITS.
+sh_pr:  MOVI  R5, 0
+        MOVI  R1, 0x3E
+        STORE R1, R5, 0x210     ; >
+        MOVI  R1, 0x20
+        STORE R1, R5, 0x211     ; space
+        MOVI  R1, 0
+        STORE R1, R5, 0x212
+        MOVI  R1, 5
+        SYSCALL
+
 sh_lp:  MOVI  R1, 2             ; read
         SYSCALL
         CMPI  R1, 0
@@ -429,11 +497,17 @@ sh_lp:  MOVI  R1, 2             ; read
         CMPI  R1, 0x70          ; 'p' -- ps
         JEQ   sh_ps
 
-; echo: the byte's own code, in decimal.
-        MOV   R2, R1
-        MOVI  R1, 1             ; write
+; echo: the CHARACTER, not its code. The byte goes in the first word, a
+; newline in the second so the answer ends its line, and the terminator third.
+        MOVI  R5, 0
+        STORE R1, R5, 0x210
+        MOVI  R1, 0x0A
+        STORE R1, R5, 0x211
+        MOVI  R1, 0
+        STORE R1, R5, 0x212
+        MOVI  R1, 5
         SYSCALL
-        JMP   sh_lp
+        JMP   sh_pr
 
 sh_idle: MOVI R1, 3             ; yield
         SYSCALL
@@ -454,7 +528,7 @@ sh_pl:  MOV   R2, R3
         ADDI  R3, R3, 1
         CMP   R3, R4
         JNE   sh_pl
-        JMP   sh_lp
+        JMP   sh_pr
 
 ; ── the layer underneath ────────────────────────────────────────
 ; At the end, so nothing falls into it: the shell's loop never exits. Every

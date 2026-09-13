@@ -36,6 +36,7 @@ module hcpu_execute #(
     input  wire                    id_is_codex,
     input  wire                    id_is_halt,
     input  wire                    id_is_print,
+    input  wire                    id_is_emits,
     input  wire                    id_is_push,
     input  wire                    id_is_pop,
     input  wire [7:0]              current_flags,
@@ -79,6 +80,8 @@ module hcpu_execute #(
     output reg                     ex_flags_we,
     output reg                     ex_is_halt,
     output reg                     ex_is_print,
+    output reg                     ex_is_emits,
+    output reg  [`DATA_ADDR_W-1:0] ex_emits_addr,
     output reg  [`XLEN-1:0]        ex_print_data,
     output reg                     ex_is_push,
     output reg                     ex_is_pop,
@@ -300,7 +303,7 @@ module hcpu_execute #(
     wire touches_window = (id_mem_read | id_mem_write)
                           && (would_addr >= `PERIPH_BASE);
     assign priv_fault = in_user && (touches_window || eret_decoded || id_is_halt
-                                    || id_is_print);
+                                    || id_is_print || id_is_emits);
 
     // Ordinary RAM is open to user mode -- the boundary is the window, not
     // memory -- but only inside [base, limit). A peripheral address is
@@ -392,6 +395,8 @@ module hcpu_execute #(
             ex_flags_we    <= 1'b0;
             ex_is_halt     <= 1'b0;
             ex_is_print    <= 1'b0;
+            ex_is_emits    <= 1'b0;
+            ex_emits_addr  <= {`DATA_ADDR_W{1'b0}};
             ex_print_data  <= {`XLEN{1'b0}};
             ex_is_push     <= 1'b0;
             ex_is_pop      <= 1'b0;
@@ -411,6 +416,8 @@ module hcpu_execute #(
             ex_flags_we    <= 1'b0;
             ex_is_halt     <= 1'b0;
             ex_is_print    <= 1'b0;
+            ex_is_emits    <= 1'b0;
+            ex_emits_addr  <= {`DATA_ADDR_W{1'b0}};
             ex_print_data  <= {`XLEN{1'b0}};
             ex_is_push     <= 1'b0;
             ex_is_pop      <= 1'b0;
@@ -423,6 +430,12 @@ module hcpu_execute #(
             ex_opcode   <= id_opcode;
             ex_dst      <= id_dst;
             ex_is_print <= id_is_print & ~priv_fault;
+            // EMITS is privileged for the same reason PRINT is, and the reason
+            // is not "user mode cannot do I/O" -- it is that UNMEDIATED I/O is
+            // worse than none. Its address is the immediate, not a register:
+            // §6.2 gives it format I.
+            ex_is_emits   <= id_is_emits & ~priv_fault;
+            ex_emits_addr <= id_imm[`DATA_ADDR_W-1:0];
             ex_is_push  <= id_is_push;
             ex_is_pop   <= id_is_pop;
 

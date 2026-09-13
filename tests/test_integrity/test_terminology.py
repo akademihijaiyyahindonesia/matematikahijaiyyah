@@ -127,7 +127,7 @@ def test_the_opcode_count_the_inventory_prints_is_the_count() -> None:
     letters = [o for o in opcodes if o.startswith("L_")]
 
     assert len(letters) == 28, f"{len(letters)} letter opcodes, not 28"
-    assert len(opcodes) - len(letters) == 53, len(opcodes) - len(letters)
+    assert len(opcodes) - len(letters) == 54, len(opcodes) - len(letters)
 
     readme = _read("teknologi/README.md")
     m = re.search(r"^\| Opcode H-ISA \| (\d+) \|", readme, re.M)

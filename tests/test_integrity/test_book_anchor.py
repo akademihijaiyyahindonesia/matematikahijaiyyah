@@ -310,6 +310,11 @@ EXTENSIONS: Dict[str, int] = {
     # block §6.1 gives to machine state, per §6.0 rule 2; the version bump is
     # rule 4. The book does not name them: it has no interrupt model to need
     # them, which is why §16.4 still says execution is run-to-completion.
+    # And EMITS, whose slot and name are v1.0's -- what v1.1 added is the
+    # string's shape in RAM and an implementation. It is the third output
+    # path, and they do not borrow from each other: PRINT integers, PRINTH
+    # codices, EMITS characters.
+    "EMITS": 0xA2,
     "FRD": 0x0A,
     "FWR": 0x0B,
     "CMOV": 0x46,

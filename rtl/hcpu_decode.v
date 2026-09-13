@@ -52,6 +52,7 @@ module hcpu_decode (
     output reg                     id_is_codex,   // Codex H-Reg operation
     output reg                     id_is_halt,    // HALT instruction
     output reg                     id_is_print,   // PRINT instruction
+    output reg                     id_is_emits,   // EMITS instruction
     output reg                     id_is_push,    // Stack push
     output reg                     id_is_pop,     // Stack pop
 
@@ -180,6 +181,7 @@ module hcpu_decode (
             id_is_codex  <= 1'b0;
             id_is_halt   <= 1'b0;
             id_is_print  <= 1'b0;
+            id_is_emits  <= 1'b0;
             id_is_push   <= 1'b0;
             id_is_pop    <= 1'b0;
         end else if (flush) begin
@@ -204,6 +206,7 @@ module hcpu_decode (
             id_is_codex  <= 1'b0;
             id_is_halt   <= 1'b0;
             id_is_print  <= 1'b0;
+            id_is_emits  <= 1'b0;
             id_is_push   <= 1'b0;
             id_is_pop    <= 1'b0;
         end else if (!stall) begin
@@ -232,6 +235,7 @@ module hcpu_decode (
             id_is_codex  <= 1'b0;
             id_is_halt   <= 1'b0;
             id_is_print  <= 1'b0;
+            id_is_emits  <= 1'b0;
             id_is_push   <= 1'b0;
             id_is_pop    <= 1'b0;
 
@@ -272,6 +276,10 @@ module hcpu_decode (
                 // machine HALTs on it -- which is what the default is for, and
                 // is how this omission was found rather than shipped.
                 `OP_FWR:    ;
+                // EMITS writes no register either: its whole effect is on the
+                // wire. Like FWR it needs an arm, or the default below halts
+                // the machine on it as an unimplemented opcode.
+                `OP_EMITS:  id_is_emits <= 1'b1;
 
                 `OP_CALL:   id_is_call <= 1'b1;
                 `OP_RET:    id_is_ret  <= 1'b1;

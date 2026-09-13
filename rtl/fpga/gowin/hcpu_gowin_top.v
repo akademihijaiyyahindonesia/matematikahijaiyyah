@@ -38,20 +38,27 @@
 // ============================================================================
 // PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// re-measured 2026-09-13 after H-ISA v1.1 added FRD (0x0A) and FWR (0x0B), so
-// FLAGS can be read into a register and written back from one:
+// re-measured 2026-09-13 after H-ISA v1.1's third instruction, EMITS (0xA2),
+// gave the machine a character path:
 //
-//     LUT4       14,775 / 20,736   71%
-//     DFF         4,499 / 15,552   28%
+//     LUT4       14,804 / 20,736   71%
+//     DFF         4,529 / 15,552   29%
 //     BSRAM          17 /     46   36%
 //
-//     Fmax       80.57 MHz (PASS at the 12.00 MHz constraint), down from
-//               114.50 -- taken after routing. Critical path 5.68 ns of logic
-//               plus 6.73 ns of routing.
+//     Fmax      108.90 MHz (PASS at the 12.00 MHz constraint), up from 80.57
+//               -- taken after routing.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +29 LUT4 AND +18 DFF, and the DFF column is NOT explained by the two
-// instructions. Neither adds architectural state: FRD routes the flag register
+// +29 LUT4 and +30 DFF against 14,775 / 4,499. The DFF column is the honest
+// one here: EMITS DOES add state -- a word address to walk the string with and
+// a busy bit -- where FRD and FWR added none. Three more states on the print
+// machine and a multiplexer on the data RAM's address port account for the
+// rest. No second transmitter: hcpu_mmio.v refuses one, and the refusal is
+// kept.
+//
+// THE MEASUREMENT BEFORE IT, the same day, after FRD and FWR: 14,775 LUT4 and
+// 4,499 DFF at 80.57 MHz -- +29 LUT4 and +18 DFF, and THAT DFF move was not
+// explained by the two instructions. Neither adds architectural state: FRD routes the flag register
 // into the GPR result mux and FWR routes a GPR into the flag write port, and
 // both of those registers existed already. Where the eighteen came from was
 // NOT separated into design and synthesis here, and this run does not claim
@@ -89,9 +96,9 @@
 // owner's; the blocker is named in cosmictera-build/OFF.md, and CDOT still
 // runs in the HVM.
 //
-// NONE OF THE Fmax MOVES ACROSS THESE FOUR RUNS -- 84.26 -> 115.66 -> 120.31
-// -> 114.50 -> 80.57 -- was separated into design and placement, and no run
-// claims any of them. What the run does
+// NONE OF THE Fmax MOVES ACROSS THESE FIVE RUNS -- 84.26 -> 115.66 -> 120.31
+// -> 114.50 -> 80.57 -> 108.90 -- was separated into design and placement, and
+// no run claims any of them. What the run does
 // establish: the design still passes the constraint the flow places it
 // against, and the board's own clock is 27 MHz.
 //
@@ -137,8 +144,9 @@
 // was never close to its own ceiling.
 //
 // Fingerprint restamped 2026-09-13 WITH a fresh place-and-route run, which is
-// the only honest way to restamp it after a design change: v1.1 touched
-// hcpu_pkg.vh, hcpu_decode.v and hcpu_execute.v, the repair before it
+// the only honest way to restamp it after a design change: EMITS touched
+// hcpu_pkg.vh, hcpu_decode.v, hcpu_execute.v and hcpu_top.v, FRD and FWR the
+// first three of those, the repair before it
 // hcpu_trap.v, and the one before that hcpu_fetch.v and hcpu_top.v -- so the
 // figures above were re-measured rather than carried over. The same was true
 // of the 2026-09-12 stamp for the codex block, and 2026-09-11 for CSET.
@@ -149,7 +157,7 @@
 // fingerprinted source -- reversing only those copyright lines in memory
 // reproduced the recorded hash exactly, so the sweep was provably the entire
 // delta and no design byte moved.
-// RTL FINGERPRINT: 844ceed11220116854d914e8b6b689369eb67fb93ff9d3031c68b402abf90263
+// RTL FINGERPRINT: 2a7d2e579b90695c0f0755f322628683c91fdbb65979965530f95f6a1cbfc79c
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

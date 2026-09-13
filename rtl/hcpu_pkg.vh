@@ -194,6 +194,11 @@
 
 // I/O (0xA0–0xAF)
 `define OP_PRINT        8'hA0       // UART print GPR[S1] as decimal
+// H-ISA v1.1. The slot and the name are v1.0's; v1.1 fixed the string's shape
+// in RAM -- one ASCII byte per 32-bit word, a zero word ends it -- and this is
+// the implementation. The address is a WORD address, so the next character is
+// at addr + 1: this memory is 4096 x 32 bits and LOAD/STORE index it by word.
+`define OP_EMITS        8'hA2       // print the string at IMM, one char/word
 
 // Unimplemented → trap
 `define OP_HALT_ERR     8'hFF       // Halt with error (unimplemented opcode)

@@ -213,6 +213,12 @@ class OpCode(IntEnum):
     # ── I/O and debug (0xA0–0xAF) ────────────────────────────────
     PRINT = 0xA0    # Print value from GPR
     PRINTH = 0xA1   # Print hybit with detail     (software only)
+    # H-ISA v1.1. The slot and the name are v1.0's; what v1.1 added is the
+    # string's shape in RAM -- one ASCII byte per 32-bit word, terminated by a
+    # zero word -- and an implementation. Chosen for being checkable rather
+    # than compact: no byte order to get wrong, no packing, and a terminator a
+    # test can delete. §13.1.1.
+    EMITS = 0xA2    # Print the string at IMM, one char per word
 
     # ── Error ────────────────────────────────────────────────────
 
@@ -312,6 +318,7 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.ANDI, OpCode.ORI, OpCode.XORI, OpCode.SHLI, OpCode.SHRI,
     OpCode.CMP, OpCode.CMPI, OpCode.JMP, OpCode.JEQ, OpCode.JNE,
     OpCode.FRD, OpCode.FWR,
+    OpCode.EMITS,
     OpCode.JGD, OpCode.JNGD,
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,
     OpCode.HLOAD, OpCode.CGET, OpCode.CSET, OpCode.HCADD,

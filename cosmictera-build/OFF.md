@@ -23,7 +23,7 @@ Label: **EH**.
 
 ### 21 opcode belum di RTL
 
-81 dari 102 terimplementasi. Yang belum:
+82 dari 103 terimplementasi. Yang belum:
 
 ```
 VDIST VNORM VSCL                vektor
@@ -106,40 +106,82 @@ Empat sifat HOS di buku semuanya berjalan sekarang — lihat
 
 ### M3 — shell: jalur keluaran karakter, dan resume setelah preemption
 
-Penghalang 2, 3 dan 4 **sudah ditutup** 13 September 2026. Yang tersisa
-hanya 1: keluaran karakter, **BLOCKED** sampai pemilik menetapkan format
-string RAM 32-bit.
+**Keempat penghalang ditutup 13 September 2026.** Bagian ini disimpan utuh —
+sebab, angka, dan sabotasenya — karena bagaimana sesuatu ditutup adalah yang
+membuatnya tetap tertutup.
 
 **12 September 2026.** Shell-nya berjalan di papan fisik: perintah masuk lewat
 UART, dijawab lewat kernel (`rtl/programs/shell.hasm`, `make -C rtl/tb
 sim_shell`). Dua hal menghalanginya menjadi shell yang digambar pemilik, dan
 keduanya diukur, bukan diduga.
 
-#### 1. Tidak ada jalur keluaran karakter — `PRINTH`/`EMITS` ditunda pemilik
+#### 1. ~~Tidak ada jalur keluaran karakter~~ — DIPERBAIKI 13 September 2026, H-ISA v1.1
 
-`PRINT` adalah satu-satunya jalan keluar dan ia mencetak **angka desimal**
-diikuti newline (`rtl/hcpu_top.v`, keadaan `P_CONV`: `8'h30 + val % 10`).
-Tidak ada cara menaruh satu karakter di kabel, jadi tidak ada prompt, tidak ada
-gema baris yang diketik, dan tidak ada editor baris. Karena itu **satu byte
-adalah satu perintah**, dan jawabannya angka.
+**Yang menghalanginya.** `PRINT` adalah satu-satunya jalan keluar dan ia
+mencetak **angka desimal** diikuti newline (`rtl/hcpu_top.v`, keadaan
+`P_CONV`: `8'h30 + val % 10`). Tidak ada cara menaruh satu karakter di kabel,
+jadi tidak ada prompt, tidak ada gema baris, tidak ada editor baris. Slot
+`EMITS` (0xA2) sudah dinamai spesifikasi sejak v1.0 — tetapi **bentuk stringnya
+di RAM 32-bit tidak pernah ditetapkan**, dan memilihnya berarti mengarang
+semantik perangkat keras.
 
-Spesifikasi menamai dua slot yang relevan dan **keduanya bertanda "perangkat
-lunak saja"**:
+**Keputusan pemilik, 13 September 2026.** Satu karakter ASCII per word 32-bit,
+word `0x00000000` sebagai penutup:
 
-| slot | apa | status |
-|---|---|---|
-| `PRINTH` 0xA1 | cetak codex | **BLOCKED** — perintah pemilik, 12 September |
-| `EMITS` 0xA2 | cetak string di alamat IMM | **BLOCKED** — perintah pemilik, 12 September |
+```
+EMITS IMM
+addr = IMM
+while MEM[addr] != 0:
+    keluarkan MEM[addr] & 0xFF
+    addr = addr + 1        ; word berikutnya
+```
 
-Dan `EMITS` punya penghalang kedua di atas itu: **spesifikasi tidak menetapkan
-bentuk string di RAM 32-bit**. Satu karakter per kata, empat karakter per kata,
-atau panjang di depan — ketiganya mungkin, dan memilihnya berarti mengarang
-semantik perangkat keras. Pemilik spesifikasi yang menetapkan.
+Dipilih **bukan karena paling hemat** melainkan karena paling mudah
+diverifikasi: tidak ada ambiguitas urutan byte, tidak ada empat karakter
+dikemas dalam satu word, penutupnya gampang diuji dan gampang disabotase.
+Borosnya empat kali lipat diterima — yang dibuktikan di tahap ini adalah jalur
+keluaran karakter, bukan kepadatan penyimpanan. §13.1.1.
 
-Yang **tidak boleh** dikerjakan atas inisiatif sendiri, tercatat di sini supaya
-tidak terjadi diam-diam: menaruh `PRINTH`/`EMITS` di RTL, membuat driver TX
-kedua (`rtl/hcpu_mmio.v` menolaknya: "a second driver on the same port is a bus
-conflict"), memakai `rtl/hcpu_font8x8.hex`, atau mengubah semantik `PRINT`.
+**Alamatnya alamat WORD.** Tabel keputusan pemilik menuliskannya sebagai
+alamat byte (`0x1000`, `0x1004`, `+4`); RAM data mesin ini 4096 × 32 bit dan
+`LOAD`/`STORE` mengalamatinya per word, jadi "word berikutnya" di sini `+1`.
+Tata letaknya sama, satuan alamatnya berbeda.
+
+**Bukan pemancar kedua.** `rtl/hcpu_mmio.v` menolak driver kedua di port
+serial — *"a second driver on the same port is a bus conflict rather than a
+feature"* — dan penolakan itu dipegang: mesin keadaan cetak di `hcpu_top.v`
+bertambah tiga keadaan dan satu sumber, tidak ada perangkat keras baru yang
+menyentuh `hcpu_uart_tx`. Port RAM data di-**mux**, bukan digandakan, dan itu
+aman karena pipeline berhenti selama mencetak, persis seperti untuk `PRINT`.
+
+**Tiga jalur keluaran, tiga domain, tidak saling meminjam:**
+
+| instruksi | mencetak |
+|---|---|
+| `PRINT` 0xA0 | bilangan bulat, desimal, diakhiri newline |
+| `PRINTH` 0xA1 | codex/hybit — **tetap perangkat lunak saja** |
+| `EMITS` 0xA2 | karakter dan string |
+
+**Di papan:**
+
+```
+Hijaiyyah                  uji penerimaan
+HIJAIYYAH                  banner shell
+> A                        'A' menggema sebagai A, bukan 65
+> 2 0 1                    'p' tetap menjawab angka
+>                          prompt tanpa newline — kursornya menunggu
+```
+
+`EMITS` **tidak** menambahkan newline. `PRINT` menambahkannya karena ia
+mencetak satu bilangan; sebuah string membawa akhirannya sendiri kalau memang
+mau — dan itulah yang membuat sebuah prompt mungkin.
+
+Disabotase bertiga sesuai perintah pemilik, dan ketiganya merah: penutup
+dihapus → `HijaiyyahZZZ`; satu karakter diubah → `HijaXyyah`; langkahnya
+dijadikan `+4` → `Hih`. **Sabotase pertama mula-mula tidak menggigit** karena
+RAM simulasi mulai dari nol, jadi penutup yang tak ditulis tetap nol;
+`rtl/tb/tb_hcpu_emits.v` sekarang menulis `Z` ke word penutupnya lebih dulu,
+supaya penutup itu benar-benar yang menghentikan (R3).
 
 #### 2. ~~Proses yang diambil TIMER tidak pernah berjalan lagi~~ — DIPERBAIKI 13 September 2026
 

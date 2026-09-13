@@ -1,27 +1,32 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
 //
-// ── MEASURED, 13 September 2026, after H-ISA v1.1 ────────────────────────
+// ── MEASURED, 13 September 2026, after EMITS ─────────────────────────────
 //
 // `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68
 // (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// loader baked in. Re-run because FRD (0x0A) and FWR (0x0B) changed
-// hcpu_pkg.vh, hcpu_decode.v and hcpu_execute.v.
+// loader baked in. Re-run because EMITS (0xA2) changed hcpu_pkg.vh,
+// hcpu_decode.v, hcpu_execute.v and hcpu_top.v.
 //
 //     IOB           15 /    384    3%
-//     LUT4      15,232 / 20,736   73%
-//     DFF        4,570 / 15,552   29%
+//     LUT4      15,332 / 20,736   73%
+//     DFF        4,600 / 15,552   29%
 //     BSRAM         17 /     46   36%
-//     Fmax      125.33 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               456.20 MHz  pixel_clk
+//     Fmax       63.73 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               453.51 MHz  pixel_clk
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +70 LUT4 and +18 DFF against this slot's previous 15,162 / 4,552, and the
-// bare hcpu_gowin_top slot moved by the same +18. Neither instruction adds
-// architectural state -- FRD routes the flag register into the GPR result mux,
-// FWR routes a GPR into the flag write port, and both registers existed -- so
-// where the eighteen came from was NOT separated into design and synthesis,
-// and neither run claims it.
+// +100 LUT4 and +30 DFF against this slot's previous 15,232 / 4,570, and the
+// bare slot moved by +29 and the same +30. EMITS DOES add state, where FRD and
+// FWR added none: a word address to walk the string with and a busy bit, plus
+// three states on the print machine and a multiplexer on the data RAM's
+// address port. No second transmitter -- hcpu_mmio.v refuses one and the
+// refusal is kept.
+//
+// THE TWO BEFORE IT, the same day: after FRD and FWR, 15,232 LUT4 and 4,570
+// DFF at 125.33 / 456.20 MHz (+70 LUT4, +18 DFF, and that DFF move was not
+// explained by those two instructions); and after the TRAP_EPC bypass, 15,162
+// and 4,552 at 127.05 / 457.25 MHz.
 //
 // THE TWO MEASUREMENTS BEFORE IT, the same day: after the TRAP_EPC bypass,
 // 15,162 LUT4 and 4,552 DFF at 127.05 / 457.25 MHz (+21 LUT4, +0 DFF -- a mux,
@@ -45,6 +50,15 @@
 //
 // FLASHED AND RUN, 13 September 2026, over the wire through the baked loader:
 //
+//     emits         Hijaiyyah         THE ROW THIS BUILD EXISTS FOR: nine
+//                                     characters and no newline, one ASCII
+//                                     byte per word with a zero word ending
+//                                     it. This machine had no way to put a
+//                                     character on the wire until now.
+//     shell         HIJAIYYAH         a banner, and a prompt with no newline
+//                   > A               after it so the cursor waits where the
+//                   > 2 0 1           typing goes. 'A' echoes as A, not 65;
+//                   >                 'p' still answers in numbers.
 //     flags_board   5 10 1 1          THE ROW THIS BUILD EXISTS FOR: pid 0 set
 //                                     G and O, pid 1 set Z and LT, and after
 //                                     two hundred preemptions each still reads
@@ -75,7 +89,7 @@
 // user_mode, shell, kernel, branch_trap_race and the shadow sweep, the number
 // of cycles an EXCEPTION was held by it is zero.
 //
-// RTL FINGERPRINT: 603a89500b67675de0164445fef1137eeb091c89057c9b3cb533b2bcd477c5a9
+// RTL FINGERPRINT: c9e58bff563d0c260163223a0220c7fb561b51a52aa0f2f0d5b3219121b270c5
 //
 `include "hcpu_pkg.vh"
 

@@ -92,6 +92,11 @@ H-ISA Bytecode          ← spesifikasi ini
 H-ISA v1.1 berstatus **OPERATIONAL** pada level emulator/VM.
 Hardware-native execution masih berstatus **DESIGNED**.
 
+**v1.1 menambahkan `EMITS` (0xA2)** — bentuk stringnya ditetapkan di §13.1.1,
+satu karakter per word dengan penutup nol — sehingga karakter dan string punya
+jalur keluaran. Slotnya sudah dinamai sejak v1.0; yang baru adalah
+representasinya dan implementasinya.
+
 **v1.1 menambahkan `FRD` (0x0A) dan `FWR` (0x0B)** — FLAGS dibaca ke GPR dan
 ditulis kembali darinya, sehingga sebuah context switch dapat menyimpannya.
 Keduanya mengambil slot kosong di blok System & Control sesuai §6.0 aturan 2,
@@ -646,7 +651,7 @@ memicu `HALT_ERR` (0xFF).
 | 0xA0 | `EMIT` | R | Alias dari `PRINT` (ejaan spesifikasi lama) |
 | 0xA1 | `PRINTH` | C | Print codex H[S1] — perangkat lunak saja |
 | 0xA1 | `EMITC` | C | Alias dari `PRINTH` |
-| 0xA2 | `EMITS` | I | Print string at address IMM — perangkat lunak saja |
+| 0xA2 | `EMITS` | I | ✅ Cetak string di alamat IMM: satu karakter per word, `0x00000000` mengakhiri |
 | 0xA3 | `DUMP` | — | Dump machine state — perangkat lunak saja |
 | 0xA4 | `TRACE` | I | Enable/disable trace (IMM=0/1) — perangkat lunak saja |
 | 0xA5 | `BREAK` | — | Breakpoint — perangkat lunak saja |
@@ -944,6 +949,52 @@ EMIT  R1           ; print integer R1
 EMITC H0           ; print codex H0
 EMITS #addr        ; print string at memory address
 ```
+
+Tiga jalur keluaran, tiga domain, tidak saling meminjam:
+
+| instruksi | mencetak |
+|---|---|
+| `PRINT` / `EMIT` (0xA0) | bilangan bulat, desimal, diakhiri newline |
+| `PRINTH` / `EMITC` (0xA1) | codex/hybit — **perangkat lunak saja** |
+| `EMITS` (0xA2) | karakter dan string |
+
+#### 13.1.1 `EMITS` — bentuk string di RAM
+
+**Ditetapkan pemilik, 13 September 2026.** Satu karakter ASCII per word 32-bit,
+word `0x00000000` sebagai penutup:
+
+```
+alamat   isi          arti
+  +0     0x00000048   'H'
+  +1     0x00000069   'i'
+  ...
+  +9     0x00000000   penutup
+```
+
+```
+EMITS IMM
+
+addr = IMM
+while MEM[addr] != 0:
+    keluarkan MEM[addr] & 0xFF
+    addr = addr + 1        ; word berikutnya
+```
+
+**Alamatnya alamat WORD.** RAM data mesin ini 4096 × 32 bit dan `LOAD`/`STORE`
+mengalamatinya per word, jadi "word berikutnya" adalah `addr + 1` di sini —
+bukan `+ 4`. Tata letaknya sama dengan penulisan alamat-byte `+4` yang lazim;
+yang berbeda hanya satuan alamat mesin ini.
+
+Dipilih **bukan karena paling hemat** melainkan karena paling mudah
+diverifikasi: tidak ada ambiguitas urutan byte, tidak ada empat karakter
+dikemas dalam satu word, penutupnya gampang diuji dan gampang disabotase, dan
+ia cocok langsung dengan RAM 32-bit. Borosnya empat kali lipat diterima: yang
+dibuktikan di tahap ini adalah jalur keluaran karakter, bukan kepadatan
+penyimpanan.
+
+`EMITS` **tidak** menambahkan newline. `PRINT` menambahkannya karena ia
+mencetak satu bilangan; sebuah string membawa akhirannya sendiri kalau memang
+mau. Itulah yang memungkinkan sebuah prompt.
 
 ### 13.2 Debug
 

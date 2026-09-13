@@ -134,6 +134,9 @@ class HISAMachine:
         #: still has to survive being saved and restored.
         self._flag_o: int = 0
         self._flag_reserved: int = 0
+        #: Bytes EMITS put on the wire. Separate from `output`, which holds
+        #: the values PRINT printed -- a character is not a value.
+        self.chars: list[int] = []
 
     def load_program(self, code: List[int]) -> None:
         """Load bytecode into code memory."""
@@ -144,6 +147,7 @@ class HISAMachine:
         self.output.clear()
         self._flag_o = 0
         self._flag_reserved = 0
+        self.chars.clear()
         self._halted = False
         self._exit_code = 0
 
@@ -214,6 +218,15 @@ class HISAMachine:
     def _sext12(cls, imm: int) -> int:
         """Sign-extend the 12-bit immediate — `imm_sext` in hcpu_execute.v."""
         return imm - 0x1000 if imm & 0x800 else imm
+
+    #: A string without a terminator is a bug, not a long string. The data
+    #: memory is 4096 words, so nothing legitimate runs past it.
+    _EMITS_LIMIT = 4096
+
+    @property
+    def text(self) -> str:
+        """What EMITS put on the wire, decoded."""
+        return bytes(self.chars).decode("ascii", "replace")
 
     #: Bit positions, from hcpu_pkg.vh. Named here rather than written as
     #: literals so the two files can be diffed by eye.
@@ -702,6 +715,42 @@ class HISAMachine:
             value = self.regs.gpr[s1]
             self.output.append(value)
             return f"PRINT R{s1} = {value}"
+
+        # ── EMITS: the character path ───────────────────────────
+        # Privileged for the same reason PRINT is, and the reason is not "user
+        # mode cannot do I/O": it is that unmediated I/O is worse than none,
+        # because two processes writing the wire interleave and nothing
+        # arbitrates. A shell reaches it by SYSCALL, like everything else.
+        #
+        # One ASCII byte per 32-bit word, a zero word ends it. The address is a
+        # WORD address: this machine's data memory is 4096 x 32 bits and
+        # LOAD/STORE index it by word, so the next character is at addr + 1.
+        # Spelled +4 in byte terms, which is the same layout counted in a
+        # different unit -- §13.1.1 says so in both.
+        #
+        # The bytes land in `chars` and not in `output`, deliberately. `output`
+        # holds the VALUES PRINT printed; a character is not a value, and
+        # folding the two would make `output == [72]` mean both "printed the
+        # number 72" and "printed an H".
+        if op == OpCode.EMITS:
+            if self.mode == self.MODE_USER:
+                self._priv_fault = True
+                return "EMITS → privilege fault (user mode)"
+            addr = imm
+            count = 0
+            while True:
+                word = self._mem_read(addr)
+                if (word & 0xFFFFFFFF) == 0:
+                    break
+                self.chars.append(word & 0xFF)
+                addr += 1
+                count += 1
+                if count > self._EMITS_LIMIT:
+                    # A string with no terminator would run off the end of
+                    # memory; the hardware would too, and this says so rather
+                    # than hanging the interpreter.
+                    return f"EMITS #{imm} → no terminator within {count} words"
+            return f"EMITS #{imm} = {count} chars"
 
         # PRINTH is software-only by the spec and stays that way: it is the
         # H-Reg print that PRINT was wrongly doing.
