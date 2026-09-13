@@ -446,6 +446,16 @@ module hcpu_execute #(
                                 id_opcode == `OP_CU   || id_opcode == `OP_CRHO ||
                                 id_opcode == `OP_HPACK || id_opcode == `OP_HCRC))
                 ex_gpr_result <= codex_gpr;
+            // FRD hands back `forwarded_flags`, NOT the register file's copy.
+            // That is the same source JEQ and JGD read three hundred lines up,
+            // and it has to be: a CMP still in flight is architecturally done
+            // as far as the next instruction is concerned, so FRD and a branch
+            // must not disagree about what the flags are. Reading
+            // `current_flags` here would make `CMP` / `FRD` return the flags
+            // from BEFORE the compare while `CMP` / `JEQ` branched on the ones
+            // after -- the same value, read two ways, answering differently.
+            else if (id_opcode == `OP_FRD)
+                ex_gpr_result <= {24'd0, forwarded_flags};
             else if (id_is_pop)
                 ex_gpr_result <= {`XLEN{1'b0}};  // Filled by memory stage
             else
@@ -473,6 +483,13 @@ module hcpu_execute #(
                 ex_flags_new <= {current_flags[7:2],
                                  (id_hreg_s1 == id_hreg_s2),
                                  current_flags[0]};
+                ex_flags_we  <= 1'b1;
+            end else if (id_opcode == `OP_FWR) begin
+                // All eight bits, including the ones nothing in this machine
+                // interprets. A context switch restores what it saved, not its
+                // reading of what it saved -- a bit the hardware does not use
+                // still belongs to the process it was taken from.
+                ex_flags_new <= id_gpr_s1[7:0];
                 ex_flags_we  <= 1'b1;
             end else if (alu_flags_we) begin
                 ex_flags_new <= alu_flags;

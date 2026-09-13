@@ -1,0 +1,272 @@
+; flags_board.hasm — the board is asked whether FLAGS belongs to the process.
+;
+; Prints FOUR numbers:
+;
+;   5   pid 0's pattern, read back by pid 0 after being preempted
+;   10  pid 1's pattern, read back by pid 1 after being preempted
+;   1   pid 0 was still running when it answered
+;   1   pid 1 was still running when it answered
+;
+; 0x05 is G and O; 0x0A is Z and LT — decimal 5 and 10 on the wire. They share
+; no bit, so a process reading the other's pattern cannot be mistaken for a
+; near miss, and a process reading the KERNEL's would print neither.
+;
+; ── the shape of the test ───────────────────────────────────────
+; Each process sets its pattern once with FWR, then loops on instructions that
+; cannot touch FLAGS. Only CMP and CMPI write them, so the loop is ADDI, FRD,
+; STORE, STORE, JMP and nothing else -- there is no comparison in either
+; process, and there cannot be: a loop that compared would overwrite the very
+; thing it is measuring. Each publishes what it reads into its own window.
+;
+; THE KERNEL IS WHAT COUNTS AND PRINTS, for that reason. At tick 200 it reads
+; the four words out of the two windows and puts them on the wire.
+;
+; The liveness markers are not decoration: a process that died at its first
+; quantum would leave a stale pattern behind, and a test that only read the
+; pattern would call that a pass. That is exactly how tb_hcpu_kernel.v hid a
+; dead process A behind `A > 0` for as long as both existed.
+;
+; ── why this could not be written before H-ISA v1.1 ─────────────
+; Nothing read FLAGS into a register, so the kernel could not save it across a
+; switch and this program could not observe it. FRD (0x0A) and FWR (0x0B) are
+; what changed, and rtl/programs/flags_ctx.hasm asks the same question in
+; simulation where the answer can be read straight out of memory.
+
+        MOVI  R5, 0
+        MOVI  R1, vector
+        CALL  hal_vector_set
+
+; ── pid 0's block ─────────────────────────────────────────────
+        MOVI  R7, 0xF10
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        STORE R1, R7, 20
+        MOVI  R1, proc0
+        STORE R1, R7, 16
+        MOVI  R1, 0x100
+        STORE R1, R7, 17
+        MOVI  R1, 0x200
+        STORE R1, R7, 18
+
+; ── pid 1's block ─────────────────────────────────────────────
+        MOVI  R7, 0xF30
+        MOVI  R1, 0
+        STORE R1, R7, 0
+        STORE R1, R7, 1
+        STORE R1, R7, 2
+        STORE R1, R7, 3
+        STORE R1, R7, 4
+        STORE R1, R7, 5
+        STORE R1, R7, 6
+        STORE R1, R7, 7
+        STORE R1, R7, 8
+        STORE R1, R7, 9
+        STORE R1, R7, 10
+        STORE R1, R7, 11
+        STORE R1, R7, 12
+        STORE R1, R7, 13
+        STORE R1, R7, 14
+        STORE R1, R7, 15
+        STORE R1, R7, 20
+        MOVI  R1, proc1
+        STORE R1, R7, 16
+        MOVI  R1, 0x200
+        STORE R1, R7, 17
+        MOVI  R1, 0x300
+        STORE R1, R7, 18
+
+        MOVI  R1, 0
+        STORE R1, R5, 0xF01
+        MOVI  R1, 1
+        STORE R1, R5, 0xF00     ; first dispatch wraps to 0
+        CALL  hal_timer_ack
+        MOVI  R1, 1
+        CALL  hal_trap_enable
+        JMP   dispatch
+
+; ── trap entry ──────────────────────────────────────────────────
+vector:
+        PUSH  R0
+        PUSH  R1
+        PUSH  R2
+        PUSH  R3
+        PUSH  R4
+        PUSH  R5
+        PUSH  R6
+        PUSH  R7
+        PUSH  R8
+        PUSH  R9
+        PUSH  R10
+        PUSH  R11
+        PUSH  R12
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+
+; Captured before the kernel compares anything: pcb_of compares a pid and the
+; cause test compares a 5, and either would overwrite what this keeps.
+        FRD   R0
+
+        MOVI  R5, 0
+        MOVI  R1, 0
+        CALL  hal_trap_enable
+        LOAD  R6, R5, 0xF00
+        CALL  pcb_of
+        STORE R0, R7, 20
+
+        CALL  hal_epc_get
+        MOV   R8, R1
+        CALL  hal_cause_get
+        CMPI  R1, 5
+        JNE   sv_st
+        ADDI  R8, R8, 1
+sv_st:  STORE R8, R7, 16
+
+        POP   R0
+        STORE R0, R7, 15
+        POP   R0
+        STORE R0, R7, 14
+        POP   R0
+        STORE R0, R7, 13
+        POP   R0
+        STORE R0, R7, 12
+        POP   R0
+        STORE R0, R7, 11
+        POP   R0
+        STORE R0, R7, 10
+        POP   R0
+        STORE R0, R7, 9
+        POP   R0
+        STORE R0, R7, 8
+        POP   R0
+        STORE R0, R7, 7
+        POP   R0
+        STORE R0, R7, 6
+        POP   R0
+        STORE R0, R7, 5
+        POP   R0
+        STORE R0, R7, 4
+        POP   R0
+        STORE R0, R7, 3
+        POP   R0
+        STORE R0, R7, 2
+        POP   R0
+        STORE R0, R7, 1
+        POP   R0
+        STORE R0, R7, 0
+
+; ── dispatch ────────────────────────────────────────────────────
+dispatch:
+        MOVI  R5, 0
+        LOAD  R9, R5, 0xF01
+        ADDI  R9, R9, 1
+        STORE R9, R5, 0xF01
+        CMPI  R9, 200
+        JEQ   report
+
+        LOAD  R6, R5, 0xF00
+        ADDI  R6, R6, 1
+        CMPI  R6, 2
+        JNE   dp_st
+        MOVI  R6, 0
+dp_st:  STORE R6, R5, 0xF00
+
+        CALL  pcb_of
+        LOAD  R1, R7, 17
+        LOAD  R2, R7, 18
+        CALL  hal_window_set
+        LOAD  R1, R7, 16
+        CALL  hal_epc_set
+        CALL  hal_mode_user
+        MOVI  R1, 2047
+        CALL  hal_timer_arm
+        MOVI  R1, 1
+        CALL  hal_trap_enable
+
+        LOAD  R1, R7, 1
+        LOAD  R2, R7, 2
+        LOAD  R3, R7, 3
+        LOAD  R4, R7, 4
+        LOAD  R5, R7, 5
+        LOAD  R6, R7, 6
+        LOAD  R8, R7, 8
+        LOAD  R9, R7, 9
+        LOAD  R10, R7, 10
+        LOAD  R11, R7, 11
+        LOAD  R12, R7, 12
+        LOAD  R13, R7, 13
+        LOAD  R14, R7, 14
+        LOAD  R15, R7, 15
+        LOAD  R0, R7, 20
+        FWR   R0
+        LOAD  R0, R7, 0
+        LOAD  R7, R7, 7
+        ERET
+
+; ── the report, at tick 200 ────────────────────────────────────
+; Supervisor code may read either window, so the kernel is the one actor that
+; can see both processes without either of them touching a comparison.
+report: MOVI  R5, 0
+        LOAD  R1, R5, 0x100
+        PRINT R1                ; 5  — pid 0 still reads G and O
+        LOAD  R1, R5, 0x200
+        PRINT R1                ; 10 — pid 1 still reads Z and LT
+        LOAD  R1, R5, 0x101
+        MOVI  R2, 0
+        CMPI  R1, 0
+        JEQ   r_p1
+        MOVI  R2, 1
+r_p1:   PRINT R2                ; 1  — pid 0 was running
+        LOAD  R1, R5, 0x201
+        MOVI  R2, 0
+        CMPI  R1, 0
+        JEQ   r_end
+        MOVI  R2, 1
+r_end:  PRINT R2                ; 1  — pid 1 was running
+        HALT
+
+pcb_of: CMPI  R6, 0
+        JEQ   po_0
+        MOVI  R7, 0xF30
+        RET
+po_0:   MOVI  R7, 0xF10
+        RET
+
+; ── pid 0: G and O ──────────────────────────────────────────────
+proc0:  MOVI  R1, 0x05
+        FWR   R1
+        MOVI  R3, 0x100
+        MOVI  R4, 0
+p0_lp:  ADDI  R4, R4, 1
+        FRD   R2
+        STORE R2, R3, 0         ; what I read back
+        STORE R4, R3, 1         ; and that I am still running
+        JMP   p0_lp
+
+; ── pid 1: Z and LT ─────────────────────────────────────────────
+proc1:  MOVI  R1, 0x0A
+        FWR   R1
+        MOVI  R3, 0x200
+        MOVI  R4, 0
+p1_lp:  ADDI  R4, R4, 1
+        FRD   R2
+        STORE R2, R3, 0
+        STORE R4, R3, 1
+        JMP   p1_lp
+
+        .include "hal.hasm"

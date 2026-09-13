@@ -46,13 +46,15 @@
 ; context -- a process that used CALL would return through another's address.
 ; Recorded in cosmictera-build/OFF.md since the kernel was built.
 ;
-; NO COMPARISON LEFT LIVE ACROSS A SYSCALL. FLAGS is not part of a context
-; either, and nothing can save it: no instruction reads FLAGS into a register.
-; rtl/programs/trap_flags.hasm measures it -- the answer is 0, on the board.
-; Every CMP here is followed immediately by the branch that reads it. That
-; discipline covers the traps this code CHOOSES; it does not cover the timer,
-; which can still land in the one-instruction window. That residue is the
-; blocker, and it is named rather than hidden.
+; FLAGS IS PART OF THE CONTEXT NOW. It was not until H-ISA v1.1: nothing could
+; read it into a register, so a process preempted between a CMP and the branch
+; that reads it lost its comparison to the handler's own. `FRD` and `FWR`
+; (0x0A/0x0B) close that, and this kernel saves FLAGS at PCB+20 alongside the
+; sixteen registers and the PC.
+;
+; The discipline of putting every CMP immediately before the branch that reads
+; it is kept anyway. It costs nothing, and it is what a reader of this file
+; should copy: the repair makes the timer safe, not the habit unnecessary.
 ;
 ; ── memory map ──────────────────────────────────────────────────
 ;   0x100-0x1FF  pid 0's window       0x200-0x2FF  pid 1's window (shell)
@@ -62,6 +64,7 @@
 ;
 ; PCB, in words from its base:
 ;   +0..+15  R0..R15   +16 pc   +17 mem_base   +18 mem_limit   +19 runnable
+;   +20 flags
 ;
 ; The kernel publishes the process count into the shell's OWN window at 0x200
 ; before it starts it. That is how `ps` reads real data without a syscall of
@@ -99,6 +102,8 @@ boot:
         STORE R1, R7, 18
         MOVI  R1, 1
         STORE R1, R7, 19        ; runnable
+        MOVI  R1, 0
+        STORE R1, R7, 20        ; flags
 
 ; ── pid 1's block: the shell ──────────────────────────────────
         MOVI  R7, 0xF30
@@ -127,6 +132,8 @@ boot:
         STORE R1, R7, 18
         MOVI  R1, 1
         STORE R1, R7, 19
+        MOVI  R1, 0
+        STORE R1, R7, 20        ; flags
 
 ; ── the syscall table ─────────────────────────────────────────
         MOVI  R1, 1
@@ -182,6 +189,17 @@ vector:
         PUSH  R14
         PUSH  R15
 
+; FLAGS IS CAPTURED HERE, BEFORE THE KERNEL COMPARES ANYTHING. The sixteen
+; pushes are what make it possible: every register is on the stack, so R0 is
+; free even though its value still belongs to the process.
+;
+; It cannot wait until after the save loop. `pcb_of` compares a pid and the
+; cause test compares a 5, and either overwrites what this instruction is
+; here to keep -- measured, with FRD placed after them: a process that set
+; 0x05 read back 0x0d, and one that set 0x0a read back 0x08, both carrying
+; the kernel's own comparison. rtl/tb/tb_hcpu_flags_ctx.v is what caught it.
+        FRD   R0
+
 ; From here every register is scratch: the values are all on the stack.
 ;
 ; THE TIMER IS MASKED FIRST, and this kernel needs that where kernel.hasm did
@@ -200,6 +218,7 @@ vector:
         MOVI  R5, 0
         LOAD  R6, R5, 0xF00
         CALL  pcb_of            ; R6 -> R7
+        STORE R0, R7, 20        ; the flags grabbed on entry, now that R7 exists
 
         CALL  hal_epc_get
         MOV   R8, R1
@@ -306,6 +325,12 @@ dp_st:  STORE R6, R5, 0xF00
         LOAD  R13, R7, 13
         LOAD  R14, R7, 14
         LOAD  R15, R7, 15
+; FLAGS is restored BEFORE the last two loads, not after: `FWR` reads a GPR, so
+; it must run while a scratch register is still free. R0 is reloaded again
+; below, so borrowing it here costs nothing.
+        LOAD  R0, R7, 20
+        FWR   R0
+        LOAD  R0, R7, 0
         LOAD  R7, R7, 7
         ERET
 

@@ -128,6 +128,12 @@ class HISAMachine:
         #: is why test_codegen.py re-read the register named in the source line
         #: instead of reading the output.
         self.output: list[int] = []
+        #: The two flag bits nothing in either machine interprets. They exist
+        #: because FLAGS is eight bits wide and FWR writes all eight: a context
+        #: switch gives back what it saved, so a bit this machine does not read
+        #: still has to survive being saved and restored.
+        self._flag_o: int = 0
+        self._flag_reserved: int = 0
 
     def load_program(self, code: List[int]) -> None:
         """Load bytecode into code memory."""
@@ -136,6 +142,8 @@ class HISAMachine:
         self.regs.pc = 0
         self.return_stack.clear()
         self.output.clear()
+        self._flag_o = 0
+        self._flag_reserved = 0
         self._halted = False
         self._exit_code = 0
 
@@ -206,6 +214,39 @@ class HISAMachine:
     def _sext12(cls, imm: int) -> int:
         """Sign-extend the 12-bit immediate — `imm_sext` in hcpu_execute.v."""
         return imm - 0x1000 if imm & 0x800 else imm
+
+    #: Bit positions, from hcpu_pkg.vh. Named here rather than written as
+    #: literals so the two files can be diffed by eye.
+    _FLAG_G, _FLAG_Z, _FLAG_O, _FLAG_LT = 0, 1, 2, 3
+
+    def _pack_flags(self) -> int:
+        """The eight bits FRD hands back, laid out as hcpu_pkg.vh lays them.
+
+        `sr.overflow` carries the SIGN bit of the last comparison, not an
+        overflow -- see _set_compare_flags -- so it is packed at FLAG_LT.
+        Nothing writes FLAG_O in either machine, and it stays whatever FWR
+        last put there.
+        """
+        return (
+            (int(self.regs.sr.guard_pass) << self._FLAG_G)
+            | (int(self.regs.sr.zero) << self._FLAG_Z)
+            | (self._flag_o << self._FLAG_O)
+            | (int(self.regs.sr.overflow) << self._FLAG_LT)
+            | self._flag_reserved
+        )
+
+    def _unpack_flags(self, value: int) -> None:
+        """FWR writes all eight bits, including the ones nothing names.
+
+        A context switch has to give back what it saved, not its reading of
+        what it saved: a bit this machine does not interpret still belongs to
+        the process it was taken from.
+        """
+        self.regs.sr.guard_pass = bool(value & (1 << self._FLAG_G))
+        self.regs.sr.zero = bool(value & (1 << self._FLAG_Z))
+        self.regs.sr.overflow = bool(value & (1 << self._FLAG_LT))
+        self._flag_o = (value >> self._FLAG_O) & 1
+        self._flag_reserved = value & 0xF0
 
     def _set_compare_flags(self, difference: int) -> None:
         """
@@ -624,6 +665,26 @@ class HISAMachine:
             same = self.regs.hreg[s1] == self.regs.hreg[s2]
             self.regs.sr.zero = same
             return f"CEQ H{s1} == H{s2} → Z={same}"
+
+        # ── FRD / FWR: FLAGS as a value ─────────────────────────
+        # THE PACKING IS THE RTL'S, not this file's naming. hcpu_pkg.vh puts
+        # G at bit 0, Z at bit 1, O at bit 2 and LT at bit 3, and §6.0 makes
+        # that the source of truth. `sr.overflow` is where THIS file keeps the
+        # sign bit of a comparison -- its own _set_compare_flags says so ("LT
+        # from its sign bit") while assigning it to a field named `overflow`.
+        # One field under the wrong name is a defect in its own right, and it
+        # is reported rather than renamed here; what matters for FRD is that
+        # the bit lands where the hardware puts it, which is 3.
+        #
+        # Bit 2 is never written by either machine, so it reads back whatever
+        # FWR last put there -- which is the point of FWR writing all eight.
+        if op == OpCode.FRD:
+            self.regs.gpr[dst] = self._pack_flags()
+            return f"FRD GPR[{dst}] = FLAGS = {self._pack_flags():#04x}"
+
+        if op == OpCode.FWR:
+            self._unpack_flags(self.regs.gpr[s1] & 0xFF)
+            return f"FWR FLAGS = GPR[{s1}][7:0] = {self.regs.gpr[s1] & 0xFF:#04x}"
 
         # ── PRINT: the machine's one output path ────────────────
         # GPR[S1], as the spec and the RTL both say. This printed hreg[dst],

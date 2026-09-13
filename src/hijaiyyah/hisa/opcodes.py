@@ -69,7 +69,17 @@ class OpCode(IntEnum):
     # peripheral slots are taken so there is nowhere to latch it. The call
     # number travels in a register instead, by convention rather than
     # encoding, which also lets the ABI change without touching the opcode.
-    SYSCALL = 0x09  # Deliberate trap — ask the supervisor
+    SYSCALL = 0x09
+    # H-ISA v1.1. FLAGS was reachable only by the J-forms, so nothing could
+    # save it -- and a context switch that cannot save a register does not
+    # own it. Measured before these existed: a loop carrying one comparison,
+    # swept against sixty timer deadlines, had five of them REVERSE the branch,
+    # because the handler's own CMP of TRAP_CAUSE overwrote the process's.
+    #
+    # Both take a free slot in System & Control, the block §6.1 gives to
+    # machine state, per §6.0 rule 2; the version bump is rule 4.
+    FRD = 0x0A      # GPR[dst] ← FLAGS, zero-extended
+    FWR = 0x0B      # FLAGS ← GPR[s1][7:0]  # Deliberate trap — ask the supervisor
     HNRM2 = 0x06    # Squared norm: ‖v₁₄‖² → GPR
     HDIST = 0x07    # Squared Euclidean distance → GPR
 
@@ -301,6 +311,7 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.SHL, OpCode.SHR,
     OpCode.ANDI, OpCode.ORI, OpCode.XORI, OpCode.SHLI, OpCode.SHRI,
     OpCode.CMP, OpCode.CMPI, OpCode.JMP, OpCode.JEQ, OpCode.JNE,
+    OpCode.FRD, OpCode.FWR,
     OpCode.JGD, OpCode.JNGD,
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,
     OpCode.HLOAD, OpCode.CGET, OpCode.CSET, OpCode.HCADD,

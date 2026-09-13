@@ -366,6 +366,18 @@ def test_the_rest_of_the_codex_block_assembles_to_the_spec_hex() -> None:
     assert assemble_line("CMOD4 R3, H0") == encode(0x4F, 3, 0, 0, 0)
 
 
+def test_frd_and_fwr_assemble_to_the_slots_v1_1_gave_them() -> None:
+    """H-ISA v1.1's two instructions, at the hex §6.2 prints for them.
+
+    They take free slots in System & Control, the block §6.1 gives to machine
+    state, per §6.0 rule 2 -- and the version bump is rule 4. FRD names a
+    destination and no source; FWR names a source and no destination, because
+    its whole result is the flag register, the way CMP's is.
+    """
+    assert assemble_line("FRD R3") == encode(0x0A, 3, 0, 0, 0)
+    assert assemble_line("FWR R3") == encode(0x0B, 0, 3, 0, 0)
+
+
 def test_zero_is_the_identity_and_passes_every_guard() -> None:
     """CZERO is not an erase. Zero is the identity of (V, +): three sum-checks
     of 0 = 0, rho = 0, and T1/T2 vacuous -- so it is a legitimate place to

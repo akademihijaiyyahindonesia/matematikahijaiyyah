@@ -89,6 +89,7 @@ module hcpu_decode (
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
             `OP_CGET, `OP_CSET,
             `OP_CMOV, `OP_CEQ, `OP_CRHO, `OP_CU, `OP_CMOD4,
+            `OP_FWR,
             `OP_HPACK, `OP_HCRC,
             `OP_PRINT, `OP_PUSH: id_uses_s1 = 1'b1;
             default: ;
@@ -239,6 +240,10 @@ module hcpu_decode (
 
                 `OP_HALT:   id_is_halt <= 1'b1;
 
+                // FRD writes a GPR and reads none; FWR reads S1 and writes
+                // no GPR at all -- its whole result is the flag register, the
+                // way CMP's is.
+                `OP_FRD:    id_gpr_we <= 1'b1;
                 `OP_MOV:    id_gpr_we <= 1'b1;
                 `OP_MOVI:   id_gpr_we <= 1'b1;
 
@@ -261,6 +266,12 @@ module hcpu_decode (
 
                 `OP_CMP:    ;  // Only sets flags, no reg write
                 `OP_CMPI:   ;
+                // FWR is the same shape as CMP: its whole result is the flag
+                // register, so it needs an arm here even though it sets
+                // nothing. Without one it falls to the default below and the
+                // machine HALTs on it -- which is what the default is for, and
+                // is how this omission was found rather than shipped.
+                `OP_FWR:    ;
 
                 `OP_CALL:   id_is_call <= 1'b1;
                 `OP_RET:    id_is_ret  <= 1'b1;

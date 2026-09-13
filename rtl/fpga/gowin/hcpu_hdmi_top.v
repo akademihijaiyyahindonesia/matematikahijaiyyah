@@ -1,29 +1,32 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
 //
-// ── MEASURED, 13 September 2026, after the TRAP_EPC bypass ───────────────
+// ── MEASURED, 13 September 2026, after H-ISA v1.1 ────────────────────────
 //
 // `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68
 // (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// loader baked in. Re-run because hcpu_trap.v gained `epc_at_eret`: a handler
-// may now write TRAP_EPC and ERET on the next instruction, where before that
-// returned to the old address.
+// loader baked in. Re-run because FRD (0x0A) and FWR (0x0B) changed
+// hcpu_pkg.vh, hcpu_decode.v and hcpu_execute.v.
 //
 //     IOB           15 /    384    3%
-//     LUT4      15,162 / 20,736   73%
-//     DFF        4,552 / 15,552   29%
+//     LUT4      15,232 / 20,736   73%
+//     DFF        4,570 / 15,552   29%
 //     BSRAM         17 /     46   36%
-//     Fmax      127.05 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               457.25 MHz  pixel_clk
+//     Fmax      125.33 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               456.20 MHz  pixel_clk
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +21 LUT4 and +0 DFF against this slot's previous 15,141 / 4,552: the bypass
-// is a mux on the return path, not a register, so it adds no state. The bare
-// hcpu_gowin_top slot measured +20 and the same +0.
+// +70 LUT4 and +18 DFF against this slot's previous 15,162 / 4,552, and the
+// bare hcpu_gowin_top slot moved by the same +18. Neither instruction adds
+// architectural state -- FRD routes the flag register into the GPR result mux,
+// FWR routes a GPR into the flag write port, and both registers existed -- so
+// where the eighteen came from was NOT separated into design and synthesis,
+// and neither run claims it.
 //
-// THE MEASUREMENT BEFORE IT, earlier the same day, after `pc_valid` stopped
-// being tied high: 15,141 LUT4 (73%), 4,552 DFF, Fmax 63.21 / 476.87 MHz --
-// +15 LUT4 and +1 DFF, exactly one bit of state.
+// THE TWO MEASUREMENTS BEFORE IT, the same day: after the TRAP_EPC bypass,
+// 15,162 LUT4 and 4,552 DFF at 127.05 / 457.25 MHz (+21 LUT4, +0 DFF -- a mux,
+// not a register); and after `pc_valid` stopped being tied high, 15,141 LUT4
+// and 4,552 DFF at 63.21 / 476.87 MHz (+15 LUT4, +1 DFF).
 //
 // The measurement before it, 12 September, after the codex block: 15,126 LUT4
 // (72%), 4,551 DFF, Fmax 70.80 / 549.15 MHz. That run was +413 LUT4 and +0 DFF
@@ -42,6 +45,12 @@
 //
 // FLASHED AND RUN, 13 September 2026, over the wire through the baked loader:
 //
+//     flags_board   5 10 1 1          THE ROW THIS BUILD EXISTS FOR: pid 0 set
+//                                     G and O, pid 1 set Z and LT, and after
+//                                     two hundred preemptions each still reads
+//                                     its OWN pattern, both still running. The
+//                                     patterns share no bit, so a swap could
+//                                     not be mistaken for a near miss.
 //     trap_epc      1 1 1             THE ROW THIS BUILD EXISTS FOR: three
 //                                     rounds at zero, one and two instructions
 //                                     of distance between STORE TRAP_EPC and
@@ -66,7 +75,7 @@
 // user_mode, shell, kernel, branch_trap_race and the shadow sweep, the number
 // of cycles an EXCEPTION was held by it is zero.
 //
-// RTL FINGERPRINT: 1d41a7d42a16ee1846fe5f75c7b06ade6f60c512ee20d4f82cbe43ac672de299
+// RTL FINGERPRINT: 603a89500b67675de0164445fef1137eeb091c89057c9b3cb533b2bcd477c5a9
 //
 `include "hcpu_pkg.vh"
 

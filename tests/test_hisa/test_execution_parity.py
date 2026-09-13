@@ -281,6 +281,37 @@ PROGRAMS: Dict[str, List[int]] = {
         enc(OpCode.CMOD4, dst=6, s1=1),
         enc(OpCode.HALT),
     ],
+    # H-ISA v1.1. FLAGS is eight bits and the two machines have to agree about
+    # every one of them, including the ones neither interprets -- FWR writes
+    # all eight and FRD hands all eight back, which is what lets a context
+    # switch return a process what it actually had.
+    #
+    # The third program is the one that would catch a lazy packing: it writes
+    # every low bit, then lets a comparison overwrite exactly two of them (Z
+    # and LT) and leave the rest, so the answer is only right if both machines
+    # put the sign bit in the same place. They did not agree about that by
+    # accident -- hcpu_pkg.vh puts LT at bit 3 while machine.py keeps it in a
+    # field named `overflow`, and the packing had to follow the hardware.
+    "flags_read_after_compare": [
+        enc(OpCode.MOVI, dst=1, imm=0),
+        enc(OpCode.CMPI, s1=1, imm=0),
+        enc(OpCode.FRD, dst=3),
+        enc(OpCode.HALT),
+    ],
+    "flags_write_then_read": [
+        enc(OpCode.MOVI, dst=4, imm=0x0F),
+        enc(OpCode.FWR, s1=4),
+        enc(OpCode.FRD, dst=5),
+        enc(OpCode.HALT),
+    ],
+    "flags_survive_a_compare": [
+        enc(OpCode.MOVI, dst=4, imm=0x0F),
+        enc(OpCode.FWR, s1=4),
+        enc(OpCode.MOVI, dst=6, imm=7),
+        enc(OpCode.CMPI, s1=6, imm=9),
+        enc(OpCode.FRD, dst=7),
+        enc(OpCode.HALT),
+    ],
     # A vector that fails G4 has a NEGATIVE residue, and the two machines have
     # to agree about how a negative lands in a 32-bit register.
     "codex_negative_residue": [

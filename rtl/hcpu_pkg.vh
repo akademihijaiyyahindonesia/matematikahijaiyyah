@@ -120,6 +120,11 @@
 `define OP_MOVI         8'h04       // DST ← zero_ext(IMM)
 `define OP_ERET         8'h08       // PC ← trap epc; leave trap
 `define OP_SYSCALL      8'h09       // deliberate trap: ask supervisor
+// H-ISA v1.1. FLAGS was reachable only by the J-forms, so a context switch
+// could not save it -- and a process preempted between a CMP and the branch
+// that reads it lost its comparison to the handler's own.
+`define OP_FRD          8'h0A       // GPR[DST] ← FLAGS, zero-extended
+`define OP_FWR          8'h0B       // FLAGS ← GPR[S1][7:0]
 
 // Arithmetic & Logic (0x10–0x1F)
 `define OP_ADD          8'h10       // DST ← S1 + S2

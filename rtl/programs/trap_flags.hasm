@@ -1,7 +1,8 @@
-; trap_flags.hasm — FLAGS is not part of a process context.
+; trap_flags.hasm — a handler that does not save FLAGS destroys them.
 ;
-; Prints ONE value: 1 if a comparison survived a trap, 0 if it did not.
-; This machine prints 0, and that number is the point of the program.
+; Prints ONE value: 1 if a comparison survived a trap, 0 if it did not. This
+; handler does not save FLAGS, so it prints 0 -- and that is now a statement
+; about THIS HANDLER rather than about the machine.
 ;
 ; ── what it asks ────────────────────────────────────────────────
 ; User code compares, takes a trap before the branch that reads the result,
@@ -9,22 +10,22 @@
 ; comparing -- it has to read TRAP_CAUSE and decide -- so the handler's Z is
 ; the one the user's JEQ sees.
 ;
-; Sixteen GPRs, the PC and the memory window are all saved by kernel.hasm's
-; context switch. FLAGS is none of those, and NOTHING CAN SAVE IT: no
-; instruction in this ISA reads FLAGS into a register (§6.2 has CMP/CMPI to
-; write it and the J-forms to read it, and nothing else). So this is not a
-; kernel that forgot a field -- it is a field software cannot reach.
+; ── what changed under it, and what did not ─────────────────────
+; When this program was written the answer was a property of the MACHINE:
+; sixteen GPRs, the PC and the memory window were saved by a context switch,
+; FLAGS was none of them, and nothing could reach it -- §6.2 had CMP/CMPI to
+; write FLAGS and the J-forms to read it, and nothing else. A field software
+; could not touch.
 ;
-; ── what that costs ─────────────────────────────────────────────
-; A voluntary trap is placeable: a program simply does not leave a comparison
-; live across its own SYSCALL. A TIMER trap is not. Any preemptively scheduled
-; process whose next instruction is a conditional branch can have its
-; comparison replaced by the kernel's. kernel.hasm's own procC is in that
-; shape -- HGRD then JGD -- and passes only because the deadline has never yet
-; landed in the one-instruction window between them.
+; H-ISA v1.1 added `FRD` (0x0A) and `FWR` (0x0B), and
+; rtl/programs/flags_ctx.hasm now shows two processes keeping their own flag
+; patterns across preemption -- on the board, 5 and 10 with both still running.
 ;
-; Recorded in cosmictera-build/OFF.md. Not repaired here: repairing it means
-; changing the trap hardware, and that is the owner's call.
+; So this program measures what it always measured, and the reading has not
+; changed: a handler that does not save FLAGS still destroys them, because the
+; handler must compare TRAP_CAUSE and that comparison is the process's. What
+; changed is whose fault it is. This one is written WITHOUT the save on
+; purpose, so the cost of leaving it out stays visible and measured.
 ;
 ; ── found while writing this ────────────────────────────────────
 ; A `STORE R, TRAP_EPC` IMMEDIATELY followed by `ERET` returns to the OLD epc.

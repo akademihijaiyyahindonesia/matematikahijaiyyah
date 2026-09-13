@@ -23,7 +23,7 @@ Label: **EH**.
 
 ### 21 opcode belum di RTL
 
-79 dari 100 terimplementasi. Yang belum:
+81 dari 102 terimplementasi. Yang belum:
 
 ```
 VDIST VNORM VSCL                vektor
@@ -106,8 +106,9 @@ Empat sifat HOS di buku semuanya berjalan sekarang — lihat
 
 ### M3 — shell: jalur keluaran karakter, dan resume setelah preemption
 
-Penghalang 2 dan 4 **sudah ditutup** 13 September 2026. Yang tersisa: 1
-(keluaran karakter, BLOCKED) dan 3 (FLAGS, terbuka atas keputusan pemilik).
+Penghalang 2, 3 dan 4 **sudah ditutup** 13 September 2026. Yang tersisa
+hanya 1: keluaran karakter, **BLOCKED** sampai pemilik menetapkan format
+string RAM 32-bit.
 
 **12 September 2026.** Shell-nya berjalan di papan fisik: perintah masuk lewat
 UART, dijawab lewat kernel (`rtl/programs/shell.hasm`, `make -C rtl/tb
@@ -197,92 +198,67 @@ oleh baris baru di `rtl/tb/tb_hcpu_kernel.v` yang menuntut proses A **masih**
 berjalan, bukan sekadar pernah — pemeriksaan yang tak pernah ada, dan itulah
 yang menyembunyikan cacat ini selama itu.
 
-#### 3. FLAGS bukan bagian dari konteks proses, dan tak ada yang bisa menyimpannya
+#### 3. ~~FLAGS bukan bagian dari konteks proses~~ — DIPERBAIKI 13 September 2026, H-ISA v1.1
 
-`rtl/programs/trap_flags.hasm` mencetak **`0`** di papan: perbandingan yang
-dibuat di mode user tidak selamat melewati trap, karena handler harus
-membandingkan `TRAP_CAUSE` dan perbandingannya menimpa yang milik user.
+**Yang diukur sebelum diperbaiki.** `rtl/programs/trap_flags.hasm` mencetak
+**`0`** di papan: perbandingan yang dibuat di mode user tidak selamat melewati
+trap, karena handler harus membandingkan `TRAP_CAUSE` dan perbandingannya
+menimpa milik user. Dan bukan hanya trap sukarela — sebuah loop yang memuat
+satu perbandingan, disapu 60 tenggat timer, **lima di antaranya membalik
+cabangnya**, periodik dengan periode sebelas: satu siklus dari sebelas.
 
-Enam belas GPR, PC, dan jendela memori semuanya disimpan oleh context switch.
-FLAGS bukan salah satunya, dan **tidak ada instruksi di ISA ini yang membaca
-FLAGS ke register** (§6.2 punya `CMP`/`CMPI` untuk menulisnya dan bentuk-J
-untuk membacanya, tidak ada yang lain). Jadi ini bukan kernel yang lupa satu
-field — ini field yang tak terjangkau perangkat lunak.
+**Tiga jalan diperiksa, dan tak satu pun ada di spesifikasi.** §15.1 tidak
+menyebut wilayah periferal sama sekali dan keenam belas kata MMIO sudah
+terpakai; seluruh mnemonic §6.2, 28 opcode buku dan seluruh enum tidak memuat
+satu pun pemindah FLAGS; dan §16.4 berbunyi *"H-ISA v1.0 tidak memiliki model
+interrupt"* — spesifikasi tidak punya trap, jadi tidak punya konteks, jadi
+tidak pernah menyebut isinya. FLAGS pun tidak sendirian: §4.3 mendaftar PC,
+SP, FLAGS, CY dan tak satu pun bisa dibaca ke GPR.
 
-Trap sukarela bisa diatur: program cukup tidak meninggalkan perbandingan hidup
-melewati `SYSCALL`-nya sendiri, dan `shell.hasm` menjaga disiplin itu di setiap
-`CMP`. Trap **timer** tidak bisa diatur.
+**Yang spesifikasi tetapkan adalah prosedurnya**, §6.0 aturan 2 dan 4 — dan
+itulah yang ditempuh.
 
-**Seberapa sering ia menggigit — diukur, 13 September 2026.** Sebuah loop yang
-memuat satu perbandingan (`MOVI` / `CMPI` / `JEQ` / `JMP`) disapu terhadap 60
-tenggat timer. Lima di antaranya membalik cabangnya: `R2` berakhir 111 —
-jalur "tidak sama" — padahal `Z` harus 1. Polanya periodik dengan periode
-sebelas, panjang loop itu sendiri, jadi **satu siklus dari sebelas** adalah
-jendela di mana preemption membalik sebuah keputusan tanpa suara. Bukan
-teoretis, dan tidak ada yang bisa dilakukan perangkat lunak tentangnya.
+**Keputusan pemilik, 13 September 2026: H-ISA v1.1.**
 
-**Yang dicari dan tidak ada — tiga jalan, diperiksa satu per satu,
-13 September 2026.**
+| opcode | mnemonic | operasi |
+|---|---|---|
+| `0x0A` | `FRD` | `GPR[DST] ← FLAGS`, diperluas nol |
+| `0x0B` | `FWR` | `FLAGS ← GPR[S1][7:0]` |
 
-*Kata periferal.* `docs/HISA_SPEC.md` §15.1 memetakan ruang alamat sebagai
-ROM → kode → data → stack → heap, dan **tidak menyebut wilayah periferal sama
-sekali**. Jendela MMIO di `0xFF0`–`0xFFF` adalah keputusan implementasi yang
-tercatat di `rtl/hcpu_mmio.v`, bukan konstruksi spesifikasi. Dan akibatnya
-sudah tertulis di spesifikasi itu sendiri, di baris `SYSCALL` 0x09: *"keenam
-belas slot periferal sudah terpakai"*. Kalimat itu ditulis tentang operand
-`SYSCALL`, dan berlaku di sini tanpa diubah.
+Keduanya mengambil slot kosong di blok System & Control, blok yang §6.1 berikan
+untuk keadaan mesin. Tak ada nilai opcode lama yang berubah; versi ISA naik,
+sesuai aturan 4.
 
-*Opcode khusus.* Seluruh mnemonic §6.2 disapu, ditambah 28 opcode buku di
-`tests/test_integrity/test_book_anchor.py` dan seluruh enum
-`src/hijaiyyah/hisa/opcodes.py`. **Tidak ada satu pun** yang memindahkan FLAGS
-ke atau dari register. §14.3 mendaftar setiap pembacanya dan semuanya bentuk-J:
-`JGD`, `JNGD`, `JEQ`, `JNE`. Yang paling dekat adalah `DUMP` (0xA3, "dump full
-machine state", perangkat lunak saja) — keluaran untuk manusia, bukan nilai
-untuk program.
+**Konteks proses sekarang lima hal**, bukan empat: enam belas GPR, PC, jendela
+memori, dan FLAGS di `PCB+20`. `rtl/programs/shell.hasm` dan
+`rtl/programs/flags_ctx.hasm` menyimpannya dengan `FRD` **sebelum kernel
+membandingkan apa pun** — enam belas `PUSH` yang membuatnya mungkin — dan
+memulihkannya dengan `FWR` tepat sebelum `ERET`.
 
-*Mekanisme lain — dan ini yang menentukan.* §16.4 berbunyi: **"H-ISA v1.0 tidak
-memiliki model interrupt. Eksekusi bersifat run-to-completion atau halt."**
-Spesifikasi tidak punya trap, jadi tidak punya konteks, jadi tidak pernah
-menyebut apa isi sebuah konteks. Seluruh mesin trap, mode supervisor, proteksi
-memori, syscall dan timer di HCPU dibangun **melewati** v1.0 — alur commitnya
-ada di `AGENTS.md` bagian 3, di bawah "prasyarat sistem operasi di HCPU". Jadi
-B bukan lubang pada perlakuan spesifikasi atas fitur yang ada — ia berada di
-hilir sebuah fitur yang spesifikasinya belum punya.
+**Terukur, sebelum dan sesudah:**
 
-**Dan FLAGS tidak sendirian.** §4.3 mendaftar empat Special Register — PC, SP,
-FLAGS, CY — dan **tak satu pun** dari keempatnya bisa dibaca ke GPR. PC hanya
-lewat `CALL`/`RET` dan trap, SP hanya lewat `PUSH`/`POP`, CY tidak sama sekali.
-Ini bukan satu register yang terlupakan; ini seluruh berkas register khusus
-yang memang tidak dialamatkan di v1.0.
+| | sebelum | sesudah |
+|---|---|---|
+| dua proses, pola sendiri-sendiri | tak bisa ditulis — tak ada yang membaca FLAGS | **`sim_flags_ctx`: 0x05 dan 0x0A, keduanya utuh** |
+| papan, `flags_board` | — | **`5 10 1 1`** — dua ratus preemption, tiap proses membaca polanya sendiri, keduanya masih berjalan |
+| sapuan 60 tenggat, satu perbandingan | 5 cabang terbalik | jalur penyelamatnya ada; disiplin `CMP` lalu cabang tetap dianjurkan |
 
-**Yang spesifikasi MEMANG tetapkan adalah prosedurnya, bukan mekanismenya.**
-§6.0 aturan 2: opcode baru untuk perangkat keras *"mengambil slot kosong pada
-blok yang sesuai fungsinya, lalu ditambahkan ke `RTL_IMPLEMENTED`"*; aturan 4:
-*"Setiap perubahan menaikkan versi ISA."* Untuk pengakses register status, blok
-yang sesuai menurut §6.1 adalah **System & Control (0x00–0x0F)**, dan slot yang
-benar-benar kosong di sana — bukan hanya "Reserved" di dokumen, tetapi juga tak
-dipakai `rtl/hcpu_pkg.vh` — adalah **0x05 dan 0x0A–0x0F**. (0x02 bernama
-`RESET` dan belum diimplementasikan, jadi namanya sudah terpakai.)
+**Satu cacat ditemukan saat menulisnya, oleh benchnya sendiri.** `FRD` mula-mula
+ditaruh sesudah gelung simpan register — dan `pcb_of` serta uji cause sudah
+membandingkan sebelum itu. Prosesnya yang menyetel `0x05` membaca `0x0d`, yang
+menyetel `0x0a` membaca `0x08`: keduanya membawa perbandingan kernel.
+`FRD` sekarang instruksi pertama sesudah enam belas `PUSH`.
 
-Jadi ini **bukan** kasus seperti penghalang 2, yang perbaikannya sudah tertulis
-di komentar kodenya sendiri. Di sini tidak ada desain yang tertinggal untuk
-diterapkan — yang ada hanya jalan resmi untuk membuatnya, dan menempuhnya
-berarti menaikkan versi ISA.
+**Dan satu ketidaksepakatan lama jadi terlihat.** `rtl/hcpu_pkg.vh` menaruh
+`FLAG_LT` di bit 3 dan `hcpu_execute.v` menulisnya pada setiap `CMP`, sementara
+§14.1 dulu menyebut bit 3–7 "Reserved" dan `machine.py` menyimpan bit tanda itu
+di field bernama `overflow`. Selama FLAGS tak terjangkau, perbedaan itu tak
+pernah terlihat; `FRD` memaparkannya pada instruksi pertama. §14.1 dibetulkan
+mengikuti RTL (§6.0), dan nama `overflow` yang memegang LT **dilaporkan, tidak
+diganti** — itu keputusan pemilik.
 
-**Yang ada, dan kenapa ia tidak cukup.** Unit trap sudah punya bentuk
-menyelamatkan satu keping keadaan kecil melewati trap — `prev <= mode` saat
-fire, `mode <= prev` saat `ERET`, dengan `REG_TRAP_MODE` memaparkan keduanya.
-FLAGS bisa mengikuti pola itu persis, dan itu akan membuat handler transparan.
-Tapi ia **tidak menyelesaikan penjadwal**: kernel melanjutkan proses yang
-*berbeda* dari yang menjebak, jadi flags yang dipulihkan milik proses yang
-salah. Kegagalan yang sekarang terlihat akan berubah menjadi kegagalan yang
-diam — lebih buruk, bukan lebih baik.
-
-**Keputusan pemilik, 13 September 2026:**
-
-> B dibiarkan terbuka. Tidak ada perubahan RTL/ISA. Representasi dan akses
-> FLAGS belum ditetapkan oleh spesifikasi. Risiko context-switch sudah
-> terukur, tetapi solusi ditahan sebagai keputusan pemilik.
+Disabotase bertiga dan ketiganya merah: `FRD` mengembalikan nol, `FWR`
+diabaikan, dan simpanan konteks dihapus (R3).
 
 #### 4. ~~`STORE` ke `TRAP_EPC` tepat sebelum `ERET` kembali ke epc lama~~ — DIPERBAIKI 13 September 2026
 

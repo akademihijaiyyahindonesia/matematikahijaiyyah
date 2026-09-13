@@ -31,14 +31,14 @@ tidak.
 |---|---:|---|
 | Huruf × dimensi | 28 × 18 | `src/hijaiyyah/core/master_table.py` |
 | Nilai tersegel | 504 | ROM 252 byte, nibble-packed |
-| Opcode H-ISA | 79 | `rtl/hcpu_pkg.vh` |
+| Opcode H-ISA | 81 | `rtl/hcpu_pkg.vh` |
 | — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |
 | Paket Python | 20 | `src/hijaiyyah/` |
 | Modul RTL HCPU | 21 | `rtl/hcpu_*.v` |
 | Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
-| Testbench RTL | 39 | `rtl/tb/` |
+| Testbench RTL | 40 | `rtl/tb/` |
 | Wrapper papan | 8 | `rtl/fpga/` |
-| Program HASM | 42 | `rtl/programs/` |
+| Program HASM | 44 | `rtl/programs/` |
 | Format berkas | 5 | `.hc` `.hasm` `.hbc` `.hgeo` `.hcai` |
 | Alat baris perintah | 4 | `hc` `hom` `hybit-ai` `kabah` |
 | Spesifikasi | 18 | `docs/` |

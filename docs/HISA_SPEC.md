@@ -1,7 +1,7 @@
 <div align="center">
 
 # **H-ISA Specification**
-## Hijaiyyah Instruction Set Architecture — Version 1.0
+## Hijaiyyah Instruction Set Architecture — Version 1.1
 
 ### Formal Instruction Set for Hijaiyyah Codex Computation
 
@@ -89,8 +89,14 @@ H-ISA Bytecode          ← spesifikasi ini
 
 ### 1.4 Status
 
-H-ISA v1.0 berstatus **OPERATIONAL** pada level emulator/VM.
+H-ISA v1.1 berstatus **OPERATIONAL** pada level emulator/VM.
 Hardware-native execution masih berstatus **DESIGNED**.
+
+**v1.1 menambahkan `FRD` (0x0A) dan `FWR` (0x0B)** — FLAGS dibaca ke GPR dan
+ditulis kembali darinya, sehingga sebuah context switch dapat menyimpannya.
+Keduanya mengambil slot kosong di blok System & Control sesuai §6.0 aturan 2,
+dan kenaikan versi ini adalah aturan 4. Tak ada nilai opcode lama yang
+berubah.
 
 ---
 
@@ -415,7 +421,9 @@ memicu `HALT_ERR` (0xFF).
 | 0x06 | `HNRM2` | C | ✅ | `GPR[DST] ← ‖v₁₄(H[S1])‖²` |
 | 0x07 | `HDIST` | C | ✅ | `GPR[DST] ← ‖H[S1] − H[S2]‖²₁₄` |
 | 0x09 | `SYSCALL` | — | ✅ | Trap disengaja: minta layanan supervisor (cause 5). Operand `—`, bukan `I`: handler tak bisa membaca immediate — memori instruksi Harvard dan hanya-tulis dari sisi CPU, dan keenam belas slot periferal sudah terpakai. Nomor panggilan lewat register. |
-| 0x05, 0x08, 0x0A–0x0F | — | — | — | Reserved |
+| 0x0A | `FRD` | R | ✅ | `GPR[DST] ← FLAGS`, diperluas nol ke 32 bit |
+| 0x0B | `FWR` | R | ✅ | `FLAGS ← GPR[S1][7:0]` |
+| 0x05, 0x0C–0x0F | — | — | — | Reserved |
 
 > **Perubahan v1.0.** `PUSH` dan `POP` sebelumnya tercantum di 0x05/0x06 dan
 > `CALL`/`RET` di 0x07/0x08. HCPU menempati 0x06/0x07 untuk `HNRM2`/`HDIST`,
@@ -980,8 +988,21 @@ System call codes **[PLANNED]**:
 |---|---|---|
 | 0 | **G** (GUARD) | 1 jika guard check terakhir lulus |
 | 1 | **Z** (ZERO) | 1 jika hasil operasi terakhir = 0 |
-| 2 | **O** (OVERFLOW) | 1 jika overflow terdeteksi |
-| 3–7 | — | Reserved |
+| 2 | **O** (OVERFLOW) | didefinisikan, **tidak ditulis siapa pun** — lihat catatan |
+| 3 | **LT** (LESS-THAN) | bit tanda dari `CMP`/`CMPI`, `S1 − S2 < 0` |
+| 4–7 | — | Reserved |
+
+> **Bit 3 dicatat di sini karena `FRD` memaparkannya.** `rtl/hcpu_pkg.vh`
+> mendefinisikan `FLAG_LT` di bit 3 dan `rtl/hcpu_execute.v` menulisnya pada
+> setiap `CMP`/`CMPI`; dokumen ini sebelumnya menyebut bit 3–7 "Reserved".
+> §6.0 menetapkan RTL sebagai sumber kebenaran encoding dan dokumen yang
+> dibetulkan, jadi yang dibetulkan tabel ini. Selama FLAGS tak terjangkau
+> program, perbedaan itu tak pernah terlihat; `FRD` membuatnya terlihat pada
+> instruksi pertama.
+>
+> **Bit 2 didefinisikan tetapi tidak ditulis siapa pun.** Tak ada satu pun
+> instruksi di RTL maupun HVM yang menyentuhnya. Ia tetap di sini sebagai slot
+> bernama, bukan sebagai perilaku.
 
 ### 14.2 Instruksi yang Mengubah Flags
 
@@ -995,9 +1016,38 @@ System call codes **[PLANNED]**:
 
 | Flag | Dibaca oleh |
 |---|---|
-| G | `JGD`, `JNGD` |
-| Z | `JEQ`, `JNE` |
-| O | (future overflow handler) |
+| G | `JGD`, `JNGD`, `FRD` |
+| Z | `JEQ`, `JNE`, `FRD` |
+| LT | `FRD` |
+| O | `FRD` (tak ada yang menulisnya) |
+
+### 14.4 `FRD` dan `FWR` — FLAGS sebagai nilai
+
+```
+FRD  R3            ; R3 ← FLAGS, diperluas nol
+FWR  R3            ; FLAGS ← R3[7:0]
+```
+
+Sampai v1.1 FLAGS hanya bisa dibaca oleh bentuk-J dan tidak bisa disimpan.
+Konsekuensinya bukan teoretis: sebuah proses yang dipreempt di antara `CMP` dan
+cabang yang membacanya kehilangan perbandingannya, karena handler harus
+membandingkan `TRAP_CAUSE` dan perbandingannya menimpa milik proses. Diukur
+pada satu loop berisi satu perbandingan, disapu 60 tenggat timer: **lima di
+antaranya membalik cabangnya**.
+
+Enam belas GPR, PC, dan jendela memori sudah bisa disimpan dan dipulihkan
+sebuah context switch. `FRD`/`FWR` menjadikan FLAGS yang kelima:
+
+```
+SAVE   A          RESTORE B
+  GPR[0..15]        GPR[0..15]
+  PC                PC
+  FRD → simpan      FWR ← pulihkan
+```
+
+`FWR` menulis kedelapan bit, termasuk yang tak bernama, supaya nilai yang
+disimpan `FRD` kembali utuh. Sebuah context switch memulihkan apa yang
+disimpannya, bukan tafsirannya.
 
 ---
 

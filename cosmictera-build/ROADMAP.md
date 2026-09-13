@@ -290,7 +290,7 @@ harfiah. "Utuh" berarti setiap baris ✅, diukur di perangkat keras fisik
    jadi jalur bacanya mengembalikan H-Reg hidup.
 5. Layanan Hybit: HISAB sebagai `SYSCALL`, bukan instruksi langsung
    (Fase 5) — dan Ka'bah bisa dipanggil dari sana (Fase 4).
-6. HVM/HCPU: 100/100 opcode, bukan 79/100 (Fase 5).
+6. HVM/HCPU: 102/102 opcode, bukan 81/102 (Fase 5).
 7. Aplikasi: sudah ✅ — program HC berjalan di atas semua ini begitu
    lapis 1–6 berhenti jadi simulasi dan mulai jadi perangkat keras yang
    benar-benar dinyalakan.
@@ -348,7 +348,7 @@ sampai menjadi satu sistem yang bisa dipakai:
 |---|---|---|---|
 | M1 | HCPU + `CGET`/`CSET` | **selesai di papan** — `f0dd0f8`, keluaran `5 6 2 0` dan `1 1 1 2 1` | — |
 | M2 | Batch ISA berikutnya | **selesai di papan** — enam opcode codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`), `test_codex` menjawab `8 0 0 1 1 0 1 5` | — (`CSUB` ditunda, `CDOT` dikeluarkan karena tempat, `CNORM`/`CDIST` duplikat — lihat [OFF.md](OFF.md)) |
-| M3 | H-Kernel boot → shell | **sebagian di papan** — shell membaca perintah dari UART dan dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | banner/prompt teks (`PRINTH`/`EMITS` **BLOCKED** — keputusan pemilik) — resume setelah preemption **sudah diperbaiki dan terbukti di papan** (`trap_resume` `86 86 27`). Yang tersisa: banner teks, FLAGS, dan hazard `TRAP_EPC`→`ERET`. **M4 ditahan** sampai pemilik memutuskan, satu penghalang pada satu waktu — lihat [OFF.md](OFF.md) |
+| M3 | H-Kernel boot → shell | **sebagian di papan** — shell membaca perintah dari UART dan dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | banner/prompt teks (`PRINTH`/`EMITS` **BLOCKED** — keputusan pemilik) — resume setelah preemption, FLAGS sebagai konteks (H-ISA v1.1), dan hazard `TRAP_EPC`→`ERET` semuanya **diperbaiki dan terbukti di papan**. Yang tersisa hanya banner teks: `PRINTH`/`EMITS` **BLOCKED**. **M4 ditahan** sampai pemilik memutuskan — lihat [OFF.md](OFF.md) |
 | M4 | Proses + syscall + timer | trap, supervisor, proteksi memori, syscall, timer semuanya di RTL dan dijalankan di papan (`81fbd2e`) | proses dinamis, stack per proses, tabel syscall |
 | M5 | HFS baca/tulis | `hos_fs_write`/`hos_fs_read` jalan di papan, guard-on-write, H-Reg dibangun ulang lewat `CSET` | media penyimpanan persisten yang terverifikasi fisik |
 | M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
@@ -398,7 +398,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.918
+software_tests      1611/1611     ← sekarang 4.944
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 

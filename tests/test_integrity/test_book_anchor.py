@@ -302,6 +302,16 @@ EXTENSIONS: Dict[str, int] = {
     # placement -- 16,015 LUT4 against 14,714 without -- so it stays
     # software-only by the owner's decision. All four are in
     # cosmictera-build/OFF.md with their blockers named.
+    # H-ISA v1.1, and the first extension that is not a codex operation.
+    # FLAGS was reachable only by the J-forms, so a context switch could not
+    # save it and a process preempted between a CMP and its branch lost the
+    # comparison to the handler's own -- measured at five reversed branches in
+    # sixty swept deadlines. Both take free slots in System & Control, the
+    # block §6.1 gives to machine state, per §6.0 rule 2; the version bump is
+    # rule 4. The book does not name them: it has no interrupt model to need
+    # them, which is why §16.4 still says execution is run-to-completion.
+    "FRD": 0x0A,
+    "FWR": 0x0B,
     "CMOV": 0x46,
     "CZERO": 0x47,
     "CEQ": 0x48,

@@ -38,28 +38,32 @@
 // ============================================================================
 // PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// re-measured 2026-09-13 after TRAP_EPC got the bypass TRAP_MODE already had,
-// so a handler may write its return address and ERET on the next instruction:
+// re-measured 2026-09-13 after H-ISA v1.1 added FRD (0x0A) and FWR (0x0B), so
+// FLAGS can be read into a register and written back from one:
 //
-//     LUT4       14,746 / 20,736   71%
-//     DFF         4,481 / 15,552   28%
+//     LUT4       14,775 / 20,736   71%
+//     DFF         4,499 / 15,552   28%
 //     BSRAM          17 /     46   36%
 //
-//     Fmax      114.50 MHz (PASS at the 12.00 MHz constraint), down from
-//               120.31 -- taken after routing.
+//     Fmax       80.57 MHz (PASS at the 12.00 MHz constraint), down from
+//               114.50 -- taken after routing. Critical path 5.68 ns of logic
+//               plus 6.73 ns of routing.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +20 LUT4 AND +0 DFF IS WHAT THIS COSTS, and the DFF column is the check on
-// it: `epc_at_eret` is a 32-bit mux on the return path, not a register, so it
-// adds no state at all. Before it, a handler that stored TRAP_EPC and returned
-// on the very next instruction returned to the OLD address -- measured at
-// fifteen re-entries in a two-hundred-cycle window, where one instruction of
-// distance made it correct.
+// +29 LUT4 AND +18 DFF, and the DFF column is NOT explained by the two
+// instructions. Neither adds architectural state: FRD routes the flag register
+// into the GPR result mux and FWR routes a GPR into the flag write port, and
+// both of those registers existed already. Where the eighteen came from was
+// NOT separated into design and synthesis here, and this run does not claim
+// it. The same goes for the 114.50 -> 80.57 move. What the run does establish:
+// the design still passes the constraint the flow places it against, the
+// board's own clock is 27 MHz, and the board answers correctly -- see below.
 //
-// THE MEASUREMENT BEFORE IT, earlier the same day, after `pc_valid` stopped
-// being tied high: 14,726 LUT4 (71%), 4,481 DFF, Fmax 120.31 MHz. That one was
-// +12 LUT4 and +1 DFF -- exactly one bit of state, `pc_valid` in hcpu_fetch,
-// written in the same places `if_pc` is. A maskable interrupt used to read Fetch's
+// THE TWO MEASUREMENTS BEFORE IT, the same day: after TRAP_EPC got the bypass
+// TRAP_MODE already had, 14,746 LUT4 and 4,481 DFF at 114.50 MHz -- +20 LUT4
+// and +0 DFF, a mux on the return path rather than a register. And before
+// that, after `pc_valid` stopped being tied high, 14,726 LUT4 and 4,481 DFF at
+// 120.31 MHz -- +12 LUT4 and +1 DFF, exactly one bit of state. A maskable interrupt used to read Fetch's
 // "presenting nothing" as ADDRESS ZERO and save it as the place to resume;
 // sixty swept deadlines saved zero twenty-one times, and on the board eight
 // samples of trap_shadow.hasm answered 0 0 88 89 88 0 0 88 with the loop at
@@ -85,9 +89,8 @@
 // owner's; the blocker is named in cosmictera-build/OFF.md, and CDOT still
 // runs in the HVM.
 //
-// THE CRITICAL PATH IS STILL INSIDE EXECUTE, 4.24 ns of logic plus 4.50 ns of
-// routing. None of the moves across these three runs -- 84.26 -> 115.66 ->
-// 120.31 -> 114.50 -- was separated into design and placement, and no run
+// NONE OF THE Fmax MOVES ACROSS THESE FOUR RUNS -- 84.26 -> 115.66 -> 120.31
+// -> 114.50 -> 80.57 -- was separated into design and placement, and no run
 // claims any of them. What the run does
 // establish: the design still passes the constraint the flow places it
 // against, and the board's own clock is 27 MHz.
@@ -134,8 +137,9 @@
 // was never close to its own ceiling.
 //
 // Fingerprint restamped 2026-09-13 WITH a fresh place-and-route run, which is
-// the only honest way to restamp it after a design change: this repair touched
-// hcpu_trap.v, and the one before it hcpu_fetch.v and hcpu_top.v, so the
+// the only honest way to restamp it after a design change: v1.1 touched
+// hcpu_pkg.vh, hcpu_decode.v and hcpu_execute.v, the repair before it
+// hcpu_trap.v, and the one before that hcpu_fetch.v and hcpu_top.v -- so the
 // figures above were re-measured rather than carried over. The same was true
 // of the 2026-09-12 stamp for the codex block, and 2026-09-11 for CSET.
 // The 2026-09-10 stamp was applied WITHOUT a run, and that was justified
@@ -145,7 +149,7 @@
 // fingerprinted source -- reversing only those copyright lines in memory
 // reproduced the recorded hash exactly, so the sweep was provably the entire
 // delta and no design byte moved.
-// RTL FINGERPRINT: 2e7760e7c819d13216fab91337c0fd6f0a7d29f6e96b47ff95c3eca4dff02954
+// RTL FINGERPRINT: 844ceed11220116854d914e8b6b689369eb67fb93ff9d3031c68b402abf90263
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

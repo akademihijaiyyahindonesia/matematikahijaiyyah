@@ -151,6 +151,8 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "SHLI":     ("dst", "s1", "imm"),
     "SHRI":     ("dst", "s1", "imm"),
     "CMP":      ("s1", "s2"),
+    "FRD":      ("dst",),
+    "FWR":      ("s1",),
     "CMPI":     ("s1", "imm"),
     "JMP":      ("imm",),
     "CALL":     ("imm",),   # absolute, like JMP
