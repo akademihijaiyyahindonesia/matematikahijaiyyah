@@ -221,14 +221,53 @@ sebelas, panjang loop itu sendiri, jadi **satu siklus dari sebelas** adalah
 jendela di mana preemption membalik sebuah keputusan tanpa suara. Bukan
 teoretis, dan tidak ada yang bisa dilakukan perangkat lunak tentangnya.
 
-**Yang dicari dan tidak ada.** Bukan hanya implementasinya yang tidak
-menyediakan jalan — **spesifikasinya juga tidak**. `docs/HISA_SPEC.md` §14.3
-mendaftar pembaca FLAGS dan hanya berisi bentuk-J: `JGD`, `JNGD`, `JEQ`,
-`JNE`. Tidak ada instruksi yang memindahkannya ke register. Dan tidak ada
-alamat yang bisa dipakai: keenam belas kata periferal `0x0`–`0xF` sudah
-terpakai semuanya. Jadi ini **bukan** kasus seperti penghalang 2, yang
-perbaikannya sudah tertulis di komentar kodenya sendiri; di sini tidak ada
-desain yang tertinggal untuk diterapkan.
+**Yang dicari dan tidak ada — tiga jalan, diperiksa satu per satu,
+13 September 2026.**
+
+*Kata periferal.* `docs/HISA_SPEC.md` §15.1 memetakan ruang alamat sebagai
+ROM → kode → data → stack → heap, dan **tidak menyebut wilayah periferal sama
+sekali**. Jendela MMIO di `0xFF0`–`0xFFF` adalah keputusan implementasi yang
+tercatat di `rtl/hcpu_mmio.v`, bukan konstruksi spesifikasi. Dan akibatnya
+sudah tertulis di spesifikasi itu sendiri, di baris `SYSCALL` 0x09: *"keenam
+belas slot periferal sudah terpakai"*. Kalimat itu ditulis tentang operand
+`SYSCALL`, dan berlaku di sini tanpa diubah.
+
+*Opcode khusus.* Seluruh mnemonic §6.2 disapu, ditambah 28 opcode buku di
+`tests/test_integrity/test_book_anchor.py` dan seluruh enum
+`src/hijaiyyah/hisa/opcodes.py`. **Tidak ada satu pun** yang memindahkan FLAGS
+ke atau dari register. §14.3 mendaftar setiap pembacanya dan semuanya bentuk-J:
+`JGD`, `JNGD`, `JEQ`, `JNE`. Yang paling dekat adalah `DUMP` (0xA3, "dump full
+machine state", perangkat lunak saja) — keluaran untuk manusia, bukan nilai
+untuk program.
+
+*Mekanisme lain — dan ini yang menentukan.* §16.4 berbunyi: **"H-ISA v1.0 tidak
+memiliki model interrupt. Eksekusi bersifat run-to-completion atau halt."**
+Spesifikasi tidak punya trap, jadi tidak punya konteks, jadi tidak pernah
+menyebut apa isi sebuah konteks. Seluruh mesin trap, mode supervisor, proteksi
+memori, syscall dan timer di HCPU dibangun **melewati** v1.0 — alur commitnya
+ada di `AGENTS.md` bagian 3, di bawah "prasyarat sistem operasi di HCPU". Jadi
+B bukan lubang pada perlakuan spesifikasi atas fitur yang ada — ia berada di
+hilir sebuah fitur yang spesifikasinya belum punya.
+
+**Dan FLAGS tidak sendirian.** §4.3 mendaftar empat Special Register — PC, SP,
+FLAGS, CY — dan **tak satu pun** dari keempatnya bisa dibaca ke GPR. PC hanya
+lewat `CALL`/`RET` dan trap, SP hanya lewat `PUSH`/`POP`, CY tidak sama sekali.
+Ini bukan satu register yang terlupakan; ini seluruh berkas register khusus
+yang memang tidak dialamatkan di v1.0.
+
+**Yang spesifikasi MEMANG tetapkan adalah prosedurnya, bukan mekanismenya.**
+§6.0 aturan 2: opcode baru untuk perangkat keras *"mengambil slot kosong pada
+blok yang sesuai fungsinya, lalu ditambahkan ke `RTL_IMPLEMENTED`"*; aturan 4:
+*"Setiap perubahan menaikkan versi ISA."* Untuk pengakses register status, blok
+yang sesuai menurut §6.1 adalah **System & Control (0x00–0x0F)**, dan slot yang
+benar-benar kosong di sana — bukan hanya "Reserved" di dokumen, tetapi juga tak
+dipakai `rtl/hcpu_pkg.vh` — adalah **0x05 dan 0x0A–0x0F**. (0x02 bernama
+`RESET` dan belum diimplementasikan, jadi namanya sudah terpakai.)
+
+Jadi ini **bukan** kasus seperti penghalang 2, yang perbaikannya sudah tertulis
+di komentar kodenya sendiri. Di sini tidak ada desain yang tertinggal untuk
+diterapkan — yang ada hanya jalan resmi untuk membuatnya, dan menempuhnya
+berarti menaikkan versi ISA.
 
 **Yang ada, dan kenapa ia tidak cukup.** Unit trap sudah punya bentuk
 menyelamatkan satu keping keadaan kecil melewati trap — `prev <= mode` saat
