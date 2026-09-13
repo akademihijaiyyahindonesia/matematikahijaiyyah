@@ -28,15 +28,15 @@ Label epistemik proyek tetap berlaku dan mengikat:
 | `AT` | terarah, belum dibangun |
 
 Tidak ada baris yang naik label tanpa bukti baru. **Fmax HCPU adalah `CC`:
-120,31 MHz pasca-perutean di Tang Nano 20K**, dan bukan angka sintesis —
+114,50 MHz pasca-perutean di Tang Nano 20K**, dan bukan angka sintesis —
 papan menjalankannya, UART membalas 23 byte yang cocok byte-per-byte dengan
 simulasi.
 
 ## Angka utuh, hari ini
 
 ```
-4.915 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
-  278 asersi RTL di 22 testbench, 0 gagal
+4.918 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
+  288 asersi RTL di 23 testbench, 0 gagal
    79 dari 100 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
     6 penyebab trap, 6 prasyarat OS tertutup, H-Kernel 4 dari 4

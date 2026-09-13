@@ -86,8 +86,7 @@ module tb_hcpu_kernel;
 
         check(t > 4,  "timer harus mempersenjatai ulang berkali-kali");
         check(a > 0,  "proses A harus berjalan");
-        check(a > a_mid,
-              "proses A harus MASIH berjalan setelah dipreempt, bukan sekadar pernah");
+        check(a > a_mid, "A MASIH jalan sesudah preempt");
         check(b > 0,  "proses B harus berjalan — dan itu membuktikan epc maju untuk cause 5");
         check((b % 100) == 0,
               "hitungan B harus kelipatan 100: register tiap proses tidak boleh bocor");

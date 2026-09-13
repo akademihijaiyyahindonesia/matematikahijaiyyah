@@ -28,7 +28,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
         sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
-        sim_redirect_shadow clean
+        sim_redirect_shadow sim_epc_eret clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -41,7 +41,7 @@ all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
      sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
-     sim_redirect_shadow
+     sim_redirect_shadow sim_epc_eret
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -100,6 +100,11 @@ sim_shell: tb_hcpu_shell.vvp shell.hex
 # The two cycles after a taken branch, where a maskable interrupt saves zero.
 # sim_branch_trap_race covers the cycle they share; this covers the shadow.
 sim_redirect_shadow: tb_hcpu_trap_redirect_shadow.vvp
+	$(VVP) $<
+
+# How much distance a handler needs between writing TRAP_EPC and returning.
+# The answer has to be none; sim_trap check 18 asks the unit the same thing.
+sim_epc_eret: tb_hcpu_trap_epc_eret.vvp
 	$(VVP) $<
 
 # The twenty-eight letter opcodes. Nothing executed one until this bench.
@@ -178,6 +183,9 @@ tb_hcpu_shell.vvp: $(TB_DIR)/tb_hcpu_shell.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_to
 	$(IVERILOG) $(INC) -o $@ $^
 
 tb_hcpu_trap_redirect_shadow.vvp: $(TB_DIR)/tb_hcpu_trap_redirect_shadow.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+tb_hcpu_trap_epc_eret.vvp: $(TB_DIR)/tb_hcpu_trap_epc_eret.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
 # ── unit benches ────────────────────────────────────────────────

@@ -374,7 +374,7 @@ satu pada satu waktu, lalu empat gerbang dan uji fisik Tang Nano 20K.
 |---|---|---|
 | A | resume setelah preemption timer | **selesai** — akar `073b968`, perbaikan `e7b5a2d`, terbukti di papan; caveat pulse exception tercatat |
 | B | FLAGS bukan bagian konteks proses | **terbuka atas keputusan pemilik** — tidak ada perubahan RTL/ISA. Representasi dan akses FLAGS belum ditetapkan spesifikasi; risikonya terukur (1 siklus dari 11 membalik sebuah cabang) |
-| C | `STORE` `TRAP_EPC` → `ERET` | **terbuka** — perilakunya terukur (0 NOP: trap masuk ulang 15 kali; 1 NOP: benar), bypass kembarannya sudah ada untuk `TRAP_MODE` di berkas yang sama. **Bypass belum diterapkan**, ditahan sebagai keputusan pemilik |
+| C | `STORE` `TRAP_EPC` → `ERET` | **selesai** — `epc_at_eret` mengikuti bentuk `prev_at_eret`; papan menjawab `1 1 1` pada jarak 0, 1, 2 instruksi. Biaya +20 LUT4, +0 DFF |
 | D | keluaran karakter (`PRINTH`/`EMITS` + bentuk string) | terbuka, **BLOCKED** |
 
 Semuanya di `cosmictera-build/OFF.md` dengan angkanya. M3 tidak boleh disebut

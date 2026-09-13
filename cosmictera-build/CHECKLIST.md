@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.915 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.918 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,7 +41,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 4.915 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 4.918 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -80,7 +80,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **278 asersi, 22 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **288 asersi, 23 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -91,6 +91,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **H-Kernel: tiga proses + daemon guard** | `make -C rtl/tb sim_kernel` |
 | ✅ | **Shell: perintah masuk lewat UART, jawaban keluar lewat kernel** | `make -C rtl/tb sim_shell` |
 | ✅ | **Bayangan redirect: di mana interupsi menyimpan `epc` = 0** | `make -C rtl/tb sim_redirect_shadow` |
+| ✅ | **Jarak `STORE TRAP_EPC` sebelum `ERET`: nol pun benar** | `make -C rtl/tb sim_epc_eret` |
 | ✅ | **28 instruksi huruf** | `make -C rtl/tb sim_letters` |
 | ✅ | **`CALL`/`RET`, sarang 8 tingkat** | `make -C rtl/tb sim_subroutine` |
 | ✅ | **I/O lewat kernel, dua sisi** | `make -C rtl/tb sim_syscall_io` |
@@ -167,7 +168,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **Bitstream HCPU, Tang Nano 20K: 71% LUT4, 120,31 MHz** | `make -C rtl/fpga/gowin bitstream` |
+| ✅ | **Bitstream HCPU, Tang Nano 20K: 71% LUT4, 114,50 MHz** | `make -C rtl/fpga/gowin bitstream` |
 | ✅ | **Bitstream Ka'bah, Tang Nano 20K: 58% LUT4, 165,98 MHz** | `make -C rtl/fpga/gowin kabah_bitstream` |
 | ✅ | **`CSET` (0x45) dijalankan di papan: `5 6 2 0`** | `make -C rtl/fpga/gowin bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_cset.hasm` |
 | ✅ | **HFS baca mengembalikan H-Reg hidup di papan: `1 1 1 2 1`** | `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_hfs.hasm` |
@@ -183,9 +184,11 @@ Fmax di atas adalah pengukuran ulang **pasca** bring-up, bukan angka pra-papan
 yang digantikannya (114,65 dan 117,91): keduanya naik karena penyerempak reset
 berhenti menggerbangi level pin 87 (MODE1) yang ditahan rendah oleh papan.
 
-**Angka HCPU diukur ulang lagi pada 13 September, setelah `pc_valid` berhenti
-diikat tinggi**: 115,66 → 120,31 MHz, 14.714 → 14.726 LUT4, dan DFF naik
-**satu** — perbaikan itu menambah tepat satu bit keadaan. Sebelumnya, 12
+**Angka HCPU diukur ulang dua kali pada 13 September.** Sesudah `pc_valid`
+berhenti diikat tinggi: 115,66 → 120,31 MHz, 14.714 → 14.726 LUT4, DFF naik
+**satu** — tepat satu bit keadaan. Lalu sesudah `TRAP_EPC` mendapat bypass yang
+sama dengan `TRAP_MODE`: 120,31 → 114,50 MHz, 14.726 → 14.746 LUT4, DFF **tidak
+bergerak** — ia mux, bukan register. Sebelumnya, 12
 September setelah blok codex: 84,26 → 115,66 MHz, 14.231 → 14.714 LUT4, DFF
 tidak bergerak sama sekali — keenam opcode tidak menambah state. Jalur kritis yang dilaporkan
 nextpnr masih di dalam Execute: berangkat dari `ex_gpr_we`, lewat `codex_hvec`
@@ -223,7 +226,7 @@ lint yang selama ini merah sebenarnya sedang menunjuk cacat huruf, dan tak ada
 yang membacanya. Peringatan yang tersisa soal bit yang tak terpakai.
 
 Bitstream pindah dari baris ini ke bagian hijau di bawah: desain muat dan
-terrout di Tang Nano 20K (**71% LUT4, 120,31 MHz**, diukur 13 September),
+terrout di Tang Nano 20K (**71% LUT4, 114,50 MHz**, diukur 13 September),
 papan di-flash, dan UART membalas 23 byte yang cocok byte-per-byte dengan
 simulasi.
 Rekamannya di [PAPAN.md](PAPAN.md).
@@ -235,7 +238,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.915 lulus, 0 dilewati
-make -C rtl/tb all               # 278 asersi, 22 bench, 0 gagal
+python3 -m pytest -q             # 4.918 lulus, 0 dilewati
+make -C rtl/tb all               # 288 asersi, 23 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

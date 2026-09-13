@@ -363,6 +363,26 @@ tidak pernah terjadi; cakupan bukan bukti universal.
 
 ---
 
+## Penghalang C ditutup di papan — 13 September 2026
+
+`STORE` ke `TRAP_EPC` tepat sebelum `ERET` dulu kembali ke epc **lama**, jadi
+handler yang ditulis ringkas mengulang instruksi yang menjebaknya — diam-diam.
+Perbaikannya bentuk yang sudah ada untuk `TRAP_MODE` di berkas yang sama.
+
+| program | keluaran papan | apa |
+|---|---|---|
+| `trap_epc` | **`1 1 1`** | tiga ronde pada jarak **0**, 1, dan 2 instruksi antara simpanan dan `ERET`; masing-masing masuk handler tepat sekali. Nol adalah ronde yang dulu berputar tanpa henti |
+
+Seluruh papan diverifikasi ulang sesudahnya, dan tidak ada yang berubah:
+`trap_resume` `86 86 27`, `trap_shadow` `88 88 88 89 88 88 88 88 21`,
+`syscall_io` `42` saja, shell `A`→`65` `p`→`2 0 1` `0`→`48` `z`→`122`,
+`test_codex` `8 0 0 1 1 0 1 5`, `test_cset` `5 6 2 0`, `test_hfs` `1 1 1 2 1`,
+`e3_sweep28` 28 nilai Θ̂ identik `MASTER_TABLE`, `trap_flags` `0` — penghalang
+FLAGS memang masih terbuka. `mem_protect`, `user_mode`, `trap_timer`,
+`timer_poll` dan `hal` halt dan melapor siklus.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -375,8 +395,8 @@ antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
 berubah bentuk:
 
 ```
-  berdampingan   sum(slot)   harus muat serentak   14.726 + 12.061 + 15.141 = 202%
-  berurutan      max(slot)   satu per satu                           15.141 =  73%
+  berdampingan   sum(slot)   harus muat serentak   14.746 + 12.061 + 15.162 = 202%
+  berurutan      max(slot)   satu per satu                           15.162 =  73%
 ```
 
 Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
@@ -405,14 +425,14 @@ pak-nya **identik byte-demi-byte** dengan bitstream yang menyala di papan, dan
 di-flash lagi ia menjawab `test_bsm` lewat kabel: 23 byte, `112`.
 
 ```
-  LUT4    15.141 / 20.736   73%
+  LUT4    15.162 / 20.736   73%
   DFF      4.552 / 15.552   29%
   BSRAM       17 /     46   36%
   IOB         15 /    384    3%
-  Fmax     63,21 MHz (HCPU), 476,87 MHz (pixel)
+  Fmax    127,05 MHz (HCPU), 457,25 MHz (pixel)
 ```
 
-Jalur video menambah 415 LUT4 di atas HCPU sendiri, jadi biaya rack **73%**,
+Jalur video menambah 416 LUT4 di atas HCPU sendiri, jadi biaya rack **73%**,
 bukan 71%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
 tercatat gratis.
 
@@ -474,7 +494,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.915 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.918 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -517,16 +537,16 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.915 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 22 testbench, 278 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.918 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 23 testbench, 288 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
 timing 8, H-Kernel 8, **shell 7**, syscall I/O 6, HOS 7, subrutin 4, huruf 3,
 **bayangan redirect 7**, wrapper Gowin 2, dan tujuh testbench yang melapor
-satu pernyataan lulus tunggal — 278, semuanya 0 FAIL. Dua yang baru:
-`tb_hcpu_shell` dan `tb_hcpu_trap_redirect_shadow`, tujuh pemeriksaan
-masing-masing.
+**epc→eret 10**, satu pernyataan lulus tunggal — 288, semuanya 0 FAIL. Tiga
+yang baru: `tb_hcpu_shell` dan `tb_hcpu_trap_redirect_shadow` tujuh
+pemeriksaan masing-masing, dan `tb_hcpu_trap_epc_eret` sepuluh.
 
 > **Selisih tujuh dari angka 253 sebelumnya bukan tes baru.** `tb_hcpu_video_timing`
 > menjaga delapan properti VESA — H_TOTAL, lebar dan posisi hsync, rentang `de`,
@@ -559,7 +579,7 @@ masing-masing.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.915 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.918 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

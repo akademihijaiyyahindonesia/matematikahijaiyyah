@@ -218,26 +218,21 @@ module tb_hcpu_trap_redirect_shadow;
         $display("  sekelas siklus dengan cabang: %0d   lari yang trapnya ditahan: %0d",
                  n_coincide, n_held);
 
-        check(n_fire >= 50, "sapuan memicu timer di hampir setiap tenggat");
-        check(n_coincide > 0, "sapuan menutupi siklus cabang itu sendiri");
+        check(n_fire >= 50, "timer menyala hampir tiap kali");
+        check(n_coincide > 0, "sapuan capai siklus cabang");
 
         // Coverage, and it has to be measured rather than assumed: a sweep
         // that never reached a redirect would satisfy every row below by
         // never testing one.
-        check(n_held > 0,
-              "sapuan benar-benar mencapai bayangan, dan trapnya ditahan di sana");
-        check(n_held * 4 > n_fire,
-              "bayangan itu bukan kasus langka: lebih dari seperempat lari");
+        check(n_held > 0, "sapuan capai bayangan redirect");
+        check(n_held * 4 > n_fire, "bayangan bukan kasus langka");
 
         // The fix hcpu_top.v already carried, kept honest.
-        check(n_bad_target == 0,
-              "tabrakan sekelas-siklus tetap mengembalikan sasaran cabang");
+        check(n_bad_target == 0, "tabrakan pulang ke sasaran");
 
         // ── what the repair had to buy ──────────────────────────
-        check(n_zero_running == 0,
-              "tak satu pun tenggat mengembalikan proses berjalan ke alamat 0");
-        check(n_valid == n_fire,
-              "setiap fire menyimpan PC yang bisa dilanjutkan");
+        check(n_zero_running == 0, "tak ada yang pulang ke alamat 0");
+        check(n_valid == n_fire, "tiap fire simpan PC yang sah");
 
         if (errors == 0)
             $display("tb_hcpu_trap_redirect_shadow: SEMUA LULUS (7 pemeriksaan)");

@@ -1,25 +1,29 @@
 // HCPU HDMI wrapper for Tang Nano 20K.
 // The HDMI transport uses the board vendor's generated DVI TX IP.
 //
-// ── MEASURED, 13 September 2026, after the trap repair ───────────────────
+// ── MEASURED, 13 September 2026, after the TRAP_EPC bypass ───────────────
 //
 // `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68
 // (-nodsp) -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// loader baked in. Re-run because `pc_valid` stopped being tied high:
-// hcpu_fetch.v now says whether the PC it presents is real, and hcpu_top.v
-// drives the trap unit from that instead of from 1'b1.
+// loader baked in. Re-run because hcpu_trap.v gained `epc_at_eret`: a handler
+// may now write TRAP_EPC and ERET on the next instruction, where before that
+// returned to the old address.
 //
 //     IOB           15 /    384    3%
-//     LUT4      15,141 / 20,736   73%
+//     LUT4      15,162 / 20,736   73%
 //     DFF        4,552 / 15,552   29%
 //     BSRAM         17 /     46   36%
-//     Fmax       63.21 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               476.87 MHz  pixel_clk
+//     Fmax      127.05 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               457.25 MHz  pixel_clk
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +15 LUT4 and +1 DFF against this slot's previous 15,126 / 4,551, and the DFF
-// column is the check on it: the repair adds exactly one bit of state. The
-// bare hcpu_gowin_top slot measured +12 and the same +1 for the same change.
+// +21 LUT4 and +0 DFF against this slot's previous 15,141 / 4,552: the bypass
+// is a mux on the return path, not a register, so it adds no state. The bare
+// hcpu_gowin_top slot measured +20 and the same +0.
+//
+// THE MEASUREMENT BEFORE IT, earlier the same day, after `pc_valid` stopped
+// being tied high: 15,141 LUT4 (73%), 4,552 DFF, Fmax 63.21 / 476.87 MHz --
+// +15 LUT4 and +1 DFF, exactly one bit of state.
 //
 // The measurement before it, 12 September, after the codex block: 15,126 LUT4
 // (72%), 4,551 DFF, Fmax 70.80 / 549.15 MHz. That run was +413 LUT4 and +0 DFF
@@ -38,12 +42,16 @@
 //
 // FLASHED AND RUN, 13 September 2026, over the wire through the baked loader:
 //
+//     trap_epc      1 1 1             THE ROW THIS BUILD EXISTS FOR: three
+//                                     rounds at zero, one and two instructions
+//                                     of distance between STORE TRAP_EPC and
+//                                     ERET, each entering the handler exactly
+//                                     once. Zero is the one that used to spin.
 //     trap_resume   86 86 27          eight preemptions, handler never
 //                                     touching epc: every resume correct and
 //                                     the process still counting
-//     trap_shadow   88 88 88 89 88    eight deadlines walked a cycle apart;
-//                   88 88 88 21       before the repair this read
-//                                     0 0 88 89 88 0 0 88
+//     trap_shadow   88 88 88 89 88    eight deadlines walked a cycle apart
+//                   88 88 88 21
 //     shell         A->65 p->2 0 1    the command path, unchanged
 //                   0->48 z->122
 //     syscall_io    42                and 99 still never reaches the wire
@@ -58,7 +66,7 @@
 // user_mode, shell, kernel, branch_trap_race and the shadow sweep, the number
 // of cycles an EXCEPTION was held by it is zero.
 //
-// RTL FINGERPRINT: 74f9582fde2333ee1cbe92d3636880860ab34fdc4f1490c4a686fc0bce0fc8b1
+// RTL FINGERPRINT: 1d41a7d42a16ee1846fe5f75c7b06ade6f60c512ee20d4f82cbe43ac672de299
 //
 `include "hcpu_pkg.vh"
 

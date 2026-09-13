@@ -1,0 +1,89 @@
+; trap_epc.hasm — how much room does a handler need between writing its return
+; address and returning? The board is asked three times, at three distances.
+;
+; Prints THREE numbers, one per round: how many times the handler was entered.
+; Each must be 1. A round that answers anything else means `ERET` took the OLD
+; epc and re-ran the instruction that trapped.
+;
+;   round 0   the ERET comes IMMEDIATELY after the store   <- the one that failed
+;   round 1   one NOP in between
+;   round 2   two NOPs
+;
+; ── why round 0 is the whole program ────────────────────────────
+; `rtl/hcpu_trap.v` built `trap_target` out of the `epc` REGISTER, so a write
+; from software in the same cycle had not landed yet. Measured in simulation
+; before the repair: at zero distance the trap fired FIFTEEN times in a
+; two-hundred-cycle window and the instruction after the SYSCALL was never
+; reached. One instruction of distance was the entire difference.
+;
+; Nothing in this tree ever tripped over it. `hal_epc_set` is followed by
+; `hal_mode_user`, `hal_timer_arm` and sixteen restore loads; `trap_flags.hasm`
+; happened to use three NOPs. A handler written tightly was silently wrong, and
+; the symptom was an instruction that repeated rather than anything that said
+; so.
+;
+; The repair is `epc_at_eret`, the same shape `prev_at_eret` already had for
+; TRAP_MODE sixteen lines above it -- whose comment closes "the fix is not to
+; require one".
+;
+; ── the shape of a round ────────────────────────────────────────
+; The vector store is an MMIO write and needs to land before the SYSCALL can
+; use it, so each round leaves it room. That is a different hazard from the one
+; under test, and giving it room is what keeps this program about one thing.
+
+        MOVI  R5, 0
+
+; ── round 0: ERET immediately after the store ──────────────────
+        MOVI  R6, 0
+        MOVI  R1, h0
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+        NOP
+        NOP
+        NOP
+        SYSCALL
+        PRINT R6                ; 1
+
+; ── round 1: one instruction in between ────────────────────────
+        MOVI  R6, 0
+        MOVI  R1, h1
+        STORE R1, R5, 0xFF8
+        NOP
+        NOP
+        NOP
+        SYSCALL
+        PRINT R6                ; 1
+
+; ── round 2: two ──────────────────────────────────────────────
+        MOVI  R6, 0
+        MOVI  R1, h2
+        STORE R1, R5, 0xFF8
+        NOP
+        NOP
+        NOP
+        SYSCALL
+        PRINT R6                ; 1
+
+        HALT
+
+; ── the three handlers ─────────────────────────────────────────
+; Identical but for the distance between the store and the return.
+h0:     ADDI  R6, R6, 1
+        LOAD  R11, R5, 0xFF9
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+        ERET
+
+h1:     ADDI  R6, R6, 1
+        LOAD  R11, R5, 0xFF9
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+        NOP
+        ERET
+
+h2:     ADDI  R6, R6, 1
+        LOAD  R11, R5, 0xFF9
+        ADDI  R11, R11, 1
+        STORE R11, R5, 0xFF9
+        NOP
+        NOP
+        ERET

@@ -278,8 +278,8 @@ Fmax    114,65 MHz (PASS pada batas 12,00 MHz)
 ```
 
 Angka di atas dari build bitstream pada komit yang lebih lama. Angka **papan**
-diambil dari run pasca-perutean terakhir — 14.726 LUT4 (71%), Fmax 120,31 MHz,
-diukur 13 September setelah perbaikan trap — dan itulah yang berlaku sebagai
+diambil dari run pasca-perutean terakhir — 14.746 LUT4 (71%), Fmax 114,50 MHz,
+diukur 13 September setelah bypass `TRAP_EPC` — dan itulah yang berlaku sebagai
 hasil fisik, tercatat di [PAPAN.md](PAPAN.md).
 
 Papan sudah di-flash dan dibaca: UART membalas **23 byte** yang cocok
@@ -294,7 +294,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.915 lulus, 0 dilewati
-make -C rtl/tb all            # 278 asersi, 22 bench, 0 gagal
+python3 -m pytest -q          # 4.918 lulus, 0 dilewati
+make -C rtl/tb all            # 288 asersi, 23 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

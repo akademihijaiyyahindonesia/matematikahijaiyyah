@@ -226,6 +226,28 @@ module tb_hcpu_trap;
         src_priv = 0; src_mem = 0;
         @(negedge clk); eret = 1; @(negedge clk); eret = 0;
 
+        // ── 18. Menulis TRAP_EPC di siklus ERET: nilai BARU yang dipakai ──
+        // Pasangan dari pemeriksaan 11/12 untuk TRAP_MODE, dan alasannya sama
+        // persis. `trap_target` membaca register `epc`, jadi tanpa bypass
+        // tulisan perangkat lunak di siklus yang sama belum mendarat, dan
+        // sebuah handler yang menulis alamat kembalinya lalu ERET di
+        // instruksi berikutnya kembali ke alamat LAMA. Terukur sebelum
+        // diperbaiki: `SYSCALL` yang dilayani handler seperti itu masuk ulang
+        // lima belas kali dalam jendela dua ratus siklus dan tidak pernah
+        // maju; satu NOP di antaranya sudah cukup menyembunyikannya.
+        @(negedge clk); eret = 0; src_timer = 0; src_priv = 0; src_mem = 0;
+        wr(`REG_TRAP_EPC, 32'h0000_0900);       // epc lama
+        @(negedge clk);
+        reg_we = 1; reg_sel = `REG_TRAP_EPC; reg_wdata = 32'h0000_0ABC;
+        eret   = 1;                              // tulisan dan ERET satu siklus
+        #1;
+        check(trap_redirect, "eret tetap mengalihkan");
+        check(trap_target == 32'h0000_0ABC,
+              "eret pakai TRAP_EPC yang baru");
+        @(negedge clk); reg_we = 0; eret = 0;
+        reg_sel = `REG_TRAP_EPC; #1;
+        check(reg_rdata == 32'h0000_0ABC, "tulisannya mendarat juga");
+
         if (errors == 0) $display("PASS: tb_hcpu_trap — semua pemeriksaan lulus");
         else             $display("FAIL: tb_hcpu_trap — %0d gagal", errors);
         $finish;

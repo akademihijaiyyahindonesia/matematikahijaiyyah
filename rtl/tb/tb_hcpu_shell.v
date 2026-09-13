@@ -121,10 +121,10 @@ module tb_hcpu_shell;
         send_byte(8'h41);
         repeat (60000) @(posedge clk_27m);
 
-        check(count == 3, "echo answered three bytes");
+        check(count == 3, "echo: three bytes back");
         if (count >= 3) begin
             check(got[0] == 8'h36 && got[1] == 8'h35 && got[2] == 8'h0A,
-                  "'A' came back as 65, which is ASCII 'A'");
+                  "'A' came back as 65");
         end
 
         // ── 'p' -> 2 0 1 ────────────────────────────────────────
@@ -132,7 +132,7 @@ module tb_hcpu_shell;
         send_byte(8'h70);
         repeat (90000) @(posedge clk_27m);
 
-        check(count == 6, "ps answered six bytes");
+        check(count == 6, "ps: six bytes back");
         if (count >= 6) begin
             check(got[0] == 8'h32 && got[1] == 8'h0A, "ps: two processes");
             check(got[2] == 8'h30 && got[3] == 8'h0A, "ps: pid 0");
@@ -145,7 +145,7 @@ module tb_hcpu_shell;
 
         $display("  pid 0 counter %0d -> %0d, ticks %0d",
                  p0_before, p0_after, ticks_after);
-        check(ticks_after > 2, "the kernel keeps dispatching");
+        check(ticks_after > 2, "kernel keeps dispatching");
 
         // ── PREEMPTION, AND THE ROW THIS ONE REPLACES ───────────
         // This used to expect pid 0 NOT to advance, with the reason written
@@ -157,8 +157,7 @@ module tb_hcpu_shell;
         //
         // pid 0 never yields. It can only have advanced because the TIMER took
         // the CPU away from it and the kernel put it back where it was.
-        check(p0_after > p0_before,
-              "pid 0 berjalan lagi setelah dipreempt timer");
+        check(p0_after > p0_before, "pid 0 jalan lagi sesudah preempt");
 
         if (errors == 0)
             $display("tb_hcpu_shell: SEMUA LULUS (7 pemeriksaan)");

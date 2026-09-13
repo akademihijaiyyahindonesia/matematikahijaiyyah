@@ -135,11 +135,32 @@ module hcpu_trap (
     wire mode_write   = reg_we && (reg_sel == `REG_TRAP_MODE);
     wire prev_at_eret = mode_write ? reg_wdata[1] : prev;
 
+    // AND THE SAME FOR TRAP_EPC, for the same reason and by the same shape.
+    // The paragraph above ends "the fix is not to require one" -- meaning a
+    // NOP -- and then only TRAP_MODE got the treatment. `trap_target` read
+    // `epc` straight, so a handler that wrote its return address and ERETed on
+    // the very next instruction returned to the OLD one.
+    //
+    // Measured before this line existed, sweeping the gap from 0 to 4 NOPs
+    // over a 200-cycle window: at ZERO the trap fired FIFTEEN times and the
+    // instruction after the SYSCALL was never reached; at ONE it was correct,
+    // and so was everything above it. Exactly one instruction of distance is
+    // what the hazard cost -- which is why rtl/programs/trap_flags.hasm, which
+    // happened to use three, never saw it.
+    //
+    // Every handler in the tree already had the distance: hal_epc_set is
+    // followed by hal_mode_user, hal_timer_arm and sixteen restore loads. So
+    // nothing that worked changes. What changes is that a SHORT handler is no
+    // longer silently wrong, and "silently" is the word that matters -- the
+    // symptom is an instruction that repeats, not an error.
+    wire epc_write    = reg_we && (reg_sel == `REG_TRAP_EPC);
+    wire [`XLEN-1:0] epc_at_eret = epc_write ? reg_wdata : epc;
+
     // ── Redirect ────────────────────────────────────────────────
     // ERET beats a new trap: the return has already been decided by an
     // instruction that retired, and dropping it would strand the handler.
     assign trap_redirect = eret || fire;
-    assign trap_target   = eret ? epc : vector;
+    assign trap_target   = eret ? epc_at_eret : vector;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

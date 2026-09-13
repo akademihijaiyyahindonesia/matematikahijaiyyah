@@ -144,7 +144,7 @@ def test_fmax_is_measured_on_the_board_not_synthesised() -> None:
     here is the board itself: place-and-route completed, the bitstream was
     flashed, and the UART answered. Synthesis alone would not earn CC."""
     assert "114,65" in ON, "ON.md must carry the Tang Nano 20K's measured Fmax"
-    assert "120,31" in README, "the board's post-routing Fmax is the headline"
+    assert "114,50" in README, "the board's post-routing Fmax is the headline"
     assert "Tang Nano 20K" in OFF
 
 

@@ -43,11 +43,11 @@ def test_the_rack_costs_its_largest_slot_not_their_sum() -> None:
     making disappears and it looks like the design simply got smaller.
     """
     top = rack.largest()
-    assert top.name == "hdmi" and top.lut4 == 15_141, (
+    assert top.name == "hdmi" and top.lut4 == 15_162, (
         "the video slot -- HCPU plus TMDS -- is the largest, and that only "
         "became visible once its cost was measured")
 
-    assert rack.naive_sum_lut4() == 14_726 + 12_061 + 15_141 == 41_928
+    assert rack.naive_sum_lut4() == 14_746 + 12_061 + 15_162 == 41_969
     assert rack.naive_sum_lut4() > rack.BOARD_LUT4, (
         "the slots would still fit side by side, so sequencing buys nothing")
     assert top.lut4 < rack.BOARD_LUT4, "the largest slot no longer fits alone"
@@ -67,7 +67,7 @@ def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
     smallest = min(measured, key=lambda s: s.lut4)
     largest = max(measured, key=lambda s: s.lut4)
     assert smallest.spare_lut4 > largest.spare_lut4
-    assert largest.spare_lut4 == 5_595, "the tightest comparator budget moved"
+    assert largest.spare_lut4 == 5_574, "the tightest comparator budget moved"
 
 
 def test_percentages_truncate_the_way_nextpnr_does() -> None:
@@ -133,18 +133,18 @@ def test_the_figures_come_from_the_wrapper_that_measured_them() -> None:
     kabah = (GOWIN / "hijaiyyah_kabah_gowin_top.v").read_text(encoding="utf-8")
 
     slots = {s.name: s for s in rack.SLOTS}
-    assert re.search(r"LUT4\s+14,726 /\s+20,736\s+71%", hcpu)
-    assert slots["hcpu"].lut4 == 14_726 and slots["hcpu"].dff == 4_481
-    assert slots["hcpu"].fmax_mhz == 120.31 and "120.31 MHz" in hcpu
+    assert re.search(r"LUT4\s+14,746 /\s+20,736\s+71%", hcpu)
+    assert slots["hcpu"].lut4 == 14_746 and slots["hcpu"].dff == 4_481
+    assert slots["hcpu"].fmax_mhz == 114.50 and "114.50 MHz" in hcpu
 
     assert re.search(r"LUT4\s+12,061/\s+20,736\s+58%", kabah)
     assert slots["kabah"].lut4 == 12_061 and slots["kabah"].dff == 1_965
     assert slots["kabah"].fmax_mhz == 165.98 and "165.98 MHz" in kabah
 
     hdmi = (GOWIN / "hcpu_hdmi_top.v").read_text(encoding="utf-8")
-    assert re.search(r"LUT4\s+15,141 /\s+20,736\s+73%", hdmi)
-    assert slots["hdmi"].lut4 == 15_141 and slots["hdmi"].dff == 4_552
-    assert slots["hdmi"].fmax_mhz == 63.21 and "63.21 MHz" in hdmi
+    assert re.search(r"LUT4\s+15,162 /\s+20,736\s+73%", hdmi)
+    assert slots["hdmi"].lut4 == 15_162 and slots["hdmi"].dff == 4_552
+    assert slots["hdmi"].fmax_mhz == 127.05 and "127.05 MHz" in hdmi
 
 
 def test_the_board_constants_are_the_board() -> None:
@@ -164,7 +164,7 @@ def test_the_hdmi_slot_is_measured_and_it_sets_the_rack_cost() -> None:
     """
     hdmi = next(s for s in rack.SLOTS if s.name == "hdmi")
     assert hdmi.measured
-    assert (hdmi.lut4, hdmi.dff, hdmi.bsram, hdmi.fmax_mhz) == (15_141, 4_552, 17, 63.21)
+    assert (hdmi.lut4, hdmi.dff, hdmi.bsram, hdmi.fmax_mhz) == (15_162, 4_552, 17, 127.05)
     assert rack.largest() is hdmi
     assert "Belum terukur" not in rack.render()
 
@@ -176,7 +176,7 @@ def test_an_unmeasured_slot_cannot_move_the_rack_cost(monkeypatch) -> None:
     monkeypatch.setattr(rack, "SLOTS", (*rack.SLOTS, ghost))
     assert not ghost.measured
     assert rack.largest().name == "hdmi"
-    assert rack.naive_sum_lut4() == 41_928
+    assert rack.naive_sum_lut4() == 41_969
     assert "Belum terukur: ghost" in rack.render()
 
 

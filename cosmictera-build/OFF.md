@@ -106,7 +106,8 @@ Empat sifat HOS di buku semuanya berjalan sekarang — lihat
 
 ### M3 — shell: jalur keluaran karakter, dan resume setelah preemption
 
-Penghalang 2 **sudah ditutup** 13 September 2026; 1, 3 dan 4 masih terbuka.
+Penghalang 2 dan 4 **sudah ditutup** 13 September 2026. Yang tersisa: 1
+(keluaran karakter, BLOCKED) dan 3 (FLAGS, terbuka atas keputusan pemilik).
 
 **12 September 2026.** Shell-nya berjalan di papan fisik: perintah masuk lewat
 UART, dijawab lewat kernel (`rtl/programs/shell.hasm`, `make -C rtl/tb
@@ -244,49 +245,46 @@ diam — lebih buruk, bukan lebih baik.
 > FLAGS belum ditetapkan oleh spesifikasi. Risiko context-switch sudah
 > terukur, tetapi solusi ditahan sebagai keputusan pemilik.
 
-#### 4. `STORE` ke `TRAP_EPC` tepat sebelum `ERET` kembali ke epc lama
+#### 4. ~~`STORE` ke `TRAP_EPC` tepat sebelum `ERET` kembali ke epc lama~~ — DIPERBAIKI 13 September 2026
 
-**Status: OPEN. Akar dan perilakunya terukur; bypass BELUM diterapkan.**
+**Jaraknya diukur persis sebelum diperbaiki.** Sebuah handler yang membaca
+`TRAP_EPC`, menambah satu, menulisnya kembali, lalu `ERET` — jumlah `NOP` di
+antaranya disapu 0 sampai 4, jendela pengamatan 200 siklus:
 
-Pertama terlihat di papan saat menulis `trap_flags.hasm`: `SYSCALL` yang sama
-di PC 80 menjebak **tiga kali berturut-turut**, mencetak 80 setiap kali, sampai
-tiga `NOP` disisipkan antara simpanan dan `ERET`.
+| jarak | sebelum | sesudah |
+|---:|---|---|
+| **0 NOP** | trap menyala **15 kali**, instruksi sesudah `SYSCALL` tak pernah tercapai | **1 kali, benar** |
+| 1 NOP | benar | benar |
+| 2–4 NOP | benar | benar |
 
-**Jaraknya diukur persis, 13 September 2026.** Sebuah handler yang membaca
-`TRAP_EPC`, menambah satu, menulisnya kembali, lalu `ERET` — dengan jumlah
-`NOP` di antaranya disapu 0 sampai 4, jendela pengamatan 200 siklus:
+Tepat **satu instruksi** adalah seluruh perbedaannya — dan itu sebabnya tidak
+ada yang tersandung: `hal_epc_set` diikuti `hal_mode_user`, `hal_timer_arm` dan
+enam belas `LOAD` pemulihan, sementara `rtl/programs/trap_flags.hasm` kebetulan
+memakai tiga `NOP`. Handler yang ditulis ringkas salah **diam-diam**, dan
+gejalanya instruksi yang berulang, bukan pesan kesalahan.
 
-| jarak | hasil |
-|---:|---|
-| **0 NOP** | trap menyala **15 kali**, handler masuk 15 kali, instruksi sesudah `SYSCALL` tidak pernah tercapai — `ERET` memakai epc **lama**, jadi `SYSCALL` diulang terus |
-| 1 NOP | menyala 1 kali, benar |
-| 2, 3, 4 NOP | benar |
-
-Jadi yang dibutuhkan tepat **satu instruksi**; tiga `NOP` di `trap_flags.hasm`
-lebih dari cukup, dan itu sebabnya ia lolos.
-
-**Sebabnya.** `rtl/hcpu_trap.v` sudah membawa bypass untuk bahaya yang **sama
-persis** pada `TRAP_MODE`:
+**Perbaikannya bentuk yang sudah ada di berkas itu, enam belas baris di atas
+gejalanya.** `rtl/hcpu_trap.v` membawa `prev_at_eret` untuk bahaya yang sama
+pada `TRAP_MODE`, dan komentarnya menutup dengan *"the fix is not to require
+one"* — lalu hanya `TRAP_MODE` yang mendapatkannya. Sekarang `TRAP_EPC` juga:
 
 ```verilog
-wire mode_write   = reg_we && (reg_sel == `REG_TRAP_MODE);
-wire prev_at_eret = mode_write ? reg_wdata[1] : prev;
+wire epc_write    = reg_we && (reg_sel == `REG_TRAP_EPC);
+wire [`XLEN-1:0] epc_at_eret = epc_write ? reg_wdata : epc;
+assign trap_target = eret ? epc_at_eret : vector;
 ```
 
-dan komentarnya menutup dengan *"One NOP in between was enough to hide it; the
-fix is not to require one."* `TRAP_EPC` tidak mendapat perlakuan itu —
-`trap_target = eret ? epc : vector` membaca registernya langsung, enam belas
-baris di bawah bypass kembarannya.
+**Papan menjawab `1 1 1`** — `rtl/programs/trap_epc.hasm`, tiga ronde pada
+jarak nol, satu dan dua instruksi, masing-masing masuk handler tepat sekali.
 
-**Siapa yang terkena dan siapa yang tidak.** Setiap handler di pohon ini sudah
-punya jaraknya: `hal_epc_set` diikuti `hal_mode_user`, `hal_timer_arm`, lalu
-enam belas `LOAD` pemulihan. Jadi kernel yang ada tidak terkena. Yang terkena
-adalah handler **ringkas** — dan ia terkena diam-diam, karena gejalanya adalah
-instruksi yang diulang, bukan pesan kesalahan.
+Biayanya **+20 LUT4 dan +0 DFF** di slot HCPU, +21/+0 di slot HDMI: ia mux di
+jalur kembali, bukan register, jadi tidak menambah keadaan sama sekali.
 
-**Perbaikannya tidak dikerjakan.** Bentuknya jelas dan kembarannya sudah ada di
-berkas yang sama, tetapi menerapkannya adalah perubahan RTL, dan itu keputusan
-pemilik. Ditahan atas perintah pemilik, 13 September 2026.
+Dijaga dua tingkat: `rtl/tb/tb_hcpu_trap.v` pemeriksaan 18 menanyakan unitnya
+(tulisan sekelas siklus dengan `ERET` harus menang), dan
+`rtl/tb/tb_hcpu_trap_epc_eret.v` menyapu jaraknya di pipeline penuh. Disabotase
+dengan mengembalikan `trap_target` ke `epc`: keduanya merah, baris 0 NOP
+kembali ke 15 kali masuk (R3).
 
 Label: `AT`.
 
