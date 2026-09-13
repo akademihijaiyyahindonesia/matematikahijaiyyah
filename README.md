@@ -256,7 +256,7 @@ Dinyatakan apa adanya, dengan label epistemik.
 | Target ASIC | Belum ada pemetaan sel standar | `EH` |
 | Realisasi fotonik | DoF individual terdemonstrasi | `EH` |
 | H-Kernel | Proses, memori, I/O, daemon guard — 4 dari 4; tiga slot tetap | `CC` |
-| HOS, HFS | Terancang | `AT` |
+| HOS, HFS | Heap, HFS empat operasi, HAR sebagai layanan — di papan | `CC` |
 
 ### Catatan sintesis
 

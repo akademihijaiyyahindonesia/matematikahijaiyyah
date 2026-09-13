@@ -158,11 +158,21 @@ merusak daftar bebas.
 **HFS** membaca "sistem berkas yang sadar hybit" secara harfiah: satu berkas
 adalah satu vektor hybit 18-komponen, dan `hos_fs_write` menjalankan `HGRD`
 sebelum berkomitmen — vektor korup (indeks ROM 31, vektor uji yang sama
-dipakai setiap bench guard) ditolak, tak pernah tersimpan. Jalur bacanya
-**setengah**, dan itu batas perangkat keras, bukan pilihan desain: `CGET`
-membaca satu komponen H-Reg ke GPR, tapi **tidak ada `CSET`** — tidak ada
-instruksi yang menulis nilai GPR ke komponen H-Reg. `hos_fs_read` karena itu
-mengembalikan penunjuk ke 18 kata mentah, bukan H-Reg hidup.
+dipakai setiap bench guard) ditolak, tak pernah tersimpan.
+
+Jalur bacanya dulu **setengah**, dan itu batas perangkat keras, bukan pilihan
+desain: `CGET` membaca satu komponen H-Reg ke GPR, dan tidak ada instruksi yang
+menulis arah sebaliknya. `CSET` 0x45 (`f0dd0f8`) menutupnya, jadi `hos_fs_read`
+sekarang membangun ulang **H-Reg hidup** dari 18 kata tersimpan, bukan
+mengembalikan penunjuk ke kata mentah. Papan menjawab `1 1 1 2 1`.
+
+Empat operasinya kini bernama semua: `hos_fs_create` (`b2a0595`) memisahkan
+berkas yang **ada tapi kosong** dari berkas yang tak pernah dibuat — `size`
+tetap 0 sampai ada yang dikomit — dan `create → write → read → verify` berjalan
+di papan sebagai `1 0 1 1 1 1 0`. Verifikasinya `CEQ` terhadap salinan yang
+diambil sebelum tulis, delapan belas komponen termasuk H*, dengan H0 sengaja
+dikotori di antaranya. Yang belum: **penyimpanan persisten** — HFS masih RAM
+data dari `0xE00` dan hilang saat reset ([OFF.md](OFF.md)).
 
 **HAR** sebagai layanan: `hos_har_get(index)` memberi titik masuk bernama
 dan stabil, bukan mengharuskan pemanggil tahu pengindeksan ROM sendiri —

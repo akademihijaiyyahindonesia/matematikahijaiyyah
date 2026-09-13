@@ -348,7 +348,7 @@ sampai menjadi satu sistem yang bisa dipakai:
 |---|---|---|---|
 | M1 | HCPU + `CGET`/`CSET` | **selesai di papan** — `f0dd0f8`, keluaran `5 6 2 0` dan `1 1 1 2 1` | — |
 | M2 | Batch ISA berikutnya | **selesai di papan** — enam opcode codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`), `test_codex` menjawab `8 0 0 1 1 0 1 5` | — (`CSUB` ditunda, `CDOT` dikeluarkan karena tempat, `CNORM`/`CDIST` duplikat — lihat [OFF.md](OFF.md)) |
-| M3 | H-Kernel boot → shell | **sebagian di papan** — shell membaca perintah dari UART dan dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | banner/prompt teks (`PRINTH`/`EMITS` **BLOCKED** — keputusan pemilik) — resume setelah preemption, FLAGS sebagai konteks (H-ISA v1.1), dan hazard `TRAP_EPC`→`ERET` semuanya **diperbaiki dan terbukti di papan**. Banner dan prompt teks ada (`EMITS`, H-ISA v1.1). **Keempat penghalang M3 ditutup dan terbukti di papan.** **M4 ditahan** sampai pemilik memutuskan — lihat [OFF.md](OFF.md) |
+| M3 | H-Kernel boot → shell | **selesai di papan** — banner `HIJAIYYAH`, prompt `> `, gema karakter, perintah dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | — keempat penghalang ditutup dan terbukti di papan: resume setelah preemption (`e7b5a2d`), FLAGS sebagai konteks (H-ISA v1.1, `a3e2a15`), hazard `TRAP_EPC`→`ERET` (`346984d`), dan jalur keluaran karakter (`EMITS` 0xA2, `37cbbad`) |
 | M4 | Proses + syscall + timer | trap, supervisor, proteksi memori, syscall, timer semuanya di RTL dan dijalankan di papan (`81fbd2e`) | proses dinamis, stack per proses, tabel syscall |
 | M5 | HFS baca/tulis | **create → write → read → verify jalan di papan** (`1 0 1 1 1 1 0`), guard-on-write, H-Reg dibangun ulang lewat `CSET`, `hos_fs_create` operasi bernama | media penyimpanan persisten yang terverifikasi fisik |
 | M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
@@ -358,6 +358,13 @@ sampai menjadi satu sistem yang bisa dipakai:
 | M10 | Konsol HDMI | 1280×720 menyala bersama HCPU dan loader | framebuffer + perender teks + layanan display di kernel |
 | M11 | Jembatan NUI | `nui_embedding` jalan di papan, `2 2 2 6 6` | protokol PC→papan untuk data inferensi |
 | M12 | **COSMICTERA COMPUTER M0** | — | seluruh rantai di atas dalam satu boot |
+
+**Penomoran.** Pemilik membuka pekerjaan berikutnya dengan nama **"M4 — HFS +
+System Services"**; di tangga ini HFS adalah baris **M5**. Dua penomoran itu
+**tidak disatukan sepihak** — yang dikerjakan adalah isinya, dan nomornya
+keputusan pemilik. Butir pertamanya, `create → write → read → verify` di papan,
+sudah selesai (`b2a0595`); metadata, persistensi, lapisan layanan, dan
+integrasi kernel ↔ filesystem **belum dibuka**.
 
 ### Yang tidak boleh dikerjakan atas inisiatif sendiri
 

@@ -67,7 +67,7 @@ Buku menetapkan tumpukan tujuh lapis:
 7  Aplikasi          program HC, alat analisis                 ✅
 6  HVM / HCPU        eksekusi bytecode (perangkat lunak/keras)  ✅
 5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ◐  HAR ada, HISAB belum layanan
-4  HFS               sistem berkas yang sadar hybit             ◐  tulis dan baca ada, penyimpanan persisten belum
+4  HFS               sistem berkas yang sadar hybit             ◐  empat operasi ada, penyimpanan persisten belum
 3  H-Kernel          manajemen proses, memori, dan I/O          ✅  4 dari 4
 2  HAL               lapisan abstraksi perangkat keras          ✅
 1  Perangkat keras   CPU/HCPU, memori, I/O                      ✅
@@ -81,7 +81,7 @@ Jalur tulis (`hos_fs_write` di `rtl/programs/hos.hasm`) nyata: `HGRD`
 dijalankan sebelum berkomitmen, vektor korup ditolak. Jalur bacanya kini utuh
 juga: `CSET` (0x45) ada di RTL, jadi `hos_fs_read` membangun ulang vektor
 tersimpan ke H0 komponen demi komponen — bukan lagi sekadar penunjuk ke 18
-kata mentah. Yang masih hilang satu:
+kata mentah.
 
 Empat operasinya kini utuh dan bernama: `hos_fs_create` dibuat di M4.1, jadi
 "berkas ini sudah ada" akhirnya bisa dinyatakan, dan siklus
@@ -385,7 +385,7 @@ Label: `EH`.
 ```
 menyala   matematika, bahasa, mesin, sistem operasi, kripto,
           jembatan (simulasi + bitstream HCPU di Tang Nano 20K)
-terhalang top level gabungan, HFS baca (tanpa CSET), penyimpanan persisten
+terhalang top level gabungan, penyimpanan persisten HFS
 belum ada 24 opcode, proses dinamis, ASIC
 ```
 

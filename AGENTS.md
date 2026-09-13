@@ -351,6 +351,45 @@ di sana. Daftar di bawah hanya penunjuk bab.
       word penutupnya lebih dulu. Kalau sebuah sabotase lewat, yang lemah
       tesnya — bukan buktinya.
 
+### 13 September — M4.1: HFS punya empat operasi
+
+- `b2a0595` **M4.1** — `create → write → read → verify`, dibaca dari papan
+  sebagai tujuh angka: `1 0 1 1 1 1 0`.
+  - Angka kedua adalah alasan `create` jadi operasi bernama. Dulu ia efek
+    samping tulis pertama — itu berjalan, dan menyembunyikan beda yang dipakai
+    sebuah filesystem: berkas yang **ada** tapi kosong bukan berkas yang tak
+    pernah dibuat. Sebelum `hos_fs_create` tidak ada cara bertanya. `size`
+    tetap 0 sampai ada yang dikomit, jadi bedanya angka, bukan terkaan.
+  - Angka kelima adalah yang bisa berbohong dan tidak: `verify` bukan "baca
+    mengembalikan sesuatu", melainkan `CEQ` terhadap salinan yang diambil
+    **sebelum** tulis — delapan belas komponen termasuk H*, yang tidak
+    diturunkan dari tujuh belas lainnya dan karena itu tak bisa benar karena
+    kebetulan. H0 sengaja dikotori antara tulis dan baca.
+  - **Titik buta yang repo ini sudah catat sekali, dan saya ulangi.** Sabotase
+    ketiga tidak menggigit: programnya menyimpan Lam dan mengotori dengan Haa,
+    dan H* keduanya 0 — komponen yang paling akhir ditinggalkan rebuild
+    separuh bernilai nol di kedua sisi. **Kaf satu-satunya huruf di tabel yang
+    H*-nya 1.** `f0dd0f8` sudah mencatat bentuk yang sama persis. Dan
+    `HLOAD 23` itu Lam, bukan Kaf: ROM 1-indeks dan Kaf duduk di 22.
+  - Tiga sabotase, ketiganya kini merah (R3): `create` tidak menandai entri →
+    `1 1 1 1 1 1 0`; satu komponen tersimpan dirusak → verify 0; `CSET`
+    terakhir pada baca dihapus → verify 0, tetapi **hanya** sesudah huruf yang
+    disimpan diganti Kaf.
+  - **Yang tidak diklaim: persistensi.** HFS adalah RAM data dari 0xE00 dan
+    hilang saat reset. Ia tetap butir sendiri di `cosmictera-build/OFF.md`, dan
+    baris centangnya di `cosmictera-build/CHECKLIST.md` membawa kata "di RAM" —
+    `tests/test_integrity/test_build_list.py` menolak centang HFS yang tidak
+    menyebut jalur mana yang diklaim.
+  - RTL tidak disentuh, jadi kedua sidik jari wrapper tetap seperti yang
+    diukur `EMITS`. Di papan `test_hfs` masih menjawab `1 1 1 2 1`.
+  - Cacat saya sendiri yang lognya sendiri tunjukkan, dan **sudah pernah
+    dicatat di `346984d`**: `check(input [255:0] what)` memuat 32 byte dan
+    memotong sisanya **dari kiri**, jadi `ok   : agi: ditolak, file dibuat
+    sekali` adalah pesan yang lebih panjang. Tiga di bench baru ini, satu di
+    `rtl/tb/tb_hcpu_emits.v`, satu di `rtl/tb/tb_hcpu_shell.v` — semuanya
+    dipendekkan. Yang **tidak** disentuh: 34 pesan sepanjang itu di enam bench
+    lama, di luar cakupan M4.1, dilaporkan bukan disapu.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
@@ -403,8 +442,8 @@ memutuskan:
    — spesifikasi belum menetapkannya.
    **Keempat penghalang M3 ditutup 13 September 2026** dan terbukti di papan
    fisik: resume setelah preemption, FLAGS sebagai konteks, hazard
-   `TRAP_EPC`→`ERET`, dan jalur keluaran karakter. **M4 tetap ditahan sampai
-   pemilik membukanya.** Yang terhalang dicatat di
+   `TRAP_EPC`→`ERET`, dan jalur keluaran karakter. Sesudah itu **pemilik
+   membuka M4**, dan hanya butir pertamanya. Yang terhalang dicatat di
    `cosmictera-build/OFF.md` dengan alasan terukur, bukan dirapikan.
 
 ### Kesimpulan resmi M3 — pemilik, 13 September 2026
@@ -412,9 +451,11 @@ memutuskan:
 > *"akar A sudah ditemukan; belum diperbaiki; B/C/D masih terbuka; M4 belum
 > boleh dimulai."*
 
-Empat kalimat itu adalah keadaan M3, dan yang keempat mengikat: **jangan
-memulai M4.** Yang boleh dikerjakan hanyalah penghalang yang pemilik putuskan,
-satu pada satu waktu, lalu empat gerbang dan uji fisik Tang Nano 20K.
+Empat kalimat itu adalah keadaan M3 **pada hari itu**, dan yang keempat
+mengikat selama ia berlaku: satu penghalang pada satu waktu, diputuskan
+pemilik, lalu empat gerbang dan uji fisik Tang Nano 20K. Keempatnya sudah
+ditutup dengan urutan itu, dan pemilik membuka M4 sesudahnya — lihat bagian
+berikutnya.
 
 | | penghalang | keadaan |
 |---|---|---|
@@ -423,9 +464,23 @@ satu pada satu waktu, lalu empat gerbang dan uji fisik Tang Nano 20K.
 | C | `STORE` `TRAP_EPC` → `ERET` | **selesai** — `epc_at_eret` mengikuti bentuk `prev_at_eret`; papan menjawab `1 1 1` pada jarak 0, 1, 2 instruksi. Biaya +20 LUT4, +0 DFF |
 | D | keluaran karakter | **selesai** — `EMITS` 0xA2, satu karakter per word, penutup nol; keputusan pemilik 13 September. Papan mencetak `Hijaiyyah`, shell punya banner dan prompt |
 
-Semuanya di `cosmictera-build/OFF.md` dengan angkanya. M3 tidak boleh disebut
-selesai sampai jalur keluaran karakter disahkan pemilik **dan** berjalan di
-papan fisik.
+Semuanya di `cosmictera-build/OFF.md` dengan angkanya. Syarat terakhir M3 —
+jalur keluaran karakter disahkan pemilik **dan** berjalan di papan fisik —
+dipenuhi `37cbbad`: papan mencetak `Hijaiyyah`, dan shell punya banner serta
+prompt.
+
+### Keputusan pemilik, 13 September 2026 — M4 dibuka
+
+> *"M4 — HFS + System Services. … M4.1 dimulai dari HFS physical storage path,
+> bukan langsung membuat filesystem besar: `create → write → read → verify` di
+> papan Tang Nano 20K, lalu baru metadata, persistence, dan service layer."*
+
+Urutannya bagian dari perintah: jalur simpan fisik lebih dulu, sendirian.
+
+- **M4.1 selesai** (`b2a0595`), terbukti di papan: `1 0 1 1 1 1 0`.
+- **Belum dibuka**: metadata, persistensi, lapisan layanan HAR, dan integrasi
+  kernel ↔ filesystem. Jangan memulainya sebelum pemilik menyebutnya — M4
+  bukan satu butir, dan "M4 dibuka" bukan izin untuk keempatnya.
 
 ---
 

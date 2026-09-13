@@ -84,8 +84,8 @@ menyangkut jalur penerimaan.
 |---|---|---|---|---|
 | **HOM** | Hijaiyyah Operating Machine | Antarmuka global dan simulator interaktif pusat untuk seluruh ekosistem | `gui/`, `__main__.py` | CC |
 | **HGSS** | Hybit Guard + Signature System | Lapis keamanan (L6) | `crypto/` | EH |
-| **HFS** | Hybit File System | Sistem berkas *Guard-on-Write*: setiap operasi tulis divalidasi guard sebelum disimpan | — | **AT** |
-| **HOS** | Hybit Operating System | Arsitektur sistem operasi 7 lapis berbasis *Guard-on-the-fly* | — | **AT** |
+| **HFS** | Hybit File System | Sistem berkas *Guard-on-Write*: setiap operasi tulis divalidasi guard sebelum disimpan | `rtl/programs/hos.hasm`, `rtl/programs/hfs_lifecycle.hasm` | **CC** |
+| **HOS** | Hybit Operating System | Arsitektur sistem operasi 7 lapis berbasis *Guard-on-the-fly* | `rtl/programs/hos.hasm` | **CC** |
 
 ---
 

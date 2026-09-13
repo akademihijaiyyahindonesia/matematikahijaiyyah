@@ -22,8 +22,8 @@ Font (sealed) → Ψ-Compiler → .hgeo → HAR ────────┘
 | HVM | Virtual machine (5 components) | OPERATIONAL |
 | Guard | Per-operation validation G1–G4 | OPERATIONAL |
 | HCHECK | Periodic integrity monitor | SPECIFIED |
-| HOS | Operating system | DESIGNED |
-| HFS | File system (guard-on-write) | DESIGNED |
+| HOS | Operating system | OPERATIONAL (heap, HFS, HAR as a service) |
+| HFS | File system (guard-on-write) | OPERATIONAL (create/write/read/verify; no persistent medium) |
 | H-Kernel | Kernel (18-wide alignment) | OPERATIONAL (4 of 4; three fixed slots) |
 
 ## Principle: No Overlap
