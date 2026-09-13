@@ -307,6 +307,19 @@ di sana. Daftar di bawah hanya penunjuk bab.
       `rtl/tb/tb_hcpu_kernel.v` dulu hanya menuntut `A > 0`, yang dipenuhi
       sebuah bangkai.
 
+  - `346984d` `TRAP_EPC` mendapat bypass yang sudah dimiliki `TRAP_MODE`.
+    - Bentuknya sudah ada enam belas baris di atas gejalanya, di berkas yang
+      sama, dan komentarnya sudah menolak jalan keluar lewat `NOP`.
+    - Papan: `trap_epc` `1 1 1` — jarak 0, 1, 2 instruksi, masing-masing masuk
+      handler tepat sekali. Nol adalah yang dulu berputar tanpa henti.
+    - Biayanya **+0 DFF**: ia mux di jalur kembali, bukan register.
+    - Dijaga dua tingkat dan keduanya disabotase: `rtl/tb/tb_hcpu_trap.v` #18 untuk
+      unitnya, `rtl/tb/tb_hcpu_trap_epc_eret.v` untuk pipeline penuh.
+    - Cacat saya sendiri yang ikut tertangkap: pesan `check()` lebih dari 32
+      karakter dipotong dari kiri, dan punya saya membelah em-dash — log
+      `make` jadi bukan UTF-8 dan tes pencacah asersi patah. Semua pesan di
+      bench yang disentuh cabang ini kini ASCII dan muat.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
