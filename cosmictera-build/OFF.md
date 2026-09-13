@@ -212,19 +212,81 @@ Trap sukarela bisa diatur: program cukup tidak meninggalkan perbandingan hidup
 melewati `SYSCALL`-nya sendiri, dan `shell.hasm` menjaga disiplin itu di setiap
 `CMP`. Trap **timer** tidak bisa diatur.
 
+**Seberapa sering ia menggigit — diukur, 13 September 2026.** Sebuah loop yang
+memuat satu perbandingan (`MOVI` / `CMPI` / `JEQ` / `JMP`) disapu terhadap 60
+tenggat timer. Lima di antaranya membalik cabangnya: `R2` berakhir 111 —
+jalur "tidak sama" — padahal `Z` harus 1. Polanya periodik dengan periode
+sebelas, panjang loop itu sendiri, jadi **satu siklus dari sebelas** adalah
+jendela di mana preemption membalik sebuah keputusan tanpa suara. Bukan
+teoretis, dan tidak ada yang bisa dilakukan perangkat lunak tentangnya.
+
+**Yang dicari dan tidak ada.** Bukan hanya implementasinya yang tidak
+menyediakan jalan — **spesifikasinya juga tidak**. `docs/HISA_SPEC.md` §14.3
+mendaftar pembaca FLAGS dan hanya berisi bentuk-J: `JGD`, `JNGD`, `JEQ`,
+`JNE`. Tidak ada instruksi yang memindahkannya ke register. Dan tidak ada
+alamat yang bisa dipakai: keenam belas kata periferal `0x0`–`0xF` sudah
+terpakai semuanya. Jadi ini **bukan** kasus seperti penghalang 2, yang
+perbaikannya sudah tertulis di komentar kodenya sendiri; di sini tidak ada
+desain yang tertinggal untuk diterapkan.
+
+**Yang ada, dan kenapa ia tidak cukup.** Unit trap sudah punya bentuk
+menyelamatkan satu keping keadaan kecil melewati trap — `prev <= mode` saat
+fire, `mode <= prev` saat `ERET`, dengan `REG_TRAP_MODE` memaparkan keduanya.
+FLAGS bisa mengikuti pola itu persis, dan itu akan membuat handler transparan.
+Tapi ia **tidak menyelesaikan penjadwal**: kernel melanjutkan proses yang
+*berbeda* dari yang menjebak, jadi flags yang dipulihkan milik proses yang
+salah. Kegagalan yang sekarang terlihat akan berubah menjadi kegagalan yang
+diam — lebih buruk, bukan lebih baik.
+
+**Keputusan pemilik, 13 September 2026:**
+
+> B dibiarkan terbuka. Tidak ada perubahan RTL/ISA. Representasi dan akses
+> FLAGS belum ditetapkan oleh spesifikasi. Risiko context-switch sudah
+> terukur, tetapi solusi ditahan sebagai keputusan pemilik.
+
 #### 4. `STORE` ke `TRAP_EPC` tepat sebelum `ERET` kembali ke epc lama
 
-Terukur di papan saat menulis `trap_flags.hasm`: `SYSCALL` yang sama di PC 80
-menjebak **tiga kali berturut-turut**, mencetak 80 setiap kali, sampai tiga
-`NOP` disisipkan antara simpanan dan `ERET`.
+**Status: OPEN. Akar dan perilakunya terukur; bypass BELUM diterapkan.**
 
-`rtl/hcpu_trap.v` sudah membawa bypass untuk bahaya yang **sama persis** pada
-`TRAP_MODE` (`prev_at_eret`), dan komentarnya menutup dengan kalimat *"One NOP
-in between was enough to hide it; the fix is not to require one."*
-`TRAP_EPC` tidak mendapat perlakuan itu: `trap_target = eret ? epc : vector`
-membaca registernya. Sepuluh instruksi `hal_epc_set` → `hal_mode_user` →
-`hal_timer_arm` → enam belas `LOAD` memberi jarak yang cukup, jadi kernel yang
-ada tidak terkena — tetapi handler yang ringkas terkena, diam-diam.
+Pertama terlihat di papan saat menulis `trap_flags.hasm`: `SYSCALL` yang sama
+di PC 80 menjebak **tiga kali berturut-turut**, mencetak 80 setiap kali, sampai
+tiga `NOP` disisipkan antara simpanan dan `ERET`.
+
+**Jaraknya diukur persis, 13 September 2026.** Sebuah handler yang membaca
+`TRAP_EPC`, menambah satu, menulisnya kembali, lalu `ERET` — dengan jumlah
+`NOP` di antaranya disapu 0 sampai 4, jendela pengamatan 200 siklus:
+
+| jarak | hasil |
+|---:|---|
+| **0 NOP** | trap menyala **15 kali**, handler masuk 15 kali, instruksi sesudah `SYSCALL` tidak pernah tercapai — `ERET` memakai epc **lama**, jadi `SYSCALL` diulang terus |
+| 1 NOP | menyala 1 kali, benar |
+| 2, 3, 4 NOP | benar |
+
+Jadi yang dibutuhkan tepat **satu instruksi**; tiga `NOP` di `trap_flags.hasm`
+lebih dari cukup, dan itu sebabnya ia lolos.
+
+**Sebabnya.** `rtl/hcpu_trap.v` sudah membawa bypass untuk bahaya yang **sama
+persis** pada `TRAP_MODE`:
+
+```verilog
+wire mode_write   = reg_we && (reg_sel == `REG_TRAP_MODE);
+wire prev_at_eret = mode_write ? reg_wdata[1] : prev;
+```
+
+dan komentarnya menutup dengan *"One NOP in between was enough to hide it; the
+fix is not to require one."* `TRAP_EPC` tidak mendapat perlakuan itu —
+`trap_target = eret ? epc : vector` membaca registernya langsung, enam belas
+baris di bawah bypass kembarannya.
+
+**Siapa yang terkena dan siapa yang tidak.** Setiap handler di pohon ini sudah
+punya jaraknya: `hal_epc_set` diikuti `hal_mode_user`, `hal_timer_arm`, lalu
+enam belas `LOAD` pemulihan. Jadi kernel yang ada tidak terkena. Yang terkena
+adalah handler **ringkas** — dan ia terkena diam-diam, karena gejalanya adalah
+instruksi yang diulang, bukan pesan kesalahan.
+
+**Perbaikannya tidak dikerjakan.** Bentuknya jelas dan kembarannya sudah ada di
+berkas yang sama, tetapi menerapkannya adalah perubahan RTL, dan itu keputusan
+pemilik. Ditahan atas perintah pemilik, 13 September 2026.
 
 Label: `AT`.
 
