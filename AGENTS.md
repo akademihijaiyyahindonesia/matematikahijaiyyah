@@ -337,6 +337,20 @@ di sana. Daftar di bawah hanya penunjuk bab.
       yang sebenarnya memegang bit tanda. §14.1 dibetulkan mengikuti RTL;
       nama yang keliru **dilaporkan, tidak diganti**.
 
+  - `37cbbad` **`EMITS`** — bentuk stringnya ditetapkan, dan mesin akhirnya
+    bisa mencetak satu karakter.
+    - Keputusan pemilik: satu karakter ASCII per word 32-bit, word nol sebagai
+      penutup. Slot dan namanya sudah ada sejak v1.0; yang hilang tata
+      letaknya.
+    - Papan: `Hijaiyyah`, lalu shell dengan banner `HIJAIYYAH`, prompt `> `
+      tanpa newline, dan `A` menggema sebagai `A`.
+    - **Bukan pemancar kedua**: mesin keadaan cetak bertambah tiga keadaan,
+      port RAM di-mux, dan penolakan `rtl/hcpu_mmio.v` tetap dipegang.
+    - Sabotase pertama **tidak menggigit** dua kali: RAM simulasi mulai nol,
+      jadi penutup yang tak ditulis tetap nol. Benchnya sekarang menulis `Z` ke
+      word penutupnya lebih dulu. Kalau sebuah sabotase lewat, yang lemah
+      tesnya — bukan buktinya.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
@@ -387,8 +401,10 @@ memutuskan:
    driver TX kedua, `rtl/hcpu_font8x8.hex`, dan mengubah semantik `PRINT`.
    Bentuk string `EMITS` di RAM 32-bit juga **tidak** boleh ditetapkan sendiri
    — spesifikasi belum menetapkannya.
-   **M3 belum boleh disebut selesai** sampai jalur keluaran karakter disahkan
-   pemilik desain dan berjalan di papan fisik. Yang terhalang dicatat di
+   **Keempat penghalang M3 ditutup 13 September 2026** dan terbukti di papan
+   fisik: resume setelah preemption, FLAGS sebagai konteks, hazard
+   `TRAP_EPC`→`ERET`, dan jalur keluaran karakter. **M4 tetap ditahan sampai
+   pemilik membukanya.** Yang terhalang dicatat di
    `cosmictera-build/OFF.md` dengan alasan terukur, bukan dirapikan.
 
 ### Kesimpulan resmi M3 — pemilik, 13 September 2026
