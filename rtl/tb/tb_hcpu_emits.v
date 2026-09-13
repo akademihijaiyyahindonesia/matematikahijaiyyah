@@ -157,7 +157,7 @@ module tb_hcpu_emits;
         end
         // The terminator is a stop, not a character: a tenth byte would mean
         // EMITS printed the zero word or ran past it.
-        check(count <= 9, "penutup menghentikan, tidak ikut tercetak");
+        check(count <= 9, "penutup tidak ikut tercetak");
         check(halted, "mesin sampai ke HALT sesudahnya");
 
         if (errors == 0)

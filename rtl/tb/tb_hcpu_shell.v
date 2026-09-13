@@ -127,7 +127,7 @@ module tb_hcpu_shell;
         p0_before = u_board.u_hcpu.u_dataram.mem[P0_COUNT];
 
         // ── the banner, before anything is typed ────────────────
-        check(count >= 12, "banner lalu prompt keluar sendiri");
+        check(count >= 12, "banner lalu prompt keluar");
         if (count >= 12) begin
             check(got[0] == "H" && got[1] == "I" && got[2] == "J"
                && got[3] == "A" && got[4] == "I" && got[5] == "Y"

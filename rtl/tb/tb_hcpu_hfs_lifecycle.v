@@ -121,12 +121,12 @@ module tb_hcpu_hfs_lifecycle;
         check(count >= 14, "tujuh jawaban keluar");
         if (count >= 14) begin
             check(got[0]  == "1", "create: file 3 dibuat");
-            check(got[2]  == "0", "create lagi: ditolak, file dibuat sekali");
+            check(got[2]  == "0", "create lagi: ditolak");
             check(got[4]  == "1", "write: vektor terjaga dikomit");
             check(got[6]  == "1", "read: entri bilang ia ada");
-            check(got[8]  == "1", "verify: yang kembali sama persis, 144 bit");
+            check(got[8]  == "1", "verify: sama persis, 144 bit");
             check(got[10] == "1", "verify: dan masih lolos guardnya");
-            check(got[12] == "0", "read file yang tak pernah dibuat: 0");
+            check(got[12] == "0", "baca file tak pernah dibuat: 0");
         end
 
         if (errors == 0)
