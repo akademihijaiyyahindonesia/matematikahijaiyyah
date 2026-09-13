@@ -235,7 +235,7 @@ src/hijaiyyah/
   gui/           aplikasi desktop HOM (Tkinter, 14 tab)
 rtl/             HCPU — Verilog, testbench, target MPW/FPGA
 hom-gui/         aplikasi web (React + Vite) → hybit.tech
-tests/           4.949 test
+tests/           4.952 test
 docs/            spesifikasi format dan protokol
 ```
 

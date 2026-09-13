@@ -83,6 +83,11 @@ juga: `CSET` (0x45) ada di RTL, jadi `hos_fs_read` membangun ulang vektor
 tersimpan ke H0 komponen demi komponen — bukan lagi sekadar penunjuk ke 18
 kata mentah. Yang masih hilang satu:
 
+Empat operasinya kini utuh dan bernama: `hos_fs_create` dibuat di M4.1, jadi
+"berkas ini sudah ada" akhirnya bisa dinyatakan, dan siklus
+create → write → read → verify berjalan di papan sebagai `1 0 1 1 1 1 0`
+(`rtl/programs/hfs_lifecycle.hasm`). Yang masih hilang tetap satu:
+
 | butuh | keadaan |
 |---|---|
 | penyimpanan persisten | **belum diverifikasi** — HFS sekarang murni RAM data (`0xE00`+), hilang saat reset. Tang Nano 20K punya jalur SDRAM/PSRAM di chipdb-nya (`IO_sdram_dq[0:31]` muncul saat PNR), tapi belum dipastikan papan fisiknya benar-benar memasang chip PSRAM |

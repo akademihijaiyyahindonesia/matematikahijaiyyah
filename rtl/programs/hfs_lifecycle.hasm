@@ -1,0 +1,88 @@
+; hfs_lifecycle.hasm — the four operations of a filesystem, on the board.
+;
+; Prints SEVEN numbers, and each is one step of the same file's life:
+;
+;   1   create   file 3 did not exist, and now does
+;   0   create   the same id again is refused -- a file is made once
+;   1   write    a guarded vector committed into it
+;   1   read     it comes back, and the entry says it was there
+;   1   verify   what came back IS what went in: CEQ over all 144 bits
+;   1   verify   and it still passes its own guard
+;   0   read     file 5 was never created, and says so
+;
+; ── what each step is actually asking ───────────────────────────
+; CREATE is a named operation here rather than a side effect of the first
+; write, and the second line is why: a filesystem has to be able to say "this
+; file already exists". Before create existed there was no way to ask.
+;
+; VERIFY is not "did read return something". It is `CEQ H0, H1` against a copy
+; taken BEFORE the write -- all eighteen components including H*, which is not
+; derived from the others and so cannot be reconstructed by luck. The vector
+; is deliberately clobbered between write and read (Haa over Kaf), so a read
+; that quietly returned the register instead of the stored words would come
+; back as Haa and the comparison would say so.
+;
+; The guard runs twice: hos_fs_write refuses to commit a vector that fails it
+; -- that is the book's guard-on-write, layer 4 -- and this program checks the
+; vector is still valid after the round trip, which is a different question.
+;
+; ── what this does NOT prove ────────────────────────────────────
+; Persistence. HFS is data RAM at 0xE00 and up, and it is gone at reset. That
+; is the next step and it is recorded as its own item in
+; cosmictera-build/OFF.md, not folded into this one.
+
+        MOVI  R5, 0
+        CALL  hos_heap_init
+
+; ── create ─────────────────────────────────────────────────────
+        MOVI  R1, 3
+        CALL  hos_fs_create
+        PRINT R1                ; 1
+
+        MOVI  R1, 3
+        CALL  hos_fs_create
+        PRINT R1                ; 0 -- made once
+
+; ── write ──────────────────────────────────────────────────────
+; Kaf, and the index is 22 rather than 23 because the ROM is ONE-indexed --
+; `HLOAD 23` is Lam. Kaf is the only letter in the whole table whose H* is 1,
+; so it is the only choice that makes the eighteenth component visible: with
+; any other letter stored, a read that never rebuilt component 17 would leave
+; the clobber's own zero there and look correct. Measured, with Lam stored and
+; Haa clobbering, deleting the read's last CSET changed nothing at all -- the
+; same blind spot f0dd0f8 recorded and this repeated.
+        HLOAD H0, 22            ; Kaf, H* = 1
+        CMOV  H1, H0            ; keep the original for the verify below
+        MOVI  R1, 3
+        CALL  hos_fs_write
+        PRINT R1                ; 1
+
+; ── clobber, so the read has to come from storage ──────────────
+        HLOAD H0, 27            ; Haa
+
+; ── read ───────────────────────────────────────────────────────
+        MOVI  R1, 3
+        CALL  hos_fs_read
+        PRINT R1                ; 1
+
+; ── verify ─────────────────────────────────────────────────────
+        MOVI  R6, 0
+        CEQ   H0, H1
+        JNE   v_diff
+        MOVI  R6, 1
+v_diff: PRINT R6                ; 1 -- byte for byte what went in
+
+        MOVI  R6, 0
+        HGRD  H0
+        JNGD  v_bad
+        MOVI  R6, 1
+v_bad:  PRINT R6                ; 1 -- and still a valid hybit
+
+; ── a file that was never made ─────────────────────────────────
+        MOVI  R1, 5
+        CALL  hos_fs_read
+        PRINT R1                ; 0
+
+        HALT
+
+        .include "hos.hasm"

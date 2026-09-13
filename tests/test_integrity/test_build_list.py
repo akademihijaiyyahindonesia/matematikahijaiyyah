@@ -301,13 +301,19 @@ def test_nothing_blocked_is_ticked_green() -> None:
     for word in ("flash", "Fmax"):
         assert not [ln for ln in green if word in ln], f"{word} is ticked green"
     # An HFS row may be green only while it names WHICH path it is claiming.
-    # There were two phrases to allow once CSET landed: the write path has
-    # always been "guard-on-write", and the read path became real when
-    # hos_fs_read stopped handing back raw words and started rebuilding a live
-    # H-Reg -- proven on the board, 1 1 1 2 1. HFS as a whole is still blocked
-    # on persistent storage (OFF.md), so a row that says only "HFS" stays
-    # refused.
-    scopes = ("guard-on-write", "baca mengembalikan H-Reg hidup")
+    # There were two phrases once CSET landed: the write path has always been
+    # "guard-on-write", and the read path became real when hos_fs_read stopped
+    # handing back raw words and started rebuilding a live H-Reg -- proven on
+    # the board, 1 1 1 2 1. M4.1 adds a third: the four operations as a
+    # lifecycle, with hos_fs_create finally a named operation instead of a
+    # side effect of the first write, proven on the board as 1 0 1 1 1 1 0.
+    #
+    # It carries "di RAM" for the same reason the other two carry their own
+    # scope: HFS as a whole is still blocked on PERSISTENT storage (OFF.md),
+    # and everything M4.1 proved is gone at reset. A row that says only "HFS"
+    # stays refused.
+    scopes = ("guard-on-write", "baca mengembalikan H-Reg hidup",
+              "create → write → read → verify, di RAM")
     hfs_rows = [ln for ln in green if "HFS" in ln]
     assert hfs_rows, "HOS's HFS row went missing from the checklist"
     for ln in hfs_rows:

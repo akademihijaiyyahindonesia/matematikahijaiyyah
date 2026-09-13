@@ -28,7 +28,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
         sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
-        sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits clean
+        sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
+        sim_hfs_lifecycle clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -41,7 +42,8 @@ all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
      sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
-     sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits
+     sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
+     sim_hfs_lifecycle
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -84,7 +86,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -113,6 +115,10 @@ sim_flags_ctx: tb_hcpu_flags_ctx.vvp flags_ctx.hex
 
 # The character path: EMITS, one ASCII byte per word, zero word ends it.
 sim_emits: tb_hcpu_emits.vvp
+	$(VVP) $<
+
+# M4.1: the four operations of a filesystem, in one file's life.
+sim_hfs_lifecycle: tb_hcpu_hfs_lifecycle.vvp hfs_lifecycle.hex
 	$(VVP) $<
 
 # The twenty-eight letter opcodes. Nothing executed one until this bench.
@@ -203,6 +209,12 @@ tb_hcpu_flags_ctx.vvp: $(TB_DIR)/tb_hcpu_flags_ctx.v $(RTL_DIR)/fpga/gowin/hcpu_
 	$(IVERILOG) $(INC) -o $@ $^
 
 tb_hcpu_emits.vvp: $(TB_DIR)/tb_hcpu_emits.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+hfs_lifecycle.hex: $(RTL_DIR)/programs/hfs_lifecycle.hasm $(RTL_DIR)/programs/hos.hasm $(RTL_DIR)/programs/hal.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+tb_hcpu_hfs_lifecycle.vvp: $(TB_DIR)/tb_hcpu_hfs_lifecycle.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
 # ── unit benches ────────────────────────────────────────────────

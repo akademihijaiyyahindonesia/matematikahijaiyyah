@@ -177,7 +177,55 @@ hf_bad: MOVI  R1, 0
 ; already put the instruction that closes it.
 ;
 ; File table entry, 3 words at 0xE80 + 3*file_id:
-;   [0] in_use (0/1)   [1] size (18, once written)   [2] heap pointer
+;   [0] in_use (0/1)   [1] size (0 until written, then 18)   [2] heap pointer
+;
+; -- create, and why it is its own operation --------------------------
+; Creation used to be implicit: the first hos_fs_write to an unused id
+; allocated the block and marked the entry. That works and it hides a
+; distinction the four operations of a filesystem depend on -- a file that
+; EXISTS and is empty is not the same as a file that was never made, and
+; without a named create there is no way to say so. hos_fs_create makes the
+; entry and the space; size stays 0 until a vector is committed, so the two
+; states are told apart by a number rather than by inference.
+;
+; It also means hos_fs_write's reuse path is now reachable with size 0, which
+; it never was before -- so the size field is written there too, not only on
+; the allocate path.
+
+; R1 = file_id (0-7) -> R1 = 1 (created) or 0 (refused)
+; Refused for three reasons, and they are not distinguished: an id past the
+; table, an id already in use, or a heap with no eighteen words left. A
+; filesystem that cannot make the file says so; which of the three it was is
+; the caller's business to avoid, not this routine's to narrate.
+hos_fs_create:
+        MOV   R4, R1             ; R4 survives hos_alloc; R1 does not
+        MOVI  R1, 7
+        MOV   R2, R4
+        CALL  hos_size_ge        ; R3 = 1 if 7 >= file_id
+        CMPI  R3, 0
+        JEQ   fc_no
+        MOVI  R10, 3
+        MUL   R10, R4, R10
+        ADDI  R10, R10, 0xE80
+        LOAD  R11, R10, 0
+        CMPI  R11, 1
+        JEQ   fc_no              ; already exists: create does not re-create
+        MOVI  R1, 18
+        CALL  hos_alloc
+        CMPI  R1, 0
+        JEQ   fc_no              ; heap exhausted
+        MOVI  R10, 3             ; R10 was clobbered by hos_alloc
+        MUL   R10, R4, R10
+        ADDI  R10, R10, 0xE80
+        STORE R1, R10, 2         ; the space
+        MOVI  R11, 1
+        STORE R11, R10, 0        ; the entry
+        MOVI  R11, 0
+        STORE R11, R10, 1        ; created, nothing committed yet
+        MOVI  R1, 1
+        RET
+fc_no:  MOVI  R1, 0
+        RET
 
 ; R1 = file_id (0-7), H0 = the vector to persist -> R1 = 1 (written) or 0 (refused)
 ; R4 holds file_id for the whole routine, not R9 or R10: hos_alloc uses BOTH
@@ -215,6 +263,11 @@ fw_have:
         MOVI  R11, 18
         STORE R11, R10, 1
 fw_reuse:
+        ; Size is written HERE and not only on the allocate path above,
+        ; because hos_fs_create reaches this line with size 0. Before create
+        ; existed, an entry marked in_use always had 18 in it already.
+        MOVI  R11, 18
+        STORE R11, R10, 1
         LOAD  R12, R10, 2        ; heap pointer -- component 0 lands at R12+0
         ; Unrolled, not looped: CGET names its component in the immediate --
         ; `calu_index = id_imm` in hcpu_execute.v, same as HLOAD's ROM index

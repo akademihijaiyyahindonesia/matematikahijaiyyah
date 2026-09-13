@@ -57,6 +57,7 @@ rtl/tb/subroutine.hex
 rtl/tb/syscall_io.hex
 rtl/tb/hos_demo.hex
 rtl/tb/flags_ctx.hex
+rtl/tb/hfs_lifecycle.hex
 rtl/tb/shell.hex
 rtl/tb/payload.txt
 

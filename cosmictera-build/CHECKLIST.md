@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.949 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.952 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,7 +41,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 4.949 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 4.952 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -80,7 +80,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **303 asersi, 25 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **311 asersi, 26 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -94,6 +94,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **Jarak `STORE TRAP_EPC` sebelum `ERET`: nol pun benar** | `make -C rtl/tb sim_epc_eret` |
 | ✅ | **FLAGS milik prosesnya, melewati preemption** | `make -C rtl/tb sim_flags_ctx` |
 | ✅ | **`EMITS` mencetak `Hijaiyyah`, penutup menghentikan** | `make -C rtl/tb sim_emits` |
+| ✅ | **HFS create → write → read → verify, di RAM** — persistensi masih terbuka, lihat [OFF.md](OFF.md) | `make -C rtl/tb sim_hfs_lifecycle` |
 | ✅ | **28 instruksi huruf** | `make -C rtl/tb sim_letters` |
 | ✅ | **`CALL`/`RET`, sarang 8 tingkat** | `make -C rtl/tb sim_subroutine` |
 | ✅ | **I/O lewat kernel, dua sisi** | `make -C rtl/tb sim_syscall_io` |
@@ -240,7 +241,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.949 lulus, 0 dilewati
-make -C rtl/tb all               # 303 asersi, 25 bench, 0 gagal
+python3 -m pytest -q             # 4.952 lulus, 0 dilewati
+make -C rtl/tb all               # 311 asersi, 26 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

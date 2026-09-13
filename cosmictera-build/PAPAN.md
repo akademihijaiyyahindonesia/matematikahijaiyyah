@@ -383,6 +383,52 @@ FLAGS memang masih terbuka. `mem_protect`, `user_mode`, `trap_timer`,
 
 ---
 
+## M4.1 — HFS: create → write → read → verify, 13 September 2026
+
+Empat operasi sebuah sistem berkas, dalam satu riwayat hidup berkas, dibaca
+dari kabel serial. `rtl/programs/hfs_lifecycle.hasm`:
+
+| keluar | langkah | apa yang ditanyakan |
+|---:|---|---|
+| `1` | create | file 3 belum ada, dan sekarang ada |
+| `0` | create | id yang sama ditolak — sebuah berkas dibuat **sekali** |
+| `1` | write | vektor terjaga dikomit; `HGRD` jalan sebelum menyimpan |
+| `1` | read | entri bilang ia ada, dan mengembalikan penunjuknya |
+| `1` | verify | yang kembali **sama persis** dengan yang masuk, 144 bit |
+| `1` | verify | dan masih lolos guardnya sendiri |
+| `0` | read | file 5 tak pernah dibuat, dan ia mengatakannya |
+
+**`create` kini operasi bernama.** Sebelumnya ia efek samping dari tulis
+pertama — itu bekerja, dan menyembunyikan perbedaan yang justru menjadi dasar
+sebuah sistem berkas: berkas yang **ada dan kosong** bukan berkas yang tak
+pernah dibuat. Baris kedua tabel itu yang membuat perbedaannya bisa
+dinyatakan. `size` tetap 0 sampai ada yang dikomit.
+
+**`verify` bukan "read mengembalikan sesuatu".** Ia `CEQ` terhadap salinan
+yang diambil **sebelum** tulis — delapan belas komponen termasuk H\*, yang
+tidak diturunkan dari tujuh belas lainnya dan karena itu tak bisa kembali
+benar karena kebetulan. H0 sengaja ditimpa Haa di antara tulis dan baca, jadi
+baca yang diam-diam mengembalikan register alih-alih kata tersimpan akan
+kembali sebagai Haa dan baris ini akan mengatakannya.
+
+**Yang belum dibuktikan: persistensi.** HFS masih RAM data dari 0xE00 ke atas
+dan hilang saat reset. Itu butir tersendiri di [OFF.md](OFF.md), tidak
+dilipat ke sini.
+
+### Satu blind spot yang terulang
+
+Sabotase ketiga — menghapus `CSET` komponen 17 di jalur baca — mula-mula
+**tidak menggigit**. Programnya menyimpan Lam dan menimpa dengan Haa, dan
+keduanya H\* = 0: komponen yang dijatuhkan terakhir oleh rekonstruksi parsial
+bernilai nol di kedua sisi, jadi perbandingannya tak bisa melihatnya. **Kaf
+satu-satunya huruf di seluruh tabel yang H\*-nya 1**, jadi ia satu-satunya
+pilihan yang membuat komponen kedelapan belas terlihat. Ini persis blind spot
+yang `f0dd0f8` sudah catat, dan saya ulangi.
+
+Dan `HLOAD 23` itu **Lam**, bukan Kaf: ROM 1-berindeks, Kaf ada di 22.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -494,7 +540,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.949 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.952 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -537,15 +583,15 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.949 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 25 testbench, 303 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.952 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 26 testbench, 311 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
 timing 8, H-Kernel 8, **shell 7**, syscall I/O 6, HOS 7, subrutin 4, huruf 3,
 **bayangan redirect 7**, wrapper Gowin 2, dan tujuh testbench yang melapor
-**epc→eret 10**, **flags-ctx 6**, **emits 4**, shell 12, satu pernyataan
-lulus tunggal — 303, semuanya 0 FAIL. Lima yang baru: `tb_hcpu_shell` dan `tb_hcpu_trap_redirect_shadow` tujuh
+**epc→eret 10**, **flags-ctx 6**, **emits 4**, **hfs-lifecycle 8**, shell 12, satu
+pernyataan lulus tunggal — 311, semuanya 0 FAIL. Enam yang baru: `tb_hcpu_shell` dan `tb_hcpu_trap_redirect_shadow` tujuh
 pemeriksaan masing-masing, dan `tb_hcpu_trap_epc_eret` sepuluh.
 
 > **Selisih tujuh dari angka 253 sebelumnya bukan tes baru.** `tb_hcpu_video_timing`
@@ -579,7 +625,7 @@ pemeriksaan masing-masing, dan `tb_hcpu_trap_epc_eret` sepuluh.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.949 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.952 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

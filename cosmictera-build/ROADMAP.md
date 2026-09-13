@@ -350,7 +350,7 @@ sampai menjadi satu sistem yang bisa dipakai:
 | M2 | Batch ISA berikutnya | **selesai di papan** — enam opcode codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`), `test_codex` menjawab `8 0 0 1 1 0 1 5` | — (`CSUB` ditunda, `CDOT` dikeluarkan karena tempat, `CNORM`/`CDIST` duplikat — lihat [OFF.md](OFF.md)) |
 | M3 | H-Kernel boot → shell | **sebagian di papan** — shell membaca perintah dari UART dan dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | banner/prompt teks (`PRINTH`/`EMITS` **BLOCKED** — keputusan pemilik) — resume setelah preemption, FLAGS sebagai konteks (H-ISA v1.1), dan hazard `TRAP_EPC`→`ERET` semuanya **diperbaiki dan terbukti di papan**. Banner dan prompt teks ada (`EMITS`, H-ISA v1.1). **Keempat penghalang M3 ditutup dan terbukti di papan.** **M4 ditahan** sampai pemilik memutuskan — lihat [OFF.md](OFF.md) |
 | M4 | Proses + syscall + timer | trap, supervisor, proteksi memori, syscall, timer semuanya di RTL dan dijalankan di papan (`81fbd2e`) | proses dinamis, stack per proses, tabel syscall |
-| M5 | HFS baca/tulis | `hos_fs_write`/`hos_fs_read` jalan di papan, guard-on-write, H-Reg dibangun ulang lewat `CSET` | media penyimpanan persisten yang terverifikasi fisik |
+| M5 | HFS baca/tulis | **create → write → read → verify jalan di papan** (`1 0 1 1 1 1 0`), guard-on-write, H-Reg dibangun ulang lewat `CSET`, `hos_fs_create` operasi bernama | media penyimpanan persisten yang terverifikasi fisik |
 | M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
 | M7 | Ka'bah dipanggil dari HCPU | Ka'bah jalan sendiri di papan, 400/400 byte cocok `cube.py` | jadi co-processor: perintah lewat MMIO, hasil kembali ke HCPU |
 | M8 | JIM/HIJRAH di perangkat keras | 28 opcode huruf `0xE0`–`0xFB` dijalankan di pipeline | instruksi JIM yang dirakit, didekode, dieksekusi, lalu diverifikasi di papan |
@@ -398,7 +398,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.949
+software_tests      1611/1611     ← sekarang 4.952
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 
