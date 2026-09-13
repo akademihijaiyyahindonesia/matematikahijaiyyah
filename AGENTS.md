@@ -320,6 +320,23 @@ di sana. Daftar di bawah hanya penunjuk bab.
       `make` jadi bukan UTF-8 dan tes pencacah asersi patah. Semua pesan di
       bench yang disentuh cabang ini kini ASCII dan muat.
 
+  - `a3e2a15` **H-ISA v1.1** — `FRD` (0x0A) dan `FWR` (0x0B), dan FLAGS masuk
+    konteks proses.
+    - Keputusan pemilik. Tiga jalan diperiksa dulu dan tak satu pun ada di
+      spesifikasi; yang ada hanya **prosedurnya** (§6.0 aturan 2 dan 4).
+    - Papan: `flags_board` `5 10 1 1` — dua proses, pola masing-masing utuh
+      melewati dua ratus preemption.
+    - `FRD` membaca `forwarded_flags`, bukan berkas register, supaya ia tidak
+      berselisih dengan cabang tentang apa isi FLAGS.
+    - Dua cacat saya sendiri, keduanya ditangkap pekerjaan itu sendiri:
+      `FWR` tanpa lengan di `case` decode menghentikan mesin lewat `default`,
+      dan `FRD` yang ditaruh sesudah gelung simpan membaca perbandingan
+      kernel. Keduanya tercatat di kodenya.
+    - Satu perselisihan lama jadi terlihat: `FLAG_LT` di bit 3 melawan §14.1
+      yang menyebut bit 3–7 "Reserved", dan field `overflow` di `src/hijaiyyah/hisa/machine.py`
+      yang sebenarnya memegang bit tanda. §14.1 dibetulkan mengikuti RTL;
+      nama yang keliru **dilaporkan, tidak diganti**.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
