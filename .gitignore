@@ -58,6 +58,9 @@ rtl/tb/syscall_io.hex
 rtl/tb/hos_demo.hex
 rtl/tb/flags_ctx.hex
 rtl/tb/hfs_lifecycle.hex
+rtl/tb/sdio_write.hex
+rtl/tb/sdio_verify.hex
+rtl/tb/sdio_probe.hex
 rtl/tb/shell.hex
 rtl/tb/payload.txt
 

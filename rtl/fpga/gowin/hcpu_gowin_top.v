@@ -38,16 +38,53 @@
 // ============================================================================
 // PLACES AND ROUTES on the Tang Nano 20K. Measured 7 September 2026 with
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
-// re-measured 2026-09-13 after H-ISA v1.1's third instruction, EMITS (0xA2),
-// gave the machine a character path:
+// re-measured 2026-09-14, twice: once when H-ISA v1.2 widened the peripheral
+// window and put the onboard TF card behind it, and again after the card's own
+// Ncc gap was fixed. These are the second run's figures:
 //
-//     LUT4       14,804 / 20,736   71%
-//     DFF         4,529 / 15,552   29%
-//     BSRAM          17 /     46   36%
+//     LUT4       15,601 / 20,736   75%
+//     DFF         5,065 / 15,552   32%
+//     BSRAM          18 /     46   39%
+//     IOB            11 /    384    2%
 //
-//     Fmax      108.90 MHz (PASS at the 12.00 MHz constraint), up from 80.57
-//               -- taken after routing.
+//     Fmax      116.35 MHz (PASS at the 12.00 MHz constraint)
+//               -- taken after routing. Zero hold and zero setup violations.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
+//
+// +1 LUT4 AND +9 DFF against 15,600 / 5,056, and that is the whole price of
+// making every command wait the eight idle SD clocks the standard owes the
+// card: an eight-bit counter and one state. Fmax moved 116.44 -> 116.35, which
+// is placement noise on a design this full rather than a cost of the change.
+//
+// WHY THE GAP HAD TO EXIST. hcpu_sdio.v sent CMD8 zero clocks after CMD0 and
+// CMD55 zero clocks after a response. The card model answered anyway, twelve
+// checks stayed green, and a healthy SDHC card on this board said nothing at
+// all -- E_CMD8, a full 100 ms timeout, four runs. See hcpu_sdio.v's S_CMD_GAP
+// and cosmictera-build/PAPAN.md.
+//
+// +796 LUT4 and +527 DFF against 14,804 / 4,529, and one more BSRAM block:
+// the 128-word sector buffer, 4,096 bits, exactly one block. The rest is the
+// SDIO controller's command shifter, its CRC7 and CRC16, and the five MMIO
+// registers in front of it.
+//
+// THIS DESIGN COST TWO FAILED PLACE-AND-ROUTES TO ARRIVE AT, and both are
+// worth the space here because the second one is a wall this repository has
+// hit before:
+//
+//   buffer in BSRAM, write path combinational  -- 8 hold violations, every one
+//       on the same net: a LUT computing sbuf_we into the block's ADB1 pin,
+//       arriving 1.83 ns after the edge where 1.95 was required. A signal that
+//       is too EARLY, which no amount of routing repairs.
+//   buffer in distributed LUT RAM              -- the hold rule vanishes and a
+//       128:1 read mux appears: +656 LUT4, 16,213 total, and nextpnr answers
+//       "Unable to find legal placement for all cells". CDOT met that same
+//       wall at 16,015 and was removed from its batch for it (7eb177a).
+//
+// The buffer stayed 128 words in BSRAM, as the owner decided; what changed is
+// that its write address, data and enable are REGISTERED, so what reaches the
+// block is a flip-flop output rather than a function that can glitch on the
+// way. One cycle of write latency inside hcpu_sdio.v, invisible at the MMIO
+// boundary because nothing reads a buffer word the cycle after writing it.
 //
 // +29 LUT4 and +30 DFF against 14,775 / 4,499. The DFF column is the honest
 // one here: EMITS DOES add state -- a word address to walk the string with and
@@ -157,7 +194,7 @@
 // fingerprinted source -- reversing only those copyright lines in memory
 // reproduced the recorded hash exactly, so the sweep was provably the entire
 // delta and no design byte moved.
-// RTL FINGERPRINT: 2a7d2e579b90695c0f0755f322628683c91fdbb65979965530f95f6a1cbfc79c
+// RTL FINGERPRINT: b3cd4682798b75c7256239f9c9ce03626ffa8c7ee6d92c12e8d693fb56370c47
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any
@@ -196,7 +233,24 @@ module hcpu_gowin_top #(
     input  wire        btn_rst_n,    // Button S2 — active low reset
     input  wire        uart_rxd,     // UART RX ← USB bridge
     output wire        uart_txd,     // UART TX → USB bridge
-    output wire [5:0]  led           // 6 LEDs — active low
+    output wire [5:0]  led,          // 6 LEDs — active low
+
+    // ── Onboard TF card, SDIO 1-bit ─────────────────────────────
+    // Source for every pin number: the Sipeed Tang Nano 20K schematic
+    // (Tang_Nano_20K_3921), read by the owner on 14 September 2026.
+    // PIN83_SDIO_CLK, PIN82_SDIO_CMD, PIN84_SDIO_D0, PIN85_SDIO_D1,
+    // PIN80_SDIO_D2, PIN81_SDIO_D3.
+    //
+    // An older revision of that schematic maps these differently. The numbers
+    // here belong to THIS board and taking them from the older document is a
+    // way to drive the clock into a data line and see nothing at all.
+    //
+    // DAT1..DAT3 are constrained and parked high rather than left out: the
+    // slot is wired for 4-bit and the widening is a later step, and a card
+    // whose upper data lines float can read them as a mode it was not put in.
+    output wire        sd_clk,
+    inout  wire        sd_cmd,
+    inout  wire [3:0]  sd_dat
 );
 
     localparam OSC_HZ = 27_000_000;
@@ -293,6 +347,9 @@ module hcpu_gowin_top #(
     wire halted_out, guard_led_out;
     wire core_txd;
 
+    // Driven by the core, resolved into pads below.
+    wire sd_cmd_out_w, sd_cmd_oe_w, sd_dat_out_w, sd_dat_oe_w;
+
     hcpu_top #(
         .CLK_HZ  (SYS_HZ),
         .BAUD    (BAUD),
@@ -310,11 +367,31 @@ module hcpu_gowin_top #(
         .uart_tx        (core_txd),
         .halted         (halted_out),
         .guard_led      (guard_led_out),
+        .sd_clk         (sd_clk),
+        .sd_cmd_out     (sd_cmd_out_w),
+        .sd_cmd_oe      (sd_cmd_oe_w),
+        .sd_cmd_in      (sd_cmd),
+        .sd_dat_out     (sd_dat_out_w),
+        .sd_dat_oe      (sd_dat_oe_w),
+        .sd_dat_in      (sd_dat[0]),
         // Debug port — unused on FPGA, tied off
         .dbg_gpr_raddr  (5'd0),
         .dbg_gpr_rdata  (),
         .dbg_flags      ()
     );
+
+    // ── The card's two open lines ───────────────────────────────
+    // This is the only place in the design that knows these are pads. CMD and
+    // DAT0 are driven when the controller says so and released otherwise, so
+    // the card can answer on the same wire; the pull-up that makes the idle
+    // state high is in the .cst, not here.
+    assign sd_cmd    = sd_cmd_oe_w ? sd_cmd_out_w : 1'bz;
+    assign sd_dat[0] = sd_dat_oe_w ? sd_dat_out_w : 1'bz;
+
+    // Parked high, not floating, and not driven low: on a card that has been
+    // put into 4-bit mode these carry data, and a host that grounds them is
+    // fighting the card. High is the idle the pull-ups already want.
+    assign sd_dat[3:1] = 3'b111;
 
     // ── Cycle counter and its report ────────────────────────────
     //

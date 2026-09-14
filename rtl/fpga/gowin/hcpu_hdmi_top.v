@@ -9,12 +9,37 @@
 // hcpu_decode.v, hcpu_execute.v and hcpu_top.v.
 //
 //     IOB           15 /    384    3%
-//     LUT4      15,332 / 20,736   73%
-//     DFF        4,600 / 15,552   29%
-//     BSRAM         17 /     46   36%
-//     Fmax       63.73 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//               453.51 MHz  pixel_clk
-//     Bitstream  7,261,470 bytes, gowin_pack exits 0
+//     LUT4      15,994 / 20,736   77%
+//     DFF        5,134 / 15,552   33%
+//     BSRAM         18 /     46   39%
+//     Fmax      115.43 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//               392.16 MHz  pixel_clk
+//
+// RE-MEASURED 2026-09-14 for the second time that day, and PLACE AND ROUTE
+// ONLY. This slot carries the SD controller whether it wants it or not:
+// hcpu_hdmi_top instantiates hcpu_gowin_top, so the card arrived here with the
+// widened peripheral window and its Ncc fix arrived here too.
+//
+// +9 DFF against 5,125, the same nine the bare HCPU slot gained: an eight-bit
+// counter and one state, instantiated once because this wrapper holds one HCPU.
+//
+// LUT4 went DOWN 84, from 16,078, and the CPU clock went UP from 90.53 to
+// 115.43 MHz. NEITHER IS A SAVING THIS CHANGE MADE. The placer is stochastic
+// and this is the fullest slot in the rack; the same RTL placed differently.
+// Recorded because it is what the run reported, not because it is an
+// improvement anyone designed. Zero hold and zero setup violations.
+//
+// NO BITSTREAM WAS PACKED IN THIS RUN, and the line that used to record one
+// is gone rather than carried over: `make hdmi_pnr.json` stops at the routed
+// JSON. The previous entry's "7,261,470 bytes, gowin_pack exits 0" described a
+// different design, and keeping it here would have been a measurement this
+// file never took.
+//
+// The card's six pins are NOT constrained in hcpu_hdmi.cst. They are inputs
+// and outputs of hcpu_gowin_top that this wrapper leaves unconnected, so
+// nextpnr places them nowhere and the controller on this slot can never see a
+// card. That is the honest state of the HDMI slot, not a defect to hide: the
+// card path belongs to the HCPU slot, and this one exists to drive a display.
 //
 // +100 LUT4 and +30 DFF against this slot's previous 15,232 / 4,570, and the
 // bare slot moved by +29 and the same +30. EMITS DOES add state, where FRD and
@@ -89,7 +114,7 @@
 // user_mode, shell, kernel, branch_trap_race and the shadow sweep, the number
 // of cycles an EXCEPTION was held by it is zero.
 //
-// RTL FINGERPRINT: c9e58bff563d0c260163223a0220c7fb561b51a52aa0f2f0d5b3219121b270c5
+// RTL FINGERPRINT: 8a9015981096ad2c96fde4393c17d8f107fec62fcb3f833e2bad319141664157
 //
 `include "hcpu_pkg.vh"
 

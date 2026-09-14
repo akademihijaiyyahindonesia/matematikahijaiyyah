@@ -51,6 +51,20 @@ module hcpu_top #(
     output wire        halted,
     output wire        guard_led,     // Current GUARD flag state
 
+    // ── The card ────────────────────────────────────────────────
+    // Out/oe/in, not inout: the pad belongs to the board wrapper, and every
+    // bench that instantiates this core would otherwise need a bus resolver
+    // for a signal it does not use. A wrapper that leaves these unconnected
+    // gets a controller that never initialises, which is the honest result of
+    // a machine with no card slot.
+    output wire        sd_clk,
+    output wire        sd_cmd_out,
+    output wire        sd_cmd_oe,
+    input  wire        sd_cmd_in,
+    output wire        sd_dat_out,
+    output wire        sd_dat_oe,
+    input  wire        sd_dat_in,
+
     // ── Debug / Wishbone GPR read-back ──────────────────────────
     input  wire [4:0]  dbg_gpr_raddr,
     output wire [`XLEN-1:0] dbg_gpr_rdata,
@@ -733,7 +747,14 @@ module hcpu_top #(
         .mem_limit      (mem_limit_w),
         .imem_we        (imem_we),
         .imem_waddr     (imem_waddr),
-        .imem_wdata     (imem_wdata)
+        .imem_wdata     (imem_wdata),
+        .sd_clk         (sd_clk),
+        .sd_cmd_out     (sd_cmd_out),
+        .sd_cmd_oe      (sd_cmd_oe),
+        .sd_cmd_in      (sd_cmd_in),
+        .sd_dat_out     (sd_dat_out),
+        .sd_dat_oe      (sd_dat_oe),
+        .sd_dat_in      (sd_dat_in)
     );
 
     // ── Trap unit ───────────────────────────────────────────────

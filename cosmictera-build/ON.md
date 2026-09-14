@@ -288,7 +288,7 @@ Fmax    114,65 MHz (PASS pada batas 12,00 MHz)
 ```
 
 Angka di atas dari build bitstream pada komit yang lebih lama. Angka **papan**
-diambil dari run pasca-perutean terakhir — 14.804 LUT4 (71%), Fmax 108,90 MHz,
+diambil dari run pasca-perutean terakhir — 15.600 LUT4 (75%), Fmax 116,44 MHz,
 diukur 13 September setelah `EMITS` — dan itulah yang berlaku sebagai
 hasil fisik, tercatat di [PAPAN.md](PAPAN.md).
 
@@ -304,7 +304,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 4.952 lulus, 0 dilewati
-make -C rtl/tb all            # 311 asersi, 26 bench, 0 gagal
+python3 -m pytest -q          # 4.961 lulus, 0 dilewati
+make -C rtl/tb all            # 334 asersi, 28 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

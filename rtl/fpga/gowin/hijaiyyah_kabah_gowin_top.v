@@ -108,7 +108,25 @@
 // memory reproduces the previously recorded hash exactly, for this wrapper and
 // for Ka'bah's -- so the sweep is provably the entire delta and no design byte
 // moved. The measured figures above still describe this RTL.
-// RTL FINGERPRINT: 03d865fa15c91f287ae4f1da98f4613dff04277247eed54303d19f85df2ed1a6
+//
+// Fingerprint restamped again 2026-09-14, and this time WITH a fresh place and
+// route -- the figures above are what it returned, unchanged to the last digit:
+// 12,061 LUT4, 1,965 DFF, 0 BSRAM, 165.98 MHz after routing, zero hold and
+// zero setup violations.
+//
+// WHY IT MOVED AT ALL, since no Ka'bah source changed: hcpu_gowin.cst is in
+// this wrapper's dependency set, and H-ISA v1.2 added six TF-card pins to it.
+// This design has no such ports, and nextpnr says so and carries on --
+// `Info: Cell sd_clk not found`, six times, Info and not error. The
+// constraints are inert here. The hash still had to move because the file did,
+// which is the guard working as intended: it cannot tell a constraint that
+// matters from one that does not, so it demands the measurement rather than
+// guessing. The measurement was taken.
+//
+// Not packed in this run: `make hijaiyyah_kabah_gowin_top_pnr.json` stops at
+// the routed JSON. The gowin_pack line above belongs to the 5 September run
+// and is left standing as that run's record, not re-claimed as this one's.
+// RTL FINGERPRINT: 90460e66f4f107ec86f509381e9803d525e9bec848d64d31a36983e62315ad30
 //
 `include "hcpu_pkg.vh"
 

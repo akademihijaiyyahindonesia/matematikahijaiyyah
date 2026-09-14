@@ -300,8 +300,13 @@ module hcpu_execute #(
     // interleave their characters and no one arbitrates. "User mode cannot do
     // I/O" was never true here; what was true is that its I/O was unmediated,
     // which is worse. It goes through the kernel now, by SYSCALL.
+    // PERIPH_WINDOW, not PERIPH_BASE. Since v1.2 the window starts sixteen
+    // words lower than the block of registers that used to define it, and the
+    // card lives in that lower half. Left at PERIPH_BASE, a user program could
+    // read and write the SD controller directly -- including its sector
+    // register -- while every other peripheral stayed protected.
     wire touches_window = (id_mem_read | id_mem_write)
-                          && (would_addr >= `PERIPH_BASE);
+                          && (would_addr >= `PERIPH_WINDOW);
     assign priv_fault = in_user && (touches_window || eret_decoded || id_is_halt
                                     || id_is_print || id_is_emits);
 

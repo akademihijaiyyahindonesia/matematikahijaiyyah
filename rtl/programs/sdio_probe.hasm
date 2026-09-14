@@ -1,0 +1,80 @@
+; sdio_probe.hasm — where does the identification sequence stop?
+;
+; One command, one number. INIT runs, and the raw SD_STATUS word is printed
+; immediately -- before anything else can overwrite the error code, which is
+; the whole reason this file exists. sdio_verify.hasm prints its status only
+; at the end, after a READ that fails with E_NOT_INIT (12) and buries the code
+; that named the actual step.
+;
+; NOTHING IS WRITTEN TO THE CARD. There is no SD_CMD 2 and no SD_CMD 3 here:
+; the card is asked to identify itself and nothing more. Not one sector is
+; read, let alone written.
+;
+; ── reading the number ──────────────────────────────────────────
+; §15.4's layout: bit0 busy, bit1 ok, bit2 error, bit3 a card answered,
+; bits 7:4 the error code. So the printed value decodes directly, and the
+; error codes are hcpu_sdio.v's own localparams:
+;
+;    10   ok + card_ready, error code 0   -- the card identified itself
+;    20   error, code  1 = E_CMD8         -- no R7 came back at all
+;    36   error, code  2 = E_ACMD41       -- CMD8 ANSWERED; never left idle
+;    52   error, code  3 = E_CID          -- CMD2 got no answer
+;    68   error, code  4 = E_RCA          -- CMD3 got no answer
+;    84   error, code  5 = E_SELECT       -- CMD7 got no answer
+;   100   error, code  6 = E_BLOCKLEN     -- CMD16 got no answer
+;
+; The line that matters is the second one against the third. 20 means nothing
+; on the CMD line ever answered, which CLK, CMD or their pull-ups can each
+; cause and this program cannot tell apart. Anything from 36 upwards means a
+; card drove the CMD line and was understood -- which proves CLK, CMD and DAT0
+; are reaching the socket, and moves the question somewhere else entirely.
+;
+; An odd value with bit0 set means sd_run gave up while the controller was
+; still busy: not a card fault, a wait that was too short.
+
+        MOVI  R12, 0
+
+        MOVI  R1, 1                 ; 1 = init, and the only command here
+        CALL  sd_run
+        PRINT R1                    ; the raw status, straight from the wire
+        HALT
+
+; Four NOPs: HALT retires at writeback, so the instructions already behind it
+; in the pipeline still carry out their memory writes. Without these, sd_run's
+; own STORE to SD_CMD runs in that shadow with whatever R1 holds. Measured in
+; tb_hcpu_sdio_prog.v, where it sent a command nobody asked for.
+        NOP
+        NOP
+        NOP
+        NOP
+
+; ── issue one command and wait for it to finish ─────────────────
+; The same routine sdio_write.hasm and sdio_verify.hasm carry, unchanged, so
+; this probe measures the path they use rather than a path of its own. The
+; fixed delay is there because busy does not rise in the cycle SD_CMD is
+; stored, and both waits are bounded because a program that hangs on the board
+; prints nothing and teaches nothing.
+sd_run:                             ; R1 = command -> R1 = status
+        STORE R1, R12, 0xFE0        ; SD_CMD
+        MOVI  R9, 100
+sd_lift:
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   sd_lift
+        MOVI  R10, 4000
+sd_outer:
+        MOVI  R9, 4000
+sd_inner:
+        LOAD  R1, R12, 0xFE1
+        ANDI  R2, R1, 1             ; bit0 = busy
+        CMPI  R2, 0
+        JEQ   sd_idle
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   sd_inner
+        ADDI  R10, R10, -1
+        CMPI  R10, 0
+        JNE   sd_outer
+sd_idle:
+        LOAD  R1, R12, 0xFE1
+        RET

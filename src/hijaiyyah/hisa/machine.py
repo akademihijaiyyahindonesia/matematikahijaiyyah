@@ -285,6 +285,13 @@ class HISAMachine:
     # not model the pipeline's timing. Reporting a counter here that "agrees"
     # with the RTL would mean one of the two was lying.
 
+    # H-ISA v1.2 widened the window without moving a register: PERIPH_WINDOW
+    # is where RAM stops, PERIPH_BASE is where these sixteen begin, and the
+    # sixteen words between them are the card's. Both numbers live in
+    # rtl/hcpu_pkg.vh and tests/test_integrity/test_traps.py compares them
+    # against this file, because a split that disagrees between the three
+    # machines is the defect commit 1b59c2a was written to end.
+    PERIPH_WINDOW = 0xFE0
     PERIPH_BASE = 0xFF0
 
     REG_RX_DATA = 0x0
@@ -331,13 +338,15 @@ class HISAMachine:
 
     def _mem_read(self, addr: int) -> int:
         masked = addr & self.DATA_ADDR_MASK
-        if masked >= self.PERIPH_BASE:
+        if masked >= self.PERIPH_WINDOW:
             if self.mode == self.MODE_USER:
                 # Suppressed, not performed and undone. A read of RX_DATA
                 # consumes the byte, so letting it through would destroy state
                 # the handler is about to be told did not happen.
                 self._priv_fault = True
                 return 0
+            if masked < self.PERIPH_BASE:
+                return self._sd_read(masked & 0xF)
             return self._periph_read(masked & 0xF)
         if self.mode == self.MODE_USER and not (
                 self.mem_base <= masked < self.mem_limit):
@@ -347,9 +356,12 @@ class HISAMachine:
 
     def _mem_write(self, addr: int, value: int) -> None:
         masked = addr & self.DATA_ADDR_MASK
-        if masked >= self.PERIPH_BASE:
+        if masked >= self.PERIPH_WINDOW:
             if self.mode == self.MODE_USER:
                 self._priv_fault = True
+                return
+            if masked < self.PERIPH_BASE:
+                self._sd_write(masked & 0xF, self._u32(value))
                 return
             self._periph_write(masked & 0xF, self._u32(value))
             return
@@ -358,6 +370,26 @@ class HISAMachine:
             self._mem_fault = True
             return
         self.data_mem[masked] = self._u32(value)
+
+    # ── The card, and the fact that this interpreter has none ──────
+    #
+    # There is no SD card in a Python process, and pretending otherwise would
+    # be worse than saying so: a modelled card would make a program pass here
+    # and fail on the board, which is the one direction of disagreement this
+    # repository refuses. So the block reads as all zeros -- not busy, not ok,
+    # no error, no card -- and writes go nowhere.
+    #
+    # A driver that polls SD_STATUS after SD_CMD therefore sees "finished, not
+    # ok" and takes its error path, which is the correct behaviour for a
+    # machine with an empty slot. What a program may NOT do is read a sector
+    # here and believe it; that path exists on hardware only, and
+    # cosmictera-build/OFF.md records it as such.
+
+    def _sd_read(self, reg: int) -> int:
+        return 0
+
+    def _sd_write(self, reg: int, value: int) -> None:
+        return
 
     def _periph_read(self, reg: int) -> int:
         if reg == self.REG_RX_DATA:

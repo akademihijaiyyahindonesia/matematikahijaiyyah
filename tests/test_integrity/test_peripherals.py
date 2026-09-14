@@ -121,7 +121,7 @@ def test_the_bus_routes_ram_and_peripherals_apart() -> None:
     """
     _run("tb_hcpu_mmio",
          ["rtl/hcpu_mmio.v", "rtl/hcpu_uart_rx.v", "rtl/hcpu_timer.v",
-          "rtl/hcpu_dataram.v", "rtl/tb/tb_hcpu_mmio.v"],
+          "rtl/hcpu_dataram.v", "rtl/hcpu_sdio.v", "rtl/tb/tb_hcpu_mmio.v"],
          "PASS: RAM, peripherals, latency, hold, and overrun")
 
 
@@ -134,8 +134,24 @@ def test_peripheral_reads_have_the_same_latency_as_ram() -> None:
     raw = (ROOT / "rtl" / "hcpu_mmio.v").read_text(encoding="utf-8")
     source = " ".join(raw.replace("//", " ").split())
     assert "LATENCY MATCHES THE RAM" in source
-    assert "periph_sel <= re & is_periph" in raw
-    assert "assign rdata = periph_sel ? periph_rdata : ram_rdata;" in raw
+
+    # THE WINDOW GAINED A SECOND SOURCE IN v1.2 and the property did not
+    # change: every peripheral read still arrives exactly one cycle after its
+    # address, like the RAM's. What changed is that there are now two ways to
+    # arrive. Both selects are registered, which is the whole check:
+    #
+    #   periph_sel   the window as a whole -- 0xFE0 and up
+    #   sd_data_sel  SD_DATA only, whose word comes from the controller's own
+    #                registered buffer read and would be a cycle late if it
+    #                were registered again here
+    #
+    # Spelled against the whitespace-normalised text rather than the raw line,
+    # because this assertion once broke on two spaces and said nothing about
+    # latency at all.
+    assert "periph_sel <= re & is_periph;" in source
+    assert "sd_data_sel <= sd_data_re;" in source
+    assert "assign rdata = periph_sel ? (sd_data_sel ? sd_buf_rdata :" in source
+    assert ": ram_rdata;" in source
 
 
 def test_an_unread_byte_followed_by_another_is_an_overrun_not_a_drop() -> None:

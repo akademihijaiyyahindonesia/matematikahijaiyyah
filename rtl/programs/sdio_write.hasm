@@ -1,0 +1,186 @@
+; sdio_write.hasm — a sector is written to the card, and read back, on the board.
+;
+; M4.2 asks for a medium that outlives the supply. This is the half that puts
+; something on it, read off the serial line as five numbers:
+;
+;   1   init    a card answered the identification sequence
+;   1   write   512 bytes committed to sector 1
+;   1   read    the same sector came back off the card
+;   1   verify  all 128 words are the pattern that went in
+;   10  status  the controller's own verdict: ok and card_ready, nothing else
+;
+; The last number is the raw SD_STATUS word rather than a flag, because a
+; failure has to say WHICH step failed and a flag cannot. Its layout is
+; §15.4: bit0 busy, bit1 ok, bit2 error, bit3 a card answered, bits 7:4 the
+; error code. 10 is ok + card_ready with a zero error code; anything with
+; bit 2 set carries E_CMD8=1 through E_NOT_INIT=12 in its top nibble, so 68
+; for example is "error, E_READ_CMD" and names the step without a second run.
+;
+; ── the buffer is clobbered between the write and the read ──────
+; Without it, a READ that never reached the card would leave the pattern
+; sitting in the controller's own 128-word buffer and the verify below would
+; be confirming the buffer instead of the medium. Every word is overwritten
+; with 7 first, so a verify that passes has to have come off the card. This is
+; the same blind spot hfs_lifecycle.hasm records, in a different place: there
+; the register was clobbered between write and read, here it is the buffer.
+;
+; ── the pattern is i + 1000, and the offset is the point ────────
+; Not the raw index. The CPU-side buffer index runs 0..127, so a controller
+; that handed back its ADDRESS instead of its contents would match a 0..127
+; pattern word for word and look perfect. Adding 1000 puts every expected
+; value outside the range the index itself can take, and still differs in
+; every word, so a dropped or duplicated word cannot land on its neighbour.
+;
+; ── WHAT THIS DOES TO THE CARD ──────────────────────────────────
+; It writes RAW SECTOR 1. On an MBR-partitioned card sector 0 is the partition
+; table and the first partition starts at 2048 or later, so sector 1 lies in
+; the gap between them and no filesystem owns it. That is the least damaging
+; choice available; it is not a safe one. A raw sector write belongs on a
+; scratch card, and a card carrying anything the owner wants should be out of
+; the slot before this program is sent.
+;
+; ── why sd_run waits the way it does ────────────────────────────
+; busy does not rise in the cycle SD_CMD is stored. Polling straight after the
+; STORE can therefore read the PREVIOUS command's ok bit and call a failure a
+; success. sd_run spends a fixed delay first: by the time it ends, a real
+; command has raised busy, and a command that failed on the spot -- a read
+; before a good init, E_NOT_INIT -- has already raised it and dropped it
+; again. Either way ok and err belong to the command just issued, because the
+; controller clears both when it starts one.
+;
+; Both waits are bounded. A program that hangs on the board prints nothing and
+; teaches nothing; one that gives up prints a status word that says why.
+;
+; ── registers ───────────────────────────────────────────────────
+;   R12  zero, and the base every peripheral address is an offset from
+;   R1   command in, status out of sd_run
+;   R2   scratch inside sd_run and the bit tests
+;   R3   word index, 0..127
+;   R4   the expected word
+;   R5   the word that came back
+;   R6   the flag a step prints
+;   R8   sticky "every word matched"
+;   R9   R10  sd_run's own counters
+; sd_run touches R1, R2, R9 and R10 and nothing else.
+
+        MOVI  R12, 0
+
+; ── init ────────────────────────────────────────────────────────
+        MOVI  R1, 1
+        CALL  sd_run
+        MOVI  R6, 0
+        ANDI  R2, R1, 2             ; bit1 = ok
+        CMPI  R2, 0
+        JEQ   w_init_done
+        MOVI  R6, 1
+w_init_done:
+        PRINT R6                    ; 1 — a card answered
+
+; ── fill the buffer with the pattern ────────────────────────────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE4        ; SD_CONTROL bit0: index back to word 0
+        MOVI  R3, 0
+w_fill: ADDI  R4, R3, 1000
+        STORE R4, R12, 0xFE3        ; SD_DATA carries its own index forward
+        ADDI  R3, R3, 1
+        CMPI  R3, 128
+        JNE   w_fill
+
+; ── write it ────────────────────────────────────────────────────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE2        ; SD_SECTOR = 1
+        MOVI  R1, 3                 ; 3 = write
+        CALL  sd_run
+        MOVI  R6, 0
+        ANDI  R2, R1, 2
+        CMPI  R2, 0
+        JEQ   w_wr_done
+        MOVI  R6, 1
+w_wr_done:
+        PRINT R6                    ; 1 — the card took the block and let go
+
+; ── clobber, so the read has nowhere else to come from ──────────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE4
+        MOVI  R3, 0
+        MOVI  R4, 7
+w_clob: STORE R4, R12, 0xFE3
+        ADDI  R3, R3, 1
+        CMPI  R3, 128
+        JNE   w_clob
+
+; ── read it back ────────────────────────────────────────────────
+        MOVI  R1, 2                 ; 2 = read, same sector as above
+        CALL  sd_run
+        MOVI  R6, 0
+        ANDI  R2, R1, 2
+        CMPI  R2, 0
+        JEQ   w_rd_done
+        MOVI  R6, 1
+w_rd_done:
+        PRINT R6                    ; 1 — the sector came back
+
+; ── verify ──────────────────────────────────────────────────────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE4
+        MOVI  R3, 0
+        MOVI  R8, 1
+w_chk:  LOAD  R5, R12, 0xFE3
+        ADDI  R4, R3, 1000
+        CMP   R5, R4
+        JEQ   w_chk_next
+        MOVI  R8, 0                 ; one wrong word is the whole answer
+w_chk_next:
+        ADDI  R3, R3, 1
+        CMPI  R3, 128
+        JNE   w_chk
+        PRINT R8                    ; 1 — word for word what went in
+
+; ── and what the controller thinks of all that ──────────────────
+        LOAD  R1, R12, 0xFE1
+        PRINT R1                    ; 10 — ok, card_ready, no error code
+        HALT
+
+; ── THE FOUR NOPS ARE NOT DECORATION ────────────────────────────
+; HALT takes effect when it reaches WRITEBACK (hcpu_controller.v), so the four
+; instructions behind it in a five-stage pipeline have already been fetched and
+; still carry out their memory writes. Without these, sd_run's own first
+; instruction -- STORE R1, R12, 0xFE0 -- sat in that shadow and ran with R1
+; holding the status word just printed: 10, whose low two bits are 2, which is
+; READ. Measured in tb_hcpu_sdio_prog.v: a fourth command went to the card,
+; `SD_CMD write, wdata=10` at 6,399,576 ns, and the card counted two CMD17s
+; for one the program issued.
+;
+; This is reported, not repaired in hardware: whether an instruction after HALT
+; should retire is the owner's call, not this program's. What a program can do
+; is not put a peripheral write there.
+        NOP
+        NOP
+        NOP
+        NOP
+
+; ── issue one command and wait for it to finish ─────────────────
+sd_run:                             ; R1 = 1 init, 2 read, 3 write -> R1 = status
+        STORE R1, R12, 0xFE0        ; SD_CMD
+        MOVI  R9, 100               ; let busy rise before believing it is low
+sd_lift:
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   sd_lift
+        MOVI  R10, 4000             ; and bound the wait, so a dead card ends
+sd_outer:
+        MOVI  R9, 4000
+sd_inner:
+        LOAD  R1, R12, 0xFE1
+        ANDI  R2, R1, 1             ; bit0 = busy
+        CMPI  R2, 0
+        JEQ   sd_idle
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   sd_inner
+        ADDI  R10, R10, -1
+        CMPI  R10, 0
+        JNE   sd_outer
+sd_idle:
+        LOAD  R1, R12, 0xFE1
+        RET

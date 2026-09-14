@@ -81,6 +81,22 @@ module hcpu_xilinx_top (
         .uart_tx        (uart_txd),
         .halted         (halted_out),
         .guard_led      (guard_led_out),
+        // ── No card slot on this board ──────────────────────────
+        // TIED HIGH, NOT LEFT OPEN. This board has no TF socket, so there is
+        // nothing to connect -- but an unconnected input reads as z, and the
+        // controller would sample x on CMD and DAT0 for ever rather than time
+        // out. High is what a released open-drain line with a pull-up reads,
+        // so the controller sees a bus nobody answers: SD_CMD reports an error
+        // instead of hanging, which is the honest result for a machine with no
+        // slot. tests/test_integrity/test_board_wiring.py is what caught this
+        // wrapper being forgotten while the Gowin one was wired.
+        .sd_clk         (),
+        .sd_cmd_out     (),
+        .sd_cmd_oe      (),
+        .sd_cmd_in      (1'b1),
+        .sd_dat_out     (),
+        .sd_dat_oe      (),
+        .sd_dat_in      (1'b1),
         // Debug port — unused on FPGA, tie off
         .dbg_gpr_raddr  (5'd0),
         .dbg_gpr_rdata  (),          // unconnected

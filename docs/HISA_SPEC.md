@@ -1,7 +1,7 @@
 <div align="center">
 
 # **H-ISA Specification**
-## Hijaiyyah Instruction Set Architecture — Version 1.1
+## Hijaiyyah Instruction Set Architecture — Version 1.2
 
 ### Formal Instruction Set for Hijaiyyah Codex Computation
 
@@ -89,7 +89,7 @@ H-ISA Bytecode          ← spesifikasi ini
 
 ### 1.4 Status
 
-H-ISA v1.1 berstatus **OPERATIONAL** pada level emulator/VM.
+H-ISA v1.2 berstatus **OPERATIONAL** pada level emulator/VM.
 Hardware-native execution masih berstatus **DESIGNED**.
 
 **v1.1 menambahkan `EMITS` (0xA2)** — bentuk stringnya ditetapkan di §13.1.1,
@@ -102,6 +102,23 @@ ditulis kembali darinya, sehingga sebuah context switch dapat menyimpannya.
 Keduanya mengambil slot kosong di blok System & Control sesuai §6.0 aturan 2,
 dan kenaikan versi ini adalah aturan 4. Tak ada nilai opcode lama yang
 berubah.
+
+**v1.2 melebarkan jendela peripheral, dan tidak menambah opcode apa pun.**
+Keputusan pemilik, 14 September 2026: kartu TF onboard menjadi media
+penyimpanan persisten HFS, dijangkau `LOAD`/`STORE` seperti peripheral lain.
+
+```
+sebelum : 0xFF0-0xFFF   16 word
+sesudah : 0xFE0-0xFFF   32 word
+```
+
+Keenam belas alamat lama **tidak bergerak satu pun**; yang baru hanya band
+`0xFE0`-`0xFEF`, berisi lima register kartu (§15.4). Karena jendela peripheral
+adalah batas supervisor, kartu otomatis tak terjangkau mode user kecuali lewat
+`SYSCALL` — dan itulah alasan memilih jendela, bukan opcode baru.
+
+Kenaikan versi ini adalah §6.0 aturan 4: peta memori berubah, jadi versinya
+naik, sekalipun tak ada satu pun encoding instruksi yang tersentuh.
 
 ---
 
@@ -1137,6 +1154,43 @@ Total: 252 bytes
 - H-Reg: 576-bit aligned (18 × 32)
 - Memory access: 32-bit aligned
 - Stack: 32-bit aligned
+
+### 15.4 Jendela peripheral, dan blok kartu — v1.2
+
+Ruang data 4.096 word. **32 word teratas adalah peripheral, sisanya RAM**, dan
+satu komparator yang memutuskan — itulah alasan letaknya di puncak ruang dan
+bukan tersebar. `addr[4]` memisahkan dua bloknya.
+
+```
+0xFE0-0xFEF   blok kartu SD        (v1.2, lima dari enam belas terpakai)
+0xFF0-0xFFF   UART, timer, trap, jendela memori, port imem   (tak berubah)
+```
+
+| Alamat | Register | Akses | Fungsi |
+|---|---|---|---|
+| `0xFE0` | `SD_CMD` | W | 1 = INIT, 2 = READ, 3 = WRITE |
+| `0xFE1` | `SD_STATUS` | R | bit0 BUSY · bit1 OK · bit2 ERROR · bit3 CARD_PRESENT · bit7:4 kode galat |
+| `0xFE2` | `SD_SECTOR` | RW | nomor blok (LBA) |
+| `0xFE3` | `SD_DATA` | RW | satu word buffer, indeks maju sendiri |
+| `0xFE4` | `SD_CONTROL` | RW | bit0 reset indeks · bit1 reset controller · bit3:2 pembagi clock |
+
+`0xFE5`–`0xFEF` kosong dan tetap kosong sampai ada yang membutuhkannya.
+
+**`SD_DATA` memajukan indeksnya sendiri**, bargain yang sama dengan
+`REG_IMEM_DATA`: satu store per word, bukan dua, jadi 512 byte berharga 128
+store. Buffernya 128 word di dalam controller, bukan di RAM data — RAM data
+satu port, dan `EMITS` sudah memperlihatkan harganya.
+
+**`CARD_PRESENT` menyatakan kartu PERNAH MENJAWAB inisialisasi**, bukan bahwa
+ada kartu di slot. Pinout papan ini tidak membawa jalur card-detect, jadi tidak
+ada yang bisa diindera; bit itu dinamai apa adanya daripada menjanjikan sesuatu
+yang papannya tidak tahu.
+
+**Mesin HISA perangkat lunak tidak punya kartu.** Blok ini terbaca nol di sana
+dan tulisan ke sana tidak ke mana-mana — sebuah program yang menanyakan status
+akan melihat "selesai, tidak ok" dan mengambil jalur galatnya, yang memang
+benar untuk mesin bersslot kosong. Jalur kartu hanya ada di perangkat keras;
+tercatat di [cosmictera-build/OFF.md](../cosmictera-build/OFF.md).
 
 ---
 

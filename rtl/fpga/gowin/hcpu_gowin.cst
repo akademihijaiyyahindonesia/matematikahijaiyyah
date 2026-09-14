@@ -60,3 +60,34 @@ IO_PORT "led[2]"    IO_TYPE=LVCMOS33 DRIVE=8;
 IO_PORT "led[3]"    IO_TYPE=LVCMOS33 DRIVE=8;
 IO_PORT "led[4]"    IO_TYPE=LVCMOS33 DRIVE=8;
 IO_PORT "led[5]"    IO_TYPE=LVCMOS33 DRIVE=8;
+
+// ── Onboard TF card, SDIO 1-bit ──────────────────────────────────
+// Source: Sipeed Tang Nano 20K official schematic,
+// Tang_Nano_20K_3921_Schematics.pdf — PIN83_SDIO_CLK, PIN82_SDIO_CMD,
+// PIN84_SDIO_D0, PIN85_SDIO_D1, PIN80_SDIO_D2, PIN81_SDIO_D3.
+//
+// AN OLDER REVISION OF THAT SCHEMATIC MAPS THESE DIFFERENTLY. Taking the
+// numbers from the older document puts the clock on a data line, and the
+// failure that produces is silence -- no card, no error, nothing to read.
+// These belong to the 3921 revision, which is the board in hand.
+//
+// CMD and DAT0 are open lines: the controller releases them so the card can
+// answer, and PULL_MODE=UP is what makes the idle state high. Without it they
+// float, and a floating CMD line reads as a start bit that never came --
+// exactly the shape of the btn_rst_n defect twenty lines above.
+//
+// D1..D3 are constrained now although 1-bit mode never drives them. The slot
+// is wired for 4-bit, the widening is a later step, and a pin that is claimed
+// cannot be given to something else by accident in between.
+IO_LOC  "sd_clk"    83;
+IO_PORT "sd_clk"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_LOC  "sd_cmd"    82;
+IO_PORT "sd_cmd"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[0]" 84;
+IO_PORT "sd_dat[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[1]" 85;
+IO_PORT "sd_dat[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[2]" 80;
+IO_PORT "sd_dat[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[3]" 81;
+IO_PORT "sd_dat[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP;

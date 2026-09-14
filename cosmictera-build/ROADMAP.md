@@ -230,7 +230,7 @@ kerja:
 
 | Celah | Yang dibutuhkan | Menutup lapis |
 |---|---|---|
-| Penyimpanan persisten | verifikasi fisik: apakah chip PSRAM benar-benar terpasang di papan 20K yang dipegang | 4 (HFS) |
+| Penyimpanan persisten | ✅ **terbukti di papan 15 September 2026** — kartu TF, SDIO 1-bit, bertahan melewati reset dan mati daya ([PAPAN.md](PAPAN.md)). Sisa lapis 4: menyambungkan `hos_fs_*` ke sektor kartu, yang masih menulis ke RAM data ([OFF.md](OFF.md)) | 4 (HFS) |
 | HISAB langsung, bukan `SYSCALL` | bungkus `HPACK`/`HCRC` sebagai layanan kernel bernama, seperti `hos_har_get` | 5 |
 | 21 opcode (vektor, codex, `JGF`/`JGP`/`JNP`/`PRINTH`) | RTL + bench per opcode — empat di antaranya menunggu keputusan pemilik, lihat [OFF.md](OFF.md) | 6/7 (dipakai program lengkap) |
 | Proses dinamis, stack per proses, tabel syscall, tidur/tunggu/sinyal | perluasan H-Kernel | 3 |
@@ -350,7 +350,7 @@ sampai menjadi satu sistem yang bisa dipakai:
 | M2 | Batch ISA berikutnya | **selesai di papan** — enam opcode codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`), `test_codex` menjawab `8 0 0 1 1 0 1 5` | — (`CSUB` ditunda, `CDOT` dikeluarkan karena tempat, `CNORM`/`CDIST` duplikat — lihat [OFF.md](OFF.md)) |
 | M3 | H-Kernel boot → shell | **selesai di papan** — banner `HIJAIYYAH`, prompt `> `, gema karakter, perintah dijawab lewat kernel (`A`→`65`, `p`→`2 0 1`), tabel syscall, HAL UART, PID 0/PID 1 | — keempat penghalang ditutup dan terbukti di papan: resume setelah preemption (`e7b5a2d`), FLAGS sebagai konteks (H-ISA v1.1, `a3e2a15`), hazard `TRAP_EPC`→`ERET` (`346984d`), dan jalur keluaran karakter (`EMITS` 0xA2, `37cbbad`) |
 | M4 | Proses + syscall + timer | trap, supervisor, proteksi memori, syscall, timer semuanya di RTL dan dijalankan di papan (`81fbd2e`) | proses dinamis, stack per proses, tabel syscall |
-| M5 | HFS baca/tulis | **create → write → read → verify jalan di papan** (`1 0 1 1 1 1 0`), guard-on-write, H-Reg dibangun ulang lewat `CSET`, `hos_fs_create` operasi bernama | media penyimpanan persisten yang terverifikasi fisik |
+| M5 | HFS baca/tulis | **create → write → read → verify jalan di papan** (`1 0 1 1 1 1 0`), dan **medianya kini persisten**: kartu TF terbukti bertahan melewati mati daya, 15 September 2026 | `hos_fs_*` masih menulis ke RAM data — jalur kartu hidup, keduanya belum disambung |
 | M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
 | M7 | Ka'bah dipanggil dari HCPU | Ka'bah jalan sendiri di papan, 400/400 byte cocok `cube.py` | jadi co-processor: perintah lewat MMIO, hasil kembali ke HCPU |
 | M8 | JIM/HIJRAH di perangkat keras | 28 opcode huruf `0xE0`–`0xFB` dijalankan di pipeline | instruksi JIM yang dirakit, didekode, dieksekusi, lalu diverifikasi di papan |
@@ -405,7 +405,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.952
+software_tests      1611/1611     ← sekarang 4.961
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 

@@ -429,6 +429,134 @@ Dan `HLOAD 23` itu **Lam**, bukan Kaf: ROM 1-berindeks, Kaf ada di 22.
 
 ---
 
+## M4.2 — jendela kartu di silikon, dan slot yang kosong, 14 September 2026
+
+**Papan menjawab `0 0 0 196`, dua kali, dan itu jawaban yang benar.** Slotnya
+memang kosong — dipastikan pemilik, bukan disimpulkan dari kabel.
+
+`rtl/programs/sdio_verify.hasm` dikirim lewat loader ke bitstream H-ISA v1.2
+(`make bridge`, lalu `send_program.py`). Programnya **tidak menulis apa pun ke
+kartu**: tidak ada `SD_CMD` 3 di dalamnya. Empat angka keluar:
+
+```
+0     init    tak ada yang menjawab urutan identifikasi
+0     read    ditolak: tak pernah ada init yang berhasil
+0     verify  128 kata itu masih 7, angka pengotor yang ditulis sendiri
+196   status  0b1100_0100 — err=1, card_ready=0, err_code=12 (E_NOT_INIT)
+```
+
+Dijalankan dua kali, yang kedua sesudah rekonfigurasi penuh papan: sama persis.
+Dan **identik byte-per-byte dengan simulasi slot-kosong** (`tb_nocard`,
+2.733.168 siklus ≈ 101 ms — satu timeout CMD8 penuh).
+
+### Yang ini buktikan, dan tak ada bench yang bisa membuktikannya
+
+| | |
+|---|---|
+| jendela peripheral v1.2 di silikon | `LOAD`/`STORE` ke `0xFE0`–`0xFE4` sampai ke blok kartu, dan `0xFF0`–`0xFFF` tidak terusik: UART tetap mencetak, pencacah siklus tetap jalan |
+| pemisahan `is_core`/`is_sd` menahan | tulisan ke `SD_CONTROL` (`0xFE4`) membawa empat bit rendah **yang sama** dengan compare timer (`0xFF4`). Kalau pemisahan itu salah, memasang kartu akan diam-diam melengan ulang timer. Ia tidak |
+| pengontrol melapor, bukan menggantung | timeout berjalan, kode galat keluar, mesin sampai ke `HALT` |
+| jalur program utuh di papan | loader → relokasi ke alamat 64 → `CALL`/`RET` → gelung polling berbatas → `PRINT` |
+
+### Yang ini TIDAK buktikan
+
+Tidak ada satu bit pun lalu lintas kartu. **Pinout SDIO di `hcpu_gowin.cst`
+masih klaim, bukan bukti** — ia diambil dari skema revisi 3921, dan komentarnya
+sendiri mencatat bahwa revisi lebih lama memetakan pin ini berbeda. Selama
+belum ada kartu yang menjawab, salah-pinout dan slot-kosong punya gejala yang
+sama persis: diam.
+
+Papan ini **tidak punya jalur card-detect** — itu sebabnya bit 3 dinamai
+"kartu pernah menjawab", bukan "ada kartu". Perangkat lunak di sini tidak bisa,
+dan tidak akan pernah bisa, membedakan slot kosong dari kartu yang gagal init.
+
+### Catatan operasional yang mengubah bentuk langkah berikutnya
+
+- **Satu program per konfigurasi.** Program berakhir `HALT`, jadi loader habis
+  dan kiriman kedua tidak dijawab siapa pun. Diukur: kiriman kedua mengembalikan
+  0 byte. Mengulang butuh rekonfigurasi atau tombol reset.
+- **Bitstream ini dimuat ke SRAM, bukan flash papan.** Ia hilang saat daya
+  dicabut. Langkah "power off → power on → verify" karena itu butuh bitstream
+  ditulis ke flash SPI papan, atau dimuat ulang sesudah menyala — yang diuji
+  tetap kartunya, bukan papannya.
+
+---
+
+## M4.2 — kartu menjawab, dan menyimpan, 15 September 2026
+
+**Kartu: MicroSD 4 GB, SDHC, terformat FAT32, terbukti sehat di komputer
+(keterangan pemilik). SDIO 1-bit. Sektor mentah LBA 1.**
+
+Lima checkpoint, berurutan, tiap satu didahului rekonfigurasi FPGA penuh:
+
+| # | program | keluaran papan | yang dibuktikan |
+|---|---|---|---|
+| 1 | `sdio_probe.hasm` | **`10`** | CMD0→CMD8→ACMD41→CMD2→CMD3→CMD7→CMD16 lengkap; kartu menjawab |
+| 2 | `sdio_verify.hasm` | **`1 1 0 10`** | sektor 1 terbaca lewat DAT0, CRC16 lolos; polanya belum ada — kartu perawan |
+| 3 | `sdio_write.hasm` | **`1 1 1 1 10`** | CMD24, kartu menerima blok, status CRC `010`, lalu baca ulang cocok |
+| 4 | `sdio_verify.hasm` | **`1 1 1 10`** ×2 | bertahan melewati reset CPU/FPGA, daya kartu tak putus |
+| 5 | `sdio_verify.hasm` | **`1 1 1 10`** | **bertahan melewati daya dicabut** |
+
+`10` = `0b1010`: ok, card_ready, err 0, `err_code` 0 (§15.4).
+
+### Kenapa checkpoint 5 bukan cache kartu
+
+Kartu SD punya buffer sendiri dan tidak wajib mengosongkannya ke NAND sampai
+catunya putus, jadi checkpoint 4 — sekuat apa pun — tidak bisa memisahkan
+"tersimpan" dari "masih menumpang di cache". Yang memisahkannya dua hal, dan
+keduanya terukur:
+
+- **Papan menyala sebagai SoC LiteX pabrikannya** sebelum disentuh — Memtest,
+  banner, prompt `litex>` di port serial. Bitstream kita ada di SRAM, dan SRAM
+  hanya hilang kalau 3,3 V benar-benar putus, termasuk ke slot kartu. Itu bukti
+  independen bahwa daya memang dicabut, bukan papan direkonfigurasi.
+- **`sdio_verify.hasm` tidak punya `SD_CMD` 3 sama sekali**, dan ia menimpa
+  seluruh 128 kata buffer dengan nilai 7 sebelum mengirim CMD17. Buffer itu
+  BSRAM: reset membersihkan mesin keadaan, bukan larik memori, jadi tanpa
+  pengotoran itu sebuah READ yang diam-diam tidak melakukan apa pun akan
+  mengembalikan bacaan boot sebelumnya dan lolos. Dengan pengotoran itu, `1`
+  pada angka ketiga hanya bisa datang dari kartu.
+
+### Akar masalahnya: N_CC, dan papan yang menemukannya
+
+Sebelum perbaikan, kartu SDHC sehat yang sama menjawab **`0 0 0 196`** —
+`err_code` 12, timeout CMD8 penuh 100 ms — **empat kali**, dan itu identik
+dengan jawaban slot kosong. Pinout dan pull-up sempat jadi tersangka; keduanya
+dicoret pemilik lewat skema resmi 3921 (pin 83/82/84 benar, pull-up 10 kΩ
+eksternal ada).
+
+Yang salah ada di `rtl/hcpu_sdio.v`: **jarak antar-perintah nol clock, di mana
+standar menuntut delapan.** Komentar kodenya sendiri menjanjikan *"give the
+card its eight idle clocks"* dan kodenya tidak melakukannya.
+
+Pengukuran pertama menyesatkan dan dicatat di sini supaya tidak diulang: ia
+menghitung dari awal frame ke awal frame, sehingga 48 bit balasan kartu ikut
+terhitung sebagai jeda, dan menyimpulkan hanya CMD0→CMD8 yang melanggar.
+Dihitung benar — clock di mana tak ada yang menggerakkan jalur — **jaraknya nol
+di setiap batas**; model kartu menolak CMD55 pada gap 0 begitu ia diajari peduli.
+
+`S_CMD_GAP` karena itu dilewati **setiap** perintah, bukan hanya CMD8:
+
+```
+gap CMD0 → CMD8     0 clock  →  8 clock
+perintah ditolak    1        →  0
+```
+
+Harganya **+1 LUT4 dan +9 DFF** (15.600→15.601, 5.056→5.065): pencacah delapan
+bit dan satu keadaan. Fmax 116,44→116,35 MHz, derau penempatan.
+
+`rtl/tb/sd_card_model.v` berhenti menjadi model yang memaafkan: ia menegakkan
+N_CC ≥ 8 dan menjatuhkan perintah yang datang kepagian, seperti kartu sungguhan.
+Disabotase pada gap 7 — kartu menolak, bench merah, 12 gagal (R3).
+
+**Kenapa simulasi tidak pernah menangkapnya:** model kartunya menulis sendiri
+di kepalanya *"Not a timing model"*. Dua belas pemeriksaan hijau, dan kartu di
+papan diam seratus milidetik. Ini butir kedua di repo ini yang penghalangnya
+hanya bisa ditemukan papan — yang pertama `abe9300`, opcode huruf yang tak
+pernah dijalankan perangkat keras.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -441,8 +569,8 @@ antaranya, jadi fabric dibelanjakan **berurutan**. Pertanyaan anggarannya
 berubah bentuk:
 
 ```
-  berdampingan   sum(slot)   harus muat serentak   14.804 + 12.061 + 15.332 = 203%
-  berurutan      max(slot)   satu per satu                           15.332 =  73%
+  berdampingan   sum(slot)   harus muat serentak   15.600 + 12.061 + 16.078 = 211%
+  berurutan      max(slot)   satu per satu                           16.078 =  78%
 ```
 
 Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
@@ -471,15 +599,15 @@ pak-nya **identik byte-demi-byte** dengan bitstream yang menyala di papan, dan
 di-flash lagi ia menjawab `test_bsm` lewat kabel: 23 byte, `112`.
 
 ```
-  LUT4    15.332 / 20.736   73%
-  DFF      4.600 / 15.552   29%
-  BSRAM       17 /     46   36%
+  LUT4    16.078 / 20.736   77%
+  DFF      5.125 / 15.552   32%
+  BSRAM       18 /     46   39%
   IOB         15 /    384    3%
-  Fmax     63,73 MHz (HCPU), 453,51 MHz (pixel)
+  Fmax     90,53 MHz (HCPU), 442,48 MHz (pixel)
 ```
 
-Jalur video menambah 528 LUT4 di atas HCPU sendiri, jadi biaya rack **73%**,
-bukan 71%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
+Jalur video menambah 478 LUT4 di atas HCPU sendiri, jadi biaya rack **78%**,
+bukan 75%. Kalau kolom itu diisi nol, 67% akan bertahan dan jalur video
 tercatat gratis.
 
 **Angka di blok ini diukur ulang 12 September setelah blok codex masuk**,
@@ -540,7 +668,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.952 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.961 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -583,8 +711,8 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.952 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 26 testbench, 311 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.961 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 28 testbench, 334 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video
@@ -625,7 +753,7 @@ pemeriksaan masing-masing, dan `tb_hcpu_trap_epc_eret` sepuluh.
 > jadi `subprocess.run([path])` gagal sementara testbench-nya sendiri lulus
 > sepanjang waktu. Lima belas titik panggil di empat berkas tes kini memanggil
 > `vvp` dengan nama, seperti lima berkas lain di suite yang sama sudah lakukan.
-> 4.952 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
+> 4.961 lulus, 0 dilewati, 0 gagal — 24 tes lebih banyak yang benar-benar
 > dieksekusi, bukan dilewati.
 
 > **Dan selisih tiga yang tersisa akhirnya punya nama.** `--collect-only`

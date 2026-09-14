@@ -1,0 +1,136 @@
+; sdio_verify.hasm — is it still there? The half that never writes.
+;
+; sdio_write.hasm puts a pattern on sector 1. This reads it and says whether
+; it is still the same, and it is the program that gets sent again after a
+; reset and again after the power has been off. Four numbers:
+;
+;   1   init    a card answered the identification sequence
+;   1   read    sector 1 came back off the card
+;   1   verify  all 128 words are still the pattern sdio_write.hasm wrote
+;   10  status  ok and card_ready, no error code — §15.4's layout
+;
+; ── this program writes nothing to the card, on purpose ─────────
+; A persistence test that re-writes what it then checks proves nothing at all.
+; There is no SD_CMD 3 anywhere below. The only thing on sector 1 is whatever
+; survived from a previous run of sdio_write.hasm, which may have been before
+; a reset or before the supply was cut.
+;
+; ── IT DOES CLOBBER THE CONTROLLER'S BUFFER FIRST, AND MUST ─────
+; The 128-word sector buffer is BSRAM. A reset clears the CPU's state machine;
+; it does NOT clear a memory array. So after pressing the reset button the
+; buffer still holds the words the previous boot read off the card, and a READ
+; that quietly did nothing would leave them there -- and this program would
+; confirm the previous boot's success as if it were this one's. Every word is
+; overwritten with 7 before the read, so a verify that passes has to have
+; come off the card in THIS boot.
+;
+; That is not a hypothetical: it is the same shape as the EMITS sabotage that
+; did not bite because simulation RAM already read as zero, recorded in
+; AGENTS.md under 37cbbad. A test that cannot fail has not been run.
+;
+; ── the pattern must match sdio_write.hasm exactly ──────────────
+; i + 1000, the same in both files. Two copies of one constant is a thing this
+; repository normally refuses (R1), and the refusal does not apply the way it
+; looks: these are two different machines' idea of the same agreement -- one
+; writes it, the other has to already know it without being told. A shared
+; definition would let a single edit move both sides at once and the test
+; would still pass while proving nothing.
+;
+; ── registers ───────────────────────────────────────────────────
+; Same as sdio_write.hasm. sd_run touches R1, R2, R9 and R10 and nothing else.
+
+        MOVI  R12, 0
+
+; ── init ────────────────────────────────────────────────────────
+        MOVI  R1, 1
+        CALL  sd_run
+        MOVI  R6, 0
+        ANDI  R2, R1, 2             ; bit1 = ok
+        CMPI  R2, 0
+        JEQ   v_init_done
+        MOVI  R6, 1
+v_init_done:
+        PRINT R6                    ; 1 — a card answered
+
+; ── clobber the buffer before asking the card for anything ──────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE4        ; SD_CONTROL bit0: index back to word 0
+        MOVI  R3, 0
+        MOVI  R4, 7
+v_clob: STORE R4, R12, 0xFE3
+        ADDI  R3, R3, 1
+        CMPI  R3, 128
+        JNE   v_clob
+
+; ── read sector 1 ───────────────────────────────────────────────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE2        ; SD_SECTOR = 1
+        MOVI  R1, 2                 ; 2 = read. There is no 3 in this file.
+        CALL  sd_run
+        MOVI  R6, 0
+        ANDI  R2, R1, 2
+        CMPI  R2, 0
+        JEQ   v_rd_done
+        MOVI  R6, 1
+v_rd_done:
+        PRINT R6                    ; 1 — the sector came back
+
+; ── is it still what was written? ───────────────────────────────
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE4
+        MOVI  R3, 0
+        MOVI  R8, 1
+v_chk:  LOAD  R5, R12, 0xFE3
+        ADDI  R4, R3, 1000
+        CMP   R5, R4
+        JEQ   v_chk_next
+        MOVI  R8, 0                 ; one wrong word is the whole answer
+v_chk_next:
+        ADDI  R3, R3, 1
+        CMPI  R3, 128
+        JNE   v_chk
+        PRINT R8                    ; 1 — still there, word for word
+
+        LOAD  R1, R12, 0xFE1
+        PRINT R1                    ; 10 — ok, card_ready, no error code
+        HALT
+
+; Four NOPs for the same reason sdio_write.hasm carries them: HALT takes effect
+; at writeback, and the instructions already in the pipeline behind it still
+; write. sd_run's first instruction is a STORE to SD_CMD, and in that shadow it
+; ran with the status word in R1 -- 10, low bits 2, a READ nobody asked for.
+; Measured there, and this file would have had the same defect unmeasured.
+        NOP
+        NOP
+        NOP
+        NOP
+
+; ── issue one command and wait for it to finish ─────────────────
+; Identical to sdio_write.hasm's, and for the same reasons: busy does not rise
+; in the cycle SD_CMD is stored, so a poll that starts immediately can read
+; the previous command's ok bit; and both waits are bounded because a program
+; that hangs on the board prints nothing and teaches nothing.
+sd_run:                             ; R1 = 1 init, 2 read -> R1 = status
+        STORE R1, R12, 0xFE0        ; SD_CMD
+        MOVI  R9, 100
+sd_lift:
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   sd_lift
+        MOVI  R10, 4000
+sd_outer:
+        MOVI  R9, 4000
+sd_inner:
+        LOAD  R1, R12, 0xFE1
+        ANDI  R2, R1, 1             ; bit0 = busy
+        CMPI  R2, 0
+        JEQ   sd_idle
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   sd_inner
+        ADDI  R10, R10, -1
+        CMPI  R10, 0
+        JNE   sd_outer
+sd_idle:
+        LOAD  R1, R12, 0xFE1
+        RET

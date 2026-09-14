@@ -75,7 +75,7 @@ Buku menetapkan tumpukan tujuh lapis:
 
 Enam dari tujuh lapis kini punya sesuatu yang nyata. Yang tersisa, berurutan:
 
-#### HFS — satu celah bersisa
+#### HFS — mediumnya sudah hidup lebih lama dari catu dayanya
 
 Jalur tulis (`hos_fs_write` di `rtl/programs/hos.hasm`) nyata: `HGRD`
 dijalankan sebelum berkomitmen, vektor korup ditolak. Jalur bacanya kini utuh
@@ -86,14 +86,37 @@ kata mentah.
 Empat operasinya kini utuh dan bernama: `hos_fs_create` dibuat di M4.1, jadi
 "berkas ini sudah ada" akhirnya bisa dinyatakan, dan siklus
 create → write → read → verify berjalan di papan sebagai `1 0 1 1 1 1 0`
-(`rtl/programs/hfs_lifecycle.hasm`). Yang masih hilang tetap satu:
+(`rtl/programs/hfs_lifecycle.hasm`).
+
+**Medianya menyala 15 September 2026, dan bertahan melewati mati daya.**
+Kartu TF onboard, SDIO 1-bit, sektor mentah LBA 1, MicroSD 4 GB SDHC FAT32:
+`10` → `1 1 0 10` → `1 1 1 1 10` → `1 1 1 10` sesudah reset → `1 1 1 10`
+sesudah daya dicabut. Rinciannya, termasuk kenapa yang terakhir bukan cache
+kartu, ada di [PAPAN.md](PAPAN.md). Ketiga penghalang yang berkas ini catat
+kemarin — kartu di slot, pinout, rantai persistensi — ketiganya tutup, dan
+pinout `.cst` berhenti menjadi klaim.
+
+Yang membuka jalannya: `S_CMD_GAP`, karena `hcpu_sdio.v` mengirim tiap perintah
+dengan jarak **nol** clock di mana standar menuntut delapan. Kartu sehat
+menjawabnya dengan diam 100 ms, empat kali, dan simulasi tidak bisa melihatnya
+karena model kartunya bukan model timing. Sekarang model itu menegakkan N_CC,
+dan sabotase gap 7 membuatnya merah.
+
+**Yang tersisa untuk lapis 4, dan ini pekerjaan lain:** HFS sendiri masih
+memakai RAM data (`0xE00`+) dan hilang saat reset. Yang terbukti persisten
+adalah **jalur ke kartunya**, bukan HFS di atasnya — menyambungkan keduanya,
+sehingga `hos_fs_write` mendarat di sektor kartu alih-alih di RAM, belum
+dikerjakan dan belum dibuka pemilik.
 
 | butuh | keadaan |
 |---|---|
-| penyimpanan persisten | **belum diverifikasi** — HFS sekarang murni RAM data (`0xE00`+), hilang saat reset. Tang Nano 20K punya jalur SDRAM/PSRAM di chipdb-nya (`IO_sdram_dq[0:31]` muncul saat PNR), tapi belum dipastikan papan fisiknya benar-benar memasang chip PSRAM |
+| medium persisten | ✅ **terbukti di papan**, 15 September 2026 |
+| HFS memakai medium itu | **belum** — `hos_fs_*` masih menulis ke RAM data; jalur kartu ada dan hidup, keduanya belum disambung |
 
-Verifikasi PSRAM Tang Nano 20K adalah pertanyaan perangkat keras: apakah chip
-itu benar-benar terpasang di papan yang dipegang, bukan hanya ada di chipdb.
+Papan ini **tidak punya jalur card-detect**, jadi bit `CARD_PRESENT` menyatakan
+"kartu pernah menjawab", bukan "ada kartu". Perbedaan itu tidak bisa ditutup
+dari perangkat lunak, dan tidak akan bisa — tapi sejak kartu menjawab, bit itu
+menjadi informasi yang berguna, bukan sekadar peringatan.
 
 #### Layanan Hybit — HAR ada, HISAB belum
 

@@ -218,6 +218,20 @@
 // Offsets from PERIPH_BASE (the top 16 words of data space). These lived as
 // localparams inside hcpu_mmio.v, which meant the trap unit and the machine
 // model would each have needed their own copy. One truth, one place.
+//
+// THE WINDOW AND THE BLOCK ARE TWO DIFFERENT NUMBERS since H-ISA v1.2.
+// `PERIPH_WINDOW` is where RAM stops and peripherals begin; `PERIPH_BASE` is
+// where these sixteen registers start, and it has not moved. Widening the
+// window rather than relocating anything is what let the card arrive without
+// touching a single address a running program already knows -- and one
+// comparator still decides, which is the property hcpu_mmio.v was built on.
+//
+//   0xFE0-0xFEF  the SD block, five registers of sixteen
+//   0xFF0-0xFFF  UART, timer, trap, memory window, imem port -- unchanged
+//
+// addr[4] tells the two blocks apart: 0 is the card, 1 is everything that was
+// here before v1.2.
+`define PERIPH_WINDOW    12'hFE0
 `define PERIPH_BASE      12'hFF0
 `define REG_RX_DATA       4'h0
 `define REG_RX_STATUS     4'h1
@@ -233,6 +247,22 @@
 `define REG_TRAP_MODE     4'hD       // bit0 mode (RO), bit1 previous (RW)
 `define REG_MEM_BASE      4'hE       // lowest data address user mode may touch
 `define REG_MEM_LIMIT     4'hF       // one past the highest
+
+// ── The card, 0xFE0 block ───────────────────────────────────────
+// Owner's decision, 14 September 2026: the TF slot is HFS's persistent
+// medium, reached by LOAD/STORE like every other peripheral rather than by a
+// new opcode. That choice carries the privilege boundary with it -- the
+// peripheral window IS the supervisor boundary, so a user program has no path
+// to the card except through a syscall.
+//
+// SD_DATA advances its own index, the same bargain REG_IMEM_DATA already
+// made: one store per word instead of two, and 512 bytes cost 128 stores.
+`define SD_CMD            4'h0       // W: 1 = init, 2 = read, 3 = write
+`define SD_STATUS         4'h1       // R: bit0 busy, 1 ok, 2 error, 3 present
+`define SD_SECTOR         4'h2       // RW: the block number
+`define SD_DATA           4'h3       // RW: one buffer word, index advances
+`define SD_CONTROL        4'h4       // RW: bit0 reset index, bit1 reset ctrl
+// 0xFE5-0xFEF remain free. Eleven words of affordance, not a gap to fill.
 
 // ── The boot path ───────────────────────────────────────────────
 // Without these the program lives inside the bitstream: $readmemh puts it

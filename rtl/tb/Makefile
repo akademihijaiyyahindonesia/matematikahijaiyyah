@@ -29,7 +29,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
         sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
-        sim_hfs_lifecycle clean
+        sim_hfs_lifecycle sim_sdio sim_sdio_prog clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -43,7 +43,7 @@ all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
-     sim_hfs_lifecycle
+     sim_hfs_lifecycle sim_sdio sim_sdio_prog
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -220,6 +220,10 @@ tb_hcpu_hfs_lifecycle.vvp: $(TB_DIR)/tb_hcpu_hfs_lifecycle.v $(RTL_DIR)/fpga/gow
 # ── unit benches ────────────────────────────────────────────────
 sim_trap: tb_hcpu_trap.vvp
 	$(VVP) $<
+sim_sdio: tb_hcpu_sdio.vvp
+	$(VVP) $<
+sim_sdio_prog: tb_hcpu_sdio_prog.vvp sdio_write.hex
+	$(VVP) $<
 sim_mmio: tb_hcpu_mmio.vvp
 	$(VVP) $<
 sim_timer: tb_hcpu_timer.vvp
@@ -228,6 +232,21 @@ sim_uart_rx: tb_hcpu_uart_rx.vvp
 	$(VVP) $<
 sim_video_timing: tb_hcpu_video_timing.vvp
 	$(VVP) $<
+
+tb_hcpu_sdio.vvp: $(TB_DIR)/tb_hcpu_sdio.v $(TB_DIR)/sd_card_model.v \
+                  $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+# M4.2 through the machine: the same card, reached by LOAD and STORE from a
+# program running on the pipeline rather than by the module's own ports. The
+# board wrapper is in the source list because it is what holds the instruction
+# memory the program is baked into.
+sdio_write.hex: $(RTL_DIR)/programs/sdio_write.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+tb_hcpu_sdio_prog.vvp: $(TB_DIR)/tb_hcpu_sdio_prog.v $(TB_DIR)/sd_card_model.v \
+                       $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
 
 tb_hcpu_trap.vvp tb_hcpu_mmio.vvp tb_hcpu_timer.vvp tb_hcpu_uart_rx.vvp \
 tb_hcpu_video_timing.vvp: \
