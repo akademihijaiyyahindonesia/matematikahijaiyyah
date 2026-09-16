@@ -456,6 +456,46 @@ di sana. Daftar di bawah hanya penunjuk bab.
    kehilangan variabel yang diujinya **tidak boleh di-flash**: hasilnya tak
    bisa ditafsirkan.
 
+### Keputusan pemilik, 17 September 2026 — lima tahap sebelum KV260
+
+Papan berikutnya adalah **Kria KV260**, bukan ASIC. Sebelum pindah, lima tahap,
+dan **tak satu pun butir perangkat keras ada di antaranya**:
+
+```
+1  HFS ke kartu SD nyata      hos_fs_* menulis sektor, bukan RAM data
+2  Loader program             citra datang dari kartu, bukan dari kabel
+3  Overlay runtime            citra dihalamankan masuk dan keluar
+4  HVM di papan               bytecode ditafsirkan mesinnya sendiri
+5  TCP/IP lewat SLIP          IP di atas UART yang sudah bekerja
+```
+
+Alasannya: kelimanya mengubah **apa yang dipindahkan** — dari CPU dengan
+demonstrasi terpasang, jadi komputer yang bisa memuat, menyimpan, menjalankan,
+dan berkomunikasi. *"Yang dipindahkan bukan hanya inti CPU, tetapi seluruh
+ekosistem HC + HASM + HVM + HOS + HFS + JIM Engine."*
+
+**Ini membuka apa yang 13 September belum dibuka.** Persistensi dan integrasi
+kernel ↔ filesystem dulu tercatat "belum dibuka"; tahap 1 dan 2 membukanya.
+Metadata, direktori, dan izin **tetap belum** — jangan memulainya.
+
+Dua pengukuran yang membentuk gerbang ini, dan keduanya harus dibaca sebelum
+menyentuh tahapnya:
+
+- **Sumber daya paling langka bukan LUT4, melainkan 4.096 kata memori
+  instruksi.** HOS + kernel + shell digabung sudah ≈1.150 kata (387 + 363 +
+  399). Seluruh Layer 11 dan 12 berbiaya nol fabric dan berbagi citra yang
+  sama. Tahap 3 ada untuk itu.
+- **ISA ini tidak punya lompatan terhitung.** `OP_JMP` dan `OP_CALL` keduanya
+  `PC ← IMM`; tidak ada `JALR`. Jadi tidak ada tabel lompat, pointer fungsi,
+  atau dispatch terindeks. Mesin keadaan protokol (tahap 5) dan gelung dispatch
+  interpreter (tahap 4) membayar rantai perbandingan — dan membayarnya dengan
+  kata instruksi, sumber daya yang paling langka itu. `0d63a7e` sudah menemui
+  bentuk yang sama: tabel syscall ditaruh di memori data, bukan tabel lompat.
+
+Spesifikasi lengkap dua belas lapis beserta triase A/B/C-nya ada sebagai
+artefak terpisah, bukan di repo — angkanya menunjuk ke header wrapper dan
+`cosmictera-build/`, bukan menyalinnya (R1).
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)

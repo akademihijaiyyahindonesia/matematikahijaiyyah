@@ -366,6 +366,26 @@ keputusan pemilik. Butir pertamanya, `create → write → read → verify` di p
 sudah selesai (`b2a0595`); metadata, persistensi, lapisan layanan, dan
 integrasi kernel ↔ filesystem **belum dibuka**.
 
+**Diperbarui 17 September 2026.** Persistensi dan integrasi kernel ↔ filesystem
+**kini dibuka** oleh gerbang lima tahap menuju KV260 — keputusannya tercatat di
+`AGENTS.md` bagian 4, dan tidak diulang di sini. Metadata, direktori, dan izin
+**tetap belum dibuka**.
+
+Yang ditambahkan halaman ini adalah syarat terimanya, karena tahap hanya tutup
+kalau ada yang bisa diukur:
+
+| | Tahap | Tutup ketika |
+|---|---|---|
+| 1 | HFS ke kartu SD nyata | Sebuah berkas bertahan melewati mati daya dan dibaca kembali identik |
+| 2 | Loader program | Program tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung** |
+| 3 | Overlay runtime | Dua program yang jumlah katanya melebihi 4.096 berjalan berurutan |
+| 4 | HVM di papan | Bytecode yang sama memberi jawaban yang sama di HVM dan di perangkat keras |
+| 5 | TCP/IP lewat SLIP | Sebuah paket dijawab dari papan |
+
+Tahap 2 syaratnya sengaja menyebut "tanpa host tersambung": `loader.hasm` hari
+ini membaca `0xFF0` — RX_DATA — jadi sebuah program yang jalan dengan kabel
+terpasang belum membuktikan apa pun tentang jalur kartu.
+
 ### Yang tidak boleh dikerjakan atas inisiatif sendiri
 
 - Opcode yang **tidak ada di** `docs/HISA_SPEC.md` (`VPROJ_K/N/Q/T`, `HCHK`).
