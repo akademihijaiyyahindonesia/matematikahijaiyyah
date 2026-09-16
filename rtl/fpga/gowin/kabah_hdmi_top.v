@@ -7,12 +7,29 @@
 // ever had: 944 s, zero TLVDS cells, and the four TMDS IO cells carry exactly
 // the names kabah_hdmi.cst constrains.
 //
+// Re-measured 15 September 2026, and the reason is a real defect rather than
+// housekeeping: dvi_tx_open.v's TMDS encoder was wrong and was repaired. All
+// three running-disparity branches updated the count for an encoding their
+// data path did not perform, and `disparity` -- a signed [5:0] register that
+// holds -32..+31 -- ran to -10,240 on a stretch of 0xFF and WRAPPED, picking
+// the wrong branch for every pixel after it. Against a decoder: 30 of 256
+// bytes failed a round trip before, 0 of 1,024 after, and |disparity| never
+// exceeds 8. This wrapper carries that encoder, so its figures are this run's:
+//
 //     IOB           15 /    384    3%
-//     LUT4      12,142 / 20,736   58%
-//     DFF        2,035 / 15,552   13%
+//     LUT4      12,133 / 20,736   58%
+//     DFF        2,036 / 15,552   13%
 //     BSRAM          0 /     46    0%
-//     Fmax       94.16 MHz  u_kabah.clk_27m (PASS at the 12.00 MHz constraint)
-//               186.85 MHz  pixel_clk
+//     Fmax      104.35 MHz  u_kabah.clk_27m (PASS at the 12.00 MHz constraint)
+//               180.86 MHz  pixel_clk
+//
+// -9 LUT4 and +1 DFF against 12,142 / 2,035. An encoder whose arithmetic
+// finally matches what it sends is not bigger than one whose does not.
+//
+// WHAT THE REPAIR DID NOT FIX, and this must not be read as a cure: the
+// corrupt-pixel defect on the display node survived it unchanged. That is
+// itself evidence -- a static encoding fault is deterministic, and the
+// corruption is not. cosmictera-build/OFF.md carries the open entry.
 //
 // On the board: Ka'bah answered over the wire with 2/2 frames, 400/400 bytes
 // matching cube.py; and a person watching the monitor saw the 1280x720
@@ -21,14 +38,19 @@
 // recorded as what they are.
 //
 // Ka'bah alone routes at 165.98 MHz (hijaiyyah_kabah_gowin_top.v); sharing
-// the fabric with the video path, 94.16 MHz -- still far above the 12 MHz
-// constraint, and the real price of the neighbour.
+// the fabric with the video path, 104.35 MHz -- still far above the 12 MHz
+// constraint, and the real price of the neighbour. It read 94.16 MHz on the
+// 11 September run, and neither number is claimed as a property of the
+// design: Fmax on this board moves run to run, and hcpu_gowin_top.v records
+// six runs of one unchanged design spanning 84 to 120 MHz.
 //
 // Until this build it carried hcpu_hdmi_top.v's first, broken output stage --
 // a hand-placed TLVDS_TBUF per lane and LVDS25 constraints -- and nothing
 // compared the two wrappers, so nothing noticed.
 //
-// RTL FINGERPRINT: 6205f7dcf2a7be8152cb89a74d72c6b2a226cca2a598c53073d0ae9dc444b829
+// Restamped 15 September 2026 WITH a fresh place-and-route run -- the figures
+// above are that run's, not the old ones carried over.
+// RTL FINGERPRINT: ceefd15841209ced006cb5ec43764e0170cf72a7dfd7b336ca8913cc0086ef58
 
 module kabah_hdmi_top (
     input wire        clk_27m,

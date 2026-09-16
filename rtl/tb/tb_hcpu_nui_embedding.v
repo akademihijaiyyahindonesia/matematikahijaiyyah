@@ -36,7 +36,7 @@ module tb_hcpu_nui_embedding;
 
     always #HALF_PERIOD clk = ~clk;
 
-    hcpu_gowin_top #(.USE_PLL(0), .BAUD(BAUD), .PROGRAM_HEX("nui_embedding.hex")) dut (
+    hcpu_gowin_core #(.USE_PLL(0), .BAUD(BAUD), .PROGRAM_HEX("nui_embedding.hex")) dut (
         .clk_27m(clk), .btn_rst_n(rst_n),
         .uart_rxd(1'b1), .uart_txd(uart_txd), .led());
 

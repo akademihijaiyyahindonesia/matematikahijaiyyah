@@ -33,11 +33,20 @@ WRAPPER = (GOWIN / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 CRYSTAL_MHZ = 27.0
 
 # What place and route reported at THIS commit, on the Tang Nano 20K.
-# Re-measured 2026-09-14, H-ISA v1.2: the peripheral window widened and the
-# SD controller arrived behind it. The buffer is the extra BSRAM block.
-UTILISATION = {"LUT4": (15601, 20736), "DFF": (5065, 15552),
+# Re-measured 2026-09-15, after hcpu_gowin_top.v was split into
+# hcpu_gowin_core (everything, including the telemetry sideband) and a
+# pin-level hcpu_gowin_top. The split was forced by a measurement: with the
+# sideband on the top level, `make -C rtl/fpga/gowin bitstream` died on
+# `ERROR: Unconstrained IO:tele_pc_OBUF_O_9` -- a top level must find a pin
+# for every output, and eighty-four bits of telemetry never will.
+#
+# +143 LUT4 and nothing else moves. DFF, BSRAM and IOB are identical, which is
+# the check that one more level of hierarchy added no function; the wrapper's
+# own header carries the controlled before/after that separates yosys remapping
+# from logic.
+UTILISATION = {"LUT4": (15744, 20736), "DFF": (5065, 15552),
                "BSRAM": (18, 46), "IOB": (11, 384)}
-MEASURED_FMAX_MHZ = 116.35
+MEASURED_FMAX_MHZ = 86.18
 
 # The commit the fitting result was taken from, re-run to confirm it still
 # reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.
@@ -218,9 +227,15 @@ def test_the_kabah_hdmi_wrapper_records_its_routed_result() -> None:
     rows = {name: (int(used.replace(",", "")), int(total.replace(",", "")))
             for name, used, total in re.findall(
                 r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", wrapper, re.M)}
-    assert rows == {"IOB": (15, 384), "LUT4": (12142, 20736),
-                    "DFF": (2035, 15552), "BSRAM": (0, 46)}
-    assert re.search(r"^//\s+Fmax\s+94\.16 MHz", wrapper, re.M)
+    # Re-measured 2026-09-15 after dvi_tx_open.v's TMDS encoder was repaired:
+    # all three running-disparity branches accounted for an encoding their data
+    # path did not perform, 30 of 256 bytes failed a decoder round trip, and
+    # `disparity` ran to -10,240 in a signed [5:0] register that wraps at 31.
+    # This wrapper instantiates that encoder, so it had to be placed again.
+    # -9 LUT4, +1 DFF against 12,142 / 2,035.
+    assert rows == {"IOB": (15, 384), "LUT4": (12133, 20736),
+                    "DFF": (2036, 15552), "BSRAM": (0, 46)}
+    assert re.search(r"^//\s+Fmax\s+104\.35 MHz", wrapper, re.M)
 
 def test_the_wrapper_header_records_the_routed_result() -> None:
     assert _routed_table() == UTILISATION

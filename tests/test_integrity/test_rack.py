@@ -47,13 +47,13 @@ def test_the_rack_costs_its_largest_slot_not_their_sum() -> None:
         "the video slot -- HCPU plus TMDS -- is the largest, and that only "
         "became visible once its cost was measured")
 
-    assert rack.naive_sum_lut4() == 15_601 + 12_061 + 15_994 == 43_656
+    assert rack.naive_sum_lut4() == 15_744 + 12_061 + 15_994 == 43_799
     assert rack.naive_sum_lut4() > rack.BOARD_LUT4, (
         "the slots would still fit side by side, so sequencing buys nothing")
     assert top.lut4 < rack.BOARD_LUT4, "the largest slot no longer fits alone"
 
     assert int(top.lut4 / rack.BOARD_LUT4 * 100) == 77
-    assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 210
+    assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 211
 
 
 def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
@@ -71,17 +71,28 @@ def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
 
 
 def test_percentages_truncate_the_way_nextpnr_does() -> None:
-    """15,600 / 20,736 is 75.2%, and truncation and rounding agree on 75.
+    """15,744 / 20,736 is 75.93%: truncation says 75, rounding says 76.
 
-    They did not always. The hazard this test exists for was 14,231 reading
-    68% truncated and 69% rounded, and the render must never print a third
-    number beside two that agree. It stays here because the figures move every
-    time the design does -- the next measurement may split them again."""
+    THEY HAVE SPLIT AGAIN, which is the case this test was kept alive for. The
+    previous version read "truncation and rounding agree on 75" at 15,601 and
+    closed with "the next measurement may split them again" -- and the split
+    that hcpu_gowin_top.v's core/top separation produced is that measurement.
+    The original hazard was 14,231 reading 68% truncated and 69% rounded.
+
+    nextpnr truncates, and the log of the run these figures come from says
+    `LUT4: 15744/ 20736 75%`. So 75 is the only number the render may print,
+    and 76 -- the one an innocent `round()` would produce -- must appear
+    nowhere. That second assertion is new, and it is the one with teeth: while
+    the two agreed, printing the wrong one was invisible."""
     hcpu = next(s for s in rack.SLOTS if s.name == "hcpu")
-    assert round(hcpu.lut4 / rack.BOARD_LUT4 * 100) == 75, (
-        "the rounding hazard this test exists for is gone -- check the render")
+    truncated = int(hcpu.lut4 / rack.BOARD_LUT4 * 100)
+    rounded = round(hcpu.lut4 / rack.BOARD_LUT4 * 100)
+    assert (truncated, rounded) == (75, 76), (
+        "the figures moved again -- re-read what nextpnr printed and say so here")
     assert f"{int(hcpu.occupancy * 100)}%" == "75%"
     assert "75%" in rack.render()
+    assert "76%" not in rack.render(), (
+        "the render is printing the rounded percentage; nextpnr truncates")
 
 
 # ── the manifest describes things that exist ─────────────────────
@@ -133,9 +144,9 @@ def test_the_figures_come_from_the_wrapper_that_measured_them() -> None:
     kabah = (GOWIN / "hijaiyyah_kabah_gowin_top.v").read_text(encoding="utf-8")
 
     slots = {s.name: s for s in rack.SLOTS}
-    assert re.search(r"LUT4\s+15,601 /\s+20,736\s+75%", hcpu)
-    assert slots["hcpu"].lut4 == 15_601 and slots["hcpu"].dff == 5_065
-    assert slots["hcpu"].fmax_mhz == 116.35 and "116.35 MHz" in hcpu
+    assert re.search(r"LUT4\s+15,744 /\s+20,736\s+75%", hcpu)
+    assert slots["hcpu"].lut4 == 15_744 and slots["hcpu"].dff == 5_065
+    assert slots["hcpu"].fmax_mhz == 86.18 and "86.18 MHz" in hcpu
 
     assert re.search(r"LUT4\s+12,061/\s+20,736\s+58%", kabah)
     assert slots["kabah"].lut4 == 12_061 and slots["kabah"].dff == 1_965
@@ -176,7 +187,7 @@ def test_an_unmeasured_slot_cannot_move_the_rack_cost(monkeypatch) -> None:
     monkeypatch.setattr(rack, "SLOTS", (*rack.SLOTS, ghost))
     assert not ghost.measured
     assert rack.largest().name == "hdmi"
-    assert rack.naive_sum_lut4() == 43_656
+    assert rack.naive_sum_lut4() == 43_799
     assert "Belum terukur: ghost" in rack.render()
 
 

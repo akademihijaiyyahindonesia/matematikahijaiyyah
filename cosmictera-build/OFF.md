@@ -17,6 +17,86 @@ dalamnya sudah teruji ditempatkan.
 
 Label: **EH**.
 
+### Pixel HDMI rusak, dan sambungannya sendiri sehat
+
+Dibekukan sebagai cacat terbuka atas keputusan pemilik, 17 September 2026,
+setelah investigasi satu-variabel yang panjang gagal menamai akarnya. Yang
+dibekukan adalah penyelidikannya, bukan faktanya: faktanya terukur.
+
+**Yang sudah terbukti, dan tidak boleh diragukan lagi oleh yang melanjutkan:**
+
+| | bukti |
+|---|---|
+| Monitor mengunci 1280×720 | pengamatan pengguna, berulang |
+| HSYNC/VSYNC, geometri, posisi area aktif | benar — teks muncul di sel yang tepat |
+| Node display ter-place dan ter-flash | **685 LUT4 (3%)**, Fmax 102,44 MHz, 0 hold, 0 setup |
+| Tumpukan M5 bukan penyebabnya | build diagnostik tanpa font, layout ROM, compositor maupun renderer — empat bilah warna solid — menunjukkan artefak yang sama |
+
+**Yang belum terbukti:** bahwa pipeline pixel menghasilkan gambar bersih, dan
+apa penyebab tunggalnya.
+
+**Tereliminasi oleh pengukuran — jangan diulang.** Masing-masing ini sudah
+diuji dan gugur, dan mengulangnya adalah membelanjakan waktu yang sama dua
+kali:
+
+- **Seluruh M5** — font ROM, layout ROM, compositor, renderer, telemetri,
+  BSRAM. Build diagnostik tanpa satupun tetap bergaris.
+- **CALIB** — 1 dan 0 dibangun keduanya; tidak ada beda di layar.
+- **Urutan bit TMDS** — dibalik, dan tautan monitor **mati sama sekali**.
+  Tautan yang mati ketika kata dibalik adalah tautan yang katanya sudah benar.
+- **PLL/CLKDIV** — aritmatikanya tutup tanpa sisa: 1650 × 750 × 60 = 74,25 MHz;
+  27 × 55/4 = 371,25 MHz; 371,25/5 = 74,25 MHz. fPFD 6,75 MHz, fVCO 742,5 MHz.
+- **Timing fabric** — `pixel_clk` Fmax terukur 276,24 MHz melawan 74,25 MHz yang
+  dibutuhkan: margin 3,7×. `serial_clk` tidak punya satu pun jalur fabric.
+- **Jaringan clock** — `serial_clk` dan `pixel_clk` keduanya *"routed using
+  global resources only"*.
+- **Encoder TMDS** — cacat **nyata** ditemukan di sini dan diperbaiki: ketiga
+  cabang disparitas tidak konsisten terhadap data yang dikirimnya, 30 dari 256
+  byte gagal round-trip dan `disparity` lari ke −10.240 pada register
+  `signed [5:0]` yang hanya memuat −32..+31. Sesudah perbaikan: 0 dari 1.024
+  gagal, |disparity| tak pernah lewat 8. **Layar tidak berubah** — yang
+  membuktikan cacat itu nyata tetapi bukan cacat ini.
+- **Tahap output TMDS** — tereliminasi oleh perangkat kerasnya sendiri. Tiga
+  cara menggerakkan belahan N dengan logika, ketiganya ditolak sebelum ada
+  bitstream: `ELVDS_OBUF` dijatuhkan penempatan (sintesis 4 → penempatan 0);
+  inverter pada aliran serial memicu `out_iob != nullptr && out_iob->bel !=
+  BelId()` di `pack_iologic.cc:183` karena OSER10 wajib mencapai pad langsung;
+  dan OSER10 kedua ditolak dengan `Can't place u_lane_r.u_oser at X39Y54/IOBB
+  because it's already taken by tmds_data_n_OBUF_O`. Netlist ter-route
+  memperlihatkan sebabnya — satu `IOLOGIC_DUMMY` per OSER10, karena satu
+  serialiser 10:1 menduduki IOLOGIC **kedua** belahan pasangan. Maka pad N
+  tidak bisa digerakkan logika **di sini maupun di desain rujukan**, dan
+  `O_tmds_*_n` milik Sipeed pasti berasal dari buffer pad diferensial yang
+  diberi satu aliran — konstruksi yang sama dengan `IO_LOC "…_OBUF_O" 33,34`
+  pada `LVCMOS33D` milik kita. Tidak pernah ada perbedaan untuk diuji.
+
+**Petunjuk terkuat yang tersisa, dan ia belum selesai dibaca.** Bitstream yang
+bit-identik dimuat **30 kali** berturut-turut (`04596c98b780995d`, 10 muatan lalu
+20 muatan). Gambarnya **berubah-ubah**, dan sebagian muatan menghasilkan gambar
+diam sementara sebagian lain berkedip. Desainnya tidak berbeda sedikit pun antar
+muatan, jadi yang memutuskan bukan desainnya — dan itu menjatuhkan seluruh kelas
+cacat statis, termasuk yang sudah diperbaiki di atas.
+
+Satu mekanisme menjelaskan ketiga wajah itu tanpa sebab kedua: `DIV_MODE="5"`
+punya lima fase keluaran yang mungkin, dan seluruh rantai keluar dari reset pada
+`pll_locked` yang **asinkron dan tidak disinkronkan** — `CLKDIV.RESETN` dan
+keempat `OSER10.RESET` dilepas pada instan yang sama, sehingga serialiser keluar
+dari reset tepat ketika `PCLK`-nya baru lahir. Fase yang jauh dari batas memberi
+gambar diam yang salah; fase dekat batas setup/hold memberi kedipan, karena yang
+terkunci adalah fasenya dan bukan hasil samplingnya; fase yang benar memberi
+gambar bersih.
+
+**Yang belum dijawab, dan menentukan:** apakah dari 30 muatan itu pernah ada satu
+yang **bersih**. Kalau pernah, seluruh rantai TMDS terbukti benar dan yang
+tersisa hanya menguncinya — reset yang disinkronkan dan diurutkan. Kalau tidak
+pernah, "satu fase benar dari lima" tinggal ~1% peluangnya dan ada cacat kedua
+yang bertahan di semua fase. Pertanyaan itu hanya bisa dijawab dari layar.
+
+**Variabel yang belum pernah diubah sama sekali:** papan ini, kabel ini, monitor
+ini. Setiap eksperimen mengubah desain kita dan membiarkan ketiganya tetap.
+
+Label: **EH**.
+
 ---
 
 ## Belum ada

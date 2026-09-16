@@ -56,15 +56,37 @@ def test_every_core_input_is_connected_in_the_wrapper(board: str) -> None:
 
 
 def _wrapper_ports(src: Path) -> list[str]:
-    """Port names, expanded per bit for buses -- led[5:0] is six pins."""
+    """Port names of the BOARD TOP, expanded per bit -- led[5:0] is six pins.
+
+    Named, not guessed by position. This used to take the first `module hcpu_`
+    in the file, which held while every wrapper was one module. hcpu_gowin_top.v
+    is now two -- hcpu_gowin_core carries the telemetry sideband, and a
+    pin-level hcpu_gowin_top wraps it -- and the old rule silently walked the
+    core's port list instead, which is the one list that must NOT have pins.
+
+    The module this test means is the one the file is named for, so that is
+    what it asks for. A file that stops containing it fails loudly here rather
+    than checking something else and passing.
+    """
     text = src.read_text(encoding="utf-8")
-    head = text[text.index("module hcpu_"):text.index(");")]
+    marker = f"module {src.stem}"
+    assert marker in text, f"{src.name} does not declare {src.stem}"
+    head = text[text.index(marker):]
+    head = head[:head.index(");")]
     out: list[str] = []
     for width, name in re.findall(
-            r"(?:input|output)\s+wire\s+(\[[^\]]+\]\s*)?(\w+)", head):
+            r"(?:input|output|inout)\s+wire\s+(\[[^\]]+\]\s*)?(\w+)", head):
         if width:
-            hi = int(re.search(r"\[\s*(\d+)", width).group(1))
-            out.extend(f"{name}[{i}]" for i in range(hi + 1))
+            # A width the board must be able to count, so a macro or a
+            # parameter is a failure to report rather than a crash to debug:
+            # a pin list cannot be checked against a bound nobody can read.
+            bound = re.search(r"\[\s*(\d+)", width)
+            assert bound, (
+                f"{src.name}: port `{name}` is declared `{width.strip()}` -- "
+                "a board top must give a literal width, or its pins cannot be "
+                "counted against the constraints file"
+            )
+            out.extend(f"{name}[{i}]" for i in range(int(bound.group(1)) + 1))
         else:
             out.append(name)
     return out

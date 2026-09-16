@@ -40,16 +40,41 @@
 // yosys 0.68 -> nextpnr-himbaechel 0.11.1 -> gowin_pack, GW2AR-LV18QN88C8/I7,
 // re-measured 2026-09-14, twice: once when H-ISA v1.2 widened the peripheral
 // window and put the onboard TF card behind it, and again after the card's own
-// Ncc gap was fixed. These are the second run's figures:
+// Ncc gap was fixed. Re-measured again 2026-09-15 after this file was split
+// into hcpu_gowin_core and a pin-level hcpu_gowin_top. These are that run's
+// figures:
 //
-//     LUT4       15,601 / 20,736   75%
+//     LUT4       15,744 / 20,736   75%
 //     DFF         5,065 / 15,552   32%
 //     BSRAM          18 /     46   39%
 //     IOB            11 /    384    2%
 //
-//     Fmax      116.35 MHz (PASS at the 12.00 MHz constraint)
+//     Fmax       86.18 MHz (PASS at the 12.00 MHz constraint)
 //               -- taken after routing. Zero hold and zero setup violations.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
+//
+// +143 LUT4 FOR THE SPLIT, AND NO NEW LOGIC. DFF, BSRAM and IOB do not move at
+// all, which is the check: a wrapper that holds no registers cannot have added
+// a function. The control was measured rather than assumed -- HEAD's
+// single-module wrapper synthesised against this same rtl/*.v:
+//
+//                  HEAD      split     delta
+//        LUT1       891       995      +104
+//        LUT2     1,517     1,530       +13
+//        LUT3     3,370     3,141      -229
+//        LUT4     7,635     7,848      +213
+//        ALU      1,873     1,898       +25
+//        DFF        181       181         0
+//
+// LUT3 falls by 229 while LUT4 rises by 213: yosys mapping the same logic
+// differently across one more level of hierarchy, not logic appearing. Net
+// +101 LUTs at synthesis, +143 after routing.
+//
+// Fmax 116.35 -> 86.18 is NOT claimed as a cost of the split. This file
+// already records six runs of the same design spanning 84.26 to 120.31 MHz,
+// none of which was ever separated into design and placement; 86.18 sits
+// inside that spread. The board's clock is 27 MHz and every run passes the
+// constraint the flow places against.
 //
 // +1 LUT4 AND +9 DFF against 15,600 / 5,056, and that is the whole price of
 // making every command wait the eight idle SD clocks the standard owes the
@@ -194,7 +219,12 @@
 // fingerprinted source -- reversing only those copyright lines in memory
 // reproduced the recorded hash exactly, so the sweep was provably the entire
 // delta and no design byte moved.
-// RTL FINGERPRINT: b3cd4682798b75c7256239f9c9ce03626ffa8c7ee6d92c12e8d693fb56370c47
+// Restamped 2026-09-15 WITH a fresh place-and-route run, and the run is the
+// reason the stamp exists rather than a formality: M5 added eight modules to
+// rtl/, which this slot's fingerprint picks up by wildcard, and the split that
+// gave this file two modules is a design change by any reading. The figures
+// above were re-measured, not carried over.
+// RTL FINGERPRINT: 7ac1fdb6a8b81e1602ff5905dc9f9a9373dec56c7d644d126f05831ea1c94299
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any
@@ -215,7 +245,38 @@
 // +2,196 LUT4 and, unexpectedly, a FASTER clock -- the DSP sat on the critical
 // path. Drop the flag when apycula can pack a MULT9X9.
 //
-module hcpu_gowin_top #(
+// ── WHY THERE ARE TWO MODULES IN THIS FILE ──────────────────────
+// hcpu_gowin_core is everything: CPU, memories, UART, card, LEDs, and the
+// telemetry sideband. hcpu_gowin_top, at the foot of this file, is a pin-level
+// wrapper around it that carries NOTHING but the board's own pins.
+//
+// The split is not tidiness. It is a defect this wrapper had, measured:
+//
+//     ERROR: Unconstrained IO:tele_pc_OBUF_O_9
+//     make: *** [hcpu_gowin_top_pnr.json] Error 125
+//
+// The telemetry ports were added to hcpu_gowin_top itself so hcpu_hdmi_top
+// could read them, and that gave one module two incompatible jobs. As a
+// SUBMODULE an unconnected output is free; as a TOP LEVEL the same output
+// demands a pin, and eighty-four bits of program counter, instruction word and
+// cycle count are never going to be pins. The CPU slot -- the wrapper every
+// HASM program on the board runs inside -- stopped building the day telemetry
+// arrived, and the stale .fs already in the directory hid it.
+//
+// So the two jobs are now two modules. The board slot instantiates the top and
+// sees pins only; hcpu_hdmi_top instantiates the CORE and taps telemetry there.
+// Nothing is duplicated: there is one CPU, one memory map, one card, and the
+// wrapper above them holds no logic at all.
+//
+// Eleven benches instantiate one of the two, and which one is decided by what
+// the bench looks at. The nine that reach INSIDE -- u_board.u_hcpu.u_regfile,
+// u_board.u_dataram.mem, u_board.cycle_count, u_board.imem -- take the core,
+// so every hierarchical path they already had still resolves and not one line
+// of their bodies changed. tb_hcpu_hfs_lifecycle.v and tb_hcpu_sdio_prog.v
+// touch nothing but ports, so they take hcpu_gowin_top, and that is what keeps
+// the wrapper itself under test: if this file stopped connecting a pin to the
+// core, those two would be the ones to say so.
+module hcpu_gowin_core #(
     parameter USE_PLL = 0,           // 0: run at 27 MHz; 1: use the rPLL
     // 1 infers a MULT9X9, which nextpnr places happily and gowin_pack then
     // refuses: `KeyError: 'IRBY_IREG0BL_0'`, an attribute apycula's chipdb
@@ -250,7 +311,25 @@ module hcpu_gowin_top #(
     // whose upper data lines float can read them as a mode it was not put in.
     output wire        sd_clk,
     inout  wire        sd_cmd,
-    inout  wire [3:0]  sd_dat
+    inout  wire [3:0]  sd_dat,
+
+    // ── telemetry sideband, for the M5 monitor ──────────────────
+    // Read-only, and not one of these is a new signal: the PC is the fetch
+    // address the instruction memory already receives, the instruction word
+    // is what it already returns, halted and guard are hcpu_top's own
+    // outputs, the cycle counter is the one this wrapper already keeps for
+    // its CYCLES= report, and FLAGS comes from a debug port that was tied off
+    // until now. Nothing is added to the CPU to produce them, which is why
+    // the monitor can show them without a program storing anything.
+    //
+    // A wrapper that leaves them unconnected is unchanged -- hcpu_gowin_top
+    // is instantiated bare by the HDMI slot and by nothing else.
+    output wire [`CODE_ADDR_W-1:0] tele_pc,
+    output wire [`ILEN-1:0]        tele_instr,
+    output wire                    tele_halted,
+    output wire                    tele_guard,
+    output wire [31:0]             tele_cycles,
+    output wire [7:0]              tele_flags
 );
 
     localparam OSC_HZ = 27_000_000;
@@ -345,6 +424,8 @@ module hcpu_gowin_top #(
 
     // ── HCPU core ───────────────────────────────────────────────
     wire halted_out, guard_led_out;
+    // Driven by hcpu_top's debug port, read by the M5 telemetry sideband.
+    wire [7:0] dbg_flags_w;
     wire core_txd;
 
     // Driven by the core, resolved into pads below.
@@ -374,11 +455,14 @@ module hcpu_gowin_top #(
         .sd_dat_out     (sd_dat_out_w),
         .sd_dat_oe      (sd_dat_oe_w),
         .sd_dat_in      (sd_dat[0]),
-        // Debug port — unused on FPGA, tied off
+        // The GPR read-back stays tied off -- the monitor has no register
+        // window yet. dbg_flags no longer is: it is the only path to FLAGS
+        // that does not require a program to execute FRD and store it.
         .dbg_gpr_raddr  (5'd0),
         .dbg_gpr_rdata  (),
-        .dbg_flags      ()
+        .dbg_flags      (dbg_flags_w)
     );
+
 
     // ── The card's two open lines ───────────────────────────────
     // This is the only place in the design that knows these are pads. CMD and
@@ -536,11 +620,64 @@ module hcpu_gowin_top #(
     reg [24:0] heartbeat = 25'd0;
     always @(posedge clk_sys) heartbeat <= heartbeat + 1'b1;
 
+    // ── telemetry taps ──────────────────────────────────────────
+    // Placed here rather than beside the CPU instantiation because
+    // `cycle_count` is declared further down: with `default_nettype none`
+    // there are no implicit wires to paper over an early reference, and
+    // iverilog says so on the line rather than inferring something.
+    assign tele_pc     = imem_addr;
+    assign tele_instr  = imem_data;
+    assign tele_halted = halted_out;
+    assign tele_guard  = guard_led_out;
+    assign tele_cycles = cycle_count;
+    assign tele_flags  = dbg_flags_w;
+
     assign led[0] = ~guard_led_out;
     assign led[1] = ~halted_out;
     assign led[2] = ~pll_locked;
     assign led[3] = ~sys_rst_n;
     assign led[4] = ~report_armed;   // cycle report sent
     assign led[5] = heartbeat[24];   // blinking = clk_sys alive
+
+endmodule
+
+// ── the board slot: pins, and not one signal more ────────────────
+// Every port here has an IO_LOC in hcpu_gowin.cst, and that is the whole
+// contract: tests/test_integrity/test_board_wiring.py walks this port list
+// against that file and fails on anything it cannot find a pin for.
+//
+// No logic, no registers, no parameters of its own -- the four it takes are
+// handed straight down. The telemetry outputs of the core are left
+// unconnected, which is exactly what an unused output should be in a
+// submodule, and costs nothing: yosys removes the logic that feeds a port
+// nobody reads.
+module hcpu_gowin_top #(
+    parameter USE_PLL     = 0,
+    parameter USE_DSP     = 0,
+    parameter PROGRAM_HEX = "program.hex",
+    parameter BAUD        = 115200
+) (
+    input  wire        clk_27m,
+    input  wire        btn_rst_n,
+    input  wire        uart_rxd,
+    output wire        uart_txd,
+    output wire [5:0]  led,
+    output wire        sd_clk,
+    inout  wire        sd_cmd,
+    inout  wire [3:0]  sd_dat
+);
+
+    hcpu_gowin_core #(
+        .USE_PLL(USE_PLL), .USE_DSP(USE_DSP),
+        .PROGRAM_HEX(PROGRAM_HEX), .BAUD(BAUD)
+    ) u_core (
+        .clk_27m(clk_27m), .btn_rst_n(btn_rst_n),
+        .uart_rxd(uart_rxd), .uart_txd(uart_txd), .led(led),
+        .sd_clk(sd_clk), .sd_cmd(sd_cmd), .sd_dat(sd_dat),
+        // The sideband the HDMI wrapper reads. Open here, and open is the
+        // point: this is the module that has to answer to a pin list.
+        .tele_pc(), .tele_instr(), .tele_halted(),
+        .tele_guard(), .tele_cycles(), .tele_flags()
+    );
 
 endmodule

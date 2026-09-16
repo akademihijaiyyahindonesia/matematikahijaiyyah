@@ -557,6 +557,54 @@ pernah dijalankan perangkat keras.
 
 ---
 
+## M5.3a — node display berdiri sendiri, 15 September 2026
+
+Dua kali dashboard ditaruh di penempatan yang sama dengan CPU, dan dua kali
+nextpnr menolaknya: 16.882 LUT4 untuk RAM + painter, 16.849 untuk ROM +
+compositor, melawan kontrol 15.933 yang terrout bersih. Sintesis diferensial
+sudah mengukur seluruh tumpukan display di 571 LUT terhadap celah 916 pasca
+perutean — yang harus dibuang lebih besar daripada seluruh yang ada untuk
+dibuang. Jadi display berhenti berbagi die dengan CPU.
+
+| | Terukur |
+|---|---|
+| `cosmictera_display_top` | **685 LUT4 / 20.736 — 3%** |
+| Fmax `pixel_clk` | **102,44 MHz** (butuh 74,25) |
+| Pelanggaran | **0 hold, 0 setup** |
+| Flash | SRAM, exit 0 |
+
+**Dari 16.849 yang ditolak ke 685 yang ter-place.** Bukan dashboard-nya yang
+dikecilkan — yang berubah adalah pertanyaannya, dari "muat di sisa fabric CPU"
+jadi "berdiri sendiri". Ini contoh terukur pertama dari memecah sistem jadi
+node-node mandiri di repo ini, dan angkanya yang membuatnya argumen dan bukan
+selera.
+
+| Di papan | Hasil | Jenis bukti |
+|---|---|---|
+| Monitor | **mengunci 1280×720** | pengamatan pengguna |
+| Teks | **terbaca, di sel yang benar** | pengamatan pengguna |
+| Pixel latar | **garis vertikal rapat, berkedip** | pengamatan pengguna |
+
+Baris ketiga adalah alasan node ini **tidak** dihitung selesai. Video timing,
+renderer, font ROM, dan page key terbukti benar oleh fakta bahwa kata-katanya
+terbaca sama sekali — tidak ada cara menggambar `READY` tanpa keempatnya. Yang
+tidak terbukti adalah bahwa pipeline pixel menghasilkan gambar bersih.
+
+Dan itu **tidak diperbaiki**. Investigasinya dibekukan atas keputusan pemilik
+pada 17 September 2026 setelah puluhan eksperimen satu-variabel gagal menamai
+akarnya; delapan penyebab tereliminasi dengan angkanya, dan petunjuk terkuat
+yang tersisa — 30 muatan bitstream bit-identik yang menghasilkan gambar
+berbeda-beda — dicatat utuh di [OFF.md](OFF.md). Yang dibekukan penyelidikannya,
+bukan faktanya.
+
+Setiap field yang perangkat kerasnya tidak laporkan berbunyi `NOT INSTRUMENTED`
+di layar, bukan angka: node ini tidak punya CPU untuk ditanyai, `snap_valid`
+diikat rendah, dan `hcpu_compositor.v` mengubah keenam field hidup jadi
+`NOT INSTRUMENTED` ketika ia rendah. Node display yang mencetak PC sebagai
+`0X000` akan mencetak nilai yang tidak ada apa-apanya di belakangnya.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -583,6 +631,21 @@ Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
 
 Tiga desain berbeda, fabric yang sama, dalam satu sesi. `112` di slot 1 dan
 slot 3 adalah angka yang sama yang dihitung testbench.
+
+> **Sumbernya sudah bergerak sejak lari itu, dan slot 1 belum diuji ulang di
+> papan.** Pada 15 September 2026 `hcpu_gowin_top.v` dipecah jadi
+> `hcpu_gowin_core` — CPU beserta sideband telemetri — dan sebuah
+> `hcpu_gowin_top` setipis pin di atasnya, karena sideband itu di tingkat atas
+> membuat slot CPU **tidak bisa dibangun sama sekali**
+> (`ERROR: Unconstrained IO:tele_pc_OBUF_O_9`). Slot itu kini membangun lagi
+> dan dicap dengan angka hasil route yang sungguhan — LUT4 15.744, Fmax
+> 86,18 MHz — tetapi bitstream hasil pemisahan itu **belum pernah dijalankan
+> di papan**: papannya tidak terhubung saat pekerjaan itu selesai
+> (`unable to open ftdi device: -3`). Jadi baris slot 1 di atas adalah rekaman
+> desain **sebelum** pemisahan. Buktinya berhenti di tingkat 3. Satu perintah
+> menaikkannya kembali ketika papan tersambung:
+> `make -C rtl/fpga/gowin flash`, lalu baca UART — jawabannya harus tetap
+> 23 byte, `112`, lalu `CYCLES=…`.
 
 **Pencacah siklus tidak sama antar-lari** (`02785D53`, `035BF689`) dan itu
 benar: ia berjalan bebas sejak konfigurasi, bukan direset per program. Yang
@@ -712,7 +775,7 @@ membuat pasangannya diferensial.
 | | Hasil |
 |---|---|
 | `python3 -m pytest -q` | 4.961 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 28 testbench, 334 pemeriksaan, 0 gagal |
+| `make -C rtl/tb all` | 32 testbench, 369 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video

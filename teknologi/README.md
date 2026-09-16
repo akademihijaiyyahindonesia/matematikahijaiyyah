@@ -34,9 +34,9 @@ tidak.
 | Opcode H-ISA | 82 | `rtl/hcpu_pkg.vh` |
 | — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |
 | Paket Python | 20 | `src/hijaiyyah/` |
-| Modul RTL HCPU | 22 | `rtl/hcpu_*.v` |
+| Modul RTL HCPU | 30 | `rtl/hcpu_*.v` |
 | Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
-| Testbench RTL | 44 | `rtl/tb/` |
+| Testbench RTL | 48 | `rtl/tb/` |
 | Wrapper papan | 8 | `rtl/fpga/` |
 | Program HASM | 48 | `rtl/programs/` |
 | Format berkas | 5 | `.hc` `.hasm` `.hbc` `.hgeo` `.hcai` |

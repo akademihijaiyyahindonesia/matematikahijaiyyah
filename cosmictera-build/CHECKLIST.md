@@ -80,7 +80,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **334 asersi, 28 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **369 asersi, 32 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -107,6 +107,10 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | NUI: penjumlahan embedding fisika (titik/garis/lengkung/theta/rho) | `make -C rtl/tb sim_nui_embedding` |
 | ✅ | NUI: opcode huruf (L_JIM/L_KHA) dimuat lewat kabel loader, bukan disintesis langsung | `make -C rtl/tb sim_loader_nui` |
 | ✅ | Video timing generator (hsync/vsync/de) cocok persis standar VESA 640x480@60Hz | `make -C rtl/tb sim_video_timing` |
+| ✅ | **Renderer teks 160×90** — generator karakter menoleh dua siklus ke depan, dan sebuah probe pada `ink` internal membuktikan bench-nyalah yang dulu mencuplik satu pixel terlambat, bukan renderernya | `make -C rtl/tb sim_text_render` |
+| ✅ | **Compositor memilih sel, bukan menulisnya** — seluruh 14.400 sel disapu dan dihitung: tepat 113 diklaim, sisanya milik layout ROM; tanpa snapshot keenam field hidup berbunyi `NOT INSTRUMENTED`, bukan angka | `make -C rtl/tb sim_dashboard` |
+| ✅ | **Snapshot telemetri lintas domain clock** — handshake req/ack, jadi yang terbaca satu potret utuh dan bukan campuran dua siklus | `make -C rtl/tb sim_telemetry` |
+| ✅ | **Tombol mode memilih halaman** — debounce, tekan panjang, dan pembungkusan halaman | `make -C rtl/tb sim_page_key` |
 
 Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
@@ -245,6 +249,6 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.961 lulus, 0 dilewati
-make -C rtl/tb all               # 334 asersi, 28 bench, 0 gagal
+make -C rtl/tb all               # 369 asersi, 32 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

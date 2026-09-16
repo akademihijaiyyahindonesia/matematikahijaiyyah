@@ -29,7 +29,8 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
         sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
-        sim_hfs_lifecycle sim_sdio sim_sdio_prog clean
+        sim_hfs_lifecycle sim_sdio sim_sdio_prog \
+        sim_text_render sim_telemetry sim_dashboard sim_page_key clean
 
 # Six of these benches existed with no target at all: tb_hcpu_trap,
 # tb_hcpu_mmio, tb_hcpu_timer, tb_hcpu_uart_rx, tb_gowin_top and
@@ -43,7 +44,8 @@ all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
-     sim_hfs_lifecycle sim_sdio sim_sdio_prog
+     sim_hfs_lifecycle sim_sdio sim_sdio_prog \
+     sim_text_render sim_telemetry sim_dashboard sim_page_key
 
 sim_rom: tb_rom.vvp
 	$(VVP) $<
@@ -86,7 +88,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -224,6 +226,40 @@ sim_sdio: tb_hcpu_sdio.vvp
 	$(VVP) $<
 sim_sdio_prog: tb_hcpu_sdio_prog.vvp sdio_write.hex
 	$(VVP) $<
+
+# ── M5 display: four benches under the dashboard ────────────────
+# The layout image and its field addresses are generated, never edited and
+# never copied: hcpu_dashboard.v `includes the .vh, so it must exist before
+# iverilog reads a line, and the text RAM reads the .hex at elaboration.
+$(RTL_DIR)/hcpu_dashboard.hex $(RTL_DIR)/hcpu_dashboard_pos.vh: \
+		$(RTL_DIR)/scripts/gen_dashboard.py
+	python3 $< >/dev/null
+
+# The renderer's own bench writes the cells it checks, so it must start from
+# a blank screen rather than from the dashboard underneath it.
+blank_text.hex:
+	python3 -c "open('$@','w').write('0020\n'*16384)"
+
+sim_text_render: tb_hcpu_text_render.vvp blank_text.hex
+	$(VVP) $<
+sim_telemetry: tb_hcpu_telemetry.vvp
+	$(VVP) $<
+sim_dashboard: tb_hcpu_dashboard.vvp
+	$(VVP) $<
+sim_page_key: tb_hcpu_page_key.vvp
+	$(VVP) $<
+
+tb_hcpu_text_render.vvp: $(TB_DIR)/tb_hcpu_text_render.v \
+                         $(RTL_DIR)/hcpu_video_timing.v $(RTL_DIR)/hcpu_text_ram.v \
+                         $(RTL_DIR)/hcpu_font_rom.v $(RTL_DIR)/hcpu_text_render.v
+	$(IVERILOG) $(INC) -o $@ $^
+tb_hcpu_telemetry.vvp: $(TB_DIR)/tb_hcpu_telemetry.v $(RTL_DIR)/hcpu_telemetry.v
+	$(IVERILOG) $(INC) -o $@ $^
+tb_hcpu_dashboard.vvp: $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v \
+                       $(RTL_DIR)/hcpu_dashboard_pos.vh
+	$(IVERILOG) $(INC) -o $@ $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v
+tb_hcpu_page_key.vvp: $(TB_DIR)/tb_hcpu_page_key.v $(RTL_DIR)/hcpu_page_key.v
+	$(IVERILOG) $(INC) -o $@ $^
 sim_mmio: tb_hcpu_mmio.vvp
 	$(VVP) $<
 sim_timer: tb_hcpu_timer.vvp

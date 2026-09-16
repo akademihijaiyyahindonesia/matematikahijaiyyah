@@ -51,7 +51,17 @@ module hcpu_video_timing #(
     output wire        de,          // data-enable: high while (x,y) is in the active area
     output wire [11:0] x,           // 0..H_ACTIVE-1 while de is high, else counting through blanking
     output wire [11:0] y,           // 0..V_ACTIVE-1 while de is high, else counting through blanking
-    output wire        frame_tick   // one pixel_clk pulse at the start of each frame (x==0 && y==0)
+    output wire        frame_tick,  // one pixel_clk pulse at the start of each frame (x==0 && y==0)
+
+    // The raw counters, added for M5. `x` and `y` above are FORCED TO ZERO
+    // outside the active area, which is right for anything that draws and
+    // wrong for anything that must look ahead: a character generator has to
+    // fetch the first cell of a line DURING the blanking that precedes it,
+    // and a coordinate pinned at zero cannot say which line is coming. These
+    // two never lie about where the beam is. Purely additive -- every
+    // existing instantiation leaves them unconnected and is unchanged.
+    output wire [11:0] h_count_o,
+    output wire [11:0] v_count_o
 );
 
     localparam H_TOTAL = H_ACTIVE + H_FRONT + H_SYNC + H_BACK;
@@ -93,5 +103,8 @@ module hcpu_video_timing #(
     assign y = v_active ? v_count : 12'd0;
 
     assign frame_tick = (h_count == 12'd0) && (v_count == 12'd0);
+
+    assign h_count_o = h_count;
+    assign v_count_o = v_count;
 
 endmodule

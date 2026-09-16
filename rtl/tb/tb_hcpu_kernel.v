@@ -31,7 +31,7 @@ module tb_hcpu_kernel;
 
     always #5 clk = ~clk;
 
-    hcpu_gowin_top #(
+    hcpu_gowin_core #(
         .USE_PLL      (0),
         .PROGRAM_HEX  ("kernel.hex")
     ) dut (

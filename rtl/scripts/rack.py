@@ -105,7 +105,7 @@ SLOTS: Tuple[Slot, ...] = (
         runs="H-ISA pipeline, 82 opcodes, sealed 28-letter ROM",
         verified="UART returned 23 bytes matching simulation byte for byte; "
                  "e3_sweep28 returned 28/28 Theta-hat",
-        lut4=15_601, dff=5_065, bsram=18, fmax_mhz=116.35,
+        lut4=15_744, dff=5_065, bsram=18, fmax_mhz=86.18,
     ),
     Slot(
         name="kabah",

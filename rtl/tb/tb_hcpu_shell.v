@@ -54,7 +54,7 @@ module tb_hcpu_shell;
 
     always #HALF_PERIOD clk_27m = ~clk_27m;
 
-    hcpu_gowin_top #(
+    hcpu_gowin_core #(
         .USE_PLL      (0),
         .BAUD         (BAUD),
         .PROGRAM_HEX  ("shell.hex")

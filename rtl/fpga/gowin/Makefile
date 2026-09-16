@@ -60,6 +60,7 @@ LOADER     ?= openFPGALoader
 SOURCES  = hcpu_gowin_top.v $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim synth bitstream flash bridge send clean \
+        display_synth display_bitstream display_flash \
         sim_kabah kabah_synth kabah_bitstream kabah_flash \
         hdmi_synth hdmi_bitstream hdmi_flash hdmi_bridge \
         kabah_hdmi_synth kabah_hdmi_bitstream kabah_hdmi_flash
@@ -189,7 +190,14 @@ kabah_flash: kabah_bitstream
 HDMI_TOP     = hcpu_hdmi_top
 HDMI_SOURCES = $(HDMI_TOP).v dvi_tx_open.v tmds_rpll.v $(SOURCES)
 
-hdmi_synth: program.hex
+# The dashboard layout and its field addresses are generated, never edited
+# and never copied: one image, read from rtl/ by a path parameter. The .vh is
+# `included by hcpu_dashboard.v, so it has to exist before yosys reads a line.
+$(RTL_DIR)/hcpu_dashboard.hex $(RTL_DIR)/hcpu_dashboard_pos.vh: \
+		$(RTL_DIR)/scripts/gen_dashboard.py
+	$(PYTHON) $< >/dev/null
+
+hdmi_synth: program.hex $(RTL_DIR)/hcpu_dashboard.hex $(RTL_DIR)/hcpu_dashboard_pos.vh
 	yosys -p "read_verilog -I $(RTL_DIR) $(HDMI_SOURCES); \
 	          synth_gowin $(YOSYS_FLAGS) -top $(HDMI_TOP) -json hdmi.json"
 
@@ -209,6 +217,36 @@ hdmi_flash: hdmi_bitstream
 hdmi_bridge:
 	$(MAKE) PROGRAM=$(RTL_DIR)/programs/loader.hasm hdmi_flash
 	$(MAKE) PROGRAM=$(RTL_DIR)/programs/test_bsm.hasm program.hex
+
+# ── M5.3a: the display node, on its own die ─────────────────────
+# No HCPU inside. Two attempts at putting the dashboard in the CPU's
+# placement were refused by nextpnr -- 16,882 and 16,849 LUT4 against a
+# control of 15,933 that routes cleanly -- so the display became its own
+# node. Shares hcpu_hdmi.cst: this top has no uart, no led and no card, and
+# nextpnr reports those constraints as Info and carries on.
+DISPLAY_TOP     = cosmictera_display_top
+DISPLAY_SOURCES = $(DISPLAY_TOP).v dvi_tx_open.v tmds_rpll.v \
+                  $(RTL_DIR)/hcpu_video_timing.v $(RTL_DIR)/hcpu_page_key.v \
+                  $(RTL_DIR)/hcpu_layout_rom.v $(RTL_DIR)/hcpu_compositor.v \
+                  $(RTL_DIR)/hcpu_font_rom.v $(RTL_DIR)/hcpu_text_render.v
+
+display_synth: $(RTL_DIR)/hcpu_display.hex $(RTL_DIR)/hcpu_dashboard_pos.vh
+	yosys -p "read_verilog -I $(RTL_DIR) $(DISPLAY_SOURCES); \
+	          synth_gowin $(YOSYS_FLAGS) -top $(DISPLAY_TOP) -json display.json"
+
+display_pnr.json: display_synth
+	$(NEXTPNR) --json display.json --write $@ \
+	    --device $(DEVICE) --vopt cst=hcpu_hdmi.cst \
+	    --vopt family=$(FAMILY)
+
+display_bitstream: display_pnr.json
+	$(GOWIN_PACK) -d $(FAMILY) -o $(DISPLAY_TOP).fs $<
+
+display_flash: display_bitstream
+	$(LOADER) -b $(BOARD) $(DISPLAY_TOP).fs
+
+$(RTL_DIR)/hcpu_display.hex: $(RTL_DIR)/scripts/gen_dashboard.py
+	$(PYTHON) $< >/dev/null
 
 # ── Ka'bah over HDMI ────────────────────────────────────────────
 # Never built until this target existed. First build, 11 September 2026:

@@ -47,7 +47,7 @@ module tb_hcpu_flags_ctx;
 
     always #HALF_PERIOD clk_27m = ~clk_27m;
 
-    hcpu_gowin_top #(
+    hcpu_gowin_core #(
         .USE_PLL      (0),
         .PROGRAM_HEX  ("flags_ctx.hex")
     ) u_board (

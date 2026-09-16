@@ -42,3 +42,31 @@ IO_PORT "led[2]" IO_TYPE=LVCMOS33 DRIVE=8;
 IO_PORT "led[3]" IO_TYPE=LVCMOS33 DRIVE=8;
 IO_PORT "led[4]" IO_TYPE=LVCMOS33 DRIVE=8;
 IO_PORT "led[5]" IO_TYPE=LVCMOS33 DRIVE=8;
+// ── Onboard TF card, SDIO 1-bit ──────────────────────────────────
+// The same six pins hcpu_gowin.cst names, from the Sipeed Tang Nano 20K
+// 3921 schematic: PIN83_SDIO_CLK, PIN82_SDIO_CMD, PIN84_SDIO_D0,
+// PIN85_SDIO_D1, PIN80_SDIO_D2, PIN81_SDIO_D3. Verified against the official
+// schematic by the owner on 14 September 2026, and proved on the board the
+// next day -- a card answered, was written, and kept its sector across a
+// power cycle.
+//
+// They arrive here because hcpu_hdmi_top now connects them. Until M5 this
+// wrapper instantiated the CPU with the card's pins dangling: the controller
+// was in the slot and could not see a socket.
+//
+// CMD and DAT0 are open lines the controller releases so the card can answer;
+// the board carries 10 kOhm pull-ups on all five data/command lines, so
+// PULL_MODE=UP here is a second, weaker helper rather than the thing holding
+// them high.
+IO_LOC  "sd_clk"    83;
+IO_PORT "sd_clk"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_LOC  "sd_cmd"    82;
+IO_PORT "sd_cmd"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[0]" 84;
+IO_PORT "sd_dat[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[1]" 85;
+IO_PORT "sd_dat[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[2]" 80;
+IO_PORT "sd_dat[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "sd_dat[3]" 81;
+IO_PORT "sd_dat[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP;

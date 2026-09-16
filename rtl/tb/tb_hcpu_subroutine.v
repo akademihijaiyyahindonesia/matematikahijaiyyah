@@ -19,7 +19,7 @@ module tb_hcpu_subroutine;
 
     always #5 clk = ~clk;
 
-    hcpu_gowin_top #(.USE_PLL(0), .PROGRAM_HEX("subroutine.hex")) dut (
+    hcpu_gowin_core #(.USE_PLL(0), .PROGRAM_HEX("subroutine.hex")) dut (
         .clk_27m(clk), .btn_rst_n(rst_n),
         .uart_rxd(1'b1), .uart_txd(uart_txd), .led());
 

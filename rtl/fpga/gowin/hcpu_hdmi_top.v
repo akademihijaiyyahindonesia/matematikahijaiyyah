@@ -118,7 +118,16 @@
 //
 `include "hcpu_pkg.vh"
 
-module hcpu_hdmi_top (
+module hcpu_hdmi_top #(
+    // ── where the two memory images live, stated once per build ──
+    // NOT copied next to this file. $readmemh resolves against the working
+    // directory, and the two builds run from different ones -- so the path is
+    // a parameter and each build says where the single copy is, rather than
+    // each build getting a copy of its own. Two files that must stay
+    // byte-identical are two files that will not.
+    parameter FONT_HEX = "../../hcpu_font8x8.hex",
+    parameter DASH_HEX = "../../hcpu_dashboard.hex"
+) (
     input wire        clk_27m,
     input wire        btn_rst_n,
     input wire        mode_key,
@@ -129,7 +138,18 @@ module hcpu_hdmi_top (
     // LVCMOS33D in the .cst makes one IOB drive both pads of the pair, which
     // is how the Tang Nano boards do TMDS. See the note above the assigns.
     output wire       tmds_clk_p,
-    output wire [2:0] tmds_data_p
+    output wire [2:0] tmds_data_p,
+
+    // ── the card, reaching this slot for the first time ─────────
+    // hcpu_gowin_top has carried an SD controller since H-ISA v1.2, and this
+    // wrapper instantiated it with the pins left dangling: the controller was
+    // present and could never see a card. The owner connected them on 15
+    // September 2026 so the monitor can report storage that is actually
+    // there. hcpu_hdmi.cst has to name these six pins or nextpnr places them
+    // wherever it likes -- which is the same as not having them.
+    output wire       sd_clk,
+    inout  wire       sd_cmd,
+    inout  wire [3:0] sd_dat
 );
     wire serial_clk;
     wire pixel_clk;
@@ -146,9 +166,24 @@ module hcpu_hdmi_top (
     wire hcpu_uart_txd;
     wire [5:0] hcpu_led;
 
-    hcpu_gowin_top u_hcpu (
+    wire [`CODE_ADDR_W-1:0] tele_pc;
+    wire [`ILEN-1:0]        tele_instr;
+    wire                    tele_halted;
+    wire                    tele_guard;
+    wire [31:0]             tele_cycles;
+    wire [7:0]              tele_flags;
+
+    // The CORE, not the board slot. hcpu_gowin_top is a pin-level wrapper and
+    // has no telemetry ports -- it cannot have any, because a top level must
+    // find a pin for every output and this sideband is eighty-four bits wide.
+    // hcpu_gowin_top.v carries the measurement that forced the split.
+    hcpu_gowin_core u_hcpu (
         .clk_27m(clk_27m), .btn_rst_n(btn_rst_n), .uart_rxd(uart_rxd),
-        .uart_txd(hcpu_uart_txd), .led(hcpu_led)
+        .uart_txd(hcpu_uart_txd), .led(hcpu_led),
+        .sd_clk(sd_clk), .sd_cmd(sd_cmd), .sd_dat(sd_dat),
+        .tele_pc(tele_pc), .tele_instr(tele_instr),
+        .tele_halted(tele_halted), .tele_guard(tele_guard),
+        .tele_cycles(tele_cycles), .tele_flags(tele_flags)
     );
 
     TMDS_rPLL u_tmds_rpll (.clkin(clk_27m), .clkout(serial_clk), .lock(pll_locked));
@@ -163,6 +198,9 @@ module hcpu_hdmi_top (
     wire de;
     wire [11:0] x;
     wire [11:0] y;
+    wire [11:0] h_count;
+    wire [11:0] v_count;
+    wire        frame_tick;
     wire tmds_clk_serial;
     wire [2:0] tmds_data_serial;
 
@@ -172,41 +210,115 @@ module hcpu_hdmi_top (
         .HSYNC_POL(1'b1), .VSYNC_POL(1'b1)
     ) u_timing (
         .pixel_clk(pixel_clk), .rst_n(video_rst_n), .hsync(hsync), .vsync(vsync),
-        .de(de), .x(x), .y(y), .frame_tick()
+        .de(de), .x(x), .y(y), .frame_tick(frame_tick),
+        .h_count_o(h_count), .v_count_o(v_count)
     );
 
-    reg mode;
-    reg mode_key_d;
+    // ── the display pipeline ────────────────────────────────────
+    // What stood here was a colour generator: a border, a grid, and three of
+    // the CPU's LED bits deciding the grid's colour. It proved the TMDS path
+    // and it could never show a number. This is the same path carrying
+    // characters instead.
+    //
+    //   text RAM  ──►  font ROM  ──►  renderer  ──►  RGB
+    //      ▲
+    //   painter  ◄──  telemetry snapshot  ◄──  the CPU, at its own clock
+    //
+    // The card is wired to the CPU above but its CONTROLLER STATE is not on
+    // this screen: card_ready, busy, the last command and the CRC results all
+    // live inside hcpu_sdio.v and have no port out of it. The device panel
+    // says NOT INSTRUMENTED for SDIO, and it will keep saying so until those
+    // wires exist.
+    wire [3:0] page;
+
+    hcpu_page_key #(
+        .DEBOUNCE(750_000), .LONG(74_250_000), .PAGES(9)
+    ) u_page (
+        .clk(pixel_clk), .rst_n(video_rst_n), .key_n(mode_key), .page(page)
+    );
+
+    // One snapshot per frame, asked for at the top of it, so every field on
+    // the screen belongs to the same instant. The painter used to raise
+    // this; with the painter gone the frame tick raises it directly.
+    wire        tele_sample = frame_tick;
+    wire [`CODE_ADDR_W-1:0] snap_pc;
+    wire [`ILEN-1:0]        snap_instr;
+    wire                    snap_halted, snap_guard, snap_valid;
+    wire [31:0]             snap_cycles;
+    wire [7:0]              snap_flags;
+
+    hcpu_telemetry #(.PCW(`CODE_ADDR_W)) u_tele (
+        .cpu_clk(clk_27m), .cpu_rst_n(video_rst_n),
+        .pc(tele_pc), .instr(tele_instr), .halted(tele_halted),
+        .guard(tele_guard), .cycles(tele_cycles), .flags(tele_flags),
+        .vid_clk(pixel_clk), .vid_rst_n(video_rst_n), .sample(tele_sample),
+        .snap_pc(snap_pc), .snap_instr(snap_instr), .snap_halted(snap_halted),
+        .snap_guard(snap_guard), .snap_cycles(snap_cycles),
+        .snap_flags(snap_flags), .snap_valid(snap_valid)
+    );
+
+    // ── layout ROM + compositor, in place of RAM + painter ──────
+    // The character for a cell is decided as the beam reaches it: the ROM
+    // holds everything fixed, the compositor overrides the eight live fields
+    // from the telemetry snapshot, and nothing is stored between frames.
+    // M5.2A wrote 128 cells a frame into a 16,384 x 16 RAM and read them back;
+    // that design placed at 16,882 LUT4 and nextpnr refused it, against a
+    // control of 15,933 that routes with zero violations.
+    wire [13:0] cell_addr;
+    wire [11:0] layout_data;
+
+    hcpu_layout_rom #(.LAYOUT_HEX(DASH_HEX)) u_layout (
+        .clk(pixel_clk), .addr(cell_addr), .data(layout_data)
+    );
+
+    wire       comp_hit;
+    wire [7:0] comp_ch;
+    wire [3:0] comp_at;
+
+    hcpu_compositor #(.PCW(`CODE_ADDR_W)) u_comp (
+        .cell_addr(cell_addr), .page(page),
+        .snap_pc(snap_pc), .snap_instr(snap_instr), .snap_halted(snap_halted),
+        .snap_guard(snap_guard), .snap_cycles(snap_cycles),
+        .snap_flags(snap_flags), .snap_valid(snap_valid),
+        .hit(comp_hit), .ch(comp_ch), .at(comp_at)
+    );
+
+    // The compositor is combinational from cell_addr, and the ROM is one
+    // cycle behind it, so the override is registered to meet it. Both then
+    // arrive together at the renderer's font-address stage.
+    reg        hit_d;
+    reg [7:0]  ch_d;
+    reg [3:0]  at_d;
     always @(posedge pixel_clk or negedge video_rst_n) begin
         if (!video_rst_n) begin
-            mode <= 1'b0;
-            mode_key_d <= 1'b1;
+            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0;
         end else begin
-            mode_key_d <= mode_key;
-            if (mode_key_d && !mode_key)
-                mode <= ~mode;
+            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at;
         end
     end
 
-    reg [7:0] red;
-    reg [7:0] green;
-    reg [7:0] blue;
-    always @* begin
-        red = 8'h08;
-        green = 8'h10;
-        blue = 8'h18;
-        if (de) begin
-            if ((y < 12'd96) || (x < 12'd24) || (x >= 12'd1256)) begin
-                red = mode ? 8'h10 : 8'h00;
-                green = mode ? 8'h70 : 8'h58;
-                blue = mode ? 8'hb0 : 8'h90;
-            end else if ((x[6:4] == 0) || (y[5:3] == 0)) begin
-                red = hcpu_led[0] ? 8'h60 : 8'h20;
-                green = hcpu_led[1] ? 8'h70 : 8'h30;
-                blue = hcpu_led[4] ? 8'hb0 : 8'h30;
-            end
-        end
-    end
+    wire [15:0] cell_data = hit_d ? {4'd0, at_d, ch_d}
+                                  : {4'd0, layout_data};
+
+    wire [6:0] font_glyph;
+    wire [2:0] font_row;
+    wire [7:0] font_bits;
+
+    hcpu_font_rom #(.FONT_HEX(FONT_HEX)) u_font (
+        .clk(pixel_clk), .glyph(font_glyph), .row(font_row), .bits(font_bits)
+    );
+
+    wire [7:0] red, green, blue;
+
+    hcpu_text_render #(
+        .COLS(160), .ROWS(90), .H_TOTAL(1650), .V_TOTAL(750)
+    ) u_render (
+        .clk(pixel_clk), .rst_n(video_rst_n),
+        .h_count(h_count), .v_count(v_count), .de(de),
+        .cell_addr(cell_addr), .cell_data(cell_data),
+        .font_glyph(font_glyph), .font_row(font_row), .font_bits(font_bits),
+        .red(red), .green(green), .blue(blue)
+    );
 
     DVI_TX_Top u_dvi_tx (
         .I_rst_n(video_rst_n), .I_serial_clk(serial_clk), .I_rgb_clk(pixel_clk),
@@ -233,5 +345,7 @@ module hcpu_hdmi_top (
     assign tmds_data_p = tmds_data_serial;
 
     assign uart_txd = hcpu_uart_txd;
-    assign led = {hcpu_led[5], mode, hcpu_led[3:1], ~pll_locked};
+    // `mode` is gone: the button drives the page counter now, and the page
+    // is shown on the screen rather than on an LED.
+    assign led = {hcpu_led[5], page[0], hcpu_led[3:1], ~pll_locked};
 endmodule

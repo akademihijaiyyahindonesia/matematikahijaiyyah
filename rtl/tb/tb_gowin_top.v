@@ -47,7 +47,7 @@ module tb_gowin_top;
 
     always #HALF_PERIOD clk_27m = ~clk_27m;
 
-    hcpu_gowin_top #(
+    hcpu_gowin_core #(
         .USE_PLL      (0),
         .BAUD         (BAUD)
     ) u_board (
