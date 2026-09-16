@@ -390,6 +390,72 @@ di sana. Daftar di bawah hanya penunjuk bab.
     dipendekkan. Yang **tidak** disentuh: 34 pesan sepanjang itu di enam bench
     lama, di luar cakupan M4.1, dilaporkan bukan disapu.
 
+### 14–15 September — M4.2: kartu bertahan melewati mati daya
+
+- `708a9cd` SDIO 1-bit, dan celah yang membuatnya bisu.
+  - Akarnya ditemukan **papan**, bukan bench: `rtl/hcpu_sdio.v` mengirim CMD8 nol
+    clock sesudah CMD0, dua belas pemeriksaan tetap hijau, dan kartu SDHC sehat
+    di papan diam seratus milidetik — E_CMD8, empat lari. N_CC menuntut
+    sekurangnya delapan clock menganggur antar perintah.
+  - Pengukuran pertama saya **salah**: saya menghitung dari awal frame ke awal
+    frame, sehingga respons 48-bit kartu terlipat ke dalam celahnya, dan saya
+    menyimpulkan hanya CMD0→CMD8 yang melanggar. Dihitung benar — clock ketika
+    tak ada yang menggerakkan jalurnya — celahnya **nol di setiap batas**.
+  - Harganya **+1 LUT4 dan +9 DFF**: satu pencacah delapan bit dan satu keadaan.
+  - Lima checkpoint fisik, termasuk mati daya sungguhan.
+
+### 15–17 September — M5: monitor sistem, dan die yang harus dipisah
+
+- `e4c251e` display meninggalkan die CPU, dan slot CPU bisa dibangun lagi.
+  - **Cacat yang paling mahal di sesi ini saya sendiri yang buat.** Sideband
+    telemetri ditambahkan ke `hcpu_gowin_top` supaya `hcpu_hdmi_top` bisa
+    membacanya, dan itu memberi satu modul dua tugas yang tak bisa didamaikan:
+    sebagai submodul keluaran tak tersambung itu gratis, sebagai top-level ia
+    menuntut pin. `ERROR: Unconstrained IO:tele_pc_OBUF_O_9` — slot tempat
+    `shell`, `kernel`, `hos`, dan `test_hfs` berjalan **berhenti bisa dibangun
+    selama empat hari**, dan `.fs` basi di direktori menyembunyikannya.
+  - `tests/test_integrity/test_board_wiring.py` sudah berusaha mengatakannya dan **tidak bisa**: ia
+    crash `AttributeError` alih-alih gagal dengan pesan, karena parser-nya tak
+    bisa membaca lebar bermakro. Crash terbaca seperti tes rusak, bukan desain
+    rusak. Regexnya juga hanya membaca `input|output`, jadi `sd_cmd` dan
+    `sd_dat` **tak pernah diperiksa sama sekali** sejak kartu dipasang.
+  - Pemisahan `hcpu_gowin_core` + `hcpu_gowin_top` setipis pin, dengan kontrol
+    terukur: DFF tidak bergerak (181 → 181), LUT3 turun 229 sementara LUT4 naik
+    213 — pemetaan ulang yosys, bukan logika baru.
+  - **Penghalangnya tempat, bukan semantik** — pola yang sama dengan `CDOT` di
+    `7eb177a`. Dua arsitektur dashboard ditolak 33 LUT4 berjauhan (16.882 dan
+    16.849 melawan kontrol 15.933); dipisah jadi node sendiri, **685 LUT4 (3%)**.
+  - Cacat encoder TMDS nyata ditemukan dan diperbaiki (30/256 byte gagal
+    round-trip → 0/1024), **dan layar tidak berubah** — yang justru jadi bukti:
+    cacat statis itu deterministik, korupsinya tidak.
+  - Yang **tidak** selesai: jalur pixel HDMI. Dibekukan sebagai cacat terbuka
+    di `cosmictera-build/OFF.md` dengan delapan penyebab tereliminasi beserta
+    angkanya. Sidik jari `rtl/fpga/gowin/hcpu_hdmi_top.v` **sengaja tidak
+    dicap**, dan satu tes merah adalah konsekuensi yang tercatat, bukan
+    regresi.
+
+### Keputusan pemilik, 15–17 September 2026
+
+1. **Compute dan display dipisah jadi node sendiri-sendiri.** Bukan mengecilkan
+   UI, melainkan mengubah pertanyaannya: dari "muat di sisa fabric CPU" jadi
+   "berdiri sendiri". Terukur: 16.849 ditolak → 685 ter-place.
+2. **`hcpu_gowin_top` wajib jadi top-level CPU murni.** Telemetri jadi
+   antarmuka opsional yang hanya ada ketika wrapper HDMI memakainya — tidak
+   memaksa slot CPU membawa 84 bit I/O yang tak pernah keluar papan.
+   Urutan yang diperintahkan: pulihkan build → cap ulang → verifikasi `.fs` →
+   **baru** putuskan nasib M5.2B.
+3. **Investigasi pixel HDMI dibekukan, 17 September 2026.** *"Ketika sebuah
+   jalur investigasi sudah menghasilkan puluhan eksperimen tanpa konfirmasi
+   akar masalah, keputusan terbaik adalah membekukan statusnya sebagai cacat
+   terbuka yang terdokumentasi."* Yang dibekukan penyelidikannya, bukan
+   faktanya.
+4. **Nasib `rtl/fpga/gowin/hcpu_hdmi_top.v` (M5.2B) ditunda**, dan satu tes
+   merah diterima sebagai keadaan yang konsisten dengan penundaan itu.
+5. **Eksperimen diagnostik butuh aba-aba khusus**, dengan variabel tunggal
+   disebut eksplisit dan seluruh sisanya dinyatakan tetap. Bitstream yang
+   kehilangan variabel yang diujinya **tidak boleh di-flash**: hasilnya tak
+   bisa ditafsirkan.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
