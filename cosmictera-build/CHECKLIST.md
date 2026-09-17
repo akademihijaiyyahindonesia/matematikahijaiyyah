@@ -189,7 +189,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | ✅ | **HFS baca mengembalikan H-Reg hidup di papan: `1 1 1 2 1`** | `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_hfs.hasm` |
 | ✅ | **Kartu MicroSD bertahan melewati mati daya: `1 1 1 10`** — SDIO 1-bit, LBA 1; lima checkpoint `10` → `1 1 0 10` → `1 1 1 1 10` → reset → mati daya ([PAPAN.md](PAPAN.md)) | `make -C rtl/fpga/gowin bridge` lalu `send PROG=../../programs/sdio_verify.hasm` |
 | ✅ | **HFS melewati mati daya di papan: `1 1 1` → kabel dicabut → `2`** — CREATE dan WRITE dari mode pengguna menulis tembus ke kartu, boot memuat HFS dari kartu; banner LiteX pabrikan di rekaman membuktikan daya memang putus ([PAPAN.md](PAPAN.md)) | `make -C rtl/tb shell_persist.hex`, `make -C rtl/fpga/gowin PROGRAM=../../tb/shell_persist.hex bitstream`, lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs` dan baca UART 115200 |
-| ✅ | **Slot CPU hasil pemisahan dijalankan di papan: 23 byte, `112`, `CYCLES=00001B89`** | `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs`, lalu baca UART 115200 |
+| ✅ | **Slot CPU hasil pemisahan dijalankan di papan: 23 byte, `112`, `CYCLES=00001B89`** | `make -C rtl/fpga/gowin bitstream` lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs`, dan baca UART 115200 — bangun dulu, karena berkas itu membawa `PROGRAM` mana pun yang terakhir dipanggang |
 | ✅ | **Blok codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`) di papan: `8 0 0 1 1 0 1 5`** | `make -C rtl/fpga/gowin hdmi_bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_codex.hasm` |
 
 **Kalimat ini dulu berbunyi "belum ada `openFPGALoader` yang benar-benar

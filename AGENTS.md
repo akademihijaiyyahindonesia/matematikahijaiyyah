@@ -569,11 +569,30 @@ Dua penetapan lain dari keputusan yang sama:
      codex = 18 kata, kontrak yang baru saja tutup di papan; mengubah unit
      alokasinya sekarang berarti membuka kembali yang sudah ditutup.
 
-  Yang **belum** ditetapkan dan tidak boleh dikarang: apakah `ENTRY` merangkap
-  alamat muat atau ada kata `LOAD_ADDR` sendiri, sektor awal area program dan
-  apakah ada tabel program, definisi `CRC`, dan nomor syscall pemuat. Yang
-  pemilik nyatakan belum dibuka: multitasking dinamis, swap, overlay runtime,
-  demand paging, semantic memory, dan format executable NUI.
+  Empat rincian yang sempat terbuka ditutup pemilik pada hari yang sama:
+
+  - **Header tujuh kata**, `LOAD_ADDR` dan `ENTRY` **terpisah**: 0 MAGIC,
+    1 VERSION, 2 WORDS, 3 LOAD_ADDR, 4 ENTRY, 5 RELOC_CNT, 6 CRC. Program yang
+    punya bootstrap kecil atau tabel awal tidak harus mulai tepat di alamat
+    muatnya.
+  - **Tata letak kartu diperluas, HFS tidak disentuh**: sektor 1–3 tetap HFS;
+    **sektor 16 tabel program** (PROGRAM_ID, FIRST_SECTOR, SECTOR_COUNT,
+    FLAGS), **sektor 17 ke atas citra program**. Bukan sektor tetap per
+    program.
+  - **Integritas tahap 2 adalah jumlah 32-bit**, bukan CRC-32, dan alasannya
+    terukur: arena heap hanya 127 kata, jadi tabel CRC-32 256 entri tidak muat,
+    sementara yang dibutuhkan tahap ini hanya memisahkan citra utuh dari citra
+    rusak. Yang dijumlah **hanya kata program**, header tidak ikut. Naik ke CRC
+    nanti lewat `VERSION`, tanpa memecahkan loader lama.
+  - **`SYSCALL` 9 `LOAD_PROGRAM`**, `R2` = PROGRAM_ID, `R1` = 1 berhasil atau 0
+    gagal. Tabel izin sekarang 0xECE–0xED5 untuk panggilan 1–8 dan masih ada
+    tempat sampai 0xEFF.
+
+  **Urutannya juga ditetapkan: 2A syscall dulu, 2B baru muat otomatis saat
+  boot.** Loader diuji sebagai layanan kernel sebelum ia jadi bagian boot.
+
+  Yang pemilik nyatakan belum dibuka: multitasking dinamis, swap, overlay
+  runtime, demand paging, semantic memory, dan format executable NUI.
 
 - **Batas semantic memory.** Yang terbukti adalah huruf → vektor → operasi
   matematis; huruf → makna → pengetahuan tidak terbukti dan melewati larangan

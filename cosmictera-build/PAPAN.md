@@ -653,6 +653,23 @@ lebih besar dari satu vektor, tidak ada metadata, direktori, atau izin — dan
 ketiganya memang belum dibuka pemilik. Tabel berkas di kartu menampung delapan
 entri; yang dijalankan di papan satu.
 
+**Tiga program lama dijalankan lagi di slot yang sama, dan jawabannya tidak
+bergerak.** Slot hasil pemisahan sampai di sini baru dibuktikan oleh `test_bsm`
+dan HFS; pemilik meminta tiga yang lain diulang sebelum tahap 2 dimulai. Slot
+`hcpu_gowin_top` dengan `loader.hasm` dipanggang (Fmax 79,23 MHz pada build
+ini), program dikirim lewat kabel, papan direkonfigurasi di antara program:
+
+| program | kata | keluaran papan | catatan sebelumnya |
+|---|---:|---|---|
+| `test_codex` | 32 | `8 0 0 1 1 0 1 5` | sama |
+| `test_cset` | 17 | `5 6 2 0` | sama |
+| `test_hfs` | 373 | `1 1 1 2 1` | sama |
+
+Ketiganya dulu dijalankan di slot `hcpu_hdmi_top` dengan loader; kali ini di
+slot CPU hasil pemisahan. Jadi yang berubah antara dua rekaman itu adalah
+slotnya, dan angkanya tidak. `CYCLES` tetap tidak sebanding antar-lari, dengan
+sebab yang sama seperti di atas.
+
 **Urutan `1 1 1` dan `2` di kabel berbeda tempat**, dan itu penjadwalan, bukan
 cacat: di lari 2 banner dan prompt shell keluar lebih dulu (`HIJAIYYAH`, `> `,
 lalu angka), di lari 3 dan 4 angka pid 0 menyelip di antara banner dan prompt.
