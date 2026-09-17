@@ -11,6 +11,12 @@ spesifikasinya ada, tapi kepanjangannya tidak tertulis di mana pun.
 
 Kolom **Label** memakai konvensi [RULES.md](../cosmictera/RULES.md).
 
+**Halaman ini mencatat akronim sistem.** Kosakata di dalam satu subsistem —
+spons, lajur, impulser, muka, tap, derajat, nuqṭah — ada di
+[`istilah/`](../istilah/README.md), dan tidak ada satu istilah pun yang dicatat
+di kedua tempat. `tests/test_integrity/test_istilah.py` menegakkan pemisahan
+itu: sebuah nama yang muncul di keduanya membuat suite merah.
+
 ---
 
 ## Inti

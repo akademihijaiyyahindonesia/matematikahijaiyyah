@@ -56,7 +56,7 @@ dengan perintah yang baru dijalankan, yang dibetulkan berkasnya (K2/R4).
 | wilayah kerja | berkas |
 |---|---|
 | gaya kode, struktur direktori, aturan git/rilis | `ENGINEERING_STANDARD.md` |
-| arti istilah, nama modul | `teknologi/ISTILAH.md` |
+| arti istilah, nama modul | `teknologi/ISTILAH.md` — akronim sistem; `istilah/` — kosakata subsistem |
 | bentuk sistem secara keseluruhan | `docs/ARCHITECTURE.md` |
 | RTL, program `rtl/programs/*.hasm`, testbench | `rtl/README.md` |
 | tapeout / ASIC | `rtl/mpw/MPW_SHUTTLE_PLAN.md` |
@@ -98,7 +98,7 @@ BAB II — Metrik Vektorial Hijaiyyah** dari buku *Matematika Hijaiyyah*.
   Empat prinsip normatifnya: Canonical Lock, Integer-Only,
   Computable & Comparable, Auditable & Reproducible.
 - **BAB II** memberi lima operasi atas codex yang sama: Vektronometry,
-  Normvektor, Aggregametric, Intrametric, Exometric.
+  Normivektor, Aggregametric, Intrametric, Exometric.
 
 Naskah buku tidak ada di repo: di-gitignore dan tidak dipublikasikan. Di repo:
 
