@@ -1,0 +1,61 @@
+; hfs_syscall_probe.hasm — a process that uses the HFS syscalls, end to end.
+;
+; shell.hasm serves syscalls 6 7 8 (HFS_CREATE, HFS_READ, HFS_WRITE) and has no
+; process that calls them: pid 0 counts, pid 1 is the shell. So nothing in the
+; suite ever issued one, and a heap that was never initialised -- which makes
+; HFS_CREATE refuse every file -- went unseen until the source was read.
+;
+; This is that missing caller. It is NOT part of the shell and ships nowhere,
+; which is why it lives beside its bench and not in rtl/programs/bench/ -- that
+; folder holds standalone experiments that run on the board and HALT, and this
+; is a process fragment that makes syscalls and never returns.
+; rtl/scripts/inject_probe.py assembles it at 0x400, past the end of the shell
+; image, and replaces the first word of pid 0 with a jump to it -- in the
+; bench's copy of the image only. The syscall arms, HOS, and the H0 save
+; routines it exercises are exactly the ones shell.hasm ships.
+;
+; It runs in USER mode as pid 0, window 0x100-0x1FF, and writes:
+;
+;   0x101  HFS_CREATE result   1 = created
+;   0x102  HFS_WRITE  result   1 = written
+;   0x103  HFS_READ   result   1 = found
+;   0x104  verdict             1 = the vector read back equals the one written
+;   0x100  0x5A, written LAST, so a bench reading it knows the rest is final
+;
+; Kaf, because it is the only letter whose H* is 1: a vector rebuilt from zeros
+; cannot compare equal to it by accident. And H0 is deliberately overwritten
+; with a different letter between WRITE and READ, so a READ that returned the
+; register untouched would fail the comparison instead of passing it.
+;
+; What this does NOT prove: that H0 survives being PREEMPTED between loading it
+; and calling WRITE. The context switch saves R0-R15 and FLAGS, not H0; the
+; per-process slot is taken inside the syscall. Today no other process writes a
+; codex register, so the vector survives -- by the same kind of accident the
+; ABI tests exist to stop being relied on. Carrying H0 across a process switch
+; was deferred to a larger fabric by the owner.
+
+probe:  MOVI  R5, 0
+        MOVI  R1, 6             ; HFS_CREATE
+        MOVI  R2, 0             ; file 0
+        SYSCALL
+        STORE R1, R5, 0x101
+        HLOAD H0, 22            ; Kaf -- the payload
+        MOVI  R1, 8             ; HFS_WRITE, vector in H0
+        MOVI  R2, 0
+        SYSCALL
+        STORE R1, R5, 0x102
+        HLOAD H0, 2             ; overwrite the caller's own H0 before reading
+        MOVI  R1, 7             ; HFS_READ, vector returned in H0
+        MOVI  R2, 0
+        SYSCALL
+        STORE R1, R5, 0x103
+        HLOAD H1, 22            ; what the read must have returned
+        CEQ   H0, H1            ; eighteen components, H* among them
+        JEQ   p_eq
+        MOVI  R2, 0
+        JMP   p_say
+p_eq:   MOVI  R2, 1
+p_say:  STORE R2, R5, 0x104
+        MOVI  R2, 0x5A
+        STORE R2, R5, 0x100     ; done, written last
+p_spin: JMP   p_spin

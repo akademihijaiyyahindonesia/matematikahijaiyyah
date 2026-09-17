@@ -456,9 +456,9 @@ di sana. Daftar di bawah hanya penunjuk bab.
    kehilangan variabel yang diujinya **tidak boleh di-flash**: hasilnya tak
    bisa ditafsirkan.
 
-### Keputusan pemilik, 17 September 2026 — lima tahap sebelum KV260
+### Keputusan pemilik, 17 September 2026 — enam tahap sebelum KV260
 
-Papan berikutnya adalah **Kria KV260**, bukan ASIC. Sebelum pindah, lima tahap,
+Papan berikutnya adalah **Kria KV260**, bukan ASIC. Sebelum pindah, enam tahap,
 dan **tak satu pun butir perangkat keras ada di antaranya**:
 
 ```
@@ -466,8 +466,16 @@ dan **tak satu pun butir perangkat keras ada di antaranya**:
 2  Loader program             citra datang dari kartu, bukan dari kabel
 3  Overlay runtime            citra dihalamankan masuk dan keluar
 4  HVM di papan               bytecode ditafsirkan mesinnya sendiri
-5  TCP/IP lewat SLIP          IP di atas UART yang sudah bekerja
+5  Semantic memory            SEARCH / MATCH / ASSOCIATE atas vektor hybit
+6  TCP/IP lewat SLIP          IP di atas UART yang sudah bekerja
 ```
+
+Semula lima tahap. Semantic memory disisipkan sebagai tahap 5 pada hari yang
+sama, dan **HVM tidak diganti olehnya**: *"Semantic Memory membutuhkan runtime
+yang matang, mekanisme dispatch, dan persistensi"* — sedangkan HVM membuktikan
+bytecode yang sama memberi hasil yang sama di simulator dan di perangkat keras,
+fondasi yang lebih rendah. Prioritas tertinggi tetap tahap 1–4, karena
+keempatnya langsung menyerang batas 4.096 kata.
 
 Alasannya: kelimanya mengubah **apa yang dipindahkan** — dari CPU dengan
 demonstrasi terpasang, jadi komputer yang bisa memuat, menyimpan, menjalankan,
@@ -495,6 +503,20 @@ menyentuh tahapnya:
 Spesifikasi lengkap dua belas lapis beserta triase A/B/C-nya ada sebagai
 artefak terpisah, bukan di repo — angkanya menunjuk ke header wrapper dan
 `cosmictera-build/`, bukan menyalinnya (R1).
+
+Dua penetapan lain dari keputusan yang sama:
+
+- **Codex JIM adalah primitif matematis** — bukan bahasa pemrograman, bukan
+  semantic memory. Perannya generator urutan: LFSR, pembangkit aliran,
+  permutasi alamat, transformasi codex. Yang terukur ada di
+  `cosmic-codex-jim/`; yang **gagal** terukur ada di `cosmic-codex-jim/LIMITS.md`
+  dan membatasi apa yang boleh diklaim darinya.
+- **Peran HCPU di KV260 belum diputuskan.** Jalur A: HCPU tetap CPU utama, ARM
+  untuk boot dan layanan. Jalur B: HCPU jadi akselerator di bawah Linux ARM, dan
+  banyak bagian HOS turun jadi pustaka. Pemilik menilai investasi pada HC, HASM,
+  HFS, HOS, dan HVM *"lebih konsisten dengan Jalur A"* — itu penilaian, belum
+  keputusan, dan tidak ada pekerjaan KV260 yang boleh berangkat dari salah satu
+  jalur sebelum pemilik memilih.
 
 ### Berikutnya — keputusan pemilik, 11 September 2026
 

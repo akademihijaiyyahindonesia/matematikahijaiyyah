@@ -731,7 +731,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 4.967 tes Python. Simulasi bukan
+langsung dari pytest — dan 4.973 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -774,8 +774,8 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.967 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 33 testbench, 371 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.973 lulus, 0 dilewati, 0 gagal |
+| `make -C rtl/tb all` | 34 testbench, 376 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video

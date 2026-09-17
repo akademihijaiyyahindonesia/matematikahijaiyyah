@@ -26,7 +26,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-        sim_letters sim_trap_hreg sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_letters sim_trap_hreg sim_hfs_syscall sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
         sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -41,7 +41,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_trap_hreg sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+     sim_letters sim_trap_hreg sim_hfs_syscall sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
      sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -88,7 +88,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -203,8 +203,25 @@ tb_hcpu_kernel.vvp: $(TB_DIR)/tb_hcpu_kernel.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_
 
 # shell.hasm includes hal.hasm, so the HAL is a prerequisite of the image even
 # though asm2hex.py is only ever handed the one file.
-shell.hex: $(RTL_DIR)/programs/shell.hasm $(RTL_DIR)/programs/hal.hasm
+shell.hex: $(RTL_DIR)/programs/shell.hasm $(RTL_DIR)/programs/hal.hasm \
+           $(RTL_DIR)/programs/hos.hasm $(RTL_DIR)/programs/hos_hctx.hasm
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+# shell.hasm with pid 0 redirected to an HFS probe -- in this image only. The
+# shipped shell has no process that calls its own HFS syscalls; this bench
+# supplies one. Depends on everything shell.hex does, plus the probe and the
+# injector, so a change to any of them rebuilds it instead of running stale.
+shell_hfs.hex: $(RTL_DIR)/programs/shell.hasm $(RTL_DIR)/programs/hal.hasm \
+               $(RTL_DIR)/programs/hos.hasm $(RTL_DIR)/programs/hos_hctx.hasm \
+               $(TB_DIR)/hfs_syscall_probe.hasm \
+               $(RTL_DIR)/scripts/inject_probe.py
+	python3 $(RTL_DIR)/scripts/inject_probe.py $(RTL_DIR)/programs/shell.hasm proc0 \
+	    $(TB_DIR)/hfs_syscall_probe.hasm 0x400 > $@
+
+tb_hcpu_hfs_syscall.vvp: $(TB_DIR)/tb_hcpu_hfs_syscall.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+sim_hfs_syscall: tb_hcpu_hfs_syscall.vvp shell_hfs.hex
+	$(VVP) $<
 
 tb_hcpu_shell.vvp: $(TB_DIR)/tb_hcpu_shell.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^

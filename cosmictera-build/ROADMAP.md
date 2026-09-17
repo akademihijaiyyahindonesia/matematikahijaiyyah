@@ -367,7 +367,7 @@ sudah selesai (`b2a0595`); metadata, persistensi, lapisan layanan, dan
 integrasi kernel ↔ filesystem **belum dibuka**.
 
 **Diperbarui 17 September 2026.** Persistensi dan integrasi kernel ↔ filesystem
-**kini dibuka** oleh gerbang lima tahap menuju KV260 — keputusannya tercatat di
+**kini dibuka** oleh gerbang enam tahap menuju KV260 — keputusannya tercatat di
 `AGENTS.md` bagian 4, dan tidak diulang di sini. Metadata, direktori, dan izin
 **tetap belum dibuka**.
 
@@ -380,7 +380,8 @@ kalau ada yang bisa diukur:
 | 2 | Loader program | Program tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung** |
 | 3 | Overlay runtime | Dua program yang jumlah katanya melebihi 4.096 berjalan berurutan |
 | 4 | HVM di papan | Bytecode yang sama memberi jawaban yang sama di HVM dan di perangkat keras |
-| 5 | TCP/IP lewat SLIP | Sebuah paket dijawab dari papan |
+| 5 | Semantic memory | Belum ditetapkan pemilik — tahap ini tidak dimulai sebelum syarat terimanya ada |
+| 6 | TCP/IP lewat SLIP | Sebuah paket dijawab dari papan |
 
 Tahap 2 syaratnya sengaja menyebut "tanpa host tersambung": `loader.hasm` hari
 ini membaca `0xFF0` — RX_DATA — jadi sebuah program yang jalan dengan kabel
@@ -425,7 +426,7 @@ Konsekuensi langsung dari yang di atas: sertifikat paten belum disinkronkan
 dengan hasil papan.
 
 ```
-software_tests      1611/1611     ← sekarang 4.967
+software_tests      1611/1611     ← sekarang 4.973
 rtl_hardware_tests   174/174      ← lihat catatan di bawah
 ```
 
