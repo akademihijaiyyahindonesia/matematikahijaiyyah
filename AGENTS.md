@@ -591,6 +591,27 @@ Dua penetapan lain dari keputusan yang sama:
   **Urutannya juga ditetapkan: 2A syscall dulu, 2B baru muat otomatis saat
   boot.** Loader diuji sebagai layanan kernel sebelum ia jadi bagian boot.
 
+  Tiga patokan terakhir, ditetapkan sesudah angkanya diukur:
+
+  - **MAGIC = `HPG1`, 0x48504731.** "Hybit Program Generation 1", entitas yang
+    berbeda dari `HFS1`.
+  - **Penyangga relokasi 0x300-0x37F, tepat 128 kata** - satu sektor penuh,
+    jauh dari heap HOS (0xE01-0xE7F) dan tabel syscall (0xECE-0xED5). Ukurannya
+    dari pengukuran: tabel relokasi terbesar 85 kata (`rtl/programs/shell.hasm`, 1.040 kata),
+    `hos_hfs_disk` 38, rata-rata 7,2 dari 41 program. Penyangga itu perlu karena
+    CPU **tidak bisa membaca memori instruksi** - hanya `IMEM_ADDR`/`IMEM_DATA`
+    untuk menulis - jadi relokasi diterapkan sebelum kata ditulis, dan tabelnya
+    harus ada di RAM saat kata program mengalir.
+  - **FLAGS bit 0 = VALID**; 0 slot kosong, 1 berisi. Bit lain disimpan dan
+    **belum diberi arti** (bootable, readonly, signed, encrypted) supaya cabang
+    desain baru tidak terbuka sebelum loader dasar terbukti. Sektor kosong yang
+    seluruhnya nol karena itu tidak pernah terbaca sebagai program nomor 0.
+
+  **Urutan field entri tabel program berubah** antara dua pesan pemilik, dan
+  yang berlaku yang terakhir: PROGRAM_ID, FLAGS, START_SECTOR, SECTOR_COUNT.
+  Yang lebih dulu menulis FLAGS di posisi terakhir; dicatat di sini supaya
+  pergeserannya tidak diam.
+
   Yang pemilik nyatakan belum dibuka: multitasking dinamis, swap, overlay
   runtime, demand paging, semantic memory, dan format executable NUI.
 

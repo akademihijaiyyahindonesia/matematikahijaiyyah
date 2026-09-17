@@ -1,0 +1,136 @@
+; sd_writer.hasm -- a container arrives on the wire and lands on the card.
+;
+; Stage 2A needs a program image ON the card before anything can load one from
+; it. The owner chose this route over writing raw sectors from the host, 18
+; September 2026: every path this repository has proven runs
+;
+;     host -> UART -> HCPU -> hal_sd -> card
+;
+; and writing raw sectors from a laptop would be a new one, with the owner's
+; own card on the other end of it.
+;
+; PROTOCOL: loader.hasm's, unchanged, so rtl/scripts/send_program.py sends a
+; container without knowing it is one -- 4 bytes word count N, most significant
+; first, then 4N bytes. Build the container with
+; rtl/scripts/build_container.py, which emits a .hex that send_program.py
+; passes through verbatim.
+;
+; LAYOUT, the owner's, 18 September 2026:
+;   sector 16     program table, entries of four words:
+;                 PROGRAM_ID, FLAGS, START_SECTOR, SECTOR_COUNT
+;                 FLAGS bit 0 = VALID, so an all-zero sector holds no programs
+;   sector 17+    the container itself, 128 words per sector, zero-padded
+;
+; This writes ONE entry, PROGRAM_ID 1, because stage 2A is one program. The
+; rest of the table stays zero, which reads as empty rather than as program 0.
+;
+; It prints two numbers and halts:
+;   1 <sectors>   the container is on the card, in that many sectors
+;   0             the card refused; nothing after the first refusal is written
+;
+; Registers: R5 zero base, R6 words left, R13 sector, R14 words in this sector,
+; R15 sectors written. R1/R2/R9/R10/R12 belong to hal_sd.hasm, R3/R4 to the
+; byte loop. The receive loop is loader.hasm's, lifted rather than rewritten:
+; four bytes, SHLI 8 then OR, most significant first.
+
+        MOVI  R5, 0
+        MOVI  R1, 1                 ; SD_CMD 1 = init
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2             ; bit 1 = ok
+        CMPI  R1, 0
+        JEQ   w_fail
+
+; ── the word count ──────────────────────────────────────────────
+        MOVI  R3, 0
+        MOVI  R4, 4
+cnt_b:  LOAD  R1, R5, 0xFF1         ; RX_STATUS
+        CMPI  R1, 0
+        JEQ   cnt_b
+        LOAD  R2, R5, 0xFF0         ; RX_DATA
+        SHLI  R3, R3, 8
+        OR    R3, R3, R2
+        ADDI  R4, R4, -1
+        CMPI  R4, 0
+        JNE   cnt_b
+        MOV   R6, R3                ; N words to place
+
+        MOVI  R13, 17               ; first data sector
+        MOVI  R15, 0                ; sectors written
+
+; ── one sector at a time ────────────────────────────────────────
+sec:    CMPI  R6, 0
+        JEQ   dir
+        CALL  hal_sd_rewind
+        MOVI  R14, 0
+wrd:    CMPI  R6, 0
+        JEQ   pad                   ; the stream ended mid-sector
+        MOVI  R3, 0
+        MOVI  R4, 4
+w_b:    LOAD  R1, R5, 0xFF1
+        CMPI  R1, 0
+        JEQ   w_b
+        LOAD  R2, R5, 0xFF0
+        SHLI  R3, R3, 8
+        OR    R3, R3, R2
+        ADDI  R4, R4, -1
+        CMPI  R4, 0
+        JNE   w_b
+        MOV   R1, R3
+        CALL  hal_sd_put            ; clobbers R1 and R12 only
+        ADDI  R6, R6, -1
+        ADDI  R14, R14, 1
+        CMPI  R14, 128
+        JNE   wrd
+        JMP   flush
+pad:    MOVI  R1, 0                 ; a sector is written whole
+        CALL  hal_sd_put
+        ADDI  R14, R14, 1
+        CMPI  R14, 128
+        JNE   pad
+flush:  MOV   R1, R13
+        CALL  hal_sd_sector
+        MOVI  R1, 3                 ; write
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   w_fail
+        ADDI  R13, R13, 1
+        ADDI  R15, R15, 1
+        JMP   sec
+
+; ── the table, written last ─────────────────────────────────────
+; Last on purpose: a table that names sectors the card never took would point
+; at whatever those sectors already held. Written after them, a valid entry
+; means the image before it is already there.
+dir:    CALL  hal_sd_rewind
+        MOVI  R1, 1                 ; PROGRAM_ID
+        CALL  hal_sd_put
+        MOVI  R1, 1                 ; FLAGS: bit 0 VALID
+        CALL  hal_sd_put
+        MOVI  R1, 17                ; START_SECTOR
+        CALL  hal_sd_put
+        MOV   R1, R15               ; SECTOR_COUNT
+        CALL  hal_sd_put
+        MOVI  R14, 4
+dpad:   MOVI  R1, 0
+        CALL  hal_sd_put
+        ADDI  R14, R14, 1
+        CMPI  R14, 128
+        JNE   dpad
+        MOVI  R1, 16
+        CALL  hal_sd_sector
+        MOVI  R1, 3
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   w_fail
+        MOVI  R1, 1
+        PRINT R1                    ; 1 -- written
+        PRINT R15                   ; how many sectors the container took
+        HALT
+
+w_fail: MOVI  R1, 0
+        PRINT R1                    ; 0 -- the card refused
+        HALT
+
+        .include "hal_sd.hasm"

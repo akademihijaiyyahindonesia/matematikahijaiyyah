@@ -311,7 +311,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 5.019 lulus, 0 dilewati
-make -C rtl/tb all            # 386 asersi, 35 bench, 0 gagal
+python3 -m pytest -q          # 5.022 lulus, 0 dilewati
+make -C rtl/tb all            # 395 asersi, 36 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

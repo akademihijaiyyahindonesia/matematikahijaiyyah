@@ -26,7 +26,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-        sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
         sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -41,7 +41,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+     sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
      sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -88,7 +88,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex shell_persist.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex shell_persist.hex sd_writer.hex container.hex container_payload.txt subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -338,6 +338,28 @@ tb_hcpu_video_timing.vvp: \
 # ── board benches ───────────────────────────────────────────────
 sim_board: tb_gowin_top.vvp program.hex
 	$(VVP) $<
+# ── stage 2A: a container on the card ───────────────────────────
+# sd_writer.hasm receives a container on the wire and writes it to sectors 17+,
+# then the program table at sector 16. The container and its byte stream come
+# from the same two host tools a board is fed from -- build_container.py frames
+# the image, send_program.py frames the wire -- so a bench that passes here
+# cannot pass with a format the board would refuse.
+sd_writer.hex: $(RTL_DIR)/programs/sd_writer.hasm $(RTL_DIR)/programs/hal_sd.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+container.hex: $(RTL_DIR)/programs/test_bsm.hasm $(RTL_DIR)/scripts/build_container.py
+	python3 $(RTL_DIR)/scripts/build_container.py $< 0x100 > $@
+
+container_payload.txt: container.hex $(RTL_DIR)/scripts/send_program.py
+	python3 $(RTL_DIR)/scripts/send_program.py $< | od -An -v -tx1 | tr -s ' ' '\n' | grep . > $@
+
+tb_hcpu_sd_writer.vvp: $(TB_DIR)/tb_hcpu_sd_writer.v $(TB_DIR)/sd_card_model.v \
+                       $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+sim_sd_writer: tb_hcpu_sd_writer.vvp sd_writer.hex container.hex container_payload.txt
+	$(VVP) $<
+
 sim_loader: tb_gowin_loader.vvp loader.hex payload.txt
 	$(VVP) $<
 sim_loader_nui: tb_gowin_loader_nui.vvp loader.hex nui_payload.txt
