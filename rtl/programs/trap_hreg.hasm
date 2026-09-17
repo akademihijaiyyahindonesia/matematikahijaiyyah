@@ -1,0 +1,108 @@
+; trap_hreg.hasm — a handler saves the codex register it is about to use.
+;
+; Stores ONE value at 0x100: 1 if the caller's H0 survived a trap, 0 if not.
+;
+; ── why this program exists ─────────────────────────────────────
+; rtl/programs/trap_flags.hasm asks this question about FLAGS and answers 0,
+; and H-ISA v1.1 then gave FLAGS a way into the process context (`FRD` 0x0A,
+; `FWR` 0x0B). This asks it about H0, and the answer matters more than it
+; looks: HFS's entire calling convention is hybit. hos_fs_write takes its
+; vector in H0 and hos_fs_read returns one there, so promoting those routines
+; to syscalls means the vector has to cross a trap boundary intact.
+;
+; Measured before this program: the process context in rtl/programs/shell.hasm
+; saves R0-R15 and FLAGS. It saves no H-register, and there are sixteen of
+; them (`HREG_COUNT` 16, `HREG_W` 144).
+;
+; ── why it survives today, and why that is not a contract ───────
+; shell.hasm contains ZERO CSET/CGET/HLOAD instructions -- so nothing in that
+; handler touches a codex register, and H0 crosses the trap untouched by
+; accident. kernel.hasm contains thirty, and its guard daemon sweeps the codex
+; periodically. A file syscall served under that kernel loses the caller's
+; vector, and loses it silently: the write lands on a table entry built from
+; whatever the handler left behind.
+;
+; So this handler does what a guard daemon does -- one HLOAD -- and nothing
+; else. That is the whole sabotage, and it is the smallest one possible.
+;
+; ── why Kaf ─────────────────────────────────────────────────────
+; HLOAD H0, 22 is Kaf, and Kaf is the ONLY letter in the table whose H* is 1.
+; Every other letter leaves that component 0, so a vector rebuilt from zeros
+; compares EQUAL to them on the component that is hardest to reconstruct.
+; This repository has recorded that blind spot twice -- `f0dd0f8` and
+; `b2a0595` -- and both times a sabotage failed to bite because both sides
+; held H* = 0. A test that can only pass for the right reason has to use the
+; one letter that makes H* load-bearing.
+;
+; ── reading the result ──────────────────────────────────────────
+;   1   the caller's H0 crossed the trap intact
+;   0   the handler's HLOAD reached the caller's register
+;
+; This handler SAVES, so it answers 1 -- and that is a statement about the
+; handler, not about the machine. The machine protects nothing: a hardware
+; bank for the codex registers was built and measured at +336 LUT4 for H0
+; alone, which this board refuses. rtl/programs/hos_hctx.hasm carries those
+; figures and the reason the software form is the one that ships.
+;
+; Delete the two CALLs below and it answers 0 again. That is the same
+; relationship rtl/programs/trap_flags.hasm has with FRD/FWR, and it is the
+; cheapest sabotage available for this guard.
+
+        MOVI  R5, 0
+        MOVI  R14, 0
+        MOVI  R1, handler
+        STORE R1, R5, 0xFF8     ; TRAP_VECTOR
+        MOVI  R1, 0x100
+        STORE R1, R5, 0xFFE     ; MEM_BASE
+        MOVI  R1, 0x200
+        STORE R1, R5, 0xFFF     ; MEM_LIMIT
+        MOVI  R1, usr
+        STORE R1, R5, 0xFF9     ; TRAP_EPC
+        MOVI  R1, 0
+        STORE R1, R5, 0xFFD     ; previous mode = USER
+        ERET
+
+; ── user mode ───────────────────────────────────────────────────
+; H0 is loaded BEFORE the trap and compared AFTER it. Nothing between the two
+; touches a codex register except the handler.
+; The verdict goes to 0x100 -- inside the user window this program set up --
+; rather than to the wire, so the bench reads a number instead of decoding a
+; character stream. Nothing here prints.
+usr:    HLOAD H0, 22            ; Kaf -- the caller's vector
+        SYSCALL                 ; the handler does codex work; whose H0 returns?
+        HLOAD H1, 22            ; what H0 must still hold
+        CEQ   H0, H1            ; eighteen components, H* among them
+        JEQ   kept
+        MOVI  R2, 0             ; the handler reached the caller's register
+        JMP   say
+kept:   MOVI  R2, 1
+say:    STORE R2, R5, 0x100     ; R5 is still 0; 0x100 is MEM_BASE
+spin:   JMP   spin
+
+; ── handler ─────────────────────────────────────────────────────
+; Save, one codex instruction, restore. The HLOAD is what a guard daemon does;
+; the two CALLs around it are what makes serving a file syscall safe.
+handler:
+        LOAD  R9, R5, 0xFFA     ; TRAP_CAUSE
+        CMPI  R9, 5             ; TRAP_SYSCALL
+        JEQ   h_call
+        HALT
+; Save, work, restore -- the shape the context switch already uses for R0-R15
+; and FLAGS. The slot is this process's own, addressed by pid rather than by a
+; number chosen here: one global slot would be safe for a trap that returns to
+; its caller and wrong the moment a scheduler runs someone else in between.
+; R1 carries the slot address through the HLOAD, which touches no GPR.
+h_call: MOVI  R1, 0             ; pid 0 -- this program is the only process
+        CALL  hos_h0_slot
+        CALL  hos_h0_save
+        HLOAD H0, 2             ; what a guard daemon does, and nothing more
+        CALL  hos_h0_load
+        LOAD  R11, R5, 0xFF9
+        ADDI  R11, R11, 1       ; a syscall names its own instruction
+        STORE R11, R5, 0xFF9
+        NOP                     ; the store must land before ERET reads epc;
+        NOP                     ; measured on the board in trap_flags.hasm
+        NOP
+        ERET
+
+        .include "hos_hctx.hasm"

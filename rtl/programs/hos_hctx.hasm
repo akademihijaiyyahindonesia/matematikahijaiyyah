@@ -1,0 +1,155 @@
+; hos_hctx.hasm -- H0 across a trap, saved the way FLAGS is saved.
+;
+; Two routines, and between them the whole of what a handler needs to serve a
+; file syscall without destroying the vector it was handed.
+;
+;   hos_h0_slot   R1 = pid                        ->  R1 = its 18-word slot
+;   hos_h0_save   R1 = address of an 18-word slot  ->  H0 written there
+;   hos_h0_load   R1 = address of an 18-word slot  ->  H0 rebuilt from there
+;
+; All three clobber R6 and preserve R1 as the result. Nothing else is touched
+; -- not FLAGS, not H1-H15, not the return stack beyond its own RET.
+;
+; -- where the slots live, and why not in the PCB ------------------
+; A slot PER PROCESS, in the HOS region, immediately after the HFS file table:
+;
+;   0xE00        heap free-list head
+;   0xE01-0xE7F  heap arena, 127 words
+;   0xE80-0xE97  HFS file table, 8 files x 3 words
+;   0xE98-0xEA9  H0_SAVE pid 0        <- this file
+;   0xEAA-0xEBB  H0_SAVE pid 1
+;   0xEBC-0xECD  H0_SAVE pid 2
+;
+; PER PROCESS rather than one global slot, because a global one breaks the
+; moment a trap yields: process A saves H0, the scheduler runs B, B saves ITS
+; H0 over the same words, and A restores a vector that was never its own.
+; Safe while a trap returns to its caller; wrong as soon as HOS schedules.
+;
+; NOT IN THE PCB, and the memory map is why. The PCB is 32 words with eleven
+; free (+21..+31), so eighteen would force the stride to 64. Three blocks then
+; run 0xF10-0xFCF against a card window that begins at 0xFE0 -- sixteen words
+; of headroom, and no room for a fourth process at all. That is survival
+; space, not growth space.
+;
+; And the stronger reason, owner's decision, 17 September 2026: H0 is not
+; process context yet. It is an artefact of one ABI -- HFS passes its vector
+; there -- and putting it in the PCB would assert something about this machine
+; that is not true. When a larger fabric makes H0-H15 genuinely part of a
+; process, that is the point to move the whole bank into the context
+; structure, and this array retires.
+;
+; -- why this is software and not silicon --------------------------
+; A hardware shadow bank was built first and does not fit. Measured on the
+; board, twice, with the message four other correct designs have had:
+;
+;     all 16 H-registers banked   LUT4 15,744 -> 19,030   refused
+;     H0 alone banked             LUT4 15,744 -> 16,080   refused
+;
+; The practical placement ceiling on this part is about 16,000 LUT4, not the
+; nominal 20,736, so +336 was already too much. The DFF cost was never the
+; problem: banking H0 adds a seventeenth entry to the codex register file,
+; which pushes its two asynchronous read multiplexers from 16:1 to 17:1 --
+; just past a power of two, where they grow out of proportion.
+;
+; -- the precedent, read properly ----------------------------------
+; FLAGS faced this exact problem and was NOT solved with hardware. `a3e2a15`
+; added FRD (0x0A) and FWR (0x0B) so SOFTWARE could put FLAGS in the process
+; context; the register file saves nothing. H0 needs no new opcode at all,
+; because CGET and CSET already reach a component each way.
+;
+;     72 instructions, 1.8% of the 4,096-word image
+;     0 LUT4, 0 DFF, 0 opcodes, 0 placement risk
+;
+; -- unrolled, and not by choice -----------------------------------
+; CGET and CSET name their component in the IMMEDIATE, so there is no index
+; register to loop over. hos.hasm's own copy loops say the same thing twice.
+; This file is generated rather than typed for that reason: eighteen hand-
+; written indices in each direction is an invitation for one of them to be
+; wrong, and a wrong one would corrupt exactly one component of a vector --
+; the failure hardest to see.
+
+; R1 = pid -> R1 = base address of that process's slot. Eighteen words each,
+; laid out after the HFS table; 0xE98 is where that table's last word ends.
+hos_h0_slot:
+        MOVI  R6, 18
+        MUL   R1, R1, R6
+        ADDI  R1, R1, 0xE98
+        RET
+
+hos_h0_save:
+        CGET  R6, H0, 0
+        STORE R6, R1, 0
+        CGET  R6, H0, 1
+        STORE R6, R1, 1
+        CGET  R6, H0, 2
+        STORE R6, R1, 2
+        CGET  R6, H0, 3
+        STORE R6, R1, 3
+        CGET  R6, H0, 4
+        STORE R6, R1, 4
+        CGET  R6, H0, 5
+        STORE R6, R1, 5
+        CGET  R6, H0, 6
+        STORE R6, R1, 6
+        CGET  R6, H0, 7
+        STORE R6, R1, 7
+        CGET  R6, H0, 8
+        STORE R6, R1, 8
+        CGET  R6, H0, 9
+        STORE R6, R1, 9
+        CGET  R6, H0, 10
+        STORE R6, R1, 10
+        CGET  R6, H0, 11
+        STORE R6, R1, 11
+        CGET  R6, H0, 12
+        STORE R6, R1, 12
+        CGET  R6, H0, 13
+        STORE R6, R1, 13
+        CGET  R6, H0, 14
+        STORE R6, R1, 14
+        CGET  R6, H0, 15
+        STORE R6, R1, 15
+        CGET  R6, H0, 16
+        STORE R6, R1, 16
+        CGET  R6, H0, 17
+        STORE R6, R1, 17
+        RET
+
+hos_h0_load:
+        LOAD  R6, R1, 0
+        CSET  H0, R6, 0
+        LOAD  R6, R1, 1
+        CSET  H0, R6, 1
+        LOAD  R6, R1, 2
+        CSET  H0, R6, 2
+        LOAD  R6, R1, 3
+        CSET  H0, R6, 3
+        LOAD  R6, R1, 4
+        CSET  H0, R6, 4
+        LOAD  R6, R1, 5
+        CSET  H0, R6, 5
+        LOAD  R6, R1, 6
+        CSET  H0, R6, 6
+        LOAD  R6, R1, 7
+        CSET  H0, R6, 7
+        LOAD  R6, R1, 8
+        CSET  H0, R6, 8
+        LOAD  R6, R1, 9
+        CSET  H0, R6, 9
+        LOAD  R6, R1, 10
+        CSET  H0, R6, 10
+        LOAD  R6, R1, 11
+        CSET  H0, R6, 11
+        LOAD  R6, R1, 12
+        CSET  H0, R6, 12
+        LOAD  R6, R1, 13
+        CSET  H0, R6, 13
+        LOAD  R6, R1, 14
+        CSET  H0, R6, 14
+        LOAD  R6, R1, 15
+        CSET  H0, R6, 15
+        LOAD  R6, R1, 16
+        CSET  H0, R6, 16
+        LOAD  R6, R1, 17
+        CSET  H0, R6, 17
+        RET

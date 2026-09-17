@@ -26,7 +26,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-        sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_letters sim_trap_hreg sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
         sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -41,7 +41,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+     sim_letters sim_trap_hreg sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
      sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -88,7 +88,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -177,6 +177,17 @@ tb_hcpu_nui_embedding.vvp: $(TB_DIR)/tb_hcpu_nui_embedding.v $(RTL_DIR)/fpga/gow
 
 tb_hcpu_subroutine.vvp: $(TB_DIR)/tb_hcpu_subroutine.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
+
+trap_hreg.hex: $(RTL_DIR)/programs/trap_hreg.hasm
+	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
+
+# A handler that runs ONE codex instruction, and whether the caller's H0
+# comes back. Red before hcpu_regfile.v banked the codex by privilege; the
+# program's header carries why it uses Kaf and nothing else.
+tb_hcpu_trap_hreg.vvp: $(TB_DIR)/tb_hcpu_trap_hreg.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+sim_trap_hreg: tb_hcpu_trap_hreg.vvp trap_hreg.hex
+	$(VVP) $<
 
 letters.hex: $(RTL_DIR)/programs/letters.hasm
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
