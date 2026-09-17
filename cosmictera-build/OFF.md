@@ -185,13 +185,54 @@ dan sabotase gap 7 membuatnya merah.
 **Yang tersisa untuk lapis 4, dan ini pekerjaan lain:** HFS sendiri masih
 memakai RAM data (`0xE00`+) dan hilang saat reset. Yang terbukti persisten
 adalah **jalur ke kartunya**, bukan HFS di atasnya — menyambungkan keduanya,
-sehingga `hos_fs_write` mendarat di sektor kartu alih-alih di RAM, belum
-dikerjakan dan belum dibuka pemilik.
+sehingga `hos_fs_write` mendarat di sektor kartu alih-alih di RAM, **dibuka
+pemilik 17 September 2026** sebagai tahap 1 gerbang KV260, dan belum
+dikerjakan. Penutupnya fisik: berkas bertahan melewati mati daya dan dibaca
+kembali identik — simulasi tidak bisa membuktikan mati daya, jadi tahap ini
+menunggu papan tersambung.
 
 | butuh | keadaan |
 |---|---|
 | medium persisten | ✅ **terbukti di papan**, 15 September 2026 |
+| HFS lewat kernel | ✅ **di RAM** — syscall 6/7/8 dari mode pengguna (`a5e4f3f`), tersimulasi, belum di papan |
 | HFS memakai medium itu | **belum** — `hos_fs_*` masih menulis ke RAM data; jalur kartu ada dan hidup, keduanya belum disambung |
+
+#### H0 diselamatkan di dalam syscall, tidak saat pergantian proses
+
+Ini batas, bukan celah yang terlupa, dan ia harus terbaca di sini supaya tidak
+diam-diam dianggap tertutup.
+
+Yang **terbukti** (`rtl/tb/tb_hcpu_trap_hreg.v`, `rtl/tb/tb_hcpu_hfs_syscall.v`):
+handler syscall HFS menyimpan H0 pemanggil ke slot per-proses di `0xE98 +
+pid×18` dan memulihkannya, jadi kode kernel boleh memakai register codex tanpa
+menghancurkan argumen pemanggil.
+
+Yang **tidak terbukti, dan tidak benar secara umum**: H0 selamat ketika sebuah
+proses **dipreempt** di antara memuat H0 dan memanggil syscall. Pergantian
+konteks di `rtl/programs/shell.hasm` menyimpan R0–R15 dan FLAGS; ia tidak
+menyimpan H-register satu pun, dan slot per-proses baru diisi di dalam syscall.
+
+```
+proses A  HLOAD H0, ...     vektor A di H0
+timer     → dispatch → proses B memakai H0 untuk codex-nya
+timer     → kembali ke A    H0 kini milik B
+proses A  SYSCALL 8         menulis vektor B ke berkas A
+```
+
+Hari ini tak satu pun proses selain pemanggil HFS yang menulis register codex,
+jadi urutan itu tidak terjadi — **selamat karena kebetulan**, bentuk yang sama
+yang tes ABI HFS ada untuk berhenti diandalkan.
+
+Kenapa belum ditutup, terukur:
+
+| cara | biaya | hasil |
+|---|---|---|
+| bank ke-16 H-register di RTL | +3.286 LUT4 | ditolak placement |
+| bank H0 saja di RTL | +336 LUT4 | ditolak placement |
+| simpan ke-16 lewat `CGET`/`STORE` di tiap pergantian | 1.152 instruksi, 28% citra | terlalu mahal |
+| opcode simpan/muat H-register utuh | `CSTORE` 0x41 ada di spesifikasi, pasangan muatnya **tidak** | keputusan ISA v1.3, ditunda |
+
+Pemilik menunda konteks hybit penuh ke KV260, 17 September 2026. Label: **AT**.
 
 Papan ini **tidak punya jalur card-detect**, jadi bit `CARD_PRESENT` menyatakan
 "kartu pernah menjawab", bukan "ada kartu". Perbedaan itu tidak bisa ditutup

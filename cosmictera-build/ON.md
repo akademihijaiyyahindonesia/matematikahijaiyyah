@@ -53,7 +53,8 @@ Label: `CC`.
 | Blok codex | CMOV, CZERO, CEQ, CRHO, CU, CMOD4 — `U` dan `ρ` dibaca dari guard, bukan dihitung ulang; `CDOT` tinggal di perangkat lunak, lihat [OFF.md](OFF.md) | `rtl/tb/tb_hcpu_top.v` Program 11 |
 | Hisab | penyapuan 28 huruf, 124 asersi | `rtl/hcpu_hisab.v` |
 | Shell | banner `HIJAIYYAH`, prompt `> `, gema karakter: `A`→`A`, `p`→`2 0 1` di papan | `rtl/programs/shell.hasm`, `make -C rtl/tb sim_shell` |
-| Tabel syscall | `write` `read` `yield` `exit` di 0xF08+n, tiap lengan membaca katanya sendiri | `rtl/programs/shell.hasm` |
+| Tabel syscall | delapan panggilan — `write` `read` `yield` `exit` `puts` dan HFS 6/7/8 — di **0xECE–0xED5**, tiap lengan membaca kata izinnya sendiri; pindah dari 0xF08+n karena panggilan ke-8 menabrak `PCB[0]` di 0xF10 | `rtl/programs/shell.hasm` |
+| **Syscall HFS** | `HFS_CREATE` 6, `HFS_READ` 7, `HFS_WRITE` 8 dari mode pengguna — create → write → read → verify, **di RAM**; H0 pemanggil disimpan ke slot per-proses di dalam syscall | `rtl/tb/tb_hcpu_hfs_syscall.v`, `tests/test_integrity/test_hfs_abi.py` |
 | HAL UART | `hal_uart_rx_ready`, `hal_uart_rx_get`, `hal_uart_tx_busy`, `hal_timer_ack` | `rtl/programs/hal.hasm` |
 | Interlock | load-use, store-load, **termasuk POP** | `rtl/hcpu_decode.v` |
 | Stack perangkat keras | 256 entri, LIFO, PUSH tanpa register basis | `rtl/hcpu_memory.v` |

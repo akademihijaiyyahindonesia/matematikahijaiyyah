@@ -511,6 +511,12 @@ Dua penetapan lain dari keputusan yang sama:
   permutasi alamat, transformasi codex. Yang terukur ada di
   `cosmic-codex-jim/`; yang **gagal** terukur ada di `cosmic-codex-jim/LIMITS.md`
   dan membatasi apa yang boleh diklaim darinya.
+- **Di Tang Nano 20K, yang bisa dibayar dengan instruksi tidak dibayar dengan
+  LUT4.** *"Jika masalah bisa diselesaikan dengan instruksi, jangan bayar
+  dengan LUT4"* — pola yang pemilik tarik dari M5: bank H-register di RTL
+  ditolak placement dua kali (+3.286 dan +336 LUT4), simpan-pulihkan perangkat
+  lunak lolos dengan 72 instruksi dan nol LUT4. LUT4 adalah sumber daya yang
+  benar-benar habis di papan ini; kata instruksi langka, tetapi tidak habis.
 - **Peran HCPU di KV260 belum diputuskan.** Jalur A: HCPU tetap CPU utama, ARM
   untuk boot dan layanan. Jalur B: HCPU jadi akselerator di bawah Linux ARM, dan
   banyak bagian HOS turun jadi pustaka. Pemilik menilai investasi pada HC, HASM,
