@@ -1,0 +1,81 @@
+; hal_sd.hasm -- the card, behind routines, the way hal.hasm puts the UART.
+;
+;   hal_sd_run      R1 = 1 init | 2 read | 3 write   ->  R1 = SD_STATUS
+;   hal_sd_sector   R1 = the sector the next read or write addresses
+;   hal_sd_rewind   buffer index back to word 0
+;   hal_sd_put      R1 = one buffer word, index advances
+;   hal_sd_get      ->  R1 = one buffer word, index advances
+;
+; SD_STATUS bit 1 is "ok". The buffer is 128 words, exactly one 512-byte
+; sector, each word four bytes big-endian on the card.
+;
+; ── why a separate file, and not hal.hasm ───────────────────────
+; hal.hasm is included by every kernel image. The card is used by the ones
+; that persist a filesystem. Instruction memory is 4,096 words and it is the
+; scarcest resource on this board, so an image pays for this only by
+; including it.
+;
+; ── the convention, and why it is wider than hal.hasm's ─────────
+; hal_sd_run clobbers R1, R2, R9, R10 and R12. The other four clobber R1 and
+; R12 only. hal.hasm promises R1, R2, R12; hal_sd_run cannot keep that promise
+; without restructuring its wait, and its wait is not ours to restructure --
+; see below. hos.hasm already treats R6-R12 as scratch, so every HOS caller
+; is unaffected.
+;
+; ── hal_sd_run is lifted, not written ───────────────────────────
+; It is rtl/programs/sdio_write.hasm's sd_run with ONE instruction added in
+; front, `MOVI R12, 0`: sd_run relied on its program setting R12 once, and a
+; library routine cannot rely on its caller. Without that line the two
+; assemble to the same 19 words -- compared, not assumed. So: the store, the
+; 100-iteration lift, and the 4000 x 4000 bound on the busy poll, unchanged. That sequence reached a real SDHC card on the Tang Nano 20K on
+; 15 September 2026 and kept a sector across a power cycle (M4.2, `708a9cd`).
+; A different loop that "does the same thing" is a different sequence that
+; has never met the card. The lift exists so the controller's busy bit has
+; risen before the first poll reads it.
+
+hal_sd_run:
+        MOVI  R12, 0
+        STORE R1, R12, 0xFE0        ; SD_CMD
+        MOVI  R9, 100
+hsd_lift:
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   hsd_lift
+        MOVI  R10, 4000
+hsd_outer:
+        MOVI  R9, 4000
+hsd_inner:
+        LOAD  R1, R12, 0xFE1        ; SD_STATUS
+        ANDI  R2, R1, 1             ; bit 0 busy
+        CMPI  R2, 0
+        JEQ   hsd_idle
+        ADDI  R9, R9, -1
+        CMPI  R9, 0
+        JNE   hsd_inner
+        ADDI  R10, R10, -1
+        CMPI  R10, 0
+        JNE   hsd_outer
+hsd_idle:
+        LOAD  R1, R12, 0xFE1
+        RET
+
+hal_sd_sector:
+        MOVI  R12, 0
+        STORE R1, R12, 0xFE2        ; SD_SECTOR
+        RET
+
+hal_sd_rewind:
+        MOVI  R12, 0
+        MOVI  R1, 1
+        STORE R1, R12, 0xFE4        ; SD_CONTROL bit 0: reset buffer index
+        RET
+
+hal_sd_put:
+        MOVI  R12, 0
+        STORE R1, R12, 0xFE3        ; SD_DATA
+        RET
+
+hal_sd_get:
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFE3        ; SD_DATA
+        RET

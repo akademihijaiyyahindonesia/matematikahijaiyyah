@@ -1,0 +1,230 @@
+; hos_hfs_disk.hasm -- HFS on the card: commit on change, load at boot.
+;
+;   hos_fs_magic        ->  R1 = 0x48465331, "HFS1"
+;   hos_fs_commit_table ->  R1 = 1 committed, 0 the card refused
+;   hos_fs_commit_data      R1 = file_id  ->  R1 = 1 committed, 0 refused
+;   hos_fs_mount        ->  R1 = 1 loaded from the card, 0 HFS starts empty
+;
+; All four follow hos.hasm's convention -- R1 result, R3 and R6-R12 scratch --
+; and ALSO clobber R2 and R4 (through hal_sd_run and hos_fs_create). R0, R5 and
+; R13-R15 are preserved, pushed and popped where a loop needs them.
+; Nothing here names a peripheral address: the card is reached through
+; rtl/programs/hal_sd.hasm, as hos.hasm reaches the UART through hal.hasm.
+;
+; ── the layout, owner's decision, 17 September 2026 ─────────────
+;   sector 1   word 0    MAGIC   0x48465331 "HFS1"
+;              word 1    VERSION 1
+;              word 2..  the RAM file table verbatim, 8 entries x 3 words:
+;                        exists, size, block pointer
+;   sector 2   file 0..3 data, 18 words each, zeros for a file that does not exist
+;   sector 3   file 4..7 data, the same
+;
+; Raw sectors in the gap before the first partition, which begins at 2048 or
+; later on an MBR card -- the region M4.2 already wrote and read back across a
+; power cycle. No host filesystem is parsed, and none is disturbed.
+;
+; One HFS does not fit one sector: 24 table words + 8 x 18 data words = 168,
+; and a sector is 128. Hence three.
+;
+; ── the block pointer on the card is NEVER trusted ──────────────
+; The table's third word is an address in THIS boot's heap. Written to the card
+; verbatim, as the layout says, but a pointer from a previous boot points at
+; whatever that heap happened to hold. hos_fs_mount therefore rebuilds every
+; file through hos_fs_create -- a fresh block, a fresh pointer -- and restores
+; only the two words that mean the same thing across a reboot: exists, size.
+;
+; ── MAGIC and VERSION are why a blank card stays blank ──────────
+; Without them, whatever bytes a sector already holds would be read as a table
+; and files that were never created would appear. That is the distinction
+; `b2a0595` built on purpose: a file that EXISTS is not a file that was never
+; made. A card that does not answer HFS1 v1 mounts as an empty filesystem, and
+; nothing is written to it until something is created.
+
+hos_fs_magic:
+        MOVI  R1, 0x484
+        SHLI  R1, R1, 12            ; 0x00484000
+        ORI   R1, R1, 0x653         ; 0x00484653
+        SHLI  R1, R1, 8             ; 0x48465300
+        ORI   R1, R1, 0x31          ; 0x48465331  "HFS1"
+        RET
+
+; ── sector 1: MAGIC, VERSION, the table, zeros to 128 words ─────
+hos_fs_commit_table:
+        PUSH  R13
+        CALL  hal_sd_rewind
+        CALL  hos_fs_magic
+        CALL  hal_sd_put
+        MOVI  R1, 1                 ; VERSION
+        CALL  hal_sd_put
+        MOVI  R13, 0
+ct_tab: ADDI  R3, R13, 0xE80        ; the table, word by word
+        LOAD  R1, R3, 0
+        CALL  hal_sd_put
+        ADDI  R13, R13, 1
+        CMPI  R13, 24
+        JNE   ct_tab
+ct_pad: MOVI  R1, 0                 ; 2 + 24 written; 102 more to fill 128
+        CALL  hal_sd_put
+        ADDI  R13, R13, 1
+        CMPI  R13, 126
+        JNE   ct_pad
+        MOVI  R1, 1
+        CALL  hal_sd_sector
+        MOVI  R1, 3                 ; write
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2             ; ok bit
+        SHRI  R1, R1, 1
+        POP   R13
+        RET
+
+; ── sector 2 or 3: the four files that share it ─────────────────
+; A sector is written whole, so committing one file rewrites its three
+; neighbours from RAM, which is where the truth of this boot lives.
+hos_fs_commit_data:
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+        SHRI  R14, R1, 2            ; 0 for files 0..3, 1 for 4..7
+        ADDI  R15, R14, 2           ; sector 2 or 3
+        SHLI  R14, R14, 2           ; first file id of the group: 0 or 4
+        CALL  hal_sd_rewind
+        MOVI  R13, 0                ; position in the group, 0..3
+cd_file:
+        ADD   R3, R14, R13          ; file id
+        MOVI  R6, 3
+        MUL   R6, R3, R6
+        ADDI  R6, R6, 0xE80         ; its table entry
+        LOAD  R7, R6, 0             ; exists
+        LOAD  R8, R6, 2             ; its block
+        MOVI  R11, 0                ; component 0..17
+cd_word:
+        MOVI  R1, 0
+        CMPI  R7, 1
+        JNE   cd_put                ; no file: eighteen zeros
+        ADD   R10, R8, R11
+        LOAD  R1, R10, 0
+cd_put: CALL  hal_sd_put            ; clobbers R1, R12 only
+        ADDI  R11, R11, 1
+        CMPI  R11, 18
+        JNE   cd_word
+        ADDI  R13, R13, 1
+        CMPI  R13, 4
+        JNE   cd_file
+        MOVI  R13, 0                ; 4 x 18 = 72 written; 56 more to 128
+cd_pad: MOVI  R1, 0
+        CALL  hal_sd_put
+        ADDI  R13, R13, 1
+        CMPI  R13, 56
+        JNE   cd_pad
+        MOV   R1, R15
+        CALL  hal_sd_sector
+        MOVI  R1, 3                 ; write
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        SHRI  R1, R1, 1
+        POP   R15
+        POP   R14
+        POP   R13
+        RET
+
+; ── boot: load HFS from the card, or start empty ────────────────
+; Must run AFTER hos_heap_init: every file it finds is rebuilt by hos_fs_create,
+; which allocates.
+;
+; A data sector that fails to read after the table loaded leaves those files
+; present with zero vectors and returns 0. It is reported rather than rolled
+; back: the table on the card said they exist, and that is still true.
+hos_fs_mount:
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+        MOVI  R1, 1                 ; init
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   mt_empty              ; no card, or it would not initialise
+        MOVI  R1, 1
+        CALL  hal_sd_sector
+        MOVI  R1, 2                 ; read the table sector
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   mt_empty
+        CALL  hal_sd_rewind
+        CALL  hal_sd_get
+        MOV   R13, R1               ; what the card holds in word 0
+        CALL  hos_fs_magic
+        CMP   R13, R1
+        JNE   mt_empty              ; not HFS: a blank or foreign card
+        CALL  hal_sd_get
+        CMPI  R1, 1
+        JNE   mt_empty              ; HFS, but a layout this code cannot read
+        MOVI  R13, 0                ; file id 0..7
+mt_ent: CALL  hal_sd_get
+        MOV   R14, R1               ; exists
+        CALL  hal_sd_get
+        MOV   R15, R1               ; size
+        CALL  hal_sd_get            ; the old block pointer: read past, not used
+        CMPI  R14, 1
+        JNE   mt_next
+        MOV   R1, R13
+        CALL  hos_fs_create         ; fresh block; touches no card state
+        MOVI  R6, 3
+        MUL   R6, R13, R6
+        ADDI  R6, R6, 0xE80
+        STORE R15, R6, 1            ; size, as the card recorded it
+mt_next:
+        ADDI  R13, R13, 1
+        CMPI  R13, 8
+        JNE   mt_ent
+        MOVI  R14, 0                ; group 0 = sector 2, group 1 = sector 3
+mt_grp: ADDI  R1, R14, 2
+        CALL  hal_sd_sector
+        MOVI  R1, 2                 ; read
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   mt_empty
+        CALL  hal_sd_rewind
+        MOVI  R13, 0                ; position in the group
+mt_file:
+        SHLI  R3, R14, 2
+        ADD   R3, R3, R13           ; file id
+        MOVI  R6, 3
+        MUL   R6, R3, R6
+        ADDI  R6, R6, 0xE80
+        LOAD  R7, R6, 0             ; exists -- as rebuilt above
+        LOAD  R8, R6, 2             ; this boot's block
+        MOVI  R15, 0                ; component 0..17
+mt_word:
+        CALL  hal_sd_get            ; clobbers R1, R12 only
+        CMPI  R7, 1
+        JNE   mt_skip
+        ADD   R10, R8, R15
+        STORE R1, R10, 0
+mt_skip:
+        ADDI  R15, R15, 1
+        CMPI  R15, 18
+        JNE   mt_word
+        ADDI  R13, R13, 1
+        CMPI  R13, 4
+        JNE   mt_file
+        ADDI  R14, R14, 1
+        CMPI  R14, 2
+        JNE   mt_grp
+        MOVI  R1, 1
+        JMP   mt_out
+mt_empty:
+        MOVI  R1, 0
+mt_out: POP   R15
+        POP   R14
+        POP   R13
+        RET
+
+        .include "hal_sd.hasm"
+        ; hos_fs_mount calls hos_fs_create, so this file must bring hos.hasm with
+        ; it: every program here assembles on its own, and one that needs a
+        ; label from a file it never includes does not. A second include of the
+        ; same file is skipped, so an image that already has hos.hasm is
+        ; byte-identical either way.
+        .include "hos.hasm"

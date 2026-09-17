@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **4.973 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **4.983 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,7 +41,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 4.973 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 4.983 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -80,7 +80,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **376 asersi, 34 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **384 asersi, 35 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -94,7 +94,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **Jarak `STORE TRAP_EPC` sebelum `ERET`: nol pun benar** | `make -C rtl/tb sim_epc_eret` |
 | ✅ | **FLAGS milik prosesnya, melewati preemption** | `make -C rtl/tb sim_flags_ctx` |
 | ✅ | **`EMITS` mencetak `Hijaiyyah`, penutup menghentikan** | `make -C rtl/tb sim_emits` |
-| ✅ | **HFS create → write → read → verify, di RAM** — persistensi masih terbuka, lihat [OFF.md](OFF.md) | `make -C rtl/tb sim_hfs_lifecycle` |
+| ✅ | **HFS create → write → read → verify, di RAM** — persistensi terbukti tersimulasi, mati daya fisik masih terbuka, lihat [OFF.md](OFF.md) | `make -C rtl/tb sim_hfs_lifecycle` |
 | ✅ | **SDIO 1-bit: init, baca, tulis, baca ulang, dan N_CC 8 clock** — model kartu memeriksa CRC7, menolak transfer sebelum CMD7, dan menjatuhkan perintah yang datang kepagian; disabotase gap 7 → merah | `make -C rtl/tb sim_sdio` |
 | ✅ | **Kartu dicapai sebuah program, bukan kabel bench** — `sdio_write.hasm` jalan di pipeline dan menyentuh `0xFE0`–`0xFE4` lewat `LOAD`/`STORE`; kartu model menyimpan polanya, satu CMD17 dan satu CMD24 | `make -C rtl/tb sim_sdio_prog` |
 | ✅ | **28 instruksi huruf** | `make -C rtl/tb sim_letters` |
@@ -112,7 +112,8 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **Snapshot telemetri lintas domain clock** — handshake req/ack, jadi yang terbaca satu potret utuh dan bukan campuran dua siklus | `make -C rtl/tb sim_telemetry` |
 | ✅ | **Tombol mode memilih halaman** — debounce, tekan panjang, dan pembungkusan halaman | `make -C rtl/tb sim_page_key` |
 | ✅ | **Register codex selamat melewati trap** — handler menjalankan satu `HLOAD` dan H0 pemanggil tetap utuh karena handler menyimpannya lewat perangkat lunak (`hos_hctx.hasm`, 72 instruksi, 0 LUT4); merah kalau kedua `CALL` simpan/pulihkan dicabut, dan memakai Kaf karena hanya huruf itu yang H\*-nya 1 | `make -C rtl/tb sim_trap_hreg` |
-| ✅ | **Syscall HFS dari mode pengguna: create → write → read → verify, di RAM**, lewat kernel — sebuah proses memanggil HFS_CREATE, HFS_WRITE (Kaf), lalu HFS_READ dan mendapat kembali vektor yang ditulisnya; merah bila `sc_ret` mempercayai R7 melewati `hos_alloc` (CREATE mengembalikan 6) dan bila heap tidak diinisialisasi (ketiganya 0). HFS belum menyentuh kartu | `make -C rtl/tb sim_hfs_syscall` |
+| ✅ | **Syscall HFS dari mode pengguna: create → write → read → verify, di RAM**, lewat kernel — sebuah proses memanggil HFS_CREATE, HFS_WRITE (Kaf), lalu HFS_READ dan mendapat kembali vektor yang ditulisnya; lalu di-commit ke kartu — MAGIC `HFS1`, VERSION 1, entri berkas, dan data sektor 2 dibaca langsung dari memori model kartu dan harus sama dengan blok RAM; merah bila `sc_ret` mempercayai R7 melewati `hos_alloc` (CREATE mengembalikan 6) dan bila heap tidak diinisialisasi (ketiganya 0) |
+| ✅ | **HFS melewati reboot lewat kartu, tersimulasi** — boot 1 membuat berkas dan menulis Kaf; CPU di-reset dan **seluruh RAM data dinolkan**, kartu dibiarkan; boot 2 memuat HFS dari kartu dan menemukan Kaf. Merah bila tabel tak dimuat dari kartu (boot 2 fase 1) atau data tak di-commit (fase 3); **hijau palsu** bila RAM tidak dinolkan, terukur — `hcpu_dataram.v` tidak mengosongkan diri saat reset. Mati daya fisik belum, lihat [OFF.md](OFF.md) | `make -C rtl/tb sim_hfs_persist` | `make -C rtl/tb sim_hfs_syscall` |
 
 Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
@@ -250,7 +251,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 4.973 lulus, 0 dilewati
-make -C rtl/tb all               # 376 asersi, 34 bench, 0 gagal
+python3 -m pytest -q             # 4.983 lulus, 0 dilewati
+make -C rtl/tb all               # 384 asersi, 35 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

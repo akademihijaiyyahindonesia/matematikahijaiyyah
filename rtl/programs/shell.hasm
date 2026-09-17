@@ -103,6 +103,13 @@ boot:
         ; other program that uses HFS -- test_hfs, hfs_lifecycle, hos_demo --
         ; already calls it; this one did not when the HFS syscalls arrived.
         CALL  hos_heap_init
+        ; Then HFS from the card, and only then the processes: the owner's boot
+        ; order, 17 September 2026. hos_fs_mount rebuilds every file it finds
+        ; through hos_fs_create, so it cannot run before the heap exists. A card
+        ; that is absent, blank, or not HFS1 v1 leaves the filesystem empty and
+        ; writes nothing. Timers are not armed yet, so a card that takes the
+        ; full wait cannot be preempted halfway through a sector.
+        CALL  hos_fs_mount
 
 ; ── pid 0's block ─────────────────────────────────────────────
         MOVI  R7, 0xF10
@@ -453,6 +460,14 @@ sc_pu:  MOVI  R5, 0
 ;     H0 = the hybit payload                   (WRITE in, READ out)
 ;     R1 = 1 on success, 0 on refusal          (every call)
 ;
+; SUCCESS MEANS ON THE CARD for the two calls that change storage. CREATE and
+; WRITE update RAM and then commit to the card (owner, 17 September 2026:
+; write-through, no SYNC), and return 1 only if both succeeded. A card that
+; refuses leaves RAM changed and returns 0 -- so a CREATE that fails on the
+; card will refuse a retry, because the file exists in RAM. That is reported
+; here rather than hidden; the card has not refused a sector on this board.
+; READ changes nothing and touches no card.
+;
 ; WHERE H0 COMES FROM, AND WHY NOT FROM THE REGISTER. READ and WRITE save
 ; the CALLER's H0 into that process's own slot before doing anything else, and
 ; WRITE then reads the vector back out of that slot rather than trusting the
@@ -479,6 +494,9 @@ sc_fc:  MOVI  R5, 0
         JEQ   sc_off
         MOV   R1, R2            ; file_id
         CALL  hos_fs_create
+        CMPI  R1, 1
+        JNE   sc_ret            ; refused in RAM: nothing to commit
+        CALL  hos_fs_commit_table
         JMP   sc_ret
 
 ; READ saves the caller's H0 first, as the contract requires, then returns the
@@ -501,13 +519,24 @@ sc_fw:  MOVI  R5, 0
         LOAD  R3, R5, 0xED5
         CMPI  R3, 0
         JEQ   sc_off
-        MOV   R4, R2            ; file_id survives the calls below
+        MOV   R4, R2            ; file_id for hos_fs_write
+        MOV   R13, R2           ; and for the commit, after hos_fs_write has
+                                ; clobbered R4 -- R13 is free inside serve,
+                                ; since dispatch reloads it, and the disk
+                                ; routines preserve it
         LOAD  R1, R5, 0xF00     ; current pid
         CALL  hos_h0_slot
         CALL  hos_h0_save       ; the caller's H0, as it arrived
         CALL  hos_h0_load       ; and back again -- from the slot, not the reg
         MOV   R1, R4
         CALL  hos_fs_write      ; R1 = file_id, H0 = the vector
+        CMPI  R1, 1
+        JNE   sc_ret
+        CALL  hos_fs_commit_table   ; size went 0 -> 18, or the entry is new
+        CMPI  R1, 1
+        JNE   sc_ret
+        MOV   R1, R13
+        CALL  hos_fs_commit_data
         JMP   sc_ret
 
 sc_off: MOVI  R1, 0             ; the table says this call is not here
@@ -639,3 +668,4 @@ sh_pl:  MOV   R2, R3
         .include "hal.hasm"
         .include "hos.hasm"
         .include "hos_hctx.hasm"
+        .include "hos_hfs_disk.hasm"

@@ -27,6 +27,11 @@
 ;   R1   argument in, result out
 ;   R2   second argument
 ;   R3, R6-R12   scratch, clobbered by every routine here
+;   R4           ALSO clobbered by hos_fs_create and hos_fs_write, which keep
+;                file_id there across hos_alloc. This line used to be missing:
+;                the convention promised R4 and two routines broke it. Nothing
+;                relied on it -- found while writing hos_hfs_disk.hasm, which
+;                does not rely on it either.
 ; everything else is preserved. Wider than HAL's (R1, R2, R12) because a
 ; free-list walk needs more live state than one register holds.
 ;

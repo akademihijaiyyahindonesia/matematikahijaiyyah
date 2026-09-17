@@ -517,6 +517,14 @@ Dua penetapan lain dari keputusan yang sama:
   ditolak placement dua kali (+3.286 dan +336 LUT4), simpan-pulihkan perangkat
   lunak lolos dengan 72 instruksi dan nol LUT4. LUT4 adalah sumber daya yang
   benar-benar habis di papan ini; kata instruksi langka, tetapi tidak habis.
+- **Tata letak HFS di kartu, 17 September 2026.** Sektor mentah 1–3 di celah
+  sebelum partisi pertama, jalur yang M4.2 sudah buktikan: sektor 1 membawa
+  MAGIC `HFS1`, VERSION, lalu tabel berkas; sektor 2 dan 3 membawa data
+  berkas 0–3 dan 4–7. CREATE dan WRITE langsung menulis ke kartu, tanpa SYNC;
+  boot memuat HFS sesudah heap dan sebelum proses; kartu tanpa `HFS1` v1
+  dimuat sebagai HFS kosong dan tidak ditulisi. VERSION adalah tambahan
+  pemilik. Rinciannya tinggal di kepala `rtl/programs/hos_hfs_disk.hasm`,
+  tidak disalin ke sini (R1).
 - **Peran HCPU di KV260 belum diputuskan.** Jalur A: HCPU tetap CPU utama, ARM
   untuk boot dan layanan. Jalur B: HCPU jadi akselerator di bawah Linux ARM, dan
   banyak bagian HOS turun jadi pustaka. Pemilik menilai investasi pada HC, HASM,

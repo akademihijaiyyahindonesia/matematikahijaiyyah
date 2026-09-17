@@ -23,12 +23,44 @@ module tb_hcpu_hfs_syscall;
     integer errors = 0;
     integer i;
     reg [31:0] done_w, create_w, write_w, read_w, verdict_w;
+    reg [31:0] card_magic, card_version, card_exists, card_size, blk, cw, rw;
+    integer k, same, nonzero;
+
+    function [31:0] card_word(input integer sector, input integer w);
+        card_word = {u_card.mem[sector*512 + w*4 + 0], u_card.mem[sector*512 + w*4 + 1],
+                     u_card.mem[sector*512 + w*4 + 2], u_card.mem[sector*512 + w*4 + 3]};
+    endfunction
 
     always #5 clk = ~clk;
 
+    // ── a card in the slot ──────────────────────────────────────
+    // Blank at start. shell.hasm mounts HFS from the card at boot, so a board with a
+    // card present is the shape this bench must run in. A blank card answers
+    // init, reads back zeros, fails MAGIC, and the filesystem starts empty --
+    // "card present, never formatted", which is also a real board.
+    wire sd_clk;
+    wire card_cmd_out, card_cmd_oe, card_dat_out, card_dat_oe;
+    wire sd_cmd;
+    wire [3:0] sd_dat;
+    pullup (sd_cmd);
+    pullup (sd_dat[0]);
+    assign sd_cmd    = card_cmd_oe ? card_cmd_out : 1'bz;
+    assign sd_dat[0] = card_dat_oe ? card_dat_out : 1'bz;
+
+    sd_card_model #(
+        .SECTORS     (16),
+        .ACMD41_BUSY (3),
+        .HIGH_CAP    (1'b1)
+    ) u_card (
+        .sd_clk(sd_clk),
+        .cmd_line(sd_cmd), .cmd_out(card_cmd_out), .cmd_oe(card_cmd_oe),
+        .dat_line(sd_dat[0]), .dat_out(card_dat_out), .dat_oe(card_dat_oe)
+    );
+
     hcpu_gowin_core #(.USE_PLL(0), .PROGRAM_HEX("shell_hfs.hex")) dut (
         .clk_27m(clk), .btn_rst_n(rst_n),
-        .uart_rxd(1'b1), .uart_txd(uart_txd), .led());
+        .uart_rxd(1'b1), .uart_txd(uart_txd), .led(),
+        .sd_clk(sd_clk), .sd_cmd(sd_cmd), .sd_dat(sd_dat));
 
     task check(input cond, input [255:0] what);
         begin
@@ -70,8 +102,34 @@ module tb_hcpu_hfs_syscall;
         check(read_w == 1,       "HFS_READ menemukan berkas");
         check(verdict_w == 1,    "vektor kembali utuh (Kaf)");
 
+        // ── and on the card ───────────────────────────────────────
+        // CREATE and WRITE commit through to the card. Read the card's own
+        // memory, not the RAM table, so a commit that never happened cannot
+        // pass: sector 1 must carry HFS1 v1 and file 0's entry, and sector 2's
+        // first eighteen words must equal the block the RAM holds for file 0.
+        card_magic   = card_word(1, 0);
+        card_version = card_word(1, 1);
+        card_exists  = card_word(1, 2);
+        card_size    = card_word(1, 3);
+        blk          = dut.u_hcpu.u_dataram.mem[12'hE82];
+        same = 1; nonzero = 0;
+        for (k = 0; k < 18; k = k + 1) begin
+            cw = card_word(2, k);
+            rw = dut.u_hcpu.u_dataram.mem[blk + k];
+            if (cw !== rw) same = 0;
+            if (cw != 0) nonzero = 1;
+        end
+        $display("  kartu: magic=%08h versi=%0d ada=%0d size=%0d", card_magic, card_version, card_exists, card_size);
+        $display("  kartu sektor 2 == blok RAM berkas 0 ? %0d", same);
+        $display("");
+
+        check(card_magic == 32'h48465331, "kartu: MAGIC HFS1");
+        check(card_version == 1,           "kartu: VERSION 1");
+        check(card_exists == 1 && card_size == 18, "kartu: entri berkas 0");
+        check(same == 1 && nonzero == 1,   "kartu: data == blok RAM");
+
         if (errors == 0)
-            $display("tb_hcpu_hfs_syscall: SEMUA LULUS (5 pemeriksaan)");
+            $display("tb_hcpu_hfs_syscall: SEMUA LULUS (9 pemeriksaan)");
         else begin
             $display("tb_hcpu_hfs_syscall: %0d GAGAL", errors);
             $fatal(1);

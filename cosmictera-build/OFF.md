@@ -147,7 +147,7 @@ Buku menetapkan tumpukan tujuh lapis:
 7  Aplikasi          program HC, alat analisis                 ✅
 6  HVM / HCPU        eksekusi bytecode (perangkat lunak/keras)  ✅
 5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ◐  HAR ada, HISAB belum layanan
-4  HFS               sistem berkas yang sadar hybit             ◐  empat operasi ada, penyimpanan persisten belum
+4  HFS               sistem berkas yang sadar hybit             ◐  empat operasi ada, persisten tersimulasi, belum di papan
 3  H-Kernel          manajemen proses, memori, dan I/O          ✅  4 dari 4
 2  HAL               lapisan abstraksi perangkat keras          ✅
 1  Perangkat keras   CPU/HCPU, memori, I/O                      ✅
@@ -186,16 +186,21 @@ dan sabotase gap 7 membuatnya merah.
 memakai RAM data (`0xE00`+) dan hilang saat reset. Yang terbukti persisten
 adalah **jalur ke kartunya**, bukan HFS di atasnya — menyambungkan keduanya,
 sehingga `hos_fs_write` mendarat di sektor kartu alih-alih di RAM, **dibuka
-pemilik 17 September 2026** sebagai tahap 1 gerbang KV260, dan belum
-dikerjakan. Penutupnya fisik: berkas bertahan melewati mati daya dan dibaca
-kembali identik — simulasi tidak bisa membuktikan mati daya, jadi tahap ini
-menunggu papan tersambung.
+pemilik 17 September 2026** sebagai tahap 1 gerbang KV260, dan **kini
+tersambung di simulasi**. CREATE dan WRITE di-commit ke kartu, boot memuat HFS
+dari kartu, dan sebuah berkas melewati reboot dengan seluruh RAM data dinolkan
+(`rtl/tb/tb_hcpu_hfs_persist.v`). Tata letak di kartu — keputusan pemilik —
+tinggal di satu tempat, kepala `rtl/programs/hos_hfs_disk.hasm`.
+
+Penutupnya tetap fisik: berkas bertahan melewati **mati daya** di papan dan
+dibaca kembali identik. Model kartu tidak bisa kehilangan daya, jadi simulasi
+membuktikan logikanya dan tidak lebih. Tahap ini menunggu papan tersambung.
 
 | butuh | keadaan |
 |---|---|
 | medium persisten | ✅ **terbukti di papan**, 15 September 2026 |
 | HFS lewat kernel | ✅ **di RAM** — syscall 6/7/8 dari mode pengguna (`a5e4f3f`), tersimulasi, belum di papan |
-| HFS memakai medium itu | **belum** — `hos_fs_*` masih menulis ke RAM data; jalur kartu ada dan hidup, keduanya belum disambung |
+| HFS memakai medium itu | **tersimulasi** — CREATE/WRITE commit ke sektor 1–3, boot memuat dari kartu, berkas melewati reboot dengan RAM dinolkan. **Belum di papan**: mati daya fisik belum dijalankan |
 
 #### H0 diselamatkan di dalam syscall, tidak saat pergantian proses
 

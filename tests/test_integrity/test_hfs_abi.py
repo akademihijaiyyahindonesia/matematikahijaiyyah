@@ -89,7 +89,7 @@ def test_the_hfs_arms_take_their_vector_from_the_slot_not_the_register() -> None
 
     order = [op for _, op in _instructions(body) if op in
              ("HOS_H0_SLOT", "HOS_H0_SAVE", "HOS_H0_LOAD", "HOS_FS_WRITE", "CALL")]
-    calls = re.findall(r"CALL\s+(\w+)", body)
+    calls = re.findall(r"CALL\s+(\w+)", body)[:4]
     assert calls == ["hos_h0_slot", "hos_h0_save", "hos_h0_load", "hos_fs_write"], (
         f"HFS_WRITE's call order is {calls}. It must address the caller's own "
         "slot, save the vector as it arrived, read it back from memory, and "
@@ -160,6 +160,103 @@ def test_the_result_path_does_not_trust_r7_across_hos_calls() -> None:
         "R6-R12 -- hos_alloc walks the heap with R7 -- so the result lands in "
         "whatever R7 last pointed at."
     )
+
+
+def _arm_calls(text: str, label: str) -> list[str]:
+    body = text.split(f"{label}:", 1)
+    assert len(body) == 2, f"shell.hasm no longer has {label}"
+    return re.findall(r"CALL\s+(\w+)", body[1].split("JMP   sc_ret", 1)[0])
+
+
+def test_create_and_write_commit_to_the_card() -> None:
+    """Write-through, owner's decision: CREATE and WRITE reach the card, no SYNC.
+
+    The stage closes on a file surviving power loss, and a WRITE that only
+    touched RAM can never satisfy that. CREATE commits the table; WRITE commits
+    the table (its size went 0 -> 18) and then the file's data sector. READ
+    changes nothing and must not write the card.
+    """
+    text = SHELL.read_text(encoding="utf-8")
+    create = _arm_calls(text, "sc_fc")
+    assert create == ["hos_fs_create", "hos_fs_commit_table"], (
+        f"HFS_CREATE calls {create}; it must create in RAM, then commit the table"
+    )
+    write = _arm_calls(text, "sc_fw")
+    assert write[4:] == ["hos_fs_commit_table", "hos_fs_commit_data"], (
+        f"HFS_WRITE calls {write}; after hos_fs_write it must commit the table "
+        "and then the data sector"
+    )
+    read = _arm_calls(text, "sc_fr")
+    assert not [c for c in read if c.startswith("hos_fs_commit")], (
+        f"HFS_READ calls {read}; a read must not write the card"
+    )
+
+
+def test_the_shell_mounts_hfs_after_the_heap_and_before_the_processes() -> None:
+    """Boot order, owner's decision: init heap, then HFS from the card, then run.
+
+    hos_fs_mount rebuilds every file it finds through hos_fs_create, which
+    allocates, so a mount before hos_heap_init would find nothing to allocate
+    from and load nothing. A shell that never mounts loses every file at
+    reset -- measured: tb_hcpu_hfs_persist.v, table loading skipped, boot 2
+    does not find the file.
+    """
+    text = SHELL.read_text(encoding="utf-8")
+    own = text.split(".include", 1)[0]
+    boot = own.split("sc_fc:", 1)[0]
+    calls = [c for c in re.findall(r"^\s*CALL\s+(\w+)", boot, re.M)]
+    assert "hos_fs_mount" in calls, "shell.hasm never mounts HFS from the card"
+    assert "hos_heap_init" in calls
+    assert calls.index("hos_heap_init") < calls.index("hos_fs_mount"), (
+        "hos_fs_mount runs before hos_heap_init; the files it rebuilds allocate"
+    )
+
+
+def test_the_disk_layer_names_no_peripheral_address() -> None:
+    """HOS reaches the card through HAL, as it reaches the UART.
+
+    hos.hasm states it: "nothing here names a peripheral address". The disk
+    layer keeps that, so the card's register map lives in exactly one HASM file
+    (R1) and a change to it touches hal_sd.hasm alone.
+    """
+    disk = (PROGRAMS / "hos_hfs_disk.hasm").read_text(encoding="utf-8")
+    code = "\n".join(line.split(";", 1)[0] for line in disk.splitlines())
+    hits = re.findall(r"0x[Ff][Ee][0-9A-Fa-f]", code)
+    assert not hits, (
+        f"hos_hfs_disk.hasm names peripheral addresses {hits}; the card is "
+        "reached through rtl/programs/hal_sd.hasm"
+    )
+
+
+def test_the_card_layout_magic_is_hfs1() -> None:
+    """MAGIC is the four ASCII bytes "HFS1", built from 12-bit immediates.
+
+    A blank or foreign card must not be read as a table, or files that were
+    never created appear -- the distinction b2a0595 built on purpose. The value
+    is assembled here and compared, so an edit that changes one immediate
+    cannot pass quietly.
+    """
+    import sys
+
+    src = ROOT / "src"
+    if str(src) not in sys.path:
+        sys.path.insert(0, str(src))
+    from hijaiyyah.hisa.assembler import assemble
+
+    disk = (PROGRAMS / "hos_hfs_disk.hasm").read_text(encoding="utf-8")
+    body = disk.split("hos_fs_magic:", 1)[1].split("RET", 1)[0]
+    words = assemble(body.strip() + "\n")
+    value = 0
+    for w in words:
+        op, imm = (w >> 24) & 0xFF, w & 0xFFF
+        if op == 0x04:          # MOVI
+            value = imm
+        elif op == 0xB9:        # SHLI
+            value = (value << (imm & 0x1F)) & 0xFFFFFFFF
+        elif op == 0xB7:        # ORI
+            value |= imm
+    assert value == 0x48465331, f"MAGIC builds {value:#010x}, not 0x48465331 (HFS1)"
+    assert value.to_bytes(4, "big") == b"HFS1"
 
 
 def test_every_syscall_arm_reads_its_own_permission_word() -> None:

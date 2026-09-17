@@ -54,6 +54,30 @@ module tb_hcpu_shell;
 
     always #HALF_PERIOD clk_27m = ~clk_27m;
 
+    // ── a card in the slot ──────────────────────────────────────
+    // Blank. shell.hasm mounts HFS from the card at boot, so a board with a
+    // card present is the shape this bench must run in. A blank card answers
+    // init, reads back zeros, fails MAGIC, and the filesystem starts empty --
+    // "card present, never formatted", which is also a real board.
+    wire sd_clk;
+    wire card_cmd_out, card_cmd_oe, card_dat_out, card_dat_oe;
+    wire sd_cmd;
+    wire [3:0] sd_dat;
+    pullup (sd_cmd);
+    pullup (sd_dat[0]);
+    assign sd_cmd    = card_cmd_oe ? card_cmd_out : 1'bz;
+    assign sd_dat[0] = card_dat_oe ? card_dat_out : 1'bz;
+
+    sd_card_model #(
+        .SECTORS     (16),
+        .ACMD41_BUSY (3),
+        .HIGH_CAP    (1'b1)
+    ) u_card (
+        .sd_clk(sd_clk),
+        .cmd_line(sd_cmd), .cmd_out(card_cmd_out), .cmd_oe(card_cmd_oe),
+        .dat_line(sd_dat[0]), .dat_out(card_dat_out), .dat_oe(card_dat_oe)
+    );
+
     hcpu_gowin_core #(
         .USE_PLL      (0),
         .BAUD         (BAUD),
@@ -63,7 +87,10 @@ module tb_hcpu_shell;
         .btn_rst_n (btn_rst_n),
         .uart_rxd  (uart_rxd),
         .uart_txd  (uart_txd),
-        .led       (led)
+        .led       (led),
+        .sd_clk    (sd_clk),
+        .sd_cmd    (sd_cmd),
+        .sd_dat    (sd_dat)
     );
 
     integer errors = 0;
@@ -123,7 +150,20 @@ module tb_hcpu_shell;
 
         // Boot, then long enough for the banner, the first prompt, and the
         // scheduler to be running both blocks.
-        repeat (40000) @(posedge clk_27m);
+        // Wait for the banner, bounded -- not a fixed 40,000 cycles. That
+        // number was a boot with nothing to do before the processes ran. The
+        // shell now mounts HFS from the card first (owner's boot order,
+        // 17 September 2026), and with a blank card in the slot the banner
+        // completes at 167,684 cycles, measured: every output check after it
+        // failed at 40,000 while the scheduler checks stayed green. The bound
+        // still catches a shell that never speaks.
+        begin : wait_banner
+            integer cyc;
+            for (cyc = 0; cyc < 1000000 && count < 12; cyc = cyc + 1)
+                @(posedge clk_27m);
+            $display("  banner dan prompt sesudah %0d siklus", cyc);
+        end
+        repeat (1000) @(posedge clk_27m);
         p0_before = u_board.u_hcpu.u_dataram.mem[P0_COUNT];
 
         // ── the banner, before anything is typed ────────────────

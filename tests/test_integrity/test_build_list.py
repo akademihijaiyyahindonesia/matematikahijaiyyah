@@ -312,8 +312,16 @@ def test_nothing_blocked_is_ticked_green() -> None:
     # scope: HFS as a whole is still blocked on PERSISTENT storage (OFF.md),
     # and everything M4.1 proved is gone at reset. A row that says only "HFS"
     # stays refused.
+    #
+    # The fourth arrived with the card layer: a file written in one boot is
+    # read in the next, with data RAM zeroed between them. Its phrase carries
+    # "tersimulasi" on purpose. The card model cannot lose power, and stage 1
+    # of the gate to KV260 closes only on a physical power cycle -- so this
+    # scope may be green while the board proof stays in OFF.md, and no phrase
+    # here lets a row claim the board.
     scopes = ("guard-on-write", "baca mengembalikan H-Reg hidup",
-              "create → write → read → verify, di RAM")
+              "create → write → read → verify, di RAM",
+              "melewati reboot lewat kartu, tersimulasi")
     hfs_rows = [ln for ln in green if "HFS" in ln]
     assert hfs_rows, "HOS's HFS row went missing from the checklist"
     for ln in hfs_rows:
