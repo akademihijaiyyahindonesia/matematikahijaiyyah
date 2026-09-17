@@ -646,6 +646,14 @@ slot 3 adalah angka yang sama yang dihitung testbench.
 > menaikkannya kembali ketika papan tersambung:
 > `make -C rtl/fpga/gowin flash`, lalu baca UART — jawabannya harus tetap
 > 23 byte, `112`, lalu `CYCLES=…`.
+>
+> **Bitstream-nya dibangun ulang dari sumber pada 18 September 2026 dan keluar
+> byte-identik** dengan `.fs` yang sudah ada di direktori sejak 15 September
+> (sha256 `29c1aed5…`): berkas itu memang desain hasil pemisahan, dan
+> tanggalnya yang lebih tua dari commit hanyalah jarak antara pekerjaan dan
+> commit-nya. Angka route-nya terulang persis — LUT4 15.744, DFF 5.065,
+> BSRAM 18, IOB 11, Fmax 86,18 MHz. Yang menunggu papan tinggal
+> menjalankannya.
 
 **Pencacah siklus tidak sama antar-lari** (`02785D53`, `035BF689`) dan itu
 benar: ia berjalan bebas sejak konfigurasi, bukan direset per program. Yang

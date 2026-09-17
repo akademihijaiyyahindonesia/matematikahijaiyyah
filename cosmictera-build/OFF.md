@@ -228,6 +228,21 @@ Bitstream dimuat ke SRAM, bukan flash SPI papan, sama seperti M4.2: sesudah
 daya dicabut papan menyala sebagai SoC LiteX pabrikannya, dan itu bukti
 independen bahwa daya memang putus, lalu bitstream dimuat lagi.
 
+**Dua bitstream menunggu papan yang sama, dan urutannya ada alasannya.**
+Keduanya dibangun 18 September 2026 dari sumber pada commit ini:
+
+| berkas di `rtl/fpga/gowin/` | citra | menutup |
+|---|---|---|
+| `hcpu_gowin_top.fs` | `test_bsm` bawaan | slot hasil pemisahan `e4c251e` belum pernah dijalankan di papan — jawaban yang diharapkan ada di [PAPAN.md](PAPAN.md), pada blockquote slot 1 |
+| `hcpu_gowin_top_persist.fs` | `shell_persist.hex` | tahap 1: `1 1 1`, mati daya, `2` |
+
+Slot dengan `test_bsm` dijalankan **lebih dulu**: ia sembilan kata dan
+jawabannya sudah diketahui, jadi kalau papan diam di situ yang salah bukan
+HFS. `.fs` di direktori ini **basi begitu RTL berubah** — persis bentuk yang
+menyembunyikan slot CPU yang tak bisa dibangun selama empat hari — jadi periksa
+`git log --oneline -1 -- rtl/` sebelum mem-flash, dan bangun ulang kalau ada
+yang bergerak.
+
 | butuh | keadaan |
 |---|---|
 | medium persisten | ✅ **terbukti di papan**, 15 September 2026 |

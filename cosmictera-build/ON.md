@@ -296,7 +296,10 @@ hasil fisik, tercatat di [PAPAN.md](PAPAN.md).
 Papan sudah di-flash dan dibaca: UART membalas **23 byte** yang cocok
 byte-per-byte dengan simulasi, `e3_sweep28` mengembalikan **28 nilai Θ̂**
 identik dengan `MASTER_TABLE`, dan satu bitstream membawa video, loader dan
-HCPU sekaligus.
+HCPU sekaligus. Semua itu **sebelum** `hcpu_gowin_top.v` dipecah jadi core dan
+top setipis pin; slot hasil pemisahan itu terbangun ulang dan belum dijalankan
+di papan — caveatnya di [PAPAN.md](PAPAN.md), penghalangnya di
+[OFF.md](OFF.md).
 
 Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 
