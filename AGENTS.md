@@ -550,6 +550,31 @@ Dua penetapan lain dari keputusan yang sama:
   READ identik. Persiapan loader boleh berjalan sambil menunggu papan, **tanpa
   mengklaim tahap 2 dimulai**; format citra dan header program tetap keputusan
   pemilik.
+- **Bentuk tahap 2 ditetapkan, 18 September 2026 — loader program dari kartu.**
+  Empat keputusan, diambil di atas angka yang diukur hari itu (sisa memori
+  instruksi 3.056 kata dari 4.096; `IMEM_ADDR` 0xFF3 dan `IMEM_DATA` 0xFF7
+  hanya bisa ditulis mode supervisor; satu sektor 128 kata; satu berkas HFS
+  tepat 18 kata):
+
+  1. **Citra program adalah container berheader**, bukan citra sektor mentah:
+     MAGIC, VERSION, WORDS, ENTRY, RELOC_CNT, CRC, lalu tabel relokasi, lalu
+     kata-kata programnya. Alasannya terukur, bukan kenyamanan: label absolut
+     pernah rusak ketika basis muat berubah, dan tanpa tabel relokasi loader
+     tidak punya cara membetulkannya.
+  2. **Alamat muat datang dari header**, bukan satu alamat tetap — supaya
+     beberapa program tidak dipaksa ke tempat yang sama.
+  3. **Kernel yang memuat, lewat syscall.** Bukan proses pengguna: perangkat
+     kerasnya sendiri menolak akses mode pengguna ke jendela itu.
+  4. **Area program terpisah dari HFS.** HFS tetap satu berkas = satu vektor
+     codex = 18 kata, kontrak yang baru saja tutup di papan; mengubah unit
+     alokasinya sekarang berarti membuka kembali yang sudah ditutup.
+
+  Yang **belum** ditetapkan dan tidak boleh dikarang: apakah `ENTRY` merangkap
+  alamat muat atau ada kata `LOAD_ADDR` sendiri, sektor awal area program dan
+  apakah ada tabel program, definisi `CRC`, dan nomor syscall pemuat. Yang
+  pemilik nyatakan belum dibuka: multitasking dinamis, swap, overlay runtime,
+  demand paging, semantic memory, dan format executable NUI.
+
 - **Batas semantic memory.** Yang terbukti adalah huruf → vektor → operasi
   matematis; huruf → makna → pengetahuan tidak terbukti dan melewati larangan
   `CONTRIBUTING.md` (huruf bukan bunyi atau makna). Jadi semantic memory di

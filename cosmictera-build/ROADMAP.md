@@ -377,7 +377,7 @@ kalau ada yang bisa diukur:
 | | Tahap | Tutup ketika |
 |---|---|---|
 | 1 | HFS ke kartu SD nyata | ✅ **tutup 18 September 2026** — berkas bertahan melewati mati daya dan dibaca kembali identik: `1 1 1` → kabel dicabut → `2` ([PAPAN.md](PAPAN.md)) |
-| 2 | Loader program | Program tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung** |
+| 2 | Loader program | Program tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung**. Bentuknya ditetapkan pemilik 18 September 2026 — container berheader, alamat muat dari header, kernel yang memuat lewat syscall, area program terpisah dari HFS; rinciannya di `AGENTS.md` bagian 4 (R1) |
 | 3 | Overlay runtime | Dua program yang jumlah katanya melebihi 4.096 berjalan berurutan |
 | 4 | HVM di papan | Bytecode yang sama memberi jawaban yang sama di HVM dan di perangkat keras |
 | 5 | Semantic memory | Belum ditetapkan pemilik — tahap ini tidak dimulai sebelum syarat terimanya ada. Batasnya sudah (18 September 2026): memori atas operasi vektor codex, bukan arti huruf |
