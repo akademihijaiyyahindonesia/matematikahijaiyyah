@@ -376,7 +376,7 @@ kalau ada yang bisa diukur:
 
 | | Tahap | Tutup ketika |
 |---|---|---|
-| 1 | HFS ke kartu SD nyata | Sebuah berkas bertahan melewati mati daya dan dibaca kembali identik |
+| 1 | HFS ke kartu SD nyata | ✅ **tutup 18 September 2026** — berkas bertahan melewati mati daya dan dibaca kembali identik: `1 1 1` → kabel dicabut → `2` ([PAPAN.md](PAPAN.md)) |
 | 2 | Loader program | Program tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung** |
 | 3 | Overlay runtime | Dua program yang jumlah katanya melebihi 4.096 berjalan berurutan |
 | 4 | HVM di papan | Bytecode yang sama memberi jawaban yang sama di HVM dan di perangkat keras |

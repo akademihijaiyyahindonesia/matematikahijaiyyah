@@ -315,13 +315,19 @@ def test_nothing_blocked_is_ticked_green() -> None:
     #
     # The fourth arrived with the card layer: a file written in one boot is
     # read in the next, with data RAM zeroed between them. Its phrase carries
-    # "tersimulasi" on purpose. The card model cannot lose power, and stage 1
-    # of the gate to KV260 closes only on a physical power cycle -- so this
-    # scope may be green while the board proof stays in OFF.md, and no phrase
-    # here lets a row claim the board.
+    # "tersimulasi" on purpose -- the card model cannot lose power.
+    #
+    # The fifth is the board itself, 18 September 2026: "melewati mati daya di
+    # papan", the cable pulled and the file read back identical. Until that day
+    # no phrase here was allowed to claim the board, because no run had earned
+    # it. This one names the physical power cycle, which is the only thing that
+    # separates stored from still-in-the-card's-cache, so it is the ONLY phrase
+    # in this list that may sit on a row claiming silicon. A row that says just
+    # "HFS" is still refused.
     scopes = ("guard-on-write", "baca mengembalikan H-Reg hidup",
               "create → write → read → verify, di RAM",
-              "melewati reboot lewat kartu, tersimulasi")
+              "melewati reboot lewat kartu, tersimulasi",
+              "melewati mati daya di papan")
     hfs_rows = [ln for ln in green if "HFS" in ln]
     assert hfs_rows, "HOS's HFS row went missing from the checklist"
     for ln in hfs_rows:

@@ -537,6 +537,12 @@ Dua penetapan lain dari keputusan yang sama:
 
 ### Keputusan pemilik, 18 September 2026 — tahap 1 ditutup di papan dulu
 
+- **Tahap 1 tutup di papan pada hari yang sama, 18 September 2026**: `1 1 1`,
+  kabel dicabut, `2` — angkanya dan alasan tiap larinya di
+  `cosmictera-build/PAPAN.md`. Slot CPU hasil pemisahan `e4c251e` ikut
+  dijalankan di papan pada sesi yang sama (23 byte, `112`), jadi kedua lubang
+  verifikasi yang tercatat hari itu tertutup. **Tahap 2 belum dibuka** — itu
+  keputusan pemilik, bukan konsekuensi otomatis.
 - **Tahap 2 tidak dibuka sebelum tahap 1 tutup di papan fisik.** Yang belum
   terbukti bukan algoritma HFS atau driver kartu, melainkan integrasinya di
   silikon, dan pola repo ini berulang: simulator hijau, papan menemukan

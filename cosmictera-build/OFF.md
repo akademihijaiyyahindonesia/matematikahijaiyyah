@@ -182,72 +182,22 @@ menjawabnya dengan diam 100 ms, empat kali, dan simulasi tidak bisa melihatnya
 karena model kartunya bukan model timing. Sekarang model itu menegakkan N_CC,
 dan sabotase gap 7 membuatnya merah.
 
-**Yang tersisa untuk lapis 4, dan ini pekerjaan lain:** HFS sendiri masih
-memakai RAM data (`0xE00`+) dan hilang saat reset. Yang terbukti persisten
-adalah **jalur ke kartunya**, bukan HFS di atasnya — menyambungkan keduanya,
-sehingga `hos_fs_write` mendarat di sektor kartu alih-alih di RAM, **dibuka
-pemilik 17 September 2026** sebagai tahap 1 gerbang KV260, dan **kini
-tersambung di simulasi**. CREATE dan WRITE di-commit ke kartu, boot memuat HFS
-dari kartu, dan sebuah berkas melewati reboot dengan seluruh RAM data dinolkan
-(`rtl/tb/tb_hcpu_hfs_persist.v`). Tata letak di kartu — keputusan pemilik —
-tinggal di satu tempat, kepala `rtl/programs/hos_hfs_disk.hasm`.
+**Lapis 4 tidak lagi terhalang di sini: HFS hidup di kartu, dan terbukti di
+papan 18 September 2026.** HFS dulu memakai RAM data (`0xE00`+) dan hilang saat
+reset; yang terbukti persisten hanyalah **jalur ke kartunya**. Menyambungkan
+keduanya dibuka pemilik 17 September 2026 sebagai tahap 1 gerbang KV260, dan
+ditutup di silikon sehari sesudahnya: sebuah berkas yang ditulis sebelum daya
+dicabut dibaca kembali identik sesudah daya kembali. Angkanya, keempat larinya,
+dan alasan tiap angka ada di [PAPAN.md](PAPAN.md) — tidak disalin ke sini (R1).
 
-Penutupnya tetap fisik: berkas bertahan melewati **mati daya** di papan dan
-dibaca kembali identik. Model kartu tidak bisa kehilangan daya, jadi simulasi
-membuktikan logikanya dan tidak lebih. Tahap ini menunggu papan tersambung —
-`openFPGALoader` menjawab `unable to open ftdi device: -3`, 18 September 2026.
-
-**Yang sudah siap, sehingga yang tersisa hanya papan.** Probe yang dijalankan
-bench melaporkan hasilnya lewat syscall `write`, jadi ia terbaca dari kabel
-serial dan bukan hanya dari RAM bench:
-
-```
-make -C rtl/tb shell_persist.hex
-make -C rtl/fpga/gowin PROGRAM=../../tb/shell_persist.hex bitstream   # 15.744 LUT4, 86,18 MHz
-# pembaca serial dibuka DULU, baru bitstream dimuat: keluaran datang segera
-make -C rtl/fpga/gowin PROGRAM=../../tb/shell_persist.hex flash
-make -C rtl/fpga/gowin program.hex      # kembalikan: program.hex terlacak git
-```
-
-Baris terakhir bukan kerapian. `rtl/fpga/gowin/program.hex` adalah berkas
-terlacak yang dijaga menyamai `PROGRAM` bawaan, dan memanggang citra lain
-menimpanya: terukur, empat tes gagal dan enam error sampai ia dikembalikan.
-
-Yang dipanggang adalah **berkas yang sama** yang dijalankan bench,
-`rtl/tb/shell_persist.hex`, disalin bukan dirakit ulang — jadi papan dan bench
-tidak bisa menyimpang diam-diam. Yang dibaca dari kabel, terukur di bench:
-
-| kabel | artinya |
-|---|---|
-| `1 1 1` | boot pertama: berkas belum ada, CREATE dan WRITE sampai ke kartu |
-| `2` | boot sesudahnya: berkas ada dan vektornya Kaf — **ini yang menutup tahap 1**, sesudah daya dicabut |
-| `3` | berkas ada, isinya bukan yang ditulis |
-| `1 0 0` | kartu tak pernah di-init: RAM menerima, kartu menolak — terukur lewat sabotase yang menghapus `hos_fs_mount` |
-
-Bitstream dimuat ke SRAM, bukan flash SPI papan, sama seperti M4.2: sesudah
-daya dicabut papan menyala sebagai SoC LiteX pabrikannya, dan itu bukti
-independen bahwa daya memang putus, lalu bitstream dimuat lagi.
-
-**Dua bitstream menunggu papan yang sama, dan urutannya ada alasannya.**
-Keduanya dibangun 18 September 2026 dari sumber pada commit ini:
-
-| berkas di `rtl/fpga/gowin/` | citra | menutup |
-|---|---|---|
-| `hcpu_gowin_top.fs` | `test_bsm` bawaan | slot hasil pemisahan `e4c251e` belum pernah dijalankan di papan — jawaban yang diharapkan ada di [PAPAN.md](PAPAN.md), pada blockquote slot 1 |
-| `hcpu_gowin_top_persist.fs` | `shell_persist.hex` | tahap 1: `1 1 1`, mati daya, `2` |
-
-Slot dengan `test_bsm` dijalankan **lebih dulu**: ia sembilan kata dan
-jawabannya sudah diketahui, jadi kalau papan diam di situ yang salah bukan
-HFS. `.fs` di direktori ini **basi begitu RTL berubah** — persis bentuk yang
-menyembunyikan slot CPU yang tak bisa dibangun selama empat hari — jadi periksa
-`git log --oneline -1 -- rtl/` sebelum mem-flash, dan bangun ulang kalau ada
-yang bergerak.
+Yang **belum** dibuka dan tetap tidak boleh dimulai atas inisiatif sendiri:
+metadata, direktori, dan izin.
 
 | butuh | keadaan |
 |---|---|
 | medium persisten | ✅ **terbukti di papan**, 15 September 2026 |
-| HFS lewat kernel | ✅ **di RAM** — syscall 6/7/8 dari mode pengguna (`a5e4f3f`), tersimulasi, belum di papan |
-| HFS memakai medium itu | **tersimulasi** — CREATE/WRITE commit ke sektor 1–3, boot memuat dari kartu, berkas melewati reboot dengan RAM dinolkan. **Belum di papan**: mati daya fisik belum dijalankan |
+| HFS lewat kernel | ✅ **terbukti di papan**, 18 September 2026 — proses mode pengguna memanggil syscall 6/7/8 dan kernel melayaninya |
+| HFS memakai medium itu | ✅ **terbukti di papan**, 18 September 2026 — melewati mati daya sungguhan |
 
 #### H0 diselamatkan di dalam syscall, tidak saat pergantian proses
 

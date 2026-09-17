@@ -54,7 +54,7 @@ Label: `CC`.
 | Hisab | penyapuan 28 huruf, 124 asersi | `rtl/hcpu_hisab.v` |
 | Shell | banner `HIJAIYYAH`, prompt `> `, gema karakter: `A`→`A`, `p`→`2 0 1` di papan | `rtl/programs/shell.hasm`, `make -C rtl/tb sim_shell` |
 | Tabel syscall | delapan panggilan — `write` `read` `yield` `exit` `puts` dan HFS 6/7/8 — di **0xECE–0xED5**, tiap lengan membaca kata izinnya sendiri; pindah dari 0xF08+n karena panggilan ke-8 menabrak `PCB[0]` di 0xF10 | `rtl/programs/shell.hasm` |
-| **Syscall HFS** | `HFS_CREATE` 6, `HFS_READ` 7, `HFS_WRITE` 8 dari mode pengguna — create → write → read → verify; H0 pemanggil disimpan ke slot per-proses di dalam syscall. CREATE dan WRITE di-commit ke kartu (sektor 1 tabel `HFS1` v1, sektor 2–3 data), dan HFS dimuat dari kartu saat boot — **tersimulasi**, berkas melewati reboot dengan RAM dinolkan; **belum di papan** | `rtl/tb/tb_hcpu_hfs_syscall.v`, `rtl/tb/tb_hcpu_hfs_persist.v`, `tests/test_integrity/test_hfs_abi.py` |
+| **Syscall HFS** | `HFS_CREATE` 6, `HFS_READ` 7, `HFS_WRITE` 8 dari mode pengguna — create → write → read → verify; H0 pemanggil disimpan ke slot per-proses di dalam syscall. CREATE dan WRITE di-commit ke kartu (sektor 1 tabel `HFS1` v1, sektor 2–3 data), dan HFS dimuat dari kartu saat boot — terbukti **di papan** 18 September 2026: `1 1 1`, kabel dicabut, `2` | `rtl/tb/tb_hcpu_hfs_syscall.v`, `rtl/tb/tb_hcpu_hfs_persist.v`, `tests/test_integrity/test_hfs_abi.py` |
 | HAL UART | `hal_uart_rx_ready`, `hal_uart_rx_get`, `hal_uart_tx_busy`, `hal_timer_ack` | `rtl/programs/hal.hasm` |
 | Interlock | load-use, store-load, **termasuk POP** | `rtl/hcpu_decode.v` |
 | Stack perangkat keras | 256 entri, LIFO, PUSH tanpa register basis | `rtl/hcpu_memory.v` |
@@ -172,8 +172,11 @@ berkas yang **ada tapi kosong** dari berkas yang tak pernah dibuat — `size`
 tetap 0 sampai ada yang dikomit — dan `create → write → read → verify` berjalan
 di papan sebagai `1 0 1 1 1 1 0`. Verifikasinya `CEQ` terhadap salinan yang
 diambil sebelum tulis, delapan belas komponen termasuk H*, dengan H0 sengaja
-dikotori di antaranya. Yang belum: **penyimpanan persisten** — HFS masih RAM
-data dari `0xE00` dan hilang saat reset ([OFF.md](OFF.md)).
+dikotori di antaranya. Penyimpanan persisten **sudah**: sejak 18 September 2026 CREATE dan WRITE
+menulis tembus ke kartu SD, boot memuat HFS dari kartu, dan sebuah berkas
+dibaca kembali identik sesudah kabel dicabut — angkanya di
+[PAPAN.md](PAPAN.md). RAM data dari `0xE00` tetap tempat kerjanya; yang berubah
+adalah ia bukan lagi satu-satunya salinan.
 
 **HAR** sebagai layanan: `hos_har_get(index)` memberi titik masuk bernama
 dan stabil, bukan mengharuskan pemanggil tahu pengindeksan ROM sendiri —
@@ -297,9 +300,9 @@ Papan sudah di-flash dan dibaca: UART membalas **23 byte** yang cocok
 byte-per-byte dengan simulasi, `e3_sweep28` mengembalikan **28 nilai Θ̂**
 identik dengan `MASTER_TABLE`, dan satu bitstream membawa video, loader dan
 HCPU sekaligus. Semua itu **sebelum** `hcpu_gowin_top.v` dipecah jadi core dan
-top setipis pin; slot hasil pemisahan itu terbangun ulang dan belum dijalankan
-di papan — caveatnya di [PAPAN.md](PAPAN.md), penghalangnya di
-[OFF.md](OFF.md).
+top setipis pin; slot hasil pemisahan itu dibangun ulang dan dijalankan di
+papan 18 September 2026 — 23 byte, `112`, `CYCLES=00001B89`
+([PAPAN.md](PAPAN.md)).
 
 Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 

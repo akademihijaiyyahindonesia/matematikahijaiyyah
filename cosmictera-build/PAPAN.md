@@ -605,6 +605,61 @@ diikat rendah, dan `hcpu_compositor.v` mengubah keenam field hidup jadi
 
 ---
 
+## Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026
+
+**Empat lari, satu papan, satu kartu.** Slot CPU adalah `hcpu_gowin_top` hasil
+pemisahan `e4c251e`, dibangun ulang dari sumber hari ini; citra yang dipanggang
+untuk tiga lari terakhir adalah **berkas yang sama** yang dijalankan
+`rtl/tb/tb_hcpu_hfs_persist.v`, `rtl/tb/shell_persist.hex`, disalin bukan
+dirakit ulang.
+
+| # | citra | daya | keluaran papan |
+|---:|---|---|---|
+| 1 | `test_bsm` | — | **23 byte** — `112`, lalu `CYCLES=00001B89` |
+| 2 | `shell_persist` | — | **18 byte** — `HIJAIYYAH`, `> `, lalu **`1 1 1`** |
+| 3 | `shell_persist` | rekonfigurasi FPGA penuh | **14 byte** — `HIJAIYYAH`, **`2`**, `> ` |
+| 4 | `shell_persist` | **kabel dicabut, lalu dicolok** | **14 byte** — `HIJAIYYAH`, **`2`**, `> ` |
+
+**Apa yang dibuktikan tiap lari.**
+
+- **Lari 1 menutup lubang yang bukan HFS.** Slot hasil pemisahan belum pernah
+  dijalankan di papan; sembilan kata dengan jawaban yang sudah diketahui
+  dijalankan lebih dulu, supaya papan yang diam tidak salah menuduh HFS.
+  `CYCLES=00001B89` = 7.049, angka yang sama dengan yang tercatat sejak hari
+  papan tiba.
+- **Lari 2 adalah CREATE dan WRITE yang sampai ke kartu.** `1 1 1` berarti
+  berkas 0 belum ada, lalu HFS_CREATE dan HFS_WRITE keduanya mengembalikan 1 —
+  dan kontraknya menuntut RAM **dan** kartu sama-sama berhasil, jadi satu nol di
+  antara ketiganya sudah cukup untuk menyatakan kartu menolak. Ketiganya lewat
+  `SYSCALL` dari mode pengguna: **HFS lewat kernel juga baru terbukti di papan
+  di sini**, bukan hanya di simulasi.
+- **Lari 3 belum cukup, dan sengaja dijalankan.** Rekonfigurasi FPGA penuh
+  membersihkan seluruh RAM data — `hcpu_dataram.v` memuat isinya dari bitstream
+  — jadi `2` hanya bisa datang dari kartu. Tetapi kartu punya cache sendiri dan
+  tidak wajib menulis ke NAND sampai catunya putus, jadi lari ini memisahkan
+  "dari kartu" dari "dari RAM", bukan "tersimpan" dari "masih di cache".
+  Bentuk yang sama dengan M4.2 checkpoint 4.
+- **Lari 4 yang menutup tahap 1.** Kabel USB dicabut pemilik, ditunggu, lalu
+  dicolok kembali; rekamannya berisi banner **LiteX pabrikan** — Memtest, SDRAM,
+  prompt `litex>` — sebelum bitstream kita dimuat. Bitstream kita ada di SRAM
+  dan SRAM hanya hilang kalau 3,3 V benar-benar putus, termasuk ke slot kartu,
+  jadi banner itu bukti independen bahwa daya memang dicabut. Sesudah itu papan
+  menjawab **`2`**: berkas 0 ada, dan `CEQ` atas delapan belas komponennya
+  melawan Kaf mengembalikan sama. **Kaf satu-satunya huruf yang H\*-nya 1**,
+  jadi komponen yang paling mudah tertinggal nol pun ikut diperiksa.
+
+**Apa yang TIDAK dibuktikan.** Tidak ada berkas kedua, tidak ada berkas yang
+lebih besar dari satu vektor, tidak ada metadata, direktori, atau izin — dan
+ketiganya memang belum dibuka pemilik. Tabel berkas di kartu menampung delapan
+entri; yang dijalankan di papan satu.
+
+**Urutan `1 1 1` dan `2` di kabel berbeda tempat**, dan itu penjadwalan, bukan
+cacat: di lari 2 banner dan prompt shell keluar lebih dulu (`HIJAIYYAH`, `> `,
+lalu angka), di lari 3 dan 4 angka pid 0 menyelip di antara banner dan prompt.
+Kedua urutan terbaca sama oleh bench, yang membaca digit saja.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -632,28 +687,21 @@ Dijalankan penuh di papan, berurutan, tanpa mencabut daya:
 Tiga desain berbeda, fabric yang sama, dalam satu sesi. `112` di slot 1 dan
 slot 3 adalah angka yang sama yang dihitung testbench.
 
-> **Sumbernya sudah bergerak sejak lari itu, dan slot 1 belum diuji ulang di
-> papan.** Pada 15 September 2026 `hcpu_gowin_top.v` dipecah jadi
-> `hcpu_gowin_core` — CPU beserta sideband telemetri — dan sebuah
-> `hcpu_gowin_top` setipis pin di atasnya, karena sideband itu di tingkat atas
-> membuat slot CPU **tidak bisa dibangun sama sekali**
-> (`ERROR: Unconstrained IO:tele_pc_OBUF_O_9`). Slot itu kini membangun lagi
-> dan dicap dengan angka hasil route yang sungguhan — LUT4 15.744, Fmax
-> 86,18 MHz — tetapi bitstream hasil pemisahan itu **belum pernah dijalankan
-> di papan**: papannya tidak terhubung saat pekerjaan itu selesai
-> (`unable to open ftdi device: -3`). Jadi baris slot 1 di atas adalah rekaman
-> desain **sebelum** pemisahan. Buktinya berhenti di tingkat 3. Satu perintah
-> menaikkannya kembali ketika papan tersambung:
-> `make -C rtl/fpga/gowin flash`, lalu baca UART — jawabannya harus tetap
-> 23 byte, `112`, lalu `CYCLES=…`.
+> **Slot 1 dipecah sesudah lari ini, lalu dijalankan lagi.** Pada 15 September
+> 2026 `hcpu_gowin_top.v` dipecah jadi `hcpu_gowin_core` — CPU beserta sideband
+> telemetri — dan sebuah `hcpu_gowin_top` setipis pin di atasnya, karena
+> sideband itu di tingkat atas membuat slot CPU **tidak bisa dibangun sama
+> sekali** (`ERROR: Unconstrained IO:tele_pc_OBUF_O_9`). Dibangun ulang dari
+> sumber pada 18 September 2026 ia keluar **byte-identik** dengan `.fs` yang
+> sudah ada di direktori sejak 15 September (sha256 `29c1aed5…`) — jadi berkas
+> itu memang desain hasil pemisahan, dan tanggalnya yang lebih tua dari commit
+> hanyalah jarak antara pekerjaan dan commit-nya. Angka route-nya terulang
+> persis: LUT4 15.744, DFF 5.065, BSRAM 18, IOB 11, Fmax 86,18 MHz.
 >
-> **Bitstream-nya dibangun ulang dari sumber pada 18 September 2026 dan keluar
-> byte-identik** dengan `.fs` yang sudah ada di direktori sejak 15 September
-> (sha256 `29c1aed5…`): berkas itu memang desain hasil pemisahan, dan
-> tanggalnya yang lebih tua dari commit hanyalah jarak antara pekerjaan dan
-> commit-nya. Angka route-nya terulang persis — LUT4 15.744, DFF 5.065,
-> BSRAM 18, IOB 11, Fmax 86,18 MHz. Yang menunggu papan tinggal
-> menjalankannya.
+> **Dan 18 September 2026 ia dijalankan di papan**: 23 byte, `112`, lalu
+> `CYCLES=00001B89`. Baris slot 1 di atas karena itu berlaku untuk desain
+> sesudah pemisahan juga — buktinya kembali ke tingkat 4. Rinciannya di bagian
+> [Tahap 1](#tahap-1--berkas-bertahan-melewati-mati-daya-18-september-2026).
 
 **Pencacah siklus tidak sama antar-lari** (`02785D53`, `035BF689`) dan itu
 benar: ia berjalan bebas sejak konfigurasi, bukan direset per program. Yang
