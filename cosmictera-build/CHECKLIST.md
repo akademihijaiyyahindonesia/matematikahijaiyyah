@@ -47,6 +47,9 @@ mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
+Hari ini kebenarannya **4.982 lulus dari 4.983, satu gagal**: sidik jari
+`hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
+yang tercatat di [OFF.md](OFF.md), bukan regresi.
 
 **Angka "0 dilewati" itu sendiri sebuah koreksi.** Empat tes dulu melewati diri
 sendiri dengan pesan `not present` — dokumen paten di
@@ -80,7 +83,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **384 asersi, 35 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **386 asersi, 35 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -112,8 +115,8 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **Snapshot telemetri lintas domain clock** — handshake req/ack, jadi yang terbaca satu potret utuh dan bukan campuran dua siklus | `make -C rtl/tb sim_telemetry` |
 | ✅ | **Tombol mode memilih halaman** — debounce, tekan panjang, dan pembungkusan halaman | `make -C rtl/tb sim_page_key` |
 | ✅ | **Register codex selamat melewati trap** — handler menjalankan satu `HLOAD` dan H0 pemanggil tetap utuh karena handler menyimpannya lewat perangkat lunak (`hos_hctx.hasm`, 72 instruksi, 0 LUT4); merah kalau kedua `CALL` simpan/pulihkan dicabut, dan memakai Kaf karena hanya huruf itu yang H\*-nya 1 | `make -C rtl/tb sim_trap_hreg` |
-| ✅ | **Syscall HFS dari mode pengguna: create → write → read → verify, di RAM**, lewat kernel — sebuah proses memanggil HFS_CREATE, HFS_WRITE (Kaf), lalu HFS_READ dan mendapat kembali vektor yang ditulisnya; lalu di-commit ke kartu — MAGIC `HFS1`, VERSION 1, entri berkas, dan data sektor 2 dibaca langsung dari memori model kartu dan harus sama dengan blok RAM; merah bila `sc_ret` mempercayai R7 melewati `hos_alloc` (CREATE mengembalikan 6) dan bila heap tidak diinisialisasi (ketiganya 0) |
-| ✅ | **HFS melewati reboot lewat kartu, tersimulasi** — boot 1 membuat berkas dan menulis Kaf; CPU di-reset dan **seluruh RAM data dinolkan**, kartu dibiarkan; boot 2 memuat HFS dari kartu dan menemukan Kaf. Merah bila tabel tak dimuat dari kartu (boot 2 fase 1) atau data tak di-commit (fase 3); **hijau palsu** bila RAM tidak dinolkan, terukur — `hcpu_dataram.v` tidak mengosongkan diri saat reset. Mati daya fisik belum, lihat [OFF.md](OFF.md) | `make -C rtl/tb sim_hfs_persist` | `make -C rtl/tb sim_hfs_syscall` |
+| ✅ | **Syscall HFS dari mode pengguna: create → write → read → verify, di RAM**, lewat kernel — sebuah proses memanggil HFS_CREATE, HFS_WRITE (Kaf), lalu HFS_READ dan mendapat kembali vektor yang ditulisnya; lalu di-commit ke kartu — MAGIC `HFS1`, VERSION 1, entri berkas, dan data sektor 2 dibaca langsung dari memori model kartu dan harus sama dengan blok RAM; merah bila `sc_ret` mempercayai R7 melewati `hos_alloc` (CREATE mengembalikan 6) dan bila heap tidak diinisialisasi (ketiganya 0) | `make -C rtl/tb sim_hfs_syscall` |
+| ✅ | **HFS melewati reboot lewat kartu, tersimulasi** — boot 1 membuat berkas dan menulis Kaf; CPU di-reset dan **seluruh RAM data dinolkan**, kartu dibiarkan; boot 2 memuat HFS dari kartu dan menemukan Kaf. Kabel serial membaca `1 1 1` di boot 1 dan `2` di boot 2 — angka yang sama yang dibaca di papan. Merah bila tabel tak dimuat dari kartu (boot 2 fase 1) atau data tak di-commit (fase 3); merah bila hasil CREATE tak dilaporkan (kabel `11`) dan bila boot tanpa `hos_fs_mount` (kabel `1 0 0` dua kali); **hijau palsu** bila RAM tidak dinolkan, terukur — `hcpu_dataram.v` tidak mengosongkan diri saat reset. Mati daya fisik belum, lihat [OFF.md](OFF.md) | `make -C rtl/tb sim_hfs_persist` |
 
 Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
@@ -252,6 +255,6 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 4.983 lulus, 0 dilewati
-make -C rtl/tb all               # 384 asersi, 35 bench, 0 gagal
+make -C rtl/tb all               # 386 asersi, 35 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

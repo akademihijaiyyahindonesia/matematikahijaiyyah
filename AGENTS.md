@@ -525,12 +525,30 @@ Dua penetapan lain dari keputusan yang sama:
   dimuat sebagai HFS kosong dan tidak ditulisi. VERSION adalah tambahan
   pemilik. Rinciannya tinggal di kepala `rtl/programs/hos_hfs_disk.hasm`,
   tidak disalin ke sini (R1).
-- **Peran HCPU di KV260 belum diputuskan.** Jalur A: HCPU tetap CPU utama, ARM
-  untuk boot dan layanan. Jalur B: HCPU jadi akselerator di bawah Linux ARM, dan
-  banyak bagian HOS turun jadi pustaka. Pemilik menilai investasi pada HC, HASM,
-  HFS, HOS, dan HVM *"lebih konsisten dengan Jalur A"* — itu penilaian, belum
-  keputusan, dan tidak ada pekerjaan KV260 yang boleh berangkat dari salah satu
-  jalur sebelum pemilik memilih.
+- **Peran HCPU di KV260 belum diputuskan.** Tiga jalur, dinamai pemilik
+  18 September 2026: **Jalur A** — HCPU CPU utama, ARM hanya boot dan layanan;
+  **Jalur B** — ARM CPU utama, HCPU koprosesor di bawah Linux, dan banyak bagian
+  HOS turun jadi pustaka; **Jalur C** — HCPU sebagai emulator di atas Linux.
+  Dua penilaian pemilik tercatat dan saling tarik: investasi pada HC, HASM, HFS,
+  HOS, dan HVM *"lebih konsisten dengan Jalur A"*, dan Jalur B *"jauh lebih
+  menarik"*. Keduanya penilaian, bukan keputusan — belum ada pengukuran yang
+  cukup untuk memilih, dan tidak ada pekerjaan KV260 yang boleh berangkat dari
+  salah satu jalur sebelum pemilik memilih.
+
+### Keputusan pemilik, 18 September 2026 — tahap 1 ditutup di papan dulu
+
+- **Tahap 2 tidak dibuka sebelum tahap 1 tutup di papan fisik.** Yang belum
+  terbukti bukan algoritma HFS atau driver kartu, melainkan integrasinya di
+  silikon, dan pola repo ini berulang: simulator hijau, papan menemukan
+  masalah. Syarat tutupnya tetap CREATE → WRITE → cabut daya → nyalakan →
+  READ identik. Persiapan loader boleh berjalan sambil menunggu papan, **tanpa
+  mengklaim tahap 2 dimulai**; format citra dan header program tetap keputusan
+  pemilik.
+- **Batas semantic memory.** Yang terbukti adalah huruf → vektor → operasi
+  matematis; huruf → makna → pengetahuan tidak terbukti dan melewati larangan
+  `CONTRIBUTING.md` (huruf bukan bunyi atau makna). Jadi semantic memory di
+  repo ini adalah memori atas **operasi vektor codex**, bukan arti huruf.
+  Syarat terima tahap 5 tetap belum ditetapkan.
 
 ### Berikutnya — keputusan pemilik, 11 September 2026
 

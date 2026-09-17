@@ -85,8 +85,18 @@ all: sim
 program.stamp: FORCE
 	@echo "$(PROGRAM)" | cmp -s - $@ || echo "$(PROGRAM)" > $@
 
+#
+# A PROGRAM that is already an image (.hex) is copied, not assembled. The image
+# a bench ran -- rtl/tb/shell_persist.hex, a shell with a probe injected by
+# rtl/scripts/inject_probe.py -- has no .hasm that assembles to it, and asm2hex
+# fed a hex answers `unknown mnemonic '04500000'`. Copying keeps the board's
+# image byte-identical to the one the bench verified.
 program.hex: $(PROGRAM) program.stamp
+ifeq ($(suffix $(PROGRAM)),.hex)
+	cp $< $@
+else
 	$(PYTHON) $(RTL_DIR)/scripts/asm2hex.py $< > $@
+endif
 
 .PHONY: FORCE
 FORCE:

@@ -194,7 +194,39 @@ tinggal di satu tempat, kepala `rtl/programs/hos_hfs_disk.hasm`.
 
 Penutupnya tetap fisik: berkas bertahan melewati **mati daya** di papan dan
 dibaca kembali identik. Model kartu tidak bisa kehilangan daya, jadi simulasi
-membuktikan logikanya dan tidak lebih. Tahap ini menunggu papan tersambung.
+membuktikan logikanya dan tidak lebih. Tahap ini menunggu papan tersambung —
+`openFPGALoader` menjawab `unable to open ftdi device: -3`, 18 September 2026.
+
+**Yang sudah siap, sehingga yang tersisa hanya papan.** Probe yang dijalankan
+bench melaporkan hasilnya lewat syscall `write`, jadi ia terbaca dari kabel
+serial dan bukan hanya dari RAM bench:
+
+```
+make -C rtl/tb shell_persist.hex
+make -C rtl/fpga/gowin PROGRAM=../../tb/shell_persist.hex bitstream   # 15.744 LUT4, 86,18 MHz
+# pembaca serial dibuka DULU, baru bitstream dimuat: keluaran datang segera
+make -C rtl/fpga/gowin PROGRAM=../../tb/shell_persist.hex flash
+make -C rtl/fpga/gowin program.hex      # kembalikan: program.hex terlacak git
+```
+
+Baris terakhir bukan kerapian. `rtl/fpga/gowin/program.hex` adalah berkas
+terlacak yang dijaga menyamai `PROGRAM` bawaan, dan memanggang citra lain
+menimpanya: terukur, empat tes gagal dan enam error sampai ia dikembalikan.
+
+Yang dipanggang adalah **berkas yang sama** yang dijalankan bench,
+`rtl/tb/shell_persist.hex`, disalin bukan dirakit ulang — jadi papan dan bench
+tidak bisa menyimpang diam-diam. Yang dibaca dari kabel, terukur di bench:
+
+| kabel | artinya |
+|---|---|
+| `1 1 1` | boot pertama: berkas belum ada, CREATE dan WRITE sampai ke kartu |
+| `2` | boot sesudahnya: berkas ada dan vektornya Kaf — **ini yang menutup tahap 1**, sesudah daya dicabut |
+| `3` | berkas ada, isinya bukan yang ditulis |
+| `1 0 0` | kartu tak pernah di-init: RAM menerima, kartu menolak — terukur lewat sabotase yang menghapus `hos_fs_mount` |
+
+Bitstream dimuat ke SRAM, bukan flash SPI papan, sama seperti M4.2: sesudah
+daya dicabut papan menyala sebagai SoC LiteX pabrikannya, dan itu bukti
+independen bahwa daya memang putus, lalu bitstream dimuat lagi.
 
 | butuh | keadaan |
 |---|---|

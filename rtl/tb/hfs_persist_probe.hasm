@@ -1,7 +1,10 @@
 ; hfs_persist_probe.hasm — the same process, booted twice, with only the card between.
 ;
 ; Injected into a copy of the shell image as pid 0 by rtl/scripts/inject_probe.py,
-; exactly as rtl/tb/hfs_syscall_probe.hasm is, and it ships nowhere.
+; exactly as rtl/tb/hfs_syscall_probe.hasm is. The bench boots that image, and
+; the same image is what stage 1's physical test bakes into the board: the
+; owner's closing condition is CREATE, WRITE, power off, power on, READ the
+; same -- and only a board can lose power.
 ;
 ; It asks one question first: does file 0 exist?
 ;
@@ -21,6 +24,12 @@
 ;   0x102  HFS_CREATE result  (phase 1 only)
 ;   0x103  HFS_WRITE  result  (phase 1 only)
 ;   0x100  0x5A, written LAST
+;
+; And says the same on the wire, through syscall 1 `write`, because a board has
+; no probe on its data RAM:
+;   first boot    1  create  write      -- "1 1 1" when both reached the card
+;   later boot    2                     -- or 3
+; The shell's banner shares the wire and has no digit in it.
 
 probe:  MOVI  R5, 0
         MOVI  R1, 7             ; HFS_READ file 0: does it exist?
@@ -48,6 +57,16 @@ p_found:
 p_eq:   MOVI  R2, 2             ; found, and equal
 p_phase:
         STORE R2, R5, 0x101
-        MOVI  R2, 0x5A
+        MOVI  R1, 1             ; write: the phase. R2 comes back untouched --
+        SYSCALL                 ; the kernel returns a result in R1 only
+        CMPI  R2, 1
+        JNE   p_done
+        LOAD  R2, R5, 0x102     ; a first boot also says what CREATE
+        MOVI  R1, 1
+        SYSCALL
+        LOAD  R2, R5, 0x103     ; and WRITE answered
+        MOVI  R1, 1
+        SYSCALL
+p_done: MOVI  R2, 0x5A
         STORE R2, R5, 0x100     ; done, written last
 p_spin: JMP   p_spin

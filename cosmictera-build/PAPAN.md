@@ -774,8 +774,8 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 4.983 lulus, 0 dilewati, 0 gagal |
-| `make -C rtl/tb all` | 35 testbench, 384 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 4.983 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `make -C rtl/tb all` | 35 testbench, 386 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video

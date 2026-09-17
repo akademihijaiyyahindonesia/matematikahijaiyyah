@@ -380,7 +380,7 @@ kalau ada yang bisa diukur:
 | 2 | Loader program | Program tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung** |
 | 3 | Overlay runtime | Dua program yang jumlah katanya melebihi 4.096 berjalan berurutan |
 | 4 | HVM di papan | Bytecode yang sama memberi jawaban yang sama di HVM dan di perangkat keras |
-| 5 | Semantic memory | Belum ditetapkan pemilik — tahap ini tidak dimulai sebelum syarat terimanya ada |
+| 5 | Semantic memory | Belum ditetapkan pemilik — tahap ini tidak dimulai sebelum syarat terimanya ada. Batasnya sudah (18 September 2026): memori atas operasi vektor codex, bukan arti huruf |
 | 6 | TCP/IP lewat SLIP | Sebuah paket dijawab dari papan |
 
 Tahap 2 syaratnya sengaja menyebut "tanpa host tersambung": `loader.hasm` hari
