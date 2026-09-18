@@ -53,7 +53,7 @@ Label: `CC`.
 | Blok codex | CMOV, CZERO, CEQ, CRHO, CU, CMOD4 — `U` dan `ρ` dibaca dari guard, bukan dihitung ulang; `CDOT` tinggal di perangkat lunak, lihat [OFF.md](OFF.md) | `rtl/tb/tb_hcpu_top.v` Program 11 |
 | Hisab | penyapuan 28 huruf, 124 asersi | `rtl/hcpu_hisab.v` |
 | Shell | banner `HIJAIYYAH`, prompt `> `, gema karakter: `A`→`A`, `p`→`2 0 1` di papan | `rtl/programs/shell.hasm`, `make -C rtl/tb sim_shell` |
-| Tabel syscall | delapan panggilan — `write` `read` `yield` `exit` `puts` dan HFS 6/7/8 — di **0xECE–0xED5**, tiap lengan membaca kata izinnya sendiri; pindah dari 0xF08+n karena panggilan ke-8 menabrak `PCB[0]` di 0xF10 | `rtl/programs/shell.hasm` |
+| Tabel syscall | sembilan panggilan — `write` `read` `yield` `exit` `puts`, HFS 6/7/8, dan `LOAD_PROGRAM` 9 — di **0xECE–0xED5**, tiap lengan membaca kata izinnya sendiri; pindah dari 0xF08+n karena panggilan ke-8 menabrak `PCB[0]` di 0xF10 | `rtl/programs/shell.hasm` |
 | **Syscall HFS** | `HFS_CREATE` 6, `HFS_READ` 7, `HFS_WRITE` 8 dari mode pengguna — create → write → read → verify; H0 pemanggil disimpan ke slot per-proses di dalam syscall. CREATE dan WRITE di-commit ke kartu (sektor 1 tabel `HFS1` v1, sektor 2–3 data), dan HFS dimuat dari kartu saat boot — terbukti **di papan** 18 September 2026: `1 1 1`, kabel dicabut, `2` | `rtl/tb/tb_hcpu_hfs_syscall.v`, `rtl/tb/tb_hcpu_hfs_persist.v`, `tests/test_integrity/test_hfs_abi.py` |
 | HAL UART | `hal_uart_rx_ready`, `hal_uart_rx_get`, `hal_uart_tx_busy`, `hal_timer_ack` | `rtl/programs/hal.hasm` |
 | Interlock | load-use, store-load, **termasuk POP** | `rtl/hcpu_decode.v` |
@@ -311,7 +311,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 5.022 lulus, 0 dilewati
-make -C rtl/tb all            # 395 asersi, 36 bench, 0 gagal
+python3 -m pytest -q          # 5.025 lulus, 0 dilewati
+make -C rtl/tb all            # 402 asersi, 37 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

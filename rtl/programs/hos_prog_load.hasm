@@ -1,0 +1,272 @@
+; hos_prog_load.hasm -- SYSCALL 9's kernel half: a program comes off the card.
+;
+;   hos_prog_magic  ->  R1 = 0x48504731, "HPG1"
+;   hos_prog_load       R1 = PROGRAM_ID  ->  R1 = 1 loaded, 0 refused
+;
+; Follows hos.hasm's convention -- R1 result, R3 and R6-R12 scratch -- and also
+; clobbers R2 and R4 through hal_sd.hasm. R0, R5 and R13-R15 are preserved,
+; pushed and popped here because the walk needs them.
+;
+; ── the layout, owner's decision, 18 September 2026 ─────────────
+;   sector 16     program table, entries of four words:
+;                 PROGRAM_ID, FLAGS, START_SECTOR, SECTOR_COUNT
+;                 FLAGS bit 0 = VALID; every other bit is deliberately without
+;                 meaning until the basic loader is proven
+;   sector 17+    containers: seven header words, the relocation table, then
+;                 the program STORED AT BASE 0
+;
+; ── why it reads the card twice ─────────────────────────────────
+; The checksum must pass BEFORE one word reaches instruction memory, and the
+; CPU cannot read instruction memory back -- 0xFF3 and 0xFF7 are write ports
+; and there is no read port at all -- so a half-written image could not be
+; undone, or even inspected. Pass one sums; pass two writes. Pass two re-reads
+; the header instead of carrying it in registers: registers are what this walk
+; is short of, and a re-read costs one sector.
+;
+; ── why a relocation buffer, and why 128 ────────────────────────
+; A word is relocated as it is written, because once written it cannot be read
+; back and patched. So the table has to sit in data memory while the program
+; streams past: 0x300-0x37F, the owner's slot, exactly one sector. A container
+; whose RELOC_CNT is larger is refused before anything is written -- the same
+; cap rtl/scripts/build_container.py refuses to exceed, so the refusal normally
+; happens on the host and this one is the backstop.
+;
+; ── what it does NOT do ─────────────────────────────────────────
+; It does not run the program. ENTRY is checked to lie inside the loaded image
+; and then left alone: making the caller continue there is stage 2B, which the
+; owner has not opened.
+
+hos_prog_magic:
+        MOVI  R1, 0x485
+        SHLI  R1, R1, 12            ; 0x00485000
+        ORI   R1, R1, 0x047         ; 0x00485047
+        SHLI  R1, R1, 8             ; 0x48504700
+        ORI   R1, R1, 0x31          ; 0x48504731  "HPG1"
+        RET
+
+; ── the next sector of this container, into the card buffer ─────
+; R11 is the cursor and advances first, so a caller starts it one BEFORE the
+; sector it wants. Refuses to walk past the SECTOR_COUNT the table promised:
+; a container that claims more words than its sectors hold is malformed, and
+; reading on would load whatever the card held next.
+;   -> R1 = 1 ready, 0 refused.  R10 = 0, words taken from this sector.
+pl_next_sec:
+        ADDI  R11, R11, 1
+        ADD   R2, R13, R14
+        CMP   R11, R2
+        JEQ   pl_ns_no
+        MOV   R1, R11
+        CALL  hal_sd_sector
+        MOVI  R1, 2                 ; read
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   pl_ns_no
+        CALL  hal_sd_rewind
+        MOVI  R10, 0
+        MOVI  R1, 1
+        RET
+pl_ns_no:
+        MOVI  R1, 0
+        RET
+
+hos_prog_load:
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+        MOV   R6, R1                ; the PROGRAM_ID asked for
+
+        MOVI  R1, 1                 ; SD_CMD 1 = init
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   pl_no
+
+; ── the program table ───────────────────────────────────────────
+        MOVI  R1, 16
+        CALL  hal_sd_sector
+        MOVI  R1, 2
+        CALL  hal_sd_run
+        ANDI  R1, R1, 2
+        CMPI  R1, 0
+        JEQ   pl_no
+        CALL  hal_sd_rewind
+        MOVI  R9, 0                 ; entries examined
+pl_ent: CALL  hal_sd_get
+        MOV   R3, R1                ; PROGRAM_ID
+        CALL  hal_sd_get
+        MOV   R4, R1                ; FLAGS
+        CALL  hal_sd_get
+        MOV   R13, R1               ; START_SECTOR
+        CALL  hal_sd_get
+        MOV   R14, R1               ; SECTOR_COUNT
+        ANDI  R4, R4, 1             ; bit 0 VALID; an all-zero sector is empty
+        CMPI  R4, 0
+        JEQ   pl_nxt
+        CMP   R3, R6
+        JEQ   pl_hdr
+pl_nxt: ADDI  R9, R9, 1
+        CMPI  R9, 32                ; 128 words / four words an entry
+        JNE   pl_ent
+        JMP   pl_no                 ; no VALID entry carries that id
+
+; ── the header, and every refusal it can earn ───────────────────
+pl_hdr: CMPI  R14, 0
+        JEQ   pl_no                 ; an entry claiming no sectors
+        ADDI  R11, R13, -1          ; pl_next_sec advances first
+        CALL  pl_next_sec
+        CMPI  R1, 0
+        JEQ   pl_no
+        CALL  hal_sd_get
+        MOV   R15, R1               ; MAGIC, as the card holds it
+        CALL  hos_prog_magic
+        CMP   R15, R1
+        JNE   pl_no
+        CALL  hal_sd_get
+        CMPI  R1, 1                 ; VERSION this code can read
+        JNE   pl_no
+        CALL  hal_sd_get
+        MOV   R8, R1                ; WORDS
+        CALL  hal_sd_get
+        MOV   R6, R1                ; LOAD_ADDR
+        CALL  hal_sd_get
+        MOV   R9, R1                ; ENTRY
+        CALL  hal_sd_get
+        MOV   R7, R1                ; RELOC_CNT
+        CALL  hal_sd_get
+        MOV   R15, R1               ; CRC
+
+        CMPI  R8, 0
+        JEQ   pl_no                 ; a program of no words
+
+        MOVI  R1, 4095              ; the image's LAST word must still be inside
+        ADD   R2, R6, R8            ; the 4,096 words of instruction memory.
+        ADDI  R2, R2, -1            ; 4095, not 4096: an immediate is 12 bits,
+        CALL  hos_size_ge           ; which is the same limit the host tool holds
+        CMPI  R3, 0
+        JEQ   pl_no
+
+        MOV   R1, R9                ; ENTRY >= LOAD_ADDR
+        MOV   R2, R6
+        CALL  hos_size_ge
+        CMPI  R3, 0
+        JEQ   pl_no
+        ADD   R1, R6, R8
+        ADDI  R1, R1, -1            ; and ENTRY <= the image's last word
+        MOV   R2, R9
+        CALL  hos_size_ge
+        CMPI  R3, 0
+        JEQ   pl_no
+
+        MOVI  R1, 128               ; the buffer at 0x300-0x37F, and no more
+        MOV   R2, R7
+        CALL  hos_size_ge
+        CMPI  R3, 0
+        JEQ   pl_no
+
+; ── pass one: the sum, before anything is written ───────────────
+; R13 start, R14 sectors, R8 words left to sum, R15 the CRC to match.
+; R3 counts down what the sum skips, R4 accumulates, R11 is the cursor.
+        ADDI  R3, R7, 7             ; header and table are not in the sum
+        MOVI  R4, 0
+        ADDI  R11, R13, -1
+p1_sec: CALL  pl_next_sec
+        CMPI  R1, 0
+        JEQ   p1_end                ; the sectors ran out; the counts decide
+p1_w:   CALL  hal_sd_get            ; clobbers R1 and R12 only
+        CMPI  R3, 0
+        JEQ   p1_sum
+        ADDI  R3, R3, -1
+        JMP   p1_nx
+p1_sum: CMPI  R8, 0
+        JEQ   p1_nx                 ; past the program: zero padding
+        ADD   R4, R4, R1
+        ADDI  R8, R8, -1
+p1_nx:  ADDI  R10, R10, 1
+        CMPI  R10, 128
+        JNE   p1_w
+        JMP   p1_sec
+p1_end: CMPI  R8, 0
+        JNE   pl_no                 ; fewer words on the card than WORDS said
+        CMP   R4, R15
+        JNE   pl_no                 ; the image on the card is not the image
+
+; ── pass two: header again, table to 0x300, then the words ──────
+        ADDI  R11, R13, -1
+        CALL  pl_next_sec
+        CMPI  R1, 0
+        JEQ   pl_no
+        MOVI  R3, 0                 ; index within the header
+p2_hdr: CALL  hal_sd_get
+        CMPI  R3, 2
+        JNE   p2_h3
+        MOV   R8, R1                ; WORDS
+p2_h3:  CMPI  R3, 3
+        JNE   p2_h5
+        MOV   R6, R1                ; LOAD_ADDR
+p2_h5:  CMPI  R3, 5
+        JNE   p2_hn
+        MOV   R15, R1               ; RELOC_CNT
+p2_hn:  ADDI  R10, R10, 1
+        ADDI  R3, R3, 1
+        CMPI  R3, 7
+        JNE   p2_hdr
+
+        MOVI  R4, 0x300             ; where the table goes, and grows
+        MOV   R3, R15               ; entries still to copy
+p2_tab: CMPI  R3, 0
+        JEQ   p2_run
+        CMPI  R10, 128
+        JNE   p2_tg
+        CALL  pl_next_sec           ; the table crossed a sector boundary
+        CMPI  R1, 0
+        JEQ   pl_no
+p2_tg:  CALL  hal_sd_get
+        STORE R1, R4, 0
+        ADDI  R4, R4, 1
+        ADDI  R10, R10, 1
+        ADDI  R3, R3, -1
+        JMP   p2_tab
+
+; R4 is now one past the last entry: the cursor R7 stops there.
+p2_run: MOVI  R7, 0x300             ; the next relocation to apply
+        MOVI  R2, 0
+        STORE R6, R2, 0xFF3         ; IMEM_ADDR = LOAD_ADDR, advances itself
+        MOVI  R15, 0                ; index of the word being written
+p2_w:   CMPI  R8, 0
+        JEQ   p2_done
+        CMPI  R10, 128
+        JNE   p2_wg
+        CALL  pl_next_sec
+        CMPI  R1, 0
+        JEQ   pl_no
+p2_wg:  CALL  hal_sd_get
+        ADDI  R10, R10, 1
+        CMP   R7, R4
+        JEQ   p2_wr                 ; every relocation is already applied
+        LOAD  R2, R7, 0             ; the index this entry names
+        CMP   R2, R15
+        JNE   p2_wr
+        ADD   R1, R1, R6            ; an address: move it to where this lands
+        ADDI  R7, R7, 1
+p2_wr:  MOVI  R2, 0
+        STORE R1, R2, 0xFF7         ; IMEM_DATA, one store per word
+        ADDI  R15, R15, 1
+        ADDI  R8, R8, -1
+        JMP   p2_w
+
+p2_done:
+        MOVI  R1, 1
+        JMP   pl_out
+pl_no:  MOVI  R1, 0
+pl_out: POP   R15
+        POP   R14
+        POP   R13
+        RET
+
+        .include "hal_sd.hasm"
+        ; hos_size_ge lives in hos.hasm, and this file must bring it: every
+        ; program here assembles on its own. A second include of the same file
+        ; is skipped, so an image that already has hos.hasm is byte-identical
+        ; either way.
+        .include "hos.hasm"

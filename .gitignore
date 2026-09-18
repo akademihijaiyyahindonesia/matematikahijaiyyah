@@ -105,3 +105,6 @@ hom-gui/.vite/
 # Vendored upstream three.js. hom-gui installs `three` from npm instead
 # (see hom-gui/package.json), so this local copy is not part of the build.
 three.js-master/
+rtl/tb/shell_progload.hex
+rtl/tb/progload_container.hex
+rtl/tb/progload_want.hex

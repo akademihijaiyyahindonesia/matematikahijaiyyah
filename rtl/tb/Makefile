@@ -26,7 +26,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-        sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_prog_load sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
         sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -41,7 +41,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+     sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_prog_load sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
      sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -88,7 +88,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex shell_persist.hex sd_writer.hex container.hex container_payload.txt subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex shell_persist.hex sd_writer.hex container.hex container_payload.txt shell_progload.hex progload_container.hex progload_want.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -205,7 +205,8 @@ tb_hcpu_kernel.vvp: $(TB_DIR)/tb_hcpu_kernel.v $(RTL_DIR)/fpga/gowin/hcpu_gowin_
 # though asm2hex.py is only ever handed the one file.
 SHELL_DEPS = $(RTL_DIR)/programs/shell.hasm $(RTL_DIR)/programs/hal.hasm \
              $(RTL_DIR)/programs/hos.hasm $(RTL_DIR)/programs/hos_hctx.hasm \
-             $(RTL_DIR)/programs/hos_hfs_disk.hasm $(RTL_DIR)/programs/hal_sd.hasm
+             $(RTL_DIR)/programs/hos_hfs_disk.hasm $(RTL_DIR)/programs/hal_sd.hasm \
+             $(RTL_DIR)/programs/hos_prog_load.hasm
 
 shell.hex: $(SHELL_DEPS)
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
@@ -356,6 +357,27 @@ container_payload.txt: container.hex $(RTL_DIR)/scripts/send_program.py
 tb_hcpu_sd_writer.vvp: $(TB_DIR)/tb_hcpu_sd_writer.v $(TB_DIR)/sd_card_model.v \
                        $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
+
+# SYSCALL 9, the kernel half. The container is subroutine.hasm at 0x900 --
+# past the 1,245-word shell image and past the probe at 0x800, so the load
+# cannot land on the kernel doing the loading -- and `--image` gives what
+# instruction memory must hold afterwards, straight from the assembler.
+progload_container.hex: $(RTL_DIR)/programs/subroutine.hasm $(RTL_DIR)/scripts/build_container.py
+	python3 $(RTL_DIR)/scripts/build_container.py $< 0x900 > $@
+
+progload_want.hex: $(RTL_DIR)/programs/subroutine.hasm $(RTL_DIR)/scripts/build_container.py
+	python3 $(RTL_DIR)/scripts/build_container.py $< 0x900 --image > $@
+
+shell_progload.hex: $(SHELL_DEPS) $(TB_DIR)/prog_load_probe.hasm $(RTL_DIR)/scripts/inject_probe.py
+	python3 $(RTL_DIR)/scripts/inject_probe.py $(RTL_DIR)/programs/shell.hasm proc0 \
+	    $(TB_DIR)/prog_load_probe.hasm $(PROBE_BASE) > $@
+
+tb_hcpu_prog_load.vvp: $(TB_DIR)/tb_hcpu_prog_load.v $(TB_DIR)/sd_card_model.v \
+                       $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+sim_prog_load: tb_hcpu_prog_load.vvp shell_progload.hex progload_container.hex progload_want.hex
+	$(VVP) $<
 
 sim_sd_writer: tb_hcpu_sd_writer.vvp sd_writer.hex container.hex container_payload.txt
 	$(VVP) $<

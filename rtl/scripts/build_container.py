@@ -63,6 +63,7 @@ HEADER_WORDS = 7
 CODE_DEPTH = 4096
 IMM_MASK = 0xFFF            # IMM_W = 12, rtl/hcpu_pkg.vh
 PROBE_DELTA = 0x100         # the second base used to find relocations
+RELOC_MAX = 128             # the loader's buffer, 0x300-0x37F, owner's decision
 
 
 def relocations(source: str, base_dir: Path) -> tuple[list[int], list[int]]:
@@ -100,6 +101,12 @@ def build(source: str, base_dir: Path, load_addr: int,
                 f"{program[i] & IMM_MASK:#x}; at {load_addr:#x} it would carry "
                 f"out of the 12-bit immediate into the S2 register field")
 
+    if len(moved) > RELOC_MAX:
+        raise ValueError(
+            f"{len(moved)} relocations will not fit: the loader copies the "
+            f"table into {RELOC_MAX} words at 0x300-0x37F, and refusing here "
+            f"is cheaper than a board that refuses after reading the card")
+
     entry = load_addr
     if entry_label is not None:
         labels = collect_labels(expand_includes(source.splitlines(), base_dir))
@@ -132,10 +139,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("program", type=Path)
     ap.add_argument("load_addr", type=lambda s: int(s, 0))
     ap.add_argument("--entry", help="label to start at; default is LOAD_ADDR")
+    ap.add_argument("--image", action="store_true",
+                    help="print the RELOCATED words instead of the container: "
+                         "what instruction memory must hold after a load")
     args = ap.parse_args(argv)
 
     container = build(args.program.read_text(encoding="utf-8"),
                       args.program.parent, args.load_addr, args.entry)
+    if args.image:
+        container = relocate(container)[1]
     for word in container:
         print(f"{word & 0xFFFFFFFF:08X}")
     return 0

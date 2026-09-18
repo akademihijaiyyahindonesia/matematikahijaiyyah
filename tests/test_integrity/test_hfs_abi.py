@@ -266,13 +266,17 @@ def test_every_syscall_arm_reads_its_own_permission_word() -> None:
     permission word would have landed on process 0's saved R0, and `serve`
     reads that word to decide whether the call is allowed. It would have
     worked most of the time.
+
+    Nine since 18 September 2026: the owner added SYSCALL 9, LOAD_PROGRAM, at
+    0xED6. The room the move bought is what absorbed it, and the last check
+    below is the one that matters -- 0xF10 is still the wall.
     """
     text = SHELL.read_text(encoding="utf-8")
     words = {int(m, 16) for m in re.findall(r"LOAD\s+R3, R5, 0x([0-9A-F]{3})", text)}
-    assert len(words) == 8, f"expected eight permission words, found {sorted(words)}"
-    assert min(words) == 0xECE and max(words) == 0xED5, (
+    assert len(words) == 9, f"expected nine permission words, found {sorted(words)}"
+    assert min(words) == 0xECE and max(words) == 0xED6, (
         f"the permission table sits at {hex(min(words))}..{hex(max(words))}; "
-        "ABI HFS v1 places it at 0xECE-0xED5, inside the HOS region"
+        "calls 1-9 place it at 0xECE-0xED6, inside the HOS region"
     )
     assert max(words) < 0xF10, (
         "the permission table has grown into PCB[0] at 0xF10 -- the exact "

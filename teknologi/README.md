@@ -36,9 +36,9 @@ tidak.
 | Paket Python | 20 | `src/hijaiyyah/` |
 | Modul RTL HCPU | 30 | `rtl/hcpu_*.v` |
 | Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
-| Testbench RTL | 52 | `rtl/tb/` |
+| Testbench RTL | 53 | `rtl/tb/` |
 | Wrapper papan | 8 | `rtl/fpga/` |
-| Program HASM | 53 | `rtl/programs/` |
+| Program HASM | 54 | `rtl/programs/` |
 | Format berkas | 5 | `.hc` `.hasm` `.hbc` `.hgeo` `.hcai` |
 | Alat baris perintah | 4 | `hc` `hom` `hybit-ai` `kabah` |
 | Spesifikasi | 18 | `docs/` |

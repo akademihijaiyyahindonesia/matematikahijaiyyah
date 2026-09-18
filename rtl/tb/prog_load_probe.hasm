@@ -1,0 +1,27 @@
+; prog_load_probe.hasm -- one process asks the kernel to load a program.
+;
+; Injected into a copy of the shell image as pid 0 by rtl/scripts/inject_probe.py,
+; the way rtl/tb/hfs_syscall_probe.hasm is, and it ships nowhere.
+;
+; It calls SYSCALL 9 with PROGRAM_ID 1 and records what came back. It cannot
+; check the loaded image itself: instruction memory has no read port, which is
+; exactly why the loader verifies the checksum BEFORE it writes. The bench
+; reads the image out of the simulated memory instead.
+;
+; Writes, in its own window 0x100-0x1FF:
+;   0x101  what SYSCALL 9 answered for PROGRAM_ID 1: 1 loaded, 0 refused
+;   0x102  and for PROGRAM_ID 2, which no VALID entry names: must be 0
+;   0x100  0x5A, written LAST
+
+probe:  MOVI  R5, 0
+        MOVI  R1, 9             ; LOAD_PROGRAM
+        MOVI  R2, 1             ; PROGRAM_ID
+        SYSCALL
+        STORE R1, R5, 0x101
+        MOVI  R1, 9             ; and one the table does not have
+        MOVI  R2, 2
+        SYSCALL
+        STORE R1, R5, 0x102
+        MOVI  R2, 0x5A
+        STORE R2, R5, 0x100     ; done, written last
+p_spin: JMP   p_spin
