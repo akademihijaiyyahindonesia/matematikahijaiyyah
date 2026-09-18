@@ -678,6 +678,35 @@ sementara itu:
   menyerang sistem ini sendiri dan menemukan permutasinya bukan permutasi
   (rank 1276/1600). Klaim ketahanan tanpa lari serangan adalah klaim kosong.
 
+### Arah pemilik, 18 September 2026 — KV260 sebagai node master
+
+Bentuk akhirnya bukan papan pengembangan, melainkan **satu alat**: KV260 berisi
+stack yang sudah lulus di Tang Nano 20K — NUI, Ka'bah, Codex, Hijrah, HISAB,
+HOS/HFS, otomasi, pemulihan — dinyalakan, disambungkan ke jaringan, lalu
+bekerja sebagai lapisan keamanan, pemantauan, otomasi, cadangan, dan pemulihan
+bagi PC, server, atau laptop yang tersambung. Tang Nano membuktikan fungsi;
+KV260 mengkonsolidasikan.
+
+Empat hal terukur yang harus dibaca bersama gambar itu:
+
+- **Sisi jaringan alat itu bukan HCPU.** Tidak ada satu baris pun tentang
+  Ethernet atau TCP/IP di `rtl/` maupun `src/`; yang direncanakan hanyalah
+  SLIP di atas UART, tahap 6 gerbang KV260, dan belum dimulai. KV260 punya
+  GbE di sisi PS-nya, yaitu ARM — jadi gambar "sambungkan ke LAN" bersandar
+  pada sisi ARM, dan itu **menyentuh pilihan Jalur A/B/C yang belum pemilik
+  putuskan**.
+- **`hijrah/` sudah ada dan sudah punya angka** — HIJRAH, Hijaiyyah Injection
+  Raw Hertz, dengan langit-langit `log₂28 = 4,81` dan 4,56 sesudah lima
+  komposisi atas GF(5) — tetapi **belum pernah dijalankan di papan**: ia tidak
+  ada di `cosmictera-build/PAPAN.md`.
+- **NUI hari ini adalah Python** (`NUI/`, `src/hijaiyyah/nui/atom.py`), dan
+  yang pernah menyentuh papan hanyalah `rtl/programs/nui_embedding.hasm` —
+  lima angka, `2 2 2 6 6`.
+  "NUI Core sebagai otak sistem" berlabel **AT**.
+- **Konsolidasi bukan penjumlahan.** Di papan ini ketiga slot berjumlah 211%
+  dan hanya bisa bergiliran; alat yang menjalankan semuanya **bersamaan**
+  adalah pertanyaan kapasitas KV260, bukan kesimpulan dari Tang Nano.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
