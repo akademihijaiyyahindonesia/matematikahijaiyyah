@@ -707,6 +707,46 @@ Empat hal terukur yang harus dibaca bersama gambar itu:
   dan hanya bisa bergiliran; alat yang menjalankan semuanya **bersamaan**
   adalah pertanyaan kapasitas KV260, bukan kesimpulan dari Tang Nano.
 
+### Arah pemilik, 18 September 2026 — beda arsitektur, dan pengawasan aktif
+
+Dua kalimat pemilik, dan keduanya arah, bukan butir kerja:
+
+1. KV260 lebih sulit diserang **bukan karena kebal**, melainkan karena
+   arsitekturnya berbeda: penyerang tidak hanya berhadapan dengan Windows atau
+   Linux, tetapi juga dengan Hybit, Codex, Hijrah, Ka'bah, HOS, HFS, HISAB, dan
+   NUI.
+2. CosmicTera bukan lapisan yang bangun **sesudah** serangan, melainkan
+   pengawas aktif atas laju, pola, dan integritas, supaya gejala terlihat lebih
+   awal.
+
+**Dua sifat yang mendukung kalimat pertama ada di RTL dan bisa diukur, jadi
+bukan klaim.** Keduanya menutup satu kelas serangan yang paling umum di mesin
+lain:
+
+- **Alamat kembali tidak ada di memori data.** `ra_stack` hidup di
+  `rtl/hcpu_execute.v`, 32 entri (`RA_DEPTH`), selebar alamat kode, dan tidak
+  bisa dijangkau `LOAD`/`STORE` sama sekali. Melimpahi sebuah buffer di memori
+  data karena itu tidak bisa menimpa alamat kembali.
+- **Tumpukan `PUSH`/`POP` juga bukan memori data.** `stack` di
+  `rtl/hcpu_memory.v`, 256 entri (`STACK_DEPTH`), dengan deteksi limpah dan
+  kurang-isi (HC-02, HC-03). Ditambah tidak adanya lompatan terhitung, rantai
+  gadget bergaya ROP tidak punya jalan yang biasa dipakainya.
+
+**Dan inilah batasnya, supaya kalimat itu tidak tumbuh lebih besar dari
+buktinya.** Yang masih di memori data dan bisa ditulis kernel: tabel syscall
+(0xECE+), blok proses (0xF10+), tabel HFS (0xE80+), dan penyangga relokasi
+loader (0x300). Proses pengguna dibatasi `mem_base`/`mem_limit` dan ditolak di
+jendela 0xFF0+ — itu terbukti di papan — tetapi **belum ada satu pun lari
+serangan terhadap HCPU**. Satu-satunya serangan yang pernah dijalankan proyek
+ini adalah terhadap Ka'bah, dan ia menemukan cacat (`3ccf193`).
+
+**Untuk kalimat kedua, yang kurang bukan mekanismenya, melainkan
+garis dasarnya.** Yang sudah ada: daemon guard (`dc5ae55`), snapshot telemetri,
+dashboard, pencacah siklus bebas, dan timer. Yang belum ada: pengukuran
+"normal" untuk dibandingkan — lari terpanjang di papan ini masih hitungan
+milidetik. Anomali laju hanya bisa dinamai sesudah laju normal diukur, dan itu
+persis tahap 4 kerangka laboratorium (burn-in 24/72/168 jam).
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
