@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **5.025 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **5.028 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,7 +41,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 5.025 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 5.028 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -192,6 +192,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | ✅ | **Kartu MicroSD bertahan melewati mati daya: `1 1 1 10`** — SDIO 1-bit, LBA 1; lima checkpoint `10` → `1 1 0 10` → `1 1 1 1 10` → reset → mati daya ([PAPAN.md](PAPAN.md)) | `make -C rtl/fpga/gowin bridge` lalu `send PROG=../../programs/sdio_verify.hasm` |
 | ✅ | **HFS melewati mati daya di papan: `1 1 1` → kabel dicabut → `2`** — CREATE dan WRITE dari mode pengguna menulis tembus ke kartu, boot memuat HFS dari kartu; banner LiteX pabrikan di rekaman membuktikan daya memang putus ([PAPAN.md](PAPAN.md)) | `make -C rtl/tb shell_persist.hex`, `make -C rtl/fpga/gowin PROGRAM=../../tb/shell_persist.hex bitstream`, lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs` dan baca UART 115200 |
 | ✅ | **Slot CPU hasil pemisahan dijalankan di papan: 23 byte, `112`, `CYCLES=00001B89`** | `make -C rtl/fpga/gowin bitstream` lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs`, dan baca UART 115200 — bangun dulu, karena berkas itu membawa `PROGRAM` mana pun yang terakhir dipanggang |
+| ✅ | **Loader membaca container dari kartu di papan: `1`, dan `0` untuk citra yang dirusak** — enam lari berurutan, kontrolnya ikut dijalankan: satu kata di container diganti `DEADBEEF` dan papan menolak ([PAPAN.md](PAPAN.md)). **Tidak** mengklaim isi memori instruksi benar: tidak ada port baca | `make -C rtl/fpga/gowin bridge` lalu `send PROG=../../programs/sd_writer.hasm` diikuti containernya, lalu `send PROG=../../programs/test_prog_load.hasm` |
 | ✅ | **Blok codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`) di papan: `8 0 0 1 1 0 1 5`** | `make -C rtl/fpga/gowin hdmi_bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_codex.hasm` |
 
 **Kalimat ini dulu berbunyi "belum ada `openFPGALoader` yang benar-benar

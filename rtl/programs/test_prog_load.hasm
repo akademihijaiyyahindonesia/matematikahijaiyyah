@@ -1,0 +1,31 @@
+; test_prog_load.hasm -- the loader, asked once, on the board.
+;
+; Stage 2A's hardware measurement, owner's decision 18 September 2026: prove
+; that the chain runs in silicon, and claim nothing further.
+;
+;   card -> program table (sector 16) -> container (sector 17+) -> MAGIC,
+;   VERSION, WORDS, LOAD_ADDR, ENTRY, RELOC_CNT, the 32-bit sum, the relocation
+;   table at 0x300-0x37F, and the words into IMEM_ADDR/IMEM_DATA
+;
+; It prints ONE number:
+;
+;   1   every check passed and the words were written
+;   0   something was refused -- see hos_prog_load.hasm for the list
+;
+; WHAT THIS CANNOT SHOW, and the owner has said so plainly: that the image in
+; instruction memory is correct. There is no read port on instruction memory,
+; so a 1 means the loader finished without refusing, not that the bits landed
+; right. Proving that needs the loaded program to RUN and speak for itself,
+; which is stage 2B and is not open.
+;
+; Sent over the wire to a board running loader.hasm, so it is assembled at 64.
+; The container it loads is built for 0x900 -- far above this program's own
+; 630-odd words -- because a load that overlapped this code would overwrite the
+; loader while it runs.
+
+        MOVI  R1, 1                 ; PROGRAM_ID 1, the only entry 2A writes
+        CALL  hos_prog_load
+        PRINT R1
+        HALT
+
+        .include "hos_prog_load.hasm"

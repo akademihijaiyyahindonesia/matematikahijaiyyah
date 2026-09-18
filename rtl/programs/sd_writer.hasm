@@ -28,6 +28,15 @@
 ;   1 <sectors>   the container is on the card, in that many sectors
 ;   0             the card refused; nothing after the first refusal is written
 ;
+; ── it loses bytes at a sector boundary, measured ───────────────
+; A container that spans MORE THAN ONE sector does not arrive. The RX register
+; holds one byte, and while this program is writing a sector the next byte on
+; the wire is gone; it then waits forever for a byte that will never come.
+; Measured on the board, 18 September 2026: a 437-word container produced zero
+; bytes of output. A one-sector container never meets the limit because its
+; first write happens after the last byte. cosmictera-build/OFF.md carries the
+; two ways out, both of them the owner's to choose.
+;
 ; Registers: R5 zero base, R6 words left, R13 sector, R14 words in this sector,
 ; R15 sectors written. R1/R2/R9/R10/R12 belong to hal_sd.hasm, R3/R4 to the
 ; byte loop. The receive loop is loader.hasm's, lifted rather than rewritten:

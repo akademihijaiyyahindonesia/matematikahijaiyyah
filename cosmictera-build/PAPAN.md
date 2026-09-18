@@ -677,6 +677,51 @@ Kedua urutan terbaca sama oleh bench, yang membaca digit saja.
 
 ---
 
+## Tahap 2A — loader membaca kartu di silikon, 18 September 2026
+
+**Enam lari, satu papan, satu kartu, dan kontrolnya ikut dijalankan.** Slot CPU
+dengan `loader.hasm` dipanggang; `sd_writer.hasm` dan `test_prog_load.hasm`
+dikirim lewat kabel, papan direkonfigurasi di antara tiap lari.
+
+| # | program | yang ada di kartu | keluaran papan |
+|---:|---|---|---|
+| 1 | `sd_writer` | menulis container `subroutine` @0x900 | **`1 1`** — ditulis, satu sektor |
+| 2 | `test_prog_load` | container itu | **`1`** |
+| 3 | `sd_writer` | menulis container yang **satu katanya dirusak** | **`1 1`** |
+| 4 | `test_prog_load` | container rusak itu | **`0`** |
+| 5 | `sd_writer` | menulis container yang benar lagi | **`1 1`** |
+| 6 | `test_prog_load` | container benar | **`1`** |
+
+**Lari 4 adalah alasan lari 2 dan 6 berarti apa-apa.** Angka `1` yang tidak
+pernah bisa menjadi `0` tidak membuktikan apa pun. Kata keempat program di
+dalam container diganti `DEADBEEF` di host, ditulis ke kartu yang sama lewat
+papan, dan jumlah 32-bit menolaknya: papan menjawab `0`, dan **tidak satu kata
+pun masuk ke memori instruksi**, karena checksum diperiksa sebelum tulis
+pertama.
+
+**Yang ini buktikan:** tabel program di sektor 16 dibaca dari kartu nyata,
+container di sektor 17 dibaca, `MAGIC` `HPG1`, `VERSION`, `WORDS`, `ENTRY`,
+`RELOC_CNT` dan jumlah 32-bit diperiksa di silikon, tabel relokasi disalin ke
+0x300–0x37F, dan kata-kata ditulis lewat `IMEM_ADDR`/`IMEM_DATA` tanpa satu pun
+penolakan.
+
+**Yang ini TIDAK buktikan, dan pemilik menetapkan batas klaimnya sendiri:**
+bahwa isi memori instruksi benar. Memori instruksi tidak punya port baca, jadi
+`1` berarti loader selesai tanpa menolak — bukan bahwa bitnya mendarat benar.
+Buktinya menuntut program yang dimuat **berjalan** dan berbicara sendiri, dan
+itu tahap 2B, yang belum dibuka.
+
+**Satu batas yang hanya papan ini temukan, dan diukur di sini.** Container
+empat sektor (437 kata, `test_hfs` @0x200) membuat papan **diam total**: tidak ada satu pun
+byte keluar. `sd_writer.hasm` membaca kabel byte demi byte, dan register RX
+menampung satu byte — saat ia sedang menulis satu sektor ke kartu, byte yang
+datang hilang, lalu ia menunggu selamanya byte yang tidak akan pernah ada.
+Container satu sektor tidak pernah menyentuh batas itu karena tulisannya
+terjadi sesudah byte terakhir. Dicatat di [OFF.md](OFF.md) dengan penghalang
+bernama; kendali alirnya keputusan pemilik.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -804,7 +849,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.025 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.028 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -847,7 +892,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.025 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.028 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 37 testbench, 402 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
