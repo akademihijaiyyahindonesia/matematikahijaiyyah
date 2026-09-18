@@ -648,6 +648,36 @@ lewat rekonfigurasi — biaya rack = slot terbesar, 15.994 LUT4 = 77%
 bersama" berlaku untuk apa yang muat dalam satu slot, dan sisanya diuji
 bergiliran; mana yang mana adalah keputusan pemilik saat tahap itu dibuka.
 
+### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
+
+CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
+atau cloud. Ia lapisan di atas yang sudah berjalan: penguat, keamanan,
+validasi, otomasi, dan pemulihan. Sistem utama tetap bekerja; CosmicTera
+memeriksa, mengawasi, dan menyiapkan pemulihan di sampingnya, dengan NUI
+sebagai pengawas dan pengorkestrasi. Komponennya bisa duduk di beberapa
+tingkat — perangkat keras, firmware, driver, layanan, pustaka, kontainer,
+aplikasi.
+
+**Ini arah, bukan butir kerja**, dan pemiliknya sendiri yang menuliskan
+syaratnya: apakah mekanisme itu lebih aman, lebih cepat, atau lebih tahan
+serangan *"perlu dibuktikan melalui pengujian dan pengukuran pada implementasi
+nyata"*. Empat pengukuran yang sudah ada membatasi apa yang boleh diklaim
+sementara itu:
+
+- **Yang memikul keamanan di Ka'bah hanya lapis 3**, HMAC-SHA256 standar
+  (`a910375`, `kabah/README.md`). Lapis 4 — kerahasiaan — ditolak dengan
+  sengaja, dan tidak ada inti SHA-256 di RTL (R10). Lapisan keamanan yang
+  dijanjikan visi ini berdiri di atas satu lapis itu, bukan di atas lima.
+- **Throughput terukur 2,59 MB/s**, hambatannya deserialiser (`49fb3b3`). Itu
+  angka yang harus dipegang setiap kalimat tentang "mesin verifikasi di depan
+  basis data".
+- **Tidak ada satu pun sisi host di repo ini**: tidak ada driver, layanan,
+  pustaka, kontainer, atau aplikasi. Yang ada hanya perkakas serial di
+  `rtl/scripts/`. Seluruh baris tabel lintas platform berlabel **AT**.
+- **Pola yang menetapkan cara membuktikannya sudah ada**: `3ccf193`
+  menyerang sistem ini sendiri dan menemukan permutasinya bukan permutasi
+  (rank 1276/1600). Klaim ketahanan tanpa lari serangan adalah klaim kosong.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
