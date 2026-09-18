@@ -621,6 +621,33 @@ Dua penetapan lain dari keputusan yang sama:
   repo ini adalah memori atas **operasi vektor codex**, bukan arti huruf.
   Syarat terima tahap 5 tetap belum ditetapkan.
 
+### Keputusan pemilik, 18 September 2026 — papan ini laboratorium validasi
+
+Tang Nano 20K bukan papan demo, melainkan **laboratorium validasi CosmicTera**,
+dan KV260 baru disentuh sesudah papan ini meluluskan enam tahap:
+
+```
+1  simulasi            RTL, bench, pytest      lulus, dan BELUM dianggap selesai
+2  di papan            tiap modul masuk FPGA lalu diuji: fungsi, stress,
+                       serangan, fault, persistensi, burn-in
+3  dokumentasi terukur tiap modul punya halaman hasilnya sendiri
+4  full stack          semuanya menyala bersama, 24 / 72 / 168 jam tanpa reset
+5  freeze              fitur, protokol, ABI, container, format jadi baseline
+6  port ke KV260       memperbesar sistem, bukan menemukan cacat dasar
+```
+
+*"Tang Nano = Proof of Function. KV260 = Proof of Scale."* Sebuah komponen
+tidak dianggap siap jadi bagian stack KV260 sebelum punya dokumen validasi
+Tang Nano 20K sendiri.
+
+**Satu batas fisik yang sudah terukur dan membentuk tahap 2 dan 4.** "Semua
+modul masuk ke FPGA" tidak bisa berarti *bersamaan*: jumlah naif ketiga slot
+adalah 43.799 LUT4 = **211%** dari papan. Yang mungkin adalah **berurutan**,
+lewat rekonfigurasi — biaya rack = slot terbesar, 15.994 LUT4 = 77%
+(`rtl/scripts/rack.py`, dan `ec2355b`). Jadi tahap 4 "semuanya menyala
+bersama" berlaku untuk apa yang muat dalam satu slot, dan sisanya diuji
+bergiliran; mana yang mana adalah keputusan pemilik saat tahap itu dibuka.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
