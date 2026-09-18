@@ -1,0 +1,41 @@
+; test_prog_run.hasm -- 2B, the smallest form: the loaded program speaks.
+;
+; Stage 2A proved the loader finishes without refusing. It could not prove the
+; image is right, because instruction memory has no read port. This hands over
+; to it and lets the program answer for itself: if the words landed wrong, the
+; numbers on the wire are wrong or nothing comes at all.
+;
+; The handover is loader.hasm's, not a new mechanism: there is no
+; register-indirect jump in this ISA, and none had to be invented. ERET jumps
+; to TRAP_EPC, which is a register this program writes, and it sets the
+; privilege level in the same act. Bit 1 of TRAP_MODE keeps the loaded program
+; in SUPERVISOR, exactly as loader.hasm does, because at this point it IS the
+; system -- there is no kernel above it to serve it.
+;
+; ENTRY IS WRITTEN HERE, NOT RETURNED BY THE LOADER, and that is a limit worth
+; naming. hos_prog_load answers 1 or 0; where the program starts is in the
+; container's header, which only the loader read. A test may know what the host
+; built -- 0x900 -- but a kernel serving SYSCALL 9 cannot guess it. Handing
+; ENTRY back through the ABI is a decision for the owner, and 2B proper waits
+; on it.
+;
+; Sent over the wire to a board running loader.hasm, so it assembles at 64 and
+; occupies roughly 640 words. The container it loads is built for 0x900, far
+; above that, so the program being loaded cannot land on the program loading it.
+
+        MOVI  R1, 1                 ; PROGRAM_ID 1
+        CALL  hos_prog_load
+        CMPI  R1, 1
+        JNE   run_no
+
+        MOVI  R5, 0
+        MOVI  R7, 0x900             ; ENTRY, as the host built the container
+        STORE R7, R5, 0xFF9         ; TRAP_EPC = where ERET goes
+        MOVI  R7, 2                 ; bit 1 = the loaded program runs supervisor
+        STORE R7, R5, 0xFFD
+        ERET                        ; from here the card's program is running
+
+run_no: PRINT R1                    ; 0 -- refused, and nothing was written
+        HALT
+
+        .include "hos_prog_load.hasm"

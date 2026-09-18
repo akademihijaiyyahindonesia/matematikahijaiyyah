@@ -636,6 +636,13 @@ dan KV260 baru disentuh sesudah papan ini meluluskan enam tahap:
 6  port ke KV260       memperbesar sistem, bukan menemukan cacat dasar
 ```
 
+**Burn-in bukan uji stabilitas, melainkan pembangun garis dasar** — pemilik
+menegaskannya 18 September 2026. *"Anomali tidak bisa didefinisikan tanpa
+mengetahui normal."* Angka normal yang belum pernah diukur membuat 20%, 40%,
+dan 80% sama-sama tak berarti. Jadi lari panjang tahap 4 adalah yang membuat
+lapisan pengawasan — NUI, Ka'bah, telemetri, daemon guard — punya sesuatu untuk
+dibandingkan. Sampai ia ada, "deteksi penyimpangan" berlabel **AT**.
+
 *"Tang Nano = Proof of Function. KV260 = Proof of Scale."* Sebuah komponen
 tidak dianggap siap jadi bagian stack KV260 sebelum punya dokumen validasi
 Tang Nano 20K sendiri.
@@ -1093,6 +1100,14 @@ diuji dengan merusak apa yang dijaganya (R3), dan satu kebenaran di satu tempat
 - `Study Matematika Hijaiyyah/` dan `rtl/mpw/sky130_sram_macros/` — dibiarkan
   di luar repo.
 - Setiap berkas dibaca utuh sebelum di-commit.
+- **Jangan pernah `git add -A` atau `git add .` di repositori ini.** Sebutkan
+  path satu per satu. Terukur 18 September 2026: satu `git add -A` menarik 442
+  berkas terlarang — `.agents/`, `.claude/`, `.codex/`, dan
+  `Study Matematika Hijaiyyah/` — ke dalam sebuah commit, 860.181 baris,
+  termasuk materi yang pemilik jaga di luar repo publik. Commit-nya dibatalkan
+  sebelum jadi riwayat; yang mencegahnya berulang adalah kebiasaan ini, bukan
+  `.gitignore` (berkas-berkas itu memang tidak terabaikan, hanya tidak
+  di-commit).
 
 ---
 

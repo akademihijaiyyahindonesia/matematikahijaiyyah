@@ -1,0 +1,34 @@
+; test_from_card.hasm -- a program whose own jump must be relocated to work.
+;
+; Stage 2B asks a question the loader cannot answer about itself: are the words
+; in instruction memory right? There is no read port, so the only witness is the
+; program. This one is built to be a sharp witness.
+;
+; Every small program that prints in this repository is straight-line -- no
+; labels, so nothing to relocate, so running one proves the words arrived but
+; not that the ADDRESSES inside them were fixed.
+;
+; THE LOOP IS CLOSED WITH `JMP`, AND THAT IS THE WHOLE POINT. Measured while
+; writing this: `JNE` assembles to 0x24000FFD -- a RELATIVE offset of -3 -- so a
+; conditional branch needs no relocation at all. `JMP` and `CALL` are the
+; absolute ones (`PC <- IMM`, rtl/hcpu_pkg.vh), and they are what a relocation
+; table is made of. That is also why the tables are small: 7.2 entries on
+; average across the 41 programs that assemble.
+;
+; Built for 0x900, the `JMP` carries 0x901; loaded without relocation it would
+; carry 0x001 and land in whatever sits there instead. So these three numbers
+;
+;   1
+;   2
+;   3
+;
+; only come out if the relocation was applied, and then it halts, which is what
+; lets the wrapper report its cycle count.
+
+        MOVI  R1, 0
+loop:   ADDI  R1, R1, 1
+        PRINT R1
+        CMPI  R1, 3
+        JEQ   done
+        JMP   loop                  ; absolute: this is the relocated word
+done:   HALT

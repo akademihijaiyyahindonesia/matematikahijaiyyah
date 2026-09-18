@@ -722,6 +722,49 @@ bernama; kendali alirnya keputusan pemilik.
 
 ---
 
+## 2B kecil — program dari kartu berjalan sendiri, 18 September 2026
+
+**Papan mencetak `1 2 3`, dan angka itu hanya bisa datang dari kartu.**
+
+| # | yang ada di kartu | keluaran papan |
+|---:|---|---|
+| 1 | container `test_from_card` @0x900 ditulis | **`1 1`** |
+| 2 | program itu dimuat lalu **dijalankan** | **`1 2 3`** |
+| 3 | container yang satu katanya dirusak ditulis | **`1 1`** |
+| 4 | dimuat | **`0`** — ditolak, tidak dijalankan |
+| 5 | container benar ditulis lagi | **`1 1`** |
+| 6 | dimuat lalu dijalankan | **`1 2 3`** |
+
+**Kenapa `1 2 3` membuktikan lebih dari `1`.** Tahap 2A hanya bisa berkata
+loader selesai tanpa menolak; memori instruksi tidak punya port baca, jadi
+isinya tak bisa diperiksa dari papan. Di sini isinya **berbicara sendiri**:
+`test_from_card.hasm` menutup gelungnya dengan `JMP`, satu-satunya lompatan
+yang membawa alamat **absolut** di ISA ini — cabang bersyarat ternyata relatif,
+`JNE` merakit jadi `0x24000FFD`, offset −3, dan tidak perlu relokasi sama
+sekali. Dibangun untuk 0x900, `JMP` itu membawa 0x901; dimuat tanpa relokasi ia
+membawa 0x001 dan mendarat di tempat lain. Terukur di simulasi: sabotase yang
+menghapus penambahan relokasi mengubah kabel dari `123` jadi `111`.
+
+**Penyerahannya bukan mekanisme baru.** `TRAP_EPC` ditulis, `TRAP_MODE` bit 1
+dipasang, lalu `ERET` — bentuk yang sama yang `loader.hasm` pakai sejak papan
+ini pertama jadi jembatan, karena ISA ini memang tidak punya lompatan lewat
+register.
+
+**Yang ini masih belum menutup tahap 2.** Syarat tahap 2 berbunyi *"program
+tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung**"*, dan di
+sini host masih mengirimkan program pemuatnya lewat kabel. Yang tertutup adalah
+rantainya: kartu → loader → periksa → relokasi → IMEM → `ENTRY` → eksekusi.
+Yang tersisa adalah memanggang pemuat itu ke dalam bitstream sehingga papan
+melakukannya sendiri saat menyala — dan itu 2B penuh, belum dibuka pemilik.
+
+**Satu batas ABI yang ikut terlihat.** `ENTRY` ditulis oleh program uji, bukan
+dikembalikan loader: `hos_prog_load` menjawab 1 atau 0, sementara di mana
+program mulai hanya ada di header yang ia baca. Sebuah uji boleh tahu apa yang
+host bangun; kernel yang melayani `SYSCALL` 9 tidak bisa menebaknya.
+Mengembalikan `ENTRY` lewat ABI adalah keputusan pemilik.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -849,7 +892,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.028 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.034 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -892,8 +935,8 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.028 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
-| `make -C rtl/tb all` | 37 testbench, 402 pemeriksaan, 0 gagal |
+| `python3 -m pytest -q` | 5.034 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `make -C rtl/tb all` | 38 testbench, 404 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video

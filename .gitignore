@@ -108,3 +108,5 @@ three.js-master/
 rtl/tb/shell_progload.hex
 rtl/tb/progload_container.hex
 rtl/tb/progload_want.hex
+rtl/tb/test_prog_run.hex
+rtl/tb/progrun_container.hex
