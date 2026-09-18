@@ -779,6 +779,41 @@ Mengembalikan `ENTRY` lewat ABI adalah keputusan pemilik.
 
 ---
 
+## Lintas sektor dan ACK — shell naik dari sebelas sektor kartu, 18 September 2026
+
+Dua prioritas pemilik, diukur di papan yang sama. `sd_writer.hasm` kini
+mencetak `0` begitu kartu siap, lalu jumlah sektor tertulis sesudah tiap sektor;
+`rtl/scripts/send_container.py` mengirim 128 kata lalu menunggu baris itu.
+
+| # | yang dijalankan | keluaran papan |
+|---:|---|---|
+| 1 | container `test_hfs` @0x900, 437 kata = 4 sektor, ditulis | ACK `1` `2` `3` `4`, lalu **`1 4`** |
+| 2 | `test_prog_load` memuat keempat sektor itu | **`1`** |
+| 3 | container **shell** @0x900, 1.377 kata = 11 sektor, ditulis | ACK `1` … `11`, lalu **`1 11`** |
+| 4 | `test_prog_run` memuat shell itu lalu menyerahkan kendali | **`HIJAIYYAH`**, `> ` |
+| 5 | diketik `A`, `p`, `z` | **`A`**, **`2 0 1`**, **`z`** |
+
+**Lari 1 adalah kegagalan yang sama, kini lewat.** Container 437 kata yang
+sama persis pernah membuat papan diam total; sebabnya register RX satu byte dan
+papan yang tuli selama menulis sektor. Dengan ACK, host tidak pernah bicara
+saat papan tidak mendengar.
+
+**Lari 3–5 adalah bukti terberat yang pernah dilalui loader ini.** Shell
+adalah kernel utuh — penjadwal, HOS, HFS di kartu, dan loader itu sendiri —
+1.245 kata dengan **125 relokasi**. Header 7 ditambah tabel 125 = 132 kata,
+jadi tabel relokasinya sendiri menyeberang dari sektor 17 ke 18, lalu kata
+programnya berjalan terus sampai sektor 27. Ia boot di 0x900 dan menjawab
+kabel persis seperti catatan M3: `A` menggema, `p` menjawab dua proses, pid 0
+dan 1. Artinya vektor trap yang dipasangnya — sebuah label, jadi ikut
+direlokasi — benar, karena setiap `SYSCALL` dan setiap preemption timer lewat
+situ.
+
+**Batasnya tetap sama dengan lari-lari sebelumnya:** program pemuat masih
+dikirim host lewat kabel ke `loader.hasm`. Yang terbukti adalah rantai
+kartu → loader → relokasi → IMEM → eksekusi untuk program sebesar kernel.
+
+---
+
 ## Rack bitstream — slot berurutan
 
 **11 September 2026.** "HCPU dan Ka'bah di satu chip" pernah diperlakukan
@@ -950,7 +985,7 @@ membuat pasangannya diferensial.
 | | Hasil |
 |---|---|
 | `python3 -m pytest -q` | 5.034 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
-| `make -C rtl/tb all` | 39 testbench, 411 pemeriksaan, 0 gagal |
+| `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
 Guard 34, Codex ALU 6, HISAB 124, `tb_hcpu_top` 15, NUI embedding 10, video

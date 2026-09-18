@@ -1,22 +1,24 @@
-// tb_hcpu_sd_writer.v -- a container crosses the wire and lands on the card.
+// tb_hcpu_sd_writer.v -- a container crosses the wire, one acknowledged sector
+// at a time, and lands on the card.
 //
-// Stage 2A needs an image ON the card before a loader can fetch one. This
-// drives the real serial pin at the real baud into sd_writer.hasm and then
-// reads the card model's own memory, byte for byte, rather than believing what
-// the program says about itself.
+// The container is test_hfs at 0x200: 437 words, four sectors -- the exact
+// container that left the board silent on 18 September 2026, when the writer
+// had no acknowledgement and lost bytes while it wrote a sector. The owner's fix
+// is an ACK per sector, and this bench behaves like the host that fix needs:
+// it waits for the board's `0` (card initialised, listening), sends 128 words,
+// waits for the running count, and only then sends the next 128.
 //
-// The container is test_bsm at 0x100, built by rtl/scripts/build_container.py
-// and framed by rtl/scripts/send_program.py: the same two host tools that feed
-// a board, so the bench cannot pass with a wire format the board would refuse.
+// It is built by rtl/scripts/build_container.py and framed exactly as
+// rtl/scripts/send_container.py frames it, so the bench cannot pass with a
+// wire protocol the board would refuse. The card model's own memory is read
+// afterwards, byte for byte, rather than believing the program's report.
 //
-// What it checks, and why each one:
-//   1  sector 17 carries the container words, big-endian, word for word
-//   2  the rest of sector 17 is zero -- a sector is written whole, and a
-//      writer that left the old contents there would corrupt the next image
-//   3  sector 16 holds the table entry: PROGRAM_ID 1, FLAGS 1 (VALID),
-//      START_SECTOR 17, SECTOR_COUNT 1
-//   4  sector 18 is untouched: the writer wrote what it was given and no more
-//   5  the wire says 1 then 1 -- written, one sector
+// What it checks:
+//   1  the acknowledgements are 0 1 2 3 4, in order, and then 1 4
+//   2  sectors 17-20 carry the container words, big-endian, word for word
+//   3  the rest of sector 20 is zero -- a sector is written whole
+//   4  sector 16 holds the table entry: 1, VALID, 17, 4, and nothing else
+//   5  sector 21 is untouched
 
 `timescale 1ns/1ps
 
@@ -24,8 +26,8 @@ module tb_hcpu_sd_writer;
     localparam real    HALF_PERIOD = 18.5;          // 27 MHz
     localparam integer BAUD        = 115200;
     localparam real    BIT_NS      = 1_000_000_000.0 / BAUD;
-    localparam integer N_WORDS     = 16;            // 7 header + 0 reloc + 9 program
-    localparam integer N_BYTES     = 4 + 4 * N_WORDS;
+    localparam integer N_WORDS     = 437;           // test_hfs @0x200: 7 + 12 + 418
+    localparam integer N_SECTORS   = (N_WORDS + 127) / 128;   // 4
 
     reg  clk_27m = 1'b0;
     reg  btn_rst_n = 1'b0;
@@ -44,8 +46,6 @@ module tb_hcpu_sd_writer;
     assign sd_cmd    = card_cmd_oe ? card_cmd_out : 1'bz;
     assign sd_dat[0] = card_dat_oe ? card_dat_out : 1'bz;
 
-    // Twenty-four sectors: the writer starts at 17, so a sixteen-sector card
-    // would refuse the write for the wrong reason.
     sd_card_model #(
         .SECTORS     (24),
         .ACMD41_BUSY (3),
@@ -87,9 +87,11 @@ module tb_hcpu_sd_writer;
         end
     endtask
 
-    // ── the wire, read back as digits ───────────────────────────
-    reg [8*4-1:0] digits = 0;
-    integer       n_digits = 0, bit_i;
+    // ── the wire, as lines of digits ────────────────────────────
+    // Every line the program prints is a number, and the host counts lines.
+    // Only the digits before the wrapper's CYCLES report are kept.
+    reg [8*8-1:0] digits = 0;
+    integer       n_digits = 0, lines = 0, bit_i;
     reg [7:0]     shifted;
 
     initial begin
@@ -100,18 +102,28 @@ module tb_hcpu_sd_writer;
                 shifted[bit_i] = uart_txd;
                 #BIT_NS;
             end
-            // Only the first two: the wrapper prints CYCLES=<hex> after
-            // HALT and those digits are not the program speaking.
-            if (shifted >= "0" && shifted <= "9" && n_digits < 2) begin
-                digits = {digits[8*3-1:0], shifted};
+            if (shifted == 8'h0A && lines < 8)
+                lines = lines + 1;
+            else if (shifted >= "0" && shifted <= "9" && n_digits < 7 && lines < 7) begin
+                digits = {digits[8*7-1:0], shifted};
                 n_digits = n_digits + 1;
             end
         end
     end
 
-    reg [7:0]  payload [0:255];
+    // Wait for the board's next line, bounded: a board that never answers
+    // must fail here, not hang the suite.
+    task wait_lines(input integer want);
+        integer cyc;
+        begin
+            for (cyc = 0; cyc < 8000000 && lines < want; cyc = cyc + 1)
+                @(posedge clk_27m);
+        end
+    endtask
+
+    reg [7:0]  payload [0:4 + 4*N_WORDS - 1];
     reg [31:0] want    [0:N_WORDS-1];
-    integer    i, cyc, bad, sector17, sector16, sector18;
+    integer    i, s, first, last, bad;
     reg [31:0] got;
 
     function [31:0] card_word(input integer sector, input integer index);
@@ -124,69 +136,65 @@ module tb_hcpu_sd_writer;
     endfunction
 
     initial begin
-        $display("=== tb_hcpu_sd_writer: container lewat kabel, mendarat di kartu ===");
+        $display("=== tb_hcpu_sd_writer: empat sektor, satu ACK per sektor ===");
         $readmemh("container_payload.txt", payload);
         $readmemh("container.hex", want);
 
         repeat (20) @(posedge clk_27m);
         btn_rst_n = 1'b1;
 
-        // The card's init runs first, so the writer is not listening yet. Give
-        // it room before the first byte: the UART holds exactly one byte, and
-        // a byte sent while the program is inside hal_sd_run is a byte lost.
-        repeat (200000) @(posedge clk_27m);
+        // The host speaks only after the board says it is listening.
+        wait_lines(1);
+        $display("  papan siap sesudah %0d baris", lines);
 
-        for (i = 0; i < N_BYTES; i = i + 1)
-            send_byte(payload[i]);
+        for (s = 0; s < N_SECTORS; s = s + 1) begin
+            first = (s == 0) ? 0 : 4 + 512 * s;
+            last  = 4 + 512 * (s + 1);
+            if (last > 4 + 4 * N_WORDS) last = 4 + 4 * N_WORDS;
+            for (i = first; i < last; i = i + 1)
+                send_byte(payload[i]);
+            wait_lines(s + 2);                      // ACK s+1
+        end
+        wait_lines(N_SECTORS + 3);                  // then "1", then the count
+        repeat (20000) @(posedge clk_27m);
 
-        // Wait for the TABLE, which sd_writer.hasm writes last: while sector
-        // 16 is still zero the image may be half written.
-        for (cyc = 0; cyc < 4000000 && card_word(16, 0) == 0; cyc = cyc + 1)
-            @(posedge clk_27m);
-        $display("  tabel program muncul sesudah %0d siklus", cyc);
-        repeat (200000) @(posedge clk_27m);       // and the two prints
+        // ── 1: what the wire said ───────────────────────────────
+        $display("  kabel: \"%0s\"", digits);
+        check(n_digits == 7 && digits[55:0] == "0123414", "ACK 0 1 2 3 4, lalu 1 4");
 
-        // ── 1: the container, word for word ─────────────────────
+        // ── 2 and 3: the container, word for word, sector by sector
         bad = 0;
         for (i = 0; i < N_WORDS; i = i + 1) begin
-            got = card_word(17, i);
+            got = card_word(17 + i / 128, i % 128);
             if (got !== want[i]) begin
                 if (bad == 0)
-                    $display("  kata %0d: kartu %08h, seharusnya %08h",
-                             i, got, want[i]);
+                    $display("  kata %0d: kartu %08h, seharusnya %08h", i, got, want[i]);
                 bad = bad + 1;
             end
         end
-        check(bad == 0, "sektor 17 = container");
-
-        // ── 2: and nothing else in that sector ──────────────────
+        check(bad == 0, "sektor 17-20 = container");
         bad = 0;
-        for (i = N_WORDS; i < 128; i = i + 1)
-            if (card_word(17, i) !== 32'd0) bad = bad + 1;
-        check(bad == 0, "sisa sektor 17 nol");
+        for (i = N_WORDS % 128; i < 128; i = i + 1)
+            if (card_word(17 + N_SECTORS - 1, i) !== 32'd0) bad = bad + 1;
+        check(bad == 0, "sisa sektor 20 nol");
 
-        // ── 3: the table entry ──────────────────────────────────
-        check(card_word(16, 0) == 32'd1,  "PROGRAM_ID = 1");
-        check(card_word(16, 1) == 32'd1,  "FLAGS bit 0 = VALID");
-        check(card_word(16, 2) == 32'd17, "START_SECTOR = 17");
-        check(card_word(16, 3) == 32'd1,  "SECTOR_COUNT = 1");
+        // ── 4: the table entry ──────────────────────────────────
+        check(card_word(16, 0) == 32'd1 && card_word(16, 1) == 32'd1
+              && card_word(16, 2) == 32'd17 && card_word(16, 3) == N_SECTORS,
+              "tabel: 1, VALID, 17, 4");
         bad = 0;
         for (i = 4; i < 128; i = i + 1)
             if (card_word(16, i) !== 32'd0) bad = bad + 1;
         check(bad == 0, "entri lain kosong");
 
-        // ── 4: nothing beyond what it was given ─────────────────
+        // ── 5: nothing beyond what it was given ─────────────────
         bad = 0;
         for (i = 0; i < 128; i = i + 1)
-            if (card_word(18, i) !== 32'd0) bad = bad + 1;
-        check(bad == 0, "sektor 18 tak tersentuh");
-
-        // ── 5: what the wire said ───────────────────────────────
-        $display("  kabel: \"%0s\"", digits);
-        check(n_digits == 2 && digits[15:0] == "11", "kabel: 1 lalu 1");
+            if (card_word(17 + N_SECTORS, i) !== 32'd0) bad = bad + 1;
+        check(bad == 0, "sektor 21 tak tersentuh");
 
         if (errors == 0)
-            $display("tb_hcpu_sd_writer: SEMUA LULUS (9 pemeriksaan)");
+            $display("tb_hcpu_sd_writer: SEMUA LULUS (6 pemeriksaan)");
         else begin
             $display("tb_hcpu_sd_writer: %0d GAGAL", errors);
             $fatal(1);

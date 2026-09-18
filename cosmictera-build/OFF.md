@@ -496,29 +496,6 @@ kembali ke 15 kali masuk (R3).
 
 Label: `AT`.
 
-### `sd_writer.hasm` kehilangan byte di batas sektor
-
-**Terukur di papan, 18 September 2026.** Container satu sektor lewat; container
-empat sektor (437 kata) membuat papan diam total: tidak ada satu pun byte keluar.
-
-Sebabnya bukan kartu dan bukan kabel: register RX menampung **satu** byte, dan
-`sd_writer.hasm` sedang menulis satu sektor ke kartu ketika byte berikutnya
-datang. Byte itu hilang, dan programnya menunggu selamanya byte yang tidak akan
-pernah ada. Container satu sektor tidak pernah menyentuh batas ini karena
-tulisan pertamanya terjadi sesudah byte terakhir diterima.
-
-Dua jalan keluar, dan **keduanya keputusan pemilik**, bukan agent: kendali
-aliran di papan (`sd_writer` mengirim satu byte balik setiap sektor, host
-menunggunya), atau jeda di host (`send_program.py` berhenti sejenak setiap 128
-kata). Yang pertama benar untuk kabel mana pun; yang kedua tidak mengubah satu
-kata pun di papan.
-
-Sampai salah satunya dipilih, **program yang muat di satu sektor** — 128 kata,
-dikurangi tujuh kata header dan tabel relokasinya — adalah yang bisa ditulis ke
-kartu lewat jalur ini. Angkanya ada di [PAPAN.md](PAPAN.md).
-
-Label: **EH**.
-
 ### Yang H-Kernel belum punya
 
 Kernelnya berjalan, dan ruang lingkupnya sempit dengan sengaja:

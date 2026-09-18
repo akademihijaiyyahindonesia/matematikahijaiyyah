@@ -341,15 +341,17 @@ sim_board: tb_gowin_top.vvp program.hex
 	$(VVP) $<
 # ── stage 2A: a container on the card ───────────────────────────
 # sd_writer.hasm receives a container on the wire and writes it to sectors 17+,
-# then the program table at sector 16. The container and its byte stream come
+# one acknowledged sector at a time, then the program table at sector 16. The
+# container is test_hfs @0x200, four sectors -- the one that left the board
+# silent before the writer acknowledged anything. The container and its byte stream come
 # from the same two host tools a board is fed from -- build_container.py frames
 # the image, send_program.py frames the wire -- so a bench that passes here
 # cannot pass with a format the board would refuse.
 sd_writer.hex: $(RTL_DIR)/programs/sd_writer.hasm $(RTL_DIR)/programs/hal_sd.hasm
 	python3 $(RTL_DIR)/scripts/asm2hex.py $< > $@
 
-container.hex: $(RTL_DIR)/programs/test_bsm.hasm $(RTL_DIR)/scripts/build_container.py
-	python3 $(RTL_DIR)/scripts/build_container.py $< 0x100 > $@
+container.hex: $(RTL_DIR)/programs/test_hfs.hasm $(RTL_DIR)/scripts/build_container.py
+	python3 $(RTL_DIR)/scripts/build_container.py $< 0x200 > $@
 
 container_payload.txt: container.hex $(RTL_DIR)/scripts/send_program.py
 	python3 $(RTL_DIR)/scripts/send_program.py $< | od -An -v -tx1 | tr -s ' ' '\n' | grep . > $@

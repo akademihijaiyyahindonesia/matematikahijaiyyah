@@ -24,18 +24,31 @@
 ; This writes ONE entry, PROGRAM_ID 1, because stage 2A is one program. The
 ; rest of the table stays zero, which reads as empty rather than as program 0.
 ;
-; It prints two numbers and halts:
+; It prints, in order:
+;   0             ready: the card initialised and nothing is written yet. The
+;                 same failure the per-sector ACK fixes happens here too -- the
+;                 card's init takes milliseconds, and a byte sent meanwhile is
+;                 lost -- so the host waits for this before the first word
+;   1 2 3 ...     one ACK per sector, the running count, AFTER that sector is
+;                 on the card -- the host sends the next 128 words only then
 ;   1 <sectors>   the container is on the card, in that many sectors
 ;   0             the card refused; nothing after the first refusal is written
 ;
-; ── it loses bytes at a sector boundary, measured ───────────────
-; A container that spans MORE THAN ONE sector does not arrive. The RX register
-; holds one byte, and while this program is writing a sector the next byte on
-; the wire is gone; it then waits forever for a byte that will never come.
-; Measured on the board, 18 September 2026: a 437-word container produced zero
-; bytes of output. A one-sector container never meets the limit because its
-; first write happens after the last byte. cosmictera-build/OFF.md carries the
-; two ways out, both of them the owner's to choose.
+; rtl/scripts/send_container.py is the host half: it sends 128 words, waits for
+; one line, and repeats.
+;
+; ── one ACK per sector, and the measurement that made it necessary ─
+; The RX register holds ONE byte. Without an acknowledgement, a container that
+; spans more than one sector did not arrive: while this program wrote a sector,
+; the next byte on the wire was lost, and it waited forever for a byte that
+; would never come. Measured on the board, 18 September 2026 -- a 437-word
+; container produced not one byte of output.
+;
+; The owner chose the fix: an ACK per sector, not a delay in the host. A delay
+; only happens to match one cable and one card; an ACK holds on any of them,
+; fast or slow, on this board or KV260. The ACK is PRINT of the running sector
+; count, because PRINT and EMITS are the only ways this machine can speak and a
+; number is the one that also says how far it got.
 ;
 ; Registers: R5 zero base, R6 words left, R13 sector, R14 words in this sector,
 ; R15 sectors written. R1/R2/R9/R10/R12 belong to hal_sd.hasm, R3/R4 to the
@@ -48,6 +61,8 @@
         ANDI  R1, R1, 2             ; bit 1 = ok
         CMPI  R1, 0
         JEQ   w_fail
+        MOVI  R15, 0                ; sectors written
+        PRINT R15                   ; ACK 0: ready, the card is initialised
 
 ; ── the word count ──────────────────────────────────────────────
         MOVI  R3, 0
@@ -64,7 +79,6 @@ cnt_b:  LOAD  R1, R5, 0xFF1         ; RX_STATUS
         MOV   R6, R3                ; N words to place
 
         MOVI  R13, 17               ; first data sector
-        MOVI  R15, 0                ; sectors written
 
 ; ── one sector at a time ────────────────────────────────────────
 sec:    CMPI  R6, 0
@@ -105,6 +119,7 @@ flush:  MOV   R1, R13
         JEQ   w_fail
         ADDI  R13, R13, 1
         ADDI  R15, R15, 1
+        PRINT R15                   ; ACK: this sector is on the card, send more
         JMP   sec
 
 ; ── the table, written last ─────────────────────────────────────

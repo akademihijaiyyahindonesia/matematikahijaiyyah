@@ -83,7 +83,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **411 asersi, 39 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **408 asersi, 39 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -118,7 +118,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **Syscall HFS dari mode pengguna: create → write → read → verify, di RAM**, lewat kernel — sebuah proses memanggil HFS_CREATE, HFS_WRITE (Kaf), lalu HFS_READ dan mendapat kembali vektor yang ditulisnya; lalu di-commit ke kartu — MAGIC `HFS1`, VERSION 1, entri berkas, dan data sektor 2 dibaca langsung dari memori model kartu dan harus sama dengan blok RAM; merah bila `sc_ret` mempercayai R7 melewati `hos_alloc` (CREATE mengembalikan 6) dan bila heap tidak diinisialisasi (ketiganya 0) | `make -C rtl/tb sim_hfs_syscall` |
 | ✅ | **`SYSCALL` 9 melintasi sebelas sektor, tersimulasi** — container-nya shell itu sendiri: 1.245 kata, 125 relokasi, 1.377 kata = 11 sektor; header + tabel = 132 kata, jadi **tabel relokasi dan kata program sama-sama menyeberang batas sektor**. Seluruh 1.245 kata di `IMEM` = keluaran perakit di 0x900. Merah bila tabel tidak pindah sektor dan bila kata program tidak pindah sektor — dua sabotase yang **tidak terlihat** oleh bench satu-sektor | `make -C rtl/tb sim_prog_load_multi` |
 | ✅ | **`SYSCALL` 9 memuat program dari kartu, tersimulasi** — proses mode pengguna meminta PROGRAM_ID 1; kernel membaca tabel sektor 16, memeriksa MAGIC `HPG1`, VERSION, batas memori, ENTRY, dan **jumlah 32-bit sebelum satu kata pun ditulis**, menyalin tabel relokasi ke 0x300, lalu menulis `IMEM` sambil menambahkan LOAD_ADDR. Citra dibandingkan dengan keluaran perakit di alamat itu (`build_container.py --image`); merah bila satu kata di kartu dirusak (ditolak, 0) dan bila relokasi tidak diterapkan | `make -C rtl/tb sim_prog_load` |
-| ✅ | **Container program mendarat di kartu, tersimulasi** — `sd_writer.hasm` menerima container di kabel (`build_container.py` lalu `send_program.py`, dua alat yang sama yang dipakai ke papan) dan menulisnya ke sektor 17+, lalu tabel program di sektor 16 **paling akhir**: PROGRAM_ID 1, FLAGS 1 (VALID), START_SECTOR 17, SECTOR_COUNT 1. Isi kartu dibaca dari memori model, bukan dari kata program itu sendiri; merah bila START_SECTOR salah dan bila satu kata nol terselip di depan data | `make -C rtl/tb sim_sd_writer` |
+| ✅ | **Container program mendarat di kartu, empat sektor, satu ACK per sektor, tersimulasi** — `sd_writer.hasm` mencetak `0` begitu kartu siap, lalu jumlah sektor tertulis sesudah tiap sektor; bench berlaku seperti `send_container.py`: tunggu `0`, kirim 128 kata, tunggu ACK. Container-nya `test_hfs` @0x200, 437 kata — **yang dulu membuat papan diam**. Kabel `0 1 2 3 4`, lalu `1 4`; sektor 17–20 kata demi kata, tabel `1, VALID, 17, 4`, sektor 21 tak tersentuh. Tanpa menunggu ACK, simulasi **mereproduksi kegagalan papan**: kata ke-128 mendarat `0001310b` alih-alih `11aa0e80` dan tabel tak pernah ditulis | `make -C rtl/tb sim_sd_writer` |
 | ✅ | **HFS melewati reboot lewat kartu, tersimulasi** — boot 1 membuat berkas dan menulis Kaf; CPU di-reset dan **seluruh RAM data dinolkan**, kartu dibiarkan; boot 2 memuat HFS dari kartu dan menemukan Kaf. Kabel serial membaca `1 1 1` di boot 1 dan `2` di boot 2 — angka yang sama yang dibaca di papan. Merah bila tabel tak dimuat dari kartu (boot 2 fase 1) atau data tak di-commit (fase 3); merah bila hasil CREATE tak dilaporkan (kabel `11`) dan bila boot tanpa `hos_fs_mount` (kabel `1 0 0` dua kali); **hijau palsu** bila RAM tidak dinolkan, terukur — `hcpu_dataram.v` tidak mengosongkan diri saat reset. Mati daya fisik: dijalankan di papan 18 September 2026, lihat [PAPAN.md](PAPAN.md) | `make -C rtl/tb sim_hfs_persist` |
 
 Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
@@ -195,6 +195,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | ✅ | **Slot CPU hasil pemisahan dijalankan di papan: 23 byte, `112`, `CYCLES=00001B89`** | `make -C rtl/fpga/gowin bitstream` lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs`, dan baca UART 115200 — bangun dulu, karena berkas itu membawa `PROGRAM` mana pun yang terakhir dipanggang |
 | ✅ | **Papan boot dari kartu tanpa masukan host: `1 2 3`, dua kali** — pemuat dipanggang ke bitstream, host hanya mendengar; 579.255 siklus (21,5 ms) dari konfigurasi sampai halt. Bitstream masih dimuat lewat JTAG ke SRAM ([PAPAN.md](PAPAN.md)) | `make -C rtl/fpga/gowin PROGRAM=../../programs/test_prog_run.hasm bitstream`, muat, baca UART 115200, lalu `make -C rtl/fpga/gowin program.hex` |
 | ✅ | **Program dari kartu berjalan di papan: `1 2 3`** — dimuat, direlokasi, lalu diserahkan lewat `TRAP_EPC`+`ERET`; container yang dirusak menjawab `0` dan tidak dijalankan. Gelungnya ditutup `JMP` (absolut), jadi angka itu juga membuktikan relokasi diterapkan; sabotase yang menghapusnya memberi `111` ([PAPAN.md](PAPAN.md)) | `make -C rtl/tb sim_prog_run` |
+| ✅ | **Shell naik dari 11 sektor kartu di papan dan menjawab kabel: `HIJAIYYAH`, lalu `A`→`A`, `p`→`2 0 1`** — container 1.377 kata ditulis dengan ACK per sektor (`1` … `11`, lalu `1 11`), dimuat dengan 125 relokasi yang tabelnya sendiri menyeberang sektor, lalu dijalankan. Container 4 sektor yang dulu membuat papan diam kini `1 4` ([PAPAN.md](PAPAN.md)) | `send_container.py <port> <container.hex> --writer ../../programs/sd_writer.hasm`, lalu `send PROG=../../programs/test_prog_run.hasm` |
 | ✅ | **Loader membaca container dari kartu di papan: `1`, dan `0` untuk citra yang dirusak** — enam lari berurutan, kontrolnya ikut dijalankan: satu kata di container diganti `DEADBEEF` dan papan menolak ([PAPAN.md](PAPAN.md)). **Tidak** mengklaim isi memori instruksi benar: tidak ada port baca | `make -C rtl/fpga/gowin bridge` lalu `send PROG=../../programs/sd_writer.hasm` diikuti containernya, lalu `send PROG=../../programs/test_prog_load.hasm` |
 | ✅ | **Blok codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`) di papan: `8 0 0 1 1 0 1 5`** | `make -C rtl/fpga/gowin hdmi_bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_codex.hasm` |
 
@@ -263,6 +264,6 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 5.019 lulus, 0 dilewati
-make -C rtl/tb all               # 411 asersi, 39 bench, 0 gagal
+make -C rtl/tb all               # 408 asersi, 39 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```
