@@ -19,9 +19,15 @@
 ; ENTRY back through the ABI is a decision for the owner, and 2B proper waits
 ; on it.
 ;
-; Sent over the wire to a board running loader.hasm, so it assembles at 64 and
-; occupies roughly 640 words. The container it loads is built for 0x900, far
-; above that, so the program being loaded cannot land on the program loading it.
+; It runs two ways, and both were measured on the board, 18 September 2026:
+;
+;   sent over the wire to loader.hasm   assembled at 64    1 2 3
+;   baked into the bitstream            assembled at 0     1 2 3, with the host
+;                                                          sending NOTHING
+;
+; Either way it occupies roughly 640 words, and the container it loads is built
+; for 0x900, far above that, so the program being loaded cannot land on the
+; program loading it.
 
         MOVI  R1, 1                 ; PROGRAM_ID 1
         CALL  hos_prog_load

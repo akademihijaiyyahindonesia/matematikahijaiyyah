@@ -750,12 +750,26 @@ dipasang, lalu `ERET` — bentuk yang sama yang `loader.hasm` pakai sejak papan
 ini pertama jadi jembatan, karena ISA ini memang tidak punya lompatan lewat
 register.
 
-**Yang ini masih belum menutup tahap 2.** Syarat tahap 2 berbunyi *"program
-tersimpan di kartu berjalan sesudah reset, **tanpa host tersambung**"*, dan di
-sini host masih mengirimkan program pemuatnya lewat kabel. Yang tertutup adalah
-rantainya: kartu → loader → periksa → relokasi → IMEM → `ENTRY` → eksekusi.
-Yang tersisa adalah memanggang pemuat itu ke dalam bitstream sehingga papan
-melakukannya sendiri saat menyala — dan itu 2B penuh, belum dibuka pemilik.
+**Lalu pemuatnya dipanggang, dan host berhenti mengirim apa pun.**
+`test_prog_run.hasm` dirakit di alamat 0 dan dipanggang ke bitstream slot CPU
+(15.744 LUT4, 86,18 MHz — angka header yang sama). Pembaca serial dibuka,
+bitstream dimuat, dan **tidak satu byte pun dikirim host**:
+
+| lari | keluaran papan | siklus konfigurasi → halt |
+|---:|---|---|
+| 1 | **`1 2 3`** | `0008D6B7` = 579.255 ≈ 21,5 ms |
+| 2 | **`1 2 3`** | `0008D6A1` = 579.233 |
+
+Angka `1 2 3` hanya bisa datang dari kartu: program yang dipanggang sendiri
+hanya bisa mencetak `0`, lewat jalur penolakannya. Selisih 22 siklus antara dua
+lari adalah waktu kartu, bukan desain.
+
+**Dan inilah batas yang masih tersisa, dinyatakan persis.** Bitstream tetap
+dimuat host lewat JTAG ke SRAM FPGA — yang hilang saat daya dicabut, sehingga
+papan menyala sebagai SoC LiteX pabrikannya. Syarat tahap 2 secara harfiah,
+*"tanpa host tersambung"*, menuntut bitstream ini tinggal di **flash SPI**
+papan sehingga daya saja cukup untuk memulainya. Menulis flash itu **menimpa
+citra LiteX pabrikan**, dan itu keputusan pemilik, bukan agent.
 
 **Satu batas ABI yang ikut terlihat.** `ENTRY` ditulis oleh program uji, bukan
 dikembalikan loader: `hos_prog_load` menjawab 1 atau 0, sementara di mana
