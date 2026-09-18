@@ -31,6 +31,12 @@
 ; cap rtl/scripts/build_container.py refuses to exceed, so the refusal normally
 ; happens on the host and this one is the backstop.
 ;
+; The margin is thin and measured: the shell's own table is 125 entries, because
+; this file brought JMPs and CALLs of its own (the shell was 85 before it). Three
+; more absolute jumps in the resident image and the shell can no longer be
+; loaded by this loader. rtl/tb/tb_hcpu_prog_load_multi.v loads the shell, so it
+; is where that will show first.
+;
 ; ── what it does NOT do ─────────────────────────────────────────
 ; It does not run the program. ENTRY is checked to lie inside the loaded image
 ; and then left alone: making the caller continue there is stage 2B, which the

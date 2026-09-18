@@ -83,7 +83,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **404 asersi, 38 bench, 0 gagal** | `make -C rtl/tb all` |
+| ✅ | **411 asersi, 39 bench, 0 gagal** | `make -C rtl/tb all` |
 | ✅ | ROM 28 huruf | `make -C rtl/tb sim_rom` |
 | ✅ | Guard G1–G4, T1–T2 | `make -C rtl/tb sim_guard` |
 | ✅ | Codex ALU | `make -C rtl/tb sim_codex_alu` |
@@ -116,6 +116,7 @@ sifatnya diasersi secara aritmetika dan deraunya berbenih.
 | ✅ | **Tombol mode memilih halaman** — debounce, tekan panjang, dan pembungkusan halaman | `make -C rtl/tb sim_page_key` |
 | ✅ | **Register codex selamat melewati trap** — handler menjalankan satu `HLOAD` dan H0 pemanggil tetap utuh karena handler menyimpannya lewat perangkat lunak (`hos_hctx.hasm`, 72 instruksi, 0 LUT4); merah kalau kedua `CALL` simpan/pulihkan dicabut, dan memakai Kaf karena hanya huruf itu yang H\*-nya 1 | `make -C rtl/tb sim_trap_hreg` |
 | ✅ | **Syscall HFS dari mode pengguna: create → write → read → verify, di RAM**, lewat kernel — sebuah proses memanggil HFS_CREATE, HFS_WRITE (Kaf), lalu HFS_READ dan mendapat kembali vektor yang ditulisnya; lalu di-commit ke kartu — MAGIC `HFS1`, VERSION 1, entri berkas, dan data sektor 2 dibaca langsung dari memori model kartu dan harus sama dengan blok RAM; merah bila `sc_ret` mempercayai R7 melewati `hos_alloc` (CREATE mengembalikan 6) dan bila heap tidak diinisialisasi (ketiganya 0) | `make -C rtl/tb sim_hfs_syscall` |
+| ✅ | **`SYSCALL` 9 melintasi sebelas sektor, tersimulasi** — container-nya shell itu sendiri: 1.245 kata, 125 relokasi, 1.377 kata = 11 sektor; header + tabel = 132 kata, jadi **tabel relokasi dan kata program sama-sama menyeberang batas sektor**. Seluruh 1.245 kata di `IMEM` = keluaran perakit di 0x900. Merah bila tabel tidak pindah sektor dan bila kata program tidak pindah sektor — dua sabotase yang **tidak terlihat** oleh bench satu-sektor | `make -C rtl/tb sim_prog_load_multi` |
 | ✅ | **`SYSCALL` 9 memuat program dari kartu, tersimulasi** — proses mode pengguna meminta PROGRAM_ID 1; kernel membaca tabel sektor 16, memeriksa MAGIC `HPG1`, VERSION, batas memori, ENTRY, dan **jumlah 32-bit sebelum satu kata pun ditulis**, menyalin tabel relokasi ke 0x300, lalu menulis `IMEM` sambil menambahkan LOAD_ADDR. Citra dibandingkan dengan keluaran perakit di alamat itu (`build_container.py --image`); merah bila satu kata di kartu dirusak (ditolak, 0) dan bila relokasi tidak diterapkan | `make -C rtl/tb sim_prog_load` |
 | ✅ | **Container program mendarat di kartu, tersimulasi** — `sd_writer.hasm` menerima container di kabel (`build_container.py` lalu `send_program.py`, dua alat yang sama yang dipakai ke papan) dan menulisnya ke sektor 17+, lalu tabel program di sektor 16 **paling akhir**: PROGRAM_ID 1, FLAGS 1 (VALID), START_SECTOR 17, SECTOR_COUNT 1. Isi kartu dibaca dari memori model, bukan dari kata program itu sendiri; merah bila START_SECTOR salah dan bila satu kata nol terselip di depan data | `make -C rtl/tb sim_sd_writer` |
 | ✅ | **HFS melewati reboot lewat kartu, tersimulasi** — boot 1 membuat berkas dan menulis Kaf; CPU di-reset dan **seluruh RAM data dinolkan**, kartu dibiarkan; boot 2 memuat HFS dari kartu dan menemukan Kaf. Kabel serial membaca `1 1 1` di boot 1 dan `2` di boot 2 — angka yang sama yang dibaca di papan. Merah bila tabel tak dimuat dari kartu (boot 2 fase 1) atau data tak di-commit (fase 3); merah bila hasil CREATE tak dilaporkan (kabel `11`) dan bila boot tanpa `hos_fs_mount` (kabel `1 0 0` dua kali); **hijau palsu** bila RAM tidak dinolkan, terukur — `hcpu_dataram.v` tidak mengosongkan diri saat reset. Mati daya fisik: dijalankan di papan 18 September 2026, lihat [PAPAN.md](PAPAN.md) | `make -C rtl/tb sim_hfs_persist` |
@@ -262,6 +263,6 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
 python3 -m pytest -q             # 5.019 lulus, 0 dilewati
-make -C rtl/tb all               # 404 asersi, 38 bench, 0 gagal
+make -C rtl/tb all               # 411 asersi, 39 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```

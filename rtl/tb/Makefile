@@ -26,7 +26,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 
 .PHONY: all sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
         sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-        sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_prog_load sim_prog_run sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+        sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_prog_load sim_prog_load_multi sim_prog_run sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
         sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
         sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
         sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -41,7 +41,7 @@ RTL_SRC   = $(wildcard $(RTL_DIR)/hcpu_*.v)
 # on top of it.
 all: sim_rom sim_guard sim_codex_alu sim_hisab sim_top sim_kernel \
      sim_trap sim_mmio sim_timer sim_uart_rx sim_board sim_loader \
-     sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_prog_load sim_prog_run sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
+     sim_letters sim_trap_hreg sim_hfs_syscall sim_hfs_persist sim_sd_writer sim_prog_load sim_prog_load_multi sim_prog_run sim_subroutine sim_syscall_io sim_branch_trap_race sim_hos \
      sim_nui_embedding sim_loader_nui sim_video_timing sim_shell \
      sim_redirect_shadow sim_epc_eret sim_flags_ctx sim_emits \
      sim_hfs_lifecycle sim_sdio sim_sdio_prog \
@@ -88,7 +88,7 @@ wave_top:      sim_top;      $(GTKWAVE) tb_hcpu_top.vcd &
 # ── Clean ───────────────────────────────────────────────────────
 
 clean:
-	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex shell_persist.hex sd_writer.hex container.hex container_payload.txt shell_progload.hex progload_container.hex progload_want.hex test_prog_run.hex progrun_container.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
+	rm -f *.vvp *.vcd blank_text.hex program.hex loader.hex payload.txt kernel.hex shell.hex flags_ctx.hex hfs_lifecycle.hex letters.hex trap_hreg.hex shell_hfs.hex shell_persist.hex sd_writer.hex container.hex container_payload.txt shell_progload.hex progload_container.hex progload_want.hex test_prog_run.hex progrun_container.hex multi_container.hex multi_want.hex subroutine.hex syscall_io.hex hos_demo.hex nui_embedding.hex nui_payload.txt
 
 # ── H-Kernel on the full pipeline ───────────────────────────────
 # The board wrapper, not hcpu_top, because the wrapper is what holds the
@@ -392,6 +392,22 @@ tb_hcpu_prog_run.vvp: $(TB_DIR)/tb_hcpu_prog_run.v $(TB_DIR)/sd_card_model.v \
 	$(IVERILOG) $(INC) -o $@ $^
 
 sim_prog_run: tb_hcpu_prog_run.vvp test_prog_run.hex progrun_container.hex
+	$(VVP) $<
+
+# SYSCALL 9 across sector boundaries: the shell itself as the container, 1,245
+# words and 125 relocations = eleven sectors, so both the relocation table and
+# the program words cross a boundary. Every earlier test used one sector.
+multi_container.hex: $(SHELL_DEPS) $(RTL_DIR)/scripts/build_container.py
+	python3 $(RTL_DIR)/scripts/build_container.py $(RTL_DIR)/programs/shell.hasm 0x900 > $@
+
+multi_want.hex: $(SHELL_DEPS) $(RTL_DIR)/scripts/build_container.py
+	python3 $(RTL_DIR)/scripts/build_container.py $(RTL_DIR)/programs/shell.hasm 0x900 --image > $@
+
+tb_hcpu_prog_load_multi.vvp: $(TB_DIR)/tb_hcpu_prog_load_multi.v $(TB_DIR)/sd_card_model.v \
+                             $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+sim_prog_load_multi: tb_hcpu_prog_load_multi.vvp shell_progload.hex multi_container.hex multi_want.hex
 	$(VVP) $<
 
 sim_prog_load: tb_hcpu_prog_load.vvp shell_progload.hex progload_container.hex progload_want.hex
