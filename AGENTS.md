@@ -655,6 +655,23 @@ lewat rekonfigurasi — biaya rack = slot terbesar, 15.994 LUT4 = 77%
 bersama" berlaku untuk apa yang muat dalam satu slot, dan sisanya diuji
 bergiliran; mana yang mana adalah keputusan pemilik saat tahap itu dibuka.
 
+### Keputusan pemilik, 20 September 2026 — tahap 2 ditutup dengan opsi B
+
+Tahap 2 ditutup dengan **bukti yang ada**, bukan dengan flash SPI. Alasan
+pemilik: loader, boot dari kartu, program 11 sektor, relokasi lintas sektor, dan
+shell yang berjalan dari kartu sudah terbukti di silikon, dan host tidak
+mengirim satu byte pun saat boot. Yang tidak ada hanyalah menyala dari daya
+tanpa JTAG dan tanpa PC — *"lebih merupakan varian metode boot, bukan pembuktian
+baru terhadap arsitektur loader."* Karena itu flash SPI tidak dicatat sebagai
+utang (K11); citra LiteX pabrikan tetap di tempatnya.
+
+Urutannya ditegaskan: Jamrah → Hijrah → Ka'bah → lab serangan Codex JIM →
+burn-in → NUI Core → Command Center Docker → KV260. Jamrah lebih dulu karena
+*"paling murah diverifikasi dan hasilnya absolut"*: 256 byte, 256/256 atau
+cacat, tanpa wilayah abu-abu. Lab serangan menunggu ketiga validasi, karena
+*"lab serangan tanpa baseline validasi akan menghasilkan angka yang sulit
+ditafsirkan."*
+
 ### Keputusan pemilik, 20 September 2026 — sembilan prioritas sesudah loader
 
 Prioritas lintas sektor dan ACK per sektor **tutup** 18 September 2026, di
