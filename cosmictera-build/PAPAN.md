@@ -814,6 +814,27 @@ kartu → loader → relokasi → IMEM → eksekusi untuk program sebesar kernel
 
 ---
 
+## Validasi Ka'bah — avalanche di silikon, 20 September 2026
+
+Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
+dibangun ulang dari sumber lebih dulu: 12.061 LUT4 (58%), 1.965 DFF, 0 BSRAM,
+Fmax 165,98 MHz — sama dengan catatan rack.
+
+| yang diukur | hasil |
+|---|---|
+| integritas berantai, 8 frame acak | **8/8 cocok `cube.py`** |
+| replay sesudah rekonfigurasi | identik — deterministik |
+| frame sama dua kali tanpa reset | keadaan berbeda — spons berantai |
+| avalanche, 32 bit-flip tunggal | **0,4995** dari 1.600 bit (min 0,4700, maks 0,5275) |
+| masukan termutasi | 32/32 masih cocok `cube.py` |
+| keadaan yang seharusnya berbeda | 73/73 berbeda |
+
+Yang diukur lapis 2, spons — `cube.py` menandainya **[EH]**, dan lapis 3
+(HMAC-SHA256) yang memikul keamanan. Ini pengukuran difusi, bukan klaim
+keamanan.
+
+---
+
 ## Validasi Hijrah — HCPU menghitung dari ROM-nya sendiri, 20 September 2026
 
 Laporan lengkapnya di [validasi/HIJRAH.md](validasi/HIJRAH.md). Program
@@ -977,7 +998,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.047 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.052 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1020,7 +1041,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.047 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.052 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
