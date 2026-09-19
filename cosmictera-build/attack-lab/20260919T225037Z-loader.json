@@ -1,0 +1,123 @@
+{
+  "target": "loader",
+  "cases": [
+    {
+      "id": "magic_flip",
+      "word": 0,
+      "value": 1213220656,
+      "expect": "reject",
+      "by": "MAGIC",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "version_bump",
+      "word": 1,
+      "value": 2,
+      "expect": "reject",
+      "by": "VERSION",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "words_zero",
+      "word": 2,
+      "value": 0,
+      "expect": "reject",
+      "by": "WORDS = 0",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "words_plus_one",
+      "word": 2,
+      "value": 8,
+      "expect": "accept",
+      "by": "nothing -- the extra word read is the sector's zero padding, so the sum is unchanged",
+      "written": true,
+      "answer": 1,
+      "got": "accept",
+      "agrees": true
+    },
+    {
+      "id": "load_addr_past_imem",
+      "word": 3,
+      "value": 4090,
+      "expect": "reject",
+      "by": "image past instruction memory",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "entry_outside_image",
+      "word": 4,
+      "value": 2315,
+      "expect": "reject",
+      "by": "ENTRY outside the image",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "reloc_cnt_over_buffer",
+      "word": 5,
+      "value": 200,
+      "expect": "reject",
+      "by": "RELOC_CNT over 128",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "crc_flip",
+      "word": 6,
+      "value": 472055814,
+      "expect": "reject",
+      "by": "the 32-bit sum",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "program_word_flip",
+      "word": 9,
+      "value": 286326784,
+      "expect": "reject",
+      "by": "the 32-bit sum",
+      "written": true,
+      "answer": 0,
+      "got": "reject",
+      "agrees": true
+    },
+    {
+      "id": "reloc_index_moved",
+      "word": 7,
+      "value": 6,
+      "expect": "accept",
+      "by": "nothing -- the sum covers program words only",
+      "written": true,
+      "answer": 1,
+      "got": "accept",
+      "agrees": true
+    }
+  ],
+  "attack_id": "20260919T225037Z-loader",
+  "timestamp": "2026-09-19T22:50:37.114392+00:00",
+  "inputs": 10,
+  "rejected": 8,
+  "accepted": 2,
+  "findings": 0,
+  "board": "Tang Nano 20K",
+  "bitstream": "rtl/fpga/gowin/hcpu_gowin_top_loader.fs"
+}

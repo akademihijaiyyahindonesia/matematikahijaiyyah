@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **5.052 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **5.056 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,13 +41,13 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 5.052 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 5.056 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **5.050 lulus, 1 dilewati, 1 gagal dari 5.052**: sidik jari
+Hari ini kebenarannya **5.054 lulus, 1 dilewati, 1 gagal dari 5.056**: sidik jari
 `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.
 
@@ -195,6 +195,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | ✅ | **Slot CPU hasil pemisahan dijalankan di papan: 23 byte, `112`, `CYCLES=00001B89`** | `make -C rtl/fpga/gowin bitstream` lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs`, dan baca UART 115200 — bangun dulu, karena berkas itu membawa `PROGRAM` mana pun yang terakhir dipanggang |
 | ✅ | **Papan boot dari kartu tanpa masukan host: `1 2 3`, dua kali** — pemuat dipanggang ke bitstream, host hanya mendengar; 579.255 siklus (21,5 ms) dari konfigurasi sampai halt. Bitstream masih dimuat lewat JTAG ke SRAM ([PAPAN.md](PAPAN.md)) | `make -C rtl/fpga/gowin PROGRAM=../../programs/test_prog_run.hasm bitstream`, muat, baca UART 115200, lalu `make -C rtl/fpga/gowin program.hex` |
 | ✅ | **Program dari kartu berjalan di papan: `1 2 3`** — dimuat, direlokasi, lalu diserahkan lewat `TRAP_EPC`+`ERET`; container yang dirusak menjawab `0` dan tidak dijalankan. Gelungnya ditutup `JMP` (absolut), jadi angka itu juga membuktikan relokasi diterapkan; sabotase yang menghapusnya memberi `111` ([PAPAN.md](PAPAN.md)) | `make -C rtl/tb sim_prog_run` |
+| ✅ | **Lab serangan, sasaran loader: 8 dari 10 korupsi ditolak di papan, 2 diterima sesuai spesifikasi** — yang diterima `words_plus_one` (padding nol tak mengubah jumlah) dan `reloc_index_moved` (jumlah 32-bit hanya menutupi kata program). Pembangkit `jim_stream.py`, periode 31 dan 3.124 terukur ulang ([attack-lab/](attack-lab/README.md)) | `python3 rtl/scripts/attack_lab.py --target loader --port <port>`; `pytest tests/test_integrity/test_attack_lab.py` |
 | ✅ | **Ka'bah di papan: avalanche 0,4995 dari 1.600 bit, 8/8 frame dan 32/32 masukan termutasi cocok `cube.py`** — spons berantai (frame sama dua kali tanpa reset memberi keadaan berbeda), deterministik sesudah rekonfigurasi, 73/73 keadaan yang seharusnya berbeda memang berbeda. Lapis 2 [EH]; keamanan ada di lapis 3 ([validasi/KABAH.md](validasi/KABAH.md)) | `python3 rtl/scripts/kabah_board.py <port> --avalanche 32`; `pytest tests/test_integrity/test_kabah_board.py` |
 | ✅ | **Hijrah di papan: 700/700 nilai muka, 24 / 27 / 28 / 28 dan 321 / 649 / 625 / 714 atas mod 2 / 3 / 4 / 5, tiga lari identik** — HCPU membangun ke-28 muka dari ROM-nya sendiri dan menghitung peta berbeda; empat pasang yang runtuh atas mod 2 keluar dari silikon sebagai ح–ل, ش–ن, ص–ق, ع–ي. Hitungan panjang ≤ 2 diikat ke `_reachable` milik `test_hijrah.py` ([validasi/HIJRAH.md](validasi/HIJRAH.md)) | `python3 rtl/scripts/hijrah_board.py <port>` di atas loader; `pytest tests/test_integrity/test_hijrah_board.py` |
 | ✅ | **Jamrah di papan: 256/256 byte, pulse dan ketujuh simpul, lima lari dari lima** — program dibangkitkan dari `jamrah_gate.hasm`, dibandingkan dengan `jamrah_vectors.txt`; 9.218 clock per 256 byte, identik tiap lari. Gerbang RTL-nya **tidak** di papan: di slot Ka'bah ia dipangkas habis ([validasi/JAMRAH.md](validasi/JAMRAH.md)) | `python3 rtl/scripts/jamrah_board.py <port>` di atas loader; `pytest tests/test_integrity/test_jamrah_board.py` |

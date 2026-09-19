@@ -814,6 +814,27 @@ kartu → loader → relokasi → IMEM → eksekusi untuk program sebesar kernel
 
 ---
 
+## Lab serangan, lari pertama — sasaran loader, 20 September 2026
+
+Catatan dan penjelasannya di [attack-lab/](attack-lab/README.md). Sepuluh
+container, satu field dirusak per kasus, ditulis ke kartu lalu diminta dimuat:
+
+| hasil | kasus |
+|---|---|
+| **ditolak, 8** | MAGIC, VERSION, WORDS = 0, LOAD_ADDR melewati memori instruksi, ENTRY di luar citra, RELOC_CNT > 128, CRC, satu kata program |
+| **diterima, 2** | `words_plus_one` dan `reloc_index_moved` |
+
+Keduanya diterima sesuai spesifikasi yang berlaku, bukan karena cacat: jumlah
+32-bit **hanya menutupi kata program**, jadi tabel relokasi yang dirusak lolos,
+dan WORDS yang dinaikkan satu menjumlahkan padding nol yang tidak mengubah
+jumlah. Memperluas cakupan jumlah adalah perubahan spesifikasi, keputusan
+pemilik.
+
+Pembangkitnya `rtl/scripts/jim_stream.py`, mesin Jim: periode terukur ulang
+**31** atas GF(2) dan **3.124** atas GF(5), cocok dengan `cosmic-codex-jim/`.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -998,7 +1019,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.052 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.056 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1041,7 +1062,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.052 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.056 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
