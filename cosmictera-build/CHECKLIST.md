@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **5.034 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **5.040 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 128 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,13 +41,13 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 5.034 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 5.040 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **5.018 lulus dari 5.019, satu gagal**: sidik jari
+Hari ini kebenarannya **5.038 lulus, 1 dilewati, 1 gagal dari 5.040**: sidik jari
 `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.
 
@@ -195,6 +195,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | ✅ | **Slot CPU hasil pemisahan dijalankan di papan: 23 byte, `112`, `CYCLES=00001B89`** | `make -C rtl/fpga/gowin bitstream` lalu `openFPGALoader -b tangnano20k rtl/fpga/gowin/hcpu_gowin_top.fs`, dan baca UART 115200 — bangun dulu, karena berkas itu membawa `PROGRAM` mana pun yang terakhir dipanggang |
 | ✅ | **Papan boot dari kartu tanpa masukan host: `1 2 3`, dua kali** — pemuat dipanggang ke bitstream, host hanya mendengar; 579.255 siklus (21,5 ms) dari konfigurasi sampai halt. Bitstream masih dimuat lewat JTAG ke SRAM ([PAPAN.md](PAPAN.md)) | `make -C rtl/fpga/gowin PROGRAM=../../programs/test_prog_run.hasm bitstream`, muat, baca UART 115200, lalu `make -C rtl/fpga/gowin program.hex` |
 | ✅ | **Program dari kartu berjalan di papan: `1 2 3`** — dimuat, direlokasi, lalu diserahkan lewat `TRAP_EPC`+`ERET`; container yang dirusak menjawab `0` dan tidak dijalankan. Gelungnya ditutup `JMP` (absolut), jadi angka itu juga membuktikan relokasi diterapkan; sabotase yang menghapusnya memberi `111` ([PAPAN.md](PAPAN.md)) | `make -C rtl/tb sim_prog_run` |
+| ✅ | **Jamrah di papan: 256/256 byte, pulse dan ketujuh simpul, lima lari dari lima** — program dibangkitkan dari `jamrah_gate.hasm`, dibandingkan dengan `jamrah_vectors.txt`; 9.218 clock per 256 byte, identik tiap lari. Gerbang RTL-nya **tidak** di papan: di slot Ka'bah ia dipangkas habis ([validasi/JAMRAH.md](validasi/JAMRAH.md)) | `python3 rtl/scripts/jamrah_board.py <port>` di atas loader; `pytest tests/test_integrity/test_jamrah_board.py` |
 | ✅ | **Shell naik dari 11 sektor kartu di papan dan menjawab kabel: `HIJAIYYAH`, lalu `A`→`A`, `p`→`2 0 1`** — container 1.377 kata ditulis dengan ACK per sektor (`1` … `11`, lalu `1 11`), dimuat dengan 125 relokasi yang tabelnya sendiri menyeberang sektor, lalu dijalankan. Container 4 sektor yang dulu membuat papan diam kini `1 4` ([PAPAN.md](PAPAN.md)) | `send_container.py <port> <container.hex> --writer ../../programs/sd_writer.hasm`, lalu `send PROG=../../programs/test_prog_run.hasm` |
 | ✅ | **Loader membaca container dari kartu di papan: `1`, dan `0` untuk citra yang dirusak** — enam lari berurutan, kontrolnya ikut dijalankan: satu kata di container diganti `DEADBEEF` dan papan menolak ([PAPAN.md](PAPAN.md)). **Tidak** mengklaim isi memori instruksi benar: tidak ada port baca | `make -C rtl/fpga/gowin bridge` lalu `send PROG=../../programs/sd_writer.hasm` diikuti containernya, lalu `send PROG=../../programs/test_prog_load.hasm` |
 | ✅ | **Blok codex (`CMOV` `CZERO` `CEQ` `CRHO` `CU` `CMOD4`) di papan: `8 0 0 1 1 0 1 5`** | `make -C rtl/fpga/gowin hdmi_bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_codex.hasm` |
