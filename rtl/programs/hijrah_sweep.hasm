@@ -1,0 +1,470 @@
+; hijrah_sweep.hasm -- HIJRAH measured by the machine, from its own ROM.
+;
+; hijrah/README.md and tests/test_integrity/test_hijrah.py hold the claim in
+; Python: take each letter's 5x5 face as a linear map, reduce it mod p, and
+; count the distinct maps words of those faces can reach. This program makes
+; the HCPU count them itself, so the board can be held against the Python.
+;
+; What it computes, and prints, in order:
+;
+;   1  the 28 faces, 25 values each -- 700 numbers. Built here from the ROM with
+;      HLOAD, CGET, CU and CRHO, the codex opcodes already proven on the board,
+;      in exactly the layout of src/hijaiyyah/core/exomatrix.py:
+;
+;          [ theta  U     rho   0     0    ]
+;          [ v1     v2    v3    0     A_N  ]
+;          [ v4     v5    v6    v7    v8   ]
+;          [ v9     v10   v11   v12   v13  ]
+;          [ H*     0     0     A_K   A_Q  ]
+;
+;   2  for p = 2, 3, 4, 5:
+;        p
+;        distinct faces mod p                 (length 1)
+;        how many pairs of letters collide, then each pair as two letter numbers
+;        distinct maps reachable by words of length 1 OR 2: the 28 faces and
+;          all 784 ordered products A*B mod p, counted as ONE set
+;        clocks spent forming the 784 products, the mod included
+;        clocks spent counting the 812
+;
+; "Length 1 or 2", not "length 2": hijrah's own count is cumulative --
+; tests/test_integrity/test_hijrah.py's _reachable returns the maps reached by
+; words of length 1..n, and the densities in hijrah/README.md are log2 of THAT
+; divided by n. Counting the 784 products alone gives 305 / 630 / 605 / 694
+; instead of 321 / 649 / 625 / 714 -- a number that looks right and answers a
+; different question. Measured while writing this, and it is why PACK1 sits
+; directly in front of PROD.
+;
+; The host divides and takes the logarithm; the board proves the COUNTS. A
+; density is log2(count) / length, arithmetic on a number this program has
+; already had to get right.
+;
+; ── what does not fit, measured ─────────────────────────────────
+; Length 3 is not here. Over mod 5 it reaches 16,359 distinct maps; at three
+; words each that is about 49,000 words, and data memory is 4,096. That is a
+; limit of this board, recorded as such -- it is what KV260 is for.
+;
+; ── mod without a divider ───────────────────────────────────────
+; The ISA has no divide. A cell of a product is a sum of five products of
+; values already reduced below p, so it is at most 5*(p-1)^2 = 80 for p = 5,
+; and hr_mod subtracts p until it cannot. The clocks printed per modulus are
+; what that costs, and why p = 5 is the one to watch.
+;
+; ── the packing ─────────────────────────────────────────────────
+; A reduced cell is below 5 and fits three bits, so a face packs into three
+; words: cells 0-9, 10-19, 20-24, most significant first. Two maps are equal
+; exactly when their three words are, and that is what the counters compare.
+;
+; ── data memory ─────────────────────────────────────────────────
+;   0x000-0x2BB  FACE[28][25]   the faces as built, never reduced
+;   0x2BC-0x577  RED[28][25]    the faces mod the current p
+;   0x578-0x5CB  PACK1[28][3]   the reduced faces, packed
+;   0x5CC-0xEFB  PROD[784][3]   every product A*B mod p, packed -- directly
+;                               after PACK1, so the two count as one set
+;   0xF00-0xF18  CELLS[25]      one product, cell by cell
+;   0xF20-0xF27  loop state that does not fit in registers
+; 0xFE0 upward is the peripheral window and is never touched.
+;
+; Sent over the wire to loader.hasm, so it is assembled at 64 and runs in
+; supervisor mode; R14 carries p throughout.
+
+        MOVI  R0, 0
+
+; ── 1. the faces ────────────────────────────────────────────────
+        HLOAD H0, 1
+        MOVI  R13, 0
+        CALL  hr_face
+        HLOAD H0, 2
+        MOVI  R13, 25
+        CALL  hr_face
+        HLOAD H0, 3
+        MOVI  R13, 50
+        CALL  hr_face
+        HLOAD H0, 4
+        MOVI  R13, 75
+        CALL  hr_face
+        HLOAD H0, 5
+        MOVI  R13, 100
+        CALL  hr_face
+        HLOAD H0, 6
+        MOVI  R13, 125
+        CALL  hr_face
+        HLOAD H0, 7
+        MOVI  R13, 150
+        CALL  hr_face
+        HLOAD H0, 8
+        MOVI  R13, 175
+        CALL  hr_face
+        HLOAD H0, 9
+        MOVI  R13, 200
+        CALL  hr_face
+        HLOAD H0, 10
+        MOVI  R13, 225
+        CALL  hr_face
+        HLOAD H0, 11
+        MOVI  R13, 250
+        CALL  hr_face
+        HLOAD H0, 12
+        MOVI  R13, 275
+        CALL  hr_face
+        HLOAD H0, 13
+        MOVI  R13, 300
+        CALL  hr_face
+        HLOAD H0, 14
+        MOVI  R13, 325
+        CALL  hr_face
+        HLOAD H0, 15
+        MOVI  R13, 350
+        CALL  hr_face
+        HLOAD H0, 16
+        MOVI  R13, 375
+        CALL  hr_face
+        HLOAD H0, 17
+        MOVI  R13, 400
+        CALL  hr_face
+        HLOAD H0, 18
+        MOVI  R13, 425
+        CALL  hr_face
+        HLOAD H0, 19
+        MOVI  R13, 450
+        CALL  hr_face
+        HLOAD H0, 20
+        MOVI  R13, 475
+        CALL  hr_face
+        HLOAD H0, 21
+        MOVI  R13, 500
+        CALL  hr_face
+        HLOAD H0, 22
+        MOVI  R13, 525
+        CALL  hr_face
+        HLOAD H0, 23
+        MOVI  R13, 550
+        CALL  hr_face
+        HLOAD H0, 24
+        MOVI  R13, 575
+        CALL  hr_face
+        HLOAD H0, 25
+        MOVI  R13, 600
+        CALL  hr_face
+        HLOAD H0, 26
+        MOVI  R13, 625
+        CALL  hr_face
+        HLOAD H0, 27
+        MOVI  R13, 650
+        CALL  hr_face
+        HLOAD H0, 28
+        MOVI  R13, 675
+        CALL  hr_face
+
+        MOVI  R6, 0                 ; print all 700 face values
+pf_lp:  LOAD  R1, R6, 0
+        PRINT R1
+        ADDI  R6, R6, 1
+        CMPI  R6, 700
+        JNE   pf_lp
+
+; ── 2. each modulus ─────────────────────────────────────────────
+        MOVI  R14, 2
+m_lp:   PRINT R14
+
+        MOVI  R6, 0                 ; RED = FACE mod p
+rd_lp:  LOAD  R1, R6, 0
+        CALL  hr_mod
+        STORE R1, R6, 0x2BC
+        ADDI  R6, R6, 1
+        CMPI  R6, 700
+        JNE   rd_lp
+
+        MOVI  R12, 0                ; PACK1[f] = pack(RED[f]). R12, not R6:
+pk_lp:  MOVI  R2, 25                ; hr_pack clobbers R4-R9
+        MUL   R4, R12, R2
+        ADDI  R4, R4, 0x2BC
+        MOVI  R2, 3
+        MUL   R5, R12, R2
+        ADDI  R5, R5, 0x578
+        CALL  hr_pack
+        ADDI  R12, R12, 1
+        CMPI  R12, 28
+        JNE   pk_lp
+
+        MOVI  R4, 0x578             ; length 1: distinct faces
+        MOVI  R5, 28
+        CALL  hr_distinct
+        PRINT R1
+
+        MOVI  R12, 0                ; the colliding pairs: how many, then which
+        CALL  hr_pairs
+        PRINT R1
+        MOVI  R12, 1
+        CALL  hr_pairs
+
+        LOAD  R1, R0, 0xFF4         ; length 2: the 784 products
+        STORE R1, R0, 0xF22
+        CALL  hr_products
+        LOAD  R1, R0, 0xFF4
+        LOAD  R2, R0, 0xF22
+        SUB   R3, R1, R2
+        STORE R3, R0, 0xF23         ; clocks to form them
+        STORE R1, R0, 0xF22
+
+        MOVI  R4, 0x578             ; PACK1 and PROD are adjacent on purpose:
+        MOVI  R5, 812               ; 28 faces + 784 products, counted as one set
+        CALL  hr_distinct
+        MOV   R13, R1               ; distinct maps of length 1 or 2
+        LOAD  R1, R0, 0xFF4
+        LOAD  R2, R0, 0xF22
+        SUB   R3, R1, R2            ; clocks to count them
+        PRINT R13
+        LOAD  R1, R0, 0xF23
+        PRINT R1
+        PRINT R3
+
+        ADDI  R14, R14, 1
+        CMPI  R14, 6
+        JNE   m_lp
+        HALT
+
+; ── the face of the letter in H0, into 25 words at R13 ──────────
+hr_face:
+        CGET  R1, H0, 0             ; theta
+        STORE R1, R13, 0
+        CU    R1, H0                ; U
+        STORE R1, R13, 1
+        CRHO  R1, H0                ; rho = theta - U
+        STORE R1, R13, 2
+        MOVI  R1, 0
+        STORE R1, R13, 3
+        STORE R1, R13, 4
+        CGET  R1, H0, 1
+        STORE R1, R13, 5
+        CGET  R1, H0, 2
+        STORE R1, R13, 6
+        CGET  R1, H0, 3
+        STORE R1, R13, 7
+        MOVI  R1, 0
+        STORE R1, R13, 8
+        CGET  R1, H0, 14            ; A_N, read from the vector, not recomputed
+        STORE R1, R13, 9
+        CGET  R1, H0, 4
+        STORE R1, R13, 10
+        CGET  R1, H0, 5
+        STORE R1, R13, 11
+        CGET  R1, H0, 6
+        STORE R1, R13, 12
+        CGET  R1, H0, 7
+        STORE R1, R13, 13
+        CGET  R1, H0, 8
+        STORE R1, R13, 14
+        CGET  R1, H0, 9
+        STORE R1, R13, 15
+        CGET  R1, H0, 10
+        STORE R1, R13, 16
+        CGET  R1, H0, 11
+        STORE R1, R13, 17
+        CGET  R1, H0, 12
+        STORE R1, R13, 18
+        CGET  R1, H0, 13
+        STORE R1, R13, 19
+        CGET  R1, H0, 17            ; H*
+        STORE R1, R13, 20
+        MOVI  R1, 0
+        STORE R1, R13, 21
+        STORE R1, R13, 22
+        CGET  R1, H0, 15            ; A_K
+        STORE R1, R13, 23
+        CGET  R1, H0, 16            ; A_Q
+        STORE R1, R13, 24
+        RET
+
+; ── R1 mod p, p in R14. Clobbers R2, R3 ─────────────────────────
+; No divide in this ISA, so subtract p until R1 < p. The sign of R1 - p is the
+; comparison (hos.hasm's hos_size_ge does the same): SHRI 31 is 1 exactly when
+; R1 < p.
+hr_mod: SUB   R2, R1, R14
+        SHRI  R3, R2, 31
+        CMPI  R3, 0
+        JNE   hm_done
+        MOV   R1, R2
+        JMP   hr_mod
+hm_done:
+        RET
+
+; ── pack 25 reduced cells at R4 into three words at R5 ──────────
+; Clobbers R4 - R9. Horner form: acc = acc << 3 | cell, so no shift by a
+; register is needed. Ten cells, ten cells, five cells.
+hr_pack:
+        MOVI  R6, 0                 ; acc
+        MOVI  R7, 0                 ; cells in this word
+        MOVI  R8, 0                 ; cells in all
+hp_c:   LOAD  R9, R4, 0
+        SHLI  R6, R6, 3
+        OR    R6, R6, R9
+        ADDI  R4, R4, 1
+        ADDI  R8, R8, 1
+        ADDI  R7, R7, 1
+        CMPI  R7, 10
+        JEQ   hp_w
+        CMPI  R8, 25
+        JEQ   hp_w
+        JMP   hp_c
+hp_w:   STORE R6, R5, 0
+        ADDI  R5, R5, 1
+        MOVI  R6, 0
+        MOVI  R7, 0
+        CMPI  R8, 25
+        JNE   hp_c
+        RET
+
+; ── how many of R5 three-word entries at R4 are distinct -> R1 ──
+; Entry i is new when no earlier entry equals it. Clobbers R6 - R11.
+hr_distinct:
+        MOVI  R1, 0
+        MOVI  R6, 0                 ; i
+hd_i:   CMP   R6, R5
+        JEQ   hd_done
+        MOVI  R2, 3
+        MUL   R7, R6, R2
+        ADD   R7, R7, R4            ; &entry[i]
+        MOVI  R8, 0                 ; j
+        MOV   R9, R4                ; &entry[j]
+hd_j:   CMP   R8, R6
+        JEQ   hd_new
+        LOAD  R10, R7, 0
+        LOAD  R11, R9, 0
+        CMP   R10, R11
+        JNE   hd_nx
+        LOAD  R10, R7, 1
+        LOAD  R11, R9, 1
+        CMP   R10, R11
+        JNE   hd_nx
+        LOAD  R10, R7, 2
+        LOAD  R11, R9, 2
+        CMP   R10, R11
+        JNE   hd_nx
+        JMP   hd_old                ; equal to an earlier one
+hd_nx:  ADDI  R8, R8, 1
+        ADDI  R9, R9, 3
+        JMP   hd_j
+hd_new: ADDI  R1, R1, 1
+hd_old: ADDI  R6, R6, 1
+        JMP   hd_i
+hd_done:
+        RET
+
+; ── the pairs of letters whose reduced faces collide ────────────
+; R12 = 0: R1 = how many pairs.  R12 = 1: print each pair as two letter
+; numbers, 1-based like HLOAD. Clobbers R1, R6 - R11.
+hr_pairs:
+        MOVI  R1, 0
+        MOVI  R6, 0                 ; i
+hq_i:   CMPI  R6, 28
+        JEQ   hq_done
+        ADDI  R8, R6, 1             ; j = i + 1
+hq_j:   CMPI  R8, 28
+        JEQ   hq_ni
+        MOVI  R2, 3
+        MUL   R7, R6, R2
+        ADDI  R7, R7, 0x578
+        MUL   R9, R8, R2
+        ADDI  R9, R9, 0x578
+        LOAD  R10, R7, 0
+        LOAD  R11, R9, 0
+        CMP   R10, R11
+        JNE   hq_nj
+        LOAD  R10, R7, 1
+        LOAD  R11, R9, 1
+        CMP   R10, R11
+        JNE   hq_nj
+        LOAD  R10, R7, 2
+        LOAD  R11, R9, 2
+        CMP   R10, R11
+        JNE   hq_nj
+        ADDI  R1, R1, 1
+        CMPI  R12, 0
+        JEQ   hq_nj
+        ADDI  R10, R6, 1
+        PRINT R10
+        ADDI  R10, R8, 1
+        PRINT R10
+hq_nj:  ADDI  R8, R8, 1
+        JMP   hq_j
+hq_ni:  ADDI  R6, R6, 1
+        JMP   hq_i
+hq_done:
+        RET
+
+; ── every ordered product RED[a] * RED[b] mod p, packed ─────────
+; a and b live in memory (0xF20, 0xF21): the product itself needs the
+; registers. Row i of A is RED[a] + 5i, column j of B is RED[b] + j with a
+; stride of 5, so the five terms of a cell are unrolled with immediate offsets.
+hr_products:
+        MOVI  R1, 0
+        STORE R1, R0, 0xF20         ; a
+hr_a:   MOVI  R1, 0
+        STORE R1, R0, 0xF21         ; b
+hr_b:   LOAD  R1, R0, 0xF20
+        MOVI  R2, 25
+        MUL   R10, R1, R2
+        ADDI  R10, R10, 0x2BC       ; &RED[a]
+        LOAD  R1, R0, 0xF21
+        MUL   R11, R1, R2
+        ADDI  R11, R11, 0x2BC       ; &RED[b]
+        MOVI  R12, 0                ; i
+hr_i:   MOVI  R13, 0                ; j
+hr_j:   MOVI  R2, 5
+        MUL   R4, R12, R2
+        ADD   R4, R4, R10           ; row i of A
+        ADD   R5, R11, R13          ; column j of B
+        LOAD  R6, R4, 0
+        LOAD  R7, R5, 0
+        MUL   R1, R6, R7
+        LOAD  R6, R4, 1
+        LOAD  R7, R5, 5
+        MUL   R6, R6, R7
+        ADD   R1, R1, R6
+        LOAD  R6, R4, 2
+        LOAD  R7, R5, 10
+        MUL   R6, R6, R7
+        ADD   R1, R1, R6
+        LOAD  R6, R4, 3
+        LOAD  R7, R5, 15
+        MUL   R6, R6, R7
+        ADD   R1, R1, R6
+        LOAD  R6, R4, 4
+        LOAD  R7, R5, 20
+        MUL   R6, R6, R7
+        ADD   R1, R1, R6
+        CALL  hr_mod                ; clobbers R2, R3 only
+        MOVI  R2, 5
+        MUL   R6, R12, R2
+        ADD   R6, R6, R13
+        STORE R1, R6, 0xF00         ; CELLS[5i + j]
+        ADDI  R13, R13, 1
+        CMPI  R13, 5
+        JNE   hr_j
+        ADDI  R12, R12, 1
+        CMPI  R12, 5
+        JNE   hr_i
+
+        LOAD  R1, R0, 0xF20         ; pack CELLS into PROD[28a + b]
+        MOVI  R2, 28
+        MUL   R1, R1, R2
+        LOAD  R2, R0, 0xF21
+        ADD   R1, R1, R2
+        MOVI  R2, 3
+        MUL   R5, R1, R2
+        MOVI  R2, 0x5CC
+        ADD   R5, R5, R2
+        MOVI  R4, 0xF00
+        CALL  hr_pack
+
+        LOAD  R1, R0, 0xF21
+        ADDI  R1, R1, 1
+        STORE R1, R0, 0xF21
+        CMPI  R1, 28
+        JNE   hr_b
+        LOAD  R1, R0, 0xF20
+        ADDI  R1, R1, 1
+        STORE R1, R0, 0xF20
+        CMPI  R1, 28
+        JNE   hr_a
+        RET

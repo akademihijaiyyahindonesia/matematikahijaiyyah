@@ -814,6 +814,25 @@ kartu → loader → relokasi → IMEM → eksekusi untuk program sebesar kernel
 
 ---
 
+## Validasi Hijrah — HCPU menghitung dari ROM-nya sendiri, 20 September 2026
+
+Laporan lengkapnya di [validasi/HIJRAH.md](validasi/HIJRAH.md). Program
+`rtl/programs/hijrah_sweep.hasm` membangun ke-28 muka dengan `HLOAD`, `CGET`,
+`CU`, dan `CRHO`, lalu menghitung peta berbeda atas mod 2, 3, 4, dan 5. Tiga
+lari, identik sampai ke siklusnya:
+
+| | papan | Python |
+|---|---|---|
+| muka | 700/700 | `build_exomatrix` |
+| panjang 1, mod 2 / 3 / 4 / 5 | **24 / 27 / 28 / 28** | sama |
+| runtuh atas mod 2 | **ح–ل, ش–ن, ص–ق, ع–ي** | sama |
+| panjang ≤ 2, mod 2 / 3 / 4 / 5 | **321 / 649 / 625 / 714** | sama |
+
+Mod 5 tanpa instruksi bagi: 70,62 clock per sel hasil kali lawan 70,02 untuk
+mod 2, selisih 0,86%.
+
+---
+
 ## Validasi Jamrah — 256 byte, lima lari, 20 September 2026
 
 Laporan lengkapnya di [validasi/JAMRAH.md](validasi/JAMRAH.md); di sini hanya
@@ -958,7 +977,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.040 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.047 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1001,7 +1020,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.040 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.047 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

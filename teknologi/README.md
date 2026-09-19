@@ -38,7 +38,7 @@ tidak.
 | Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
 | Testbench RTL | 55 | `rtl/tb/` |
 | Wrapper papan | 8 | `rtl/fpga/` |
-| Program HASM | 57 | `rtl/programs/` |
+| Program HASM | 58 | `rtl/programs/` |
 | Format berkas | 5 | `.hc` `.hasm` `.hbc` `.hgeo` `.hcai` |
 | Alat baris perintah | 4 | `hc` `hom` `hybit-ai` `kabah` |
 | Spesifikasi | 18 | `docs/` |
