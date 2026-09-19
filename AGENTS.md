@@ -655,6 +655,43 @@ lewat rekonfigurasi — biaya rack = slot terbesar, 15.994 LUT4 = 77%
 bersama" berlaku untuk apa yang muat dalam satu slot, dan sisanya diuji
 bergiliran; mana yang mana adalah keputusan pemilik saat tahap itu dibuka.
 
+### Keputusan pemilik, 20 September 2026 — sembilan prioritas sesudah loader
+
+Prioritas lintas sektor dan ACK per sektor **tutup** 18 September 2026, di
+simulasi dan di papan (`605a708`, `561b2a6`). Urutan berikutnya dari pemilik:
+
+```
+1  tutup tahap 2              flash SPI, atau terima bukti yang ada
+2  validasi Jamrah            laporan validasi
+3  validasi Hijrah            laporan validasi
+4  validasi Ka'bah            laporan validasi
+5  lab serangan Codex JIM     JIM sebagai pembangkit serangan
+6  burn-in 24 / 72 / 168 jam  laporan keandalan
+7  NUI Core                   runtime, penjadwal, agen, monitor
+8  Command Center di Docker   di MacBook, dengan UI
+9  KV260 sebagai platform master
+```
+
+Tiga hal terukur yang harus dibaca bersama daftar itu:
+
+- **Jamrah di repo ini adalah gerbang, bukan detektor statistik.** Ia pohon
+  reduksi 8-daun dengan tujuh simpul dalam (`rtl/hijaiyyah_jamrah_gate.v`,
+  `rtl/programs/jamrah_gate.hasm`), bagian **Lapis 1 Guard** Ka'bah: menolak
+  masukan malformed dalam O(1), tanpa kunci (`istilah/KABAH.md`). Masukannya
+  satu byte, jadi ruang masukannya **256 nilai** — ia bisa diuji **tuntas**,
+  dan pengujian acak justru lebih lemah dari itu. "Detection rate", false
+  positive, dan false negative untuk predikat eksak berarti 256 dari 256 atau
+  sebuah cacat, bukan persentase.
+- **Hijrah sudah punya angka, tetapi hanya di Python.** Kepadatan 4,58 / 4,81 /
+  4,81 bit per huruf atas GF(2) / GF(4) / GF(5), dan empat pasang huruf yang
+  runtuh atas GF(2), dijaga 41 tes (`hijrah/README.md`). Validasi di papan
+  berarti HCPU menghitungnya sendiri dari ROM-nya.
+- **Daftar ini tidak memuat overlay runtime (tahap 3) dan HVM (tahap 4)** dari
+  gerbang enam tahap 17 September, padahal pemilik pernah menegaskan HVM harus
+  tetap. Dicatat sebagai dua urutan yang belum dipertemukan, bukan dirapikan
+  sepihak. Command Center di Docker juga menuntut unduhan perangkat lunak pihak
+  ketiga, yang butuh izin pemilik.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
