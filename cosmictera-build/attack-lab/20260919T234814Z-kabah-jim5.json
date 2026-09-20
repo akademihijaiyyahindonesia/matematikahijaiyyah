@@ -1,0 +1,100 @@
+{
+  "target": "kabah",
+  "baseline": 0.4995,
+  "avalanche": [
+    {
+      "bits_flipped": 1,
+      "trials": 8,
+      "mean_fraction": 0.504609375,
+      "min_fraction": 0.475625,
+      "max_fraction": 0.523125,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 2,
+      "trials": 8,
+      "mean_fraction": 0.4953125,
+      "min_fraction": 0.48625,
+      "max_fraction": 0.5125,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 4,
+      "trials": 8,
+      "mean_fraction": 0.50109375,
+      "min_fraction": 0.4825,
+      "max_fraction": 0.51625,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 8,
+      "trials": 8,
+      "mean_fraction": 0.495703125,
+      "min_fraction": 0.4775,
+      "max_fraction": 0.520625,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 16,
+      "trials": 8,
+      "mean_fraction": 0.5003125,
+      "min_fraction": 0.470625,
+      "max_fraction": 0.54125,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 32,
+      "trials": 8,
+      "mean_fraction": 0.50453125,
+      "min_fraction": 0.489375,
+      "max_fraction": 0.52,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 64,
+      "trials": 8,
+      "mean_fraction": 0.50546875,
+      "min_fraction": 0.491875,
+      "max_fraction": 0.521875,
+      "integrity_failures": 0
+    }
+  ],
+  "avalanche_single_bit": 0.504609375,
+  "permutation": {
+    "frames": 4,
+    "order": [
+      2,
+      3,
+      1,
+      0
+    ],
+    "final_state_differs": true,
+    "fraction_changed": 0.505625,
+    "both_match_cube": true
+  },
+  "truncated": {
+    "cut_at": 64,
+    "reply_to_short_piece": 0,
+    "reply_after_completion": 200,
+    "equals_cube_of_the_splice": true
+  },
+  "duplicated": {
+    "frames": 4,
+    "match_cube": 4,
+    "distinct_states": 4
+  },
+  "inputs": 126,
+  "integrity_failures": 0,
+  "collisions": 0,
+  "source": "jim5",
+  "field": 5,
+  "state_period": 3124,
+  "byte_period": 3124,
+  "bytes_drawn": 10015,
+  "findings": 0,
+  "attack_id": "20260919T234814Z-kabah-jim5",
+  "timestamp": "2026-09-19T23:48:14.843385+00:00",
+  "board": "Tang Nano 20K",
+  "clock_hz": 27000000,
+  "bitstream": "rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.fs"
+}

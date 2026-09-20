@@ -1,0 +1,95 @@
+{
+  "target": "kabah",
+  "baseline": 0.4995,
+  "avalanche": [
+    {
+      "bits_flipped": 1,
+      "trials": 4,
+      "mean_fraction": 0.496875,
+      "min_fraction": 0.469375,
+      "max_fraction": 0.52375,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 2,
+      "trials": 4,
+      "mean_fraction": 0.50890625,
+      "min_fraction": 0.493125,
+      "max_fraction": 0.52125,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 4,
+      "trials": 4,
+      "mean_fraction": 0.499375,
+      "min_fraction": 0.485625,
+      "max_fraction": 0.50875,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 8,
+      "trials": 4,
+      "mean_fraction": 0.50625,
+      "min_fraction": 0.49625,
+      "max_fraction": 0.5275,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 16,
+      "trials": 4,
+      "mean_fraction": 0.4946875,
+      "min_fraction": 0.4725,
+      "max_fraction": 0.5125,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 32,
+      "trials": 4,
+      "mean_fraction": 0.48921875,
+      "min_fraction": 0.478125,
+      "max_fraction": 0.506875,
+      "integrity_failures": 0
+    },
+    {
+      "bits_flipped": 64,
+      "trials": 4,
+      "mean_fraction": 0.50328125,
+      "min_fraction": 0.490625,
+      "max_fraction": 0.5225,
+      "integrity_failures": 0
+    }
+  ],
+  "avalanche_single_bit": 0.496875,
+  "permutation": {
+    "frames": 4,
+    "order": [
+      3,
+      1,
+      0,
+      2
+    ],
+    "final_state_differs": true,
+    "fraction_changed": 0.49,
+    "both_match_cube": true
+  },
+  "truncated": {
+    "cut_at": 64,
+    "reply_to_short_piece": 0,
+    "reply_after_completion": 200,
+    "equals_cube_of_the_splice": true
+  },
+  "duplicated": {
+    "frames": 4,
+    "match_cube": 4,
+    "distinct_states": 4
+  },
+  "inputs": 70,
+  "integrity_failures": 0,
+  "collisions": 0,
+  "findings": 0,
+  "attack_id": "20260919T233459Z-kabah",
+  "timestamp": "2026-09-19T23:34:59.081522+00:00",
+  "board": "Tang Nano 20K",
+  "clock_hz": 27000000,
+  "bitstream": "rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.fs"
+}

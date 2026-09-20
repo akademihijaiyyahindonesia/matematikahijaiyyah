@@ -835,6 +835,46 @@ Pembangkitnya `rtl/scripts/jim_stream.py`, mesin Jim: periode terukur ulang
 
 ---
 
+## Lab serangan, kelas A, C, dan D — 20 September 2026
+
+Catatan dan angkanya di [attack-lab/](attack-lab/README.md).
+
+**Kelas A — latensi Jamrah.** Tiap byte diukur sendiri di antara dua bacaan
+pencacah 0xFF4, lima lari dari 256 byte: **33 clock untuk setiap byte**, satu
+nilai saja, identik byte demi byte di kelima lari; 28 lolos dan 228 ditolak
+tiap lari. Kontrolnya — predikat yang sama ditulis sebagai gelung banding,
+milik lab, bukan varian gerbang proyek — **29 nilai berbeda, 13 sampai 232
+clock**. Tanpa kontrol itu bacaan konstan tidak membuktikan apa pun (R3).
+Klaim kanal waktu di komentar `rtl/programs/jamrah_gate.hasm` sekarang punya
+angka dari silikon.
+
+**Kelas C — Ka'bah di luar bit tunggal.** Garis dasarnya 0,4995 dari laporan
+Ka'bah, yang hanya mengukur bit tunggal:
+
+| lebar mutasi | 1 | 2 | 4 | 8 | 16 | 32 | 64 |
+|---|---|---|---|---|---|---|---|
+| rata-rata dari 1.600 bit | 0,4984 | 0,5035 | 0,5006 | 0,4984 | 0,5011 | 0,5016 | 0,5061 |
+
+56 pasang, 0 kegagalan integritas. Permutasi empat blok memindahkan keadaan
+akhir 0,4975 dan kedua urutan tetap cocok `cube.py`. Satu frame diulang empat
+kali: 4/4 cocok, 4/4 keadaan berbeda.
+
+**Frame terpotong — pernyataan tentang protokol, bukan tentang spons.** 64 byte
+tidak menarik balasan sama sekali; 64 byte berikutnya menyelesaikan frame dan
+balasan 200 byte-nya adalah `cube.py` dari **sambungan** keduanya. Wrapper
+menyerap 128 byte tetap dan tidak punya field panjang, jadi tidak ada yang bisa
+ditolaknya.
+
+**Kelas D — aliran codex sebagai sumber kasus.** Kelas B dan C dijalankan ulang
+dengan aliran Jim GF(5) menggantikan RNG. Loader: **16 dari 16 kata program
+yang dirusak ditolak** — 100% untuk kategori yang memang harus ditolak.
+Ka'bah: 0,5046 untuk bit tunggal, 0,4953–0,5055 untuk 2 sampai 64 bit,
+permutasi 0,5056, terpotong dan diulang berperilaku sama persis. **Aliran
+terstruktur tidak menemukan satu pun hal yang tidak ditemukan sumber acak** —
+satu perbandingan pada ukuran ini, bukan pernyataan umum.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1019,7 +1059,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.056 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.061 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1062,7 +1102,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.056 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.061 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

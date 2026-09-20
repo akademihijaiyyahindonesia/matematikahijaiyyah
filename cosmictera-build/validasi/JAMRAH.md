@@ -42,6 +42,13 @@ programnya. Di interpreter lintasan yang sama 33,02 **instruksi** per byte;
 selisihnya biaya pipeline, dan kedua angka tidak dibandingkan sebagai satuan
 yang sama.
 
+**Tiap byte sendiri-sendiri, 20 September 2026.** Angka di atas satu angka
+untuk seluruh lintasan; yang tidak dijawabnya adalah apakah byte yang berbeda
+memakai waktu yang berbeda. [Lab serangan kelas A](../attack-lab/README.md)
+mengukurnya: **33 clock untuk setiap satu dari 256 byte**, satu nilai saja,
+identik byte demi byte di lima lari — jendelanya badan gerbang ditambah dua
+instruksi tetap, bukan empat instruksi gelung yang ikut di angka 36,01.
+
 **Biaya.** Bentuk program: nol LUT, 29 kata instruksi untuk badan gerbangnya.
 Bentuk RTL, disintesis sendirian (`synth_gowin`): 12 LUT (1 LUT1, 8 LUT2,
 1 LUT3, 2 LUT4), 1 MUX2_LUT5, 16 ALU, 19 DFF; keluarannya teregister, jadi

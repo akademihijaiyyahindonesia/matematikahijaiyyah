@@ -77,5 +77,10 @@ avalanche berarti 68 kali muat bitstream, ±2 menit 43 detik seluruhnya.
 - **Serangan sungguhan.** Halaman ini mengukur difusi dan integritas, bukan
   ketahanan. Lab serangan adalah prioritas 5 pemilik, dan pemilik sendiri
   menulis alasan urutannya: *"lab serangan tanpa baseline validasi akan
-  menghasilkan angka yang sulit ditafsirkan."* Baseline itu sekarang ada.
+  menghasilkan angka yang sulit ditafsirkan."* Baseline itu halaman ini, dan
+  [lab serangan kelas C](../attack-lab/README.md) sudah berdiri di atasnya
+  pada hari yang sama: mutasi 1 sampai 64 bit tetap memberi difusi ~0,5,
+  permutasi blok memindahkan keadaan akhir 0,4975, dan frame terpotong
+  **tidak ditolak** — wrapper tidak punya field panjang, jadi potongan
+  berikutnya menyambungnya.
 - **Tabrakan di luar skala laboratorium** — lihat di atas.
