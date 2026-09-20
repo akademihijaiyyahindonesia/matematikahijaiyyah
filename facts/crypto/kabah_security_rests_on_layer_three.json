@@ -1,0 +1,18 @@
+{
+  "fact_id": "crypto.kabah_security_rests_on_layer_three",
+  "statement": "Dari lima lapis Ka'bah, hanya lapis 3 (HMAC-SHA256 standar) yang memikul keamanan. Lapis 2, spons, berlabel EH dan cube.py sendiri menandainya bukan hash tervetting.",
+  "value": 3,
+  "source": [
+    "kabah/README.md",
+    "src/hijaiyyah/crypto/cube.py"
+  ],
+  "evidence": [
+    "cosmictera/RULES.md"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_cosmictera_docs.py"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-02"
+}

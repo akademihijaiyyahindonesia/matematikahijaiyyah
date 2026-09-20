@@ -1,0 +1,24 @@
+{
+  "fact_id": "hisa.hijrah_length_one_counts",
+  "statement": "Peta berbeda yang dicapai kata sepanjang satu huruf: 24 atas mod 2, 27 atas mod 3, 28 atas mod 4, 28 atas mod 5. Papan menghitungnya sendiri dari ROM dan sepakat dengan Python.",
+  "value": [
+    24,
+    27,
+    28,
+    28
+  ],
+  "source": [
+    "cosmictera-build/validasi/HIJRAH.md",
+    "hijrah/README.md"
+  ],
+  "evidence": [
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/scripts/hijrah_board.py"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_hijrah.py"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

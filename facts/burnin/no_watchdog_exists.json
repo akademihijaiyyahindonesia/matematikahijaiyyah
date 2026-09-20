@@ -1,0 +1,18 @@
+{
+  "fact_id": "burnin.no_watchdog_exists",
+  "statement": "Tidak ada watchdog di desain ini -- tidak ada modul semacam itu di rtl/. Mesin yang berhenti tidak bisa melaporkan bahwa ia berhenti, jadi yang diukur adalah diamnya.",
+  "value": 0,
+  "source": [
+    "rtl/"
+  ],
+  "evidence": [
+    "cosmictera-build/burn-in/README.md",
+    "rtl/programs/burn_in.hasm"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_burn_in.py"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-20"
+}

@@ -1,0 +1,19 @@
+{
+  "fact_id": "hisa.address_unification",
+  "statement": "Untuk ke-28 huruf, indeks Master Table, opcode H-ISA, dan alamat ROM HCPU adalah satu alamat yang sama.",
+  "value": true,
+  "source": [
+    "src/hijaiyyah/nui/atom.py",
+    "src/hijaiyyah/core/master_table.py",
+    "src/hijaiyyah/hisa/opcodes.py"
+  ],
+  "evidence": [
+    "tests/test_ai/test_nui_atom.py"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "address_unification_holds"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-21"
+}

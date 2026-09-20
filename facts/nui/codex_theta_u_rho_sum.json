@@ -1,0 +1,18 @@
+{
+  "fact_id": "nui.codex_theta_u_rho_sum",
+  "statement": "Jumlah theta + U + rho atas ke-28 huruf Master Table adalah 178. Papan menghitungnya sendiri dari ROM-nya dan memberi angka yang sama.",
+  "value": 178,
+  "source": [
+    "src/hijaiyyah/core/master_table.py"
+  ],
+  "evidence": [
+    "rtl/programs/burn_in.hasm",
+    "cosmictera-build/burn-in/README.md"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "codex_theta_u_rho_sum"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

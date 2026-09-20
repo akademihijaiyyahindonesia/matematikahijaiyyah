@@ -1,0 +1,19 @@
+{
+  "fact_id": "fpga.sd_init_fails_after_interrupted_read",
+  "statement": "Merekonfigurasi papan saat pengendali SD sedang membaca membuat inisialisasi kartu di lari berikutnya gagal delapan percobaan; lari sesudah itu menemukannya sehat lagi. Delapan peluncuran dari delapan, berselang-seling.",
+  "value": 8,
+  "source": [
+    "rtl/hcpu_sdio.v",
+    "rtl/programs/hal_sd.hasm"
+  ],
+  "evidence": [
+    "cosmictera-build/OFF.md",
+    "rtl/scripts/burn_in.py"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "python3 rtl/scripts/burn_in.py --port <port> --hours 0.01"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

@@ -1,0 +1,17 @@
+{
+  "fact_id": "nui.letter_count",
+  "statement": "Master Table tersegel memuat tepat 28 huruf kanonik.",
+  "value": 28,
+  "source": [
+    "src/hijaiyyah/core/master_table.py"
+  ],
+  "evidence": [
+    "tests/test_integrity/test_bab_satu.py"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "letter_count"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-21"
+}

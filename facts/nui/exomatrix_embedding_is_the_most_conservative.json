@@ -1,0 +1,18 @@
+{
+  "fact_id": "nui.exomatrix_embedding_is_the_most_conservative",
+  "statement": "Dari empat varian embedding yang diadu train.py, varian eksomatriks -- struktur yang kriptografi Ka'bah sendiri pakai -- punya precision sempurna tetapi recall 0,004: ia nyaris tidak pernah memprediksi positif. Benar secara matematis tidak otomatis berguna sebagai representasi.",
+  "value": 0.004,
+  "source": [
+    "src/hijaiyyah/nui/train.py",
+    "NUI/README.md"
+  ],
+  "evidence": [
+    "tests/test_ai/test_nui.py"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_ai/test_nui.py"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-06"
+}

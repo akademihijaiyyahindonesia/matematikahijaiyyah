@@ -1,0 +1,18 @@
+{
+  "fact_id": "fpga.jamrah_gate_is_constant_time",
+  "statement": "Bentuk program gerbang Jamrah memakai 33 clock untuk setiap satu dari 256 byte, identik byte demi byte di lima lari. Kontrolnya -- predikat sama ditulis sebagai gelung banding -- menyebar 13 sampai 232 clock.",
+  "value": 33,
+  "source": [
+    "rtl/programs/jamrah_gate.hasm"
+  ],
+  "evidence": [
+    "cosmictera-build/attack-lab/README.md",
+    "rtl/scripts/attack_lab.py"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "python3 rtl/scripts/attack_lab.py --target jamrah --runs 5 --port <port>"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

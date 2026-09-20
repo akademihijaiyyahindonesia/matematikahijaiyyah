@@ -17,7 +17,7 @@ terdengar meyakinkan.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **13 modul**; `tests/test_ai/` berisi **131 tes**
+`src/hijaiyyah/nui/` berisi **14 modul**; `tests/test_ai/` berisi **131 tes**
 yang lulus. PyTorch 2.14.0 terpasang. Semua angka di halaman ini datang dari
 menghitung berkasnya, bukan dari ingatan.
 
@@ -35,6 +35,7 @@ menghitung berkasnya, bukan dari ingatan.
 | `sram_mock.py` | protokol twin-port makro SRAM sky130 | `test_nui_sram_mock.py` (10) |
 | `claims.py` | klaim luar diuji terhadap data tersegel repo ini — **keduanya negatif** | `test_nui_claims.py` (6) |
 | `pattern_language.py` | "Titik → Transform → Garis" diuji sebagai urutan komposisi | `test_nui_pattern_language.py` (7) |
+| `facts.py` | inventaris fakta Lapis 0: memuat `facts/`, menghitung ulang yang bisa dihitung | `test_facts.py` (8) |
 
 ## Dua penomoran, dan keduanya dicatat
 
@@ -58,22 +59,31 @@ Fase 5  NUI sebagai layanan          → belum dipetakan ke lapis mana pun
 **Tujuan.** Basis fakta yang tiap butirnya punya sumber, bukti, dan cara
 verifikasi.
 
-**Aset yang sudah ada.** `src/hijaiyyah/core/master_table.py` (tersegel),
+**Aset yang sudah ada.** Sejak 21 September 2026 lapis ini **punya
+basisnya**: `facts/` — 21 fakta di tujuh domain, tiap satunya satu berkas JSON
+dengan tujuh medan — dimuat dan diperiksa oleh `src/hijaiyyah/nui/facts.py`,
+dijaga `tests/test_integrity/test_facts.py`. Sumbernya yang lama tetap di
+tempatnya: `src/hijaiyyah/core/master_table.py` (tersegel),
 `src/hijaiyyah/core/guards.py`, `src/hijaiyyah/core/exomatrix.py`,
 `src/hijaiyyah/crypto/cube.py`, `docs/HISA_SPEC.md`; label epistemik
-VF/DP/CC/EH/AT di `cosmictera/RULES.md`; `cosmictera/TELEMETRY.md` yang sudah
-berbentuk tabel fakta bersumber; dan `src/hijaiyyah/nui/claims.py` sebagai
-polanya — klaim luar diuji terhadap data tersegel, dan **dilaporkan negatif**.
+VF/DP/CC/EH/AT di `cosmictera/RULES.md`; `cosmictera/TELEMETRY.md`; dan
+`src/hijaiyyah/nui/claims.py` sebagai polanya — klaim luar diuji terhadap
+data tersegel, dan **dilaporkan negatif**.
 
-**Yang belum ada.** Satu basis fakta yang bisa dibaca mesin. Hari ini fakta
-tersebar di tes dan dokumen; tidak ada struktur tunggal yang bisa ditanyai
-"fakta ini dibuktikan oleh apa".
+Dari 21 fakta itu: **9 dihitung ulang** dari repositori tiap kali tes
+berjalan, **7 dibuktikan sebuah tes**, **5 diukur di papan** dan ditandai
+tidak bisa dijalankan ulang tanpa perangkat kerasnya.
 
-**Cara verifikasi.** Tiap fakta menyebut oracle yang menghasilkannya, dan
-penjaga menuntut oracle itu ada dan lulus.
+**Yang belum ada.** Dua hal. Pertama, **cakupan**: 21 fakta adalah permulaan,
+bukan seluruh yang terukur di repositori ini. Kedua, **sisi bertanya** — lapis
+3 akan bertanya "apa yang diketahui benar tentang opcode ini", dan hari ini
+basis ini hanya bisa dimuat dan diperiksa, belum ditanyai per-objek.
 
-**Syarat selesai.** Setiap fakta di basis punya sumber, bukti, dan metode,
-dan seluruhnya diperiksa ulang oleh pytest.
+**Cara verifikasi.** Sudah berjalan: fakta `derive` dihitung ulang, fakta
+`pytest` menyebut node yang harus ada, fakta `board` menyebut perintahnya.
+Tiga sabotase diuji dan ketiganya merah.
+
+**Syarat selesai.** Tercapai untuk bentuknya; belum untuk cakupannya.
 
 ---
 

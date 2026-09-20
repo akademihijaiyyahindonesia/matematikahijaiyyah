@@ -1,0 +1,19 @@
+{
+  "fact_id": "burnin.counter_wrap_seconds",
+  "statement": "Pencacah bebas di 0xFF4 adalah 32 bit pada 27 MHz, jadi ia berputar tiap 159,072863 detik -- sekitar 543 kali dalam 24 jam. Uptime papan adalah putaran dan pencacah bersama-sama.",
+  "value": 159.072863,
+  "source": [
+    "rtl/hcpu_timer.v",
+    "rtl/fpga/gowin/hcpu_gowin_top.v"
+  ],
+  "evidence": [
+    "rtl/scripts/burn_in.py",
+    "cosmictera-build/burn-in/README.md"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "counter_wrap_seconds"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-20"
+}

@@ -1,0 +1,17 @@
+{
+  "fact_id": "fpga.jamrah_node_sum",
+  "statement": "Jumlah ketujuh simpul pohon Jamrah atas ke-256 byte adalah 3.072 -- tiga tingkat, masing-masing menjumlah 1.024 bit yang menyala. Papan menghitungnya tiap siklus burn-in.",
+  "value": 3072,
+  "source": [
+    "rtl/tb/jamrah_vectors.txt"
+  ],
+  "evidence": [
+    "rtl/programs/burn_in.hasm"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "jamrah_node_sum"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

@@ -1,0 +1,18 @@
+{
+  "fact_id": "hisa.print_cannot_render_large_values",
+  "statement": "PRINT mencetak nilai besar dengan salah di papan: benar sampai 4.194.304, 8.388.608 kembali sebagai 8388600, dan dari 33.554.432 ke atas ia mengeluarkan karakter di atas '9' (nilai digit 10-15).",
+  "value": 4194304,
+  "source": [
+    "rtl/hcpu_top.v"
+  ],
+  "evidence": [
+    "cosmictera-build/OFF.md",
+    "rtl/programs/burn_in.hasm"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "tangga 2^0..2^31 lewat loader.hasm, 20 September 2026"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

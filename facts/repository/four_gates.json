@@ -1,0 +1,18 @@
+{
+  "fact_id": "repository.four_gates",
+  "statement": "Sebuah butir dinyatakan selesai hanya sesudah empat gerbang hijau di lari yang sama: lint dan typecheck, pytest, bench RTL, dan bitstream yang muat dan terrout.",
+  "value": 4,
+  "source": [
+    "AGENTS.md",
+    "cosmictera/RULES.md"
+  ],
+  "evidence": [
+    "cosmictera-build/CHECKLIST.md"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_agent_notes.py"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-11"
+}

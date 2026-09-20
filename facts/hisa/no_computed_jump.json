@@ -1,0 +1,18 @@
+{
+  "fact_id": "hisa.no_computed_jump",
+  "statement": "H-ISA tidak punya lompatan terhitung: JMP dan CALL keduanya PC <- IMM, dan tidak ada JALR. Karena itu tabel syscall tinggal di memori data dan gelung dispatch membayar rantai perbandingan.",
+  "value": true,
+  "source": [
+    "src/hijaiyyah/hisa/opcodes.py",
+    "docs/HISA_SPEC.md"
+  ],
+  "evidence": [
+    "cosmictera-build/ROADMAP.md"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "no_computed_jump"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-21"
+}

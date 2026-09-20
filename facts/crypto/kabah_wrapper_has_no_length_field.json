@@ -1,0 +1,17 @@
+{
+  "fact_id": "crypto.kabah_wrapper_has_no_length_field",
+  "statement": "Wrapper Ka'bah menyerap 128 byte tetap dan tidak punya field panjang: 64 byte tidak menarik balasan, dan 64 byte berikutnya menyelesaikan frame -- balasannya cube.py dari sambungan keduanya.",
+  "value": 128,
+  "source": [
+    "rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.v"
+  ],
+  "evidence": [
+    "cosmictera-build/attack-lab/README.md"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "python3 rtl/scripts/attack_lab.py --target kabah --port <port>"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

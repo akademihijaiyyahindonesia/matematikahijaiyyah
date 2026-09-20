@@ -1,0 +1,18 @@
+{
+  "fact_id": "hisa.instruction_memory_words",
+  "statement": "Memori instruksi 4.096 kata, dan itu sumber daya paling langka di papan ini -- bukan LUT4.",
+  "value": 4096,
+  "source": [
+    "src/hijaiyyah/hisa/machine.py",
+    "rtl/hcpu_dataram.v"
+  ],
+  "evidence": [
+    "AGENTS.md"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "instruction_memory_words"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-21"
+}

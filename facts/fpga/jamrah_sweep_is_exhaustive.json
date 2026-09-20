@@ -1,0 +1,18 @@
+{
+  "fact_id": "fpga.jamrah_sweep_is_exhaustive",
+  "statement": "Ruang masukan gerbang Jamrah adalah 256 nilai, dan acuannya memberi 28 byte lolos dari 256. Papan menjawab 256/256 di lima lari.",
+  "value": 28,
+  "source": [
+    "rtl/tb/jamrah_vectors.txt"
+  ],
+  "evidence": [
+    "cosmictera-build/validasi/JAMRAH.md",
+    "rtl/scripts/jamrah_board.py"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "jamrah_pulse_count"
+  },
+  "status": "CC",
+  "timestamp": "2026-09-20"
+}

@@ -1,0 +1,17 @@
+{
+  "fact_id": "telemetry.four_fields_have_no_source",
+  "statement": "Dari 27 medan kontrak telemetri v1, empat belum punya sumber: anomaly_score, corruption_score, state_hash, last_relocation.",
+  "value": 4,
+  "source": [
+    "cosmictera/TELEMETRY.md"
+  ],
+  "evidence": [
+    "tests/test_integrity/test_telemetry_contract.py"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_telemetry_contract.py"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-20"
+}

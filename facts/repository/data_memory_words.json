@@ -1,0 +1,18 @@
+{
+  "fact_id": "repository.data_memory_words",
+  "statement": "Memori data 4.096 kata, dan enam belas kata paling atas adalah peripheral -- itu sebabnya satu komparator memutuskan, bukan sekumpulan alamat yang tersebar.",
+  "value": 4096,
+  "source": [
+    "rtl/hcpu_dataram.v",
+    "rtl/hcpu_mmio.v"
+  ],
+  "evidence": [
+    "src/hijaiyyah/hisa/machine.py"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "data_memory_words"
+  },
+  "status": "DP",
+  "timestamp": "2026-09-21"
+}
