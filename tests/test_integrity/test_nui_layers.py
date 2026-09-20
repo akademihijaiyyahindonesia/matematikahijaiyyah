@@ -83,24 +83,35 @@ def test_the_counts_in_the_map_are_the_counts_in_the_tree() -> None:
     assert f"**{programs} program HASM**" in TEXT, programs
 
 
-def test_all_three_numberings_are_kept() -> None:
-    """The owner renumbered his own layers between two messages on the same
-    day, and ROADMAP.md has a third numbering older than both. The latest
-    wins, and the shift is written down -- the precedent AGENTS.md set when
-    the program table's field order moved."""
+def test_every_numbering_is_kept_and_the_layers_are_keyed_by_name() -> None:
+    """Three messages in one day numbered these layers three ways while the
+    assets under them barely moved. The map is therefore keyed by NAME, the
+    number is an attribute, and one table is the only place it lives.
+    ROADMAP.md's Fase 0-5 is a fourth numbering and is mapped, not deleted."""
     assert (ROOT / "NUI" / "ROADMAP.md").exists()
-    assert "| dulu | sekarang | lapis |" in TEXT, "the renumbering table is gone"
+    assert "| lapis (nama) | pesan 1 | pesan 2 | **berlaku** |" in TEXT
     assert "Fase 2 = Lapis 2" in TEXT
     assert "Yang berlaku yang terakhir" in TEXT
+    assert "dikunci pada **nama**" in TEXT
 
 
-def test_the_label_the_owner_and_rules_disagree_about_is_recorded() -> None:
-    """Layer 5 has no asset. The owner marked it EH; RULES.md's own table
-    defines EH as measured-but-not-cryptanalysed and AT as not-yet-done. The
-    page reports the difference instead of picking one silently."""
+def test_the_layer_dropped_in_the_third_message_keeps_its_assets() -> None:
+    """Physical verification stopped being a numbered layer. Its assets did
+    not stop existing, and a map that let them fall out with the number would
+    be losing measurements to an edit."""
+    assert "verifikasi fisik (dulu 7)" in TEXT
+    for kept in ("tangga bukti empat tingkat", "PAPAN.md", "place and route",
+                 "fakta `board`"):
+        assert kept in TEXT, kept
+
+
+def test_the_label_disagreement_and_its_answer_are_both_kept() -> None:
+    """The second message marked Linux EH, which disagreed with RULES.md's own
+    table; the third answered AT. Both halves stay: a page that kept only the
+    answer would lose why it was asked."""
     layer5 = sections()[5]
-    assert "EH" in layer5 and "AT" in layer5
-    assert "keputusan pemilik" in layer5
+    assert "EH" in layer5 and "**AT**" in layer5
+    assert "dilaporkan" in layer5
     rules = (ROOT / "cosmictera" / "RULES.md").read_text(encoding="utf-8")
     assert "belum dikerjakan" in rules, "AT's definition moved"
 

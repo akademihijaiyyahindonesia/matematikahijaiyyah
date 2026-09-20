@@ -788,19 +788,23 @@ kesadaran, tidak ada benchmark fiktif, dan label tidak naik tanpa bukti baru
 begitu, bukan diisi rencana: Linux (lapis 5 — tidak ada satu pun sisi host di
 repo ini) dan rekayasa otonom (lapis 11).
 
-**Penomoran lapisnya berubah di pesan pemilik berikutnya pada hari yang
-sama**, dan yang berlaku yang terakhir: repositori naik ke lapis 1, program ke
-2, paritas ke 4, perangkat keras ke 6; dan empat lapis baru muncul — pemahaman
-eksekusi (3), diagnostik otonom (8), penalaran komputasional (9), komputasi
-universal (11). Tabel pergeserannya ada di `NUI/LAYERS.md`; tidak disalin ke
-sini (R1). Penomoran ketiga, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus.
-Pola yang sama dipakai ketika urutan field tabel program bergeser: yang
-terakhir berlaku, pergeserannya dicatat supaya tidak diam.
+**Penomoran lapisnya berubah tiga kali pada hari yang sama**, dan yang berlaku
+yang terakhir. Lapis 0–6 sama di dua pesan terakhir; yang bergeser ekornya —
+diagnostik otonom ke 7, perencanaan perbaikan otonom (baru) ke 8, mesin
+penalaran ke 9, komputasi universal ke 10, rekayasa otonom ke 11 — dan satu
+lapis pesan kedua, **verifikasi fisik, hilang**. Asetnya tidak ikut hilang:
+tangga bukti empat tingkat, `cosmictera-build/PAPAN.md`, sidik jari place and
+route, dan lima fakta `board` tetap berlaku.
 
-**Satu selisih label dilaporkan, bukan dirapikan.** Pemilik menandai lapis
-Linux **EH**; tabel `cosmictera/RULES.md` sendiri mendefinisikan EH sebagai
+**Karena penomorannya bergerak sementara asetnya tidak, `NUI/LAYERS.md`
+dikunci pada nama lapis**: nomornya atribut, dan satu tabel di halaman itu
+satu-satunya tempat ia hidup. Tabel pergeserannya tidak disalin ke sini (R1).
+Penomoran keempat, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus.
+
+**Satu selisih label dilaporkan, lalu dijawab pemilik.** Pesan kedua menandai
+lapis Linux EH; tabel `cosmictera/RULES.md` sendiri mendefinisikan EH sebagai
 "terukur, belum dikriptanalisis" dan AT sebagai "belum dikerjakan", dan lapis
-tanpa satu pun aset jatuh pada AT. Labelnya keputusan pemilik.
+tanpa satu pun aset jatuh pada AT. Pesan ketiga menjawabnya: **AT**.
 
 **Medan `confidence` ditambahkan ke inventaris fakta, dan ia bukan
 probabilitas.** Angka bergradasi akan dikarang; yang direkam adalah apa yang
