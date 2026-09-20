@@ -25,6 +25,17 @@ NO_SOURCE = ("belum ada sumbernya", "belum terpisah")
 WITHOUT_SOURCE = {"anomaly_score", "corruption_score", "state_hash",
                   "last_relocation"}
 
+# The owner's words for each, 20 September 2026, so a dashboard cannot quietly
+# upgrade one into a number. "partial evidence" is the sharpest of the four:
+# relocation_count and container_loaded are real, and entry_reached is not the
+# loader's to report at all.
+STATUSES = {
+    "state_hash": "pending architecture",
+    "last_relocation": "partial evidence",
+    "anomaly_score": "waiting baseline",
+    "corruption_score": "waiting baseline",
+}
+
 
 def fields() -> list[str]:
     """The field names, read from the contract block rather than retyped."""
@@ -38,8 +49,12 @@ def fields() -> list[str]:
 
 
 def rows() -> dict[str, str]:
+    """The main source table only. Later sections carry tables of their own --
+    the three fields that replaced relocation_ok, for instance -- and those
+    are not contract fields."""
+    table = TEXT.split("## Sumber tiap medan, hari ini")[1].split("\n## ")[0]
     out = {}
-    for line in TEXT.splitlines():
+    for line in table.splitlines():
         m = re.match(r"\| `([a-z_0-9]+)` \| (.*)$", line)
         if m:
             out[m.group(1)] = m.group(2)
@@ -124,3 +139,20 @@ def test_what_the_open_contracts_are_held_against_still_exists() -> None:
     for path in ("cosmictera-build/attack-lab/README.md",
                  "rtl/scripts/burn_in_report.py"):
         assert (ROOT / path).exists(), path
+
+
+def test_the_four_derived_fields_carry_the_status_the_owner_gave_them() -> None:
+    for field, status in STATUSES.items():
+        assert f"{field:<17} = {status}" in TEXT, (field, status)
+    assert set(STATUSES) == WITHOUT_SOURCE
+
+
+def test_relocation_is_narrowed_to_what_was_proved() -> None:
+    """relocation_ok was dropped because the attack lab measured a moved
+    relocation entry passing with no refusal. What replaces it says less."""
+    section = TEXT.split("### 2. `last_relocation`")[1].split("### 3.")[0]
+    assert "relocation_count" in section
+    assert "container_loaded" in section
+    assert "entry_reached" in section
+    assert "bukan milik loader" in section, "entry_reached must not be the loader's"
+    assert "relocation_ok" in section and "ditinggalkan" in section

@@ -750,6 +750,19 @@ keputusan), bentuk `last_relocation`, dan pita `anomaly_score`. Yang terakhir
 tidak bisa ditarik dari data sebelum garis dasar ada: empat dari enam
 masukannya belum pernah bergerak dari nol.
 
+**`relocation_ok` ditinggalkan pemilik pada hari yang sama**, dan diganti tiga
+medan yang mengatakan lebih sedikit: `relocation_count`, `container_loaded`,
+`entry_reached` — *"tidak menyatakan lebih dari yang benar-benar telah
+dibuktikan."* Alasannya terukur: lab serangan menemukan satu entri relokasi
+yang digeser **lolos tanpa penolakan**. Yang ketiga bukan milik loader sama
+sekali — sesudah `ERET` loader tidak punya suara, dan hanya program yang
+dimuat yang bisa bersaksi.
+
+**Keempat medan turunan diberi status, bukan angka**, supaya dashboard tidak
+mengklaim lebih dari yang diukur: `state_hash` pending architecture,
+`last_relocation` partial evidence, `anomaly_score` dan `corruption_score`
+waiting baseline.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

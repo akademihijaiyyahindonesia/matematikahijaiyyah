@@ -120,21 +120,34 @@ sebagai keputusan.
 
 ### 2. `last_relocation`
 
-Pemilik mengusulkan tiga medan saat boot: `relocation_count`,
-`relocation_ok`, `relocation_failed`.
+Pemilik mempersempitnya 20 September 2026, tepat karena `relocation_ok` akan
+mengklaim lebih dari yang terbukti. Tiga medan menggantikannya:
 
-**`relocation_count` sudah ada di tempatnya** — ia kata ke-5 header container
-(RELOC_CNT), dan loader membacanya untuk bekerja. Terukur: 125 untuk
-`shell.hasm`, 38 untuk `hos_hfs_disk`, rata-rata 7,2 dari 41 program.
+```
+relocation_count    container_loaded    entry_reached
+```
 
-**`relocation_ok` hanya bisa sekuat pemeriksaan yang ada**, dan lab serangan
-sudah mengukur batasnya: satu entri tabel relokasi yang diarahkan ke kata lain
-**lolos tanpa penolakan**, karena jumlah 32-bit hanya menutupi kata program
-([attack-lab/](../cosmictera-build/attack-lab/README.md)). Jadi hari ini
-`relocation_ok` akan berarti "cacahnya di dalam penyangga dan citra termuat",
-bukan "tiap entri benar". Memperluasnya menuntut keputusan yang masih terbuka
-sejak lab serangan kelas B: apakah cakupan jumlah diperluas ke header dan
-tabel relokasi.
+*"dan tidak menyatakan lebih dari yang benar-benar telah dibuktikan."*
+Masing-masing, hari ini:
+
+| medan | yang bisa dikatakannya sekarang |
+|---|---|
+| `relocation_count` | **ada** — kata ke-5 header container, dibaca loader untuk bekerja. Terukur: 125 untuk `shell.hasm`, 38 untuk `hos_hfs_disk`, rata-rata 7,2 dari 41 program |
+| `container_loaded` | **ada** — `R1` yang dikembalikan `hos_prog_load.hasm`: 1 atau 0, jawaban `SYSCALL` 9 |
+| `entry_reached` | **bukan milik loader** — sesudah `ERET` loader tidak punya suara lagi; hanya program yang dimuat yang bisa bersaksi ia berjalan, dan hari ini kesaksiannya adalah keluarannya sendiri (`1 2 3` di papan) |
+
+**Kenapa `relocation_ok` ditinggalkan, dengan angkanya:** lab serangan mengukur
+satu entri tabel relokasi yang diarahkan ke kata program lain **lolos tanpa
+satu pun penolakan**, karena jumlah 32-bit hanya menutupi kata program
+([attack-lab/](../cosmictera-build/attack-lab/README.md)). Medan bernama "ok"
+akan berbohong pada kasus itu. Memperluasnya menuntut keputusan yang masih
+terbuka sejak kelas B: apakah cakupan jumlah diperluas ke header dan tabel
+relokasi.
+
+Satu batas lagi yang menempel di sini dan sudah tertulis di kodenya:
+**ENTRY tidak dikembalikan loader** — `rtl/programs/test_prog_run.hasm`
+menuliskannya sendiri sebelum `ERET`, dan mengembalikan ENTRY lewat ABI
+`SYSCALL` 9 adalah keputusan pemilik yang belum diambil.
 
 ### 3. `anomaly_score`
 
@@ -148,6 +161,21 @@ sebuah ambang yang ditetapkan sebelum garis dasar selesai adalah angka yang
 dikarang. Empat dari enam masukan itu sejauh lari ini **belum pernah bergerak
 dari nol sama sekali**, jadi pita untuk mereka tidak bisa ditarik dari data —
 hanya dari keputusan.
+
+## Status empat medan turunan — pemilik, 20 September 2026
+
+Supaya dashboard tidak mengklaim lebih dari yang diukur, keempatnya diberi
+status, bukan angka:
+
+```
+state_hash        = pending architecture
+last_relocation   = partial evidence
+anomaly_score     = waiting baseline
+corruption_score  = waiting baseline
+```
+
+`tests/test_integrity/test_telemetry_contract.py` menjaga keempat status itu
+tetap tertulis persis begitu sampai ada yang mengukurnya.
 
 ## Apa yang kontrak ini belum tentukan
 
