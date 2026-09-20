@@ -67,6 +67,20 @@ dalam 24 jam — jadi uptime adalah putaran dan pencacah bersama-sama. Papan
 menghitung putarannya sendiri, host menyimpan jamnya sendiri di sebelahnya,
 dan keduanya harus tetap sejalan.
 
+## Pengurainya diuji tanpa papan
+
+Lari sehari tidak bisa diulang untuk menguji penguraiannya, jadi `Feed` di
+`burn_in.py` berdiri sendiri dan diuji dari potongan byte yang direkam:
+siklus pertama dan detak dibedakan oleh **penanda `H`, bukan oleh jumlah
+angka**; baris bercampur seperti `335544;<` **dibuang utuh dan dihitung**,
+tidak diperas jadi `335544`; dan byte yang datang terpotong-potong tetap satu
+baris. Ketiganya disabotase dan ketiganya merah ketika disabotase.
+
+Pengurai ini pernah salah sekali — ia menghitung angka alih-alih menandai
+grup, membaca tujuh nilai siklus pertama sebagai detak enam-kolom, dan menulis
+**3.072 kesalahan yang tidak ada** ke dalam catatan. Itu sebabnya ia sekarang
+punya tesnya sendiri.
+
 ## Dari catatan ke garis dasar
 
 Lari yang berakhir dengan "0 error" mengatakan mesinnya tidak rusak. Ia

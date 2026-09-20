@@ -205,6 +205,63 @@ class Run:
         }
 
 
+class Feed:
+    """Bytes from the wire, turned into first cycles and heartbeats.
+
+    Its own class because a day-long run cannot be re-run to test its parser,
+    and because this parser has been wrong once already: it counted numbers
+    instead of marking groups, read the first cycle's seven values as a
+    six-field heartbeat, and wrote 3,072 errors that did not exist into a log.
+    """
+
+    def __init__(self, run: Run, want: dict[str, int], gap_threshold: float,
+                 beating: bool = False) -> None:
+        self.run, self.want, self.gap_threshold = run, want, gap_threshold
+        self.beating = beating          # has an "H" arrived yet
+        self.buf = bytearray()
+        self.pending: list[int] = []
+
+    def take(self, chunk: bytes) -> None:
+        if chunk:
+            self.buf += chunk
+        while b"\n" in self.buf:
+            line, _, rest = self.buf.partition(b"\n")
+            self.buf = bytearray(rest)
+            self.line(bytes(c for c in line if 32 <= c < 127).decode("ascii").strip())
+
+    def line(self, text: str) -> None:
+        if text == "H":
+            # The first cycle's numbers come before any H, so what a group
+            # means is decided by whether one has arrived -- not by how many
+            # numbers are in hand.
+            self.beating, self.pending = True, []
+        elif text.isdigit():
+            self.pending.append(int(text))
+            if not self.beating and not self.run.first:
+                if len(self.pending) == len(FIRST):
+                    self.first_cycle()
+            elif self.beating and len(self.pending) == len(FIELDS):
+                self.run.heartbeat(self.pending, self.gap_threshold)
+                self.pending = []
+        elif text:
+            # Dropped whole, never stripped down to its digits: "335544;<" is
+            # not 335544, and a lab that quietly makes it so is the lab that
+            # lost a line in jamrah_board.py.
+            self.run.unparsed += 1
+            self.run.write("unparsed", text=text[:64])
+
+    def first_cycle(self) -> None:
+        first = dict(zip(FIRST, self.pending, strict=True))
+        first["card_word"] = first.pop("card_hi") << 16 | first.pop("card_lo")
+        ok = all(first[k] == v for k, v in self.want.items())
+        self.run.first = first
+        self.run.write("first_cycle", ok=ok, **first)
+        print(f"first cycle: {first}, card word {first['card_word']:#010x}"
+              f"{' -- HFS1' if first['card_word'] == HFS1 else ''} "
+              f"{'as expected' if ok else 'DISAGREES with Python'}")
+        self.pending = []
+
+
 def configure(bitstream: Path) -> None:
     subprocess.run(["openFPGALoader", "-b", "tangnano20k", str(bitstream)],
                    check=True, capture_output=True)
@@ -326,46 +383,16 @@ def main(argv: list[str] | None = None) -> int:
     # board's cadence rather than the host's polling. Tier 1 ran at 1.0 s and
     # its intervals piled up at 1.0 and 2.0 against a true period of 1.58.
     link.timeout = 0.25
+    # A shorter timeout than the launch used, so the gap between beats is the
+    # board's cadence rather than the host's polling. Tier 1 ran at 1.0 s and
+    # its intervals piled up at 1.0 and 2.0 against a true period of 1.58.
+    link.timeout = 0.25
     deadline = time.time() + args.hours * 3600
-    buf = bytearray()
-    pending: list[int] = []
-    beating = bool(run.first)
+    feed = Feed(run, want, args.gap_threshold, beating=bool(run.first))
     note = "duration reached"
     try:
         while time.time() < deadline:
-            chunk = link.read(256)
-            if chunk:
-                buf += chunk
-            while b"\n" in buf:
-                line, _, rest = buf.partition(b"\n")
-                buf = bytearray(rest)
-                text = bytes(c for c in line if 32 <= c < 127).decode("ascii").strip()
-                if text == "H":
-                    # The first cycle's numbers come before any H, so what a
-                    # group means is decided by whether one has arrived yet --
-                    # not by how many numbers are in hand. Counting instead of
-                    # marking read the seven first-cycle values as a six-field
-                    # heartbeat, and reported 3072 errors that did not exist.
-                    beating, pending = True, []
-                elif text.isdigit():
-                    pending.append(int(text))
-                    if not beating and not run.first and len(pending) == len(FIRST):
-                        run.first = dict(zip(FIRST, pending, strict=True))
-                        run.first["card_word"] = (run.first.pop("card_hi") << 16
-                                                  | run.first.pop("card_lo"))
-                        ok = all(run.first[k] == v for k, v in want.items())
-                        run.write("first_cycle", ok=ok, **run.first)
-                        print(f"first cycle: {run.first}, card word "
-                              f"{run.first['card_word']:#010x}"
-                              f"{' -- HFS1' if run.first['card_word'] == HFS1 else ''}"
-                              f" {'as expected' if ok else 'DISAGREES with Python'}")
-                        pending = []
-                    elif beating and len(pending) == len(FIELDS):
-                        run.heartbeat(pending, args.gap_threshold)
-                        pending = []
-                elif text:
-                    run.unparsed += 1
-                    run.write("unparsed", text=text[:64])
+            feed.take(link.read(256))
     except KeyboardInterrupt:
         note = "stopped before the duration"
     finally:

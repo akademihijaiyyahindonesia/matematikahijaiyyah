@@ -25,10 +25,14 @@ import pytest  # noqa: E402
 from burn_in import (  # noqa: E402
     COUNTER_SHIFT,
     EXPECT,
+    FIELDS,
+    FIRST,
     HEARTBEAT_CYCLES,
     OSC_HZ,
     PROGRAM,
     WRAP_S,
+    Feed,
+    Run,
     expected_first_cycle,
     uptime_s,
 )
@@ -172,3 +176,62 @@ def test_a_run_that_stalls_cannot_hide_inside_an_average(tmp_path: Path) -> None
     assert b["longest_silence_s"] == 40.0
     assert b["heartbeat_interval_s_as_the_host_saw_it"]["max"] == 40.0
     assert b["heartbeat_interval_s_as_the_host_saw_it"]["p50"] == 1.5
+
+
+# -- the parser, which a day-long run cannot afford to get wrong ----------
+
+
+def _feed(tmp_path: Path) -> Feed:
+    from datetime import datetime, timezone
+    run = Run(tmp_path / "parse.jsonl", datetime.now(timezone.utc), "none")
+    return Feed(run, EXPECT, gap_threshold=5.0)
+
+
+def _beat(values: list[int]) -> bytes:
+    return b"H\n" + b"".join(f"{v}\n".encode() for v in values)
+
+
+def test_the_first_cycle_and_the_beats_after_it_are_read_apart(
+        tmp_path: Path) -> None:
+    feed = _feed(tmp_path)
+    feed.take(b"".join(f"{v}\n".encode() for v in
+                       (28, 3072, 178, 18502, 21297, 1, 1)))
+    assert feed.run.first["card_word"] == 0x48465331
+    assert feed.run.first["init_attempts"] == 1
+    feed.take(_beat([1, 0, 0, 0, 123, 10]) + _beat([2, 0, 0, 0, 456, 10]))
+    assert feed.run.heartbeats == 2
+    assert feed.run.errors == 0
+    assert feed.run.cycles == 2 * HEARTBEAT_CYCLES
+
+
+def test_a_mangled_number_is_dropped_whole_and_counted(tmp_path: Path) -> None:
+    """PRINT emits characters above '9' for large values. Squeezing the digits
+    out of "335544;<" would turn a known defect into a plausible number."""
+    feed = _feed(tmp_path)
+    feed.run.first = {"done": 1}
+    feed.take(b"H\n1\n0\n0\n0\n335544;<\n10\n")
+    assert feed.run.unparsed == 1
+    assert feed.run.heartbeats == 0        # the group never completed
+    feed.take(_beat([2, 0, 0, 0, 456, 10]))
+    assert feed.run.heartbeats == 1        # and the next H starts clean
+
+
+def test_a_split_arrival_is_still_one_line(tmp_path: Path) -> None:
+    """The board's bytes arrive in whatever pieces the port hands over."""
+    feed = _feed(tmp_path)
+    feed.run.first = {"done": 1}
+    for piece in (b"H\n12", b"3\n0\n", b"0\n0\n7", b"89\n10\n"):
+        feed.take(piece)
+    assert feed.run.heartbeats == 1
+    assert feed.run.cycles == 123 * HEARTBEAT_CYCLES
+
+
+def test_the_two_group_shapes_cannot_be_confused(tmp_path: Path) -> None:
+    """Six fields in a heartbeat, seven in the first cycle -- and the first
+    cycle has no H in front of it. That is the whole of the rule."""
+    assert len(FIELDS) == 6
+    assert len(FIRST) == 7
+    feed = _feed(tmp_path)
+    feed.take(_beat([1, 0, 0, 0, 123, 10]))
+    assert feed.run.heartbeats == 1
+    assert feed.run.first == {}, "a heartbeat must never be read as a first cycle"
