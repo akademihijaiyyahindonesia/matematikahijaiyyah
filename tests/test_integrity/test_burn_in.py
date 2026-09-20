@@ -36,7 +36,14 @@ from burn_in import (  # noqa: E402
     expected_first_cycle,
     uptime_s,
 )
-from burn_in_report import baseline, classify_gaps, percentile, read, spread  # noqa: E402
+from burn_in_report import (  # noqa: E402
+    baseline,
+    classify_gaps,
+    compare,
+    percentile,
+    read,
+    spread,
+)
 from jamrah_board import GATE, gate_body  # noqa: E402
 
 from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
@@ -329,3 +336,34 @@ def test_the_two_beat_counts_are_reported_apart(tmp_path: Path) -> None:
     # and the work must be measured against the board's count, not the host's:
     # a host that parsed a tenth of the beats did not make the machine idle.
     assert b["work_accounted"] == pytest.approx(1.0, abs=0.01)
+
+
+# -- holding a run against a frozen baseline ------------------------------
+
+
+def _baseline_of(tmp_path: Path, rate: float, name: str) -> dict:
+    beats = [(60.0 * i, 1.5, int(60.0 * i * rate)) for i in range(1, 11)]
+    return baseline(*read(_log(tmp_path / name, beats)))
+
+
+def test_a_slower_run_shows_up_as_a_difference(tmp_path: Path) -> None:
+    frozen = _baseline_of(tmp_path, 650.0, "frozen")
+    now = _baseline_of(tmp_path, 600.0, "now")
+    moved = {row["field"]: row for row in compare(now, frozen)}
+    assert moved["cycles_per_second.p50"]["delta"] == pytest.approx(-50, abs=1)
+    assert moved["cycles_per_second.p50"]["percent"] == pytest.approx(-7.7, abs=0.2)
+    assert moved["cycle_ms"]["delta"] > 0          # slower work, longer cycle
+    for field in ("work_accounted", "errors", "sd_read_failures",
+                  "board_beat_period_s"):
+        assert field in moved, field
+
+
+def test_the_difference_view_passes_no_judgement(tmp_path: Path) -> None:
+    """The bands are the owner's and cannot be drawn before a baseline exists.
+    A tool that scored this would be the anomaly engine, which is priority 7."""
+    frozen = _baseline_of(tmp_path, 650.0, "frozen2")
+    now = _baseline_of(tmp_path, 300.0, "half")
+    for row in compare(now, frozen):
+        assert set(row) == {"field", "now", "frozen", "delta", "percent"}
+        assert not any(k in str(row).lower()
+                       for k in ("verdict", "warning", "critical", "anomaly"))

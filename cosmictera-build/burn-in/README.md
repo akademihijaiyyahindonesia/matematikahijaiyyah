@@ -100,6 +100,22 @@ siklus, bukan dari jarak yang terlihat. Lari berikutnya memakai tenggat 0,25
 detik; itu tidak mengubah apa yang tingkat 1 ukur, dan angka tingkat 1 tidak
 dilabeli ulang diam-diam.
 
+## Membekukan, lalu membandingkan
+
+Sebuah garis dasar yang dibekukan hanya berguna kalau ada yang bisa
+membandingkannya. `--against` mencetak **apa yang bergeser** antara sebuah lari
+dan garis dasar beku:
+
+```bash
+python3 rtl/scripts/burn_in_report.py <id>.jsonl --write            # bekukan
+python3 rtl/scripts/burn_in_report.py <lari-baru>.jsonl --against <id>-baseline.json
+```
+
+Ia menyatakan **selisih, bukan vonis** — tanpa skor, tanpa ambang. Ambang
+Normal / Warning / Critical adalah milik pemilik, dan tidak bisa ditarik jujur
+dari data yang belum ada. Alat yang menebaknya sudah menjadi mesin anomali,
+dan itu prioritas 7.
+
 ## Lari
 
 | lari | tingkat | hasil |

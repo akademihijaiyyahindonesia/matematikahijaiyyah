@@ -14,6 +14,13 @@ far apart the beats are, how the board's own clock tracks the host's, and where
 the outliers were. It writes <id>-baseline.json beside the log so a later run,
 or NUI, can hold its numbers against these rather than against a feeling.
 
+-- holding one run against a frozen one -----------------------------------
+`--against <baseline.json>` prints what moved. It states DIFFERENCES and
+nothing else: no verdict, no score, no threshold. What counts as too far is
+the owner's to set, and the thresholds cannot honestly be drawn before a
+baseline exists -- which is what tier 1 is for. A tool that guessed them would
+be the anomaly engine, and that is priority 7.
+
 -- the blind spot a long silence leaves, and how it is closed -------------
 While the host is not reading, nothing would show a board that stopped and
 started again. One number closes that: the board's OWN beat counter times the
@@ -235,9 +242,41 @@ def show(b: dict[str, object]) -> None:
           f"{b['drift_per_hour_s']} s per hour")
 
 
+def compare(now: dict[str, object], frozen: dict[str, object]) -> list[dict]:
+    """What moved, between a run and a frozen baseline. Differences only.
+
+    No verdict is returned, and that is deliberate: the bands for normal,
+    warning and critical are the owner's, and they cannot be drawn from data
+    that does not exist yet. This says how far, not whether it is too far.
+    """
+    out = []
+    for key in ("cycles_per_second", "heartbeat_interval_s_as_the_host_saw_it",
+                "board_minus_host_s"):
+        a, b = now.get(key), frozen.get(key)
+        if isinstance(a, dict) and isinstance(b, dict):
+            for stat in ("p50", "p95"):
+                out.append(_moved(f"{key}.{stat}", a[stat], b[stat]))
+    for key in ("board_beat_period_s", "cycle_ms", "work_accounted",
+                "drift_per_hour_s", "errors", "sd_read_failures",
+                "unparsed_lines"):
+        if key in now and key in frozen:
+            out.append(_moved(key, now[key], frozen[key]))
+    return [row for row in out if row is not None]
+
+
+def _moved(name: str, now: object, frozen: object) -> dict | None:
+    if not isinstance(now, int | float) or not isinstance(frozen, int | float):
+        return None
+    delta = now - frozen
+    return {"field": name, "now": now, "frozen": frozen, "delta": round(delta, 6),
+            "percent": (round(100 * delta / frozen, 3) if frozen else None)}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("log", type=Path, help="a run's .jsonl")
+    ap.add_argument("--against", type=Path,
+                    help="a frozen <id>-baseline.json to print the differences from")
     ap.add_argument("--write", action="store_true",
                     help="also write <id>-baseline.json beside the log")
     args = ap.parse_args(argv)
@@ -245,6 +284,12 @@ def main(argv: list[str] | None = None) -> int:
     lines, summary = read(args.log)
     b = baseline(lines, summary)
     show(b)
+    if args.against:
+        frozen = json.loads(args.against.read_text())
+        print(f"\nagainst {args.against.name} -- differences, not a verdict:")
+        for row in compare(b, frozen):
+            percent = "" if row["percent"] is None else f"  {row['percent']:+.3f}%"
+            print(f"  {row['field']:<42} {row['frozen']} -> {row['now']}{percent}")
     if args.write:
         out = args.log.with_name(args.log.stem + "-baseline.json")
         out.write_text(json.dumps(b, indent=2) + "\n")
