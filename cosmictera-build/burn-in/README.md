@@ -108,20 +108,30 @@ dilabeli ulang diam-diam.
 
 Tingkat 72 jam dan 168 jam belum dijalankan.
 
-**Yang sudah terlihat pada 4,6 jam pertama**, dan bukan hasil akhir: 10.488
-detak, 10,7 juta siklus, **0 error, 0 baca kartu gagal, 0 baris tak terbaca**;
-laju **649,4 siklus per detik** (1,54 ms kerja per siklus), dan selisih jam
-papan terhadap jam host tetap di −3,3 detik tanpa hanyut.
+**Yang sudah terlihat pada 15,5 jam pertama**, dan bukan hasil akhir: papan
+memancarkan **35.525 detak**, host sempat mengurai 32.915; **36,4 juta
+siklus**; **0 error, 0 baca kartu gagal**; laju **650,4 siklus per detik**
+(1,5375 ms kerja per siklus).
 
-**Satu diam 140 detik, dan pemiliknya host — bukan papan.** Pada detik
-14.496 host berhenti membaca dua menit; detak yang datang sesudahnya adalah
-detak **lama** — jam papan tertinggal 138 detik lalu mengejar, dan 127 detak
-terkuras dalam 61 detik berikutnya. Papan tidak pernah berhenti. Alat
-laporannya sekarang menggolongkan tiap diam dengan membandingkan kedua jam,
-karena "mesin menggantung dua menit" dan "host sibuk dua menit" terlihat sama
-persis di angka jarak antar detak, dan hanya satu dari keduanya yang benar.
-Yang menyibukkan host saat itu: suite tes penuh dan lari bench di mesin yang
-sama. Lari berikutnya dijalankan dengan `nice` untuk mengurangi itu.
+**Enam belas diam, dan setiap satunya milik host.** Satu 140 detik pada detik
+14.496, lalu sejak detik ±46.600 sebuah pola berulang: host berhenti membaca
+±925 detik, **setiap ±960 detik**. Detak yang datang sesudahnya adalah detak
+lama, jam papan tertinggal lalu mengejar, dan ratusan detak terkuras dalam
+puluhan detik.
+
+**Papan tidak pernah berhenti, dan itu diukur — bukan disimpulkan dari
+diamnya.** Selama host tidak membaca, tidak ada yang akan memperlihatkan mesin
+yang berhenti lalu jalan lagi. Yang menutup titik buta itu satu angka: kerja
+yang papan laporkan, dibagi laju terukurnya, dibandingkan dengan uptime papan
+sendiri. Sesudah sepuluh diam yang totalnya lebih dari dua jam, angkanya
+**1,0002** — kerjanya menutupi waktunya.
+
+**Sembilan baris tak terbaca, dan semuanya sesudah diam.** Bentuknya sama:
+`4H`, `6062H`, `655620H`, `HH` — sebuah angka yang menempel pada penanda
+berikutnya, yaitu satu baris baru yang **hilang** karena penyangga penerima
+meluap selama host diam. Pengurainya membuang baris seperti itu **utuh**;
+kalau ia memeras digitnya, `6062H` akan jadi angka 6062 di dalam sebuah detak
+dan tak seorang pun tahu.
 
 ## Dua temuan dari membangun lab ini
 

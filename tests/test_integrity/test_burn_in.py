@@ -125,6 +125,7 @@ def test_the_program_reads_the_card_and_never_writes_it() -> None:
 
 def _log(tmp_path: Path, beats: list[tuple[float, float, int]]) -> Path:
     """A synthetic run: (host_s, gap, cycles) per sampled beat."""
+    tmp_path.mkdir(parents=True, exist_ok=True)
     path = tmp_path / "run.jsonl"
     lines = [{"t": 0.0, "kind": "start"}]
     for host_s, gap, cycles in beats:
@@ -286,3 +287,45 @@ def test_a_stall_does_not_bend_the_work_rate(tmp_path: Path) -> None:
     assert b["intervals_set_aside_for_silence"] == 2
     assert b["cycles_per_second"]["min"] == pytest.approx(rate, rel=1e-6)
     assert b["cycles_per_second"]["max"] == pytest.approx(rate, rel=1e-6)
+
+
+def test_a_board_that_stopped_unseen_shows_up_in_the_work(tmp_path: Path) -> None:
+    """Ten silences totalling two hours leave a blind spot: nothing in the log
+    would show the machine stopping and starting inside one. The work the
+    board reports, against the board's own clock, is what closes it."""
+    rate = 650.0
+    honest = [(60.0 * i, 1.5, int(60.0 * i * rate)) for i in range(1, 11)]
+    b = baseline(*read(_log(tmp_path, honest)))
+    assert b["work_accounted"] == pytest.approx(1.0, abs=0.01)
+    assert b["beats_emitted_by_board"] == honest[-1][2] // HEARTBEAT_CYCLES
+
+    # the same run with one minute where the board did no work at all while
+    # its clock kept running -- a stall nobody watched. The rate everywhere
+    # else is untouched, so the median still says 650, and the shortfall lands
+    # in the ratio.
+    stalled = []
+    cycles = 0
+    for i in range(1, 11):
+        if i != 6:
+            cycles += int(60.0 * rate)
+        stalled.append((60.0 * i, 1.5, cycles))
+    b = baseline(*read(_log(tmp_path / "stalled", stalled)))
+    assert b["cycles_per_second"]["p50"] == pytest.approx(rate, rel=1e-6)
+    assert b["work_accounted"] < 0.95, b["work_accounted"]
+
+
+def test_the_two_beat_counts_are_reported_apart(tmp_path: Path) -> None:
+    """The board says how many beats it emitted; the host says how many it
+    managed to parse. On a run with long silences these differ by thousands,
+    and only the first means anything about the machine."""
+    beats = [(60.0 * i, 1.5, int(60.0 * i * 650)) for i in range(1, 11)]
+    path = _log(tmp_path, beats)
+    summary = json.loads(path.with_suffix(".json").read_text())
+    summary["heartbeats"] = 100           # the host parsed far fewer
+    path.with_suffix(".json").write_text(json.dumps(summary))
+    b = baseline(*read(path))
+    assert b["beats_parsed_by_host"] == 100
+    assert b["beats_emitted_by_board"] > 100
+    # and the work must be measured against the board's count, not the host's:
+    # a host that parsed a tenth of the beats did not make the machine idle.
+    assert b["work_accounted"] == pytest.approx(1.0, abs=0.01)

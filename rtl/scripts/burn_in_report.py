@@ -14,6 +14,19 @@ far apart the beats are, how the board's own clock tracks the host's, and where
 the outliers were. It writes <id>-baseline.json beside the log so a later run,
 or NUI, can hold its numbers against these rather than against a feeling.
 
+-- the blind spot a long silence leaves, and how it is closed -------------
+While the host is not reading, nothing would show a board that stopped and
+started again. One number closes that: the board's OWN beat counter times the
+cycles per beat, held against the board's OWN uptime at the measured rate. If
+the machine had ever stopped, the work would fall short of the time. Measured
+on the 24-hour run after ten silences totalling more than two hours: the work
+accounts for 1.0002 of the uptime. It never stopped.
+
+That also separates two counts that were being read as one. The board says how
+many beats IT has emitted; the host counts how many it managed to parse. On
+this run: 35,525 emitted, 32,915 parsed. The board's number is the one that
+means anything.
+
 -- a silence has two possible owners --------------------------------------
 The host measures the gap between beats it PARSED, and a machine that stopped
 and a host that stopped reading look identical in that number. They are not
@@ -143,6 +156,8 @@ def baseline(lines: list[dict], summary: dict) -> dict[str, object]:
             rates.append((b["cycles"] - a["cycles"]) / span)
         drifts.append(b["board_s"] - b["host_s"])
 
+    last_beat = max((ln for ln in lines if "counter_hi" in ln),
+                    key=lambda ln: ln["cycles"], default=None)
     first, last = samples[0], samples[-1]
     hours = (last["host_s"] - first["host_s"]) / 3600
     return {
@@ -163,6 +178,15 @@ def baseline(lines: list[dict], summary: dict) -> dict[str, object]:
         "anomaly_lines": {kind: sum(1 for ln in lines if ln["kind"] == kind)
                           for kind in ("gap", "error", "unparsed", "launch")},
         # sampled beats only, and said so
+        # The board's own count against the host's, and the work against the
+        # clock. A board that stopped while nobody was reading shows up here
+        # and nowhere else.
+        "beats_emitted_by_board": (last_beat["cycles"] // HEARTBEAT_CYCLES
+                                   if last_beat else None),
+        "beats_parsed_by_host": summary.get("heartbeats"),
+        "work_accounted": (round(
+            (last_beat["cycles"] / percentile(rates, 50)) / summary["board_seconds"], 4)
+            if last_beat and rates and summary.get("board_seconds") else None),
         "sampled_beats": len(samples),
         "intervals_set_aside_for_silence": skipped,
         "heartbeat_interval_s_as_the_host_saw_it": spread(gaps),
@@ -182,9 +206,13 @@ def show(b: dict[str, object]) -> None:
     drift = b["board_minus_host_s"]     # type: ignore[index]
     print(f"{b['host_seconds']} s of host time, {b['board_seconds']} s by the "
           f"board's own counter")
-    print(f"{b['heartbeats']} beats, {b['cycles']:,} cycles, "  # type: ignore[str-format]
-          f"{b['errors']} error(s), {b['sd_read_failures']} unfinished card "
+    print(f"{b['beats_emitted_by_board']} beats emitted by the board, "
+          f"{b['beats_parsed_by_host']} parsed by the host; "
+          f"{b['cycles']:,} cycles")           # type: ignore[str-format]
+    print(f"{b['errors']} error(s), {b['sd_read_failures']} unfinished card "
           f"read(s), {b['unparsed_lines']} unreadable line(s)")
+    print(f"work against the board's own clock: {b['work_accounted']} "
+          f"-- 1.0 means it never stopped")
     print(f"longest silence {b['longest_silence_s']} s "
           f"at {b['longest_silence_at_s']} s")
     for g in b["silences"]:          # type: ignore[union-attr]
