@@ -1,0 +1,474 @@
+; burn_in.hasm -- the same work, over and over, with a heartbeat to watch.
+;
+; The owner's sixth priority, opened 20 September 2026 after the attack lab:
+; "apakah sistem ini stabil berjalan terus-menerus?" -- a question no
+; simulation answers, because what it asks about is hours.
+;
+; -- one cycle, and what each part would catch --------------------
+;   1  the jamrah gate over all 256 bytes, summing the pulse and the seven
+;      nodes. A drifting ALU, a stuck bit in the register file, a shift that
+;      stops shifting: the two sums move.
+;   2  the 28 codex vectors, read from ROM with HLOAD, CGET, CU and CRHO,
+;      summed. The ROM is read every cycle, so a ROM read that decays shows.
+;   3  sixteen words of data memory, written once at the start and compared
+;      every cycle afterwards. This is the memory-corruption check.
+;   4  one PUSH and one POP. The stack lives outside data memory
+;      (rtl/hcpu_memory.v), so nothing above would notice it failing.
+;   5  sector 1 of the card, read and its first word compared. The SDIO path
+;      is the youngest hardware here and the only wire to a physical device.
+;      It is READ, never written: writing every cycle for a week would be a
+;      wear test of the card, not of this machine.
+;
+; -- two counters, because they are two different things ----------
+; ERRORS counts values that disagree with what this machine itself produced
+; first. SD FAILURES counts reads the card did not complete. Mixing them would
+; make a card having a bad moment look like memory corruption, and the owner's
+; criterion for this tier is about the second kind.
+;
+; A failed read costs the full bounded wait in hal_sd.hasm -- about 3.3
+; seconds, measured -- so a cycle that hits one is slow, and a run where the
+; card never came up would crawl. That is why the card is brought up BEFORE
+; the loop, with up to eight attempts, and why a cycle that meets a failed
+; read makes exactly ONE attempt to bring it back and then moves on. A cycle
+; is not a recovery loop.
+;
+; -- first cycle records, every cycle after compares --------------
+; Nothing is compared against a constant assembled into the image, because a
+; wrong constant reports a defect that is not there. The first cycle STORES
+; what each part produced; every later cycle compares against that copy and
+; counts a mismatch. The first cycle also PRINTS seven numbers, so the host
+; can hold them against Python and against rtl/tb/jamrah_vectors.txt:
+;
+;   pulse sum, node sum, codex sum, card word high, card word low,
+;   init attempts, reference-read attempts
+;
+; -- the heartbeat ------------------------------------------------
+; Every 1024 cycles: the letter H, then six numbers, one per line:
+;
+;   heartbeats, errors, sd failures, counter wraps, counter >> 12, sd status
+;
+; NOT the cycle count and NOT the counter itself, and the reason is measured
+; rather than chosen. PRINT renders large values wrongly on this board: a
+; ladder of 2^0..2^31 sent to the wire on 20 September 2026 came back right up
+; to 4,194,304, and from 33,554,432 upward it emits characters ABOVE '9' --
+; 2^25 arrives as "335544;<". ':' to '?' are '0' + 10 to '0' + 15, so the
+; decimal conversion is producing digit values it cannot render. The defect is
+; in the machine, not in this program; it is reported, not worked around in
+; RTL (K9). What this program does is stay inside what PRINT renders: every
+; number it prints is below a million. The host multiplies the heartbeat count
+; by 1024 and the shifted counter by 4096.
+;
+; The counter at 0xFF4 is 32 bits at 27 MHz, so it wraps every 159.07 seconds
+; -- about 543 times in 24 hours. Uptime is wraps and counter together.
+;
+; THERE IS NO WATCHDOG IN THIS MACHINE -- no such module exists in rtl/, and
+; this program does not pretend to be one. What a stopped machine looks like
+; from outside is silence, and the host measures the gap between heartbeats.
+;
+; -- data memory --------------------------------------------------
+;   0x200 cycles          0x204 ref pulse sum    0x220 pulse sum, this cycle
+;   0x201 errors          0x205 ref node sum     0x221 node sum, this cycle
+;   0x202 wraps           0x206 ref codex sum    0x222 codex sum, this cycle
+;   0x203 prev counter    0x207 ref card word    0x223 card status, last
+;   0x208 first done      0x209 heartbeats       0x224 card word, this cycle
+;   0x20A card usable     0x20B read attempts    0x225 init attempts
+;   0x210-0x21F the sixteen words                0x226 card read failures
+;   0x230-0x232 the string "H" and a newline
+;
+; Sent over the wire to loader.hasm, so it is assembled at 64 and runs in
+; supervisor mode.
+
+        MOVI  R0, 0
+        MOVI  R1, 0
+        STORE R1, R0, 0x200
+        STORE R1, R0, 0x201
+        STORE R1, R0, 0x202
+        STORE R1, R0, 0x208
+        STORE R1, R0, 0x209
+        STORE R1, R0, 0x20A
+        STORE R1, R0, 0x226
+        LOAD  R1, R0, 0xFF4
+        STORE R1, R0, 0x203
+
+; the marker string, "H" then a newline
+        MOVI  R1, 72
+        STORE R1, R0, 0x230
+        MOVI  R1, 10
+        STORE R1, R0, 0x231
+        MOVI  R1, 0
+        STORE R1, R0, 0x232
+
+; the sixteen words: 3, 10, 17, ... written once and never again
+        MOVI  R2, 0
+        MOVI  R3, 3
+bi_fill:
+        STORE R3, R2, 0x210
+        ADDI  R3, R3, 7
+        ADDI  R2, R2, 1
+        CMPI  R2, 16
+        JNE   bi_fill
+
+; -- the card, brought up before the loop -------------------------
+; Measured 20 September 2026: an init that fails leaves every later read
+; paying the full bounded wait, and a run whose first cycle took 13 seconds
+; instead of 2 produced no heartbeat in six minutes. Eight attempts here cost
+; at most a few seconds once; not making them costs the run.
+        MOVI  R8, 0
+bi_init:
+        ADDI  R8, R8, 1
+        MOVI  R1, 1
+        CALL  hal_sd_run
+        MOVI  R0, 0
+        STORE R1, R0, 0x223
+        ANDI  R2, R1, 2             ; bit 1: the card answered
+        CMPI  R2, 0
+        JNE   bi_init_done
+        CMPI  R8, 8
+        JNE   bi_init
+bi_init_done:
+        MOVI  R0, 0
+        STORE R8, R0, 0x225
+
+; the reference read, the same way
+        MOVI  R8, 0
+bi_ref:
+        ADDI  R8, R8, 1
+        MOVI  R1, 1
+        CALL  hal_sd_sector
+        MOVI  R1, 2
+        CALL  hal_sd_run
+        MOVI  R0, 0
+        STORE R1, R0, 0x223
+        ANDI  R2, R1, 2
+        CMPI  R2, 0
+        JEQ   bi_ref_again
+        CALL  hal_sd_rewind
+        CALL  hal_sd_get
+        MOVI  R0, 0
+        STORE R1, R0, 0x207
+        MOVI  R1, 1
+        STORE R1, R0, 0x20A         ; the card is usable
+        JMP   bi_ref_done
+bi_ref_again:
+        CMPI  R8, 8
+        JNE   bi_ref
+bi_ref_done:
+        MOVI  R0, 0
+        STORE R8, R0, 0x20B
+
+; -- the cycle ----------------------------------------------------
+bi_cycle:
+        MOVI  R5, 0
+        MOVI  R4, 0
+        STORE R4, R5, 0x220
+        STORE R4, R5, 0x221
+
+; 1. the jamrah gate, all 256 bytes. The body below is
+;    rtl/programs/jamrah_gate.hasm's, word for word, and
+;    tests/test_integrity/test_burn_in.py fails if the two ever differ.
+;    It leaves R3 = pulse, R6..R11 = n0..n5, R2 = n6, and clobbers
+;    everything but R0 -- which is why the sums live in memory.
+        MOVI  R0, 0
+bi_byte:
+        MOV   R1, R0
+; >>> jamrah_gate.hasm body begins
+
+; ── level 1: four nodes, each a pair of adjacent bits ────────────
+        ANDI  R4, R1, 1
+        SHRI  R5, R1, 1
+        ANDI  R5, R5, 1
+        ADD   R6, R4, R5       ; n0 = b0 + b1
+
+        SHRI  R4, R1, 2
+        ANDI  R4, R4, 1
+        SHRI  R5, R1, 3
+        ANDI  R5, R5, 1
+        ADD   R7, R4, R5       ; n1 = b2 + b3
+
+        SHRI  R4, R1, 4
+        ANDI  R4, R4, 1
+        SHRI  R5, R1, 5
+        ANDI  R5, R5, 1
+        ADD   R8, R4, R5       ; n2 = b4 + b5
+
+        SHRI  R4, R1, 6
+        ANDI  R4, R4, 1
+        SHRI  R5, R1, 7
+        ANDI  R5, R5, 1
+        ADD   R9, R4, R5       ; n3 = b6 + b7
+
+; ── level 2: two nodes ───────────────────────────────────────────
+        ADD   R10, R6, R7     ; n4 = n0 + n1
+        ADD   R11, R8, R9     ; n5 = n2 + n3
+
+; ── level 3: the root ────────────────────────────────────────────
+        ADD   R2, R10, R11      ; n6 = popcount
+
+; ── the gate: 1 <= byte <= 28, branchless ────────────────────────
+;
+; The instruction set has only JEQ and JNE in hardware — no "jump if
+; greater" — so a range check used to need a comparison chain. With shifts it
+; needs none: subtract, then read the sign bit. Bit 31 of (x - 29) is 1
+; exactly when x < 29, and bit 31 of (0 - x) is 1 exactly when x > 0.
+;
+; Branchless matters beyond elegance here. A gate that branches on its input
+; takes a different number of cycles for different bytes, and that is a timing
+; channel on the very check meant to be cheap and uniform.
+
+        MOVI  R12, 29
+        SUB   R13, R1, R12      ; x - 29
+        SHRI  R13, R13, 31      ; 1 if x < 29
+
+        MOVI  R14, 0
+        SUB   R15, R14, R1      ; 0 - x
+        SHRI  R15, R15, 31      ; 1 if x > 0
+
+        AND   R3, R13, R15      ; both conditions
+; <<< jamrah_gate.hasm body ends
+        MOVI  R5, 0
+        LOAD  R4, R5, 0x220
+        ADD   R4, R4, R3
+        STORE R4, R5, 0x220
+        ADD   R6, R6, R7
+        ADD   R6, R6, R8
+        ADD   R6, R6, R9
+        ADD   R6, R6, R10
+        ADD   R6, R6, R11
+        ADD   R6, R6, R2
+        LOAD  R4, R5, 0x221
+        ADD   R4, R4, R6
+        STORE R4, R5, 0x221
+        ADDI  R0, R0, 1
+        CMPI  R0, 256
+        JNE   bi_byte
+
+; 2. the 28 codex vectors. HLOAD takes the letter as an immediate, so the
+;    list is written out; the summing is one routine.
+        MOVI  R11, 0
+        HLOAD H0, 1
+        CALL  bi_codex
+        HLOAD H0, 2
+        CALL  bi_codex
+        HLOAD H0, 3
+        CALL  bi_codex
+        HLOAD H0, 4
+        CALL  bi_codex
+        HLOAD H0, 5
+        CALL  bi_codex
+        HLOAD H0, 6
+        CALL  bi_codex
+        HLOAD H0, 7
+        CALL  bi_codex
+        HLOAD H0, 8
+        CALL  bi_codex
+        HLOAD H0, 9
+        CALL  bi_codex
+        HLOAD H0, 10
+        CALL  bi_codex
+        HLOAD H0, 11
+        CALL  bi_codex
+        HLOAD H0, 12
+        CALL  bi_codex
+        HLOAD H0, 13
+        CALL  bi_codex
+        HLOAD H0, 14
+        CALL  bi_codex
+        HLOAD H0, 15
+        CALL  bi_codex
+        HLOAD H0, 16
+        CALL  bi_codex
+        HLOAD H0, 17
+        CALL  bi_codex
+        HLOAD H0, 18
+        CALL  bi_codex
+        HLOAD H0, 19
+        CALL  bi_codex
+        HLOAD H0, 20
+        CALL  bi_codex
+        HLOAD H0, 21
+        CALL  bi_codex
+        HLOAD H0, 22
+        CALL  bi_codex
+        HLOAD H0, 23
+        CALL  bi_codex
+        HLOAD H0, 24
+        CALL  bi_codex
+        HLOAD H0, 25
+        CALL  bi_codex
+        HLOAD H0, 26
+        CALL  bi_codex
+        HLOAD H0, 27
+        CALL  bi_codex
+        HLOAD H0, 28
+        CALL  bi_codex
+        MOVI  R0, 0
+        STORE R11, R0, 0x222
+
+; 3. the sixteen words, as they were written
+        MOVI  R2, 0
+        MOVI  R3, 3
+bi_ram:
+        LOAD  R4, R2, 0x210
+        CMP   R4, R3
+        JEQ   bi_ram_ok
+        CALL  bi_err
+bi_ram_ok:
+        ADDI  R3, R3, 7
+        ADDI  R2, R2, 1
+        CMPI  R2, 16
+        JNE   bi_ram
+
+; 4. the stack, which no check above can see
+        MOVI  R4, 1365
+        PUSH  R4
+        MOVI  R4, 0
+        POP   R4
+        CMPI  R4, 1365
+        JEQ   bi_stack_ok
+        CALL  bi_err
+bi_stack_ok:
+
+; 5. sector 1 of the card -- skipped entirely if the card never came up
+        MOVI  R0, 0
+        LOAD  R1, R0, 0x20A
+        CMPI  R1, 0
+        JEQ   bi_card_done
+        MOVI  R1, 1
+        CALL  hal_sd_sector
+        MOVI  R1, 2
+        CALL  hal_sd_run
+        MOVI  R0, 0
+        STORE R1, R0, 0x223
+        ANDI  R2, R1, 2
+        CMPI  R2, 0
+        JEQ   bi_card_bad
+        CALL  hal_sd_rewind
+        CALL  hal_sd_get
+        MOVI  R0, 0
+        STORE R1, R0, 0x224
+        LOAD  R2, R0, 0x207
+        CMP   R1, R2
+        JEQ   bi_card_done
+        CALL  bi_err
+        JMP   bi_card_done
+bi_card_bad:
+        MOVI  R0, 0
+        LOAD  R1, R0, 0x226
+        ADDI  R1, R1, 1
+        STORE R1, R0, 0x226
+        MOVI  R1, 1
+        CALL  hal_sd_run            ; one attempt to bring it back, then on
+bi_card_done:
+
+; -- the first cycle records; every cycle after compares ----------
+        MOVI  R0, 0
+        LOAD  R1, R0, 0x208
+        CMPI  R1, 0
+        JNE   bi_compare
+
+        LOAD  R1, R0, 0x220
+        STORE R1, R0, 0x204
+        PRINT R1                    ; the pulse sum
+        LOAD  R1, R0, 0x221
+        STORE R1, R0, 0x205
+        PRINT R1                    ; the node sum
+        LOAD  R1, R0, 0x222
+        STORE R1, R0, 0x206
+        PRINT R1                    ; the codex sum
+        LOAD  R1, R0, 0x207
+        SHRI  R2, R1, 16
+        PRINT R2                    ; the card's first word, high half
+        SHLI  R2, R1, 16            ; the low half, without a 16-bit immediate
+        SHRI  R2, R2, 16
+        PRINT R2                    ; PRINT cannot render the whole word
+        LOAD  R2, R0, 0x225
+        PRINT R2                    ; init attempts
+        LOAD  R2, R0, 0x20B
+        PRINT R2                    ; reference-read attempts
+        MOVI  R1, 1
+        STORE R1, R0, 0x208
+        JMP   bi_tick
+
+bi_compare:
+        LOAD  R1, R0, 0x220
+        LOAD  R2, R0, 0x204
+        CMP   R1, R2
+        JEQ   bi_c2
+        CALL  bi_err
+bi_c2:  LOAD  R1, R0, 0x221
+        LOAD  R2, R0, 0x205
+        CMP   R1, R2
+        JEQ   bi_c3
+        CALL  bi_err
+bi_c3:  LOAD  R1, R0, 0x222
+        LOAD  R2, R0, 0x206
+        CMP   R1, R2
+        JEQ   bi_tick
+        CALL  bi_err
+
+; -- the tick: count the cycle, follow the counter, speak sometimes
+bi_tick:
+        MOVI  R0, 0
+        LOAD  R1, R0, 0x200
+        ADDI  R1, R1, 1
+        STORE R1, R0, 0x200
+
+; A wrap is the counter's top bit falling, 1 to 0, and nothing else. The first
+; version of this counted the sign of (now - prev) instead, and the board
+; disproved it in three minutes: 180.6 seconds of host time came back as 20.5,
+; exactly one wrap short. (now - prev) after a wrap is the elapsed count, which
+; is SMALL and positive -- its sign bit is set only if more than 2^31 clocks
+; passed between two samples, which is the opposite of what happens here. The
+; top bit cannot lie as long as a cycle is shorter than half a wrap period,
+; 79.5 seconds; a cycle is about 1.5 milliseconds.
+        LOAD  R2, R0, 0xFF4
+        LOAD  R3, R0, 0x203
+        SHRI  R6, R3, 31            ; the top bit as it was
+        SHRI  R7, R2, 31            ; and as it is
+        XORI  R7, R7, 1
+        AND   R6, R6, R7            ; 1 exactly when it fell
+        LOAD  R5, R0, 0x202
+        ADD   R5, R5, R6
+        STORE R5, R0, 0x202
+        STORE R2, R0, 0x203
+
+        ANDI  R4, R1, 1023
+        CMPI  R4, 0
+        JNE   bi_cycle
+
+        LOAD  R4, R0, 0x209
+        ADDI  R4, R4, 1
+        STORE R4, R0, 0x209
+
+        EMITS 0x230
+        PRINT R4                    ; heartbeats -- x1024 is the cycle count
+        LOAD  R4, R0, 0x201
+        PRINT R4                    ; errors
+        LOAD  R4, R0, 0x226
+        PRINT R4                    ; reads the card did not complete
+        PRINT R5                    ; counter wraps
+        SHRI  R2, R2, 12
+        PRINT R2                    ; the counter, x4096 -- 152 us of grain
+        LOAD  R4, R0, 0x223
+        PRINT R4                    ; the card's status word
+        JMP   bi_cycle
+
+; -- the two routines ---------------------------------------------
+bi_codex:
+        CGET  R1, H0, 0             ; theta
+        ADD   R11, R11, R1
+        CU    R1, H0                ; U
+        ADD   R11, R11, R1
+        CRHO  R1, H0                ; rho
+        ADD   R11, R11, R1
+        RET
+
+; One more error, and never a reset: the count is what the host watches.
+bi_err:
+        MOVI  R12, 0
+        LOAD  R13, R12, 0x201
+        ADDI  R13, R13, 1
+        STORE R13, R12, 0x201
+        RET
+
+        .include "hal_sd.hasm"

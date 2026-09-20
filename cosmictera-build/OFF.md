@@ -97,6 +97,58 @@ ini. Setiap eksperimen mengubah desain kita dan membiarkan ketiganya tetap.
 
 Label: **EH**.
 
+### PRINT tidak bisa mencetak angka besar
+
+Ditemukan 20 September 2026 oleh lab burn-in, yang butuh mencetak pencacah
+siklus 32-bit dan tidak bisa. Tangga `2^0` sampai `2^31` dikirim ke papan
+lewat `loader.hasm`, satu `PRINT` per nilai:
+
+| nilai | kembali sebagai |
+|---|---|
+| sampai 4.194.304 (2²²) | benar |
+| 8.388.608 (2²³) | `8388600` |
+| 16.777.216 (2²⁴) | benar |
+| 33.554.432 (2²⁵) | `335544;<` |
+| 2.147.483.648 (2³¹) | `2147481?::` |
+
+`:` sampai `?` adalah `'0'` + 10 sampai `'0'` + 15: konversi desimalnya
+menghasilkan **nilai digit yang tidak bisa ia cetak**. Jadi bukan sekadar
+pemotongan — angkanya juga salah (2²³ meleset delapan).
+
+`rtl/hcpu_top.v` menandai konversi itu dengan kalimat "Re-measure before
+changing this", dan aturan K9 berlaku: ini **dilaporkan, bukan diperbaiki**.
+Keputusan perbaikannya milik pemilik.
+
+Yang terdampak hanya program yang mencetak angka besar.
+`rtl/programs/burn_in.hasm` menjaga setiap angkanya di bawah sejuta dan
+hostnya yang mengalikan kembali; program lain di repo ini mencetak angka
+kecil dan tidak tersentuh.
+
+Label: **EH**.
+
+### Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan
+
+Terukur 20 September 2026, **delapan peluncuran dari delapan**, berselang-seling
+tanpa kecuali: kalau papan direkonfigurasi sementara pengendali SD sedang
+membaca, inisialisasi kartu di lari **berikutnya** gagal — delapan percobaan,
+`SD_STATUS` = 1 (sibuk, bit "ok" nol). Lari sesudah **itu**, yang kartunya tak
+pernah menyala sehingga tak pernah membaca, menemukannya sehat kembali.
+
+Harganya nyata: satu percobaan yang gagal membayar penuh tunggu berbatas di
+`rtl/programs/hal_sd.hasm`, **±3,3 detik**, jadi lari yang kartunya tak pernah
+naik merangkak — satu lari tanpa satu pun detak dalam enam menit.
+
+Yang belum diketahui: apakah yang tertinggal itu keadaan kartu, keadaan
+pengendali, atau keduanya. Menjawabnya butuh menyalakan ulang daya kartu,
+dan soketnya tidak punya sakelar daya.
+
+Dua hal dipakai sementara itu, dan keduanya bukan perbaikan RTL:
+`burn_in.hasm` menyerah sesudah delapan percobaan lalu melewati kartu
+(dibanding merangkak), dan `burn_in.py` meluncurkan ulang — konfigurasi lagi,
+kirim lagi — kalau kartu tidak naik.
+
+Label: **EH**.
+
 ---
 
 ## Belum ada

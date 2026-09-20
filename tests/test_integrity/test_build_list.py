@@ -327,7 +327,11 @@ def test_nothing_blocked_is_ticked_green() -> None:
     scopes = ("guard-on-write", "baca mengembalikan H-Reg hidup",
               "create → write → read → verify, di RAM",
               "melewati reboot lewat kartu, tersimulasi",
-              "melewati mati daya di papan")
+              "melewati mati daya di papan",
+              # The burn-in row names HFS only because the magic word is what
+              # it compares sector 1 against. It claims a READ, and no HFS
+              # operation at all, so it has to say which of the two it is.
+              "sektor 1 dibaca, bukan klaim HFS")
     hfs_rows = [ln for ln in green if "HFS" in ln]
     assert hfs_rows, "HOS's HFS row went missing from the checklist"
     for ln in hfs_rows:

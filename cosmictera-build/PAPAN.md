@@ -875,6 +875,52 @@ satu perbandingan pada ukuran ini, bukan pernyataan umum.
 
 ---
 
+## Burn-in tingkat 1 — lab dibangun dan dijalankan, 20 September 2026
+
+Catatan lengkapnya di [burn-in/](burn-in/README.md). `rtl/programs/burn_in.hasm`
+(332 kata) mengulang satu siklus tanpa henti: gerbang Jamrah atas ke-256 byte,
+ke-28 vektor codex dari ROM, enam belas kata memori data, satu `PUSH`/`POP`,
+dan satu sektor kartu **dibaca** (tidak pernah ditulis). Siklus pertama
+menyimpan hasilnya; tiap siklus sesudahnya membandingkan.
+
+Tiga angka siklus pertama punya jawaban dari luar papan dan **cocok di papan**:
+**28** (huruf 1..28, `jamrah_vectors.txt`), **3072** (tiga tingkat pohon, tiap
+tingkat menjumlah 1.024 bit), **178** (θ + U + ρ dari Master Table). Kata
+pertama sektor 1 kembali sebagai **0x48465331 — `HFS1`**.
+
+**Dua temuan muncul dari membangun lab ini, dan keduanya dilaporkan bukan
+diperbaiki (K9):**
+
+1. **`PRINT` salah untuk angka besar.** Tangga `2^0..2^31` dikirim ke papan:
+   benar sampai 4.194.304, lalu `8.388.608` kembali sebagai `8388600`, dan dari
+   `2^25` ke atas muncul karakter `:` sampai `?` — yaitu nilai digit 10 sampai
+   15 yang konversi desimalnya tidak bisa cetak. Karena itu program ini menjaga
+   tiap angka yang dicetaknya di bawah sejuta.
+2. **Kartu gagal init sesudah rekonfigurasi di tengah pembacaan** — delapan
+   peluncuran dari delapan, berselang-seling tanpa kecuali. Satu percobaan
+   gagal berharga ±3,3 detik (tunggu berbatas `hal_sd.hasm`), jadi lari yang
+   kartunya tak pernah naik merangkak: satu lari enam menit **tanpa satu pun
+   detak**.
+
+Keduanya di [OFF.md](OFF.md) dengan angkanya.
+
+**Tidak ada watchdog di mesin ini** — tidak ada modul semacam itu di `rtl/` —
+jadi satu dari empat kriteria tingkat 1 tidak bisa diukur di papan ini, dan itu
+dikatakan di muka. Yang diukur sebagai gantinya adalah **diam**: jarak antar
+detak, dicatat host.
+
+Tiga cacat saya sendiri ditemukan papan sebelum lari panjang dimulai, dan
+ketiganya tercatat di kodenya: deteksi putaran pencacah yang memakai tanda
+`(now - prev)` (papan menjawab 20,5 detik untuk 180,6 detik nyata — tepat satu
+putaran kurang), pengurai host yang membaca tujuh angka siklus pertama sebagai
+detak enam-kolom (melaporkan 3.072 kesalahan yang tidak ada), dan inisialisasi
+kartu tanpa percobaan ulang.
+
+**Lari 24 jam berjalan sejak 01:35 UTC**, dan angkanya belum ada di sini —
+halaman ini mencatat yang sudah keluar dari papan, bukan yang sedang berjalan.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1059,7 +1105,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.061 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.070 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1102,7 +1148,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.061 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.070 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
