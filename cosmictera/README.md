@@ -75,6 +75,7 @@ Determinisme harus struktural, bukan empiris.
 | [`SYSTEM.md`](SYSTEM.md) | Penjelasan sistem teknis: geometri, lipatan, rotasi, impulser, segel. |
 | [`CONCRETE.md`](CONCRETE.md) | Penjelasan konkret lengkap: jalur satu aliran dari bit sampai segel, dengan setiap angka dan asalnya. |
 | [`COMPUTING.md`](COMPUTING.md) | Apa itu "Cosmictera Computing" secara program: empat program nyata (HCPU, Ka'bah, tumpukan tujuh lapis, NUI) dan disiplin yang sama-sama mereka taati. |
+| [`TELEMETRY.md`](TELEMETRY.md) | Kontrak telemetri v1 — keputusan pemilik 20 September 2026 — beserta sumber tiap medannya, dan mana yang belum punya sumber sama sekali. |
 | [`CODEX.md`](CODEX.md) | Bab I & II buku *Matematika Hijaiyyah* dipetakan ke modul kode (`core/`, `algebra/`, `skeleton/`) dan tes yang memverifikasinya — lapis matematika di bawah keempat program itu. |
 
 Angka di ketiganya diikat oleh

@@ -709,6 +709,33 @@ Tiga hal terukur yang harus dibaca bersama daftar itu:
   sepihak. Command Center di Docker juga menuntut unduhan perangkat lunak pihak
   ketiga, yang butuh izin pemilik.
 
+### Keputusan pemilik, 20 September 2026 — kontrak telemetri v1
+
+Diambil sementara burn-in tingkat 1 berjalan, ketika pertanyaannya jadi
+konkret: apa yang sebenarnya bisa dilaporkan sistem ini tentang dirinya. Tujuh
+kelompok — SYSTEM, MEMORY, JAMRAH, KABAH, STORAGE, BOOT, HIJRAH — dan 27
+medan. Isinya tinggal di `cosmictera/TELEMETRY.md` beserta sumber tiap medan;
+tidak disalin ke sini (R1).
+
+Dua penetapan yang menyertainya menutup pertanyaan yang sempat terbuka:
+
+- **Loader bukan telemetri kontinu, melainkan telemetri kejadian boot** — yang
+  disimpan hasil terakhirnya, bukan pembacaan tiap detik.
+- **Hijrah bukan daemon, melainkan mesin validasi** — yang hidup bukan
+  statusnya melainkan hasil validasi terakhirnya.
+
+**Empat medan belum punya sumber sama sekali**, dan itu dicatat sebagai
+keadaan, bukan utang yang dikarang: `anomaly_score` dan `corruption_score`
+adalah turunan yang menunggu NUI (prioritas 7, belum dimulai), `state_hash`
+menuntut bentuk ringkasan yang belum pemilik tetapkan (tidak ada inti SHA-256
+di RTL, R10), dan `last_relocation` adalah langkah yang loader kerjakan tanpa
+melaporkannya terpisah. `tests/test_integrity/test_telemetry_contract.py`
+menjaga keempatnya tetap ditandai begitu sampai ada yang mengukurnya.
+
+Tiga hal yang kontrak ini **belum** tetapkan, dan tidak boleh dikarang: setiap
+berapa lama tiap medan dilaporkan, lewat jalur apa, dan ambang Normal /
+Warning / Critical. Yang terakhir menuntut garis dasar selesai lebih dulu.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

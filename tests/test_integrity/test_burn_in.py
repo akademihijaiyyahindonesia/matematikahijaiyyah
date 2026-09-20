@@ -36,7 +36,7 @@ from burn_in import (  # noqa: E402
     expected_first_cycle,
     uptime_s,
 )
-from burn_in_report import baseline, percentile, read, spread  # noqa: E402
+from burn_in_report import baseline, classify_gaps, percentile, read, spread  # noqa: E402
 from jamrah_board import GATE, gate_body  # noqa: E402
 
 from hijaiyyah.core.master_table import MASTER_TABLE  # noqa: E402
@@ -235,3 +235,54 @@ def test_the_two_group_shapes_cannot_be_confused(tmp_path: Path) -> None:
     feed.take(_beat([1, 0, 0, 0, 123, 10]))
     assert feed.run.heartbeats == 1
     assert feed.run.first == {}, "a heartbeat must never be read as a first cycle"
+
+
+# -- whose silence was it -------------------------------------------------
+
+
+def _carrying(t: float, host_s: float, board_s: float, beats: int,
+              kind: str = "sample", gap: float = 2.0) -> dict:
+    """A logged beat, with the board's clock expressed the way the log does."""
+    wraps, rest = divmod(board_s, WRAP_S)
+    return {"t": t, "kind": kind, "gap": gap, "host_s": host_s, "board_s": board_s,
+            "heartbeats": beats, "errors": 0, "sd_fails": 0, "wraps": int(wraps),
+            "counter_hi": int(rest * OSC_HZ) >> COUNTER_SHIFT, "sd_status": 10,
+            "cycles": beats * HEARTBEAT_CYCLES}
+
+
+def test_a_host_that_stopped_reading_is_not_a_board_that_stopped() -> None:
+    """Measured on the 24-hour run: 140 seconds of silence where the board had
+    never stopped. Reporting that as a hang would be wrong in the one
+    direction that matters."""
+    lines = [_carrying(100.0, 100.0, 100.0, 60),
+             _carrying(300.0, 300.0, 160.0, 96, kind="gap", gap=140.0)]
+    (g,) = classify_gaps(lines)
+    assert g["whose"] == "the host"
+    assert g["board_advance_s"] < g["host_advance_s"] / 2
+
+
+def test_a_board_that_stopped_is_named_as_the_board() -> None:
+    """The other side of the same test: the beat after the gap is CURRENT and
+    the count barely moved."""
+    lines = [_carrying(100.0, 100.0, 100.0, 60),
+             _carrying(240.0, 240.0, 240.0, 61, kind="gap", gap=140.0)]
+    (g,) = classify_gaps(lines)
+    assert g["whose"] == "the board"
+    assert g["beats_advanced"] == 1
+
+
+def test_a_stall_does_not_bend_the_work_rate(tmp_path: Path) -> None:
+    """The stall and the minute after it produce a rate four times too low and
+    four times too high. Neither belongs in a baseline."""
+    rate, beats = 650.0, []
+    for i in range(1, 11):
+        beats.append((60.0 * i, 1.5, int(60.0 * i * rate)))
+    path = _log(tmp_path, beats)
+    lines = [json.loads(ln) for ln in path.read_text().splitlines()]
+    # bend one sample's board clock away from the host's, as a stall does
+    lines[5]["board_s"] -= 100.0
+    path.write_text("\n".join(json.dumps(x) for x in lines) + "\n")
+    b = baseline(*read(path))
+    assert b["intervals_set_aside_for_silence"] == 2
+    assert b["cycles_per_second"]["min"] == pytest.approx(rate, rel=1e-6)
+    assert b["cycles_per_second"]["max"] == pytest.approx(rate, rel=1e-6)

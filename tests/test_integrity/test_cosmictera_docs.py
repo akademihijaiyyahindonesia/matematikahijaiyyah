@@ -19,7 +19,8 @@ from hijaiyyah.crypto.program import BUILD_PRODUCTS, SYSTEM_PATTERNS, defined_op
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "cosmictera"
-NAMES = ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md", "COMPUTING.md", "CODEX.md")
+NAMES = ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md", "COMPUTING.md",
+         "CODEX.md", "TELEMETRY.md")
 
 
 def _text(name: str) -> str:
@@ -52,7 +53,7 @@ def _row(text: str, label: str, cells: int) -> list[str]:
 #  The folder exists and is indexed
 # ══════════════════════════════════════════════════════════════════
 
-def test_the_folder_carries_exactly_the_four_documents_it_indexes() -> None:
+def test_the_folder_carries_exactly_the_documents_it_indexes() -> None:
     assert DOCS.is_dir()
     found = {p.name for p in DOCS.glob("*.md")}
     assert found == set(NAMES), found

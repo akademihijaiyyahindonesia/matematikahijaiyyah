@@ -108,10 +108,20 @@ dilabeli ulang diam-diam.
 
 Tingkat 72 jam dan 168 jam belum dijalankan.
 
-**Yang sudah terlihat pada 3,4 jam pertama**, dan bukan hasil akhir: 7.805
-detak, 7,99 juta siklus, **0 error, 0 baca kartu gagal, 0 baris tak terbaca**;
+**Yang sudah terlihat pada 4,6 jam pertama**, dan bukan hasil akhir: 10.488
+detak, 10,7 juta siklus, **0 error, 0 baca kartu gagal, 0 baris tak terbaca**;
 laju **649,4 siklus per detik** (1,54 ms kerja per siklus), dan selisih jam
 papan terhadap jam host tetap di −3,3 detik tanpa hanyut.
+
+**Satu diam 140 detik, dan pemiliknya host — bukan papan.** Pada detik
+14.496 host berhenti membaca dua menit; detak yang datang sesudahnya adalah
+detak **lama** — jam papan tertinggal 138 detik lalu mengejar, dan 127 detak
+terkuras dalam 61 detik berikutnya. Papan tidak pernah berhenti. Alat
+laporannya sekarang menggolongkan tiap diam dengan membandingkan kedua jam,
+karena "mesin menggantung dua menit" dan "host sibuk dua menit" terlihat sama
+persis di angka jarak antar detak, dan hanya satu dari keduanya yang benar.
+Yang menyibukkan host saat itu: suite tes penuh dan lari bench di mesin yang
+sama. Lari berikutnya dijalankan dengan `nice` untuk mengurangi itu.
 
 ## Dua temuan dari membangun lab ini
 

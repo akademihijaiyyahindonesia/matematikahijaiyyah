@@ -14,6 +14,23 @@ far apart the beats are, how the board's own clock tracks the host's, and where
 the outliers were. It writes <id>-baseline.json beside the log so a later run,
 or NUI, can hold its numbers against these rather than against a feeling.
 
+-- a silence has two possible owners --------------------------------------
+The host measures the gap between beats it PARSED, and a machine that stopped
+and a host that stopped reading look identical in that number. They are not
+identical in the log, because every beat carries the board's own clock:
+
+  the host stopped    the beats after the gap are OLD -- the board's clock
+                      lags the host's, then catches up as the backlog drains
+  the board stopped   the beat after the gap is CURRENT -- the board's clock
+                      tracks the host's, and the beat COUNT barely moved
+
+So each gap is classified rather than reported bare. Measured 20 September
+2026 on the 24-hour run: a 140-second silence at 14,496 s was the host's --
+the board's clock had fallen 138 seconds behind and recovered within a minute,
+and 127 beats drained in the 61 seconds after. The board never stopped. A
+report that called that "the machine hung for two minutes" would have been
+wrong in the one direction that matters.
+
 -- one number is the host's, not the board's -----------------------------
 The interval between beats as MEASURED here is quantised by the host's serial
 read timeout: tier 1 ran with a one-second timeout, so its intervals pile up
@@ -37,6 +54,15 @@ import argparse
 import json
 from itertools import pairwise
 from pathlib import Path
+
+OSC_HZ = 27_000_000
+WRAP_S = 2 ** 32 / OSC_HZ
+COUNTER_SHIFT = 12
+
+
+def uptime_s(wraps: int, counter_hi: int) -> float:
+    """burn_in.py's, repeated here so a log can be read without a board."""
+    return wraps * WRAP_S + (counter_hi << COUNTER_SHIFT) / OSC_HZ
 
 ROOT = Path(__file__).resolve().parents[2]
 HEARTBEAT_CYCLES = 1024      # burn_in.py's, and burn_in.hasm's
@@ -70,16 +96,50 @@ def read(path: Path) -> tuple[list[dict], dict]:
     return lines, summary
 
 
+def classify_gaps(lines: list[dict]) -> list[dict[str, object]]:
+    """Whose silence each gap was -- the board's or the host's."""
+    carrying = [ln for ln in lines if "counter_hi" in ln]
+    out = []
+    for i, ln in enumerate(carrying):
+        if ln["kind"] != "gap" or i == 0:
+            continue
+        before = carrying[i - 1]
+        host = ln["host_s"] - before["host_s"] if "host_s" in ln else float(ln["gap"])
+        board = (uptime_s(ln["wraps"], ln["counter_hi"])
+                 - uptime_s(before["wraps"], before["counter_hi"]))
+        beats = ln["heartbeats"] - before["heartbeats"]
+        whose = ("the host" if board < 0.5 * host else
+                 "the board" if beats <= 2 else "unclear")
+        out.append({"at_s": round(ln["t"], 1), "silence_s": float(ln["gap"]),
+                    "host_advance_s": round(host, 1),
+                    "board_advance_s": round(board, 1),
+                    "beats_advanced": beats, "whose": whose})
+    return out
+
+
 def baseline(lines: list[dict], summary: dict) -> dict[str, object]:
     samples = [ln for ln in lines if ln["kind"] == "sample"]
     if len(samples) < 2:
         raise ValueError("a baseline needs at least two samples")
 
     gaps = [float(s["gap"]) for s in samples]
-    rates, drifts = [], []
+    silences = classify_gaps(lines)
+    # A rate measured across a silence is not a work rate. During a host stall
+    # the cycles are real and the host's seconds are spent waiting; in the
+    # minute after, the backlog drains and the same ratio comes out four times
+    # too high. On 20 September one stall produced both 188.9 and 2,121.5
+    # cycles per second. An interval is set aside when the board's own clock
+    # and the host's disagree about how long it was -- which is the event
+    # itself, not a guess at where it was.
+    rates, drifts, skipped = [], [], 0
     for a, b in pairwise(samples):
         span = b["host_s"] - a["host_s"]
-        if span > 0:
+        board_span = b["board_s"] - a["board_s"]
+        if span <= 0:
+            continue
+        if abs(board_span - span) > 0.2 * span:
+            skipped += 1
+        else:
             rates.append((b["cycles"] - a["cycles"]) / span)
         drifts.append(b["board_s"] - b["host_s"])
 
@@ -99,10 +159,12 @@ def baseline(lines: list[dict], summary: dict) -> dict[str, object]:
         "unparsed_lines": summary.get("unparsed_lines"),
         "longest_silence_s": summary.get("longest_gap_s"),
         "longest_silence_at_s": summary.get("longest_gap_at_s"),
+        "silences": silences,
         "anomaly_lines": {kind: sum(1 for ln in lines if ln["kind"] == kind)
                           for kind in ("gap", "error", "unparsed", "launch")},
         # sampled beats only, and said so
         "sampled_beats": len(samples),
+        "intervals_set_aside_for_silence": skipped,
         "heartbeat_interval_s_as_the_host_saw_it": spread(gaps),
         "cycles_per_second": spread(rates),
         # What the board actually does, free of the host's read timeout.
@@ -125,6 +187,10 @@ def show(b: dict[str, object]) -> None:
           f"read(s), {b['unparsed_lines']} unreadable line(s)")
     print(f"longest silence {b['longest_silence_s']} s "
           f"at {b['longest_silence_at_s']} s")
+    for g in b["silences"]:          # type: ignore[union-attr]
+        print(f"  {g['silence_s']:>7.1f} s at {g['at_s']:>9.1f} s -- {g['whose']}"
+              f" (board moved {g['board_advance_s']} s while the host moved "
+              f"{g['host_advance_s']} s, {g['beats_advanced']} beats)")
     print()
     print(f"over {b['sampled_beats']} sampled beats:")
     print(f"  interval       {hb['min']:.3f} / {hb['p50']:.3f} / {hb['p95']:.3f} "
@@ -134,6 +200,9 @@ def show(b: dict[str, object]) -> None:
     print(f"  cycles/second  {cps['min']:.1f} / {cps['p50']:.1f} / "
           f"{cps['p95']:.1f} / {cps['max']:.1f}   "
           f"({b['cycle_ms']} ms of work per cycle)")
+    if b["intervals_set_aside_for_silence"]:
+        print(f"                 -- {b['intervals_set_aside_for_silence']} "
+              f"interval(s) set aside for containing a silence")
     print(f"  board - host   {drift['min']:.1f} to {drift['max']:.1f} s, "
           f"{b['drift_per_hour_s']} s per hour")
 

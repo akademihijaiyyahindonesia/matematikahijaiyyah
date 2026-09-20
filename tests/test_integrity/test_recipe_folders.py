@@ -25,7 +25,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 FOLDERS = {
-    "cosmictera": ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md", "COMPUTING.md", "CODEX.md"),
+    "cosmictera": ("README.md", "RULES.md", "SYSTEM.md", "CONCRETE.md",
+                   "COMPUTING.md", "CODEX.md", "TELEMETRY.md"),
     "cosmic-codex-jim": ("README.md", "MACHINE.md", "WAVE.md", "LIMITS.md"),
     "hijrah": ("README.md", "UNIT.md", "INSTRUCTION.md", "JUMP.md"),
     "matematika-hijaiyyah": ("README.md", "GUARD.md", "ALGEBRA.md", "LINEAGE.md"),
