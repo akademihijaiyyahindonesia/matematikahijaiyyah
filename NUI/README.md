@@ -6,7 +6,9 @@ kodenya, tugasnya, dan hasil ukurnya, apa adanya.
 
 Halaman ini mencatat apa yang **sudah** ada. Untuk arah ke depan — dari satu
 klasifikasi menuju kecerdasan yang lebih umum, dibangun dari aset proyek ini
-sendiri, bukan LLM luar — lihat [`ROADMAP.md`](ROADMAP.md). Fondasi di
+sendiri, bukan LLM luar — lihat [`ROADMAP.md`](ROADMAP.md). Untuk dua belas
+lapis yang pemilik tetapkan 21 September 2026, dan peta tiap lapis terhadap
+aset yang sudah ada di repositori ini, lihat [`LAYERS.md`](LAYERS.md). Fondasi di
 bawah semua fase itu — huruf sebagai alamat (indeks Master Table = opcode
 HISA = alamat ROM HCPU) dengan dua wujud, perangkat lunak dan fisik
 (UART nyata pada 27 MHz) — ada di `nui/atom.py`, dijelaskan di

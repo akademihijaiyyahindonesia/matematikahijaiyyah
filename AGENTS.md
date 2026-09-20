@@ -763,6 +763,35 @@ mengklaim lebih dari yang diukur: `state_hash` pending architecture,
 `last_relocation` partial evidence, `anomaly_score` dan `corruption_score`
 waiting baseline.
 
+### Perintah pemilik, 21 September 2026 — NUI dalam dua belas lapis
+
+NUI — **Natural Universal Intelligence** — dibangun sebagai sistem komputasi
+yang memahami, memverifikasi, memodelkan, dan mensintesis seluruh stack
+CosmicTera. **Namanya tetap**: tidak ada nama baru, singkatan baru, atau
+rebranding. Bukan chatbot, bukan persona, bukan pembungkus LLM.
+
+Dua belas lapis, dari fakta terverifikasi sampai rekayasa otonom, dipetakan
+terhadap aset yang sudah ada di `NUI/LAYERS.md` — tiap lapis membawa lima hal
+yang pemilik tuntut: tujuan, aset yang ada, yang belum ada, cara verifikasi,
+syarat selesai. Tidak disalin ke sini (R1).
+
+**Aturan yang mengikat pekerjaannya**, dan yang pertama adalah urutannya:
+*"Gunakan seluruh aset yang sudah ada di repositori terlebih dahulu. Jangan
+menambah kompleksitas baru sebelum semua aset yang sudah ada dimodelkan,
+dipetakan, dan diverifikasi oleh NUI."* Lalu: tidak ada klaim tanpa
+pengukuran, tidak ada kemampuan yang diasumsikan, tidak ada klaim AGI atau
+kesadaran, tidak ada benchmark fiktif, dan label tidak naik tanpa bukti baru
+(R2).
+
+**Yang sudah ada terukur**: 13 modul di `src/hijaiyyah/nui/`, 131 tes di
+`tests/test_ai/`, PyTorch 2.14.0. **Dua lapis kosong sama sekali** dan dicatat
+begitu, bukan diisi rencana: Linux (lapis 5 — tidak ada satu pun sisi host di
+repo ini) dan rekayasa otonom (lapis 11).
+
+**Dua penomoran hidup berdampingan**: `NUI/ROADMAP.md` memakai Fase 0–5,
+perintah ini memakai Lapis 0–11. Keduanya dipetakan, tidak ada yang dihapus —
+konflik dicatat, bukan dirapikan sepihak.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
