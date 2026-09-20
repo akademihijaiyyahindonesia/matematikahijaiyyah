@@ -67,6 +67,25 @@ dalam 24 jam — jadi uptime adalah putaran dan pencacah bersama-sama. Papan
 menghitung putarannya sendiri, host menyimpan jamnya sendiri di sebelahnya,
 dan keduanya harus tetap sejalan.
 
+## Dari catatan ke garis dasar
+
+Lari yang berakhir dengan "0 error" mengatakan mesinnya tidak rusak. Ia
+**belum** mengatakan seperti apa perilaku biasanya, dan justru angka itu yang
+nanti dibandingkan lapisan pengawasan — kalimat pemilik sendiri: *"Anomali
+tidak bisa didefinisikan tanpa mengetahui normal."*
+
+`rtl/scripts/burn_in_report.py` membaca satu lari dan menyatakan normal yang ia
+temukan: laju kerja, jarak antar detak, dan bagaimana jam papan mengikuti jam
+host. Ia menulis `<id>-baseline.json` di sebelah catatannya.
+
+**Satu angka di situ milik host, bukan papan, dan dikatakan begitu.** Jarak
+antar detak yang *terukur* dikuantisasi oleh tenggat baca serial host: tingkat 1
+berjalan dengan tenggat satu detik, jadi jaraknya menumpuk di 1,0 dan 2,0 detik
+padahal papan berdetak tiap **1,58 detik**. Angka papannya diturunkan dari laju
+siklus, bukan dari jarak yang terlihat. Lari berikutnya memakai tenggat 0,25
+detik; itu tidak mengubah apa yang tingkat 1 ukur, dan angka tingkat 1 tidak
+dilabeli ulang diam-diam.
+
 ## Lari
 
 | lari | tingkat | hasil |
@@ -74,6 +93,11 @@ dan keduanya harus tetap sejalan.
 | `20260920T013538Z-burn-in-24h` | 24 jam | **sedang berjalan** sejak 20 September 2026 01:35 UTC |
 
 Tingkat 72 jam dan 168 jam belum dijalankan.
+
+**Yang sudah terlihat pada 3,4 jam pertama**, dan bukan hasil akhir: 7.805
+detak, 7,99 juta siklus, **0 error, 0 baca kartu gagal, 0 baris tak terbaca**;
+laju **649,4 siklus per detik** (1,54 ms kerja per siklus), dan selisih jam
+papan terhadap jam host tetap di −3,3 detik tanpa hanyut.
 
 ## Dua temuan dari membangun lab ini
 
@@ -96,6 +120,7 @@ penuh — bukan karena dibaca dari kode.
 ```bash
 python3 rtl/scripts/burn_in.py                                   # rencananya saja
 python3 rtl/scripts/burn_in.py --port /dev/tty.usbserial-<port> --hours 24 --label 24h
+python3 rtl/scripts/burn_in_report.py cosmictera-build/burn-in/<id>.jsonl --write
 python3 -m pytest -q tests/test_integrity/test_burn_in.py
 ```
 

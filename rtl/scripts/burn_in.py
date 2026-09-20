@@ -322,6 +322,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{args.launches} launches, and the card never came up", file=sys.stderr)
         return 1
 
+    # A shorter timeout than the launch used, so the gap between beats is the
+    # board's cadence rather than the host's polling. Tier 1 ran at 1.0 s and
+    # its intervals piled up at 1.0 and 2.0 against a true period of 1.58.
+    link.timeout = 0.25
     deadline = time.time() + args.hours * 3600
     buf = bytearray()
     pending: list[int] = []
