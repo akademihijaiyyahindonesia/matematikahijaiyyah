@@ -14,5 +14,6 @@
     "command": "python3 rtl/scripts/attack_lab.py --target jamrah --runs 5 --port <port>"
   },
   "status": "CC",
+  "confidence": "board-measured",
   "timestamp": "2026-09-20"
 }

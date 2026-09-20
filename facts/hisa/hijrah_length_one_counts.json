@@ -20,5 +20,6 @@
     "node": "tests/test_integrity/test_hijrah.py"
   },
   "status": "CC",
+  "confidence": "test-backed",
   "timestamp": "2026-09-20"
 }

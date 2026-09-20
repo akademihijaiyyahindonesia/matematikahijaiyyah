@@ -10,8 +10,28 @@ pun bisa menjawabnya dari model. Jawabannya datang dari sini.
 Satu fakta = satu berkas JSON, dengan tujuh medan yang pemilik tetapkan:
 
 ```
-fact_id   statement   source   evidence   verification_method   status   timestamp
+fact_id   statement   source   evidence   verification_method   status
+timestamp   confidence
 ```
+
+`domain` tidak disimpan: ia segmen pertama `fact_id` **dan** nama foldernya,
+dan penjaga memeriksa keduanya cocok. Menyimpannya ketiga kali akan
+meletakkan satu gagasan di tiga tempat.
+
+**`confidence` bukan probabilitas.** Angka di situ akan dikarang — repo ini
+tidak punya cara mengukurnya. Yang direkam medan itu adalah **apa yang
+menopang faktanya**, dan penjaga menuntutnya cocok dengan cara verifikasinya:
+
+```
+recomputed       nilainya dihitung ulang tiap lari tes
+test-backed      sebuah node tes memikulnya
+board-measured   ia datang dari papan dan tidak bisa diulang di sini
+```
+
+Sebuah fakta yang mengaku `recomputed` sambil menyebut perintah papan adalah
+persis kebohongan yang medan ini ada untuk mencegah. Kalau yang pemilik
+maksud angka bergradasi, itu keputusan yang diambil **sebelum** ada angka
+yang masuk.
 
 JSON, bukan YAML, karena PyYAML tidak terpasang dan menambah dependensi butuh
 izin pemilik (`AGENTS.md`).
@@ -50,8 +70,8 @@ PYTHONPATH=src python3 -m hijaiyyah.nui.facts
 python3 -m pytest -q tests/test_integrity/test_facts.py
 ```
 
-**21 fakta di tujuh domain**: 9 dihitung ulang di sini, 7 dibuktikan sebuah
-tes, 5 diukur di papan.
+**21 fakta di tujuh domain**: 9 dihitung ulang di sini (`recomputed`), 7
+dibuktikan sebuah tes (`test-backed`), 5 diukur di papan (`board-measured`).
 
 ```
 burnin      counter_wrap_seconds · no_watchdog_exists

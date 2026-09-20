@@ -15,5 +15,6 @@
     "command": "python3 rtl/scripts/burn_in.py --port <port> --hours 0.01"
   },
   "status": "CC",
+  "confidence": "board-measured",
   "timestamp": "2026-09-20"
 }

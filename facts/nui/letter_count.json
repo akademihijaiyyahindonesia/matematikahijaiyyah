@@ -13,5 +13,6 @@
     "derivation": "letter_count"
   },
   "status": "DP",
+  "confidence": "recomputed",
   "timestamp": "2026-09-21"
 }

@@ -15,5 +15,6 @@
     "derivation": "counter_wrap_seconds"
   },
   "status": "DP",
+  "confidence": "recomputed",
   "timestamp": "2026-09-20"
 }

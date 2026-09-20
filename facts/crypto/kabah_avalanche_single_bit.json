@@ -14,5 +14,6 @@
     "command": "python3 rtl/scripts/kabah_board.py <port> --avalanche 32"
   },
   "status": "EH",
+  "confidence": "board-measured",
   "timestamp": "2026-09-20"
 }

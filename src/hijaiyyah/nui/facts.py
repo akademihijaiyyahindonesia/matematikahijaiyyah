@@ -6,8 +6,23 @@ in a different domain -- what is known to be true about this opcode, this
 module, this target -- and none of them can answer it from a model. They
 answer it from here.
 
-A fact carries the seven fields he named: fact_id, statement, source,
-evidence, verification_method, status, timestamp. Nothing else is a fact.
+A fact carries the fields he named: fact_id, statement, source, evidence,
+verification_method, status, timestamp, and confidence. Nothing else is a
+fact. `domain` is not stored -- it is the first segment of the fact_id, and
+the folder a fact sits in must match it, which the guard checks.
+
+-- confidence is not a probability ---------------------------------------
+A number there would be invented, and this repository has no way to measure
+one. What the field records instead is WHAT THE FACT RESTS ON, and the guard
+requires it to agree with the verification method rather than be asserted
+beside it:
+
+    recomputed       the value is derived again every test run
+    test-backed      a named test node carries it
+    board-measured   it came off the Tang Nano 20K and cannot be re-run here
+
+If the owner meant a graded number, that is a decision to take before any
+number goes in -- not after.
 
 -- the status vocabulary is the repository's, not a new one ---------------
 cosmictera/RULES.md already labels claims VF, CC, DP, EH, AT, and R2 forbids
@@ -46,7 +61,12 @@ FACTS = ROOT / "facts"
 STATUSES = ("VF", "CC", "DP", "EH", "AT")
 KINDS = ("derive", "pytest", "board")
 FIELDS = ("fact_id", "statement", "source", "evidence", "verification_method",
-          "status", "timestamp")
+          "status", "timestamp", "confidence")
+#: What each verification method leaves a fact resting on. The guard requires
+#: the stored confidence to be exactly this -- a fact cannot claim to be
+#: recomputed while naming a board command.
+CONFIDENCE_OF_KIND = {"derive": "recomputed", "pytest": "test-backed",
+                      "board": "board-measured"}
 
 
 @dataclass(frozen=True)
@@ -58,6 +78,7 @@ class Fact:
     verification_method: dict[str, object]
     status: str
     timestamp: str
+    confidence: str
     value: object = None
     path: Path | None = None
 
@@ -159,7 +180,7 @@ def load(root: Path = FACTS) -> list[Fact]:
             source=tuple(raw["source"]), evidence=tuple(raw["evidence"]),
             verification_method=raw["verification_method"],
             status=raw["status"], timestamp=raw["timestamp"],
-            value=raw.get("value"), path=path))
+            confidence=raw["confidence"], value=raw.get("value"), path=path))
     return sorted(facts, key=lambda f: f.fact_id)
 
 
@@ -196,6 +217,9 @@ def main() -> int:
             held, why = verify(fact)
             mark = "ok " if held else "-- "
             print(f"  {mark}{fact.fact_id:<38} [{fact.status}] {why}")
+    print()
+    for name in sorted(set(CONFIDENCE_OF_KIND.values())):
+        print(f"  {name:<16} {sum(1 for f in facts if f.confidence == name)}")
     print(f"\n{len(facts)} facts, "
           f"{sum(1 for f in facts if f.kind == 'derive')} recomputed here, "
           f"{sum(1 for f in facts if f.kind == 'pytest')} proved by a test, "

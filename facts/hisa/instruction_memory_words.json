@@ -14,5 +14,6 @@
     "derivation": "instruction_memory_words"
   },
   "status": "DP",
+  "confidence": "recomputed",
   "timestamp": "2026-09-21"
 }

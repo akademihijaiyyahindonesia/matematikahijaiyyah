@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from hijaiyyah.nui.facts import (  # noqa: E402
+    CONFIDENCE_OF_KIND,
     DERIVATIONS,
     FIELDS,
     KINDS,
@@ -102,3 +103,28 @@ def test_each_fact_sits_in_the_folder_its_id_names() -> None:
     for fact in FACTS:
         assert fact.path is not None
         assert fact.path.parent.name == fact.domain, fact.fact_id
+
+
+def test_confidence_says_what_the_fact_rests_on_and_agrees_with_its_method() -> None:
+    """Not a probability -- there is no way here to measure one, and a number
+    would be invented. It names what carries the fact, and it cannot disagree
+    with the verification: a fact claiming to be recomputed while naming a
+    board command would be the exact lie this field exists to prevent."""
+    for fact in FACTS:
+        assert fact.confidence == CONFIDENCE_OF_KIND[fact.kind], fact.fact_id
+    assert set(f.confidence for f in FACTS) == set(CONFIDENCE_OF_KIND.values())
+
+
+def test_the_domain_is_not_stored_twice() -> None:
+    """The owner's field list names `domain`. It is the fact_id's first
+    segment and the folder's name, and both are checked -- storing it a third
+    time would be one idea in three places."""
+    for fact in FACTS:
+        assert "domain" not in json_of(fact), fact.fact_id
+        assert fact.domain and fact.fact_id.startswith(fact.domain + ".")
+
+
+def json_of(fact) -> dict:
+    import json
+    assert fact.path is not None
+    return json.loads(fact.path.read_text(encoding="utf-8"))

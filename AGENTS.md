@@ -788,9 +788,24 @@ kesadaran, tidak ada benchmark fiktif, dan label tidak naik tanpa bukti baru
 begitu, bukan diisi rencana: Linux (lapis 5 — tidak ada satu pun sisi host di
 repo ini) dan rekayasa otonom (lapis 11).
 
-**Dua penomoran hidup berdampingan**: `NUI/ROADMAP.md` memakai Fase 0–5,
-perintah ini memakai Lapis 0–11. Keduanya dipetakan, tidak ada yang dihapus —
-konflik dicatat, bukan dirapikan sepihak.
+**Penomoran lapisnya berubah di pesan pemilik berikutnya pada hari yang
+sama**, dan yang berlaku yang terakhir: repositori naik ke lapis 1, program ke
+2, paritas ke 4, perangkat keras ke 6; dan empat lapis baru muncul — pemahaman
+eksekusi (3), diagnostik otonom (8), penalaran komputasional (9), komputasi
+universal (11). Tabel pergeserannya ada di `NUI/LAYERS.md`; tidak disalin ke
+sini (R1). Penomoran ketiga, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus.
+Pola yang sama dipakai ketika urutan field tabel program bergeser: yang
+terakhir berlaku, pergeserannya dicatat supaya tidak diam.
+
+**Satu selisih label dilaporkan, bukan dirapikan.** Pemilik menandai lapis
+Linux **EH**; tabel `cosmictera/RULES.md` sendiri mendefinisikan EH sebagai
+"terukur, belum dikriptanalisis" dan AT sebagai "belum dikerjakan", dan lapis
+tanpa satu pun aset jatuh pada AT. Labelnya keputusan pemilik.
+
+**Medan `confidence` ditambahkan ke inventaris fakta, dan ia bukan
+probabilitas.** Angka bergradasi akan dikarang; yang direkam adalah apa yang
+menopang faktanya — `recomputed`, `test-backed`, atau `board-measured` — dan
+penjaga menuntutnya cocok dengan cara verifikasinya.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

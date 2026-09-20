@@ -13,5 +13,6 @@
     "node": "tests/test_integrity/test_telemetry_contract.py"
   },
   "status": "DP",
+  "confidence": "test-backed",
   "timestamp": "2026-09-20"
 }

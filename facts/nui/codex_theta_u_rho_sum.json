@@ -14,5 +14,6 @@
     "derivation": "codex_theta_u_rho_sum"
   },
   "status": "CC",
+  "confidence": "recomputed",
   "timestamp": "2026-09-20"
 }
