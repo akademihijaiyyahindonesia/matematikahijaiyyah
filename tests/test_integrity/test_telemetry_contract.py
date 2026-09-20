@@ -91,3 +91,36 @@ def test_the_density_that_moved_columns_is_named() -> None:
     assert "| `density_mod4` | **ada** — 4,81" in TEXT
     measured = (ROOT / "cosmictera-build" / "validasi" / "HIJRAH.md").read_text()
     assert "| panjang 1 | 4,58 | 4,75 | 4,81 | 4,81 | 1,00 |" in measured
+
+
+# -- the time hierarchy, and the three that are still open ----------------
+
+LEVELS = ("pencacah siklus FPGA", "uptime papan", "cap waktu host")
+OPEN = ("`state_hash`", "`last_relocation`", "`anomaly_score`")
+
+
+def test_the_time_hierarchy_is_recorded_in_its_order() -> None:
+    """Host time is not the truth, and the order is the whole of the rule.
+    A page that listed the three without their order would be decoration."""
+    found = [TEXT.index(level) for level in LEVELS]
+    assert found == sorted(found), "the levels are out of order"
+    assert "Waktu host bukan sumber kebenaran" in TEXT
+    assert "140 detik" in TEXT, "the measurement that forced the rule is missing"
+
+
+def test_the_three_open_contracts_are_not_quietly_settled() -> None:
+    """Each is the owner's to decide. The failure that matters is one of them
+    acquiring an answer in this page without him giving it."""
+    section = TEXT.split("## Tiga kontrak yang belum diputuskan")[1]
+    for name in OPEN:
+        assert name in section, name
+    assert "bukan pilihan yang diambil sepihak" in section
+    # the owner's leaning on state_hash is recorded as a leaning
+    assert "Dicatat sebagai" in section and "penilaian" in section
+
+
+def test_what_the_open_contracts_are_held_against_still_exists() -> None:
+    """The numbers quoted for the options come from files, not from memory."""
+    for path in ("cosmictera-build/attack-lab/README.md",
+                 "rtl/scripts/burn_in_report.py"):
+        assert (ROOT / path).exists(), path

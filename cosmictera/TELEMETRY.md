@@ -75,6 +75,80 @@ mod 2   mod 3   mod 4   mod 5
 berpindah kolom. Dicatat di sini, bukan dirapikan diam-diam, karena kontrak
 telemetri adalah tempat angka disalin orang lain.
 
+## Hierarki waktu — keputusan pemilik, 20 September 2026
+
+**Waktu host bukan sumber kebenaran.** Urutannya ditetapkan pemilik:
+
+```
+Tingkat 1   pencacah siklus FPGA      0xFF4, 32 bit, 27 MHz
+Tingkat 2   uptime papan              putaran pencacah + pencacah sekarang
+Tingkat 3   cap waktu host            hanya untuk mencatat, bukan untuk menilai
+```
+
+Akibatnya langsung: MacBook yang sibuk, Docker yang sibuk, editor yang macet —
+tak satu pun boleh terbaca sebagai anomali CosmicTera.
+
+**Keputusan ini lahir dari pengukuran, bukan dari kehati-hatian.** Lari 24 jam
+diam 140 detik pada detik 14.496, dan diam itu **milik host**: detak yang
+datang sesudahnya adalah detak lama, jam papan tertinggal 138 detik lalu
+mengejar, 127 detak terkuras dalam 61 detik berikutnya. Papan tidak pernah
+berhenti. Kalau jam host dipakai sebagai kebenaran, itu terbaca sebagai mesin
+menggantung dua menit.
+
+Burn-in sudah bekerja begitu: tiap detak membawa jam papannya sendiri, dan
+`rtl/scripts/burn_in_report.py` menggolongkan tiap diam dengan membandingkan
+kedua jam — papan yang berhenti meninggalkan jamnya sejalan dengan host dan
+cacah detaknya membeku; host yang berhenti meninggalkan jam papan tertinggal.
+
+## Tiga kontrak yang belum diputuskan
+
+Pemilik menamai ketiganya 20 September 2026 dan memberi pilihannya. Yang
+tertulis di sini **pilihannya beserta angka yang sudah terukur untuk
+masing-masing**, bukan pilihan yang diambil sepihak.
+
+### 1. `state_hash`
+
+| opsi pemilik | yang sudah terukur |
+|---|---|
+| **A** — simpan keadaan mentah 200 byte | tidak ada yang perlu dibangun: wrapper Ka'bah **sudah** menjawab 200 byte per frame. Di UART 115200 itu **17,4 ms per keadaan**; pada irama detak burn-in (1,58 detik) ia 1,1% dari kabel |
+| **B** — sidik jari 64-bit dari Ka'bah sendiri | lipatan XOR 64-bit atas 200 byte, 20.000 pesan acak: **20.000 nilai berbeda, 0 tabrakan**. Angka itu **tidak membuktikan banyak** — harapan ulang tahun pada 2⁶⁴ untuk 20.000 nilai adalah 1,1 × 10⁻¹¹, jadi nol adalah yang diharapkan bahkan dari lipatan yang buruk; yang ia singkirkan hanya kemerosotan kasar. Dan lipatan XOR **linier**: tabrakan bisa dibuat sengaja, jadi ia mendeteksi kecelakaan, bukan lawan |
+| **C** — host yang menghitung SHA-256 | **biaya papan nol** — ini persis yang wrapper lakukan sekarang. Tidak ada baris RTL atau HASM yang berubah, dan R10 tidak tersentuh karena tidak ada inti SHA-256 yang dibangun |
+
+Pemilik menilai **C paling realistis untuk tahap awal**. Dicatat sebagai
+penilaian; tidak ada pekerjaan yang berangkat darinya sebelum ia dinyatakan
+sebagai keputusan.
+
+### 2. `last_relocation`
+
+Pemilik mengusulkan tiga medan saat boot: `relocation_count`,
+`relocation_ok`, `relocation_failed`.
+
+**`relocation_count` sudah ada di tempatnya** — ia kata ke-5 header container
+(RELOC_CNT), dan loader membacanya untuk bekerja. Terukur: 125 untuk
+`shell.hasm`, 38 untuk `hos_hfs_disk`, rata-rata 7,2 dari 41 program.
+
+**`relocation_ok` hanya bisa sekuat pemeriksaan yang ada**, dan lab serangan
+sudah mengukur batasnya: satu entri tabel relokasi yang diarahkan ke kata lain
+**lolos tanpa penolakan**, karena jumlah 32-bit hanya menutupi kata program
+([attack-lab/](../cosmictera-build/attack-lab/README.md)). Jadi hari ini
+`relocation_ok` akan berarti "cacahnya di dalam penyangga dan citra termuat",
+bukan "tiap entri benar". Memperluasnya menuntut keputusan yang masih terbuka
+sejak lab serangan kelas B: apakah cakupan jumlah diperluas ke header dan
+tabel relokasi.
+
+### 3. `anomaly_score`
+
+Pemilik menyarankan lima pita — 0–20 NORMAL, 21–40 NOTICE, 41–60 WARNING,
+61–80 ALERT, 81–100 CRITICAL — atas cycle drift, memory mismatch, stack
+mismatch, Jamrah mismatch, Ka'bah integrity mismatch, dan SD read failure.
+
+Enam masukan itu **semuanya sudah punya sumber** (lihat tabel di atas). Yang
+belum ada adalah **normalnya**, dan itu justru yang sedang dikerjakan tingkat 1:
+sebuah ambang yang ditetapkan sebelum garis dasar selesai adalah angka yang
+dikarang. Empat dari enam masukan itu sejauh lari ini **belum pernah bergerak
+dari nol sama sekali**, jadi pita untuk mereka tidak bisa ditarik dari data —
+hanya dari keputusan.
+
 ## Apa yang kontrak ini belum tentukan
 
 Kontrak menyebut **apa** yang dilaporkan. Yang belum ditetapkan pemilik, dan

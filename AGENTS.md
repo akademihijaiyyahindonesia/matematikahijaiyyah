@@ -736,6 +736,20 @@ Tiga hal yang kontrak ini **belum** tetapkan, dan tidak boleh dikarang: setiap
 berapa lama tiap medan dilaporkan, lewat jalur apa, dan ambang Normal /
 Warning / Critical. Yang terakhir menuntut garis dasar selesai lebih dulu.
 
+**Hierarki waktu, ditetapkan hari yang sama: waktu host bukan sumber
+kebenaran.** Tingkat 1 pencacah siklus FPGA, tingkat 2 uptime papan, tingkat 3
+cap waktu host — yang terakhir untuk mencatat, bukan untuk menilai. Aturan ini
+lahir dari pengukuran: lari burn-in diam 140 detik, dan diam itu milik **host**
+— jam papan tertinggal 138 detik lalu mengejar, sementara papan tidak pernah
+berhenti. Host yang sibuk tidak boleh terbaca sebagai anomali CosmicTera.
+
+**Tiga kontrak masih terbuka** dan pilihannya tercatat beserta angka masing-
+masing di `cosmictera/TELEMETRY.md`: bentuk `state_hash` (pemilik menilai opsi
+C — host yang menghitung — paling realistis, dan itu penilaian, bukan
+keputusan), bentuk `last_relocation`, dan pita `anomaly_score`. Yang terakhir
+tidak bisa ditarik dari data sebelum garis dasar ada: empat dari enam
+masukannya belum pernah bergerak dari nol.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
