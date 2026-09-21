@@ -8,10 +8,13 @@ Halaman ini mencatat apa yang **sudah** ada. Untuk arah ke depan — dari satu
 klasifikasi menuju kecerdasan yang lebih umum, dibangun dari aset proyek ini
 sendiri, bukan LLM luar — lihat [`ROADMAP.md`](ROADMAP.md). Untuk dua belas
 lapis yang pemilik tetapkan 21 September 2026, dan peta tiap lapis terhadap
-aset yang sudah ada di repositori ini, lihat [`LAYERS.md`](LAYERS.md); untuk graf repositori yang Lapis 1 bangun — 533 node, 1.577 edge, tiap
-satunya dengan barisnya — lihat [`GRAPH.md`](GRAPH.md); untuk apa yang
-dilakukan tiap program, fungsi, dan modul — diturunkan dari badannya, tidak
-ditulis — lihat [`PROGRAMS.md`](PROGRAMS.md). Fondasi di
+aset yang sudah ada di repositori ini, lihat [`LAYERS.md`](LAYERS.md); untuk
+graf repositori yang Lapis 1 bangun — tiap edge-nya dengan barisnya — lihat
+[`GRAPH.md`](GRAPH.md); untuk apa yang dilakukan tiap program, fungsi, dan
+modul — diturunkan dari badannya, tidak ditulis — lihat
+[`PROGRAMS.md`](PROGRAMS.md); untuk apa yang benar-benar terjadi saat tiap
+program HASM dijalankan — tiap langkah sebelum → sesudah, tiap edge dengan
+langkah dan barisnya — lihat [`EXECUTION.md`](EXECUTION.md). Fondasi di
 bawah semua fase itu — huruf sebagai alamat (indeks Master Table = opcode
 HISA = alamat ROM HCPU) dengan dua wujud, perangkat lunak dan fisik
 (UART nyata pada 27 MHz) — ada di `nui/atom.py`, dijelaskan di

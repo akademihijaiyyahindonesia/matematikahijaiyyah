@@ -54,8 +54,8 @@ Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 10.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **19 modul**; `tests/test_ai/` berisi **131 tes**
-yang lulus, ditambah 8 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
+`src/hijaiyyah/nui/` berisi **21 modul**; `tests/test_ai/` berisi **178 tes**
+yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
 | modul | apa yang ia lakukan | tes |
@@ -73,11 +73,13 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `claims.py` | klaim luar diuji terhadap data tersegel — **keduanya negatif** | `test_nui_claims.py` (6) |
 | `pattern_language.py` | "Titik → Transform → Garis" diuji sebagai urutan komposisi | `test_nui_pattern_language.py` (7) |
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
-| `repository_index.py` | 533 node repositori, terklasifikasi | `test_nui_repository_graph.py` (10) |
-| `repository_graph.py` | 1.577 edge, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.080 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
+| `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
+| `program_index.py` | 62 program HASM, 1.123 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
+| `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (25) |
+| `execution_graph.py` | 63 lari, 1.890 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
 
 ---
 
@@ -129,13 +131,13 @@ dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
-*references*, dan sekarang keduanya ada: 90 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 643 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.270 node, 3.292 edge**.
+*references*, dan sekarang keduanya ada: 91 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 668 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.299 node, 3.390 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
-**90** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
+**91** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
 kalau dokumen diambil dari disk lagi.
 
 **Yang belum ada.** **Edge pemanggilan** — fungsi mana memanggil fungsi mana.
@@ -162,7 +164,7 @@ untuk menghasilkan.
 
 **Cara verifikasi.** Sudah berjalan: tiap edge `imports` harus mendarat di
 baris yang benar-benar mengimpor, tiap `mentions` di baris yang benar-benar
-menyebut nama berkasnya — diperiksa untuk **seluruh** 1.577 edge, bukan
+menyebut nama berkasnya — diperiksa untuk **seluruh** edge, bukan
 sampel.
 
 **Syarat selesai.** Tercapai untuk import, referensi, dan verifikasi; belum
@@ -180,7 +182,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.080 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.123 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -205,25 +207,71 @@ bisa dibaca tanpa menebak.
 **Tujuan.** Bukan hanya membaca kode, melainkan tahu keadaan **sebelum →
 instruksi → sesudah** untuk tiap langkah.
 
-**Aset yang sudah ada.** `HISAMachine.run()` mengembalikan daftar
-`TraceEntry`, `HISAMachine.step()` melangkah satu instruksi, dan
-`dump_state()` memberi keadaan penuh — persis ground truth yang pemilik
-sebut. Dipakai nyata oleh `rtl/scripts/attack_lab.py` dan
-`tests/test_integrity/test_burn_in.py`, yang menjalankan `burn_in.hasm` di
-interpreter dan membandingkan keluarannya.
+**Aset yang sudah ada.** `HISAMachine.step()` melangkah satu instruksi, dan
+setiap akses data — biasa maupun memory-mapped — lewat dua metodenya sendiri,
+`_mem_read` dan `_mem_write`. Itulah ground truth yang pemilik sebut, dan
+sudah dipakai nyata oleh `rtl/scripts/attack_lab.py` dan
+`tests/test_integrity/test_burn_in.py`.
 
-**Yang belum ada.** Prediksi, dan jejak panggilan saat berjalan. Direktif
-keempat meminta rantai `atom → rack → clockwork → freeze → multitask`
-**dibuktikan lewat eksekusi**. Lapis 1 sudah mengukur import-nya: tiga
-sambungan pertama ada, `freeze` tidak mengimpor `clockwork`, dan `multitask`
-tidak menyentuh `freeze` sama sekali. Jejak eksekusi akan menguji rantai itu —
-ia bisa mengkonfirmasi atau membantahnya, tetapi tidak bisa membuatnya ada.
+**Sejak 21 September 2026 lapis ini berdiri**:
+`src/hijaiyyah/nui/execution_trace.py` merekam satu lari **saat berjalan** —
+membungkus kedua metode akses itu, jadi alamat efektif yang tercatat adalah
+yang mesin hitung dari register yang benar-benar ia pegang — dan
+`src/hijaiyyah/nui/execution_graph.py` menggabungkan semua lari jadi satu
+model, `NUI/execution_model.json`. Dijaga
+`tests/test_ai/test_nui_execution.py` (25) dan ditarik ke
+[`EXECUTION.md`](EXECUTION.md) oleh kodenya sendiri.
 
-**Cara verifikasi.** Prediksi dibandingkan dengan jejak interpreter, langkah
-demi langkah.
+- **63 lari**: 62 program HASM, ditambah `loader.hasm` yang membawa program
+  tiga kata di kabelnya. Keluar: 43 `halt`, 12 `step_cap`, 6 `end_of_code`,
+  2 `hcheck`.
+- **1.890 edge** dari sembilan jenis yang pemilik tetapkan, tiap satunya
+  dengan langkah pertama dan `berkas:baris` sumbernya. `READS` dan `OBSERVES`
+  dibedakan oleh pengukuran — apakah antrean UART menyusut selama baca itu —
+  bukan oleh nama registernya. Ke-106 `CALLS` mendarat di label yang diikat
+  pass pertama assembler: itu node fungsinya.
+- **Jejak penuh tiap lari** — ENTRY, lalu tiap STEP dengan `CHANGE`
+  sebelum → sesudah (register, komponen H-register, flag, memori data, code
+  memory, dan state mesin di bawah nama atributnya sendiri) atau `NO_CHANGE`,
+  lalu EXIT — dicetak `--trace` dan dipegang model lewat SHA-256-nya.
 
-**Syarat selesai.** Untuk kumpulan program yang disebut, prediksi cocok; yang
-tidak cocok dilaporkan dengan namanya.
+Pertanyaan pemilik, *"Bagaimana loader.hasm memindahkan kontrol?"*, dijawab
+dari model, bukan dari kode: langkah 174 `WRITES TRAP_EPC` (`loader.hasm:71`),
+176 `WRITES TRAP_MODE` (`:73`), 177 `RESUMES pc:0x040` (`:74`); payload lalu
+mencetak 7 dan berhenti. Urutan contoh pemilik — `RX_STATUS`, `RX_DATA`,
+`IMEM_ADDR`, `IMEM_DATA`, `TRAP_EPC`, `TRAP_MODE`, `ERET` — ditemukan di
+jejak loader dengan urutan yang sama.
+
+**Satu cacat yang lapis ini temukan pada lari pertamanya.** Interpreter
+menyatakan `_halted`, tetapi jalur HC-04 (CALL luber) dan HC-05 (RET tanpa
+alamat kembali) menulis `halted` — atribut yang tak dibaca siapa pun. Mesin
+melaporkan HC-05 lalu **terus berjalan**: `RET` yang diikuti `MOVI R1, 5`,
+`PRINT R1`, `HALT` mencetak `5`. `docs/HISA_SPEC.md` (0x2F) dan
+`rtl/hcpu_execute.v` sama-sama berhenti di situ. Enam program pustaka yang
+dijalankan sendirian mencapainya, dan itulah keenam `end_of_code` di atas.
+`tests/test_integrity/test_subroutine.py` tidak melihatnya: ia memeriksa
+`m.halted` — atribut yang diciptakan cacat itu sendiri — dan programnya
+menaruh `HALT` tepat sesudah `RET`.
+
+**Yang belum ada.** Eksekusi **RTL** tidak dijejak di sini; menyatukannya
+dengan jejak interpreter adalah Lapis 4. Eksekusi **Python** juga tidak:
+rantai `atom → rack → clockwork → freeze → multitask` dari direktif keempat
+masih terukur lewat import saja (Lapis 1), dan entry mana yang dihitung
+sebagai satu lari Python belum diputuskan. Tiap program berjalan sendirian di
+alamat 0 tanpa masukan UART, kecuali loader; yang bergantung pada kabel, kartu
+SD, atau jam nyata dicatat di inventaris UNKNOWN, bukan diisi.
+
+**Cara verifikasi.** Sudah berjalan: `verify()` membangun ulang model dari
+repositori dan menamai tiap klaim yang tidak terulang. Ketiga sabotase yang
+pemilik wajibkan — edge eksekusi palsu, register palsu, MMIO palsu — merah,
+begitu pula bukti yang dipindah langkahnya, jumlah yang salah, dan jejak
+palsu. Delapan penjaga baru disabotase satu per satu dan kedelapannya merah.
+
+**Syarat selesai.** Tercapai untuk interpreter: tiap program HASM punya
+jejak, tiap MMIO tertelusur ke register bernama, tiap trap punya sumber
+(`epc`) dan tujuan (vektor — tiga probe `rtl/tb/` mendarat di vektor 0
+karena handlernya dipasang shell, dan tercatat begitu), dan pertanyaan loader
+dijawab dari model. RTL dan Python di luar cakupan, tercatat di atas.
 
 ---
 
