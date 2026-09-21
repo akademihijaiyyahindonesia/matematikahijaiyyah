@@ -128,19 +128,19 @@ Tingkat 72 jam dan 168 jam belum dijalankan.
 
 ```
 86.405,4 detik jam host      86.401,5 detik jam papan sendiri
-54.882 detak dipancarkan papan   52.282 terurai host
+54.893 detak dipancarkan papan   52.282 terurai host
 56.210.432 siklus
 
 0 error                      0 baca kartu gagal
-kerja terhadap jam papan sendiri: 1,0
+kerja terhadap jam papan sendiri: 1,0002
 ```
 
 **Keempat kriteria tingkat 1, dijawab dengan angkanya:**
 
 | kriteria pemilik | hasil |
 |---|---|
-| tidak ada deadlock | **kerja menutupi waktu, 1,0** — papan tidak pernah berhenti, termasuk di dalam diam-diam panjang yang host tidak melihat |
-| tidak ada korupsi memori | **0 error** dari 54.882 detak; enam belas kata, dua jumlah, dan tumpukan dibandingkan tiap siklus |
+| tidak ada deadlock | **kerja menutupi waktu, 1,0002** — papan tidak pernah berhenti, termasuk di dalam diam-diam panjang yang host tidak melihat |
+| tidak ada korupsi memori | **0 error** dari 54.893 detak; enam belas kata, dua jumlah, dan tumpukan dibandingkan tiap siklus |
 | tidak ada watchdog timeout | **tidak bisa diukur — tidak ada watchdog di desain ini**, dan itu dikatakan di muka, bukan dilewatkan |
 | tidak ada serial menggantung | **9 baris tak terbaca**, semuanya sesudah host berhenti membaca, dan tiap satunya dibuang utuh |
 
@@ -171,6 +171,15 @@ berikutnya, yaitu satu baris baru yang hilang karena penyangga penerima meluap
 selagi host pergi. Pengurainya membuang baris seperti itu utuh. Kalau ia
 memeras digitnya, `6062H` akan jadi angka 6062 di dalam sebuah detak dan tak
 seorang pun tahu.
+
+**Dua angka di atas dibetulkan sesudah diterbitkan.** Versi pertama halaman
+ini menulis 54.882 detak dan kerja 1,0. Alat laporannya mengambil cacah
+detak dari sampel terakhir tetapi uptime dari ringkasan — dua momen yang
+berselisih sampai semenit. Pada lari yang sudah selesai selisihnya 11 detak,
+cukup kecil untuk tak terlihat; pada lari 72 jam yang baru berjalan 33 menit
+ia terbaca sebagai host yang mengurai **lebih banyak** detak daripada yang
+papan kirim — dan dari situ ketahuan. Sekarang ketiga angka diambil dari
+detak yang sama. Kesimpulannya tidak bergeser; angkanya bergeser.
 
 **Yang tidak dibuktikan lari ini**, supaya tidak tumbuh lebih besar dari
 buktinya: ia satu lari, di satu papan, pada satu suhu ruangan yang tidak

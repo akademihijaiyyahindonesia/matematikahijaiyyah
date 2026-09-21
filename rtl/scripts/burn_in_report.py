@@ -188,12 +188,22 @@ def baseline(lines: list[dict], summary: dict) -> dict[str, object]:
         # The board's own count against the host's, and the work against the
         # clock. A board that stopped while nobody was reading shows up here
         # and nowhere else.
-        "beats_emitted_by_board": (last_beat["cycles"] // HEARTBEAT_CYCLES
-                                   if last_beat else None),
+        #
+        # All three from the SAME beat. The summary's cycles, heartbeats and
+        # board_seconds are written together from one heartbeat; a logged
+        # sample is up to a minute older. Mixing the two read, on a run 33
+        # minutes old, as 1,170 beats emitted against 1,192 parsed -- a host
+        # parsing beats the board had not sent -- and work 0.9815 on a board
+        # that had not stopped. On a finished day the skew vanishes into the
+        # rounding, which is why tier 1 never showed it.
+        "beats_emitted_by_board": (
+            summary["cycles"] // HEARTBEAT_CYCLES if summary.get("cycles")
+            else last_beat["cycles"] // HEARTBEAT_CYCLES if last_beat else None),
         "beats_parsed_by_host": summary.get("heartbeats"),
         "work_accounted": (round(
-            (last_beat["cycles"] / percentile(rates, 50)) / summary["board_seconds"], 4)
-            if last_beat and rates and summary.get("board_seconds") else None),
+            (summary["cycles"] / percentile(rates, 50)) / summary["board_seconds"], 4)
+            if summary.get("cycles") and rates and summary.get("board_seconds")
+            else None),
         "sampled_beats": len(samples),
         "intervals_set_aside_for_silence": skipped,
         "heartbeat_interval_s_as_the_host_saw_it": spread(gaps),

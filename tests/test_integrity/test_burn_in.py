@@ -367,3 +367,24 @@ def test_the_difference_view_passes_no_judgement(tmp_path: Path) -> None:
         assert set(row) == {"field", "now", "frozen", "delta", "percent"}
         assert not any(k in str(row).lower()
                        for k in ("verdict", "warning", "critical", "anomaly"))
+
+
+def test_the_work_figure_takes_every_number_from_the_same_beat(tmp_path: Path) -> None:
+    """A live run's summary is up to a minute ahead of its last logged sample.
+    Taking cycles from one and uptime from the other read, 33 minutes into the
+    72-hour run, as a host parsing MORE beats than the board had sent, and as
+    work 0.9815 on a board that had not stopped. All three now come from the
+    summary, which writes them together from one heartbeat."""
+    rate = 650.0
+    beats = [(60.0 * i, 1.5, int(60.0 * i * rate)) for i in range(1, 11)]
+    path = _log(tmp_path, beats)
+    summary = json.loads(path.with_suffix(".json").read_text())
+    # the summary a minute ahead of the last sample, as on a live run
+    summary["cycles"] = int(660.0 * rate)
+    summary["board_seconds"] = 660.0 - 3.0
+    summary["heartbeats"] = summary["cycles"] // HEARTBEAT_CYCLES
+    path.with_suffix(".json").write_text(json.dumps(summary))
+    b = baseline(*read(path))
+    assert b["beats_emitted_by_board"] == summary["cycles"] // HEARTBEAT_CYCLES
+    assert b["beats_emitted_by_board"] >= b["beats_parsed_by_host"]
+    assert b["work_accounted"] == pytest.approx(1.0, abs=0.01)

@@ -1,7 +1,7 @@
 {
   "fact_id": "burnin.tier1_work_accounts_for_the_time",
-  "statement": "Kerja yang papan laporkan sendiri, dibagi laju terukurnya, menutupi seluruh uptime papan: 1,0. Itu yang menutup titik buta lima belas diam — selama host tidak membaca, tidak ada lain yang akan memperlihatkan papan berhenti lalu jalan lagi.",
-  "value": 1.0,
+  "statement": "Kerja yang papan laporkan sendiri, dibagi laju terukurnya, menutupi seluruh uptime papan: 1,0002. Itu yang menutup titik buta lima belas diam — selama host tidak membaca, tidak ada lain yang akan memperlihatkan papan berhenti lalu jalan lagi.",
+  "value": 1.0002,
   "source": [
     "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json"
   ],

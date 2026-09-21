@@ -139,9 +139,9 @@
     "unparsed": 9,
     "launch": 1
   },
-  "beats_emitted_by_board": 54882,
+  "beats_emitted_by_board": 54893,
   "beats_parsed_by_host": 52282,
-  "work_accounted": 1.0,
+  "work_accounted": 1.0002,
   "sampled_beats": 1265,
   "intervals_set_aside_for_silence": 10,
   "heartbeat_interval_s_as_the_host_saw_it": {
