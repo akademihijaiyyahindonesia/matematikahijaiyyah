@@ -819,6 +819,39 @@ probabilitas.** Angka bergradasi akan dikarang; yang direkam adalah apa yang
 menopang faktanya — `recomputed`, `test-backed`, atau `board-measured` — dan
 penjaga menuntutnya cocok dengan cara verifikasinya.
 
+### Perintah pemilik, 21 September 2026 — lapis 1–3 dulu, dua cacat RTL menunggu
+
+Tiga perintah lapis datang berurutan, masing-masing dengan berkas keluarannya
+sendiri, dan ketiganya sudah berdiri: Lapis 1 graf repositori (`441b2c6`,
+diperluas `d0c9e89`), Lapis 2 pemahaman program (`1d7bcc8`), Lapis 3 pemahaman
+eksekusi (`0fe74f4`). Isi, angka, dan syarat selesainya di `NUI/LAYERS.md`,
+tidak disalin ke sini (R1).
+
+**Aturan Lapis 3, kalimat pemilik:** *"Jangan membangun sistem baru. Jangan
+membuat asumsi. Jangan menulis dokumentasi yang tidak berasal dari
+pengukuran."* Yang tak bisa dibuktikan ditandai **UNKNOWN**. Dilarang: call
+graph spekulatif, probabilitas, confidence score, ringkasan AI, dokumentasi
+naratif. Alasan pemilik menaruhnya sebelum penalaran: NUI *"belum boleh
+menyimpulkan sesuatu yang belum bisa dibuktikan oleh jejak eksekusinya
+sendiri."*
+
+Dua keputusan diambil bersamaan:
+
+- **Burn-in tingkat 2 (72 jam) hanya di slot CPU**, sebagai eksperimen mandiri
+  dengan parameter yang sama dengan tingkat 1. Burn-in Ka'bah terpisah,
+  sesudahnya.
+- **Dua cacat RTL yang burn-in temukan tidak disentuh sampai lapis 1–3
+  selesai**: `PRINT` untuk angka besar, dan kartu SD yang gagal init sesudah
+  rekonfigurasi — keduanya di `cosmictera-build/OFF.md`. Lapis 1–3 berdiri
+  21 September 2026; membuka keduanya tetap keputusan pemilik, bukan
+  konsekuensi otomatis.
+
+**Lari pertama Lapis 3 menemukan cacat interpreter**, dan ia diperbaiki
+sebagai butir sendiri di bawah K9 (`b218df8`): HC-04 dan HC-05 menulis
+`halted`, bukan `_halted`, jadi mesin melaporkan fault lalu terus berjalan —
+berlawanan dengan `docs/HISA_SPEC.md` dan `rtl/hcpu_execute.v`. Tes lamanya
+hijau karena memeriksa atribut salah ketik itu sendiri.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
