@@ -54,7 +54,7 @@ Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 11.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **14 modul**; `tests/test_ai/` berisi **131 tes**
+`src/hijaiyyah/nui/` berisi **16 modul**; `tests/test_ai/` berisi **131 tes**
 yang lulus, ditambah 8 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -72,7 +72,9 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `sram_mock.py` | protokol twin-port makro SRAM sky130 | `test_nui_sram_mock.py` (10) |
 | `claims.py` | klaim luar diuji terhadap data tersegel — **keduanya negatif** | `test_nui_claims.py` (6) |
 | `pattern_language.py` | "Titik → Transform → Garis" diuji sebagai urutan komposisi | `test_nui_pattern_language.py` (7) |
-| `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (8) |
+| `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
+| `repository_index.py` | 533 node repositori, terklasifikasi | `test_nui_repository_graph.py` (10) |
+| `repository_graph.py` | 1.577 edge, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
 
 ---
 
@@ -117,8 +119,18 @@ yang disebut harus ada), `test_build_list.py`, `test_recipe_folders.py`,
 `test_place_and_route.py` (sidik jari RTL terhadap wrapper), dan sekarang
 `test_nui_layers.py` serta `test_facts.py`.
 
-**Yang belum ada.** Grafnya sebagai struktur yang bisa ditanyai. Penjaga
-memeriksa; ia tidak menjawab "apa yang terdampak kalau berkas ini berubah".
+**Sejak 21 September 2026 grafnya ada**: `src/hijaiyyah/nui/repository_index.py`
+(533 node — python, tes, verilog, hasm, fakta) dan
+`src/hijaiyyah/nui/repository_graph.py` (1.577 edge — `imports`, `mentions`,
+`verifies`), dijaga `tests/test_ai/test_nui_repository_graph.py` dan
+dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
+pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
+
+**Yang belum ada.** **Edge pemanggilan** — fungsi mana memanggil fungsi mana.
+`ast` melihat modul mengimpor modul; melihat panggilan di bahasa dinamis butuh
+lebih dari parse, dan itu akan jadi inferensi pertama di graf yang dibangun
+supaya tidak punya satu pun. Dan **dokumen**: 745 berkas Markdown belum jadi
+node.
 
 **Satu contoh yang sudah diukur, dan rantainya tidak seperti yang dikira.**
 Perintah pemilik mencontohkan `atom → rack → clockwork → freeze → multitask`.
@@ -137,11 +149,13 @@ model     → dataset
 Tiga sambungan pertama benar; dua terakhir tidak. Itulah yang lapis ini ada
 untuk menghasilkan.
 
-**Cara verifikasi.** Graf diuji terhadap `ast` dan `git`: tiap sisi punya
-bukti tekstual.
+**Cara verifikasi.** Sudah berjalan: tiap edge `imports` harus mendarat di
+baris yang benar-benar mengimpor, tiap `mentions` di baris yang benar-benar
+menyebut nama berkasnya — diperiksa untuk **seluruh** 1.577 edge, bukan
+sampel.
 
-**Syarat selesai.** Untuk berkas yang disebut, graf menyebut modul dan tes
-yang memang menyentuhnya.
+**Syarat selesai.** Tercapai untuk import, referensi, dan verifikasi; belum
+untuk panggilan.
 
 ---
 

@@ -30,9 +30,9 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **5.115 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **5.126 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
-| ✅ | mypy bersih, 129 berkas | `make typecheck` |
+| ✅ | mypy bersih, 131 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
 | ✅ | Citra ROM terbangkitkan | `make rom` |
 | ✅ | ROM cocok dengan tabel | `python3 rtl/scripts/cross_verify_rom.py` |
@@ -41,13 +41,13 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 5.115 dalam 9 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 5.126 dalam 9 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **5.113 lulus, 1 dilewati, 1 gagal dari 5.115**: sidik jari
+Hari ini kebenarannya **5.124 lulus, 1 dilewati, 1 gagal dari 5.126**: sidik jari
 `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.
 
@@ -199,7 +199,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | ✅ | **Lab serangan kelas A, latensi Jamrah: 33 clock untuk setiap satu dari 256 byte, lima lari identik byte demi byte** — kontrolnya, predikat sama ditulis sebagai gelung banding, menyebar 13–232 clock di 29 nilai, jadi alat ukurnya terbukti bisa melihat perbedaan (R3). `jamrah_gate.hasm` tidak disentuh ([attack-lab/](attack-lab/README.md)) | `python3 rtl/scripts/attack_lab.py --target jamrah --runs 5 --port <port>` |
 | ✅ | **Lab serangan kelas C, Ka'bah di luar bit tunggal: difusi tetap ~0,5 dari 1 sampai 64 bit yang dibalik** — 0,4984 / 0,5035 / 0,5006 / 0,4984 / 0,5011 / 0,5016 / 0,5061 dari 1.600 bit, 56 pasang, 0 kegagalan integritas; permutasi 4 blok memindahkan keadaan akhir 0,4975. Frame terpotong **tidak ditolak**: wrapper tak punya field panjang, jadi 64+64 byte tersambung jadi satu frame ([attack-lab/](attack-lab/README.md)) | `python3 rtl/scripts/attack_lab.py --target kabah --trials 8 --port <port>` |
 | ✅ | **Lab serangan kelas D, aliran codex jadi sumber kasus: 16/16 kata program yang dirusak ditolak loader, dan Ka'bah memberi angka yang sama seperti sumber acak** — 0,5046 bit tunggal, 0,4953–0,5055 untuk 2–64 bit. Aliran terstruktur tidak menemukan yang tidak ditemukan acak, pada ukuran ini ([attack-lab/](attack-lab/README.md)) | `python3 rtl/scripts/attack_lab.py --target loader --source jim5 --cases 16 --port <port>`; `--target kabah --source jim5 --trials 8` |
-| ✅ | **Burn-in tingkat 1 tutup: 24 jam, 0 error, 0 baca kartu gagal** — 54.882 detak dipancarkan papan, 56.210.432 siklus, dan kerja terhadap jam papan sendiri **1,0**, yang menutup titik buta lima belas diam milik host. Garis dasar beku: 650,4 siklus/detik, irama detak 1,5744 s, hanyut −0,0292 s/jam ([burn-in/](burn-in/README.md)) | `python3 rtl/scripts/burn_in.py --port <port> --hours 24 --label 24h`; `python3 rtl/scripts/burn_in_report.py <id>.jsonl --write` |
+| ✅ | **Burn-in tingkat 1 tutup: 24 jam, 0 error, 0 baca kartu gagal** — 54.893 detak dipancarkan papan, 56.210.432 siklus, dan kerja terhadap jam papan sendiri **1,0002**, yang menutup titik buta lima belas diam milik host. Garis dasar beku: 650,4 siklus/detik, irama detak 1,5744 s, hanyut −0,0292 s/jam ([burn-in/](burn-in/README.md)) | `python3 rtl/scripts/burn_in.py --port <port> --hours 24 --label 24h`; `python3 rtl/scripts/burn_in_report.py <id>.jsonl --write` |
 | ✅ | **Lab burn-in berjalan di papan: siklus pertama 28 / 3072 / 178 dan kartu menjawab `HFS1`** — gerbang Jamrah, ke-28 vektor codex, enam belas kata memori, `PUSH`/`POP`, dan **sektor 1 dibaca, bukan klaim HFS** — kata pertamanya dibandingkan, berulang; dua temuan keluar dari membangunnya (`PRINT` salah untuk angka besar; kartu gagal init sesudah rekonfigurasi di tengah pembacaan, 8 dari 8) ([burn-in/](burn-in/README.md)) | `python3 rtl/scripts/burn_in.py --port <port> --hours 24 --label 24h`; `pytest tests/test_integrity/test_burn_in.py` |
 | ✅ | **Ka'bah di papan: avalanche 0,4995 dari 1.600 bit, 8/8 frame dan 32/32 masukan termutasi cocok `cube.py`** — spons berantai (frame sama dua kali tanpa reset memberi keadaan berbeda), deterministik sesudah rekonfigurasi, 73/73 keadaan yang seharusnya berbeda memang berbeda. Lapis 2 [EH]; keamanan ada di lapis 3 ([validasi/KABAH.md](validasi/KABAH.md)) | `python3 rtl/scripts/kabah_board.py <port> --avalanche 32`; `pytest tests/test_integrity/test_kabah_board.py` |
 | ✅ | **Hijrah di papan: 700/700 nilai muka, 24 / 27 / 28 / 28 dan 321 / 649 / 625 / 714 atas mod 2 / 3 / 4 / 5, tiga lari identik** — HCPU membangun ke-28 muka dari ROM-nya sendiri dan menghitung peta berbeda; empat pasang yang runtuh atas mod 2 keluar dari silikon sebagai ح–ل, ش–ن, ص–ق, ع–ي. Hitungan panjang ≤ 2 diikat ke `_reachable` milik `test_hijrah.py` ([validasi/HIJRAH.md](validasi/HIJRAH.md)) | `python3 rtl/scripts/hijrah_board.py <port>` di atas loader; `pytest tests/test_integrity/test_hijrah_board.py` |
