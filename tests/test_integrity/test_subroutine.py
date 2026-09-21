@@ -124,9 +124,16 @@ messy:  MOVI  R2, 5
 
 def test_ret_with_nothing_to_return_to_halts() -> None:
     """HC-05. A RET on an empty stack has no correct target; jumping to
-    whatever the array happens to hold is how a fault becomes a wild branch."""
-    m = _run("        RET\n        HALT\n")
-    assert m.halted
+    whatever the array happens to hold is how a fault becomes a wild branch.
+
+    The work after the RET is the point. This test once put HALT straight
+    after it and asserted `m.halted` -- an attribute the fault path set and
+    nothing read -- so it passed while the machine reported HC-05 and ran on:
+    this program printed 5. Found by NUI layer 3."""
+    m = _run("        RET\n        MOVI  R1, 5\n        PRINT R1\n        HALT\n")
+    assert m.output == [], "the machine ran past HC-05"
+    assert m.trace[-1].description == "RET → HC-05 return stack underflow"
+    assert m.step() is None
     assert m.return_stack == []
 
 
@@ -138,9 +145,12 @@ def test_the_depth_is_the_same_number_in_both_implementations() -> None:
 def test_overflow_halts_rather_than_wrapping() -> None:
     """HC-04. Recursion one level past the stack must stop, not wrap onto its
     own oldest frame."""
-    m = _run("        CALL loop\n        HALT\nloop:   CALL loop\n        RET\n")
-    assert m.halted
-    assert len(m.return_stack) <= HISAMachine.RA_DEPTH
+    m = _run("        CALL loop\n        HALT\nloop:   CALL loop\n        MOVI  R1, 5\n"
+             "        PRINT R1\n        RET\n")
+    assert m.output == [], "the machine ran past HC-04"
+    assert m.trace[-1].description == "CALL → HC-04 return stack overflow"
+    assert m.step() is None
+    assert len(m.return_stack) == HISAMachine.RA_DEPTH
 
 
 # ── the RTL agrees, and its bench says so ───────────────────────

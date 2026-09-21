@@ -8,38 +8,38 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 |---|---:|
 | lari | 63 |
 | batas langkah per lari | 20000 |
-| keluar `end_of_code` | 6 |
+| keluar `fault` | 6 |
 | keluar `halt` | 43 |
 | keluar `hcheck` | 2 |
 | keluar `step_cap` | 12 |
-| cabang terlihat dua arah | 62 |
-| cabang terlihat satu arah | 134 |
+| cabang terlihat dua arah | 55 |
+| cabang terlihat satu arah | 94 |
 
 ## Edge
 
 | jenis | jumlah |
 |---|---:|
-| `EXECUTES` | 695 |
-| `READS` | 27 |
-| `OBSERVES` | 81 |
-| `WRITES` | 182 |
-| `MODIFIES` | 340 |
-| `CALLS` | 106 |
-| `RETURNS` | 392 |
+| `EXECUTES` | 623 |
+| `READS` | 20 |
+| `OBSERVES` | 49 |
+| `WRITES` | 136 |
+| `MODIFIES` | 308 |
+| `CALLS` | 93 |
+| `RETURNS` | 182 |
 | `RESUMES` | 47 |
 | `TRAPS` | 20 |
-| **total** | **1890** |
+| **total** | **1478** |
 
 ## Node tujuan edge
 
 | jenis | jumlah |
 |---|---:|
 | `hreg:` | 6 |
-| `label:` | 298 |
+| `label:` | 121 |
 | `mem:` | 8 |
-| `mmio:` | 20 |
+| `mmio:` | 19 |
 | `opcode:` | 78 |
-| `pc:` | 147 |
+| `pc:` | 131 |
 | `reg:` | 16 |
 | `trap:` | 4 |
 
@@ -53,7 +53,7 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 
 ## Inventaris UNKNOWN
 
-### `branch_seen_one_way` — 27
+### `branch_seen_one_way` — 24
 
 - `rtl/programs/burn_in.hasm: 8 branch(es)`
 - `rtl/programs/flags_board.hasm: 2 branch(es)`
@@ -61,10 +61,7 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 - `rtl/programs/hal_sd.hasm: 1 branch(es)`
 - `rtl/programs/hfs_lifecycle.hasm: 8 branch(es)`
 - `rtl/programs/hijrah_sweep.hasm: 1 branch(es)`
-- `rtl/programs/hos.hasm: 11 branch(es)`
 - `rtl/programs/hos_demo.hasm: 22 branch(es)`
-- `rtl/programs/hos_hfs_disk.hasm: 14 branch(es)`
-- `rtl/programs/hos_prog_load.hasm: 15 branch(es)`
 - `rtl/programs/loader.hasm: 1 branch(es)`
 - `rtl/programs/loader.hasm#with-payload: 2 branch(es)`
 - `rtl/programs/sd_writer.hasm: 2 branch(es)`
@@ -98,25 +95,18 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 - `rtl/tb/hfs_syscall_probe.hasm: 20000 steps; last 200 read no register read`
 - `rtl/tb/prog_load_probe.hasm: 20000 steps; last 200 read no register read`
 
-### `ran_off_its_code` — 6
+### `ran_off_its_code` — 0
 
-- `rtl/programs/hal.hasm: included by another program`
-- `rtl/programs/hal_sd.hasm: included by another program`
-- `rtl/programs/hos.hasm: included by another program`
-- `rtl/programs/hos_hctx.hasm: included by another program`
-- `rtl/programs/hos_hfs_disk.hasm: included by another program`
-- `rtl/programs/hos_prog_load.hasm: included by another program`
+- (kosong)
 
 ### `registers_the_hardware_lacks` — 0
 
 - (kosong)
 
-### `sd_card_absent_in_interpreter` — 11
+### `sd_card_absent_in_interpreter` — 9
 
 - `rtl/programs/burn_in.hasm`
 - `rtl/programs/hal_sd.hasm`
-- `rtl/programs/hos_hfs_disk.hasm`
-- `rtl/programs/hos_prog_load.hasm`
 - `rtl/programs/sd_writer.hasm`
 - `rtl/programs/sdio_probe.hasm`
 - `rtl/programs/sdio_verify.hasm`
@@ -125,29 +115,20 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 - `rtl/programs/test_prog_load.hasm`
 - `rtl/programs/test_prog_run.hasm`
 
-### `state_the_machine_never_declared` — 6
+### `state_the_machine_never_declared` — 0
 
-- `rtl/programs/hal.hasm: halted first set at step 2, rtl/programs/hal.hasm:27`
-- `rtl/programs/hal_sd.hasm: halted first set at step 310, rtl/programs/hal_sd.hasm:60`
-- `rtl/programs/hos.hasm: halted first set at step 3, rtl/programs/hos.hasm:61`
-- `rtl/programs/hos_hctx.hasm: halted first set at step 3, rtl/programs/hos_hctx.hasm:77`
-- `rtl/programs/hos_hfs_disk.hasm: halted first set at step 5, rtl/programs/hos_hfs_disk.hasm:49`
-- `rtl/programs/hos_prog_load.hasm: halted first set at step 5, rtl/programs/hos_prog_load.hasm:51`
+- (kosong)
 
 ### `stopped_by_interpreter_hcheck` — 2
 
 - `rtl/programs/hfs_lifecycle.hasm: HCHECK CORRUPTION: H0: guard check failed`
 - `rtl/programs/hos_demo.hasm: HCHECK CORRUPTION: H0: guard check failed`
 
-### `timer_counts_instructions` — 14
+### `timer_counts_instructions` — 10
 
 - `rtl/programs/burn_in.hasm`
 - `rtl/programs/flags_board.hasm`
 - `rtl/programs/flags_ctx.hasm`
-- `rtl/programs/hal.hasm`
-- `rtl/programs/hos.hasm`
-- `rtl/programs/hos_hfs_disk.hasm`
-- `rtl/programs/hos_prog_load.hasm`
 - `rtl/programs/kernel.hasm`
 - `rtl/programs/shell.hasm`
 - `rtl/programs/timer_poll.hasm`

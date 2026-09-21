@@ -54,7 +54,7 @@ Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 10.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **21 modul**; `tests/test_ai/` berisi **178 tes**
+`src/hijaiyyah/nui/` berisi **21 modul**; `tests/test_ai/` berisi **179 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -78,8 +78,8 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `program_index.py` | 62 program HASM, 1.123 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
-| `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (25) |
-| `execution_graph.py` | 63 lari, 1.890 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
+| `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
+| `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
 
 ---
 
@@ -219,16 +219,16 @@ membungkus kedua metode akses itu, jadi alamat efektif yang tercatat adalah
 yang mesin hitung dari register yang benar-benar ia pegang — dan
 `src/hijaiyyah/nui/execution_graph.py` menggabungkan semua lari jadi satu
 model, `NUI/execution_model.json`. Dijaga
-`tests/test_ai/test_nui_execution.py` (25) dan ditarik ke
+`tests/test_ai/test_nui_execution.py` (26) dan ditarik ke
 [`EXECUTION.md`](EXECUTION.md) oleh kodenya sendiri.
 
 - **63 lari**: 62 program HASM, ditambah `loader.hasm` yang membawa program
-  tiga kata di kabelnya. Keluar: 43 `halt`, 12 `step_cap`, 6 `end_of_code`,
+  tiga kata di kabelnya. Keluar: 43 `halt`, 12 `step_cap`, 6 `fault`,
   2 `hcheck`.
-- **1.890 edge** dari sembilan jenis yang pemilik tetapkan, tiap satunya
+- **1.478 edge** dari sembilan jenis yang pemilik tetapkan, tiap satunya
   dengan langkah pertama dan `berkas:baris` sumbernya. `READS` dan `OBSERVES`
   dibedakan oleh pengukuran — apakah antrean UART menyusut selama baca itu —
-  bukan oleh nama registernya. Ke-106 `CALLS` mendarat di label yang diikat
+  bukan oleh nama registernya. Ke-93 `CALLS` mendarat di label yang diikat
   pass pertama assembler: itu node fungsinya.
 - **Jejak penuh tiap lari** — ENTRY, lalu tiap STEP dengan `CHANGE`
   sebelum → sesudah (register, komponen H-register, flag, memori data, code
@@ -242,16 +242,18 @@ mencetak 7 dan berhenti. Urutan contoh pemilik — `RX_STATUS`, `RX_DATA`,
 `IMEM_ADDR`, `IMEM_DATA`, `TRAP_EPC`, `TRAP_MODE`, `ERET` — ditemukan di
 jejak loader dengan urutan yang sama.
 
-**Satu cacat yang lapis ini temukan pada lari pertamanya.** Interpreter
-menyatakan `_halted`, tetapi jalur HC-04 (CALL luber) dan HC-05 (RET tanpa
-alamat kembali) menulis `halted` — atribut yang tak dibaca siapa pun. Mesin
-melaporkan HC-05 lalu **terus berjalan**: `RET` yang diikuti `MOVI R1, 5`,
-`PRINT R1`, `HALT` mencetak `5`. `docs/HISA_SPEC.md` (0x2F) dan
-`rtl/hcpu_execute.v` sama-sama berhenti di situ. Enam program pustaka yang
-dijalankan sendirian mencapainya, dan itulah keenam `end_of_code` di atas.
-`tests/test_integrity/test_subroutine.py` tidak melihatnya: ia memeriksa
+**Satu cacat yang lapis ini temukan pada lari pertamanya, dan sudah
+diperbaiki.** Interpreter menyatakan `_halted`, tetapi jalur HC-04 (CALL
+luber) dan HC-05 (RET tanpa alamat kembali) menulis `halted` — atribut yang
+tak dibaca siapa pun. Mesin melaporkan HC-05 lalu **terus berjalan**: `RET`
+yang diikuti `MOVI R1, 5`, `PRINT R1`, `HALT` mencetak `5`.
+`docs/HISA_SPEC.md` (0x2F) dan `rtl/hcpu_execute.v` sama-sama berhenti di
+situ. `tests/test_integrity/test_subroutine.py` tidak melihatnya: ia memeriksa
 `m.halted` — atribut yang diciptakan cacat itu sendiri — dan programnya
-menaruh `HALT` tepat sesudah `RET`.
+menaruh `HALT` tepat sesudah `RET`. Sesudah perbaikan, keenam program pustaka
+yang dijalankan sendirian berhenti di `RET` pertamanya sebagai `fault`, dan
+model kehilangan **412 dari 1.890 edge** — semuanya buatan mesin yang terus
+berjalan menembus setiap fungsi sesudahnya.
 
 **Yang belum ada.** Eksekusi **RTL** tidak dijejak di sini; menyatukannya
 dengan jejak interpreter adalah Lapis 4. Eksekusi **Python** juga tidak:

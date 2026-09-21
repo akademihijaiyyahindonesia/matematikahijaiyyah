@@ -1006,7 +1006,7 @@ class HISAMachine:
         # consequence is the same in both: PUSH and CALL do not share a stack.
         if op == OpCode.CALL:
             if len(self.return_stack) >= self.RA_DEPTH:
-                self.halted = True
+                self._halted = True
                 return "CALL → HC-04 return stack overflow"
             self.return_stack.append(self.regs.pc)
             self.regs.pc = imm
@@ -1014,7 +1014,7 @@ class HISAMachine:
 
         if op == OpCode.RET:
             if not self.return_stack:
-                self.halted = True
+                self._halted = True
                 return "RET → HC-05 return stack underflow"
             self.regs.pc = self.return_stack.pop()
             return f"RET → {self.regs.pc}"

@@ -234,18 +234,24 @@ def test_the_unknown_inventory_is_there_and_says_what_it_cannot_show() -> None:
     assert any("hfs_lifecycle" in u for u in unknown["stopped_by_interpreter_hcheck"])
 
 
-def test_state_the_machine_never_declared_is_named() -> None:
-    """The machine as it is, not as it should be. HISAMachine declares
-    `_halted`; its CALL-overflow and RET-underflow paths set `halted`, an
-    attribute nothing reads, so an HC-05 is reported and execution goes on.
-    Six library programs reach a RET with nothing to return to when run
-    alone, and each shows it. docs/HISA_SPEC.md (0x2F) and rtl/hcpu_execute.v
-    both halt there."""
-    found = FRESH["unknown"]["state_the_machine_never_declared"]
-    assert [f.split(": ")[1].split(" ")[0] for f in found] == ["halted"] * 6, found
-    assert sorted(f.split(":")[0] for f in found) == [
-        f"rtl/programs/{p}.hasm" for p in ("hal", "hal_sd", "hos", "hos_hctx",
-                                           "hos_hfs_disk", "hos_prog_load")]
+def test_no_run_sets_state_the_machine_never_declared() -> None:
+    """How layer 3's first run caught HC-04/HC-05 not stopping the machine:
+    the fault paths set `halted`, an attribute nothing reads, beside the
+    `_halted` everything does. It showed as an integer that appeared on the
+    machine mid-run. Fixed; this holds the category empty, so the next
+    misspelled attribute is named the day it is written."""
+    assert FRESH["unknown"]["state_the_machine_never_declared"] == []
+
+
+def test_the_library_programs_stop_at_their_first_return() -> None:
+    """Run alone, each of these reaches a RET with nothing to return to. The
+    spec (0x2F) and the RTL halt there as HC-05; so does the interpreter now,
+    instead of running on through every function after it."""
+    faults = {name: s["exit_detail"] for name, s in FRESH["programs"].items()
+              if s["exit"] == "fault"}
+    assert faults == {f"rtl/programs/{p}.hasm": "RET → HC-05 return stack underflow"
+                      for p in ("hal", "hal_sd", "hos", "hos_hctx",
+                                "hos_hfs_disk", "hos_prog_load")}
 
 
 # -- the three sabotages the owner requires to be red -----------------------
