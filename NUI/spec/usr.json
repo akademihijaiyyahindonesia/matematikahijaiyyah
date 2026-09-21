@@ -3,7 +3,7 @@
  "title": "Universal Semantic Representation (USR)",
  "fields": [
   {
-   "name": "action",
+   "name": "ACTION",
    "required": true,
    "values": "actions",
    "status": "ditetapkan",
@@ -11,7 +11,7 @@
    "required_status": "usulan"
   },
   {
-   "name": "object",
+   "name": "OBJECT",
    "required": true,
    "values": "objects",
    "status": "ditetapkan",
@@ -19,7 +19,7 @@
    "required_status": "usulan"
   },
   {
-   "name": "target",
+   "name": "TARGET",
    "required": false,
    "rule": "per OBJECT, lihat objects[].target",
    "status": "ditetapkan",
@@ -27,7 +27,7 @@
    "required_status": "usulan"
   },
   {
-   "name": "context",
+   "name": "CONTEXT",
    "required": false,
    "values": "contexts",
    "status": "ditetapkan",
@@ -35,7 +35,7 @@
    "required_status": "usulan"
   },
   {
-   "name": "state",
+   "name": "STATE",
    "required": false,
    "values": "states",
    "status": "ditetapkan",
@@ -44,9 +44,9 @@
   }
  ],
  "case": {
-  "rule": "ACTION dan OBJECT huruf besar; CONTEXT dan STATE huruf kecil",
+  "rule": "Kunci medan huruf besar: ACTION, OBJECT, TARGET, CONTEXT, STATE. Nilai ACTION dan OBJECT huruf besar; nilai CONTEXT ditulis seperti pemilik menulisnya (`Ubuntu`, `HC`); nilai STATE huruf kecil",
   "status": "ditetapkan",
-  "source": "pemilik, 22 September 2026 -- contoh {\"action\": \"READ\", \"object\": \"FILE\", ..., \"context\": \"ubuntu_host\", \"state\": \"latest\"}; contoh 21 September memakai huruf kecil ({\"action\": \"read\", \"object\": \"file\"}), dan yang berlaku yang terakhir"
+  "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- {\"ACTION\": \"READ\", \"OBJECT\": \"FILE\", \"TARGET\": \"/etc/hosts\", \"CONTEXT\": \"Ubuntu\", \"STATE\": \"requested\"}. Bergeser dua kali, dan yang berlaku yang terakhir: 21 September semuanya huruf kecil ({\"action\": \"read\", \"object\": \"file\"}); pesan sebelumnya pada 22 September kuncinya huruf kecil, nilai ACTION/OBJECT huruf besar, dan CONTEXT `ubuntu_host`"
  },
  "actions": [
   {
@@ -96,6 +96,12 @@
    "stage": null,
    "status": "dinyatakan, belum diizinkan",
    "source": "pemilik, 21 September 2026 -- systemctl stop"
+  },
+  {
+   "name": "PRINT",
+   "stage": null,
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh {ACTION PRINT, OBJECT VALUE, TARGET angka + harga, CONTEXT HC, STATE compiled}. Aksi di konteks HC, bukan perintah host, jadi tidak punya tahap Lapis 5"
   }
  ],
  "objects": [
@@ -173,39 +179,85 @@
     "required": true,
     "status": "usulan"
    }
+  },
+  {
+   "name": "VALUE",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE",
+   "target": {
+    "kind": "ekspresi HC",
+    "required": true,
+    "examples": [
+     "angka + harga"
+    ],
+    "status": "usulan"
+   }
   }
  ],
  "target_rules": [
   {
    "rule": "TARGET adalah satu string, diteruskan sebagai SATU elemen argv -- tidak pernah lewat shell, jadi ; | & $ ` tidak punya arti apa pun",
    "status": "usulan",
-   "source": "keamanan: perintah host dibentuk sebagai daftar argumen"
+   "source": "keamanan: perintah host dibentuk sebagai daftar argumen",
+   "applies_to": "CONTEXT Ubuntu, dan USR tanpa CONTEXT",
+   "applies_to_status": "usulan"
   },
   {
    "rule": "TARGET tidak boleh diawali '-': ia akan dibaca perintah sebagai opsi, bukan sebagai nama",
    "status": "usulan",
-   "source": "keamanan"
+   "source": "keamanan",
+   "applies_to": "CONTEXT Ubuntu, dan USR tanpa CONTEXT",
+   "applies_to_status": "usulan"
   },
   {
    "rule": "TARGET tidak boleh memuat baris baru atau karakter NUL",
    "status": "usulan",
-   "source": "keamanan"
+   "source": "keamanan",
+   "applies_to": "CONTEXT Ubuntu, dan USR tanpa CONTEXT",
+   "applies_to_status": "usulan"
   }
  ],
  "contexts": [
   {
-   "name": "ubuntu_host",
+   "name": "Ubuntu",
    "status": "ditetapkan",
-   "source": "pemilik, 22 September 2026"
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- menggantikan `ubuntu_host` dari pesan sebelumnya pada 22 September: satu nama untuk satu hal, dan yang berlaku yang terakhir"
+  },
+  {
+   "name": "HC",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE"
   }
  ],
  "states": [
   {
    "name": "latest",
    "status": "contoh pemilik; artinya belum ditetapkan",
-   "source": "pemilik, 22 September 2026"
+   "source": "pemilik, 22 September 2026, pesan sebelumnya -- contoh READ FILE /var/log/syslog"
+  },
+  {
+   "name": "requested",
+   "status": "contoh pemilik; artinya belum ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh READ FILE /etc/hosts"
+  },
+  {
+   "name": "compiled",
+   "status": "contoh pemilik; artinya belum ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE"
   }
  ],
+ "state_definition": {
+  "text": "STATE adalah keadaan aktual target/objek pada saat aksi dinyatakan, bukan tahap pipeline. `requested` dan `compiled` lebih mirip status proses/perintah; `compiled` lebih tepat metadata eksekusi/compiler, bukan STATE semantik.",
+  "example": {
+   "ACTION": "READ",
+   "OBJECT": "FILE",
+   "TARGET": "/etc/hosts",
+   "CONTEXT": "Ubuntu",
+   "STATE": "present"
+  },
+  "status": "usulan pemilik, belum dikunci",
+  "source": "pemilik, 22 September 2026, pesan ketiga -- 'Itu usulan definisi, bukan perubahan yang boleh dilakukan agent tanpa Anda menguncinya.' Kosakata STATE dan contoh di atas karena itu tidak diubah; `present` belum termasuk nilai STATE."
+ },
  "phrases": {
   "grammar": "<kata kerja> <objek> [<target>] -- target adalah sisa kalimat",
   "grammar_status": "usulan",
@@ -230,9 +282,46 @@
    }
   ]
  },
+ "examples": [
+  {
+   "usr": {
+    "ACTION": "READ",
+    "OBJECT": "FILE",
+    "TARGET": "/etc/hosts",
+    "CONTEXT": "Ubuntu",
+    "STATE": "requested"
+   },
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in'"
+  },
+  {
+   "usr": {
+    "ACTION": "PRINT",
+    "OBJECT": "VALUE",
+    "TARGET": "angka + harga",
+    "CONTEXT": "HC",
+    "STATE": "compiled"
+   },
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in'"
+  },
+  {
+   "usr": {
+    "ACTION": "READ",
+    "OBJECT": "FILE",
+    "TARGET": "/var/log/syslog",
+    "CONTEXT": "Ubuntu",
+    "STATE": "latest"
+   },
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan sebelumnya -- ditulis ulang dalam bentuk yang berlaku; aslinya {\"action\": \"READ\", \"object\": \"FILE\", \"target\": \"/var/log/syslog\", \"context\": \"ubuntu_host\", \"state\": \"latest\"}"
+  }
+ ],
  "open": [
-  "Apa arti STATE `latest`: isi saat ini, atau entri terbaru saja?",
-  "CONTEXT selain `ubuntu_host` -- misalnya papan HCPU -- belum ada.",
+  "Arti STATE belum dikunci. Usulan pemilik ada di `state_definition`: keadaan aktual target/objek saat aksi dinyatakan, bukan tahap pipeline -- `present` sebagai contoh, `compiled` sebagai metadata eksekusi. Sampai dikunci, `latest`, `requested`, dan `compiled` tetap tercatat sebagai contoh pemilik.",
+  "CONTEXT selain `Ubuntu` dan `HC` -- misalnya papan HCPU -- belum ada.",
+  "TARGET di CONTEXT HC adalah ekspresi HC; aturan TARGET yang ada ditulis untuk argv host dan hanya berlaku di sana (usulan). Aturan untuk ekspresi HC belum ada.",
+  "Apakah `اطبع angka + harga` diurai jadi USR PRINT VALUE seperti contoh pemilik? Penerjemahnya belum dibangun -- implementasi menunggu sesudah Lapis 5.",
   "Kosakata kata kerja dan objek selain read/file dalam tiga bahasa belum ditetapkan.",
   "Apakah satu kalimat boleh mencampur bahasa (`read ملف x`)?",
   "Contoh pemilik 21 September, `اعرض العمليات النشطة` -> `ps aux`, belum dipetakan: `اعرض` (tampilkan) sebagai READ, `العمليات` sebagai PROCESS, dan `النشطة` (aktif) sebagai STATE adalah tafsiran yang belum disahkan."

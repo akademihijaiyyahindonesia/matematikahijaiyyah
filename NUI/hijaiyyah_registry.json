@@ -1,0 +1,1626 @@
+[
+ {
+  "index": 1,
+  "char": "ا",
+  "name": "Alif",
+  "codex": [
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_ALIF",
+    "opcode": "0xe0",
+    "effect": "H0 <- H0 + v(ا)",
+    "rom_address": 1,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 1
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ا",
+   "compiles_to": "HLOAD H0, #1",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ا')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ا",
+   "word": "0xe0000000",
+   "load": "HLOAD Hn, #1",
+   "source": "src/hijaiyyah/hisa/opcodes.py:243"
+  }
+ },
+ {
+  "index": 2,
+  "char": "ب",
+  "name": "Ba",
+  "codex": [
+   2,
+   0,
+   0,
+   1,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_BA",
+    "opcode": "0xe1",
+    "effect": "H0 <- H0 + v(ب)",
+    "rom_address": 2,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 2,
+     "period": 4
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 248
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ب",
+   "compiles_to": "HLOAD H0, #2",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ب')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ب",
+   "word": "0xe1000000",
+   "load": "HLOAD Hn, #2",
+   "source": "src/hijaiyyah/hisa/opcodes.py:244"
+  }
+ },
+ {
+  "index": 3,
+  "char": "ت",
+  "name": "Ta",
+  "codex": [
+   2,
+   2,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   2,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_TA",
+    "opcode": "0xe2",
+    "effect": "H0 <- H0 + v(ت)",
+    "rom_address": 3,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 3,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 142
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ت",
+   "compiles_to": "HLOAD H0, #3",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ت')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ت",
+   "word": "0xe2000000",
+   "load": "HLOAD Hn, #3",
+   "source": "src/hijaiyyah/hisa/opcodes.py:245"
+  }
+ },
+ {
+  "index": 4,
+  "char": "ث",
+  "name": "Tsa",
+  "codex": [
+   2,
+   3,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   3,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_TSA",
+    "opcode": "0xe3",
+    "effect": "H0 <- H0 + v(ث)",
+    "rom_address": 4,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 4,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 781
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ث",
+   "compiles_to": "HLOAD H0, #4",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ث')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ث",
+   "word": "0xe3000000",
+   "load": "HLOAD Hn, #4",
+   "source": "src/hijaiyyah/hisa/opcodes.py:246"
+  }
+ },
+ {
+  "index": 5,
+  "char": "ج",
+  "name": "Jim",
+  "codex": [
+   3,
+   0,
+   1,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_JIM",
+    "opcode": "0xe4",
+    "effect": "H0 <- H0 + v(ج)",
+    "rom_address": 5,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 5,
+    "gf2": {
+     "tail": 1,
+     "period": 31
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 3124
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ج",
+   "compiles_to": "HLOAD H0, #5",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ج')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ج",
+   "word": "0xe4000000",
+   "load": "HLOAD Hn, #5",
+   "source": "src/hijaiyyah/hisa/opcodes.py:247"
+  }
+ },
+ {
+  "index": 6,
+  "char": "ح",
+  "name": "Ha",
+  "codex": [
+   3,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_HA",
+    "opcode": "0xe5",
+    "effect": "H0 <- H0 + v(ح)",
+    "rom_address": 6,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 3,
+     "period": 2
+    },
+    "gf5": {
+     "tail": 3,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ح",
+   "compiles_to": "HLOAD H0, #6",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ح')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ح",
+   "word": "0xe5000000",
+   "load": "HLOAD Hn, #6",
+   "source": "src/hijaiyyah/hisa/opcodes.py:248"
+  }
+ },
+ {
+  "index": 7,
+  "char": "خ",
+  "name": "Kha",
+  "codex": [
+   3,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_KHA",
+    "opcode": "0xe6",
+    "effect": "H0 <- H0 + v(خ)",
+    "rom_address": 7,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 5,
+    "gf2": {
+     "tail": 1,
+     "period": 31
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 744
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "خ",
+   "compiles_to": "HLOAD H0, #7",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'خ')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "خ",
+   "word": "0xe6000000",
+   "load": "HLOAD Hn, #7",
+   "source": "src/hijaiyyah/hisa/opcodes.py:249"
+  }
+ },
+ {
+  "index": 8,
+  "char": "د",
+  "name": "Dal",
+  "codex": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_DAL",
+    "opcode": "0xe7",
+    "effect": "H0 <- H0 + v(د)",
+    "rom_address": 8,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 3,
+    "gf2": {
+     "tail": 1,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 1
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "د",
+   "compiles_to": "HLOAD H0, #8",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'د')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "د",
+   "word": "0xe7000000",
+   "load": "HLOAD Hn, #8",
+   "source": "src/hijaiyyah/hisa/opcodes.py:250"
+  }
+ },
+ {
+  "index": 9,
+  "char": "ذ",
+  "name": "Dzal",
+  "codex": [
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1,
+   0,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_DZAL",
+    "opcode": "0xe8",
+    "effect": "H0 <- H0 + v(ذ)",
+    "rom_address": 9,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 1,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 20
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ذ",
+   "compiles_to": "HLOAD H0, #9",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ذ')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ذ",
+   "word": "0xe8000000",
+   "load": "HLOAD Hn, #9",
+   "source": "src/hijaiyyah/hisa/opcodes.py:251"
+  }
+ },
+ {
+  "index": 10,
+  "char": "ر",
+  "name": "Ra",
+  "codex": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_RA",
+    "opcode": "0xe9",
+    "effect": "H0 <- H0 + v(ر)",
+    "rom_address": 10,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 3,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 1
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ر",
+   "compiles_to": "HLOAD H0, #10",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ر')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ر",
+   "word": "0xe9000000",
+   "load": "HLOAD Hn, #10",
+   "source": "src/hijaiyyah/hisa/opcodes.py:252"
+  }
+ },
+ {
+  "index": 11,
+  "char": "ز",
+  "name": "Zay",
+  "codex": [
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   1,
+   0,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_ZAY",
+    "opcode": "0xea",
+    "effect": "H0 <- H0 + v(ز)",
+    "rom_address": 11,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 2,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 20
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ز",
+   "compiles_to": "HLOAD H0, #11",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ز')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ز",
+   "word": "0xea000000",
+   "load": "HLOAD Hn, #11",
+   "source": "src/hijaiyyah/hisa/opcodes.py:253"
+  }
+ },
+ {
+  "index": 12,
+  "char": "س",
+  "name": "Sin",
+  "codex": [
+   4,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   3,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_SIN",
+    "opcode": "0xeb",
+    "effect": "H0 <- H0 + v(س)",
+    "rom_address": 12,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "س",
+   "compiles_to": "HLOAD H0, #12",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'س')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "س",
+   "word": "0xeb000000",
+   "load": "HLOAD Hn, #12",
+   "source": "src/hijaiyyah/hisa/opcodes.py:254"
+  }
+ },
+ {
+  "index": 13,
+  "char": "ش",
+  "name": "Syin",
+  "codex": [
+   4,
+   3,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   2,
+   0,
+   0,
+   0,
+   3,
+   0,
+   3,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_SYIN",
+    "opcode": "0xec",
+    "effect": "H0 <- H0 + v(ش)",
+    "rom_address": 13,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 20
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ش",
+   "compiles_to": "HLOAD H0, #13",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ش')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ش",
+   "word": "0xec000000",
+   "load": "HLOAD Hn, #13",
+   "source": "src/hijaiyyah/hisa/opcodes.py:255"
+  }
+ },
+ {
+  "index": 14,
+  "char": "ص",
+  "name": "Shad",
+  "codex": [
+   6,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_SHAD",
+    "opcode": "0xed",
+    "effect": "H0 <- H0 + v(ص)",
+    "rom_address": 14,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 1,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ص",
+   "compiles_to": "HLOAD H0, #14",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ص')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ص",
+   "word": "0xed000000",
+   "load": "HLOAD Hn, #14",
+   "source": "src/hijaiyyah/hisa/opcodes.py:256"
+  }
+ },
+ {
+  "index": 15,
+  "char": "ض",
+  "name": "Dhad",
+  "codex": [
+   6,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_DHAD",
+    "opcode": "0xee",
+    "effect": "H0 <- H0 + v(ض)",
+    "rom_address": 15,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 1,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 12
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ض",
+   "compiles_to": "HLOAD H0, #15",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ض')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ض",
+   "word": "0xee000000",
+   "load": "HLOAD Hn, #15",
+   "source": "src/hijaiyyah/hisa/opcodes.py:257"
+  }
+ },
+ {
+  "index": 16,
+  "char": "ط",
+  "name": "Tha",
+  "codex": [
+   4,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_THA",
+    "opcode": "0xef",
+    "effect": "H0 <- H0 + v(ط)",
+    "rom_address": 16,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 3,
+    "gf2": {
+     "tail": 1,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 20
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ط",
+   "compiles_to": "HLOAD H0, #16",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ط')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ط",
+   "word": "0xef000000",
+   "load": "HLOAD Hn, #16",
+   "source": "src/hijaiyyah/hisa/opcodes.py:258"
+  }
+ },
+ {
+  "index": 17,
+  "char": "ظ",
+  "name": "Zha",
+  "codex": [
+   4,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_ZHA",
+    "opcode": "0xf0",
+    "effect": "H0 <- H0 + v(ظ)",
+    "rom_address": 17,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 2,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 60
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ظ",
+   "compiles_to": "HLOAD H0, #17",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ظ')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ظ",
+   "word": "0xf0000000",
+   "load": "HLOAD Hn, #17",
+   "source": "src/hijaiyyah/hisa/opcodes.py:259"
+  }
+ },
+ {
+  "index": 18,
+  "char": "ع",
+  "name": "Ain",
+  "codex": [
+   3,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_AIN",
+    "opcode": "0xf1",
+    "effect": "H0 <- H0 + v(ع)",
+    "rom_address": 18,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 1,
+    "gf2": {
+     "tail": 1,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ع",
+   "compiles_to": "HLOAD H0, #18",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ع')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ع",
+   "word": "0xf1000000",
+   "load": "HLOAD Hn, #18",
+   "source": "src/hijaiyyah/hisa/opcodes.py:260"
+  }
+ },
+ {
+  "index": 19,
+  "char": "غ",
+  "name": "Ghain",
+  "codex": [
+   3,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_GHAIN",
+    "opcode": "0xf2",
+    "effect": "H0 <- H0 + v(غ)",
+    "rom_address": 19,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 1,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 12
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "غ",
+   "compiles_to": "HLOAD H0, #19",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'غ')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "غ",
+   "word": "0xf2000000",
+   "load": "HLOAD Hn, #19",
+   "source": "src/hijaiyyah/hisa/opcodes.py:261"
+  }
+ },
+ {
+  "index": 20,
+  "char": "ف",
+  "name": "Fa",
+  "codex": [
+   5,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   1,
+   1,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_FA",
+    "opcode": "0xf3",
+    "effect": "H0 <- H0 + v(ف)",
+    "rom_address": 20,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 3,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 124
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ف",
+   "compiles_to": "HLOAD H0, #20",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ف')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ف",
+   "word": "0xf3000000",
+   "load": "HLOAD Hn, #20",
+   "source": "src/hijaiyyah/hisa/opcodes.py:262"
+  }
+ },
+ {
+  "index": 21,
+  "char": "ق",
+  "name": "Qaf",
+  "codex": [
+   6,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   2,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_QAF",
+    "opcode": "0xf4",
+    "effect": "H0 <- H0 + v(ق)",
+    "rom_address": 21,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 1,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 24
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ق",
+   "compiles_to": "HLOAD H0, #21",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ق')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ق",
+   "word": "0xf4000000",
+   "load": "HLOAD Hn, #21",
+   "source": "src/hijaiyyah/hisa/opcodes.py:263"
+  }
+ },
+ {
+  "index": 22,
+  "char": "ك",
+  "name": "Kaf",
+  "codex": [
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_KAF",
+    "opcode": "0xf5",
+    "effect": "H0 <- H0 + v(ك)",
+    "rom_address": 22,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 3,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ك",
+   "compiles_to": "HLOAD H0, #22",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ك')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ك",
+   "word": "0xf5000000",
+   "load": "HLOAD Hn, #22",
+   "source": "src/hijaiyyah/hisa/opcodes.py:264"
+  }
+ },
+ {
+  "index": 23,
+  "char": "ل",
+  "name": "Lam",
+  "codex": [
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_LAM",
+    "opcode": "0xf6",
+    "effect": "H0 <- H0 + v(ل)",
+    "rom_address": 23,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 4,
+    "gf2": {
+     "tail": 3,
+     "period": 2
+    },
+    "gf5": {
+     "tail": 3,
+     "period": 5
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ل",
+   "compiles_to": "HLOAD H0, #23",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ل')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ل",
+   "word": "0xf6000000",
+   "load": "HLOAD Hn, #23",
+   "source": "src/hijaiyyah/hisa/opcodes.py:265"
+  }
+ },
+ {
+  "index": 24,
+  "char": "م",
+  "name": "Mim",
+  "codex": [
+   4,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_MIM",
+    "opcode": "0xf7",
+    "effect": "H0 <- H0 + v(م)",
+    "rom_address": 24,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 1,
+     "period": 3
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 20
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "م",
+   "compiles_to": "HLOAD H0, #24",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'م')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "م",
+   "word": "0xf7000000",
+   "load": "HLOAD Hn, #24",
+   "source": "src/hijaiyyah/hisa/opcodes.py:266"
+  }
+ },
+ {
+  "index": 25,
+  "char": "ن",
+  "name": "Nun",
+  "codex": [
+   2,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_NUN",
+    "opcode": "0xf8",
+    "effect": "H0 <- H0 + v(ن)",
+    "rom_address": 25,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ن",
+   "compiles_to": "HLOAD H0, #25",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ن')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ن",
+   "word": "0xf8000000",
+   "load": "HLOAD Hn, #25",
+   "source": "src/hijaiyyah/hisa/opcodes.py:267"
+  }
+ },
+ {
+  "index": 26,
+  "char": "و",
+  "name": "Waw",
+  "codex": [
+   5,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   1,
+   0,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_WAW",
+    "opcode": "0xf9",
+    "effect": "H0 <- H0 + v(و)",
+    "rom_address": 26,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 2,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 2,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "و",
+   "compiles_to": "HLOAD H0, #26",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'و')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "و",
+   "word": "0xf9000000",
+   "load": "HLOAD Hn, #26",
+   "source": "src/hijaiyyah/hisa/opcodes.py:268"
+  }
+ },
+ {
+  "index": 27,
+  "char": "هـ",
+  "name": "Haa",
+  "codex": [
+   8,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0,
+   0,
+   0,
+   0,
+   2,
+   0,
+   1,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_HAA",
+    "opcode": "0xfa",
+    "effect": "H0 <- H0 + v(هـ)",
+    "rom_address": 27,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 2,
+    "gf2": {
+     "tail": 3,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 1,
+     "period": 24
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "هـ",
+   "compiles_to": "HLOAD H0, #27",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'هـ')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "هـ",
+   "word": "0xfa000000",
+   "load": "HLOAD Hn, #27",
+   "source": "src/hijaiyyah/hisa/opcodes.py:269"
+  }
+ },
+ {
+  "index": 28,
+  "char": "ي",
+  "name": "Ya",
+  "codex": [
+   3,
+   0,
+   0,
+   2,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   0,
+   2,
+   0,
+   2,
+   0
+  ],
+  "operator": {
+   "instruction": {
+    "mnemonic": "L_YA",
+    "opcode": "0xfb",
+    "effect": "H0 <- H0 + v(ي)",
+    "rom_address": 28,
+    "source": "src/hijaiyyah/hisa/opcodes.py:230"
+   },
+   "face": {
+    "rank_gf2": 1,
+    "gf2": {
+     "tail": 1,
+     "period": 1
+    },
+    "gf5": {
+     "tail": 3,
+     "period": 4
+    },
+    "source": "src/hijaiyyah/core/exomatrix.py"
+   }
+  },
+  "hc": {
+   "literal": "ي",
+   "compiles_to": "HLOAD H0, #28",
+   "as_a_name": "L1:5: Expected variable name (got HIJAIYYAH 'ي')",
+   "source": "src/hijaiyyah/compiler/codegen.py, src/hijaiyyah/language/parser.py:210"
+  },
+  "hisa": {
+   "letter": "ي",
+   "word": "0xfb000000",
+   "load": "HLOAD Hn, #28",
+   "source": "src/hijaiyyah/hisa/opcodes.py:270"
+  }
+ }
+]

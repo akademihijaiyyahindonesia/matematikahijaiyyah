@@ -1,55 +1,75 @@
 {
  "version": 1,
  "title": "Kamus HC Arab-Indonesia-Inggris",
+ "format": {
+  "rule": "Kamus dibaca per konsep: {KONSEP: {\"hc\": ..., \"arabic\": ..., \"indonesia\": ...}}",
+  "status": "ditetapkan",
+  "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in'"
+ },
  "entries": [
   {
+   "concept": "VARIABLE",
+   "concept_status": "ditetapkan",
+   "concept_source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- {\"VARIABLE\": {\"hc\": \"let\", \"arabic\": \"متغير\", \"indonesia\": \"variabel\"}}",
    "hc": "let",
    "kind": "kata kunci",
-   "ar": "متغير",
-   "id": "variabel",
+   "arabic": "متغير",
+   "indonesia": "variabel",
    "status": "ditetapkan",
    "source": "pemilik, 21 September 2026 dan pemilik, 22 September 2026"
   },
   {
+   "concept": "PRINT",
+   "concept_status": "ditetapkan",
+   "concept_source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- {\"PRINT\": {\"hc\": \"println\", \"arabic\": \"اطبع\", \"indonesia\": \"cetak\"}}; nama yang sama dengan ACTION PRINT di USR",
    "hc": "println",
    "kind": "fungsi bawaan",
-   "ar": "اطبع",
-   "id": "cetak",
+   "arabic": "اطبع",
+   "indonesia": "cetak",
    "status": "ditetapkan",
    "source": "pemilik, 22 September 2026 menulis `println`; pemilik, 21 September 2026 menulis `print`. Keduanya fungsi bawaan HC (src/hijaiyyah/language/evaluator.py) dan keduanya dikompilasi ke PRINT (src/hijaiyyah/compiler/codegen.py)"
   },
   {
+   "concept": "IF",
+   "concept_status": "usulan",
+   "concept_source": "pemilik baru menamai konsep untuk let dan println; ini kata kunci HC-nya dalam huruf besar",
    "hc": "if",
    "kind": "kata kunci",
-   "ar": "اذا",
-   "id": "jika",
+   "arabic": "اذا",
+   "indonesia": "jika",
    "status": "ditetapkan",
    "source": "pemilik, 21 September 2026 dan pemilik, 22 September 2026"
   },
   {
-   "hc": "while",
-   "kind": "kata kunci",
-   "ar": "بينما",
-   "id": "selama",
-   "status": "ditetapkan",
-   "source": "pemilik, 21 September 2026; tidak ada di tabel pemilik, 22 September 2026"
-  },
-  {
+   "concept": "FUNCTION",
+   "concept_status": "usulan",
+   "concept_source": "pemilik menulis `function` pada 21 September; kata kunci HC-nya `fn`",
    "hc": "fn",
    "kind": "kata kunci",
-   "ar": "دالة",
-   "id": "fungsi",
+   "arabic": "دالة",
+   "indonesia": "fungsi",
    "status": "ditetapkan",
    "source": "pemilik menulis `function`; kata kunci HC untuknya adalah `fn` (src/hijaiyyah/language/tokens.py)"
+  }
+ ],
+ "withheld": [
+  {
+   "hc": "while",
+   "arabic": "بينما",
+   "indonesia": "selama",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan ketiga -- 'while tetap belum menjadi keyword. Jangan menambahkannya hanya karena umum di bahasa pemrograman. Itu harus muncul dari kebutuhan HC dan keputusan pemilik.'",
+   "reason": "Bentuk Arab dan Indonesianya tidak ditambahkan ke kamus. Diukur: `while` sendiri sudah kata kunci HC dalam bahasa Inggris (src/hijaiyyah/language/tokens.py); yang ditahan adalah permukaan tiga bahasanya. Ada di tabel 21 September, tidak di kedua tabel 22 September."
   }
  ],
  "not_hc": [
   {
    "name": "read_file",
-   "ar": "اقرأ_ملف",
-   "id": "baca_file",
-   "source": "pemilik, 22 September 2026",
-   "reason": "tidak ada di HC -- bukan kata kunci, bukan fungsi bawaan, bukan modul. Operasinya adalah USR READ FILE di host, bukan konstruksi bahasa; menambahkannya ke HC adalah keputusan bahasa, dan aturan 21 September berbunyi 'jangan tambah sampai pipeline terbukti'"
+   "arabic": "اقرأ_ملف",
+   "indonesia": "baca_file",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, pesan ketiga -- 'read_file bukan keyword HC saat ini ... Jangan memasukkan read_file sebagai keyword baru tanpa keputusan arsitektur baru.'",
+   "reason": "tidak ada di HC -- bukan kata kunci, bukan fungsi bawaan, bukan modul. Operasinya adalah USR READ FILE di host, bukan konstruksi bahasa. Tidak dimasukkan tanpa keputusan arsitektur baru."
   }
  ],
  "token_rules": [
@@ -69,7 +89,7 @@
    "source": "diukur: `دالة` pecah jadi د ا ل + nama `ة`, `اقرأ` jadi ا ق ر + nama `أ`"
   },
   {
-   "rule": "Kata kunci Indonesia dicadangkan seperti kata kunci Inggris: `variabel`, `cetak`, `jika`, `selama`, `fungsi` tidak bisa lagi jadi nama",
+   "rule": "Kata kunci Indonesia dicadangkan seperti kata kunci Inggris: `variabel`, `cetak`, `jika`, `fungsi` tidak bisa lagi jadi nama",
    "status": "usulan",
    "source": "diukur: tak satu pun dipakai sebagai nama di kode HC repositori"
   },
@@ -88,19 +108,22 @@
   {
    "source": "متغير angka = 10\nمتغير harga = 20\nاطبع angka + harga\n",
    "hc": "let angka = 10;\nlet harga = 20;\nprintln(angka + harga);\n",
+   "hisa": "MOVI R1,10\nMOVI R2,20\nADD  R3,R1,R2\nPRINT R3\nHALT\n",
    "status": "ditetapkan",
-   "source_note": "pemilik, 22 September 2026"
+   "source_note": "pemilik, 22 September 2026",
+   "hisa_source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in'"
   },
   {
    "source": "متغير س = 10\n",
    "hc": null,
    "status": "ditetapkan tidak sah",
-   "source_note": "pemilik, 21 September 2026 -- `س` sudah punya arti matematis"
+   "source_note": "pemilik, 21 September 2026 -- `س` sudah punya arti matematis",
+   "hisa": null
   }
  ],
  "open": [
-  "`print` atau `println` untuk `اطبع` / `cetak` -- dua tabel pemilik berbeda; keduanya ada di HC.",
-  "`while` ada di tabel 21 September, tidak di tabel 22 September -- tetap, atau dikeluarkan?",
+  "`print` atau `println` untuk `اطبع` / `cetak` -- tabel 21 September menulis `print`, dua tabel 22 September `println`; keduanya ada di HC dan keduanya dikompilasi ke PRINT.",
+  "Nama konsep untuk `if` dan `fn` (usulan: IF, FUNCTION) -- pemilik baru menamai VARIABLE dan PRINT.",
   "Ejaan: `اذا` (tabel pemilik) atau `إذا` (dengan hamzah) -- apakah keduanya diterima?",
   "Harakat dan tatweel dalam kata kunci Arab: dibuang sebelum dicocokkan, atau ditolak?"
  ]

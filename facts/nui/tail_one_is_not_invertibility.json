@@ -1,0 +1,27 @@
+{
+  "fact_id": "nui.tail_one_is_not_invertibility",
+  "statement": "Atas GF(2), tujuh huruf punya ekor 1 dengan rank di bawah 5 -- Dal, Dzal, Tha, Ain, Ghain, Mim, Ya. Ekor 1 bukan invertibilitas. Docstring matrix_order dan gf2_rank di src/hijaiyyah/core/exomatrix.py menyamakan keduanya; itu selisih yang belum diperiksa, dan NUI tidak memakainya sebagai aturan.",
+  "value": [
+    "Dal",
+    "Dzal",
+    "Tha",
+    "Ain",
+    "Ghain",
+    "Mim",
+    "Ya"
+  ],
+  "source": [
+    "src/hijaiyyah/core/exomatrix.py",
+    "src/hijaiyyah/nui/registry.py"
+  ],
+  "evidence": [
+    "tests/test_ai/test_nui_registry.py"
+  ],
+  "verification_method": {
+    "kind": "derive",
+    "derivation": "tail_one_below_full_rank"
+  },
+  "status": "CC",
+  "confidence": "recomputed",
+  "timestamp": "2026-09-22"
+}

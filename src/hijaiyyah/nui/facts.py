@@ -151,6 +151,18 @@ def no_computed_jump() -> bool:
     return not any(name in OpCode.__members__ for name in ("JALR", "JMPR", "CALLR"))
 
 
+def tail_one_below_full_rank() -> list[str]:
+    """Letters whose face over GF(2) is already inside its own cycle (tail 1)
+    and yet has rank below 5 -- each one a case where tail 1 is not
+    invertibility, which the docstrings of matrix_order and gf2_rank equate."""
+    from ..core.exomatrix import build_exomatrix, gf2_rank, matrix_order
+    from ..core.master_table import MASTER_TABLE
+    return [e.name for e in MASTER_TABLE.all_entries()
+            if matrix_order(e.vector, 2)[0] == 1
+            and gf2_rank(tuple(tuple(x % 2 for x in row)
+                               for row in build_exomatrix(e.vector))) < 5]
+
+
 DERIVATIONS: dict[str, Callable[[], object]] = {
     "codex_theta_u_rho_sum": codex_theta_u_rho_sum,
     "letter_count": letter_count,
@@ -161,6 +173,7 @@ DERIVATIONS: dict[str, Callable[[], object]] = {
     "data_memory_words": data_memory_words,
     "address_unification_holds": address_unification_holds,
     "no_computed_jump": no_computed_jump,
+    "tail_one_below_full_rank": tail_one_below_full_rank,
 }
 
 

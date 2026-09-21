@@ -1,0 +1,191 @@
+[
+ {
+  "key": "modul-ka-bah-mentah-masih-tak-bisa-ditempatkan",
+  "id": null,
+  "title": "Modul Ka'bah mentah masih tak bisa ditempatkan",
+  "section": "Terhalang — terbangun, tidak bisa dijalankan",
+  "status": "EH",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": []
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:10"
+ },
+ {
+  "key": "pixel-hdmi-rusak-dan-sambungannya-sendiri-sehat",
+  "id": null,
+  "title": "Pixel HDMI rusak, dan sambungannya sendiri sehat",
+  "section": "Terhalang — terbangun, tidak bisa dijalankan",
+  "status": "EH",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": []
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:20"
+ },
+ {
+  "key": "print-tidak-bisa-mencetak-angka-besar-di-silikon",
+  "id": "OFF-PRINT-SILICON",
+  "title": "PRINT tidak bisa mencetak angka besar di silikon",
+  "section": "Terhalang — terbangun, tidak bisa dijalankan",
+  "status": "EH",
+  "layer": 4,
+  "evidence": {
+   "commits": [],
+   "files": [
+    "NUI/PARITY.md",
+    "rtl/hcpu_top.v",
+    "rtl/programs/burn_in.hasm"
+   ]
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:100"
+ },
+ {
+  "key": "instruksi-sesudah-berhenti-ikut-menulis-register",
+  "id": null,
+  "title": "Instruksi sesudah berhenti ikut menulis register",
+  "section": "Terhalang — terbangun, tidak bisa dijalankan",
+  "status": "EH",
+  "layer": 4,
+  "evidence": {
+   "commits": [],
+   "files": [
+    "NUI/PARITY.md",
+    "rtl/hcpu_controller.v",
+    "rtl/hcpu_writeback.v",
+    "rtl/programs/subroutine.hasm",
+    "rtl/scripts/parity_board.py"
+   ]
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:138"
+ },
+ {
+  "key": "kartu-sd-gagal-init-sesudah-rekonfigurasi-di-tengah-pembacaan",
+  "id": null,
+  "title": "Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan",
+  "section": "Terhalang — terbangun, tidak bisa dijalankan",
+  "status": "EH",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": [
+    "rtl/programs/hal_sd.hasm"
+   ]
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:166"
+ },
+ {
+  "key": "21-opcode-belum-di-rtl",
+  "id": null,
+  "title": "21 opcode belum di RTL",
+  "section": "Belum ada",
+  "status": "AT",
+  "layer": null,
+  "evidence": {
+   "commits": [
+    "7582ae5",
+    "8e92825"
+   ],
+   "files": [
+    "docs/HISA_SPEC.md"
+   ]
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:193"
+ },
+ {
+  "key": "hfs-dan-hos",
+  "id": null,
+  "title": "HFS dan HOS",
+  "section": "Belum ada",
+  "status": "AT",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": [
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/tb/tb_hcpu_hfs_syscall.v",
+    "rtl/tb/tb_hcpu_trap_hreg.v"
+   ]
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:231"
+ },
+ {
+  "key": "m3-shell-jalur-keluaran-karakter-dan-resume-setelah-preemption",
+  "id": null,
+  "title": "M3 — shell: jalur keluaran karakter, dan resume setelah preemption",
+  "section": "Belum ada",
+  "status": "AT",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": [
+    "rtl/hcpu_fetch.v",
+    "rtl/hcpu_mmio.v",
+    "rtl/hcpu_pkg.vh",
+    "rtl/hcpu_top.v",
+    "rtl/hcpu_trap.v",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/tb/tb_hcpu_branch_trap_race.v",
+    "rtl/tb/tb_hcpu_emits.v",
+    "rtl/tb/tb_hcpu_kernel.v",
+    "rtl/tb/tb_hcpu_trap.v",
+    "rtl/tb/tb_hcpu_trap_epc_eret.v",
+    "rtl/tb/tb_hcpu_trap_redirect_shadow.v"
+   ]
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:347"
+ },
+ {
+  "key": "yang-h-kernel-belum-punya",
+  "id": null,
+  "title": "Yang H-Kernel belum punya",
+  "section": "Belum ada",
+  "status": "AT",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": []
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:588"
+ },
+ {
+  "key": "asic",
+  "id": null,
+  "title": "ASIC",
+  "section": "Belum ada",
+  "status": "EH",
+  "layer": null,
+  "evidence": {
+   "commits": [],
+   "files": []
+  },
+  "reproduced": null,
+  "fixed": false,
+  "source": "cosmictera-build/OFF.md:608"
+ }
+]

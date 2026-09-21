@@ -971,6 +971,60 @@ Urutannya ditegaskan: selesaikan burn-in 72 jam → `rtl/scripts/parity_board.py
 Lapis 5 → lapis berikutnya. *"Seluruh temuan papan nyata akan masuk ke basis
 pengetahuan NUI sebelum host Linux ditambahkan."*
 
+### Perintah pemilik, 22 September 2026 — NUI sambil menunggu burn-in
+
+Dua pesan pada hari yang sama, dan keduanya **tanpa papan, tanpa Lapis 5,
+tanpa mengubah compiler, dan tanpa mengganggu urutan yang sudah dikunci**.
+Yang pertama meminta spesifikasi USR, katalog Lapis 5, dan kamus HC
+(`c935270`). Yang kedua meminta lima hal yang *"paling aman dikerjakan
+sekarang"*: spesifikasi USR, kamus HC–Arab–Indonesia, dokumen HCL = HC
+diperluas, registry matematika Hijaiyyah, dan knowledge base NUI — yang
+setengah jadi di pohon kerja, untuk ditinjau dan dirapikan dalam enam domain:
+HC, HISA, RTL, OFF, PAPAN, NUI. Isinya di `NUI/SEMANTIK.md` dan `NUI/LAYERS.md`,
+tidak disalin ke sini (R1). Yang harus diketahui kuli berikutnya:
+
+- **Pergeseran dicatat, dan yang berlaku yang terakhir.** Contoh USR pesan
+  kedua memakai kunci huruf besar dan CONTEXT `Ubuntu`; pesan pertama memakai
+  kunci huruf kecil dan `ubuntu_host`. Bentuk lama kini **ditolak**, bukan
+  diterima berdampingan — satu nama untuk satu hal. Kamus dibaca per konsep,
+  bentuk pemilik `{KONSEP: {hc, arabic, indonesia}}`.
+- **Contoh pemilik diukur sampai HISA**: compiler HC menghasilkan lima
+  instruksi yang sama dengan HISA tulisan pemilik, dan interpreter mencetak
+  `30`. Langkah Arab → HC tetap terjemahan pemilik, tidak dijalankan.
+
+**Pesan ketiga, hari yang sama, mengunci lima hal yang tidak boleh dirapikan
+sendiri**, sebelum commit:
+
+1. **28 huruf.** Angka 29 di pesan sebelumnya salah ketik dan bukan bagian
+   spesifikasi.
+2. **`read_file` bukan kata kunci HC** — kelima kata kunci yang diputuskan
+   adalah bagian HC yang sudah ada; `read_file` tidak masuk tanpa keputusan
+   arsitektur baru.
+3. **`while` belum menjadi kata kunci tiga bahasa** — *"jangan menambahkannya
+   hanya karena umum di bahasa pemrograman"*. Diukur: `while` sudah kata kunci
+   HC dalam bahasa Inggris; yang ditahan adalah bentuk Arab dan Indonesianya.
+   Kamusnya kini empat: `let`, `println`, `if`, `fn`.
+4. **Arti STATE adalah usulan pemilik, belum dikunci**: keadaan aktual
+   target/objek saat aksi dinyatakan, bukan tahap pipeline — `present` sebagai
+   contoh, `compiled` sebagai metadata eksekusi. Dicatat di `NUI/spec/usr.json`;
+   kosakata STATE tidak diubah sampai dikunci.
+5. **Peta jangka panjang Lapis 0–9 adalah usulan roadmap**, bukan pengganti
+   dua belas lapis yang berlaku. Linux/Ubuntu, Command Center Docker, dan
+   integrasi KV260 tetap di luar implementasi aktif sampai urutannya dibuka.
+
+**Temuan matematis dipisahkan, tidak diperbaiki**: docstring `matrix_order`
+dan `gf2_rank` di `src/hijaiyyah/core/exomatrix.py` membaca ekor 1 sebagai
+invertibel, sedangkan tujuh huruf berekor 1 atas GF(2) punya rank di bawah 5 —
+Dal rank 3. Pemilik: *"Jangan memperbaiki matematika berdasarkan dugaan"*;
+selisihnya ditandai sebagai fakta Lapis 0 `nui.tail_one_is_not_invertibility`,
+dan NUI tidak memakai "ekor 1 berarti invertibel" sebagai aturan sampai
+definisinya dibuktikan.
+
+Menurut pemilik, yang kini berdiri di NUI: pengetahuan terverifikasi → graf
+repositori → pemahaman program → pemahaman eksekusi → paritas perangkat lunak
+↔ keras → kueri pengetahuan → registry Hijaiyyah → sintaks HC multibahasa →
+fondasi USR.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

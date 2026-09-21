@@ -236,7 +236,7 @@ Buku menetapkan tumpukan tujuh lapis:
 7  Aplikasi          program HC, alat analisis                 ✅
 6  HVM / HCPU        eksekusi bytecode (perangkat lunak/keras)  ✅
 5  Layanan Hybit     akses HAR, protokol HISAB, daemon pengaman ◐  HAR ada, HISAB belum layanan
-4  HFS               sistem berkas yang sadar hybit             ◐  empat operasi ada, persisten tersimulasi, belum di papan
+4  HFS               sistem berkas yang sadar hybit             ◐  empat operasi ada, bertahan melewati mati daya di papan (tahap 1, 18 September 2026); metadata, direktori, izin belum
 3  H-Kernel          manajemen proses, memori, dan I/O          ✅  4 dari 4
 2  HAL               lapisan abstraksi perangkat keras          ✅
 1  Perangkat keras   CPU/HCPU, memori, I/O                      ✅
@@ -620,8 +620,9 @@ Label: `EH`.
 ```
 menyala   matematika, bahasa, mesin, sistem operasi, kripto,
           jembatan (simulasi + bitstream HCPU di Tang Nano 20K)
-terhalang top level gabungan, penyimpanan persisten HFS
-belum ada 24 opcode, proses dinamis, ASIC
+terhalang modul Ka'bah mentah, pixel HDMI, PRINT di silikon, instruksi
+          sesudah berhenti, SD init sesudah rekonfigurasi
+belum ada 21 opcode, proses dinamis, ASIC
 ```
 
 Enam lapis berjalan. Silikon dedikasi (ASIC, bukan FPGA) belum dimulai, dan

@@ -52,6 +52,27 @@ tetap tertulis: K3–K6 dan R3.
 Penomoran kelima, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus:
 Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 10.
 
+**Peta jangka panjang pemilik, 22 September 2026 — usulan roadmap, bukan
+pengganti tabel di atas.** Pesan "sambil menunggu burn-in" menulis peta
+*sesudah Lapis 5*:
+
+```
+0 Fondasi   1 Program Graph   2 Program Understanding   3 Execution Understanding
+4 RTL Parity   5 Ubuntu Host   6 Docker   7 Python Runtime Semantics
+8 KV260   9 Universal Semantic Layer (USR)
+```
+
+Lapis 0–5-nya sama nomor dan isinya dengan tabel di atas. Lapis 6–9-nya
+**bukan penomoran ulang**: Docker, Python Runtime Semantics, KV260, dan USR
+tidak ada sebagai lapis di halaman ini, sedangkan pemahaman perangkat keras,
+operasi otonom, diagnostik otonom, mesin penalaran, rekayasa, dan komputasi
+universal tidak ada di peta itu. Pesan pemilik berikutnya, hari yang sama,
+menjawabnya: peta itu *"sebaiknya diperlakukan sebagai proposal roadmap,
+bukan overwrite terhadap Layer 0–11 yang sekarang menjadi struktur resmi."*
+Tabel dua belas lapis di atas tetap yang berlaku, dan Linux/Ubuntu, Command
+Center Docker, serta integrasi KV260 tetap di luar implementasi aktif sampai
+urutannya dibuka.
+
 ## Arahan kelima — lapisan semantik di atas mesin yang terbukti
 
 **Arahan pemilik, 21 September 2026, sesudah Lapis 4.** NUI bukan komputer
@@ -88,23 +109,60 @@ keduanya pada hari yang sama** (keputusannya di `AGENTS.md`):
   diperluas — bukan bahasa baru, dan bukan lapisan di atas HC. Nama di
   repositori tetap HC.
 
-Kata kunci multibahasa tahap pertama hanya lima, dan *"jangan tambah sampai
+Kata kunci multibahasa tahap pertama semula lima, dan *"jangan tambah sampai
 pipeline terbukti"*. Tabelnya tinggal di `NUI/spec/hc_kamus.json`, ditampilkan
 di [`SEMANTIK.md`](SEMANTIK.md), dengan dua koreksi terukur atas tabel pemilik:
 kata kunci HC untuk *function* adalah `fn`, dan `print` maupun `println`
-sama-sama fungsi bawaan HC.
+sama-sama fungsi bawaan HC. Sejak pesan ketiga pemilik, 22 September, kamusnya
+**empat**: `let`, `println`, `if`, `fn`. `read_file` bukan kata kunci HC dan
+tidak masuk tanpa keputusan arsitektur baru; permukaan tiga bahasa `while`
+ditahan sampai HC membutuhkannya dan pemilik memutuskannya, walau `while`
+sendiri sudah kata kunci HC dalam bahasa Inggris.
 
 **Spesifikasi lapisan semantik, 22 September 2026**, dikerjakan sambil
 menunggu burn-in atas permintaan pemilik: USR, kalimat tiga bahasa → USR,
 katalog perintah Lapis 5, dan kamus HC beserta aturan token parsernya.
 Semuanya JSON di `NUI/spec/`, dibaca `src/hijaiyyah/nui/usr.py` — yang
-memvalidasi dan memetakan ke argv tetapi **tidak menjalankan apa pun** — dan
-ditarik ke [`SEMANTIK.md`](SEMANTIK.md). Tiap entri menyebut miliknya:
+memvalidasi dan memetakan ke argv tetapi **tidak menjalankan perintah host
+apa pun** — dan ditarik ke [`SEMANTIK.md`](SEMANTIK.md). Tiap entri menyebut miliknya:
 `ditetapkan` untuk keputusan pemilik, `usulan` untuk usulan yang menunggu.
 Diukur untuk aturan token: dari 19 sumber HC di repositori tidak satu pun
 menulis dua huruf telanjang berdampingan, jadi membaca deretan huruf sebagai
 kata tidak mematahkan apa pun; dan `دالة` memuat `ة`, huruf di luar 28 yang
 lexer HC kenal.
+
+**Pesan kedua pemilik hari itu** meminta lima hal tanpa papan, tanpa Lapis 5,
+dan tanpa mengubah compiler, dan semuanya ada di halaman yang sama:
+
+- **Contoh pemilik sampai HISA, diukur.** `let angka = 10; let harga = 20;
+  println(angka + harga);` dikompilasi compiler HC menjadi lima instruksi yang
+  **sama instruksi demi instruksi** dengan HISA yang pemilik tulis tangan, dan
+  interpreter mencetak `30`. Langkah Arab → HC tetap terjemahan pemilik, tidak
+  dijalankan.
+- **USR bergeser, dan yang berlaku yang terakhir.** Kunci medan kini huruf
+  besar (`ACTION` … `STATE`), `ubuntu_host` menjadi `Ubuntu`, CONTEXT `HC`,
+  ACTION `PRINT`, OBJECT `VALUE`, dan STATE `requested` serta `compiled`
+  masuk dari dua contoh pemilik. Bentuk lama ditolak, tidak diterima
+  berdampingan. Arti STATE belum dikunci: pemilik mengusulkan *keadaan aktual
+  target/objek saat aksi dinyatakan, bukan tahap pipeline* — `present` sebagai
+  contoh, `compiled` sebagai metadata eksekusi — dan usulan itu dicatat tanpa
+  mengubah kosakata STATE.
+- **Kamus per konsep**, dalam bentuk pemilik `{KONSEP: {hc, arabic,
+  indonesia}}`: VARIABLE dan PRINT milik pemilik, IF dan FUNCTION usulan.
+  Diukur: `let` dan `println` sampai HISA; `if` dan `fn` diurai HC tetapi
+  ditolak compiler; lexer hari ini memecah tiap kata kunci Arab jadi huruf dan
+  membaca tiap kata Indonesia sebagai nama.
+- **Registry Hijaiyyah** (`src/hijaiyyah/nui/registry.py`): huruf → operator
+  → HC → HISA untuk **28** huruf; angka 29 di pesan pemilik salah ketik, kata
+  pemilik sendiri. Operatornya dua yang sudah ada: instruksi
+  `H0 <- H0 + v(huruf)` dan muka 5×5 sebagai peta linier, dengan periode yang
+  Codex JIM ukur. HC sudah menolak ke-28 huruf sebagai nama variabel.
+- **Satu selisih matematis ditandai, tidak diperbaiki**: docstring
+  `src/hijaiyyah/core/exomatrix.py` membaca ekor 1 sebagai invertibel,
+  sedangkan tujuh huruf berekor 1 punya rank di bawah 5. Ia fakta Lapis 0,
+  `nui.tail_one_is_not_invertibility`, dan NUI tidak memakai kalimat itu sebagai
+  aturan sampai definisinya dibuktikan.
+- **Knowledge base dalam enam domain** — lihat Lapis 9.
 
 Prioritasnya bukan bahasa: Lapis 5 lebih dulu, karena NUI harus mampu
 mengendalikan sistem nyata sebelum diajak bicara.
@@ -118,7 +176,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **24 modul**; `tests/test_ai/` berisi **231 tes**
+`src/hijaiyyah/nui/` berisi **27 modul**; `tests/test_ai/` berisi **296 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -139,14 +197,17 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.184 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.223 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
 | `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
 | `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
 | `board_parity.py` | apa yang dikirim ke papan dan apa yang harus kembali, dengan epilog pembaca register | `test_nui_board_parity.py` (10) |
-| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC — divalidasi, tidak dijalankan | `test_nui_usr.py` (23) |
+| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (34) |
+| `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
+| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (47) |
+| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC — dalam enam domain, tiap butir bersumber | `test_nui_knowledge.py` |
 
 ---
 
@@ -155,7 +216,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 **Tujuan.** Basis fakta yang tiap butirnya punya sumber, bukti, dan cara
 verifikasi.
 
-**Aset yang sudah ada.** `facts/` — 26 fakta di tujuh domain — dimuat dan
+**Aset yang sudah ada.** `facts/` — 27 fakta di tujuh domain — dimuat dan
 diperiksa `src/hijaiyyah/nui/facts.py`, dijaga
 `tests/test_integrity/test_facts.py`. Sumber lamanya tetap:
 `src/hijaiyyah/core/master_table.py` (tersegel),
@@ -164,14 +225,16 @@ diperiksa `src/hijaiyyah/nui/facts.py`, dijaga
 `cosmictera/TELEMETRY.md`, `src/hijaiyyah/nui/claims.py`,
 `src/hijaiyyah/nui/atom.py`.
 
-Dari 26 fakta: **9 dihitung ulang** tiap kali tes berjalan, **9 dibuktikan
+Dari 27 fakta: **10 dihitung ulang** tiap kali tes berjalan, **9 dibuktikan
 sebuah tes**, **8 diukur di papan** dan ditandai tidak bisa diulang tanpa
-perangkat kerasnya. Lima yang terakhir datang dari burn-in tingkat 1 yang
-tutup 21 September.
+perangkat kerasnya. Lima dari yang diukur di papan datang dari burn-in
+tingkat 1 yang tutup 21 September. Yang ke-27, 22 September, adalah sebuah
+selisih yang diketahui, bukan aturan: ekor 1 atas GF(2) bukan invertibilitas
+(`nui.tail_one_is_not_invertibility`).
 
-**Yang belum ada.** Cakupan — 26 fakta permulaan, bukan seluruh yang terukur
-di repo ini — dan sisi bertanya: basis ini bisa dimuat dan diperiksa, belum
-ditanyai per-objek.
+**Yang belum ada.** Cakupan — 27 fakta permulaan, bukan seluruh yang terukur
+di repo ini. Sisi bertanya kini ada: basis ini ditanyai per objek lewat
+`src/hijaiyyah/nui/knowledge.py` (Lapis 9).
 
 **Cara verifikasi.** Sudah berjalan: `derive` dihitung ulang, `pytest`
 menyebut node yang harus ada, `board` menyebut perintahnya. Tiga sabotase
@@ -199,8 +262,8 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 93 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 734 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.375 node, 3.610 edge**.
+`references`, tidak pernah dihitung sebagai import) dan 773 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.420 node, 3.707 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -249,7 +312,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.184 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.223 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -609,13 +672,30 @@ diberi tahu di mana harus melihat.
 **Tujuan.** Penalaran berbasis fakta, dengan urutan pemilik: fakta → relasi →
 inferensi → kesimpulan, dan penalaran tidak boleh mendahului bukti.
 
-**Aset yang sudah ada.** **Tidak ada** sebagai penalaran. Yang ada bahannya,
-dan kini tiga dari empat anak tangganya: fakta (`facts/`, Lapis 0), relasi
-(graf Lapis 1 dan graf program Lapis 2), dan jejak interpreter (Lapis 3,
-belum dibangun).
+**Aset yang sudah ada.** **Tidak ada** sebagai penalaran. Yang ada bahannya:
+fakta (`facts/`, Lapis 0), relasi (graf Lapis 1 dan graf program Lapis 2),
+jejak eksekusi (Lapis 3), dan paritas (Lapis 4).
+
+**Sejak 22 September 2026 ada basis pengetahuannya**, atas permintaan pemilik
+sebagai pondasi lapis ini: `src/hijaiyyah/nui/knowledge.py` menjawab *apa
+yang diketahui tentang* sebuah opcode, program, butir OFF, huruf, atau kata
+kunci HC dengan mengumpulkan yang sudah dipegang lapis-lapis itu, dan setiap
+butir jawaban membawa sumbernya. Jawabannya dikelompokkan ke **enam domain
+pemilik** — HC, HISA, RTL, OFF, PAPAN, NUI — dan tiap domain menyebut tempat
+yang ia baca; sebuah tes menolak butir yang duduk di domain yang tidak membaca
+sumbernya. Bentuk jawaban pertama pemilik hari itu (`facts`, `tests`,
+`board_findings`) masuk ke bentuk kedua: fakta di NUI, catatan papan di PAPAN,
+tes tetap di samping domain. Ia **penelusuran, bukan penalaran**: tidak ada
+inferensi dan tidak ada skor, dan yang tak bisa dijawab domain mana pun
+ditulis di `unknown`. Butir OFF-nya datang dari `src/hijaiyyah/nui/off_db.py`,
+yang membaca `cosmictera-build/OFF.md` jadi rekaman (`NUI/off_db.json`) tanpa
+menjadi salinan kedua; butir huruf dari registry Hijaiyyah
+(`src/hijaiyyah/nui/registry.py`). Dijaga `tests/test_ai/test_nui_knowledge.py`
+(47) dan `tests/test_ai/test_nui_registry.py` (7).
 
 **Yang belum ada.** Seluruh penalarannya. Lapis ini tidak bisa berdiri sebelum
-Lapis 1 punya grafnya — yang sekarang ada — dan Lapis 3 punya jejaknya.
+Lapis 1 punya grafnya dan Lapis 3 punya jejaknya — keduanya kini ada; yang
+belum adalah inferensinya.
 
 **Cara verifikasi.** Setiap kesimpulan harus bisa ditelusuri kembali ke bukti.
 

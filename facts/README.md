@@ -70,7 +70,7 @@ PYTHONPATH=src python3 -m hijaiyyah.nui.facts
 python3 -m pytest -q tests/test_integrity/test_facts.py
 ```
 
-**26 fakta di tujuh domain**: 9 dihitung ulang di sini (`recomputed`), 9
+**27 fakta di tujuh domain**: 10 dihitung ulang di sini (`recomputed`), 9
 dibuktikan sebuah tes (`test-backed`), 8 diukur di papan (`board-measured`).
 
 ```
@@ -84,7 +84,8 @@ fpga        jamrah_sweep_is_exhaustive · jamrah_node_sum ·
 hisa        address_unification · no_computed_jump · instruction_memory_words ·
             print_cannot_render_large_values · hijrah_length_one_counts
 nui         codex_theta_u_rho_sum · letter_count ·
-            exomatrix_embedding_is_the_most_conservative
+            exomatrix_embedding_is_the_most_conservative ·
+            tail_one_is_not_invertibility
 repository  data_memory_words · four_gates
 telemetry   host_time_is_not_the_truth · four_fields_have_no_source
 ```
