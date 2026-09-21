@@ -1,0 +1,19 @@
+{
+  "fact_id": "burnin.tier1_every_silence_was_the_host",
+  "statement": "Lima belas diam dalam lari 24 jam, dan tidak satu pun milik papan: tiap satunya host yang berhenti membaca, atau kurasan yang mengikutinya. Sembilan baris tak terbaca semuanya muncul sesudah diam, berbentuk angka yang menempel pada penanda berikutnya.",
+  "value": 15,
+  "source": [
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.jsonl"
+  ],
+  "evidence": [
+    "rtl/scripts/burn_in_report.py",
+    "cosmictera/TELEMETRY.md"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_burn_in.py"
+  },
+  "status": "CC",
+  "confidence": "test-backed",
+  "timestamp": "2026-09-21"
+}

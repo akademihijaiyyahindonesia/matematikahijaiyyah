@@ -1,0 +1,177 @@
+{
+  "source": "2026-09-20T01:35:38.015192+00:00",
+  "ended": "duration reached",
+  "hours_covered_by_samples": 23.995,
+  "host_seconds": 86405.4,
+  "board_seconds": 86401.5,
+  "heartbeats": 52282,
+  "cycles": 56210432,
+  "errors": 0,
+  "sd_read_failures": 0,
+  "unparsed_lines": 9,
+  "longest_silence_s": 927.509,
+  "longest_silence_at_s": 48564.2,
+  "silences": [
+    {
+      "at_s": 14496.5,
+      "silence_s": 140.202,
+      "host_advance_s": 140.2,
+      "board_advance_s": 56.7,
+      "beats_advanced": 36,
+      "whose": "the host"
+    },
+    {
+      "at_s": 46632.5,
+      "silence_s": 909.521,
+      "host_advance_s": 909.5,
+      "board_advance_s": 40.9,
+      "beats_advanced": 26,
+      "whose": "the host"
+    },
+    {
+      "at_s": 47591.3,
+      "silence_s": 927.491,
+      "host_advance_s": 927.5,
+      "board_advance_s": 941.3,
+      "beats_advanced": 598,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 48564.2,
+      "silence_s": 927.509,
+      "host_advance_s": 927.5,
+      "board_advance_s": 972.7,
+      "beats_advanced": 618,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 49516.4,
+      "silence_s": 914.943,
+      "host_advance_s": 914.9,
+      "board_advance_s": 964.8,
+      "beats_advanced": 613,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 49546.7,
+      "silence_s": 26.1,
+      "host_advance_s": 26.1,
+      "board_advance_s": 919.2,
+      "beats_advanced": 584,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 50518.6,
+      "silence_s": 925.626,
+      "host_advance_s": 925.6,
+      "board_advance_s": 17.3,
+      "beats_advanced": 11,
+      "whose": "the host"
+    },
+    {
+      "at_s": 50635.7,
+      "silence_s": 25.455,
+      "host_advance_s": 25.5,
+      "board_advance_s": 31.5,
+      "beats_advanced": 20,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 51593.5,
+      "silence_s": 926.675,
+      "host_advance_s": 926.7,
+      "board_advance_s": 26.8,
+      "beats_advanced": 17,
+      "whose": "the host"
+    },
+    {
+      "at_s": 52552.4,
+      "silence_s": 927.454,
+      "host_advance_s": 927.5,
+      "board_advance_s": 958.5,
+      "beats_advanced": 609,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 52747.4,
+      "silence_s": 149.57,
+      "host_advance_s": 149.6,
+      "board_advance_s": 972.7,
+      "beats_advanced": 618,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 53712.5,
+      "silence_s": 925.743,
+      "host_advance_s": 925.7,
+      "board_advance_s": 188.9,
+      "beats_advanced": 120,
+      "whose": "the host"
+    },
+    {
+      "at_s": 54685.3,
+      "silence_s": 927.418,
+      "host_advance_s": 927.4,
+      "board_advance_s": 971.1,
+      "beats_advanced": 617,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 55496.3,
+      "silence_s": 768.539,
+      "host_advance_s": 768.5,
+      "board_advance_s": 969.6,
+      "beats_advanced": 616,
+      "whose": "unclear"
+    },
+    {
+      "at_s": 55663.2,
+      "silence_s": 23.266,
+      "host_advance_s": 23.3,
+      "board_advance_s": 25.2,
+      "beats_advanced": 16,
+      "whose": "unclear"
+    }
+  ],
+  "anomaly_lines": {
+    "gap": 16,
+    "error": 0,
+    "unparsed": 9,
+    "launch": 1
+  },
+  "beats_emitted_by_board": 54882,
+  "beats_parsed_by_host": 52282,
+  "work_accounted": 1.0,
+  "sampled_beats": 1265,
+  "intervals_set_aside_for_silence": 10,
+  "heartbeat_interval_s_as_the_host_saw_it": {
+    "n": 1265,
+    "min": 1.0,
+    "p50": 2.012,
+    "p95": 2.021,
+    "p99": 2.041,
+    "max": 927.509,
+    "mean": 9.301194466403162
+  },
+  "cycles_per_second": {
+    "n": 1254,
+    "min": 638.6649979140573,
+    "p50": 650.4234527687142,
+    "p95": 660.099173553719,
+    "p99": 661.1920529801962,
+    "max": 777.7854500616522,
+    "mean": 650.6631014405768
+  },
+  "board_beat_period_s": 1.5744,
+  "cycle_ms": 1.5375,
+  "board_minus_host_s": {
+    "n": 1264,
+    "min": -929.6000000000058,
+    "p50": -3.8000000000029104,
+    "p95": -3.0,
+    "p99": -2.7999999999999545,
+    "max": -2.699999999999818,
+    "mean": -11.232674050632845
+  },
+  "drift_per_hour_s": -0.0292
+}

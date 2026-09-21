@@ -916,8 +916,30 @@ putaran kurang), pengurai host yang membaca tujuh angka siklus pertama sebagai
 detak enam-kolom (melaporkan 3.072 kesalahan yang tidak ada), dan inisialisasi
 kartu tanpa percobaan ulang.
 
-**Lari 24 jam berjalan sejak 01:35 UTC**, dan angkanya belum ada di sini —
-halaman ini mencatat yang sudah keluar dari papan, bukan yang sedang berjalan.
+**Tingkat 1 tutup 21 September 2026, 24 jam penuh, 0 error.**
+
+```
+86.405,4 detik jam host      86.401,5 detik jam papan sendiri
+54.882 detak dipancarkan     52.282 terurai host
+56.210.432 siklus            0 error   0 baca kartu gagal
+kerja terhadap jam papan sendiri: 1,0
+```
+
+Angka terakhir itu yang menjawab pertanyaan yang tidak bisa dijawab diamnya:
+selama host tidak membaca — dan ia berhenti lima belas kali, dua di antaranya
+lebih dari lima belas menit — tidak ada yang akan memperlihatkan papan yang
+berhenti lalu jalan lagi. Kerja yang papan laporkan sendiri, dibagi lajunya,
+menutupi seluruh uptime-nya. **Papan tidak pernah berhenti.**
+
+Garis dasar yang ditinggalkannya, beku di
+`cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json`:
+**650,4 siklus per detik** (1,5375 ms per siklus), irama detak 1,5744 detik,
+dan jam papan terhadap jam host hanyut **−0,0292 detik per jam** — 8,1 ppm
+selama sehari penuh.
+
+**Lima belas diam, tidak satu pun milik papan.** Semuanya host yang berhenti
+membaca, dan kurasan yang mengikutinya. Sembilan baris tak terbaca, semuanya
+sesudah diam, dan semuanya dibuang utuh.
 
 ---
 

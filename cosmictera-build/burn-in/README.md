@@ -120,34 +120,63 @@ dan itu prioritas 7.
 
 | lari | tingkat | hasil |
 |---|---|---|
-| `20260920T013538Z-burn-in-24h` | 24 jam | **sedang berjalan** sejak 20 September 2026 01:35 UTC |
+| `20260920T013538Z-burn-in-24h` | 24 jam | **tutup, 0 error** — 21 September 2026 01:35 UTC |
 
 Tingkat 72 jam dan 168 jam belum dijalankan.
 
-**Yang sudah terlihat pada 15,5 jam pertama**, dan bukan hasil akhir: papan
-memancarkan **35.525 detak**, host sempat mengurai 32.915; **36,4 juta
-siklus**; **0 error, 0 baca kartu gagal**; laju **650,4 siklus per detik**
-(1,5375 ms kerja per siklus).
+## Tingkat 1 — hasil, 24 jam penuh
 
-**Enam belas diam, dan setiap satunya milik host.** Satu 140 detik pada detik
-14.496, lalu sejak detik ±46.600 sebuah pola berulang: host berhenti membaca
-±925 detik, **setiap ±960 detik**. Detak yang datang sesudahnya adalah detak
-lama, jam papan tertinggal lalu mengejar, dan ratusan detak terkuras dalam
-puluhan detik.
+```
+86.405,4 detik jam host      86.401,5 detik jam papan sendiri
+54.882 detak dipancarkan papan   52.282 terurai host
+56.210.432 siklus
 
-**Papan tidak pernah berhenti, dan itu diukur — bukan disimpulkan dari
-diamnya.** Selama host tidak membaca, tidak ada yang akan memperlihatkan mesin
-yang berhenti lalu jalan lagi. Yang menutup titik buta itu satu angka: kerja
-yang papan laporkan, dibagi laju terukurnya, dibandingkan dengan uptime papan
-sendiri. Sesudah sepuluh diam yang totalnya lebih dari dua jam, angkanya
-**1,0002** — kerjanya menutupi waktunya.
+0 error                      0 baca kartu gagal
+kerja terhadap jam papan sendiri: 1,0
+```
 
-**Sembilan baris tak terbaca, dan semuanya sesudah diam.** Bentuknya sama:
-`4H`, `6062H`, `655620H`, `HH` — sebuah angka yang menempel pada penanda
-berikutnya, yaitu satu baris baru yang **hilang** karena penyangga penerima
-meluap selama host diam. Pengurainya membuang baris seperti itu **utuh**;
-kalau ia memeras digitnya, `6062H` akan jadi angka 6062 di dalam sebuah detak
-dan tak seorang pun tahu.
+**Keempat kriteria tingkat 1, dijawab dengan angkanya:**
+
+| kriteria pemilik | hasil |
+|---|---|
+| tidak ada deadlock | **kerja menutupi waktu, 1,0** — papan tidak pernah berhenti, termasuk di dalam diam-diam panjang yang host tidak melihat |
+| tidak ada korupsi memori | **0 error** dari 54.882 detak; enam belas kata, dua jumlah, dan tumpukan dibandingkan tiap siklus |
+| tidak ada watchdog timeout | **tidak bisa diukur — tidak ada watchdog di desain ini**, dan itu dikatakan di muka, bukan dilewatkan |
+| tidak ada serial menggantung | **9 baris tak terbaca**, semuanya sesudah host berhenti membaca, dan tiap satunya dibuang utuh |
+
+**Garis dasar yang ditinggalkannya** — ini yang lapisan pengawasan nanti
+bandingkan, dan ia beku di `20260920T013538Z-burn-in-24h-baseline.json`:
+
+```
+laju kerja        638,7 / 650,4 / 660,1 / 661,2 siklus per detik  (min p50 p95 maks)
+kerja per siklus  1,5375 ms
+irama detak papan 1,5744 detik
+jam papan − host  −3,8 detik, kemiringan −0,0292 detik/jam
+```
+
+Kemiringan itu **8,1 ppm** terhadap jam host selama sehari penuh — osilator
+27 MHz papan diukur relatif terhadap jam mesin pengembangan, bukan terhadap
+standar frekuensi.
+
+**Lima belas diam, dan tidak satu pun milik papan.** Satu 140 detik, lalu
+empat belas sejak jam ke-12,9 dengan pola ±925 detik tiap ±960 detik. Setengah
+digolongkan "host" dan setengah "unclear"; yang "unclear" adalah **kurasan**
+yang mengikuti tiap diam — ratusan detak tiba sekaligus, jadi jam papan maju
+lebih jauh daripada jam host di interval itu. Keduanya sisi dari kejadian yang
+sama, dan tak satu pun papan yang berhenti.
+
+**Sembilan baris tak terbaca, semuanya sesudah diam**, dan bentuknya sama:
+`4H`, `6062H`, `655620H`, `HH` — sebuah angka menempel pada penanda
+berikutnya, yaitu satu baris baru yang hilang karena penyangga penerima meluap
+selagi host pergi. Pengurainya membuang baris seperti itu utuh. Kalau ia
+memeras digitnya, `6062H` akan jadi angka 6062 di dalam sebuah detak dan tak
+seorang pun tahu.
+
+**Yang tidak dibuktikan lari ini**, supaya tidak tumbuh lebih besar dari
+buktinya: ia satu lari, di satu papan, pada satu suhu ruangan yang tidak
+diukur, dengan satu kartu. Ia mengatakan mesin ini bekerja sehari penuh tanpa
+satu pun kesalahan yang bisa dilihat pemeriksaannya sendiri — bukan bahwa
+tiap papan akan begitu.
 
 ## Dua temuan dari membangun lab ini
 

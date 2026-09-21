@@ -1,0 +1,18 @@
+{
+  "fact_id": "burnin.tier1_cycle_rate",
+  "statement": "Laju kerja garis dasar: 650,4 siklus per detik (median), 1,5375 ms per siklus, dengan irama detak papan 1,5744 detik. Satu siklus adalah sapuan Jamrah 256 byte, 28 vektor codex dari ROM, enam belas kata memori, satu PUSH/POP, dan satu sektor kartu dibaca.",
+  "value": 650.4,
+  "source": [
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json"
+  ],
+  "evidence": [
+    "cosmictera-build/burn-in/README.md"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "python3 rtl/scripts/burn_in_report.py <id>.jsonl"
+  },
+  "status": "CC",
+  "confidence": "board-measured",
+  "timestamp": "2026-09-21"
+}

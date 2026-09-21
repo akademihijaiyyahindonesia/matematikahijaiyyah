@@ -70,11 +70,13 @@ PYTHONPATH=src python3 -m hijaiyyah.nui.facts
 python3 -m pytest -q tests/test_integrity/test_facts.py
 ```
 
-**21 fakta di tujuh domain**: 9 dihitung ulang di sini (`recomputed`), 7
-dibuktikan sebuah tes (`test-backed`), 5 diukur di papan (`board-measured`).
+**26 fakta di tujuh domain**: 9 dihitung ulang di sini (`recomputed`), 9
+dibuktikan sebuah tes (`test-backed`), 8 diukur di papan (`board-measured`).
 
 ```
-burnin      counter_wrap_seconds · no_watchdog_exists
+burnin      counter_wrap_seconds · no_watchdog_exists · tier1_zero_errors ·
+            tier1_work_accounts_for_the_time · tier1_cycle_rate ·
+            tier1_clock_drift · tier1_every_silence_was_the_host
 crypto      kabah_avalanche_single_bit · kabah_security_rests_on_layer_three ·
             kabah_wrapper_has_no_length_field
 fpga        jamrah_sweep_is_exhaustive · jamrah_node_sum ·

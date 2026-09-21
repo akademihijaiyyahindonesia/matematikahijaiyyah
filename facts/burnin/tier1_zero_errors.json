@@ -1,0 +1,19 @@
+{
+  "fact_id": "burnin.tier1_zero_errors",
+  "statement": "Burn-in tingkat 1: 24 jam penuh, 54.882 detak dipancarkan papan, 56.210.432 siklus, 0 error dan 0 baca kartu gagal. Tiap siklus membandingkan enam belas kata memori, dua jumlah terhitung, dan satu round-trip tumpukan terhadap apa yang siklus pertama hasilkan.",
+  "value": 0,
+  "source": [
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.json"
+  ],
+  "evidence": [
+    "cosmictera-build/burn-in/README.md",
+    "rtl/programs/burn_in.hasm"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "python3 rtl/scripts/burn_in.py --port <port> --hours 24 --label 24h"
+  },
+  "status": "CC",
+  "confidence": "board-measured",
+  "timestamp": "2026-09-21"
+}

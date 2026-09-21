@@ -1,0 +1,19 @@
+{
+  "fact_id": "burnin.tier1_work_accounts_for_the_time",
+  "statement": "Kerja yang papan laporkan sendiri, dibagi laju terukurnya, menutupi seluruh uptime papan: 1,0. Itu yang menutup titik buta lima belas diam — selama host tidak membaca, tidak ada lain yang akan memperlihatkan papan berhenti lalu jalan lagi.",
+  "value": 1.0,
+  "source": [
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json"
+  ],
+  "evidence": [
+    "rtl/scripts/burn_in_report.py",
+    "tests/test_integrity/test_burn_in.py"
+  ],
+  "verification_method": {
+    "kind": "pytest",
+    "node": "tests/test_integrity/test_burn_in.py"
+  },
+  "status": "CC",
+  "confidence": "test-backed",
+  "timestamp": "2026-09-21"
+}

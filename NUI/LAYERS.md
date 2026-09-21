@@ -81,7 +81,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 **Tujuan.** Basis fakta yang tiap butirnya punya sumber, bukti, dan cara
 verifikasi.
 
-**Aset yang sudah ada.** `facts/` — 21 fakta di tujuh domain — dimuat dan
+**Aset yang sudah ada.** `facts/` — 26 fakta di tujuh domain — dimuat dan
 diperiksa `src/hijaiyyah/nui/facts.py`, dijaga
 `tests/test_integrity/test_facts.py`. Sumber lamanya tetap:
 `src/hijaiyyah/core/master_table.py` (tersegel),
@@ -90,11 +90,12 @@ diperiksa `src/hijaiyyah/nui/facts.py`, dijaga
 `cosmictera/TELEMETRY.md`, `src/hijaiyyah/nui/claims.py`,
 `src/hijaiyyah/nui/atom.py`.
 
-Dari 21 fakta: **9 dihitung ulang** tiap kali tes berjalan, **7 dibuktikan
-sebuah tes**, **5 diukur di papan** dan ditandai tidak bisa diulang tanpa
-perangkat kerasnya.
+Dari 26 fakta: **9 dihitung ulang** tiap kali tes berjalan, **9 dibuktikan
+sebuah tes**, **8 diukur di papan** dan ditandai tidak bisa diulang tanpa
+perangkat kerasnya. Lima yang terakhir datang dari burn-in tingkat 1 yang
+tutup 21 September.
 
-**Yang belum ada.** Cakupan — 21 fakta permulaan, bukan seluruh yang terukur
+**Yang belum ada.** Cakupan — 26 fakta permulaan, bukan seluruh yang terukur
 di repo ini — dan sisi bertanya: basis ini bisa dimuat dan diperiksa, belum
 ditanyai per-objek.
 

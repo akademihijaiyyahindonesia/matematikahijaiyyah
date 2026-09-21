@@ -1,0 +1,19 @@
+{
+  "fact_id": "burnin.tier1_clock_drift",
+  "statement": "Jam papan terhadap jam host hanyut −0,0292 detik per jam selama 24 jam — 8,1 ppm. Diukur relatif terhadap jam mesin pengembangan, bukan terhadap standar frekuensi.",
+  "value": -0.0292,
+  "source": [
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json"
+  ],
+  "evidence": [
+    "cosmictera-build/burn-in/README.md",
+    "cosmictera/TELEMETRY.md"
+  ],
+  "verification_method": {
+    "kind": "board",
+    "command": "python3 rtl/scripts/burn_in_report.py <id>.jsonl"
+  },
+  "status": "CC",
+  "confidence": "board-measured",
+  "timestamp": "2026-09-21"
+}
