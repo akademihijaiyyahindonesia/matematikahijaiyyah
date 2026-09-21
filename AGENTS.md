@@ -893,18 +893,32 @@ kalau fungsinya sudah ada; tiap lapis terverifikasi lewat tes, eksekusi, dan
 perangkat keras nyata; tidak ada asumsi.
 
 Peta arahan ini terhadap aset yang terukur ada di `NUI/LAYERS.md`, tidak
-disalin ke sini (R1). **Ini arah, bukan butir kerja yang sudah dibuka**: lima
-hal di dalamnya adalah keputusan desain yang belum diambil. Kelimanya:
+disalin ke sini (R1).
 
-- apakah HCL = HC;
-- kata kunci Arab dan Indonesia;
-- arti nama Arab di HC, yang hari ini adalah literal hybit;
-- bentuk USR;
-- host Linux dan perintah yang boleh dijalankannya.
+**Keputusan pemilik, hari yang sama**, sesudah peta itu dilaporkan: *"NUI
+tidak boleh dimulai dari bahasa Arab. NUI harus dimulai dari komputasi yang
+sudah terbukti."*
 
-Arahan ini juga menyentuh larangan `CONTRIBUTING.md` tentang huruf sebagai
-makna. Tidak ada implementasinya yang boleh berangkat sebelum pemilik
-menetapkan kelimanya.
+1. **HCL = HC**, diperluas. Bukan bahasa baru dan bukan lapisan di atas HC —
+   Arab, Indonesia, dan Inggris masuk ke HC, lalu HISA, RTL, FPGA, perangkat
+   keras. Nama di repositori tetap HC: satu nama untuk satu hal.
+2. **Huruf Hijaiyyah tunggal tetap objek matematika** — *Hybit Symbol*, bukan
+   nama variabel. `متغير س = 10` tidak sah, karena `س` sudah punya arti
+   matematis. Nama variabel Arab adalah kata penuh: `متغير العدد = 10`.
+3. **USR adalah lima medan** — ACTION, OBJECT, TARGET, CONTEXT, STATE. Bukan
+   vektor huruf, bukan embedding, bukan LLM. `اقرأ ملف`, `baca file`, dan
+   `read file` menuju USR yang sama, `{"action": "read", "object": "file"}`.
+   Ini menjaga larangan `CONTRIBUTING.md` tentang huruf sebagai makna.
+4. **Kata kunci multibahasa tahap pertama hanya lima** — `let`, `print`, `if`,
+   `while`, `function`, dengan padanan Arab dan Indonesia di `NUI/LAYERS.md`.
+   *"Belum lebih. Jangan tambah sampai pipeline terbukti."*
+5. **Prioritas berikutnya Lapis 5, Ubuntu Linux Layer — bukan bahasa**:
+   *"NUI harus mampu mengendalikan sistem nyata terlebih dahulu."* Target
+   awalnya di `NUI/LAYERS.md`. Urutan sesudahnya tetap 6 → 11.
+
+**Satu penghalang terukur hari itu**: tidak ada host Ubuntu. Mesin
+pengembangan ini macOS 26.6.2 arm64 tanpa perkakas VM atau kontainer, dan
+memasangnya adalah unduhan pihak ketiga — butuh izin pemilik.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

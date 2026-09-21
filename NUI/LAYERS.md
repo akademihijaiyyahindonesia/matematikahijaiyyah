@@ -70,21 +70,37 @@ Diukur terhadap repositori pada hari yang sama:
 |---|---|---|
 | bahasa komputasi | HC — *Hybit Code* (`teknologi/ISTILAH.md` baris 33): lexer, parser, dan evaluator di `src/hijaiyyah/language/`, compiler ke H-ISA di `src/hijaiyyah/compiler/codegen.py` | kata kunci selain Inggris: `src/hijaiyyah/language/tokens.py` hanya punya `let`, `fn`, `if`, dan seterusnya |
 | contoh pemilik, `متغير س = 10` / `متغير ص = 20` / `اطبع س + ص` | bentuk HC-nya, `let s = 10; let p = 20; println(s + p);`, jadi lima instruksi (`MOVI MOVI ADD PRINT HALT`); interpreter mencetak `30`, RTL mengirim `30\n` ke kabel | kata kunci Arab ditolak parser; nama variabel Arab juga ditolak, karena di HC huruf Hijaiyyah telanjang adalah **literal hybit** (`src/hijaiyyah/language/lexer.py` baris 89) — `let س = 10` menjawab `Expected variable name (got HIJAIYYAH 'س')` |
-| compiler Arab ↔ HISA | jalur HC → H-ISA → interpreter → RTL (`698dd3e`, Lapis 4) | pemetaan kata Arab dan Indonesia ke konstruksi HC |
-| USR | — | tidak ada definisinya di repositori |
+| compiler Arab ↔ HISA | jalur HC → H-ISA → interpreter → RTL (`698dd3e`, Lapis 4) | pemetaan kata Arab dan Indonesia ke konstruksi HC — lima kata kunci ditetapkan pemilik, di bawah |
+| USR | — | implementasinya; bentuknya ditetapkan pemilik, di bawah |
 | antarmuka bahasa alami | `src/hijaiyyah/ai/runtime.py`, yang menjalankan program bergaya HC lewat model Ollama lokal | versi yang deterministik: arahan pertama menolak pembungkus LLM, dan aturan Lapis 3 menolak probabilitas |
-| Linux sebagai host | — (Lapis 5, **AT**); mesin pengembangan ini macOS arm64 | host Ubuntu, dan daftar perintah host yang boleh dijalankan |
+| Linux sebagai host | — (Lapis 5, **AT**); mesin pengembangan ini macOS 26.6.2 arm64, dan tidak ada `docker`, `podman`, `colima`, `lima`, `multipass`, `qemu`, UTM, atau OrbStack terpasang | host Ubuntu itu sendiri |
 
-**Dua batas yang sudah tertulis menyentuh arahan ini.**
+**Dua batas yang tertulis menyentuh arahan ini, dan pemilik menjawab
+keduanya pada hari yang sama** (keputusannya di `AGENTS.md`):
 
 - `CONTRIBUTING.md` melarang, pada level konsep, *"memperlakukan huruf sebagai
-  bunyi/makna"*. Kata Arab sebagai kata kunci (`اطبع` → `PRINT`) adalah kata →
-  operasi, bukan huruf → makna. Tetapi langkah *makna → matematika Hijaiyyah*
-  menyentuh larangan itu bila makna diwakili vektor huruf — bentuk yang sama
-  yang sudah dicatat sebagai batas semantic memory, 18 September 2026.
-- Dua nama untuk satu hal adalah cacat (`7582ae5`). HCL dan HC sama-sama
-  disebut bahasa tingkat tinggi; apakah HCL adalah HC, atau lapisan di atasnya,
-  belum ditetapkan.
+  bunyi/makna"*. Jawabannya: USR **bukan** vektor huruf, bukan embedding, bukan
+  LLM, melainkan lima medan — ACTION, OBJECT, TARGET, CONTEXT, STATE — dan
+  huruf Hijaiyyah tunggal tetap objek matematika. Jadi `متغير س = 10` **tidak
+  sah**, persis seperti yang parser hari ini jawab; nama variabel Arab adalah
+  kata penuh, `متغير العدد = 10`.
+- Dua nama untuk satu hal adalah cacat (`7582ae5`). Jawabannya: **HCL = HC**,
+  diperluas — bukan bahasa baru, dan bukan lapisan di atas HC. Nama di
+  repositori tetap HC.
+
+Kata kunci multibahasa tahap pertama hanya lima, dan *"jangan tambah sampai
+pipeline terbukti"*:
+
+| HC | Arab | Indonesia |
+|---|---|---|
+| `let` | `متغير` | `variabel` |
+| `print` | `اطبع` | `cetak` |
+| `if` | `اذا` | `jika` |
+| `while` | `بينما` | `selama` |
+| `function` | `دالة` | `fungsi` |
+
+Prioritasnya bukan bahasa: Lapis 5 lebih dulu, karena NUI harus mampu
+mengendalikan sistem nyata sebelum diajak bicara.
 
 **Satu ketidakcocokan kecil di jalur yang akan dipakai arahan ini.**
 `src/hijaiyyah/compiler/codegen.py` membagikan register sampai R17, sedangkan
@@ -402,17 +418,31 @@ sesudah burn-in.
 
 ## Lapis 5 — Integrasi Linux
 
-**Tujuan.** Memahami host nyata: menjalankan program, membaca log,
-filesystem, proses, service, runtime. Targetnya Ubuntu Linux.
+**Tujuan.** Lapis ini adalah **Ubuntu Linux Layer** (keputusan pemilik,
+21 September 2026): NUI mengendalikan dan membaca host nyata. Target awalnya,
+dari pemilik:
+
+| wilayah | operasi |
+|---|---|
+| filesystem | baca, tulis, salin, pindah, hapus berkas |
+| proses | `ps`, `top`, `kill` |
+| jaringan | `ping`, `curl`, `wget` |
+| service | `systemctl`, `journalctl` |
+| kontainer | `docker`, `podman` |
 
 **Aset yang sudah ada.** **Tidak ada.** `AGENTS.md` sudah mencatatnya: tidak
 ada satu pun sisi host di repositori ini — tidak ada driver, layanan,
 pustaka, kontainer, atau aplikasi. Yang ada hanya perkakas serial di
 `rtl/scripts/`, dan mesin pengembangannya macOS, bukan Ubuntu.
 
-**Yang belum ada.** Seluruhnya.
+**Yang belum ada.** Seluruhnya, mulai dari host Ubuntu itu sendiri: diukur
+21 September 2026, mesin ini macOS 26.6.2 arm64 tanpa satu pun perkakas VM
+atau kontainer, dan tanpa host SSH yang terdaftar. Memasangnya adalah unduhan
+pihak ketiga, dan unduhan butuh izin pemilik.
 
-**Cara verifikasi.** Belum bisa ditetapkan sebelum ada yang dibangun.
+**Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
+dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Belum
+bisa dijalankan: host belum ada.
 
 **Syarat selesai.** Belum ditetapkan.
 
