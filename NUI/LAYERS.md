@@ -474,12 +474,23 @@ baca**:
 
 **Image VM adalah bagian baseline Lapis 5** (pemilik, 22 September 2026):
 SHA256-nya diverifikasi sebelum dipakai, checksum-nya disimpan di
-dokumentasi, dan versi persisnya dicatat. Yang disiapkan, **belum diunduh**:
+dokumentasi, dan versi persisnya dicatat. **Diunduh 22 September 2026**, atas
+izin pemilik hari itu, ke `~/cosmictera-layer5/downloads/` — di luar
+repositori, karena repositori ini publik dan image-nya 591 MiB. **Belum
+dipasang dan belum dijalankan**: Lapis 5 dimulai sesudah langkah papan.
 
-| berkas | sumber | ukuran |
-|---|---|---|
-| `lima-2.2.0-Darwin-arm64.tar.gz`, dengan `SHA256SUMS` | rilis resmi Lima di GitHub, Apache-2.0 | 37,6 MB |
-| `ubuntu-24.04-server-cloudimg-arm64.img`, dengan `SHA256SUMS` | cloud-images.ubuntu.com, Ubuntu 24.04 LTS | 591 MB |
+| berkas | versi persis dan sumber | byte | SHA256 |
+|---|---|---:|---|
+| `lima-2.2.0-Darwin-arm64.tar.gz` | Lima v2.2.0, rilis resmi github.com/lima-vm/lima, Apache-2.0 | 37.586.365 | `bbdef91774885a0d05f7b048c4eb89ae2bcf3a0c252ae7ca7934e63df76d93c3` |
+| `ubuntu-24.04-server-cloudimg-arm64.img` | Ubuntu 24.04 LTS, seri `release-20260911`, cloud-images.ubuntu.com/releases/noble/release-20260911/ | 619.621.888 | `7b682958a67ff5de068e36de6af8b75fa645d296af5a70d6500527f6a33781db` |
+
+Keduanya **cocok** dengan `SHA256SUMS` resmi rilisnya masing-masing. Berkas
+`SHA256SUMS` Lima sendiri bernilai `7da5160e…97312a5f`, sama dengan yang
+ditampilkan halaman rilis GitHub; milik Ubuntu `89be81c6…0747b0185`. Yang
+**tidak** diverifikasi: tanda tangan GPG kedua berkas checksum itu
+(`SHA256SUMS.asc`, `SHA256SUMS.gpg`) — butuh kunci penandatangannya, unduhan
+lain. Jadi yang terbukti adalah berkas utuh sesuai yang diumumkan server,
+bukan bahwa server itu sendiri asli.
 
 **Yang belum ada.** Seluruhnya, mulai dari host itu sendiri: diukur
 21 September 2026, mesin ini macOS 26.6.2 arm64 tanpa satu pun perkakas VM
