@@ -1425,6 +1425,44 @@
       "key": 11,
       "value": "xxxxxxxx"
      }
+    },
+    {
+     "index": 0,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 1,
+      "reads_mmio": [],
+      "step": 1,
+      "stopped_here": true,
+      "where": "<stop-probe:halt-then-print>:2"
+     },
+     "kind": "TX",
+     "program": "stop-probe:halt-then-print",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 7,
+      "key": 0,
+      "value": 53
+     }
+    },
+    {
+     "index": 0,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 2,
+      "reads_mmio": [],
+      "step": 2,
+      "stopped_here": true,
+      "where": "<stop-probe:halt-then-store>:3"
+     },
+     "kind": "RAM",
+     "program": "stop-probe:halt-then-store",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 6,
+      "key": 256,
+      "value": 5
+     }
     }
    ],
    "python": "SAME ENGINE",
@@ -2626,7 +2664,10 @@
     "rtl/programs/user_mode.hasm",
     "rtl/tb/hfs_persist_probe.hasm",
     "rtl/tb/hfs_syscall_probe.hasm",
-    "rtl/tb/prog_load_probe.hasm"
+    "rtl/tb/prog_load_probe.hasm",
+    "stop-probe:halt-then-print",
+    "stop-probe:halt-then-store",
+    "stop-probe:ret-then-print"
    ],
    "board": "PARITY",
    "board_programs": [
@@ -2968,6 +3009,25 @@
       "cycle": 10,
       "key": 11,
       "value": 1
+     }
+    },
+    {
+     "index": 0,
+     "interpreter": {
+      "opcode": "RET",
+      "pc": 1,
+      "reads_mmio": [],
+      "step": 1,
+      "stopped_here": true,
+      "where": "<stop-probe:ret-then-print>:2"
+     },
+     "kind": "TX",
+     "program": "stop-probe:ret-then-print",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 7,
+      "key": 0,
+      "value": 53
      }
     }
    ],
@@ -7988,6 +8048,177 @@
     "halted": false
    },
    "status": "UNKNOWN"
+  },
+  "stop-probe:halt-then-print": {
+   "agreed_through_step": 0,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 0,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 1,
+     "reads_mmio": [],
+     "step": 1,
+     "stopped_here": true,
+     "where": "<stop-probe:halt-then-print>:2"
+    },
+    "kind": "TX",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 7,
+     "key": 0,
+     "value": 53
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 2
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4016,
+    "cycles": 7,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 1
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "stop-probe:halt-then-store": {
+   "agreed_through_step": 0,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 0,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 2,
+     "reads_mmio": [],
+     "step": 2,
+     "stopped_here": true,
+     "where": "<stop-probe:halt-then-store>:3"
+    },
+    "kind": "RAM",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 6,
+     "key": 256,
+     "value": 5
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 1,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "stop-probe:ret-then-print": {
+   "agreed_through_step": 0,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 0,
+    "interpreter": {
+     "opcode": "RET",
+     "pc": 1,
+     "reads_mmio": [],
+     "step": 1,
+     "stopped_here": true,
+     "where": "<stop-probe:ret-then-print>:2"
+    },
+    "kind": "TX",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 7,
+     "key": 0,
+     "value": 53
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 2
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4016,
+    "cycles": 7,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 1
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
   }
  },
  "python": {

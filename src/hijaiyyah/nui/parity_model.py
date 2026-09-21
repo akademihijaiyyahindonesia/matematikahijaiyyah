@@ -92,6 +92,19 @@ LADDER = "print-ladder"
 LADDER_SOURCE = "        MOVI  R1, 1\n        PRINT R1\n" + (
     "        SHLI  R1, R1, 1\n        PRINT R1\n" * 31) + "        HALT\n"
 
+#: One word behind a stop, of each kind that leaves a trace outside the
+#: register file. The word after HALT, or after a RET that stops the machine
+#: as HC-05, was found committing its register write on the RTL; these ask
+#: whether a store and a print commit too -- and a print is the one the board
+#: can show, because the wire is all the board has.
+STOP_PROBES = {
+    "stop-probe:halt-then-store": "        MOVI  R1, 5\n        MOVI  R2, 0\n"
+                                  "        HALT\n        STORE R1, R2, 0x100\n",
+    "stop-probe:halt-then-print": "        MOVI  R1, 5\n        HALT\n        PRINT R1\n",
+    "stop-probe:ret-then-print": "        MOVI  R1, 5\n        RET\n        PRINT R1\n"
+                                "        HALT\n",
+}
+
 
 @dataclass
 class Program:
@@ -113,6 +126,10 @@ def corpus() -> list[Program]:
     words = assemble(LADDER_SOURCE)
     out.append(Program(LADDER, words, {pc: ("<print-ladder>", pc + 1)
                                        for pc in range(len(words))}, {}))
+    for name, text in sorted(STOP_PROBES.items()):
+        words = assemble(text)
+        out.append(Program(name, words, {pc: (f"<{name}>", pc + 1)
+                                         for pc in range(len(words))}, {}))
     return out
 
 
@@ -167,9 +184,17 @@ def _tx_bytes(value: int) -> list[int]:
     return list(f"{value}\n".encode("ascii"))
 
 
-def run_interpreter(program: Program, max_steps: int = MAX_STEPS) -> InterpreterRun:
-    machine = HISAMachine(MASTER_TABLE)
+def run_interpreter(program: Program, max_steps: int = MAX_STEPS,
+                    wire: list[int] | None = None,
+                    hcheck_interval: int = 100) -> InterpreterRun:
+    """`wire` is what arrives on the UART, byte by byte -- the loader's
+    payload when the program is loader.hasm, as on the board.
+    `hcheck_interval` is the interpreter's own periodic HCHECK, on by default
+    as everywhere else in this layer."""
+    machine = HISAMachine(MASTER_TABLE, hcheck_interval=hcheck_interval)
     machine.load_program(list(program.words))
+    if wire is not None:
+        machine.rx_queue = list(wire)
     flags: list[int] = []
     python: list[dict[str, Any]] = []
     step = machine.step

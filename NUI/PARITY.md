@@ -16,7 +16,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | status | jumlah |
 |---|---:|
 | PARITY | 70 |
-| MISMATCH | 27 |
+| MISMATCH | 30 |
 | UNKNOWN | 7 |
 
 | program | status | selisih pertama |
@@ -55,6 +55,9 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `rtl/tb/hfs_persist_probe.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran |
 | `rtl/tb/hfs_syscall_probe.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran |
 | `rtl/tb/prog_load_probe.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran |
+| `stop-probe:halt-then-print` | MISMATCH | step 1 `<stop-probe:halt-then-print>:2` (`HALT`): the interpreter stops here; the RTL then commits TX 53 at cycle 7 |
+| `stop-probe:halt-then-store` | MISMATCH | step 2 `<stop-probe:halt-then-store>:3` (`HALT`): the interpreter stops here; the RTL then commits RAM[0x100]=5 at cycle 6 |
+| `stop-probe:ret-then-print` | MISMATCH | step 1 `<stop-probe:ret-then-print>:2` (`RET`): the interpreter stops here; the RTL then commits TX 53 at cycle 7 |
 
 ## Opcode
 

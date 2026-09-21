@@ -10,6 +10,7 @@ names the step, the register and the opcode rather than only saying "differs".
 from __future__ import annotations
 
 import copy
+import functools
 import json
 import os
 import re
@@ -32,11 +33,19 @@ from hijaiyyah.hisa.machine import HISAMachine  # noqa: E402
 from hijaiyyah.hisa.opcodes import OpCode  # noqa: E402
 from hijaiyyah.nui import parity_model as pm  # noqa: E402
 
-FRESH = json.loads(json.dumps(pm.build()))
+
+@functools.cache
+def _fresh() -> dict:
+    """Built on first use, not at import -- see test_nui_execution.py."""
+    return json.loads(json.dumps(pm.build()))
 COMMITTED = json.loads(pm.MODEL.read_text(encoding="utf-8"))
 STOPPED = [f"rtl/programs/{p}.hasm" for p in (
     "bench/e6_record_triage", "hal_sd", "hos_hctx", "hos_prog_load", "mem_protect",
     "subroutine", "syscall", "test_hfs", "trap_epc", "user_mode")]
+#: One word behind a stop, per kind: what the RTL then does, as (stream, value).
+PROBES = {"stop-probe:halt-then-print": ("TX", ord("5")),
+          "stop-probe:halt-then-store": ("RAM", 5),
+          "stop-probe:ret-then-print": ("TX", ord("5"))}
 
 
 @pytest.fixture
@@ -50,7 +59,7 @@ def sim(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 def test_the_committed_model_is_what_the_repository_produces() -> None:
-    assert pm.verify(COMMITTED, FRESH) == []
+    assert pm.verify(COMMITTED, _fresh()) == []
 
 
 def test_the_page_is_drawn_from_the_model() -> None:
@@ -59,9 +68,9 @@ def test_the_page_is_drawn_from_the_model() -> None:
 
 def test_every_program_is_compared_and_every_opcode_has_a_row() -> None:
     names = {p.name for p in pm.corpus()}
-    assert set(FRESH["programs"]) == names
-    assert set(FRESH["opcodes"]) == {op.name for op in OpCode} | {"TRAP"}
-    for name, result in FRESH["programs"].items():
+    assert set(_fresh()["programs"]) == names
+    assert set(_fresh()["opcodes"]) == {op.name for op in OpCode} | {"TRAP"}
+    for name, result in _fresh()["programs"].items():
         assert result["status"] in ("PARITY", "MISMATCH", "UNKNOWN"), name
         if result["status"] == "MISMATCH":
             assert result["first_divergence"], name
@@ -77,11 +86,11 @@ def test_print_is_a_board_mismatch_and_only_the_board() -> None:
     The RTL as simulated prints all thirty-two ladder values exactly as the
     interpreter does; the board, built from the same RTL, printed three of
     the recorded ones wrong."""
-    ladder = [r for r in FRESH["board"] if r["program"] == pm.LADDER]
+    ladder = [r for r in _fresh()["board"] if r["program"] == pm.LADDER]
     assert all(r["interpreter"] == r["rtl"] == str(r["value"]) for r in ladder)
     wrong = {r["value"]: r["board"] for r in ladder if r["status"] == "MISMATCH"}
     assert wrong == {1 << 23: "8388600", 1 << 25: "335544;<", 1 << 31: "2147481?::"}
-    entry = FRESH["opcodes"]["PRINT"]
+    entry = _fresh()["opcodes"]["PRINT"]
     assert (entry["rtl"], entry["board"], entry["status"]) == ("PARITY", "MISMATCH",
                                                                "MISMATCH")
     assert "print_val % 10" in _line(entry["source"])
@@ -90,24 +99,29 @@ def test_print_is_a_board_mismatch_and_only_the_board() -> None:
 def test_the_sd_init_defect_is_named_board_only() -> None:
     """The second target cannot be a parity row: no other engine here has a
     card or a reconfiguration. It is said so, not left out."""
-    assert any("SD init" in s and "board-only" in s for s in FRESH["unknown"]["scope"])
+    assert any("SD init" in s and "board-only" in s for s in _fresh()["unknown"]["scope"])
 
 
 def test_the_word_after_a_stop_commits_on_the_rtl() -> None:
     """Found by this layer: the instruction behind HALT -- or behind a RET that
-    stops the machine as HC-05 -- writes its register on the RTL, once, after
-    the interpreter has stopped. In ten programs, and nowhere before the stop
-    do the two disagree."""
-    after = sorted(n for n, r in FRESH["programs"].items()
+    stops the machine as HC-05 -- commits on the RTL, once, after the
+    interpreter has stopped. Ten programs show it as a register write, and
+    nowhere before the stop do the two disagree. The three probes ask the
+    kinds the ten did not: a store reaches RAM, and a print reaches the wire
+    -- which is what makes it visible on the board."""
+    after = sorted(n for n, r in _fresh()["programs"].items()
                    if r["first_divergence"] and r["first_divergence"]["rtl"].get("after_stop"))
-    assert after == sorted(STOPPED)
-    for name in after:
-        d = FRESH["programs"][name]["first_divergence"]
+    assert after == sorted(STOPPED + list(PROBES))
+    for name in STOPPED:
+        d = _fresh()["programs"][name]["first_divergence"]
         assert d["kind"] == "GPR" and d["interpreter"]["opcode"] in ("HALT", "RET"), name
-    sub = FRESH["programs"]["rtl/programs/subroutine.hasm"]["first_divergence"]
+    for name, (kind, value) in PROBES.items():
+        d = _fresh()["programs"][name]["first_divergence"]
+        assert (d["kind"], d["rtl"]["value"]) == (kind, value), name
+    sub = _fresh()["programs"]["rtl/programs/subroutine.hasm"]["first_divergence"]
     assert (sub["rtl"]["key"], sub["rtl"]["value"]) == (1, 10)     # 3 + the ADDI's 7
     for op in ("HALT", "RET"):
-        entry = FRESH["opcodes"][op]
+        entry = _fresh()["opcodes"][op]
         assert entry["rtl"] == "MISMATCH", op
         lines = [_line(s) for s in entry["source"].split(", ")]
         assert "else if (wb_halt)" in lines[0] and "assign wb_gpr_we" in lines[1]
@@ -116,16 +130,16 @@ def test_the_word_after_a_stop_commits_on_the_rtl() -> None:
 def test_peripheral_differences_are_charged_to_the_register_not_the_load() -> None:
     """A LOAD of COUNTER that differs is the timer differing: the interpreter
     counts instructions, the RTL clocks. So LOAD stays PARITY."""
-    assert sorted(FRESH["mmio"]) == ["COUNTER", "SD_STATUS"]
-    assert len(FRESH["mmio"]["COUNTER"]) == 8 and len(FRESH["mmio"]["SD_STATUS"]) == 7
-    assert FRESH["opcodes"]["LOAD"]["rtl"] == "PARITY"
+    assert sorted(_fresh()["mmio"]) == ["COUNTER", "SD_STATUS"]
+    assert len(_fresh()["mmio"]["COUNTER"]) == 8 and len(_fresh()["mmio"]["SD_STATUS"]) == 7
+    assert _fresh()["opcodes"]["LOAD"]["rtl"] == "PARITY"
 
 
 def test_the_python_references_agree_and_a_trap_is_not_an_execution() -> None:
     """The four book functions agree with the interpreter on every execution.
     trap_hreg takes a trap on an HLOAD's word; the first version counted that
     as an HLOAD that loaded nothing, and reported a mismatch that never ran."""
-    for name, row in FRESH["python"].items():
+    for name, row in _fresh()["python"].items():
         assert row["status"] == "PARITY" and row["checked"] > 0, name
     prog = next(p for p in pm.corpus() if p.name == "rtl/programs/trap_hreg.hasm")
     run = pm.run_interpreter(prog)
@@ -137,13 +151,13 @@ def test_the_python_references_agree_and_a_trap_is_not_an_execution() -> None:
 
 def test_a_false_parity_is_denied(model: dict) -> None:
     model["programs"]["rtl/programs/subroutine.hasm"]["status"] = "PARITY"
-    problems = pm.verify(model, FRESH)
+    problems = pm.verify(model, _fresh())
     assert any("programs rtl/programs/subroutine.hasm status" in p for p in problems), problems
 
 
 def test_a_false_register_value_is_denied(model: dict) -> None:
     model["programs"]["rtl/programs/subroutine.hasm"]["first_divergence"]["rtl"]["value"] = 11
-    problems = pm.verify(model, FRESH)
+    problems = pm.verify(model, _fresh())
     assert any("subroutine.hasm first_divergence" in p for p in problems), problems
 
 
@@ -151,13 +165,13 @@ def test_a_false_board_record_is_denied(model: dict) -> None:
     row = next(r for r in model["board"] if r.get("value") == 1 << 23)
     row["board"] = "8388608"
     row["status"] = "PARITY"
-    problems = pm.verify(model, FRESH)
+    problems = pm.verify(model, _fresh())
     assert any(p.startswith("differs: board row") for p in problems), problems
 
 
 def test_a_false_opcode_status_is_denied(model: dict) -> None:
     model["opcodes"]["HALT"]["rtl"] = "PARITY"
-    problems = pm.verify(model, FRESH)
+    problems = pm.verify(model, _fresh())
     assert any("opcodes HALT rtl" in p for p in problems), problems
 
 
@@ -208,11 +222,11 @@ def test_board_records_postdate_the_last_change_to_the_cpu_rtl() -> None:
          ":(glob)rtl/fpga/gowin/hcpu_gowin_*.v"],
         cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     assert tuple(last) == pm.LAST_CPU_RTL_CHANGE
-    assert all(r["date"] > pm.LAST_CPU_RTL_CHANGE[1] for r in FRESH["board"])
+    assert all(r["date"] > pm.LAST_CPU_RTL_CHANGE[1] for r in _fresh()["board"])
 
 
 def test_every_halted_run_had_room_in_its_cycle_budget() -> None:
-    for name, r in FRESH["programs"].items():
+    for name, r in _fresh()["programs"].items():
         if r["rtl"]["halted"]:
             assert r["rtl"]["cycles"] < 0.9 * r["rtl"]["budget"], name
         elif r["interpreter"]["exit"] in pm.HALTED:
@@ -233,11 +247,11 @@ def test_the_harness_prints_no_trace_unless_asked(sim: Path, tmp_path: Path) -> 
 
 def test_the_owner_questions_are_answered_in_his_format() -> None:
     for name in ("ADD", "SUB", "LOAD", "STORE", "CALL", "RET", "TRAP", "PRINT"):
-        block = pm.opcode_block(FRESH, name)
+        block = pm.opcode_block(_fresh(), name)
         assert block.startswith(f"OPCODE: {name}") and "STATUS:" in block, name
         for engine in ("Python:", "Interpreter:", "RTL:", "Board:"):
             assert engine in block, (name, engine)
-        if FRESH["opcodes"][name]["status"] == "MISMATCH":
+        if _fresh()["opcodes"][name]["status"] == "MISMATCH":
             assert "SOURCE:" in block, name
 
 
@@ -247,6 +261,6 @@ def _line(ref: str) -> str:
 
 
 def test_sources_point_at_real_lines() -> None:
-    for name, entry in FRESH["opcodes"].items():
+    for name, entry in _fresh()["opcodes"].items():
         for ref in filter(None, entry.get("source", "").split(", ")):
             assert re.fullmatch(r"rtl/[\w/.]+:\d+", ref) and _line(ref).strip(), (name, ref)

@@ -111,7 +111,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **22 modul**; `tests/test_ai/` berisi **198 tes**
+`src/hijaiyyah/nui/` berisi **23 modul**; `tests/test_ai/` berisi **208 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -132,12 +132,13 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.159 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.172 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
 | `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
 | `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
+| `board_parity.py` | apa yang dikirim ke papan dan apa yang harus kembali, dengan epilog pembaca register | `test_nui_board_parity.py` (10) |
 
 ---
 
@@ -190,8 +191,8 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 92 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 708 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.343 node, 3.530 edge**.
+`references`, tidak pernah dihitung sebagai import) dan 722 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.360 node, 3.580 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -240,7 +241,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.159 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.172 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -357,17 +358,23 @@ ke [`PARITY.md`](PARITY.md), dijaga `tests/test_ai/test_nui_parity.py` (19).
 Korpus 41 program paritas dipindah ke `src/hijaiyyah/hisa/parity_programs.py`
 supaya tes lama dan lapis ini memakai satu korpus (R1).
 
-- **104 lari** — 41 program paritas, 62 program HASM, dan tangga `PRINT`
-  2⁰–2³¹. Interpreter ↔ RTL: **70 PARITY, 27 MISMATCH, 7 UNKNOWN**. Yang
+- **107 lari** — 41 program paritas, 62 program HASM, tangga `PRINT`
+  2⁰–2³¹, dan tiga probe berhenti. Interpreter ↔ RTL: **70 PARITY,
+  30 MISMATCH, 7 UNKNOWN**. Yang
   UNKNOWN tidak berhenti dan dibandingkan sejauh keduanya berjalan
   (5.000 langkah interpreter).
-- **Ke-27 MISMATCH semuanya menunjuk langkah, register, dan opcode-nya**, dan
-  terbagi empat:
+- **Ke-30 MISMATCH semuanya menunjuk langkah, register, dan opcode-nya**, dan
+  terbagi lima:
   - 10 — instruksi tepat sesudah `HALT` (7) atau sesudah `RET` yang
     menghentikan mesin sebagai HC-05 (3) **ikut menulis register di RTL**,
     sesudah interpreter berhenti. Sebelum berhenti tidak ada satu pun selisih.
     `subroutine.hasm`: interpreter R1 = 3, RTL R1 = 10 (3 + `ADDI` 7 sesudah
     `HALT`). Temuan baru; tercatat di `cosmictera-build/OFF.md`.
+  - 3 — probe berhenti, satu kata di belakang penghenti, untuk jenis yang
+    kesepuluh program itu tidak punya: `STORE` sesudah `HALT` menulis
+    `MEM[0x100] = 5`, dan `PRINT` sesudah `HALT` atau sesudah `RET` HC-05
+    mengirim byte `'5'` ke kabel. Yang terakhir itulah yang membuat cacat ini
+    **terlihat di papan**.
   - 8 — langkahnya membaca `COUNTER`: interpreter menghitung instruksi, RTL
     menghitung clock. Dibebankan ke register itu, bukan ke `LOAD`.
   - 7 — langkahnya membaca `SD_STATUS`: tanpa kartu interpreter membaca 0,
@@ -397,9 +404,30 @@ supaya tes lama dan lapis ini memakai satu korpus (R1).
   paritas.** Tidak ada mesin lain di sini yang punya kartu atau rekonfigurasi,
   jadi ia dicatat hanya-papan, UNKNOWN.
 
-**Yang belum ada.** Papan tidak dijalankan ulang: ia memikul burn-in 72 jam
-sampai 24 September 2026, jadi kolom papan hanya dari catatan, dan hanya
-lewat keluaran cetak — registernya tidak terlihat dari kabel. `loader.hasm`
+**Lari papan sudah disiapkan, belum dijalankan** — ia menunggu burn-in, sesuai
+urutan pemilik. `src/hijaiyyah/nui/board_parity.py` menentukan apa yang
+dikirim dan apa yang harus kembali; `rtl/scripts/parity_board.py` mengirimnya
+lewat `loader.hasm` dan menyimpan tangkapan mentah, dan menolak jalan selama
+proses burn-in hidup. Dijaga `tests/test_ai/test_nui_board_parity.py` (10).
+
+- **83 dari 107 program akan dikirim.** Yang tidak: 9 menyentuh jendela SD —
+  kartunya milik burn-in —, 10 tidak berhenti, dan 5 pustaka berhenti sebagai
+  fault HC-05.
+- **Register dibaca lewat kabel.** Program yang tidak mencetak apa pun
+  mendapat epilog: `HALT` yang benar-benar menghentikannya — diukur, bukan
+  dibaca — diganti lompatan ke kode yang mencetak FLAGS, tiap GPR yang ia
+  ubah byte demi byte, dan tiap komponen H-register yang ia ubah. Byte tidak
+  pernah mencapai OFF-PRINT-SILICON. Tiap epilog dibuktikan di interpreter:
+  yang dicetaknya harus persis keadaan saat lompatan.
+- **Acuannya interpreter di bawah loader**, dengan HCHECK berkala mati:
+  HCHECK itu milik interpreter saja, dan di bawah loader jamnya bergeser
+  hingga menghentikan dua program di titik yang tak pernah dihentikan papan.
+- **RTL memberi byte yang sama di kabel untuk 76 dari 80 payload**; empat
+  sisanya membaca `COUNTER`. Untuk `trap_resume`, RTL mencetak `86 86 27` —
+  persis catatan papan di `cosmictera-build/PAPAN.md`.
+
+**Yang belum ada.** Kolom papan per opcode: lari di atas belum dijalankan,
+jadi kolom papan masih dari catatan lama, dan hanya lewat keluaran cetak. `loader.hasm`
 berpayload tidak dijalankan di RTL: `tb_parity.v` tidak punya masukan UART
 maupun port tulis memori instruksi. Tujuh program tidak berhenti dalam
 anggaran.
@@ -411,8 +439,8 @@ interpreter yang menambah satu pada `ADD` dinamai di langkah 2, R3, 308 lawan
 307. Tujuh penjaga baru dirusak satu per satu dan ketujuhnya merah.
 
 **Syarat selesai.** Tercapai untuk interpreter ↔ RTL atas korpus ini, dan
-untuk papan sejauh catatannya. Kolom papan per opcode menunggu lari ulang
-sesudah burn-in.
+untuk papan sejauh catatannya. Kolom papan per opcode menunggu lari papan
+yang sudah disiapkan, sesudah burn-in.
 
 ---
 

@@ -534,7 +534,7 @@ def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
 
     CHECKLIST.md's footnote used to say this figure "cannot be checked without
     running pytest inside pytest". Half true: what CANNOT be checked is how
-    many PASS. How many EXIST is `--collect-only`, ~9 seconds, executing
+    many PASS. How many EXIST is `--collect-only`, ~12 seconds, executing
     nothing.
 
     But `passed + skipped == collected` was one term short, and the missing
@@ -548,7 +548,7 @@ def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
 
     So the identity is: quoted passed + quoted skipped == collected + the
     skips that happen during collection. Both halves come from the same
-    ~9-second run, because -rs lists them there too.
+    ~12-second run, because -rs lists them there too.
 
     -p no:cacheprovider keeps the child from writing the parent's cache.
     """

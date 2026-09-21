@@ -150,9 +150,12 @@ di `NUI/PARITY.md`, tidak disalin ke sini (R1).
 Jalurnya terbaca di kode: `halted` diset satu clock sesudah instruksi penghenti
 sampai di writeback (`rtl/hcpu_controller.v`, `else if (wb_halt)`), dan
 write-enable writeback tidak digerbang olehnya (`rtl/hcpu_writeback.v`,
-`assign wb_gpr_we`). Yang lolos hanya tulisan register: di kesepuluh program
-tidak ada byte tambahan di kabel, jadi di papan cacat ini tidak terlihat lewat
-keluaran cetak.
+`assign wb_gpr_we`). Di kesepuluh program itu yang lolos hanya tulisan
+register. Tiga probe berhenti, diukur 22 September 2026, menjawab jenis yang
+lain: `STORE` sesudah `HALT` menulis `MEM[0x100] = 5`, dan `PRINT` sesudah
+`HALT` — juga sesudah `RET` yang berhenti sebagai HC-05 — mengirim byte `'5'`
+ke kabel. Jadi cacat ini **bisa terlihat di papan**, lewat keluaran cetak; lari
+papannya sudah disiapkan (`rtl/scripts/parity_board.py`) dan menunggu burn-in.
 
 **Dilaporkan, tidak diperbaiki** — ia di RTL, dan K9 berlaku. Pemilik,
 21 September 2026: tetap **EH**, dan masuk antrean perbaikan RTL sesudah
