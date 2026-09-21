@@ -54,7 +54,7 @@ Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 11.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **16 modul**; `tests/test_ai/` berisi **131 tes**
+`src/hijaiyyah/nui/` berisi **19 modul**; `tests/test_ai/` berisi **131 tes**
 yang lulus, ditambah 8 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -75,6 +75,9 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | 533 node repositori, terklasifikasi | `test_nui_repository_graph.py` (10) |
 | `repository_graph.py` | 1.577 edge, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
+| `program_index.py` | 62 program HASM, 1.080 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
+| `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 
 ---
 
@@ -168,14 +171,24 @@ register, efek memori.
 `src/hijaiyyah/hisa/machine.py` sebagai **ground truth**, `src/hijaiyyah/hvm/`,
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
-**Yang belum ada.** Semuanya di sisi NUI: tidak ada modul yang membaca program
-lalu menjelaskan efeknya.
+**Sejak 21 September 2026 lapis ini berdiri**:
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.080 fungsi Python,
+120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
+instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
+(apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
+barisnya), dijaga `tests/test_ai/test_nui_program_index.py` dan dijelaskan di
+[`PROGRAMS.md`](PROGRAMS.md).
 
-**Cara verifikasi.** Bandingkan terhadap `assemble()` dan `HISAMachine`.
-Oracle-nya sudah ada dan sudah dipakai ribuan kali.
+**Yang belum ada.** Tautan fungsi-ke-fungsi Python — nama yang dipanggil
+dicantumkan apa adanya dan ditandai tak terselesaikan. Dan apakah sebuah
+register benar-benar tercapai saat berjalan: itu Lapis 3.
 
-**Syarat selesai.** Untuk program yang disebut, penjelasan yang dihasilkan
-cocok dengan yang assembler dan interpreter hasilkan.
+**Cara verifikasi.** Sudah berjalan, dua arah: tiap efek turunan menunjuk ke
+baris yang menghasilkannya, dan efek `loader.hasm` diperiksa terhadap
+**eksekusi** lewat `freeze_load()`.
+
+**Syarat selesai.** Tercapai untuk HASM dan Verilog; untuk Python sebatas yang
+bisa dibaca tanpa menebak.
 
 ---
 
