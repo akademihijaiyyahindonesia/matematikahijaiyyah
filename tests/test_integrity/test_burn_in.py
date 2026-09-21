@@ -431,3 +431,18 @@ def test_a_run_that_reaches_its_deadline_says_so(tmp_path: Path) -> None:
 
     note = listen(_SteadyPort(), _feed(tmp_path), time.time() + 0.05)
     assert note == "duration reached"
+
+
+def test_a_summary_written_mid_run_describes_one_beat(tmp_path: Path) -> None:
+    """Every periodic summary must carry the beat count, the cycles and the
+    errors of the SAME beat. The first version brought cycles and errors up to
+    date only after writing, so a live summary said 430 beats parsed against
+    429 emitted -- a host parsing a beat the board had not sent."""
+    feed = _feed(tmp_path)
+    feed.run.first = {"done": 1}
+    feed.run.summary_path = tmp_path / "live.json"
+    for n in range(1, 6):
+        feed.run.last_sample = 0.0                 # every beat writes a summary
+        feed.take(_beat([n, 0, 0, 0, 100 * n, 10]))
+        live = json.loads(feed.run.summary_path.read_text())
+        assert live["cycles"] // HEARTBEAT_CYCLES == live["heartbeats"] == n, live

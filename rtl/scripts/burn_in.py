@@ -161,6 +161,13 @@ class Run:
         beat["cycles"] = beat["heartbeats"] * HEARTBEAT_CYCLES
         self.board_uptime = uptime_s(beat["wraps"], beat["counter_hi"])
         grew = beat["errors"] > self.errors or beat["sd_fails"] > self.sd_fails
+        # The state is brought up to THIS beat before anything is written from
+        # it. The first version updated it at the end of this method, after
+        # the periodic summary -- so every summary written mid-run carried
+        # this beat's count beside the previous beat's cycles and errors, and
+        # a live report read 430 beats parsed against 429 emitted.
+        self.errors, self.cycles = beat["errors"], beat["cycles"]
+        self.sd_fails = beat["sd_fails"]
         if grew:
             self.write("error", gap=round(gap, 3), **beat)
         if gap > gap_threshold:
@@ -176,8 +183,6 @@ class Run:
                 self.summary_path.write_text(
                     json.dumps(self.summary(self.port, "still running"), indent=2)
                     + "\n")
-        self.errors, self.cycles = beat["errors"], beat["cycles"]
-        self.sd_fails = beat["sd_fails"]
 
     def summary(self, port: str, note: str) -> dict[str, object]:
         host_s = time.time() - self.started.timestamp()

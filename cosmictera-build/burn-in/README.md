@@ -159,6 +159,16 @@ pertama sudah dibetulkan dari catatan daya, dengan medan yang menyatakan
 koreksinya. Berkas JSONL di sebelahnya dibiarkan persis seperti yang alat
 tulis.
 
+**Satu cacat lagi di alat saya, dan batas pengaruhnya.** Ringkasan yang
+ditulis **di tengah lari** tertinggal satu detak: cacah detak sudah detak
+sekarang, siklus dan error masih detak sebelumnya — sehingga laporan atas
+lari yang hidup sempat berbunyi 430 terurai melawan 429 dipancarkan. Sudah
+dibetulkan. **Ringkasan akhir tidak pernah terkena**: ia ditulis sesudah
+detak terakhir selesai diproses, jadi hasil tingkat 1 tidak bergeser.
+Percobaan kedua 72 jam dijalankan dengan kode sebelum perbaikan ini, jadi
+ringkasan berkalanya akan tetap tertinggal satu detak sampai lari selesai;
+ringkasan akhirnya tetap benar.
+
 **Percobaan kedua menahan host tetap terjaga.** `burn_in.py` sekarang
 memegang `caffeinate -s -i -w <pid>`: asersi daya macOS yang mencegah tidur
 selama proses logger hidup, hanya di daya AC. Ia tidak mengubah satu pun
