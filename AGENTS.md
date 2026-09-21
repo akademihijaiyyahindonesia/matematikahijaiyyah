@@ -952,6 +952,25 @@ matematika; USR lima medan. Ditambah:
 Host."* Bahasa Arab dan Indonesia tetap front-end semantik di atas HC, bukan
 proyek terpisah.
 
+### Konfirmasi pemilik, 22 September 2026 — nama variabel, dan image sebagai baseline
+
+Keputusan 21 September dikonfirmasi tanpa perubahan, dengan dua rincian:
+
+- **Contoh HC berkata kunci Arab dengan nama variabel kata utuh**:
+  `متغير angka = 10`, `متغير harga = 20`, `اطبع angka + harga` menjadi HC
+  `let angka = 10; let harga = 20; println(angka + harga);`, lalu HISA.
+  Kata kunci Arab dan Indonesia adalah lapisan sintaks HC, bukan bahasa
+  terpisah; huruf tunggal seperti `س` tetap objek matematis. Implementasinya
+  tetap menunggu sesudah Lapis 5.
+- **Image VM Lapis 5 menjadi bagian baseline**: SHA256 diverifikasi sebelum
+  dipakai, checksum disimpan di dokumentasi, versi persis dicatat. Berkasnya
+  di `NUI/LAYERS.md`.
+
+Urutannya ditegaskan: selesaikan burn-in 72 jam → `rtl/scripts/parity_board.py`
+→ kolom hardware per opcode → OFF-PRINT-SILICON di papan → HALT/RET di papan →
+Lapis 5 → lapis berikutnya. *"Seluruh temuan papan nyata akan masuk ke basis
+pengetahuan NUI sebelum host Linux ditambahkan."*
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

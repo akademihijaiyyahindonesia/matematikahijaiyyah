@@ -192,7 +192,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 92 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 722 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.360 node, 3.580 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.360 node, 3.581 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -471,6 +471,15 @@ baca**:
 | diizinkan | belum diizinkan, sampai seluruh pipeline Lapis 5 tervalidasi |
 |---|---|
 | read file, `ls`, `find`, `cat`, `ps`, `top`, `ping`, `curl`, `journalctl`, `systemctl status`, `docker ps` | `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` |
+
+**Image VM adalah bagian baseline Lapis 5** (pemilik, 22 September 2026):
+SHA256-nya diverifikasi sebelum dipakai, checksum-nya disimpan di
+dokumentasi, dan versi persisnya dicatat. Yang disiapkan, **belum diunduh**:
+
+| berkas | sumber | ukuran |
+|---|---|---|
+| `lima-2.2.0-Darwin-arm64.tar.gz`, dengan `SHA256SUMS` | rilis resmi Lima di GitHub, Apache-2.0 | 37,6 MB |
+| `ubuntu-24.04-server-cloudimg-arm64.img`, dengan `SHA256SUMS` | cloud-images.ubuntu.com, Ubuntu 24.04 LTS | 591 MB |
 
 **Yang belum ada.** Seluruhnya, mulai dari host itu sendiri: diukur
 21 September 2026, mesin ini macOS 26.6.2 arm64 tanpa satu pun perkakas VM
