@@ -881,6 +881,31 @@ Hasil Lapis 4 dan jawaban atas kedua target ada di `NUI/LAYERS.md` dan
 `NUI/PARITY.md`, tidak disalin ke sini (R1). Satu temuan RTL barunya tercatat
 di `cosmictera-build/OFF.md`.
 
+### Arah pemilik, 21 September 2026 — NUI sebagai lapisan semantik Hijaiyyah
+
+Sesudah Lapis 0–4, pemilik menetapkan arah NUI: **bukan bahasa pemrograman
+baru dari nol**, melainkan lapisan semantik Hijaiyyah di atas mesin yang sudah
+terbukti berjalan — HISA, HCPU, RTL, interpreter, host Linux. Tiga bahasa
+manusia (Arab, Indonesia, Inggris), satu bahasa komputasi (HCL), dan rantai
+bahasa manusia → pohon semantik → USR → compiler Hijaiyyah → HISA → RTL →
+FPGA/ASIC. Empat prinsipnya: aset yang ada lebih dulu; tidak ada sistem baru
+kalau fungsinya sudah ada; tiap lapis terverifikasi lewat tes, eksekusi, dan
+perangkat keras nyata; tidak ada asumsi.
+
+Peta arahan ini terhadap aset yang terukur ada di `NUI/LAYERS.md`, tidak
+disalin ke sini (R1). **Ini arah, bukan butir kerja yang sudah dibuka**: lima
+hal di dalamnya adalah keputusan desain yang belum diambil. Kelimanya:
+
+- apakah HCL = HC;
+- kata kunci Arab dan Indonesia;
+- arti nama Arab di HC, yang hari ini adalah literal hybit;
+- bentuk USR;
+- host Linux dan perintah yang boleh dijalankannya.
+
+Arahan ini juga menyentuh larangan `CONTRIBUTING.md` tentang huruf sebagai
+makna. Tidak ada implementasinya yang boleh berangkat sebelum pemilik
+menetapkan kelimanya.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

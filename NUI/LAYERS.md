@@ -52,6 +52,47 @@ tetap tertulis: K3–K6 dan R3.
 Penomoran kelima, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus:
 Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 10.
 
+## Arahan kelima — lapisan semantik di atas mesin yang terbukti
+
+**Arahan pemilik, 21 September 2026, sesudah Lapis 4.** NUI bukan komputer
+baru, melainkan sistem komputasi universal berbasis struktur Hijaiyyah yang
+berjalan di atas Linux, HISA VM, RTL HCPU, FPGA, dan perangkat keras
+berikutnya. Tiga bahasa manusia — Arab, Indonesia, Inggris — dan satu bahasa
+komputasi, *Hijaiyyah Computing Language* (HCL). Rantainya: bahasa manusia →
+pohon semantik → *Universal Semantic Representation* (USR) → compiler
+Hijaiyyah → HISA → RTL HCPU → FPGA/ASIC, dengan Linux sebagai host utama.
+Arahan ini tidak menomori ulang lapis; ia menetapkan ke mana lapis-lapis itu
+menuju.
+
+Diukur terhadap repositori pada hari yang sama:
+
+| bagian arahan | yang sudah ada, terukur | yang belum ada |
+|---|---|---|
+| bahasa komputasi | HC — *Hybit Code* (`teknologi/ISTILAH.md` baris 33): lexer, parser, dan evaluator di `src/hijaiyyah/language/`, compiler ke H-ISA di `src/hijaiyyah/compiler/codegen.py` | kata kunci selain Inggris: `src/hijaiyyah/language/tokens.py` hanya punya `let`, `fn`, `if`, dan seterusnya |
+| contoh pemilik, `متغير س = 10` / `متغير ص = 20` / `اطبع س + ص` | bentuk HC-nya, `let s = 10; let p = 20; println(s + p);`, jadi lima instruksi (`MOVI MOVI ADD PRINT HALT`); interpreter mencetak `30`, RTL mengirim `30\n` ke kabel | kata kunci Arab ditolak parser; nama variabel Arab juga ditolak, karena di HC huruf Hijaiyyah telanjang adalah **literal hybit** (`src/hijaiyyah/language/lexer.py` baris 89) — `let س = 10` menjawab `Expected variable name (got HIJAIYYAH 'س')` |
+| compiler Arab ↔ HISA | jalur HC → H-ISA → interpreter → RTL (`698dd3e`, Lapis 4) | pemetaan kata Arab dan Indonesia ke konstruksi HC |
+| USR | — | tidak ada definisinya di repositori |
+| antarmuka bahasa alami | `src/hijaiyyah/ai/runtime.py`, yang menjalankan program bergaya HC lewat model Ollama lokal | versi yang deterministik: arahan pertama menolak pembungkus LLM, dan aturan Lapis 3 menolak probabilitas |
+| Linux sebagai host | — (Lapis 5, **AT**); mesin pengembangan ini macOS arm64 | host Ubuntu, dan daftar perintah host yang boleh dijalankan |
+
+**Dua batas yang sudah tertulis menyentuh arahan ini.**
+
+- `CONTRIBUTING.md` melarang, pada level konsep, *"memperlakukan huruf sebagai
+  bunyi/makna"*. Kata Arab sebagai kata kunci (`اطبع` → `PRINT`) adalah kata →
+  operasi, bukan huruf → makna. Tetapi langkah *makna → matematika Hijaiyyah*
+  menyentuh larangan itu bila makna diwakili vektor huruf — bentuk yang sama
+  yang sudah dicatat sebagai batas semantic memory, 18 September 2026.
+- Dua nama untuk satu hal adalah cacat (`7582ae5`). HCL dan HC sama-sama
+  disebut bahasa tingkat tinggi; apakah HCL adalah HC, atau lapisan di atasnya,
+  belum ditetapkan.
+
+**Satu ketidakcocokan kecil di jalur yang akan dipakai arahan ini.**
+`src/hijaiyyah/compiler/codegen.py` membagikan register sampai R17, sedangkan
+assembler berhenti di R15: program dengan enam belas atau tujuh belas
+variabel hidup lolos dikompilasi lalu ditolak assembler dengan keras —
+`register R16 is out of range (max R15)`. Tidak ada kompilasi yang diam-diam
+salah. Dilaporkan, belum disentuh.
+
 ## Yang sudah berjalan hari ini, diukur
 
 `src/hijaiyyah/nui/` berisi **22 modul**; `tests/test_ai/` berisi **198 tes**
@@ -134,7 +175,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 92 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 708 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.343 node, 3.526 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.343 node, 3.530 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat

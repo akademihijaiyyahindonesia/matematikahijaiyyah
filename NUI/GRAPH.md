@@ -13,7 +13,7 @@ nyata — bukan inferensi LLM."*
 ```
 1.343 node    python 176 · tes 161 · verilog 118 · hasm 62 · fakta 26 ·
               dokumen 92 · fungsi dan kelas 708
-3.526 edge    imports 786 · mentions 886 · references 1.071 · defines 708 ·
+3.530 edge    imports 786 · mentions 886 · references 1.075 · defines 708 ·
               verifies 75
 ```
 
