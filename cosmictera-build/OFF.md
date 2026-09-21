@@ -97,7 +97,7 @@ ini. Setiap eksperimen mengubah desain kita dan membiarkan ketiganya tetap.
 
 Label: **EH**.
 
-### PRINT tidak bisa mencetak angka besar
+### OFF-PRINT-SILICON — PRINT tidak bisa mencetak angka besar di silikon
 
 Ditemukan 20 September 2026 oleh lab burn-in, yang butuh mencetak pencacah
 siklus 32-bit dan tidak bisa. Tangga `2^0` sampai `2^31` dikirim ke papan
@@ -129,6 +129,9 @@ oleh Lapis 4 NUI (`NUI/PARITY.md`). Tangga yang sama, di `hcpu_top.v` di bawah
 Icarus, mencetak ke-32 nilai persis seperti interpreter, termasuk ketiga yang
 salah di papan. Jadi selisihnya muncul antara RTL yang disimulasikan dan
 silikon yang dibangun darinya, bukan di logika RTL sebagaimana disimulasikan.
+Karena itu pemilik memisahkannya, 21 September 2026, sebagai
+**OFF-PRINT-SILICON**: ia bukan selisih interpreter ↔ RTL. Verifikasinya di
+papan menunggu burn-in 72 jam selesai.
 
 Label: **EH**.
 
@@ -151,7 +154,9 @@ write-enable writeback tidak digerbang olehnya (`rtl/hcpu_writeback.v`,
 tidak ada byte tambahan di kabel, jadi di papan cacat ini tidak terlihat lewat
 keluaran cetak.
 
-**Dilaporkan, tidak diperbaiki** — ia di RTL, dan K9 berlaku.
+**Dilaporkan, tidak diperbaiki** — ia di RTL, dan K9 berlaku. Pemilik,
+21 September 2026: tetap **EH**, dan masuk antrean perbaikan RTL sesudah
+burn-in 72 jam selesai — lebih dulu diverifikasi di papan.
 
 Label: **EH**.
 

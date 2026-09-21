@@ -920,6 +920,38 @@ sudah terbukti."*
 pengembangan ini macOS 26.6.2 arm64 tanpa perkakas VM atau kontainer, dan
 memasangnya adalah unduhan pihak ketiga — butuh izin pemilik.
 
+### Keputusan pemilik, 21 September 2026 — host Lapis 5, baca-saja, dan urutan sesudah burn-in
+
+Keputusan arsitektur NUI yang sudah dicatat di atas **dikunci** pemilik: HC
+bahasa utama dan HCL = HC diperluas; huruf Hijaiyyah tunggal tetap objek
+matematika; USR lima medan. Ditambah:
+
+- **Host Lapis 5: VM Ubuntu Server 24.04 LTS ARM64** — sesuai Ubuntu
+  sungguhan, dengan systemd, `systemctl`, dan `journalctl`, terisolasi dari Mac
+  host.
+- **Tahap pertama Lapis 5 hanya baca.** Daftar yang diizinkan dan yang belum
+  diizinkan ada di `NUI/LAYERS.md`; yang mengubah sistem menunggu seluruh
+  pipeline Lapis 5 tervalidasi.
+- **PRINT dipisahkan sebagai OFF-PRINT-SILICON**, karena interpreter dan RTL
+  simulasi benar, dan hanya perangkat keras yang berbeda.
+- **HALT/RET tetap EH, masuk antrean perbaikan RTL sesudah burn-in.** Pemilik
+  menilainya lebih serius daripada PRINT: interpreter berhenti, RTL masih
+  menulis register.
+
+**Urutan sesudah burn-in 72 jam selesai**, dari pemilik:
+
+```
+1  jalankan ulang korpus paritas di papan
+2  lengkapi kolom hardware per opcode
+3  verifikasi PRINT silikon
+4  verifikasi HALT/RET pada papan
+5  mulai Lapis 5, host Ubuntu
+```
+
+*"Data hardware nyata akan melengkapi Lapis 4 sebelum NUI melangkah ke Linux
+Host."* Bahasa Arab dan Indonesia tetap front-end semantik di atas HC, bukan
+proyek terpisah.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

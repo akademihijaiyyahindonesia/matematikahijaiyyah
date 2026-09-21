@@ -435,10 +435,20 @@ ada satu pun sisi host di repositori ini — tidak ada driver, layanan,
 pustaka, kontainer, atau aplikasi. Yang ada hanya perkakas serial di
 `rtl/scripts/`, dan mesin pengembangannya macOS, bukan Ubuntu.
 
-**Yang belum ada.** Seluruhnya, mulai dari host Ubuntu itu sendiri: diukur
+**Hostnya diputuskan pemilik, 21 September 2026: VM Ubuntu Server 24.04 LTS
+ARM64** — terisolasi, tidak menyentuh Mac host, dengan systemd sungguhan,
+sehingga `systemctl` dan `journalctl` nyata. Dan tahap pertamanya **hanya
+baca**:
+
+| diizinkan | belum diizinkan, sampai seluruh pipeline Lapis 5 tervalidasi |
+|---|---|
+| read file, `ls`, `find`, `cat`, `ps`, `top`, `ping`, `curl`, `journalctl`, `systemctl status`, `docker ps` | `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` |
+
+**Yang belum ada.** Seluruhnya, mulai dari host itu sendiri: diukur
 21 September 2026, mesin ini macOS 26.6.2 arm64 tanpa satu pun perkakas VM
 atau kontainer, dan tanpa host SSH yang terdaftar. Memasangnya adalah unduhan
-pihak ketiga, dan unduhan butuh izin pemilik.
+pihak ketiga, dan tiap unduhan butuh izin pemilik atas berkas, sumber, dan
+ukurannya. Lapis ini dimulai sesudah langkah papan pasca-burn-in (`AGENTS.md`).
 
 **Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
 dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Belum
