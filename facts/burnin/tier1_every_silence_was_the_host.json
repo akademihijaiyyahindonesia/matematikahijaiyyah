@@ -1,6 +1,6 @@
 {
   "fact_id": "burnin.tier1_every_silence_was_the_host",
-  "statement": "Lima belas diam dalam lari 24 jam, dan tidak satu pun milik papan: tiap satunya host yang berhenti membaca, atau kurasan yang mengikutinya. Sembilan baris tak terbaca semuanya muncul sesudah diam, berbentuk angka yang menempel pada penanda berikutnya.",
+  "statement": "Lima belas diam dalam lari 24 jam, dan tidak satu pun milik papan. Empat belas di antaranya adalah MacBook dalam Deep Idle yang DarkWake tiap ±16 menit — diukur dari pmset -g log, dimulai tepat 21:32 lokal pada detik ke-46.600 — dan logger hanya membaca selama DarkWake. Sembilan baris tak terbaca semuanya muncul sesudah diam, berbentuk angka yang menempel pada penanda berikutnya.",
   "value": 15,
   "source": [
     "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.jsonl"

@@ -937,9 +937,14 @@ Garis dasar yang ditinggalkannya, beku di
 dan jam papan terhadap jam host hanyut **−0,0292 detik per jam** — 8,1 ppm
 selama sehari penuh.
 
-**Lima belas diam, tidak satu pun milik papan.** Semuanya host yang berhenti
-membaca, dan kurasan yang mengikutinya. Sembilan baris tak terbaca, semuanya
-sesudah diam, dan semuanya dibuang utuh.
+**Lima belas diam, tidak satu pun milik papan** — dan sebabnya kini terukur:
+empat belas di antaranya adalah MacBook dalam Deep Idle yang DarkWake tiap ±16
+menit (`pmset -g log`), dan logger hanya membaca selama DarkWake. Sembilan
+baris tak terbaca, semuanya sesudah diam, semuanya dibuang utuh.
+
+**Percobaan pertama 72 jam berhenti di menit ke-33**: baterai MacBook habis,
+Mac berhibernasi, hibernasi memutus daya USB, dan papan kembali ke image
+pabrik LiteX. Percobaan kedua berjalan dengan host ditahan terjaga.
 
 ---
 
@@ -1127,7 +1132,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.126 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.128 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1170,7 +1175,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.126 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.128 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

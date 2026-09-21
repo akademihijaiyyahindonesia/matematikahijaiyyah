@@ -1,0 +1,30 @@
+{
+  "target": "burn-in",
+  "program": "rtl/programs/burn_in.hasm",
+  "board": "Tang Nano 20K",
+  "clock_hz": 27000000,
+  "port": "/dev/tty.usbserial-20250303171",
+  "started": "2026-09-21T04:40:23.512224+00:00",
+  "first_cycle": {
+    "pulse_sum": 28,
+    "node_sum": 3072,
+    "codex_sum": 178,
+    "init_attempts": 1,
+    "read_attempts": 1,
+    "card_word": 1212568369,
+    "launches": 2
+  },
+  "host_seconds": 2004.9,
+  "board_seconds": 1876.8,
+  "board_minus_host_s": -128.1,
+  "heartbeats": 1192,
+  "cycles": 1220608,
+  "errors": 0,
+  "sd_read_failures": 0,
+  "longest_gap_s": 84.444,
+  "longest_gap_at_s": 84.4,
+  "unparsed_lines": 0,
+  "heartbeat_cycles": 1024,
+  "ended": "STOPPED EARLY: SerialException: read failed: [Errno 6] Device not configured -- the MacBook entered Low Power Sleep at 1% battery (12:13:00 +0700) and woke from Hibernate at 12:13:48 +0700, cutting USB power; the board came back running the LiteX factory image from flash",
+  "ended_corrected": "this field originally read 'duration reached', written by a defect in burn_in.py that labelled every non-Ctrl-C exit as a finished run; corrected 21 September 2026 from pmset -g log. The JSONL beside it is left exactly as the tool wrote it"
+}

@@ -1,0 +1,37 @@
+{"t": 0.0, "kind": "start", "program_words": 332, "hours": 72.0, "expect": {"pulse_sum": 28, "node_sum": 3072, "codex_sum": 178}}
+{"t": 78.979, "kind": "launch", "n": 1, "first": null}
+{"t": 83.678, "kind": "launch", "n": 2, "first": {"pulse_sum": 28, "node_sum": 3072, "codex_sum": 178, "card_hi": 18502, "card_lo": 21297, "init_attempts": 1, "read_attempts": 1}}
+{"t": 83.684, "kind": "first_cycle", "ok": true, "pulse_sum": 28, "node_sum": 3072, "codex_sum": 178, "init_attempts": 1, "read_attempts": 1, "card_word": 1212568369, "launches": 2}
+{"t": 84.445, "kind": "gap", "gap": 84.444, "heartbeats": 1, "errors": 0, "sd_fails": 0, "wraps": 0, "counter_hi": 16690, "sd_status": 10, "cycles": 1024}
+{"t": 84.445, "kind": "sample", "gap": 84.444, "host_s": 84.4, "board_s": 2.5, "heartbeats": 1, "errors": 0, "sd_fails": 0, "wraps": 0, "counter_hi": 16690, "sd_status": 10, "cycles": 1024}
+{"t": 145.69, "kind": "sample", "gap": 1.522, "host_s": 145.7, "board_s": 63.9, "heartbeats": 40, "errors": 0, "sd_fails": 0, "wraps": 0, "counter_hi": 421220, "sd_status": 10, "cycles": 40960}
+{"t": 207.21, "kind": "sample", "gap": 1.781, "host_s": 207.2, "board_s": 125.3, "heartbeats": 79, "errors": 0, "sd_fails": 0, "wraps": 0, "counter_hi": 825761, "sd_status": 10, "cycles": 80896}
+{"t": 268.577, "kind": "sample", "gap": 1.538, "host_s": 268.6, "board_s": 186.6, "heartbeats": 118, "errors": 0, "sd_fails": 0, "wraps": 1, "counter_hi": 181734, "sd_status": 10, "cycles": 120832}
+{"t": 329.814, "kind": "sample", "gap": 1.54, "host_s": 329.8, "board_s": 248.0, "heartbeats": 157, "errors": 0, "sd_fails": 0, "wraps": 1, "counter_hi": 586300, "sd_status": 10, "cycles": 160768}
+{"t": 391.297, "kind": "sample", "gap": 1.543, "host_s": 391.3, "board_s": 309.4, "heartbeats": 196, "errors": 0, "sd_fails": 0, "wraps": 1, "counter_hi": 990865, "sd_status": 10, "cycles": 200704}
+{"t": 452.582, "kind": "sample", "gap": 1.558, "host_s": 452.6, "board_s": 370.8, "heartbeats": 235, "errors": 0, "sd_fails": 0, "wraps": 2, "counter_hi": 346851, "sd_status": 10, "cycles": 240640}
+{"t": 513.975, "kind": "sample", "gap": 1.559, "host_s": 514.0, "board_s": 432.1, "heartbeats": 274, "errors": 0, "sd_fails": 0, "wraps": 2, "counter_hi": 751415, "sd_status": 10, "cycles": 280576}
+{"t": 575.31, "kind": "sample", "gap": 1.558, "host_s": 575.3, "board_s": 493.5, "heartbeats": 313, "errors": 0, "sd_fails": 0, "wraps": 3, "counter_hi": 107398, "sd_status": 10, "cycles": 320512}
+{"t": 636.696, "kind": "sample", "gap": 1.553, "host_s": 636.7, "board_s": 554.9, "heartbeats": 352, "errors": 0, "sd_fails": 0, "wraps": 3, "counter_hi": 511958, "sd_status": 10, "cycles": 360448}
+{"t": 698.049, "kind": "sample", "gap": 1.558, "host_s": 698.0, "board_s": 616.3, "heartbeats": 391, "errors": 0, "sd_fails": 0, "wraps": 3, "counter_hi": 916520, "sd_status": 10, "cycles": 400384}
+{"t": 759.425, "kind": "sample", "gap": 1.553, "host_s": 759.4, "board_s": 677.6, "heartbeats": 430, "errors": 0, "sd_fails": 0, "wraps": 4, "counter_hi": 272505, "sd_status": 10, "cycles": 440320}
+{"t": 820.752, "kind": "sample", "gap": 1.543, "host_s": 820.8, "board_s": 739.0, "heartbeats": 469, "errors": 0, "sd_fails": 0, "wraps": 4, "counter_hi": 677070, "sd_status": 10, "cycles": 480256}
+{"t": 882.154, "kind": "sample", "gap": 1.552, "host_s": 882.2, "board_s": 800.4, "heartbeats": 508, "errors": 0, "sd_fails": 0, "wraps": 5, "counter_hi": 33059, "sd_status": 10, "cycles": 520192}
+{"t": 943.56, "kind": "sample", "gap": 1.558, "host_s": 943.6, "board_s": 861.8, "heartbeats": 547, "errors": 0, "sd_fails": 0, "wraps": 5, "counter_hi": 437617, "sd_status": 10, "cycles": 560128}
+{"t": 1004.987, "kind": "sample", "gap": 1.56, "host_s": 1005.0, "board_s": 923.1, "heartbeats": 586, "errors": 0, "sd_fails": 0, "wraps": 5, "counter_hi": 842181, "sd_status": 10, "cycles": 600064}
+{"t": 1066.491, "kind": "sample", "gap": 1.796, "host_s": 1066.5, "board_s": 984.5, "heartbeats": 625, "errors": 0, "sd_fails": 0, "wraps": 6, "counter_hi": 198167, "sd_status": 10, "cycles": 640000}
+{"t": 1127.709, "kind": "sample", "gap": 1.552, "host_s": 1127.7, "board_s": 1045.9, "heartbeats": 664, "errors": 0, "sd_fails": 0, "wraps": 6, "counter_hi": 602727, "sd_status": 10, "cycles": 679936}
+{"t": 1189.146, "kind": "sample", "gap": 1.558, "host_s": 1189.1, "board_s": 1107.2, "heartbeats": 703, "errors": 0, "sd_fails": 0, "wraps": 6, "counter_hi": 1007285, "sd_status": 10, "cycles": 719872}
+{"t": 1250.418, "kind": "sample", "gap": 1.551, "host_s": 1250.4, "board_s": 1168.6, "heartbeats": 742, "errors": 0, "sd_fails": 0, "wraps": 7, "counter_hi": 363265, "sd_status": 10, "cycles": 759808}
+{"t": 1311.781, "kind": "sample", "gap": 1.557, "host_s": 1311.8, "board_s": 1230.0, "heartbeats": 781, "errors": 0, "sd_fails": 0, "wraps": 7, "counter_hi": 767821, "sd_status": 10, "cycles": 799744}
+{"t": 1373.256, "kind": "sample", "gap": 1.554, "host_s": 1373.3, "board_s": 1291.4, "heartbeats": 820, "errors": 0, "sd_fails": 0, "wraps": 8, "counter_hi": 123799, "sd_status": 10, "cycles": 839680}
+{"t": 1434.65, "kind": "sample", "gap": 1.541, "host_s": 1434.6, "board_s": 1352.7, "heartbeats": 859, "errors": 0, "sd_fails": 0, "wraps": 8, "counter_hi": 528361, "sd_status": 10, "cycles": 879616}
+{"t": 1496.098, "kind": "sample", "gap": 1.814, "host_s": 1496.1, "board_s": 1414.1, "heartbeats": 898, "errors": 0, "sd_fails": 0, "wraps": 8, "counter_hi": 932926, "sd_status": 10, "cycles": 919552}
+{"t": 1557.359, "kind": "sample", "gap": 1.521, "host_s": 1557.4, "board_s": 1475.5, "heartbeats": 937, "errors": 0, "sd_fails": 0, "wraps": 9, "counter_hi": 288913, "sd_status": 10, "cycles": 959488}
+{"t": 1618.632, "kind": "sample", "gap": 1.53, "host_s": 1618.6, "board_s": 1536.9, "heartbeats": 976, "errors": 0, "sd_fails": 0, "wraps": 9, "counter_hi": 693478, "sd_status": 10, "cycles": 999424}
+{"t": 1678.651, "kind": "sample", "gap": 1.783, "host_s": 1678.7, "board_s": 1596.7, "heartbeats": 1014, "errors": 0, "sd_fails": 0, "wraps": 10, "counter_hi": 39104, "sd_status": 10, "cycles": 1038336}
+{"t": 1739.842, "kind": "sample", "gap": 1.552, "host_s": 1739.8, "board_s": 1658.0, "heartbeats": 1053, "errors": 0, "sd_fails": 0, "wraps": 10, "counter_hi": 443706, "sd_status": 10, "cycles": 1078272}
+{"t": 1801.261, "kind": "sample", "gap": 1.555, "host_s": 1801.3, "board_s": 1719.4, "heartbeats": 1092, "errors": 0, "sd_fails": 0, "wraps": 10, "counter_hi": 848317, "sd_status": 10, "cycles": 1118208}
+{"t": 1862.584, "kind": "sample", "gap": 1.56, "host_s": 1862.6, "board_s": 1780.8, "heartbeats": 1131, "errors": 0, "sd_fails": 0, "wraps": 11, "counter_hi": 204347, "sd_status": 10, "cycles": 1158144}
+{"t": 1924.09, "kind": "sample", "gap": 1.523, "host_s": 1924.1, "board_s": 1842.2, "heartbeats": 1170, "errors": 0, "sd_fails": 0, "wraps": 11, "counter_hi": 608957, "sd_status": 10, "cycles": 1198080}
+{"t": 2005.002, "kind": "end", "target": "burn-in", "program": "rtl/programs/burn_in.hasm", "board": "Tang Nano 20K", "clock_hz": 27000000, "port": "/dev/tty.usbserial-20250303171", "started": "2026-09-21T04:40:23.512224+00:00", "first_cycle": {"pulse_sum": 28, "node_sum": 3072, "codex_sum": 178, "init_attempts": 1, "read_attempts": 1, "card_word": 1212568369, "launches": 2}, "host_seconds": 2004.9, "board_seconds": 1876.8, "board_minus_host_s": -128.1, "heartbeats": 1192, "cycles": 1220608, "errors": 0, "sd_read_failures": 0, "longest_gap_s": 84.444, "longest_gap_at_s": 84.4, "unparsed_lines": 0, "heartbeat_cycles": 1024, "ended": "duration reached"}

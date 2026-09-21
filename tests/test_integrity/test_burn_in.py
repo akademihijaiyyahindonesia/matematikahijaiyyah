@@ -34,6 +34,7 @@ from burn_in import (  # noqa: E402
     Feed,
     Run,
     expected_first_cycle,
+    listen,
     uptime_s,
 )
 from burn_in_report import (  # noqa: E402
@@ -388,3 +389,45 @@ def test_the_work_figure_takes_every_number_from_the_same_beat(tmp_path: Path) -
     assert b["beats_emitted_by_board"] == summary["cycles"] // HEARTBEAT_CYCLES
     assert b["beats_emitted_by_board"] >= b["beats_parsed_by_host"]
     assert b["work_accounted"] == pytest.approx(1.0, abs=0.01)
+
+
+class _VanishingPort:
+    """A serial port that works, then disappears -- as the Tang Nano's did when
+    the MacBook hibernated at 1% battery and cut USB power."""
+
+    def __init__(self, good_reads: int) -> None:
+        self.left = good_reads
+
+    def read(self, _: int) -> bytes:
+        if self.left == 0:
+            raise OSError(6, "Device not configured")
+        self.left -= 1
+        return b""
+
+
+def test_a_run_that_lost_its_port_does_not_say_it_finished(tmp_path: Path) -> None:
+    """The first 72-hour run ended at minute 33 and its record said "duration
+    reached". A record that lies about why it ended looks like a finished run,
+    which is worse than no record."""
+    import time
+
+    note = listen(_VanishingPort(3), _feed(tmp_path), time.time() + 60)
+    assert note.startswith("STOPPED EARLY"), note
+    assert "Device not configured" in note
+    assert "duration reached" not in note
+
+
+class _SteadyPort:
+    """A port that never vanishes, and waits a little the way a real read does."""
+
+    def read(self, _: int) -> bytes:
+        import time
+        time.sleep(0.001)
+        return b""
+
+
+def test_a_run_that_reaches_its_deadline_says_so(tmp_path: Path) -> None:
+    import time
+
+    note = listen(_SteadyPort(), _feed(tmp_path), time.time() + 0.05)
+    assert note == "duration reached"

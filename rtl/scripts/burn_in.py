@@ -262,6 +262,46 @@ class Feed:
         self.pending = []
 
 
+def listen(link, feed: Feed, deadline: float) -> str:
+    """Read until the deadline, and say truthfully why the reading stopped.
+
+    The first version of this said "duration reached" whenever the loop was
+    left by anything but Ctrl-C. On 21 September the serial device vanished
+    33 minutes into the 72-hour run -- the MacBook hibernated at 1% battery and
+    took USB power with it -- and the record that came out said "duration
+    reached". A record that lies about why it ended is worse than no record:
+    it looks like a finished run.
+    """
+    try:
+        while time.time() < deadline:
+            feed.take(link.read(256))
+    except KeyboardInterrupt:
+        return "stopped before the duration"
+    except Exception as exc:          # the port vanishing, above all
+        return f"STOPPED EARLY: {type(exc).__name__}: {exc}"
+    return "duration reached"
+
+
+def keep_awake() -> subprocess.Popen[bytes] | None:
+    """Hold a macOS power assertion for as long as this process lives.
+
+    Measured, not assumed, 21 September 2026: tier 1's fourteen long silences
+    were the MacBook in Deep Idle, dark-waking every sixteen minutes -- the
+    logger froze with it and read only in the ~40-second wakes. The board kept
+    running because ordinary sleep keeps USB powered. The first 72-hour run
+    died when the battery reached 1% and the Mac HIBERNATED, which does not.
+
+    `caffeinate -s -i -w <pid>` prevents system and idle sleep while this pid
+    is alive (-s holds only on AC power). It changes no setting; the assertion
+    ends with the process. Not on macOS, it does nothing and says so.
+    """
+    import os
+    import shutil
+    if shutil.which("caffeinate") is None:
+        return None
+    return subprocess.Popen(["caffeinate", "-s", "-i", "-w", str(os.getpid())])
+
+
 def configure(bitstream: Path) -> None:
     subprocess.run(["openFPGALoader", "-b", "tangnano20k", str(bitstream)],
                    check=True, capture_output=True)
@@ -322,6 +362,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--bitstream", type=Path, default=BITSTREAM)
     ap.add_argument("--no-configure", dest="configure", action="store_false",
                     help="do not load the bitstream; take the board as it is")
+    ap.add_argument("--allow-sleep", action="store_true",
+                    help="do not hold the macOS power assertion")
     args = ap.parse_args(argv)
 
     want = expected_first_cycle()
@@ -350,7 +392,9 @@ def main(argv: list[str] | None = None) -> int:
         raise KeyboardInterrupt(f"signal {signum}")
 
     signal.signal(signal.SIGTERM, stop)
-    run.write("start", program_words=words, hours=args.hours, expect=want)
+    awake = None if args.allow_sleep else keep_awake()
+    run.write("start", program_words=words, hours=args.hours, expect=want,
+              keeping_host_awake=awake is not None)
     print(f"logging to {(OUT / f'{ident}.jsonl').relative_to(ROOT)}")
     link = None
     for launch in range(1, args.launches + 1):
@@ -389,18 +433,12 @@ def main(argv: list[str] | None = None) -> int:
     link.timeout = 0.25
     deadline = time.time() + args.hours * 3600
     feed = Feed(run, want, args.gap_threshold, beating=bool(run.first))
-    note = "duration reached"
-    try:
-        while time.time() < deadline:
-            feed.take(link.read(256))
-    except KeyboardInterrupt:
-        note = "stopped before the duration"
-    finally:
-        link.close()
-        record = run.summary(args.port, note)
-        (OUT / f"{ident}.json").write_text(json.dumps(record, indent=2) + "\n")
-        run.write("end", **record)
-        run.log.close()
+    note = listen(link, feed, deadline)
+    link.close()
+    record = run.summary(args.port, note)
+    (OUT / f"{ident}.json").write_text(json.dumps(record, indent=2) + "\n")
+    run.write("end", **record)
+    run.log.close()
     print(f"\n{record['heartbeats']} heartbeats, {record['cycles']} cycles, "
           f"{record['errors']} error(s), {record['sd_read_failures']} card read(s) "
           f"unfinished; board {record['board_seconds']}s against host "

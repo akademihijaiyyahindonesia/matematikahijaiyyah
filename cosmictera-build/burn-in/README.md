@@ -121,8 +121,50 @@ dan itu prioritas 7.
 | lari | tingkat | hasil |
 |---|---|---|
 | `20260920T013538Z-burn-in-24h` | 24 jam | **tutup, 0 error** — 21 September 2026 01:35 UTC |
+| `20260921T044023Z-burn-in-72h-attempt1` | 72 jam | **berhenti di menit ke-33** — host berhibernasi, bukan papan |
+| `20260921T053430Z-burn-in-72h` | 72 jam | **sedang berjalan**, host ditahan terjaga |
 
-Tingkat 72 jam dan 168 jam belum dijalankan.
+Tingkat 168 jam belum dijalankan.
+
+## Pengamatnya tidur — diukur dari catatan daya host
+
+**Keempat belas diam panjang tingkat 1 adalah MacBook yang tidur.** Catatan
+daya mesin ini sendiri (`pmset -g log`) memperlihatkan Mac dalam *Deep Idle*,
+di baterai 88%, dengan **DarkWake setiap ±16 menit**: 21:32, 21:48, 22:05,
+22:20, 22:37 … waktu lokal. Tingkat 1 dimulai 01:35:38 UTC; detik ke-46.600
+jatuh tepat pada **21:32 lokal — DarkWake pertama**. Logger membeku bersama
+Mac dan hanya membaca selama tiap DarkWake ±30–45 detik; itulah "diam ±925
+detik, lalu ratusan detak terkuras". Papan tetap bekerja karena tidur biasa
+tidak memutus daya USB — dan kerja terhadap jam papan 1,0002 sudah
+mengatakannya sebelum sebabnya diketahui.
+
+**Percobaan pertama 72 jam mati karena hal yang lebih berat: hibernasi.**
+
+```
+12:13:00 +0700  Sleep  "Low Power Sleep" ... Using AC (Charge:1%)
+12:13:48 +0700  Wake   from Hibernate ... Using AC (Charge:3%)
+```
+
+Baterai habis sesudah berjam-jam di baterai, Mac masuk hibernasi walau sudah
+tersambung charger, **hibernasi memutus daya USB**, dan papan kembali
+menjalankan image pabrik LiteX dari flash — `No boot medium found`,
+`litex>`. Logger mati pada detik yang sama dengan bangunnya Mac, 12:13:48.
+Sampai detik itu lari bersih: 1.170 detak, 0 error.
+
+**Dan alat saya berbohong tentang itu.** Ringkasan percobaan pertama menulis
+`"ended": "duration reached"`, karena `burn_in.py` menamai setiap keluar
+selain Ctrl-C sebagai lari yang selesai. Sekarang ia mencatat sebab
+sebenarnya — `STOPPED EARLY: <jenis>: <pesan>` — dan ringkasan percobaan
+pertama sudah dibetulkan dari catatan daya, dengan medan yang menyatakan
+koreksinya. Berkas JSONL di sebelahnya dibiarkan persis seperti yang alat
+tulis.
+
+**Percobaan kedua menahan host tetap terjaga.** `burn_in.py` sekarang
+memegang `caffeinate -s -i -w <pid>`: asersi daya macOS yang mencegah tidur
+selama proses logger hidup, hanya di daya AC. Ia tidak mengubah satu pun
+setelan dan berakhir bersama prosesnya. Satu hal tetap di luar jangkauan
+alat: **Mac harus tetap tersambung ke charger yang cukup**, karena hibernasi
+akibat baterai habis mengalahkan asersi apa pun.
 
 ## Tingkat 1 — hasil, 24 jam penuh
 
