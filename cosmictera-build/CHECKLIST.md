@@ -30,9 +30,9 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **5.196 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **5.219 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
-| ✅ | mypy bersih, 139 berkas | `make typecheck` |
+| ✅ | mypy bersih, 140 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
 | ✅ | Citra ROM terbangkitkan | `make rom` |
 | ✅ | ROM cocok dengan tabel | `python3 rtl/scripts/cross_verify_rom.py` |
@@ -41,13 +41,13 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 5.196 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 5.219 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **5.194 lulus, 1 dilewati, 1 gagal dari 5.196**: sidik jari
+Hari ini kebenarannya **5.217 lulus, 1 dilewati, 1 gagal dari 5.219**: sidik jari
 `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.
 

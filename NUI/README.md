@@ -16,7 +16,9 @@ modul — diturunkan dari badannya, tidak ditulis — lihat
 program HASM dijalankan — tiap langkah sebelum → sesudah, tiap edge dengan
 langkah dan barisnya — lihat [`EXECUTION.md`](EXECUTION.md); untuk apakah
 interpreter, RTL, dan papan menjawab sama, dan di langkah mana mereka berpisah
-kalau tidak — lihat [`PARITY.md`](PARITY.md). Fondasi di
+kalau tidak — lihat [`PARITY.md`](PARITY.md); untuk USR, kalimat tiga bahasa,
+katalog perintah Lapis 5, dan kamus HC — lihat [`SEMANTIK.md`](SEMANTIK.md).
+Fondasi di
 bawah semua fase itu — huruf sebagai alamat (indeks Master Table = opcode
 HISA = alamat ROM HCPU) dengan dua wujud, perangkat lunak dan fisik
 (UART nyata pada 27 MHz) — ada di `nui/atom.py`, dijelaskan di

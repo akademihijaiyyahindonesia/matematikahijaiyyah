@@ -1,0 +1,80 @@
+{
+ "version": 1,
+ "title": "Katalog perintah Lapis 5",
+ "allowlist": "NUI/LAYERS.md, Lapis 5, tabel diizinkan/belum diizinkan -- dibaca dari sana, tidak disalin (R1)",
+ "entries": [
+  {
+   "action": "READ",
+   "object": "FILE",
+   "argv": [
+    "cat",
+    "{target}"
+   ],
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- READ FILE -> cat"
+  },
+  {
+   "action": "READ",
+   "object": "PROCESS",
+   "argv": [
+    "ps",
+    "aux"
+   ],
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- READ PROCESS -> ps; pemilik, 21 September 2026 -- اعرض العمليات النشطة -> ps aux"
+  },
+  {
+   "action": "READ",
+   "object": "SERVICE",
+   "argv": [
+    "systemctl",
+    "status",
+    "{target}"
+   ],
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- READ SERVICE -> systemctl status"
+  },
+  {
+   "action": "READ",
+   "object": "JOURNAL",
+   "argv": [
+    "journalctl"
+   ],
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- READ JOURNAL -> journalctl"
+  },
+  {
+   "action": "READ",
+   "object": "NETWORK",
+   "argv": [
+    "ip"
+   ],
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- READ NETWORK -> ip"
+  },
+  {
+   "action": "READ",
+   "object": "CONTAINER",
+   "argv": [
+    "docker",
+    "ps"
+   ],
+   "status": "usulan",
+   "source": "`docker ps` di daftar izin"
+  },
+  {
+   "action": "READ",
+   "object": "DIRECTORY",
+   "argv": [
+    "ls",
+    "{target}"
+   ],
+   "status": "usulan",
+   "source": "`ls` di daftar izin"
+  }
+ ],
+ "open": [
+  "`ip` (READ NETWORK) tidak ada di daftar izin tahap pertama: masukkan ke daftar izin, atau petakan READ NETWORK ke perintah lain?",
+  "Opsi perintah (misalnya `journalctl -u <unit>`, `-n <jumlah>`) belum ditetapkan; katalog hanya memakai bentuk yang pemilik tulis."
+ ]
+}

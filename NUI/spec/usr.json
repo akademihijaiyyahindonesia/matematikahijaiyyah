@@ -1,0 +1,240 @@
+{
+ "version": 1,
+ "title": "Universal Semantic Representation (USR)",
+ "fields": [
+  {
+   "name": "action",
+   "required": true,
+   "values": "actions",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026",
+   "required_status": "usulan"
+  },
+  {
+   "name": "object",
+   "required": true,
+   "values": "objects",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026",
+   "required_status": "usulan"
+  },
+  {
+   "name": "target",
+   "required": false,
+   "rule": "per OBJECT, lihat objects[].target",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026",
+   "required_status": "usulan"
+  },
+  {
+   "name": "context",
+   "required": false,
+   "values": "contexts",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026",
+   "required_status": "usulan"
+  },
+  {
+   "name": "state",
+   "required": false,
+   "values": "states",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026",
+   "required_status": "usulan"
+  }
+ ],
+ "case": {
+  "rule": "ACTION dan OBJECT huruf besar; CONTEXT dan STATE huruf kecil",
+  "status": "ditetapkan",
+  "source": "pemilik, 22 September 2026 -- contoh {\"action\": \"READ\", \"object\": \"FILE\", ..., \"context\": \"ubuntu_host\", \"state\": \"latest\"}; contoh 21 September memakai huruf kecil ({\"action\": \"read\", \"object\": \"file\"}), dan yang berlaku yang terakhir"
+ },
+ "actions": [
+  {
+   "name": "READ",
+   "stage": 1,
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- satu-satunya aksi tahap pertama: Lapis 5 hanya baca"
+  },
+  {
+   "name": "WRITE",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- target awal Lapis 5: write file"
+  },
+  {
+   "name": "COPY",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- copy file"
+  },
+  {
+   "name": "MOVE",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- move file"
+  },
+  {
+   "name": "DELETE",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- delete file"
+  },
+  {
+   "name": "KILL",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- kill"
+  },
+  {
+   "name": "START",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- systemctl start"
+  },
+  {
+   "name": "STOP",
+   "stage": null,
+   "status": "dinyatakan, belum diizinkan",
+   "source": "pemilik, 21 September 2026 -- systemctl stop"
+  }
+ ],
+ "objects": [
+  {
+   "name": "FILE",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026",
+   "target": {
+    "kind": "path",
+    "required": true,
+    "examples": [
+     "/var/log/syslog",
+     "nginx.log"
+    ],
+    "status": "ditetapkan",
+    "source": "contoh pemilik 22 September: /var/log/syslog, nginx.log"
+   }
+  },
+  {
+   "name": "PROCESS",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- katalog: READ PROCESS",
+   "target": {
+    "kind": "none",
+    "required": false,
+    "status": "usulan"
+   }
+  },
+  {
+   "name": "SERVICE",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- katalog: READ SERVICE",
+   "target": {
+    "kind": "unit",
+    "required": false,
+    "status": "usulan"
+   }
+  },
+  {
+   "name": "NETWORK",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- katalog: READ NETWORK",
+   "target": {
+    "kind": "none",
+    "required": false,
+    "status": "usulan"
+   }
+  },
+  {
+   "name": "JOURNAL",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- katalog: READ JOURNAL",
+   "target": {
+    "kind": "unit",
+    "required": false,
+    "status": "usulan"
+   }
+  },
+  {
+   "name": "CONTAINER",
+   "status": "usulan",
+   "source": "wilayah Lapis 5 'Container' (pemilik, 21 September 2026) dan `docker ps` di daftar izin; belum ada OBJECT untuknya",
+   "target": {
+    "kind": "none",
+    "required": false,
+    "status": "usulan"
+   }
+  },
+  {
+   "name": "DIRECTORY",
+   "status": "usulan",
+   "source": "`ls` di daftar izin; FILE dengan `cat` tidak bisa membaca direktori",
+   "target": {
+    "kind": "path",
+    "required": true,
+    "status": "usulan"
+   }
+  }
+ ],
+ "target_rules": [
+  {
+   "rule": "TARGET adalah satu string, diteruskan sebagai SATU elemen argv -- tidak pernah lewat shell, jadi ; | & $ ` tidak punya arti apa pun",
+   "status": "usulan",
+   "source": "keamanan: perintah host dibentuk sebagai daftar argumen"
+  },
+  {
+   "rule": "TARGET tidak boleh diawali '-': ia akan dibaca perintah sebagai opsi, bukan sebagai nama",
+   "status": "usulan",
+   "source": "keamanan"
+  },
+  {
+   "rule": "TARGET tidak boleh memuat baris baru atau karakter NUL",
+   "status": "usulan",
+   "source": "keamanan"
+  }
+ ],
+ "contexts": [
+  {
+   "name": "ubuntu_host",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026"
+  }
+ ],
+ "states": [
+  {
+   "name": "latest",
+   "status": "contoh pemilik; artinya belum ditetapkan",
+   "source": "pemilik, 22 September 2026"
+  }
+ ],
+ "phrases": {
+  "grammar": "<kata kerja> <objek> [<target>] -- target adalah sisa kalimat",
+  "grammar_status": "usulan",
+  "verbs": [
+   {
+    "action": "READ",
+    "ar": "اقرأ",
+    "id": "baca",
+    "en": "read",
+    "status": "ditetapkan",
+    "source": "pemilik, 21 September 2026 -- اقرأ ملف / baca file / read file"
+   }
+  ],
+  "objects": [
+   {
+    "object": "FILE",
+    "ar": "ملف",
+    "id": "file",
+    "en": "file",
+    "status": "ditetapkan",
+    "source": "pemilik, 21 September 2026"
+   }
+  ]
+ },
+ "open": [
+  "Apa arti STATE `latest`: isi saat ini, atau entri terbaru saja?",
+  "CONTEXT selain `ubuntu_host` -- misalnya papan HCPU -- belum ada.",
+  "Kosakata kata kerja dan objek selain read/file dalam tiga bahasa belum ditetapkan.",
+  "Apakah satu kalimat boleh mencampur bahasa (`read ملف x`)?",
+  "Contoh pemilik 21 September, `اعرض العمليات النشطة` -> `ps aux`, belum dipetakan: `اعرض` (tampilkan) sebagai READ, `العمليات` sebagai PROCESS, dan `النشطة` (aktif) sebagai STATE adalah tafsiran yang belum disahkan."
+ ]
+}

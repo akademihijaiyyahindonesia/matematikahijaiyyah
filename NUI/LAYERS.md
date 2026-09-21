@@ -89,15 +89,22 @@ keduanya pada hari yang sama** (keputusannya di `AGENTS.md`):
   repositori tetap HC.
 
 Kata kunci multibahasa tahap pertama hanya lima, dan *"jangan tambah sampai
-pipeline terbukti"*:
+pipeline terbukti"*. Tabelnya tinggal di `NUI/spec/hc_kamus.json`, ditampilkan
+di [`SEMANTIK.md`](SEMANTIK.md), dengan dua koreksi terukur atas tabel pemilik:
+kata kunci HC untuk *function* adalah `fn`, dan `print` maupun `println`
+sama-sama fungsi bawaan HC.
 
-| HC | Arab | Indonesia |
-|---|---|---|
-| `let` | `متغير` | `variabel` |
-| `print` | `اطبع` | `cetak` |
-| `if` | `اذا` | `jika` |
-| `while` | `بينما` | `selama` |
-| `function` | `دالة` | `fungsi` |
+**Spesifikasi lapisan semantik, 22 September 2026**, dikerjakan sambil
+menunggu burn-in atas permintaan pemilik: USR, kalimat tiga bahasa → USR,
+katalog perintah Lapis 5, dan kamus HC beserta aturan token parsernya.
+Semuanya JSON di `NUI/spec/`, dibaca `src/hijaiyyah/nui/usr.py` — yang
+memvalidasi dan memetakan ke argv tetapi **tidak menjalankan apa pun** — dan
+ditarik ke [`SEMANTIK.md`](SEMANTIK.md). Tiap entri menyebut miliknya:
+`ditetapkan` untuk keputusan pemilik, `usulan` untuk usulan yang menunggu.
+Diukur untuk aturan token: dari 19 sumber HC di repositori tidak satu pun
+menulis dua huruf telanjang berdampingan, jadi membaca deretan huruf sebagai
+kata tidak mematahkan apa pun; dan `دالة` memuat `ة`, huruf di luar 28 yang
+lexer HC kenal.
 
 Prioritasnya bukan bahasa: Lapis 5 lebih dulu, karena NUI harus mampu
 mengendalikan sistem nyata sebelum diajak bicara.
@@ -111,7 +118,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **23 modul**; `tests/test_ai/` berisi **208 tes**
+`src/hijaiyyah/nui/` berisi **24 modul**; `tests/test_ai/` berisi **231 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -132,13 +139,14 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.172 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.184 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
 | `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
 | `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
 | `board_parity.py` | apa yang dikirim ke papan dan apa yang harus kembali, dengan epilog pembaca register | `test_nui_board_parity.py` (10) |
+| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC — divalidasi, tidak dijalankan | `test_nui_usr.py` (23) |
 
 ---
 
@@ -190,13 +198,13 @@ dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
-*references*, dan sekarang keduanya ada: 92 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 722 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.360 node, 3.581 edge**.
+*references*, dan sekarang keduanya ada: 93 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 734 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.375 node, 3.610 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
-**92** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
+**93** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
 kalau dokumen diambil dari disk lagi.
 
 **Yang belum ada.** **Edge pemanggilan** — fungsi mana memanggil fungsi mana.
@@ -241,7 +249,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.172 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.184 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan

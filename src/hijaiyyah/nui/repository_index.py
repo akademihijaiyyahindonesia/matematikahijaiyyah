@@ -74,17 +74,23 @@ def _module(path: Path) -> str | None:
     return ".".join(parts)
 
 
-@lru_cache(maxsize=1)
-def tracked_docs() -> tuple[str, ...]:
-    """Every Markdown file git tracks. Empty if git is not available -- the
-    graph then says it has no documents rather than guessing at the disk."""
+@lru_cache(maxsize=None)
+def tracked(pattern: str) -> tuple[str, ...]:
+    """Every file git tracks that matches `pattern`. Empty if git is not
+    available -- a caller then says it found nothing rather than guessing at
+    the disk, where private folders sit beside the repository's own."""
     import subprocess
     try:
-        out = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT, check=True,
+        out = subprocess.run(["git", "ls-files", pattern], cwd=ROOT, check=True,
                              capture_output=True, text=True).stdout
     except (OSError, subprocess.CalledProcessError):
         return ()
     return tuple(sorted(line for line in out.splitlines() if line))
+
+
+def tracked_docs() -> tuple[str, ...]:
+    """Every Markdown file git tracks."""
+    return tracked("*.md")
 
 
 @lru_cache(maxsize=1)

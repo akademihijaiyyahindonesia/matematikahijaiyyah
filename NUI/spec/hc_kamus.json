@@ -1,0 +1,107 @@
+{
+ "version": 1,
+ "title": "Kamus HC Arab-Indonesia-Inggris",
+ "entries": [
+  {
+   "hc": "let",
+   "kind": "kata kunci",
+   "ar": "متغير",
+   "id": "variabel",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026 dan pemilik, 22 September 2026"
+  },
+  {
+   "hc": "println",
+   "kind": "fungsi bawaan",
+   "ar": "اطبع",
+   "id": "cetak",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 menulis `println`; pemilik, 21 September 2026 menulis `print`. Keduanya fungsi bawaan HC (src/hijaiyyah/language/evaluator.py) dan keduanya dikompilasi ke PRINT (src/hijaiyyah/compiler/codegen.py)"
+  },
+  {
+   "hc": "if",
+   "kind": "kata kunci",
+   "ar": "اذا",
+   "id": "jika",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026 dan pemilik, 22 September 2026"
+  },
+  {
+   "hc": "while",
+   "kind": "kata kunci",
+   "ar": "بينما",
+   "id": "selama",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026; tidak ada di tabel pemilik, 22 September 2026"
+  },
+  {
+   "hc": "fn",
+   "kind": "kata kunci",
+   "ar": "دالة",
+   "id": "fungsi",
+   "status": "ditetapkan",
+   "source": "pemilik menulis `function`; kata kunci HC untuknya adalah `fn` (src/hijaiyyah/language/tokens.py)"
+  }
+ ],
+ "not_hc": [
+  {
+   "name": "read_file",
+   "ar": "اقرأ_ملف",
+   "id": "baca_file",
+   "source": "pemilik, 22 September 2026",
+   "reason": "tidak ada di HC -- bukan kata kunci, bukan fungsi bawaan, bukan modul. Operasinya adalah USR READ FILE di host, bukan konstruksi bahasa; menambahkannya ke HC adalah keputusan bahasa, dan aturan 21 September berbunyi 'jangan tambah sampai pipeline terbukti'"
+  }
+ ],
+ "token_rules": [
+  {
+   "rule": "Satu huruf Hijaiyyah -- satu dari 28, termasuk هـ -- tetap literal hybit, tidak pernah kata kunci atau nama",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026"
+  },
+  {
+   "rule": "Deretan dua huruf Arab atau lebih tanpa pemisah dibaca sebagai SATU kata: kata kunci bila persis ada di tabel, nama bila tidak",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026 -- 'nama variabel Arab adalah kata penuh'"
+  },
+  {
+   "rule": "Huruf yang membentuk kata Arab adalah blok huruf Arab Unicode, termasuk yang bukan anggota 28: hamzah (أ إ آ ء ؤ ئ), ة, ى. Tanpa ini `دالة` dan `اقرأ` pecah, karena hari ini lexer HC hanya mengenal 28 huruf",
+   "status": "usulan",
+   "source": "diukur: `دالة` pecah jadi د ا ل + nama `ة`, `اقرأ` jadi ا ق ر + nama `أ`"
+  },
+  {
+   "rule": "Kata kunci Indonesia dicadangkan seperti kata kunci Inggris: `variabel`, `cetak`, `jika`, `selama`, `fungsi` tidak bisa lagi jadi nama",
+   "status": "usulan",
+   "source": "diukur: tak satu pun dipakai sebagai nama di kode HC repositori"
+  },
+  {
+   "rule": "Titik koma boleh dihilangkan, seperti contoh pemilik; HC hari ini sudah menerima pernyataan tanpa `;`",
+   "status": "diukur",
+   "source": "parser HC"
+  },
+  {
+   "rule": "Terjemahannya kata demi kata ke HC yang ada, lalu jalur HC -> HISA yang sudah terbukti; tidak ada compiler kedua",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026 -- HCL = HC diperluas"
+  }
+ ],
+ "examples": [
+  {
+   "source": "متغير angka = 10\nمتغير harga = 20\nاطبع angka + harga\n",
+   "hc": "let angka = 10;\nlet harga = 20;\nprintln(angka + harga);\n",
+   "status": "ditetapkan",
+   "source_note": "pemilik, 22 September 2026"
+  },
+  {
+   "source": "متغير س = 10\n",
+   "hc": null,
+   "status": "ditetapkan tidak sah",
+   "source_note": "pemilik, 21 September 2026 -- `س` sudah punya arti matematis"
+  }
+ ],
+ "open": [
+  "`print` atau `println` untuk `اطبع` / `cetak` -- dua tabel pemilik berbeda; keduanya ada di HC.",
+  "`while` ada di tabel 21 September, tidak di tabel 22 September -- tetap, atau dikeluarkan?",
+  "Ejaan: `اذا` (tabel pemilik) atau `إذا` (dengan hamzah) -- apakah keduanya diterima?",
+  "Harakat dan tatweel dalam kata kunci Arab: dibuang sebelum dicocokkan, atau ditolak?"
+ ]
+}
