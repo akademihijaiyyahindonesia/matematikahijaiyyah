@@ -16,6 +16,12 @@ the evidence is a place you can go and look:
                resolves, "features.py" does not, and the ambiguous ones are
                counted rather than guessed at.
     verifies   a fact from layer 0 pointing at what proves it.
+    references a DOCUMENT naming a file. Kept apart from `mentions` on
+               purpose: a page describing a module is a weaker relation than
+               code citing it, and the owner's fourth directive names it
+               "references".
+    defines    a Python file to a function or class it defines at top level,
+               node `path::name`, line number kept.
 
 Two relations are DERIVED and named so, because they are questions rather
 than edges: `verified_by` is the import edges whose source lives under
@@ -39,7 +45,7 @@ from functools import lru_cache
 
 from .repository_index import ROOT, Node, index, resolve
 
-EDGE_KINDS = ("imports", "mentions", "verifies")
+EDGE_KINDS = ("imports", "mentions", "verifies", "references", "defines")
 #: A repo path written inside a file. Anchored on a known top directory so
 #: that "features.py" alone -- which could be any of several -- is not guessed.
 PATH_IN_TEXT = re.compile(
@@ -130,6 +136,33 @@ def _mention_edges(node: Node, text: str, nodes: dict[str, Node]) -> list[Edge]:
     return edges
 
 
+def _definitions() -> tuple[list[Node], list[Edge]]:
+    """Top-level functions and classes under src/, as nodes of their own.
+
+    Parsed here with ast rather than borrowed from layer 2: layer 1 must not
+    depend on the layer above it, and a definition's name and line are the
+    same one fact whichever layer reads them."""
+    nodes, edges = [], []
+    for node in index().values():
+        if node.kind != "python" or not node.path.startswith("src/"):
+            continue
+        try:
+            tree = ast.parse((ROOT / node.path).read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for item in tree.body:
+            if isinstance(item, ast.ClassDef):
+                kind = "class"
+            elif isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
+                kind = "function"
+            else:
+                continue
+            key = f"{node.path}::{item.name}"
+            nodes.append(Node(path=key, kind=kind, module=None))
+            edges.append(Edge(node.path, key, "defines", f"line {item.lineno}"))
+    return nodes, edges
+
+
 def _fact_edges(nodes: dict[str, Node]) -> list[Edge]:
     from .facts import load
     edges = []
@@ -166,6 +199,10 @@ class Graph:
 
     def used_by(self, path: str) -> list[str]:
         return sorted({e.source for e in self.into(path, "imports")})
+
+    def documented_by(self, path: str) -> list[str]:
+        """Documents that name this file -- `references` edges only."""
+        return sorted({e.source for e in self.into(path, "references")})
 
     def verified_by(self, path: str) -> list[str]:
         """Tests that import it -- derived from import edges, not asserted."""
@@ -204,9 +241,12 @@ class Graph:
         mentions = sorted({e.target for e in self.out(path, "mentions")})
         cited_by = sorted({e.source for e in self.into(path, "verifies")})
         lines = [f"Node:        {node.path}  [{node.kind}]"]
+        defines = sorted({e.target.split("::")[1] for e in self.out(path, "defines")})
         for label, items in (("Depends On", self.depends_on(path)),
                              ("Used By", self.used_by(path)),
                              ("Verified By", self.verified_by(path)),
+                             ("Documented By", self.documented_by(path)),
+                             ("Defines", defines),
                              ("Mentions", mentions),
                              ("Hardware Link", self.hardware_links(path)),
                              ("Facts Citing It", cited_by)):
@@ -218,15 +258,23 @@ class Graph:
 
 @lru_cache(maxsize=1)
 def build() -> Graph:
-    nodes = index()
+    nodes = dict(index())
     edges: list[Edge] = []
-    for node in nodes.values():
+    for node in list(nodes.values()):
         if node.kind == "fact":
             continue
         text = (ROOT / node.path).read_text(encoding="utf-8", errors="replace")
         if node.kind in ("python", "test"):
             edges += _import_edges(node, text)
-        edges += _mention_edges(node, text, nodes)
+        found = _mention_edges(node, text, nodes)
+        if node.kind == "doc":
+            # A page naming a file references it; it does not cite it the way
+            # code does, and the two are never counted together.
+            found = [Edge(e.source, e.target, "references", e.evidence) for e in found]
+        edges += found
+    defined, defines = _definitions()
+    nodes.update({n.path: n for n in defined})
+    edges += defines
     edges += _fact_edges(nodes)
     return Graph(nodes=nodes, edges=collapse(edges))
 

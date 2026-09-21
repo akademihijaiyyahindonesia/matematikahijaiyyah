@@ -11,8 +11,10 @@ nyata — bukan inferensi LLM."*
 ## Bentuknya
 
 ```
-533 node      python 169 · test 158 · verilog 118 · hasm 62 · fakta 26
-1.577 edge    imports 744 · mentions 787 · verifies 46
+1.270 node    python 172 · tes 159 · verilog 118 · hasm 62 · fakta 26 ·
+              dokumen 90 · fungsi dan kelas 643
+3.292 edge    imports 754 · mentions 845 · references 975 · defines 643 ·
+              verifies 75
 ```
 
 | edge | dari mana | buktinya |
@@ -20,6 +22,8 @@ nyata — bukan inferensi LLM."*
 | `imports` | pernyataan `import`, diurai `ast`, diselesaikan ke berkas di repo ini | nomor baris |
 | `mentions` | path repo yang **tertulis** di dalam berkas — docstring, `.include` HASM, `$readmemh` Verilog. Nama telanjang ikut, **hanya kalau tepat satu berkas di pohon memakainya**: `loader.hasm` terselesaikan, `features.py` tidak | nomor baris |
 | `verifies` | fakta Lapis 0 menunjuk ke apa yang membuktikannya | status faktanya |
+| `references` | **dokumen** yang menyebut sebuah berkas. Terpisah dari `mentions` dengan sengaja: halaman yang menggambarkan modul adalah relasi yang lebih lemah daripada kode yang mengutipnya | nomor baris |
+| `defines` | berkas Python ke fungsi atau kelas tingkat atas yang didefinisikannya, node `path::nama` | nomor baris |
 
 **Satu relasi = satu edge.** Berkas yang menyebut berkas lain di empat puluh
 baris punya satu relasi, bukan empat puluh; `evidence` menyimpan tempat
@@ -40,10 +44,12 @@ sebuah parse, dan itu akan jadi inferensi pertama di graf yang dibangun supaya
 tidak punya satu pun. Contoh pemilik menyebut "siapa memanggil siapa", dan ia
 **tidak ada di sini**. Mengatakannya adalah beda antara celah dan kebohongan.
 
-**Dokumen.** 745 berkas Markdown belum jadi node: dokumen yang menyebut modul
-adalah relasi yang lebih lemah daripada yang mengimpornya, dan mencampur
-keduanya akan menaruh kutipan dan panggilan di pijakan yang sama. Dokumen
-sudah diikat ke pohon oleh `tests/test_integrity/test_agent_notes.py`.
+**Dokumen kini node — dan angka yang dulu tertulis di sini salah.** Versi
+pertama halaman ini menyebut 745 berkas Markdown. Itu hasil `find` di disk,
+yang ikut menghitung folder pribadi yang tak pernah di-commit. Repositori
+memuat **90**, dan sumbernya sekarang `git ls-files`: satu tes gagal kalau
+dokumen diambil dari disk lagi, dan satu lagi gagal kalau satu saja path dari
+folder pribadi muncul sebagai node.
 
 ## Lima pertanyaan pemilik, dijawab graf
 

@@ -4,14 +4,17 @@ The graph in `repository_graph` needs something to hang edges on, and that
 something has to be decided once and written down: which files are nodes,
 what kind each one is, and how a dotted import name turns back into a path.
 
--- the scope, and why it is not everything -------------------------------
-Nodes are CODE and FACTS -- Python, HASM, Verilog, and the JSON facts of
-layer 0. Not the 745 Markdown files: a document mentioning a module is a
-weaker relation than importing it, and mixing the two would put a citation
-and a call on the same footing. Documents are already held to the tree by
-tests/test_integrity/ (test_agent_notes.py checks every file a note names
-exists), so nothing is unguarded -- it is just not part of this graph yet,
-and the page says so rather than implying coverage it does not have.
+-- the scope ---------------------------------------------------------------
+Nodes are code, facts, and -- since the owner's fourth directive asked for
+them -- DOCUMENTATION. A document naming a module is a weaker relation than
+importing it, so it gets its own edge kind in the graph (`references`) and is
+never counted as an import or a code mention.
+
+Documents come from `git ls-files`, not from walking the disk, and that is
+the point: the disk holds private folders that are never committed, and the
+first count of Markdown files -- 745 -- included them. The repository holds
+90. Asking git is how the graph describes the repository and nothing beside
+it.
 """
 from __future__ import annotations
 
@@ -72,9 +75,24 @@ def _module(path: Path) -> str | None:
 
 
 @lru_cache(maxsize=1)
+def tracked_docs() -> tuple[str, ...]:
+    """Every Markdown file git tracks. Empty if git is not available -- the
+    graph then says it has no documents rather than guessing at the disk."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT, check=True,
+                             capture_output=True, text=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return ()
+    return tuple(sorted(line for line in out.splitlines() if line))
+
+
+@lru_cache(maxsize=1)
 def index() -> dict[str, Node]:
     """Every node, keyed by repo-relative path."""
     nodes: dict[str, Node] = {}
+    for rel in tracked_docs():
+        nodes[rel] = Node(path=rel, kind="doc", module=None)
     for tree in TREES:
         base = ROOT / tree
         if not base.is_dir():

@@ -15,42 +15,42 @@ tujuan, aset yang sudah ada, yang belum ada, cara verifikasi, dan syarat
 selesai. Yang belum ada ditulis kosong — bukan diisi rencana yang terdengar
 meyakinkan.
 
-## Penomorannya sudah berubah tiga kali, dan lapisnya dikunci pada nama
+## Penomorannya sudah berubah empat kali, dan lapisnya dikunci pada nama
 
-Perintah pemilik 21 September 2026 datang tiga kali dan menomori lapisnya tiga
-cara. **Yang berlaku yang terakhir**, dan pergeserannya dicatat di sini supaya
-tidak diam-diam — pola yang sama dipakai ketika urutan field tabel program
-bergeser antara dua pesan.
+Direktif NUI datang empat kali dan menomori lapisnya empat cara.
+**Yang berlaku yang terakhir**, dan pergeserannya dicatat di sini supaya tidak
+diam-diam — pola yang sama dipakai ketika urutan field tabel program bergeser
+antara dua pesan.
 
-| lapis (nama) | pesan 1 | pesan 2 | **berlaku** |
-|---|---:|---:|---:|
-| pengetahuan terverifikasi | 0 | 0 | **0** |
-| pemahaman repositori | 6 | 1 | **1** |
-| pemahaman program | 3 | 2 | **2** |
-| pemahaman eksekusi | — | 3 | **3** |
-| paritas perangkat lunak ↔ keras | 8 | 4 | **4** |
-| integrasi Linux | 5 | 5 | **5** |
-| pemahaman perangkat keras | 7 | 6 | **6** |
-| diagnostik otonom | — | 8 | **7** |
-| perencanaan perbaikan otonom | — | — | **8** |
-| mesin penalaran | — | 9 | **9** |
-| komputasi universal | — | 11 | **10** |
-| rekayasa otonom | 11 | 10 | **11** |
+| lapis (nama) | pesan 1 | pesan 2 | pesan 3 | **berlaku** |
+|---|---:|---:|---:|---:|
+| pengetahuan terverifikasi | 0 | 0 | 0 | **0** |
+| pemahaman repositori | 6 | 1 | 1 | **1** |
+| pemahaman program | 3 | 2 | 2 | **2** |
+| pemahaman eksekusi | — | 3 | 3 | **3** |
+| paritas perangkat lunak ↔ keras | 8 | 4 | 4 | **4** |
+| integrasi Linux | 5 | 5 | 5 | **5** |
+| pemahaman perangkat keras | 7 | 6 | 6 | **6** |
+| operasi otonom | — | — | — | **7** |
+| diagnostik otonom | — | 8 | 7 | **8** |
+| mesin penalaran | — | 9 | 9 | **9** |
+| rekayasa | 11 | 10 | 11 | **10** |
+| komputasi universal | — | 11 | 10 | **11** |
 
-**Isinya yang tidak berubah adalah asetnya.** Tiga penomoran, dan daftar
+**Isinya yang tidak berubah adalah asetnya.** Empat penomoran, dan daftar
 aset, celah, serta cara verifikasi tiap lapis hampir tidak bergeser — yang
 berpindah nomornya. Karena itu halaman ini dikunci pada **nama**: nomornya
 atribut, dan tabel di atas satu-satunya tempat ia hidup.
 
-**Satu lapis pesan kedua hilang di pesan ketiga: verifikasi fisik (dulu 7).**
-Asetnya tidak ikut hilang dan tidak boleh hilang — tangga bukti empat tingkat
-di `AGENTS.md`, `cosmictera-build/PAPAN.md`, sidik jari place and route, dan
-lima fakta `board` di `facts/` yang menandai dirinya tidak bisa diulang tanpa
-perangkat kerasnya. Semuanya tetap berlaku; yang berubah hanya bahwa ia bukan
-lapis bernomor lagi.
+**Dua lapis hilang di sepanjang jalan, dan asetnya tidak ikut hilang.**
+*Verifikasi fisik* (pesan 2) — tangga bukti empat tingkat di `AGENTS.md`,
+`cosmictera-build/PAPAN.md`, sidik jari place and route, dan fakta `board` di
+`facts/` tetap berlaku. *Perencanaan perbaikan otonom* (pesan 3) — isinya kini
+keluaran Lapis 8 (akar masalah, bukti, jalur reproduksi), dan disiplinnya
+tetap tertulis: K3–K6 dan R3.
 
-Penomoran keempat, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus:
-Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 11.
+Penomoran kelima, Fase 0–5 di `NUI/ROADMAP.md`, juga tidak dihapus:
+Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 10.
 
 ## Yang sudah berjalan hari ini, diukur
 
@@ -123,17 +123,25 @@ yang disebut harus ada), `test_build_list.py`, `test_recipe_folders.py`,
 `test_nui_layers.py` serta `test_facts.py`.
 
 **Sejak 21 September 2026 grafnya ada**: `src/hijaiyyah/nui/repository_index.py`
-(533 node — python, tes, verilog, hasm, fakta) dan
-`src/hijaiyyah/nui/repository_graph.py` (1.577 edge — `imports`, `mentions`,
-`verifies`), dijaga `tests/test_ai/test_nui_repository_graph.py` dan
+dan `src/hijaiyyah/nui/repository_graph.py` (`imports`, `mentions`,
+`references`, `verifies`, `defines`), dijaga `tests/test_ai/test_nui_repository_graph.py` dan
 dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
+
+Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
+*references*, dan sekarang keduanya ada: 90 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 643 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.270 node, 3.292 edge**.
+
+**Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
+ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
+**90** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
+kalau dokumen diambil dari disk lagi.
 
 **Yang belum ada.** **Edge pemanggilan** — fungsi mana memanggil fungsi mana.
 `ast` melihat modul mengimpor modul; melihat panggilan di bahasa dinamis butuh
 lebih dari parse, dan itu akan jadi inferensi pertama di graf yang dibangun
-supaya tidak punya satu pun. Dan **dokumen**: 745 berkas Markdown belum jadi
-node.
+supaya tidak punya satu pun.
 
 **Satu contoh yang sudah diukur, dan rantainya tidak seperti yang dikira.**
 Perintah pemilik mencontohkan `atom → rack → clockwork → freeze → multitask`.
@@ -204,8 +212,12 @@ sebut. Dipakai nyata oleh `rtl/scripts/attack_lab.py` dan
 `tests/test_integrity/test_burn_in.py`, yang menjalankan `burn_in.hasm` di
 interpreter dan membandingkan keluarannya.
 
-**Yang belum ada.** Prediksi. Yang ada menjalankan; belum ada yang
-memperkirakan keadaan akhir tanpa menjalankan.
+**Yang belum ada.** Prediksi, dan jejak panggilan saat berjalan. Direktif
+keempat meminta rantai `atom → rack → clockwork → freeze → multitask`
+**dibuktikan lewat eksekusi**. Lapis 1 sudah mengukur import-nya: tiga
+sambungan pertama ada, `freeze` tidak mengimpor `clockwork`, dan `multitask`
+tidak menyentuh `freeze` sama sekali. Jejak eksekusi akan menguji rantai itu —
+ia bisa mengkonfirmasi atau membantahnya, tetapi tidak bisa membuatnya ada.
 
 **Cara verifikasi.** Prediksi dibandingkan dengan jejak interpreter, langkah
 demi langkah.
@@ -282,119 +294,127 @@ dengan benchnya.
 
 ---
 
-## Lapis 7 — Diagnostik otonom
+## Lapis 7 — Operasi otonom
 
-**Tujuan.** Menemukan masalah sendiri: anomali, penyebabnya, dan buktinya.
+**Tujuan.** Menjalankan sistem tanpa pengawasan manusia: memantau, memulihkan,
+memulai ulang, mengisolasi kesalahan — berdasarkan telemetri, diagnostik, dan
+fakta terverifikasi.
+
+**Aset yang sudah ada, kecil dan nyata, dan sudah berjalan di papan.**
+`rtl/scripts/burn_in.py` **memulihkan sendiri**: kalau kartu SD tidak naik
+sesudah rekonfigurasi, ia mengkonfigurasi ulang papan dan mengirim programnya
+lagi — dan itu sudah terjadi di perangkat keras (percobaan pertama 72 jam
+butuh dua peluncuran, probe sebelumnya tiga). Ia **menjaga pengamatnya**:
+`caffeinate` menahan host tetap terjaga selama logger hidup.
+`rtl/scripts/burn_in_report.py` **mengisolasi kesalahan**: tiap diam
+digolongkan milik papan atau milik host dengan membandingkan kedua jam.
+
+**Yang belum ada.** Semua itu terbatas pada satu harness dan satu jenis
+kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan kegagalan di
+luar burn-in, dan tidak ada yang bisa memulihkan host yang berhibernasi —
+itu yang membunuh percobaan pertama 72 jam.
+
+**Cara verifikasi.** Pemulihan dihitung dari catatan lari: berapa peluncuran,
+berapa diam, milik siapa.
+
+**Syarat selesai.** Belum ditetapkan.
+
+---
+
+## Lapis 8 — Diagnostik otonom
+
+**Tujuan.** Mendeteksi dan menjelaskan masalah: akar masalah, bukti, dan jalur
+reproduksinya.
 
 **Aset yang sudah ada.** Alat yang menemukan, tetapi dijalankan tangan:
 `rtl/scripts/jamrah_board.py`, `rtl/scripts/hijrah_board.py`,
 `rtl/scripts/kabah_board.py`, `rtl/scripts/attack_lab.py`,
-`rtl/scripts/burn_in_report.py` (yang menggolongkan tiap diam milik siapa),
-empat gerbang, dan disiplin R3. Telemetri burn-in memberi bahannya:
-`cosmictera-build/burn-in/`.
+`rtl/scripts/burn_in_report.py`, empat gerbang, dan disiplin R3. Perencanaan
+perbaikan, yang dulu lapis sendiri, kini keluaran lapis ini — dan disiplinnya
+tertulis: K3–K6, dan `073b968` yang menemukan akar lalu sengaja tidak
+menambal karena perbaikannya keputusan pemilik.
 
-**Yang sudah benar-benar ditemukan**, supaya daftarnya tetap yang nyata:
-gerbang RTL Jamrah **tidak ada di slot Ka'bah** (dipangkas habis, hanya
-`$scopeinfo` tersisa); permutasi Ka'bah **bukan permutasi** (rank 1276/1600,
-`3ccf193`); celah N_CC SDIO yang **papan** temukan, bukan bench (`708a9cd`);
-`PRINT` salah untuk nilai besar; kartu gagal init sesudah rekonfigurasi di
-tengah pembacaan; dan diam 140 detik yang ternyata milik host.
+**Yang sudah benar-benar ditemukan**, masing-masing dengan akar, bukti, dan
+jalur reproduksinya: gerbang RTL Jamrah **tidak ada di slot Ka'bah**;
+permutasi Ka'bah **bukan permutasi** (rank 1276/1600, `3ccf193`); celah N_CC
+SDIO yang **papan** temukan (`708a9cd`); `PRINT` salah untuk nilai besar;
+kartu gagal init sesudah rekonfigurasi di tengah pembacaan; dan — yang
+membedakan kegagalan papan dari kegagalan pengamat — diam-diam burn-in yang
+ternyata **MacBook yang tidur**, dan percobaan 72 jam pertama yang mati karena
+Mac **berhibernasi**, keduanya dibuktikan dari catatan daya host sendiri.
 
-**Mismatch latensi SRAM tidak ada di daftar itu.** `src/hijaiyyah/nui/sram_mock.py`
-memodelkan latensi satu siklus dan 10 tesnya hijau; tidak ada catatan mismatch
-yang pernah ditemukan. Dicatat supaya contoh tidak jadi sejarah.
+**Mismatch latensi SRAM tidak ada di daftar itu.**
+`src/hijaiyyah/nui/sram_mock.py` memodelkan latensi satu siklus dan 10 tesnya
+hijau; tidak ada catatan mismatch yang pernah ditemukan.
 
-**Yang belum ada.** Yang otonomnya — hari ini semua alat itu diarahkan orang.
+**Yang belum ada.** Yang otomatisnya — hari ini semua alat itu diarahkan orang.
 
 **Cara verifikasi.** Temuan harus reproducible dengan perintah yang dicatat,
 seperti tiap baris `cosmictera-build/CHECKLIST.md`.
 
-**Syarat selesai.** Untuk kelas anomali yang disebut, alat menemukannya tanpa
+**Syarat selesai.** Untuk kelas masalah yang disebut, alat menemukannya tanpa
 diberi tahu di mana harus melihat.
-
----
-
-## Lapis 8 — Perencanaan perbaikan otonom
-
-**Tujuan.** Menemukan akar masalah, menyusun langkah perbaikan, memverifikasi
-dampaknya.
-
-**Aset yang sudah ada.** Bukan kodenya, melainkan **disiplinnya**, dan itu
-tertulis: K3 (buktikan cacatnya sebelum menambal), K4 (satu tambalan satu
-sebab), K5 (tambal pada penyebabnya), K6 (buktikan yang lain tidak rusak),
-R3 (gerbang diuji dengan merusak yang dijaganya). Riwayatnya penuh contoh
-yang mengikuti urutan itu — `073b968` menemukan akar lalu **tidak**
-menambalnya karena perbaikannya keputusan pemilik.
-
-**Yang belum ada.** Seluruh sisi otomatisnya. Tidak ada modul yang menyusun
-rencana perbaikan hari ini.
-
-**Cara verifikasi.** Rencana dinilai dari empat gerbang sesudah diterapkan,
-dan dari apakah sabotase terhadap tambalannya merah.
-
-**Syarat selesai.** Belum ditetapkan.
 
 ---
 
 ## Lapis 9 — Mesin penalaran
 
-**Tujuan.** Menalar lintas domain: deduksi, sebab-akibat, perencanaan, atas
-fakta, program, perangkat keras, dan telemetri.
+**Tujuan.** Penalaran berbasis fakta, dengan urutan pemilik: fakta → relasi →
+inferensi → kesimpulan, dan penalaran tidak boleh mendahului bukti.
 
-**Aset yang sudah ada.** **Tidak ada** sebagai penalaran. Yang ada bahannya:
-`facts/` (Lapis 0), graf yang belum dibangun (Lapis 1), jejak interpreter
-(Lapis 3), dan telemetri burn-in.
+**Aset yang sudah ada.** **Tidak ada** sebagai penalaran. Yang ada bahannya,
+dan kini tiga dari empat anak tangganya: fakta (`facts/`, Lapis 0), relasi
+(graf Lapis 1 dan graf program Lapis 2), dan jejak interpreter (Lapis 3,
+belum dibangun).
 
 **Yang belum ada.** Seluruh penalarannya. Lapis ini tidak bisa berdiri sebelum
-Lapis 1 punya grafnya.
+Lapis 1 punya grafnya — yang sekarang ada — dan Lapis 3 punya jejaknya.
 
-**Cara verifikasi.** Jawaban harus menyebut kebergantungan yang nyata dan bisa
-ditunjukkan, bukan yang masuk akal.
+**Cara verifikasi.** Setiap kesimpulan harus bisa ditelusuri kembali ke bukti.
 
 **Syarat selesai.** Belum ditetapkan.
 
 ---
 
-## Lapis 10 — Komputasi universal
+## Lapis 10 — Rekayasa
 
-**Tujuan.** Memetakan konsep → program → mesin → perangkat keras, sebagai satu
-model.
+**Tujuan.** Menghasilkan perubahan sistem — patch, refaktor, modifikasi RTL,
+optimasi — dengan urutan pemilik: cari aset, ukur, verifikasi, identifikasi
+celah, **baru** bangun.
 
-**Aset yang sudah ada.** Satu sambungan dari rantai itu **sudah terbukti dan
-terukur**: `src/hijaiyyah/nui/atom.py` membuktikan indeks Master Table, opcode
-H-ISA, dan alamat ROM HCPU adalah satu alamat — huruf sampai mesin, untuk
-ke-28 huruf. Sisanya ada sebagai bagian yang belum dijahit:
-`src/hijaiyyah/core/exomatrix.py`, `docs/HISA_SPEC.md`, `rtl/`,
-`src/hijaiyyah/crypto/cube.py`.
-
-**Yang belum ada.** Pemetaan penuhnya. Satu sambungan bukan rantai.
-
-**Cara verifikasi.** Tiap sambungan harus punya oracle seperti
-`verify_address_unification` punya.
-
-**Syarat selesai.** Tiap sambungan dalam rantai punya pemeriksaan yang
-dijalankan, bukan diagram.
-
----
-
-## Lapis 11 — Rekayasa otonom
-
-**Tujuan.** NUI memperluas sistemnya sendiri: modul baru, tes baru, dokumentasi
-baru, dan memverifikasi hasilnya sendiri. Syaratnya lapis sebelumnya stabil.
-
-**Aset yang sudah ada.** **Tidak ada.** Yang mendekat adalah generator yang
-ditulis tangan — `rtl/scripts/build_container.py`,
+**Aset yang sudah ada.** **Tidak ada** sebagai kemampuan NUI. Yang mendekat
+adalah generator yang ditulis tangan — `rtl/scripts/build_container.py`,
 `rtl/scripts/jamrah_board.py` yang membangkitkan program dari badan
 `jamrah_gate.hasm` kata demi kata, `rtl/scripts/attack_lab.py`,
 `rtl/scripts/gen_rom.py` — tetapi tak satu pun memutuskan apa yang dibangun.
+Urutan pemilik itu sendiri sudah dipegang tangan: ia persis K3–K6.
 
 **Yang belum ada.** Seluruhnya.
 
 **Cara verifikasi.** Artefak harus lolos oracle yang sama dengan artefak
 tulisan tangan: assembler, interpreter, bench, papan, empat gerbang.
 
-**Syarat selesai.** Belum ditetapkan. Status **AT**, dan pemilik sendiri
-menandainya begitu.
+**Syarat selesai.** Belum ditetapkan.
+
+---
+
+## Lapis 11 — Komputasi universal
+
+**Tujuan.** Menyatukan semua lapis jadi satu model: perangkat lunak,
+perangkat keras, sistem operasi, repositori, eksekusi, fakta, dan rekayasa.
+
+**Aset yang sudah ada.** Satu sambungan dari rantai itu **sudah terbukti dan
+terukur**: `src/hijaiyyah/nui/atom.py` membuktikan indeks Master Table, opcode
+H-ISA, dan alamat ROM HCPU adalah satu alamat — huruf sampai mesin, untuk
+ke-28 huruf. Sisanya ada sebagai bagian yang belum dijahit.
+
+**Yang belum ada.** Penyatuannya. Satu sambungan bukan rantai.
+
+**Cara verifikasi.** Tiap sambungan harus punya oracle seperti
+`verify_address_unification` punya.
+
+**Syarat selesai.** Tiap sambungan dalam rantai punya pemeriksaan yang
+dijalankan, bukan diagram.
 
 ---
 

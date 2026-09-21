@@ -796,6 +796,14 @@ lapis pesan kedua, **verifikasi fisik, hilang**. Asetnya tidak ikut hilang:
 tangga bukti empat tingkat, `cosmictera-build/PAPAN.md`, sidik jari place and
 route, dan lima fakta `board` tetap berlaku.
 
+**Pesan keempat, hari yang sama, menomorinya sekali lagi**: operasi otonom
+(baru) jadi 7, diagnostik otonom 8, rekayasa 10, komputasi universal 11, dan
+lapis *perencanaan perbaikan otonom* hilang — isinya kini keluaran diagnostik.
+Ia juga meminta graf repositori memuat **dokumentasi, kelas, dan fungsi**:
+sekarang ada, dan dokumennya diambil dari `git ls-files`. Angka 745 berkas
+Markdown yang sempat ditulis salah — ia menghitung folder pribadi di disk;
+repositori memuat 90.
+
 **Karena penomorannya bergerak sementara asetnya tidak, `NUI/LAYERS.md`
 dikunci pada nama lapis**: nomornya atribut, dan satu tabel di halaman itu
 satu-satunya tempat ia hidup. Tabel pergeserannya tidak disalin ke sini (R1).

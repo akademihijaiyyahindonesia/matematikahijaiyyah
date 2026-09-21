@@ -25,9 +25,23 @@ FREEZE = "src/hijaiyyah/nui/freeze.py"
 
 def test_the_index_finds_every_kind_of_node() -> None:
     kinds = counts()
-    for kind in ("python", "test", "hasm", "verilog", "fact"):
+    for kind in ("python", "test", "hasm", "verilog", "fact", "doc"):
         assert kinds.get(kind, 0) > 0, kind
     assert len(index()) == sum(kinds.values())
+
+
+def test_documents_are_the_ones_git_tracks_and_no_others() -> None:
+    """The first count of Markdown was 745 because it walked the disk, which
+    holds private folders that are never committed. The repository holds what
+    git tracks, and nothing from those folders may become a node."""
+    from hijaiyyah.nui.repository_index import tracked_docs
+
+    docs = [n.path for n in index().values() if n.kind == "doc"]
+    assert sorted(docs) == list(tracked_docs())
+    for path in GRAPH.nodes:
+        for private in ("Study Matematika Hijaiyyah/", "Buku Matematika Hijaiyyah/",
+                        ".claude/", ".agents/", ".codex/"):
+            assert not path.startswith(private), path
 
 
 def test_imports_resolve_to_files_in_this_repository() -> None:
@@ -56,7 +70,10 @@ def test_every_edge_can_be_walked_back_to_its_own_line() -> None:
             encoding="utf-8", errors="replace").splitlines()[number - 1]
         if edge.kind == "imports":
             assert "import" in line, (edge, line)
-        else:
+        elif edge.kind == "defines":
+            name = edge.target.split("::")[1]
+            assert f"def {name}" in line or f"class {name}" in line, (edge, line)
+        else:                       # mentions and references
             assert edge.target.rsplit("/", 1)[-1] in line, (edge, line)
 
 
@@ -125,3 +142,21 @@ def test_the_graph_says_what_it_does_not_have() -> None:
     from hijaiyyah.nui import repository_graph
 
     assert "Call edges." in (repository_graph.__doc__ or "")
+
+
+def test_a_document_references_and_does_not_import() -> None:
+    """A page naming a module is a weaker relation than code importing it. The
+    owner's fourth directive calls it `references`, and it is never counted
+    as an import or a code mention."""
+    documented = GRAPH.documented_by(ATOM)
+    assert "NUI/GRAPH.md" in documented
+    for edge in GRAPH.edges:
+        if GRAPH.nodes[edge.source].kind == "doc":
+            assert edge.kind == "references", edge
+
+
+def test_a_file_names_what_it_defines() -> None:
+    defined = {e.target.split("::")[1] for e in GRAPH.out(ATOM, "defines")}
+    assert {"verify_address_unification", "build_atoms", "LetterAtom"} <= defined
+    kinds = {GRAPH.nodes[e.target].kind for e in GRAPH.out(ATOM, "defines")}
+    assert kinds == {"function", "class"}

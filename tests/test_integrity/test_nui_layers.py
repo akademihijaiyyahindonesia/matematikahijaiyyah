@@ -17,11 +17,14 @@ DOC = ROOT / "NUI" / "LAYERS.md"
 TEXT = DOC.read_text(encoding="utf-8")
 FIELDS = ("**Tujuan.**", "**Aset yang sudah ada", "**Yang belum ada.**",
           "**Cara verifikasi.**", "**Syarat selesai.**")
-# Measured 21 September 2026: Linux and universal computing have no asset in
-# this repository at all. A layer leaving this set has been given something,
-# and that must be deliberate. Layer 9 is a third state and is checked
-# separately -- it has materials but no reasoning built on them.
-EMPTY = {5, 11}
+# Measured 21 September 2026 against the fourth directive: Linux has no asset
+# in this repository at all. A layer leaving this set has been given
+# something, and that must be deliberate.
+EMPTY = {5}
+#: Nothing as a NUI capability, with materials or hand-written tools nearby.
+#: Writing "none" would throw the materials away; listing them as assets
+#: would claim the capability.
+PARTIAL = {9, 10}
 
 
 def sections() -> dict[int, str]:
@@ -51,13 +54,14 @@ def test_the_layers_with_nothing_say_so_and_the_others_do_not() -> None:
         assert empty == (number in EMPTY), (number, empty)
 
 
-def test_the_layer_that_has_materials_but_no_reasoning_says_both() -> None:
-    """Layer 9 is neither full nor empty: the pieces it would reason over
-    exist, the reasoning does not. Writing "none" would throw away the first
+def test_the_layers_with_materials_but_no_capability_say_both() -> None:
+    """Reasoning and engineering are neither full nor empty: the pieces exist,
+    the NUI capability does not. Writing "none" would throw away the first
     half; writing an asset list would claim the second."""
-    body = sections()[9]
-    assert "**Tidak ada** sebagai penalaran" in body
-    assert "Lapis 1 punya grafnya" in body
+    for number in PARTIAL:
+        assert "**Tidak ada** sebagai" in sections()[number], number
+    assert "Lapis 3 punya jejaknya" in sections()[9]
+    assert "ditulis tangan" in sections()[10]
 
 
 def test_every_file_the_map_cites_exists() -> None:
@@ -89,19 +93,21 @@ def test_every_numbering_is_kept_and_the_layers_are_keyed_by_name() -> None:
     number is an attribute, and one table is the only place it lives.
     ROADMAP.md's Fase 0-5 is a fourth numbering and is mapped, not deleted."""
     assert (ROOT / "NUI" / "ROADMAP.md").exists()
-    assert "| lapis (nama) | pesan 1 | pesan 2 | **berlaku** |" in TEXT
+    assert "| lapis (nama) | pesan 1 | pesan 2 | pesan 3 | **berlaku** |" in TEXT
     assert "Fase 2 = Lapis 2" in TEXT
+    assert "Fase 4 = Lapis 10" in TEXT
     assert "Yang berlaku yang terakhir" in TEXT
     assert "dikunci pada **nama**" in TEXT
 
 
-def test_the_layer_dropped_in_the_third_message_keeps_its_assets() -> None:
-    """Physical verification stopped being a numbered layer. Its assets did
-    not stop existing, and a map that let them fall out with the number would
-    be losing measurements to an edit."""
-    assert "verifikasi fisik (dulu 7)" in TEXT
+def test_the_layers_dropped_along_the_way_keep_their_assets() -> None:
+    """Two layers stopped being numbered layers. Their assets did not stop
+    existing, and a map that let them fall out with a number would be losing
+    measurements to an edit."""
+    assert "*Verifikasi fisik* (pesan 2)" in TEXT
+    assert "*Perencanaan perbaikan otonom* (pesan 3)" in TEXT
     for kept in ("tangga bukti empat tingkat", "PAPAN.md", "place and route",
-                 "fakta `board`"):
+                 "fakta `board`", "K3–K6"):
         assert kept in TEXT, kept
 
 
