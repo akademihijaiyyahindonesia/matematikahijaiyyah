@@ -478,9 +478,11 @@ BOARD_TABLES = [
     ("rtl/programs/test_hfs.hasm", "cosmictera-build/PAPAN.md",
      "## Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026", "test_hfs"),
 ]
-LADDER_RECORD = ("cosmictera-build/OFF.md", "### PRINT tidak bisa mencetak angka besar")
+#: Found by the name the owner gave the entry, not by its prose: the prose
+#: heading was renamed once (324d409) and this lookup broke with it.
+LADDER_RECORD = ("cosmictera-build/OFF.md", "### OFF-PRINT-SILICON")
 RECORD_DATE = {"## Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026":
-               "2026-09-18", "### PRINT tidak bisa mencetak angka besar": "2026-09-20"}
+               "2026-09-18", "### OFF-PRINT-SILICON": "2026-09-20"}
 
 
 def _section(path: str, heading: str) -> tuple[list[str], int]:
