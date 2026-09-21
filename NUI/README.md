@@ -14,7 +14,9 @@ graf repositori yang Lapis 1 bangun — tiap edge-nya dengan barisnya — lihat
 modul — diturunkan dari badannya, tidak ditulis — lihat
 [`PROGRAMS.md`](PROGRAMS.md); untuk apa yang benar-benar terjadi saat tiap
 program HASM dijalankan — tiap langkah sebelum → sesudah, tiap edge dengan
-langkah dan barisnya — lihat [`EXECUTION.md`](EXECUTION.md). Fondasi di
+langkah dan barisnya — lihat [`EXECUTION.md`](EXECUTION.md); untuk apakah
+interpreter, RTL, dan papan menjawab sama, dan di langkah mana mereka berpisah
+kalau tidak — lihat [`PARITY.md`](PARITY.md). Fondasi di
 bawah semua fase itu — huruf sebagai alamat (indeks Master Table = opcode
 HISA = alamat ROM HCPU) dengan dua wujud, perangkat lunak dan fisik
 (UART nyata pada 27 MHz) — ada di `nui/atom.py`, dijelaskan di

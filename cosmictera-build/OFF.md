@@ -124,6 +124,35 @@ Yang terdampak hanya program yang mencetak angka besar.
 hostnya yang mengalikan kembali; program lain di repo ini mencetak angka
 kecil dan tidak tersentuh.
 
+**RTL yang disimulasikan tidak punya cacat ini** — diukur 21 September 2026
+oleh Lapis 4 NUI (`NUI/PARITY.md`). Tangga yang sama, di `hcpu_top.v` di bawah
+Icarus, mencetak ke-32 nilai persis seperti interpreter, termasuk ketiga yang
+salah di papan. Jadi selisihnya muncul antara RTL yang disimulasikan dan
+silikon yang dibangun darinya, bukan di logika RTL sebagaimana disimulasikan.
+
+Label: **EH**.
+
+### Instruksi sesudah berhenti ikut menulis register
+
+Ditemukan 21 September 2026 oleh Lapis 4 NUI, di simulasi RTL. Instruksi tepat
+sesudah `HALT` — atau sesudah `RET` yang menghentikan mesin sebagai HC-05 —
+menulis registernya **satu kali, sesudah interpreter berhenti**. Terukur di
+sepuluh program, dan sebelum titik berhenti tidak ada satu pun selisih antara
+kedua mesin. Contoh: `rtl/programs/subroutine.hasm` berhenti di `HALT`
+baris 35; kata sesudahnya `ADDI R1, R1, 7`, dan RTL berakhir dengan R1 = 10
+sementara interpreter R1 = 3. Tiga program menulis `xxxxxxxx`: kata sesudah
+`HALT` adalah `LOAD` yang membaca nilai tak terdefinisi. Daftar lengkapnya
+di `NUI/PARITY.md`, tidak disalin ke sini (R1).
+
+Jalurnya terbaca di kode: `halted` diset satu clock sesudah instruksi penghenti
+sampai di writeback (`rtl/hcpu_controller.v`, `else if (wb_halt)`), dan
+write-enable writeback tidak digerbang olehnya (`rtl/hcpu_writeback.v`,
+`assign wb_gpr_we`). Yang lolos hanya tulisan register: di kesepuluh program
+tidak ada byte tambahan di kabel, jadi di papan cacat ini tidak terlihat lewat
+keluaran cetak.
+
+**Dilaporkan, tidak diperbaiki** — ia di RTL, dan K9 berlaku.
+
 Label: **EH**.
 
 ### Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan

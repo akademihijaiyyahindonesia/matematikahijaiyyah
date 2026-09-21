@@ -54,7 +54,7 @@ Fase 2 = Lapis 2, Fase 3 = Lapis 0, dan Fase 4 = Lapis 10.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **21 modul**; `tests/test_ai/` berisi **179 tes**
+`src/hijaiyyah/nui/` berisi **22 modul**; `tests/test_ai/` berisi **198 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -75,11 +75,12 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.123 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.159 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
 | `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
+| `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
 
 ---
 
@@ -131,13 +132,13 @@ dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
-*references*, dan sekarang keduanya ada: 91 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 668 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.299 node, 3.390 edge**.
+*references*, dan sekarang keduanya ada: 92 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 708 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.343 node, 3.526 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
-**91** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
+**92** berkas Markdown; sumbernya sekarang `git ls-files`, dan satu tes gagal
 kalau dokumen diambil dari disk lagi.
 
 **Yang belum ada.** **Edge pemanggilan** — fungsi mana memanggil fungsi mana.
@@ -182,7 +183,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.123 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.159 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -279,23 +280,82 @@ dijawab dari model. RTL dan Python di luar cakupan, tercatat di atas.
 
 ## Lapis 4 — Paritas perangkat lunak dan perangkat keras
 
-**Tujuan.** Tiap opcode terlacak dari sumber → assemble → interpreter → RTL →
-papan.
+**Tujuan.** Membuktikan Python = interpreter = RTL = papan untuk operasi yang
+sama, dan kalau berbeda: di langkah berapa, register mana, memori mana, opcode
+mana.
 
 **Aset yang sudah ada — ini lapis terkuat di repositori.** `698dd3e` tiga
 mesin sepakat; `44ba928` HVM menjalankan semua opcode RTL;
-`rtl/scripts/jamrah_board.py`, `rtl/scripts/hijrah_board.py`,
-`rtl/scripts/kabah_board.py` masing-masing membandingkan papan dengan Python
-dan **sudah menemukan beda**.
+`tests/test_hisa/test_execution_parity.py` dengan `rtl/tb/tb_parity.v`
+membandingkan keadaan akhir 41 program; `rtl/scripts/jamrah_board.py`,
+`rtl/scripts/hijrah_board.py`, `rtl/scripts/kabah_board.py` masing-masing
+membandingkan papan dengan Python dan **sudah menemukan beda**.
 
-**Yang belum ada.** Penemuan divergensi yang otomatis dan menyeluruh; hari ini
-tiap perbandingan ditulis tangan per modul.
+**Sejak 21 September 2026 lapis ini berdiri**, tanpa mesin baru:
+`src/hijaiyyah/nui/parity_model.py` menjalankan kata yang sama di interpreter
+(lewat perekam Lapis 3) dan di RTL (lewat `rtl/tb/tb_parity.v`, yang mendapat
+mode `+TRACE` — hanya membaca sinyal yang sudah ada, keluaran bawaannya tidak
+berubah), lalu membaca catatan papan. Hasilnya `NUI/parity_model.json`, ditarik
+ke [`PARITY.md`](PARITY.md), dijaga `tests/test_ai/test_nui_parity.py` (19).
+Korpus 41 program paritas dipindah ke `src/hijaiyyah/hisa/parity_programs.py`
+supaya tes lama dan lapis ini memakai satu korpus (R1).
 
-**Cara verifikasi.** Perbandingan yang sudah ada, dan sabotase yang harus
-merah (R3).
+- **104 lari** — 41 program paritas, 62 program HASM, dan tangga `PRINT`
+  2⁰–2³¹. Interpreter ↔ RTL: **70 PARITY, 27 MISMATCH, 7 UNKNOWN**. Yang
+  UNKNOWN tidak berhenti dan dibandingkan sejauh keduanya berjalan
+  (5.000 langkah interpreter).
+- **Ke-27 MISMATCH semuanya menunjuk langkah, register, dan opcode-nya**, dan
+  terbagi empat:
+  - 10 — instruksi tepat sesudah `HALT` (7) atau sesudah `RET` yang
+    menghentikan mesin sebagai HC-05 (3) **ikut menulis register di RTL**,
+    sesudah interpreter berhenti. Sebelum berhenti tidak ada satu pun selisih.
+    `subroutine.hasm`: interpreter R1 = 3, RTL R1 = 10 (3 + `ADDI` 7 sesudah
+    `HALT`). Temuan baru; tercatat di `cosmictera-build/OFF.md`.
+  - 8 — langkahnya membaca `COUNTER`: interpreter menghitung instruksi, RTL
+    menghitung clock. Dibebankan ke register itu, bukan ke `LOAD`.
+  - 7 — langkahnya membaca `SD_STATUS`: tanpa kartu interpreter membaca 0,
+    RTL membaca 1.
+  - 2 — HCHECK berkala interpreter menghentikan `hfs_lifecycle` dan
+    `hos_demo`; RTL tidak.
+- **Opcode, kolom RTL**: 78 PARITY; `HALT` dan `RET` MISMATCH; `EMITS`,
+  `POP`, `HALT_ERR` tanpa eksekusi yang disepakati kedua mesin; 21 tidak ada
+  di RTL. `TRAP` punya baris sendiri dan ditandai bukan opcode.
+- **Python**: empat opcode punya fungsi buku yang tidak dipanggil interpreter,
+  dan keempatnya sama pada setiap eksekusi — `HLOAD` 724, `HCADD` 49,
+  `HNRM2` 4, `HDIST` 4. Untuk opcode lain Python **adalah** interpreter
+  (`src/hijaiyyah/vm` mendelegasikan ke sana), dan model menyebutnya begitu.
+- **Papan**, dari catatan sesudah perubahan RTL CPU terakhir (`e4c251e`):
+  keluaran `test_bsm`, `test_codex`, `test_cset`, `test_hfs` sama dengan
+  interpreter dan RTL. Dari 27 nilai tangga yang tercatat, 24 sama dan 3
+  berbeda.
 
-**Syarat selesai.** Untuk daftar opcode yang disebut, tiap wujudnya
-dibandingkan otomatis dan yang berbeda dilaporkan dengan namanya.
+**Dua cacat RTL yang pemilik jadikan target verifikasi Lapis 4.**
+
+- **`PRINT` angka besar — nyata dan terukur, tetapi tidak di RTL sebagaimana
+  disimulasikan.** Simulasi mencetak ke-32 nilai tangga persis seperti
+  interpreter, termasuk 8.388.608, 33.554.432, dan 2.147.483.648; papan mencetak
+  `8388600`, `335544;<`, `2147481?::`. Selisihnya muncul antara RTL yang
+  disimulasikan dan silikon.
+- **Kartu SD gagal init sesudah rekonfigurasi — tidak bisa jadi baris
+  paritas.** Tidak ada mesin lain di sini yang punya kartu atau rekonfigurasi,
+  jadi ia dicatat hanya-papan, UNKNOWN.
+
+**Yang belum ada.** Papan tidak dijalankan ulang: ia memikul burn-in 72 jam
+sampai 24 September 2026, jadi kolom papan hanya dari catatan, dan hanya
+lewat keluaran cetak — registernya tidak terlihat dari kabel. `loader.hasm`
+berpayload tidak dijalankan di RTL: `tb_parity.v` tidak punya masukan UART
+maupun port tulis memori instruksi. Tujuh program tidak berhenti dalam
+anggaran.
+
+**Cara verifikasi.** Sudah berjalan: `verify()` membangun ulang dan menamai
+tiap klaim yang tak terulang. PARITY palsu, nilai register palsu, catatan
+papan palsu, dan status opcode palsu merah. Mesinnya sendiri juga disabotase:
+interpreter yang menambah satu pada `ADD` dinamai di langkah 2, R3, 308 lawan
+307. Tujuh penjaga baru dirusak satu per satu dan ketujuhnya merah.
+
+**Syarat selesai.** Tercapai untuk interpreter ↔ RTL atas korpus ini, dan
+untuk papan sejauh catatannya. Kolom papan per opcode menunggu lari ulang
+sesudah burn-in.
 
 ---
 

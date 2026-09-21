@@ -24,6 +24,19 @@
 //   HREG[<i>]=<36 hex digits>
 //   FLAGS=<2 hex digits>
 //
+// With +TRACE, every state change is printed as it is written, before the
+// final block, one line each, tagged with the cycle it lands on:
+//   T <cycle> GPR <i> <8 hex>        a general register written
+//   T <cycle> HREG <i> <36 hex>      an H-register written
+//   T <cycle> FLAGS <2 hex>          FLAGS written
+//   T <cycle> RAM <addr> <8 hex>     a data RAM word written
+//   T <cycle> MMIO <addr> <8 hex>    a store into the peripheral window
+//   T <cycle> TX <2 hex>             a byte handed to the UART transmitter
+// src/hijaiyyah/nui/parity_model.py reads these to find the FIRST step at
+// which the RTL and the interpreter part, rather than only whether their
+// final states do. The signals are sampled at the clock edge that writes
+// them, so each value is the one committed, not a neighbour.
+//
 
 `timescale 1ns / 1ps
 `include "hcpu_pkg.vh"
@@ -36,6 +49,7 @@ module tb_parity;
     integer i;
     integer cycle_count;
     integer max_cycles;
+    reg     trace_on;
     // 4096 bits = 512 characters. A 1024-bit register holds only 128, and a
     // pytest tmp_path can exceed that — the path then arrives truncated from
     // the left and $readmemh silently fails, leaving every register unknown.
@@ -76,6 +90,28 @@ module tb_parity;
     initial clk = 0;
     always #5 clk = ~clk;
 
+    // ── The write trace (+TRACE only) ───────────────────────────
+    // Read-only taps on signals the design already has; nothing here drives
+    // the DUT. RAM is the post-decode write that reaches hcpu_dataram, gated
+    // the way that instance gates it; MMIO is the CPU-side store into the
+    // peripheral window.
+    always @(posedge clk) if (trace_on && rst_n) begin
+        if (u_dut.u_regfile.gpr_we)
+            $display("T %0d GPR %0d %08X", cycle_count,
+                     u_dut.u_regfile.gpr_waddr, u_dut.u_regfile.gpr_wdata);
+        if (u_dut.u_regfile.hreg_we)
+            $display("T %0d HREG %0d %036X", cycle_count,
+                     u_dut.u_regfile.hreg_waddr, u_dut.u_regfile.hreg_wdata);
+        if (u_dut.u_regfile.flags_we)
+            $display("T %0d FLAGS %02X", cycle_count, u_dut.u_regfile.flags_in);
+        if (u_dut.ram_we && !u_dut.emits_busy)
+            $display("T %0d RAM %03X %08X", cycle_count, u_dut.ram_addr, u_dut.ram_wdata);
+        if (u_dut.dram_we && u_dut.dram_addr >= `PERIPH_WINDOW)
+            $display("T %0d MMIO %03X %08X", cycle_count, u_dut.dram_addr, u_dut.dram_wdata);
+        if (u_dut.uart_start)
+            $display("T %0d TX %02X", cycle_count, u_dut.uart_data);
+    end
+
     initial begin
         if (!$value$plusargs("PROGRAM=%s", program_path)) begin
             $display("ERROR: +PROGRAM=<hexfile> is required");
@@ -83,6 +119,7 @@ module tb_parity;
         end
         if (!$value$plusargs("CYCLES=%d", max_cycles))
             max_cycles = 500;
+        trace_on = $test$plusargs("TRACE");
 
         // Unwritten words stay NOP so a short program cannot run into garbage.
         for (i = 0; i < `CODE_DEPTH; i = i + 1)

@@ -852,6 +852,35 @@ sebagai butir sendiri di bawah K9 (`b218df8`): HC-04 dan HC-05 menulis
 berlawanan dengan `docs/HISA_SPEC.md` dan `rtl/hcpu_execute.v`. Tes lamanya
 hijau karena memeriksa atribut salah ketik itu sendiri.
 
+### Keputusan pemilik, 21 September 2026 — Lapis 4 sebelum dua cacat RTL
+
+Sesudah Lapis 3 menemukan cacat interpreter dan model kehilangan 412 dari 1.890
+edge, pemilik **tidak membuka kedua cacat RTL**. Alasannya: *"Layer 4
+membutuhkan data Layer 3 yang sudah benar"* — model paritas yang dibangun di
+atas edge yang salah akan salah seluruhnya. Tiga penetapan:
+
+- **Lapis 4 berikutnya**, dan tujuannya bukan simulator baru, melainkan bukti
+  bahwa Python = interpreter = RTL = papan untuk operasi yang sama — dan kalau
+  berbeda: langkah, register, memori, opcode. Keluarannya **model paritas**,
+  bukan dokumen atau narasi.
+- **`PRINT` angka besar dan SD init sesudah rekonfigurasi dicatat sebagai
+  target verifikasi Lapis 4 lebih dulu.** Perbaikannya baru masuk pekerjaan
+  berikutnya kalau model paritas menunjuk keduanya sebagai mismatch yang nyata
+  dan terukur — dan itu tetap keputusan pemilik.
+- **Pertanyaan entry Python untuk rantai `atom → rack → clockwork → freeze →
+  multitask` tidak diputuskan sekarang**: itu kebutuhan Lapis 7 atau Lapis 9,
+  bukan Lapis 4, yang butuh unit eksekusi terkecil — opcode, trap, MMIO,
+  transisi register dan memori.
+
+Urutan sesudahnya, dari pemilik: Lapis 5 Linux/Ubuntu → 6 perangkat keras →
+7 operasi otonom → 8 diagnostik otonom → 9 penalaran → 10 rekayasa → 11
+komputasi universal, karena penalaran tidak bisa dipercaya sebelum eksekusi,
+paritas, host, dan perangkat keras benar.
+
+Hasil Lapis 4 dan jawaban atas kedua target ada di `NUI/LAYERS.md` dan
+`NUI/PARITY.md`, tidak disalin ke sini (R1). Satu temuan RTL barunya tercatat
+di `cosmictera-build/OFF.md`.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

@@ -11,9 +11,9 @@ nyata — bukan inferensi LLM."*
 ## Bentuknya
 
 ```
-1.299 node    python 174 · tes 160 · verilog 118 · hasm 62 · fakta 26 ·
-              dokumen 91 · fungsi dan kelas 668
-3.390 edge    imports 770 · mentions 861 · references 1.016 · defines 668 ·
+1.343 node    python 176 · tes 161 · verilog 118 · hasm 62 · fakta 26 ·
+              dokumen 92 · fungsi dan kelas 708
+3.526 edge    imports 786 · mentions 886 · references 1.071 · defines 708 ·
               verifies 75
 ```
 
@@ -47,7 +47,7 @@ tidak punya satu pun. Contoh pemilik menyebut "siapa memanggil siapa", dan ia
 **Dokumen kini node — dan angka yang dulu tertulis di sini salah.** Versi
 pertama halaman ini menyebut 745 berkas Markdown. Itu hasil `find` di disk,
 yang ikut menghitung folder pribadi yang tak pernah di-commit. Repositori
-memuat **91**, dan sumbernya sekarang `git ls-files`: satu tes gagal kalau
+memuat **92**, dan sumbernya sekarang `git ls-files`: satu tes gagal kalau
 dokumen diambil dari disk lagi, dan satu lagi gagal kalau satu saja path dari
 folder pribadi muncul sebagai node.
 

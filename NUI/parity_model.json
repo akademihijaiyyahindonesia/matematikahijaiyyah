@@ -1,0 +1,8079 @@
+{
+ "board": [
+  {
+   "board": "112",
+   "date": "2026-09-18",
+   "interpreter": "112",
+   "program": "rtl/programs/test_bsm.hasm",
+   "record": "cosmictera-build/PAPAN.md:618",
+   "rtl": "112",
+   "status": "PARITY"
+  },
+  {
+   "board": "8 0 0 1 1 0 1 5",
+   "date": "2026-09-18",
+   "interpreter": "8 0 0 1 1 0 1 5",
+   "program": "rtl/programs/test_codex.hasm",
+   "record": "cosmictera-build/PAPAN.md:664",
+   "rtl": "8 0 0 1 1 0 1 5",
+   "status": "PARITY"
+  },
+  {
+   "board": "5 6 2 0",
+   "date": "2026-09-18",
+   "interpreter": "5 6 2 0",
+   "program": "rtl/programs/test_cset.hasm",
+   "record": "cosmictera-build/PAPAN.md:665",
+   "rtl": "5 6 2 0",
+   "status": "PARITY"
+  },
+  {
+   "board": "1 1 1 2 1",
+   "date": "2026-09-18",
+   "interpreter": "1 1 1 2 1",
+   "program": "rtl/programs/test_hfs.hasm",
+   "record": "cosmictera-build/PAPAN.md:666",
+   "rtl": "1 1 1 2 1",
+   "status": "PARITY"
+  },
+  {
+   "board": "1",
+   "date": "2026-09-20",
+   "interpreter": "1",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "1",
+   "status": "PARITY",
+   "step": 1,
+   "value": 1
+  },
+  {
+   "board": "2",
+   "date": "2026-09-20",
+   "interpreter": "2",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "2",
+   "status": "PARITY",
+   "step": 3,
+   "value": 2
+  },
+  {
+   "board": "4",
+   "date": "2026-09-20",
+   "interpreter": "4",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "4",
+   "status": "PARITY",
+   "step": 5,
+   "value": 4
+  },
+  {
+   "board": "8",
+   "date": "2026-09-20",
+   "interpreter": "8",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "8",
+   "status": "PARITY",
+   "step": 7,
+   "value": 8
+  },
+  {
+   "board": "16",
+   "date": "2026-09-20",
+   "interpreter": "16",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "16",
+   "status": "PARITY",
+   "step": 9,
+   "value": 16
+  },
+  {
+   "board": "32",
+   "date": "2026-09-20",
+   "interpreter": "32",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "32",
+   "status": "PARITY",
+   "step": 11,
+   "value": 32
+  },
+  {
+   "board": "64",
+   "date": "2026-09-20",
+   "interpreter": "64",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "64",
+   "status": "PARITY",
+   "step": 13,
+   "value": 64
+  },
+  {
+   "board": "128",
+   "date": "2026-09-20",
+   "interpreter": "128",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "128",
+   "status": "PARITY",
+   "step": 15,
+   "value": 128
+  },
+  {
+   "board": "256",
+   "date": "2026-09-20",
+   "interpreter": "256",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "256",
+   "status": "PARITY",
+   "step": 17,
+   "value": 256
+  },
+  {
+   "board": "512",
+   "date": "2026-09-20",
+   "interpreter": "512",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "512",
+   "status": "PARITY",
+   "step": 19,
+   "value": 512
+  },
+  {
+   "board": "1024",
+   "date": "2026-09-20",
+   "interpreter": "1024",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "1024",
+   "status": "PARITY",
+   "step": 21,
+   "value": 1024
+  },
+  {
+   "board": "2048",
+   "date": "2026-09-20",
+   "interpreter": "2048",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "2048",
+   "status": "PARITY",
+   "step": 23,
+   "value": 2048
+  },
+  {
+   "board": "4096",
+   "date": "2026-09-20",
+   "interpreter": "4096",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "4096",
+   "status": "PARITY",
+   "step": 25,
+   "value": 4096
+  },
+  {
+   "board": "8192",
+   "date": "2026-09-20",
+   "interpreter": "8192",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "8192",
+   "status": "PARITY",
+   "step": 27,
+   "value": 8192
+  },
+  {
+   "board": "16384",
+   "date": "2026-09-20",
+   "interpreter": "16384",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "16384",
+   "status": "PARITY",
+   "step": 29,
+   "value": 16384
+  },
+  {
+   "board": "32768",
+   "date": "2026-09-20",
+   "interpreter": "32768",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "32768",
+   "status": "PARITY",
+   "step": 31,
+   "value": 32768
+  },
+  {
+   "board": "65536",
+   "date": "2026-09-20",
+   "interpreter": "65536",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "65536",
+   "status": "PARITY",
+   "step": 33,
+   "value": 65536
+  },
+  {
+   "board": "131072",
+   "date": "2026-09-20",
+   "interpreter": "131072",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "131072",
+   "status": "PARITY",
+   "step": 35,
+   "value": 131072
+  },
+  {
+   "board": "262144",
+   "date": "2026-09-20",
+   "interpreter": "262144",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "262144",
+   "status": "PARITY",
+   "step": 37,
+   "value": 262144
+  },
+  {
+   "board": "524288",
+   "date": "2026-09-20",
+   "interpreter": "524288",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "524288",
+   "status": "PARITY",
+   "step": 39,
+   "value": 524288
+  },
+  {
+   "board": "1048576",
+   "date": "2026-09-20",
+   "interpreter": "1048576",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "1048576",
+   "status": "PARITY",
+   "step": 41,
+   "value": 1048576
+  },
+  {
+   "board": "2097152",
+   "date": "2026-09-20",
+   "interpreter": "2097152",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "2097152",
+   "status": "PARITY",
+   "step": 43,
+   "value": 2097152
+  },
+  {
+   "board": "4194304",
+   "date": "2026-09-20",
+   "interpreter": "4194304",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:108",
+   "rtl": "4194304",
+   "status": "PARITY",
+   "step": 45,
+   "value": 4194304
+  },
+  {
+   "board": "8388600",
+   "date": "2026-09-20",
+   "interpreter": "8388608",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:109",
+   "rtl": "8388608",
+   "status": "MISMATCH",
+   "step": 47,
+   "value": 8388608
+  },
+  {
+   "board": "16777216",
+   "date": "2026-09-20",
+   "interpreter": "16777216",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:110",
+   "rtl": "16777216",
+   "status": "PARITY",
+   "step": 49,
+   "value": 16777216
+  },
+  {
+   "board": "335544;<",
+   "date": "2026-09-20",
+   "interpreter": "33554432",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:111",
+   "rtl": "33554432",
+   "status": "MISMATCH",
+   "step": 51,
+   "value": 33554432
+  },
+  {
+   "board": "2147481?::",
+   "date": "2026-09-20",
+   "interpreter": "2147483648",
+   "program": "print-ladder",
+   "record": "cosmictera-build/OFF.md:112",
+   "rtl": "2147483648",
+   "status": "MISMATCH",
+   "step": 63,
+   "value": 2147483648
+  }
+ ],
+ "engines": {
+  "board": "recorded output dated after e4c251e (2026-09-17), the last change to the CPU's RTL",
+  "interpreter": "src/hijaiyyah/hisa/machine.py",
+  "python": "book functions for HLOAD, HCADD, HNRM2, HDIST; otherwise the interpreter itself (src/hijaiyyah/vm delegates to it)",
+  "rtl": "rtl/*.v under Icarus via rtl/tb/tb_parity.v +TRACE"
+ },
+ "generated_by": "src/hijaiyyah/nui/parity_model.py",
+ "max_steps": 5000,
+ "mmio": {
+  "COUNTER": [
+   {
+    "index": 0,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 9,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 9,
+     "value": 10,
+     "where": "rtl/programs/burn_in.hasm:90"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/burn_in.hasm",
+    "rtl": {
+     "cycle": 14,
+     "key": 1,
+     "value": 13
+    }
+   },
+   {
+    "index": 23,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 246,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 108,
+     "value": 109,
+     "where": "rtl/programs/hal.hasm:117"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/flags_board.hasm",
+    "rtl": {
+     "cycle": 166,
+     "key": 2,
+     "value": 165
+    }
+   },
+   {
+    "index": 23,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 226,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 106,
+     "value": 107,
+     "where": "rtl/programs/hal.hasm:117"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/flags_ctx.hasm",
+    "rtl": {
+     "cycle": 164,
+     "key": 2,
+     "value": 163
+    }
+   },
+   {
+    "index": 29,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 383,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 123,
+     "value": 124,
+     "where": "rtl/programs/hal.hasm:117"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/kernel.hasm",
+    "rtl": {
+     "cycle": 174,
+     "key": 2,
+     "value": 174
+    }
+   },
+   {
+    "index": 0,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 1,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 1,
+     "value": 2,
+     "where": "rtl/programs/timer_poll.hasm:14"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/timer_poll.hasm",
+    "rtl": {
+     "cycle": 6,
+     "key": 1,
+     "value": 5
+    }
+   },
+   {
+    "index": 5,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 13,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 13,
+     "value": 14,
+     "where": "rtl/programs/trap_resume.hasm:45"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/trap_resume.hasm",
+    "rtl": {
+     "cycle": 18,
+     "key": 1,
+     "value": 17
+    }
+   },
+   {
+    "index": 5,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 13,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 13,
+     "value": 14,
+     "where": "rtl/programs/trap_shadow.hasm:48"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/trap_shadow.hasm",
+    "rtl": {
+     "cycle": 18,
+     "key": 1,
+     "value": 17
+    }
+   },
+   {
+    "index": 1,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 5,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 5,
+     "value": 6,
+     "where": "rtl/programs/trap_timer.hasm:35"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/trap_timer.hasm",
+    "rtl": {
+     "cycle": 10,
+     "key": 2,
+     "value": 9
+    }
+   }
+  ],
+  "SD_STATUS": [
+   {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 98,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 308,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/sd_writer.hasm",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 16,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 307,
+     "value": 0,
+     "where": "rtl/programs/sdio_probe.hasm:68"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/sdio_probe.hasm",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 54,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 307,
+     "value": 0,
+     "where": "rtl/programs/sdio_verify.hasm:124"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/sdio_verify.hasm",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 70,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 307,
+     "value": 0,
+     "where": "rtl/programs/sdio_write.hasm:174"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/sdio_write.hasm",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   {
+    "index": 108,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 1025,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 326,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/shell.hasm",
+    "rtl": {
+     "cycle": 648,
+     "key": 2,
+     "value": 1
+    }
+   },
+   {
+    "index": 105,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 207,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 313,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/test_prog_load.hasm",
+    "rtl": {
+     "cycle": 622,
+     "key": 2,
+     "value": 1
+    }
+   },
+   {
+    "index": 105,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 215,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 313,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "program": "rtl/programs/test_prog_run.hasm",
+    "rtl": {
+     "cycle": 622,
+     "key": 2,
+     "value": 1
+    }
+   }
+  ]
+ },
+ "opcodes": {
+  "ADD": {
+   "agreeing_programs": [
+    "parity:integer_arithmetic",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R3=307",
+    "event": true,
+    "program": "parity:integer_arithmetic",
+    "step": 2,
+    "where": "<parity:integer_arithmetic>:3"
+   }
+  },
+  "ADDI": {
+   "agreeing_programs": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hal_sd.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/hos_hctx.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/sd_writer.hasm",
+    "rtl/programs/sdio_probe.hasm",
+    "rtl/programs/sdio_verify.hasm",
+    "rtl/programs/sdio_write.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R2=15",
+    "event": true,
+    "program": "parity:add_immediate_signed",
+    "step": 1,
+    "where": "<parity:add_immediate_signed>:2"
+   }
+  },
+  "AND": {
+   "agreeing_programs": [
+    "parity:bitwise_register",
+    "rtl/programs/jamrah_gate.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R3=48",
+    "event": true,
+    "program": "parity:bitwise_register",
+    "step": 2,
+    "where": "<parity:bitwise_register>:3"
+   }
+  },
+  "ANDI": {
+   "agreeing_programs": [
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "rtl/programs/jamrah_gate.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R2=240",
+    "event": true,
+    "program": "parity:bitwise_immediate",
+    "step": 1,
+    "where": "<parity:bitwise_immediate>:2"
+   }
+  },
+  "CALL": {
+   "agreeing_programs": [
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/sd_writer.hasm",
+    "rtl/programs/sdio_probe.hasm",
+    "rtl/programs/sdio_verify.hasm",
+    "rtl/programs/sdio_write.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
+    "rtl/programs/trap_hreg.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x002 -> 0x0cf",
+    "event": false,
+    "program": "rtl/programs/flags_board.hasm",
+    "step": 2,
+    "where": "rtl/programs/flags_board.hasm:37"
+   }
+  },
+  "CDOT": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "CEQ": {
+   "agreeing_programs": [
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x003 -> 0x004",
+    "event": false,
+    "program": "parity:codex_equality_sets_zero",
+    "step": 3,
+    "where": "<parity:codex_equality_sets_zero>:4"
+   }
+  },
+  "CGET": {
+   "agreeing_programs": [
+    "parity:cset_then_reads_it_back",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_hreg.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R3=7",
+    "event": true,
+    "program": "parity:cset_then_reads_it_back",
+    "step": 3,
+    "where": "<parity:cset_then_reads_it_back>:4"
+   }
+  },
+  "CHASH": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "CMOD4": {
+   "agreeing_programs": [
+    "parity:codex_turning_budget_and_residue",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R6=1",
+    "event": true,
+    "program": "parity:codex_turning_budget_and_residue",
+    "step": 7,
+    "where": "<parity:codex_turning_budget_and_residue>:8"
+   }
+  },
+  "CMOV": {
+   "agreeing_programs": [
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "H2[0]=8",
+    "event": true,
+    "program": "parity:codex_copy_and_zero",
+    "step": 1,
+    "where": "<parity:codex_copy_and_zero>:2"
+   }
+  },
+  "CMP": {
+   "agreeing_programs": [
+    "parity:backward_branch_loop",
+    "parity:compare_sets_flags",
+    "parity:forward_branch_taken",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_loop.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x003 -> 0x004",
+    "event": false,
+    "program": "parity:backward_branch_loop",
+    "step": 3,
+    "where": "<parity:backward_branch_loop>:4"
+   }
+  },
+  "CMPI": {
+   "agreeing_programs": [
+    "parity:compare_immediate",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hal_sd.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/loader.hasm",
+    "rtl/programs/sd_writer.hasm",
+    "rtl/programs/sdio_probe.hasm",
+    "rtl/programs/sdio_verify.hasm",
+    "rtl/programs/sdio_write.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/tb/hfs_persist_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x001 -> 0x002",
+    "event": false,
+    "program": "parity:compare_immediate",
+    "step": 1,
+    "where": "<parity:compare_immediate>:2"
+   }
+  },
+  "CRHO": {
+   "agreeing_programs": [
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R2=4294967289",
+    "event": true,
+    "program": "parity:codex_negative_residue",
+    "step": 2,
+    "where": "<parity:codex_negative_residue>:3"
+   }
+  },
+  "CSET": {
+   "agreeing_programs": [
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_hreg.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x002 -> 0x003",
+    "event": false,
+    "program": "parity:cset_past_seventeen_names_nothing",
+    "step": 2,
+    "where": "<parity:cset_past_seventeen_names_nothing>:3"
+   }
+  },
+  "CSIGN": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "CSUB": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "CU": {
+   "agreeing_programs": [
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R1=8",
+    "event": true,
+    "program": "parity:codex_negative_residue",
+    "step": 1,
+    "where": "<parity:codex_negative_residue>:2"
+   }
+  },
+  "CZERO": {
+   "agreeing_programs": [
+    "parity:codex_copy_and_zero",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "H3[0]=0",
+    "event": true,
+    "program": "parity:codex_copy_and_zero",
+    "step": 3,
+    "where": "<parity:codex_copy_and_zero>:4"
+   }
+  },
+  "EMITS": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "no run in the corpus executes it at a step both engines reached and agreed on",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "ERET": {
+   "agreeing_programs": [
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x00d -> 0x00e",
+    "event": false,
+    "program": "rtl/programs/mem_protect.hasm",
+    "step": 13,
+    "where": "rtl/programs/mem_protect.hasm:36"
+   }
+  },
+  "FRD": {
+   "agreeing_programs": [
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R3=2",
+    "event": true,
+    "program": "parity:flags_read_after_compare",
+    "step": 2,
+    "where": "<parity:flags_read_after_compare>:3"
+   }
+  },
+  "FWR": {
+   "agreeing_programs": [
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x001 -> 0x002",
+    "event": false,
+    "program": "parity:flags_survive_a_compare",
+    "step": 1,
+    "where": "<parity:flags_survive_a_compare>:2"
+   }
+  },
+  "HALT": {
+   "agreeing_programs": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:string_integral_bsm",
+    "parity:subtraction_wraps_at_32_bits",
+    "print-ladder",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_distance.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hisab.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/trap_flags.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [
+    {
+     "index": 1,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 50,
+      "reads_mmio": [],
+      "step": 50,
+      "stopped_here": true,
+      "where": "rtl/programs/bench/e6_record_triage.hasm:65"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/bench/e6_record_triage.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 370,
+      "key": 1,
+      "value": 500
+     }
+    },
+    {
+     "index": 13,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 19,
+      "reads_mmio": [],
+      "step": 28,
+      "stopped_here": true,
+      "where": "rtl/programs/mem_protect.hasm:46"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/mem_protect.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 44,
+      "key": 10,
+      "value": "xxxxxxxx"
+     }
+    },
+    {
+     "index": 19,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 15,
+      "reads_mmio": [],
+      "step": 54,
+      "stopped_here": true,
+      "where": "rtl/programs/subroutine.hasm:35"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/subroutine.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 144,
+      "key": 1,
+      "value": 10
+     }
+    },
+    {
+     "index": 15,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 18,
+      "reads_mmio": [],
+      "step": 30,
+      "stopped_here": true,
+      "where": "rtl/programs/syscall.hasm:48"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/syscall.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 46,
+      "key": 10,
+      "value": "xxxxxxxx"
+     }
+    },
+    {
+     "index": 60,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 18,
+      "reads_mmio": [],
+      "step": 173,
+      "stopped_here": true,
+      "where": "rtl/programs/test_hfs.hasm:39"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/test_hfs.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 1096,
+      "key": 3,
+      "value": 4294967295
+     }
+    },
+    {
+     "index": 14,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 25,
+      "reads_mmio": [],
+      "step": 46,
+      "stopped_here": true,
+      "where": "rtl/programs/trap_epc.hasm:66"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/trap_epc.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 544,
+      "key": 6,
+      "value": 2
+     }
+    },
+    {
+     "index": 10,
+     "interpreter": {
+      "opcode": "HALT",
+      "pc": 13,
+      "reads_mmio": [],
+      "step": 22,
+      "stopped_here": true,
+      "where": "rtl/programs/user_mode.hasm:43"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/user_mode.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 37,
+      "key": 11,
+      "value": "xxxxxxxx"
+     }
+    }
+   ],
+   "python": "SAME ENGINE",
+   "rtl": "MISMATCH",
+   "source": "rtl/hcpu_controller.v:75, rtl/hcpu_writeback.v:33",
+   "status": "MISMATCH",
+   "witness": {
+    "change": "halted",
+    "event": false,
+    "program": "parity:add_immediate_signed",
+    "step": 3,
+    "where": "<parity:add_immediate_signed>:4"
+   }
+  },
+  "HALT_ERR": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "no run in the corpus executes it at a step both engines reached and agreed on",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "HCADD": {
+   "agreeing_programs": [
+    "parity:codex_add",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "PARITY",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "H2[0]=6",
+    "event": true,
+    "program": "parity:codex_add",
+    "step": 2,
+    "where": "<parity:codex_add>:3"
+   }
+  },
+  "HCHK": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "HCRC": {
+   "agreeing_programs": [
+    "parity:hisab_pack_and_crc",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R2=2586908108",
+    "event": true,
+    "program": "parity:hisab_pack_and_crc",
+    "step": 2,
+    "where": "<parity:hisab_pack_and_crc>:3"
+   }
+  },
+  "HDCMP": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "HDES": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "HDIST": {
+   "agreeing_programs": [
+    "parity:distance_between_letters",
+    "rtl/programs/test_distance.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "PARITY",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R4=10",
+    "event": true,
+    "program": "parity:distance_between_letters",
+    "step": 2,
+    "where": "<parity:distance_between_letters>:3"
+   }
+  },
+  "HEXMT": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "HGRD": {
+   "agreeing_programs": [
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_negative_residue",
+    "parity:guard_a_letter",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_negative.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x001 -> 0x002",
+    "event": false,
+    "program": "parity:branch_on_guard",
+    "step": 1,
+    "where": "<parity:branch_on_guard>:2"
+   }
+  },
+  "HLOAD": {
+   "agreeing_programs": [
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:norm_of_a_letter",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_distance.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_hisab.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "PARITY",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "H0[0]=2",
+    "event": true,
+    "program": "parity:branch_on_guard",
+    "step": 0,
+    "where": "<parity:branch_on_guard>:1"
+   }
+  },
+  "HNRM2": {
+   "agreeing_programs": [
+    "parity:norm_of_a_letter",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/test_bsm.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_bsm.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "PARITY",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R5=18",
+    "event": true,
+    "program": "parity:norm_of_a_letter",
+    "step": 1,
+    "where": "<parity:norm_of_a_letter>:2"
+   }
+  },
+  "HPACK": {
+   "agreeing_programs": [
+    "parity:hisab_pack_and_crc",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R1=65824",
+    "event": true,
+    "program": "parity:hisab_pack_and_crc",
+    "step": 1,
+    "where": "<parity:hisab_pack_and_crc>:2"
+   }
+  },
+  "HPROJ": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "HSER": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "JEQ": {
+   "agreeing_programs": [
+    "parity:forward_branch_taken",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x003 -> 0x006",
+    "event": false,
+    "program": "parity:forward_branch_taken",
+    "step": 3,
+    "where": "<parity:forward_branch_taken>:4"
+   }
+  },
+  "JGD": {
+   "agreeing_programs": [
+    "parity:branch_on_guard",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x002 -> 0x004",
+    "event": false,
+    "program": "parity:branch_on_guard",
+    "step": 2,
+    "where": "<parity:branch_on_guard>:3"
+   }
+  },
+  "JGF": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "JGP": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "JMP": {
+   "agreeing_programs": [
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x03c -> 0x07b",
+    "event": false,
+    "program": "rtl/programs/flags_board.hasm",
+    "step": 70,
+    "where": "rtl/programs/flags_board.hasm:100"
+   }
+  },
+  "JNE": {
+   "agreeing_programs": [
+    "parity:backward_branch_loop",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hal_sd.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/sd_writer.hasm",
+    "rtl/programs/sdio_probe.hasm",
+    "rtl/programs/sdio_verify.hasm",
+    "rtl/programs/sdio_write.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
+    "rtl/tb/hfs_persist_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x004 -> 0x002",
+    "event": false,
+    "program": "parity:backward_branch_loop",
+    "step": 4,
+    "where": "<parity:backward_branch_loop>:5"
+   }
+  },
+  "JNGD": {
+   "agreeing_programs": [
+    "parity:branch_on_guard_not_taken",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_negative.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "pc 0x002 -> 0x003",
+    "event": false,
+    "program": "parity:branch_on_guard_not_taken",
+    "step": 2,
+    "where": "<parity:branch_on_guard_not_taken>:3"
+   }
+  },
+  "JNP": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "LOAD": {
+   "agreeing_programs": [
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:store_then_load",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/loader.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/programs/user_mode.hasm",
+    "rtl/tb/hfs_persist_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R1=291",
+    "event": true,
+    "program": "parity:mmio_compare_round_trip",
+    "step": 3,
+    "where": "<parity:mmio_compare_round_trip>:4"
+   }
+  },
+  "L_AIN": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=60",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 23,
+    "where": "rtl/programs/letters.hasm:42"
+   }
+  },
+  "L_ALIF": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[4]=1",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 6,
+    "where": "rtl/programs/letters.hasm:25"
+   }
+  },
+  "L_BA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=2",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 0,
+    "where": "rtl/programs/letters.hasm:19"
+   }
+  },
+  "L_DAL": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=26",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 13,
+    "where": "rtl/programs/letters.hasm:32"
+   }
+  },
+  "L_DHAD": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=49",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 20,
+    "where": "rtl/programs/letters.hasm:39"
+   }
+  },
+  "L_DZAL": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=27",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 14,
+    "where": "rtl/programs/letters.hasm:33"
+   }
+  },
+  "L_FA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=68",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 25,
+    "where": "rtl/programs/letters.hasm:44"
+   }
+  },
+  "L_GHAIN": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=63",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 24,
+    "where": "rtl/programs/letters.hasm:43"
+   }
+  },
+  "L_HA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=22",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 11,
+    "where": "rtl/programs/letters.hasm:30"
+   }
+  },
+  "L_HAA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=96",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 32,
+    "where": "rtl/programs/letters.hasm:51"
+   }
+  },
+  "L_JIM": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm",
+    "rtl/programs/nui_embedding.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=19",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 10,
+    "where": "rtl/programs/letters.hasm:29"
+   }
+  },
+  "L_KAF": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=76",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 27,
+    "where": "rtl/programs/letters.hasm:46"
+   }
+  },
+  "L_KHA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm",
+    "rtl/programs/nui_embedding.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=25",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 12,
+    "where": "rtl/programs/letters.hasm:31"
+   }
+  },
+  "L_LAM": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=77",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 28,
+    "where": "rtl/programs/letters.hasm:47"
+   }
+  },
+  "L_MIM": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=10",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 2,
+    "where": "rtl/programs/letters.hasm:21"
+   }
+  },
+  "L_NUN": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=83",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 30,
+    "where": "rtl/programs/letters.hasm:49"
+   }
+  },
+  "L_QAF": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=74",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 26,
+    "where": "rtl/programs/letters.hasm:45"
+   }
+  },
+  "L_RA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=28",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 15,
+    "where": "rtl/programs/letters.hasm:34"
+   }
+  },
+  "L_SHAD": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=43",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 19,
+    "where": "rtl/programs/letters.hasm:38"
+   }
+  },
+  "L_SIN": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=6",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 1,
+    "where": "rtl/programs/letters.hasm:20"
+   }
+  },
+  "L_SYIN": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=37",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 18,
+    "where": "rtl/programs/letters.hasm:37"
+   }
+  },
+  "L_TA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=14",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 8,
+    "where": "rtl/programs/letters.hasm:27"
+   }
+  },
+  "L_THA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=53",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 21,
+    "where": "rtl/programs/letters.hasm:40"
+   }
+  },
+  "L_TSA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=16",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 9,
+    "where": "rtl/programs/letters.hasm:28"
+   }
+  },
+  "L_WAW": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=88",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 31,
+    "where": "rtl/programs/letters.hasm:50"
+   }
+  },
+  "L_YA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=99",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 33,
+    "where": "rtl/programs/letters.hasm:52"
+   }
+  },
+  "L_ZAY": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=29",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 16,
+    "where": "rtl/programs/letters.hasm:35"
+   }
+  },
+  "L_ZHA": {
+   "agreeing_programs": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "H0[0]=57",
+    "event": true,
+    "program": "rtl/programs/letters.hasm",
+    "step": 22,
+    "where": "rtl/programs/letters.hasm:41"
+   }
+  },
+  "MOV": {
+   "agreeing_programs": [
+    "parity:move_and_immediate",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R3=4095",
+    "event": true,
+    "program": "parity:move_and_immediate",
+    "step": 2,
+    "where": "<parity:move_and_immediate>:3"
+   }
+  },
+  "MOVI": {
+   "agreeing_programs": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:integer_arithmetic",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:subtraction_wraps_at_32_bits",
+    "print-ladder",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/burn_in.hasm",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hal.hasm",
+    "rtl/programs/hal_sd.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/hos_hctx.hasm",
+    "rtl/programs/hos_hfs_disk.hasm",
+    "rtl/programs/hos_prog_load.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/loader.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/sd_writer.hasm",
+    "rtl/programs/sdio_probe.hasm",
+    "rtl/programs/sdio_verify.hasm",
+    "rtl/programs/sdio_write.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm",
+    "rtl/programs/user_mode.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm",
+    "rtl/tb/prog_load_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R1=10",
+    "event": true,
+    "program": "parity:add_immediate_signed",
+    "step": 0,
+    "where": "<parity:add_immediate_signed>:1"
+   }
+  },
+  "MUL": {
+   "agreeing_programs": [
+    "parity:integer_arithmetic",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/hos_hctx.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_hreg.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R5=2100",
+    "event": true,
+    "program": "parity:integer_arithmetic",
+    "step": 4,
+    "where": "<parity:integer_arithmetic>:5"
+   }
+  },
+  "NOP": {
+   "agreeing_programs": [
+    "parity:move_and_immediate",
+    "parity:store_then_load",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x003 -> 0x004",
+    "event": false,
+    "program": "parity:move_and_immediate",
+    "step": 3,
+    "where": "<parity:move_and_immediate>:4"
+   }
+  },
+  "NOT": {
+   "agreeing_programs": [
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R1=4294967295",
+    "event": true,
+    "program": "parity:bitwise_immediate_extension",
+    "step": 1,
+    "where": "<parity:bitwise_immediate_extension>:2"
+   }
+  },
+  "OR": {
+   "agreeing_programs": [
+    "parity:bitwise_register"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R4=252",
+    "event": true,
+    "program": "parity:bitwise_register",
+    "step": 3,
+    "where": "<parity:bitwise_register>:4"
+   }
+  },
+  "ORI": {
+   "agreeing_programs": [
+    "parity:bitwise_immediate",
+    "rtl/programs/hos_hfs_disk.hasm",
+    "rtl/programs/hos_prog_load.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R3=255",
+    "event": true,
+    "program": "parity:bitwise_immediate",
+    "step": 2,
+    "where": "<parity:bitwise_immediate>:3"
+   }
+  },
+  "POP": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "no run in the corpus executes it at a step both engines reached and agreed on",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "PRINT": {
+   "agreeing_programs": [
+    "print-ladder",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_distance.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_hisab.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm"
+   ],
+   "board": "MISMATCH",
+   "board_mismatches": [
+    {
+     "board": "8388600",
+     "date": "2026-09-20",
+     "interpreter": "8388608",
+     "program": "print-ladder",
+     "record": "cosmictera-build/OFF.md:109",
+     "rtl": "8388608",
+     "status": "MISMATCH",
+     "step": 47,
+     "value": 8388608
+    },
+    {
+     "board": "335544;<",
+     "date": "2026-09-20",
+     "interpreter": "33554432",
+     "program": "print-ladder",
+     "record": "cosmictera-build/OFF.md:111",
+     "rtl": "33554432",
+     "status": "MISMATCH",
+     "step": 51,
+     "value": 33554432
+    },
+    {
+     "board": "2147481?::",
+     "date": "2026-09-20",
+     "interpreter": "2147483648",
+     "program": "print-ladder",
+     "record": "cosmictera-build/OFF.md:112",
+     "rtl": "2147483648",
+     "status": "MISMATCH",
+     "step": 63,
+     "value": 2147483648
+    }
+   ],
+   "board_programs": [
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "source": "rtl/hcpu_top.v:324",
+   "status": "MISMATCH",
+   "witness": {
+    "change": "printed 1",
+    "event": true,
+    "program": "print-ladder",
+    "step": 1,
+    "where": "<print-ladder>:2"
+   }
+  },
+  "PRINTH": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "PUSH": {
+   "agreeing_programs": [
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x3a9 -> 0x3aa",
+    "event": false,
+    "program": "rtl/programs/shell.hasm",
+    "step": 16,
+    "where": "rtl/programs/hos_hfs_disk.hasm:138"
+   }
+  },
+  "RET": {
+   "agreeing_programs": [
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hal.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/hos_hfs_disk.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_hreg.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [
+    {
+     "index": 103,
+     "interpreter": {
+      "opcode": "RET",
+      "pc": 19,
+      "reads_mmio": [],
+      "step": 310,
+      "stopped_here": true,
+      "where": "rtl/programs/hal_sd.hasm:60"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/hal_sd.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 606,
+      "key": 1,
+      "value": 196
+     }
+    },
+    {
+     "index": 2,
+     "interpreter": {
+      "opcode": "RET",
+      "pc": 3,
+      "reads_mmio": [],
+      "step": 3,
+      "stopped_here": true,
+      "where": "rtl/programs/hos_hctx.hasm:77"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/hos_hctx.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 8,
+      "key": 6,
+      "value": 0
+     }
+    },
+    {
+     "index": 5,
+     "interpreter": {
+      "opcode": "RET",
+      "pc": 5,
+      "reads_mmio": [],
+      "step": 5,
+      "stopped_here": true,
+      "where": "rtl/programs/hos_prog_load.hasm:51"
+     },
+     "kind": "GPR",
+     "program": "rtl/programs/hos_prog_load.hasm",
+     "rtl": {
+      "after_stop": true,
+      "cycle": 10,
+      "key": 11,
+      "value": 1
+     }
+    }
+   ],
+   "python": "SAME ENGINE",
+   "rtl": "MISMATCH",
+   "source": "rtl/hcpu_controller.v:75, rtl/hcpu_writeback.v:33",
+   "status": "MISMATCH",
+   "witness": {
+    "change": "pc 0x0d1 -> 0x003",
+    "event": false,
+    "program": "rtl/programs/flags_board.hasm",
+    "step": 5,
+    "where": "rtl/programs/hal.hasm:27"
+   }
+  },
+  "SHL": {
+   "agreeing_programs": [
+    "parity:bitwise_shift",
+    "parity:shift_overflow"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R3=3840",
+    "event": true,
+    "program": "parity:bitwise_shift",
+    "step": 2,
+    "where": "<parity:bitwise_shift>:3"
+   }
+  },
+  "SHLI": {
+   "agreeing_programs": [
+    "parity:bitwise_shift",
+    "parity:shift_overflow",
+    "print-ladder",
+    "rtl/programs/hos_hfs_disk.hasm",
+    "rtl/programs/hos_prog_load.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R5=61440",
+    "event": true,
+    "program": "parity:bitwise_shift",
+    "step": 4,
+    "where": "<parity:bitwise_shift>:5"
+   }
+  },
+  "SHR": {
+   "agreeing_programs": [
+    "parity:bitwise_shift",
+    "parity:shift_overflow"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R4=15",
+    "event": true,
+    "program": "parity:bitwise_shift",
+    "step": 3,
+    "where": "<parity:bitwise_shift>:4"
+   }
+  },
+  "SHRI": {
+   "agreeing_programs": [
+    "parity:bitwise_shift",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R6=15",
+    "event": true,
+    "program": "parity:bitwise_shift",
+    "step": 5,
+    "where": "<parity:bitwise_shift>:6"
+   }
+  },
+  "STORE": {
+   "agreeing_programs": [
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:store_then_load",
+    "rtl/programs/burn_in.hasm",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hal.hasm",
+    "rtl/programs/hal_sd.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/sd_writer.hasm",
+    "rtl/programs/sdio_probe.hasm",
+    "rtl/programs/sdio_verify.hasm",
+    "rtl/programs/sdio_write.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm",
+    "rtl/programs/user_mode.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm",
+    "rtl/tb/prog_load_probe.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "COMPARE=291",
+    "event": true,
+    "program": "parity:mmio_compare_round_trip",
+    "step": 2,
+    "where": "<parity:mmio_compare_round_trip>:3"
+   }
+  },
+  "SUB": {
+   "agreeing_programs": [
+    "parity:integer_arithmetic",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R4=293",
+    "event": true,
+    "program": "parity:integer_arithmetic",
+    "step": 3,
+    "where": "<parity:integer_arithmetic>:4"
+   }
+  },
+  "SYSCALL": {
+   "agreeing_programs": [
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm",
+    "rtl/tb/prog_load_probe.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "pc 0x010 -> 0x011",
+    "event": false,
+    "program": "rtl/programs/syscall.hasm",
+    "step": 16,
+    "where": "rtl/programs/syscall.hasm:46"
+   }
+  },
+  "TRAP": {
+   "agreeing_programs": [
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/syscall_io.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/programs/user_mode.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm",
+    "rtl/tb/prog_load_probe.hasm"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "note": "not an opcode: the step on which the machine takes a trap",
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "trap cause=4 epc=0x012 vector=0x014",
+    "event": false,
+    "program": "rtl/programs/mem_protect.hasm",
+    "step": 19,
+    "where": "rtl/programs/mem_protect.hasm:46"
+   }
+  },
+  "VDIST": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "VNORM": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "VPROJ_K": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "VPROJ_N": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "VPROJ_Q": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "VPROJ_T": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "VSCL": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": false,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "not in RTL_IMPLEMENTED: the HCPU halts with HALT_ERR on it",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
+  "XOR": {
+   "agreeing_programs": [
+    "parity:bitwise_register"
+   ],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "UNKNOWN",
+   "witness": {
+    "change": "R5=204",
+    "event": true,
+    "program": "parity:bitwise_register",
+    "step": 4,
+    "where": "<parity:bitwise_register>:5"
+   }
+  },
+  "XORI": {
+   "agreeing_programs": [
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "board_programs": [
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "rtl": "PARITY",
+   "status": "PARITY",
+   "witness": {
+    "change": "R4=15",
+    "event": true,
+    "program": "parity:bitwise_immediate",
+    "step": 3,
+    "where": "<parity:bitwise_immediate>:4"
+   }
+  }
+ },
+ "programs": {
+  "parity:add_immediate_signed": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:backward_branch_loop": {
+   "agreed_through_step": 11,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 4,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 12
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4096,
+    "cycles": 23,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:bitwise_immediate": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:bitwise_immediate_extension": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:bitwise_register": {
+   "agreed_through_step": 6,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 6,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 7
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4056,
+    "cycles": 12,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:bitwise_shift": {
+   "agreed_through_step": 6,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 6,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 7
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4056,
+    "cycles": 12,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:branch_on_guard": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 13,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:branch_on_guard_not_taken": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:codex_add": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 3,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:codex_copy_and_zero": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 4,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 4,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 4,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:codex_equality_sets_zero": {
+   "agreed_through_step": 6,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 7
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4056,
+    "cycles": 12,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:codex_inequality_clears_zero": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 14,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:codex_negative_residue": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:codex_turning_budget_and_residue": {
+   "agreed_through_step": 8,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 9
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4072,
+    "cycles": 14,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:compare_immediate": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:compare_sets_flags": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 2,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:cset_past_seventeen_names_nothing": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:cset_takes_the_low_byte": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:cset_then_reads_it_back": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:cset_twice_into_the_same_register": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 3,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:cset_writes_one_component": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:distance_between_letters": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:every_letter_loads": {
+   "agreed_through_step": 28,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 28,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 29
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4232,
+    "cycles": 34,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:flags_read_after_compare": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:flags_survive_a_compare": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:flags_write_then_read": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 2,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:forward_branch_taken": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 14,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:guard_a_letter": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:hisab_pack_and_crc": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:integer_arithmetic": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 5,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:load_one_letter": {
+   "agreed_through_step": 1,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 2
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4016,
+    "cycles": 7,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:load_three_letters": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 3,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:mmio_compare_round_trip": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:mmio_does_not_disturb_ram": {
+   "agreed_through_step": 6,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 1,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 1,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 7
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4056,
+    "cycles": 12,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 1,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:mmio_status_when_idle": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:move_and_immediate": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:norm_of_a_letter": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:shift_overflow": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 5,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:store_then_load": {
+   "agreed_through_step": 8,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 1,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 1,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 9
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4072,
+    "cycles": 14,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 1,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:string_integral_bsm": {
+   "agreed_through_step": 6,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 5,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 5,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 7
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4056,
+    "cycles": 12,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 5,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "parity:subtraction_wraps_at_32_bits": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "print-ladder": {
+   "agreed_through_step": 64,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 32,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 199
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 32,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 199
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 65
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 28400,
+    "cycles": 20375,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 32,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 199
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_guard_x1.hasm": {
+   "agreed_through_step": 16,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 15,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 17
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4136,
+    "cycles": 22,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_guard_x10.hasm": {
+   "agreed_through_step": 25,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 15,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 26
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4208,
+    "cycles": 31,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_hisab.hasm": {
+   "agreed_through_step": 19,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 15,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 20
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4160,
+    "cycles": 25,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n02.hasm": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 3,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 5
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4040,
+    "cycles": 10,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n04.hasm": {
+   "agreed_through_step": 8,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 7,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 7,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 9
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4072,
+    "cycles": 14,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 7,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n08.hasm": {
+   "agreed_through_step": 16,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 15,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 17
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4136,
+    "cycles": 22,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 15,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n12.hasm": {
+   "agreed_through_step": 24,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 0,
+    "HREG": 23,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 23,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 25
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4200,
+    "cycles": 30,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 0,
+     "HREG": 23,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e3_sweep28.hasm": {
+   "agreed_through_step": 112,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 16,
+    "HREG": 28,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 56
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 16,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 56
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 113
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 11624,
+    "cycles": 5651,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 16,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 56
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e4_frame.hasm": {
+   "agreed_through_step": 9,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 33
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 33
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 10
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 8040,
+    "cycles": 3310,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 33
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e5_negative.hasm": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 4
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4528,
+    "cycles": 329,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e6_record_triage.hasm": {
+   "agreed_through_step": 49,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 16,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 4
+   },
+   "first_divergence": {
+    "index": 1,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 50,
+     "reads_mmio": [],
+     "step": 50,
+     "stopped_here": true,
+     "where": "rtl/programs/bench/e6_record_triage.hasm:65"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 370,
+     "key": 1,
+     "value": 500
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 16,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 51
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4888,
+    "cycles": 371,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 2,
+     "HREG": 16,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/burn_in.hasm": {
+   "agreed_through_step": 8,
+   "compared": {
+    "FLAGS": 5,
+    "GPR": 1638,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 19,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 0,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 9,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 9,
+     "value": 10,
+     "where": "rtl/programs/burn_in.hasm:90"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 14,
+     "key": 1,
+     "value": 13
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 47,
+     "GPR": 1638,
+     "HREG": 0,
+     "MMIO": 24,
+     "RAM": 20,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 5,
+     "GPR": 4074,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 19,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/flags_board.hasm": {
+   "agreed_through_step": 107,
+   "compared": {
+    "FLAGS": 13,
+    "GPR": 1017,
+    "HREG": 0,
+    "MMIO": 23,
+    "RAM": 942,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 23,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 246,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 108,
+     "value": 109,
+     "where": "rtl/programs/hal.hasm:117"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 166,
+     "key": 2,
+     "value": 165
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 13,
+     "GPR": 1017,
+     "HREG": 0,
+     "MMIO": 23,
+     "RAM": 942,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 81,
+     "GPR": 5584,
+     "HREG": 0,
+     "MMIO": 142,
+     "RAM": 5001,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/flags_ctx.hasm": {
+   "agreed_through_step": 105,
+   "compared": {
+    "FLAGS": 12,
+    "GPR": 1018,
+    "HREG": 0,
+    "MMIO": 23,
+    "RAM": 943,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 23,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 226,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 106,
+     "value": 107,
+     "where": "rtl/programs/hal.hasm:117"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 164,
+     "key": 2,
+     "value": 163
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 12,
+     "GPR": 1018,
+     "HREG": 0,
+     "MMIO": 23,
+     "RAM": 943,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 80,
+     "GPR": 5589,
+     "HREG": 0,
+     "MMIO": 142,
+     "RAM": 5006,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/guard_negative.hasm": {
+   "agreed_through_step": 32,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 6,
+    "HREG": 6,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 2
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 6,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 2
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 33
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4504,
+    "cycles": 145,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 6,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 2
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/hal.hasm": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 0,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 0,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/hal_sd.hasm": {
+   "agreed_through_step": 304,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 103,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 103,
+    "interpreter": {
+     "opcode": "RET",
+     "pc": 19,
+     "reads_mmio": [],
+     "step": 310,
+     "stopped_here": true,
+     "where": "rtl/programs/hal_sd.hasm:60"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 606,
+     "key": 1,
+     "value": 196
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 103,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 311
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6488,
+    "cycles": 617,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 104,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/hfs_lifecycle.hasm": {
+   "agreed_through_step": 199,
+   "compared": {
+    "FLAGS": 6,
+    "GPR": 77,
+    "HREG": 7,
+    "MMIO": 0,
+    "RAM": 13,
+    "TX": 6
+   },
+   "first_divergence": {
+    "index": null,
+    "interpreter": {
+     "opcode": "HCHECK",
+     "pc": 238,
+     "reads_mmio": [],
+     "step": 200,
+     "value": "HCHECK CORRUPTION: H0: guard check failed",
+     "where": "rtl/programs/hos.hasm:371"
+    },
+    "kind": "EXIT",
+    "rtl": {
+     "cycle": 1475,
+     "halted": true
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 6,
+     "GPR": 77,
+     "HREG": 7,
+     "MMIO": 0,
+     "RAM": 13,
+     "TX": 6
+    },
+    "exit": "hcheck",
+    "exit_detail": "HCHECK CORRUPTION: H0: guard check failed",
+    "steps": 201
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6328,
+    "cycles": 1475,
+    "events": {
+     "FLAGS": 7,
+     "GPR": 92,
+     "HREG": 9,
+     "MMIO": 0,
+     "RAM": 13,
+     "TX": 14
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/hijrah_sweep.hasm": {
+   "agreed_through_step": 4998,
+   "compared": {
+    "FLAGS": 9,
+    "GPR": 1274,
+    "HREG": 28,
+    "MMIO": 0,
+    "RAM": 184,
+    "TX": 1402
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 9,
+     "GPR": 1274,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 184,
+     "TX": 1402
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 212240 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 212240,
+    "cycles": 212240,
+    "events": {
+     "FLAGS": 3615,
+     "GPR": 15645,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 408,
+     "TX": 1430
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hos.hasm": {
+   "agreed_through_step": 3,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/hos_demo.hasm": {
+   "agreed_through_step": 582,
+   "compared": {
+    "FLAGS": 29,
+    "GPR": 228,
+    "HREG": 11,
+    "MMIO": 0,
+    "RAM": 49,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": null,
+    "interpreter": {
+     "opcode": "HCHECK",
+     "pc": 325,
+     "reads_mmio": [],
+     "step": 600,
+     "value": "HCHECK CORRUPTION: H0: guard check failed",
+     "where": "rtl/programs/hos.hasm:415"
+    },
+    "kind": "EXIT",
+    "rtl": {
+     "cycle": 934,
+     "halted": true
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 29,
+     "GPR": 228,
+     "HREG": 11,
+     "MMIO": 0,
+     "RAM": 49,
+     "TX": 0
+    },
+    "exit": "hcheck",
+    "exit_detail": "HCHECK CORRUPTION: H0: guard check failed",
+    "steps": 601
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 8808,
+    "cycles": 934,
+    "events": {
+     "FLAGS": 30,
+     "GPR": 230,
+     "HREG": 12,
+     "MMIO": 0,
+     "RAM": 50,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/hos_hctx.hasm": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 2,
+    "interpreter": {
+     "opcode": "RET",
+     "pc": 3,
+     "reads_mmio": [],
+     "step": 3,
+     "stopped_here": true,
+     "where": "rtl/programs/hos_hctx.hasm:77"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 8,
+     "key": 6,
+     "value": 0
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 4
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4032,
+    "cycles": 9,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/hos_hfs_disk.hasm": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 5,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/hos_prog_load.hasm": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 5,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 5,
+    "interpreter": {
+     "opcode": "RET",
+     "pc": 5,
+     "reads_mmio": [],
+     "step": 5,
+     "stopped_here": true,
+     "where": "rtl/programs/hos_prog_load.hasm:51"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 10,
+     "key": 11,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "fault",
+    "exit_detail": "RET \u2192 HC-05 return stack underflow",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4048,
+    "cycles": 11,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/jamrah_gate.hasm": {
+   "agreed_through_step": 30,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 26,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 26,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 31
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4248,
+    "cycles": 36,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 26,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/kernel.hasm": {
+   "agreed_through_step": 122,
+   "compared": {
+    "FLAGS": 11,
+    "GPR": 953,
+    "HREG": 489,
+    "MMIO": 22,
+    "RAM": 859,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 29,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 383,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 123,
+     "value": 124,
+     "where": "rtl/programs/hal.hasm:117"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 174,
+     "key": 2,
+     "value": 174
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 11,
+     "GPR": 953,
+     "HREG": 489,
+     "MMIO": 22,
+     "RAM": 859,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 83,
+     "GPR": 4209,
+     "HREG": 2512,
+     "MMIO": 142,
+     "RAM": 3532,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/letters.hasm": {
+   "agreed_through_step": 36,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 31,
+    "MMIO": 0,
+    "RAM": 2,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 31,
+     "MMIO": 0,
+     "RAM": 2,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 37
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4296,
+    "cycles": 42,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 31,
+     "MMIO": 0,
+     "RAM": 2,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/loader.hasm": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/mem_protect.hasm": {
+   "agreed_through_step": 26,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 13,
+    "HREG": 0,
+    "MMIO": 7,
+    "RAM": 1,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 13,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 19,
+     "reads_mmio": [],
+     "step": 28,
+     "stopped_here": true,
+     "where": "rtl/programs/mem_protect.hasm:46"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 44,
+     "key": 10,
+     "value": "xxxxxxxx"
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 13,
+     "HREG": 0,
+     "MMIO": 7,
+     "RAM": 1,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 29
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4232,
+    "cycles": 44,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 14,
+     "HREG": 0,
+     "MMIO": 7,
+     "RAM": 1,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/nui_embedding.hasm": {
+   "agreed_through_step": 47,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 14,
+    "HREG": 2,
+    "MMIO": 0,
+    "RAM": 5,
+    "TX": 10
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 14,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 5,
+     "TX": 10
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 48
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 5584,
+    "cycles": 976,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 14,
+     "HREG": 2,
+     "MMIO": 0,
+     "RAM": 5,
+     "TX": 10
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/payload.hasm": {
+   "agreed_through_step": 2,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4024,
+    "cycles": 8,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/sd_writer.hasm": {
+   "agreed_through_step": 307,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 105,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 98,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 308,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 105,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 2
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 320
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6800,
+    "cycles": 6800,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 668,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/sdio_probe.hasm": {
+   "agreed_through_step": 306,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 105,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 16,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 307,
+     "value": 0,
+     "where": "rtl/programs/sdio_probe.hasm:68"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 105,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 2
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 315
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6760,
+    "cycles": 6760,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 664,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/sdio_verify.hasm": {
+   "agreed_through_step": 306,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 600,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 54,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 307,
+     "value": 0,
+     "where": "rtl/programs/sdio_verify.hasm:124"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 7,
+     "GPR": 600,
+     "HREG": 0,
+     "MMIO": 133,
+     "RAM": 0,
+     "TX": 8
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 2185
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 22440,
+    "cycles": 22440,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 2090,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/sdio_write.hasm": {
+   "agreed_through_step": 306,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 962,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 104,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 70,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 307,
+     "value": 0,
+     "where": "rtl/programs/sdio_write.hasm:174"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 614,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 11,
+     "GPR": 962,
+     "HREG": 0,
+     "MMIO": 263,
+     "RAM": 0,
+     "TX": 10
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 3145
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 30360,
+    "cycles": 30360,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 2810,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/shell.hasm": {
+   "agreed_through_step": 325,
+   "compared": {
+    "FLAGS": 4,
+    "GPR": 1590,
+    "HREG": 0,
+    "MMIO": 2,
+    "RAM": 2,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 108,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 1025,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 326,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 648,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 14,
+     "GPR": 1590,
+     "HREG": 0,
+     "MMIO": 28,
+     "RAM": 1391,
+     "TX": 10
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 45200,
+    "cycles": 45200,
+    "events": {
+     "FLAGS": 4,
+     "GPR": 4161,
+     "HREG": 0,
+     "MMIO": 2,
+     "RAM": 2,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/subroutine.hasm": {
+   "agreed_through_step": 53,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 19,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 4,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 19,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 15,
+     "reads_mmio": [],
+     "step": 54,
+     "stopped_here": true,
+     "where": "rtl/programs/subroutine.hasm:35"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 144,
+     "key": 1,
+     "value": 10
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 19,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 4,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 55
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4440,
+    "cycles": 144,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 20,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 4,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/syscall.hasm": {
+   "agreed_through_step": 29,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 15,
+    "HREG": 0,
+    "MMIO": 7,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 15,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 18,
+     "reads_mmio": [],
+     "step": 30,
+     "stopped_here": true,
+     "where": "rtl/programs/syscall.hasm:48"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 46,
+     "key": 10,
+     "value": "xxxxxxxx"
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 15,
+     "HREG": 0,
+     "MMIO": 7,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 31
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4248,
+    "cycles": 46,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 16,
+     "HREG": 0,
+     "MMIO": 7,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/syscall_io.hasm": {
+   "agreed_through_step": 50,
+   "compared": {
+    "FLAGS": 3,
+    "GPR": 17,
+    "HREG": 0,
+    "MMIO": 7,
+    "RAM": 0,
+    "TX": 3
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 3,
+     "GPR": 17,
+     "HREG": 0,
+     "MMIO": 7,
+     "RAM": 0,
+     "TX": 3
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 44360 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 44360,
+    "cycles": 44360,
+    "events": {
+     "FLAGS": 3,
+     "GPR": 17,
+     "HREG": 0,
+     "MMIO": 7,
+     "RAM": 0,
+     "TX": 3
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/test_bsm.hasm": {
+   "agreed_through_step": 8,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 1,
+    "HREG": 5,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 4
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 5,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 9
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4552,
+    "cycles": 329,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 1,
+     "HREG": 5,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_codex.hasm": {
+   "agreed_through_step": 30,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 5,
+    "HREG": 5,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 16
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 5,
+     "HREG": 5,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 16
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 31
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6168,
+    "cycles": 1553,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 5,
+     "HREG": 5,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 16
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_cset.hasm": {
+   "agreed_through_step": 15,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 5,
+    "HREG": 3,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 8
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 8
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 16
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 5088,
+    "cycles": 735,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 5,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 8
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_distance.hasm": {
+   "agreed_through_step": 10,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 3,
+    "HREG": 4,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 6
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 4,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 6
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 11
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4808,
+    "cycles": 527,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 3,
+     "HREG": 4,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 6
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_from_card.hasm": {
+   "agreed_through_step": 15,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 3,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 6
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 6
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 16
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4848,
+    "cycles": 531,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 3,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 6
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_guard.hasm": {
+   "agreed_through_step": 142,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 28,
+    "HREG": 28,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 3
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 28,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 3
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 143
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 5504,
+    "cycles": 359,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 28,
+     "HREG": 28,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 3
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_hfs.hasm": {
+   "agreed_through_step": 172,
+   "compared": {
+    "FLAGS": 6,
+    "GPR": 60,
+    "HREG": 8,
+    "MMIO": 0,
+    "RAM": 13,
+    "TX": 10
+   },
+   "first_divergence": {
+    "index": 60,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 18,
+     "reads_mmio": [],
+     "step": 173,
+     "stopped_here": true,
+     "where": "rtl/programs/test_hfs.hasm:39"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 1096,
+     "key": 3,
+     "value": 4294967295
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 6,
+     "GPR": 60,
+     "HREG": 8,
+     "MMIO": 0,
+     "RAM": 13,
+     "TX": 10
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 174
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6592,
+    "cycles": 1097,
+    "events": {
+     "FLAGS": 6,
+     "GPR": 61,
+     "HREG": 8,
+     "MMIO": 0,
+     "RAM": 13,
+     "TX": 10
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/test_hisab.hasm": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 2,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 17
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 17
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6088,
+    "cycles": 1665,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 2,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 17
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_loop.hasm": {
+   "agreed_through_step": 33,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 11,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 3
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 11,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 3
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 34
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4632,
+    "cycles": 277,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 11,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 3
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_negative.hasm": {
+   "agreed_through_step": 5,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 1,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 4
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 6
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4528,
+    "cycles": 329,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 1,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 4
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/test_prog_load.hasm": {
+   "agreed_through_step": 312,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 106,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 105,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 207,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 313,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 622,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 106,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 2
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 329
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6872,
+    "cycles": 6872,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 675,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/test_prog_run.hasm": {
+   "agreed_through_step": 312,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 106,
+    "HREG": 0,
+    "MMIO": 1,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 105,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 215,
+     "reads_mmio": [
+      "SD_STATUS"
+     ],
+     "step": 313,
+     "value": 0,
+     "where": "rtl/programs/hal_sd.hasm:48"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 622,
+     "key": 2,
+     "value": 1
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 106,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 2
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 331
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 6888,
+    "cycles": 6888,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 676,
+     "HREG": 0,
+     "MMIO": 1,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/timer_poll.hasm": {
+   "agreed_through_step": -1,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 6,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 0,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 1,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 1,
+     "value": 2,
+     "where": "rtl/programs/timer_poll.hasm:14"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 6,
+     "key": 1,
+     "value": 5
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 9
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4072,
+    "cycles": 15,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 6,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/trap_epc.hasm": {
+   "agreed_through_step": 45,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 14,
+    "HREG": 0,
+    "MMIO": 6,
+    "RAM": 0,
+    "TX": 6
+   },
+   "first_divergence": {
+    "index": 14,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 25,
+     "reads_mmio": [],
+     "step": 46,
+     "stopped_here": true,
+     "where": "rtl/programs/trap_epc.hasm:66"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 544,
+     "key": 6,
+     "value": 2
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 14,
+     "HREG": 0,
+     "MMIO": 6,
+     "RAM": 0,
+     "TX": 6
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 47
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 5096,
+    "cycles": 544,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 15,
+     "HREG": 0,
+     "MMIO": 6,
+     "RAM": 0,
+     "TX": 6
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/trap_flags.hasm": {
+   "agreed_through_step": 45,
+   "compared": {
+    "FLAGS": 3,
+    "GPR": 13,
+    "HREG": 0,
+    "MMIO": 6,
+    "RAM": 0,
+    "TX": 2
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 3,
+     "GPR": 13,
+     "HREG": 0,
+     "MMIO": 6,
+     "RAM": 0,
+     "TX": 2
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 46
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4608,
+    "cycles": 182,
+    "events": {
+     "FLAGS": 3,
+     "GPR": 13,
+     "HREG": 0,
+     "MMIO": 6,
+     "RAM": 0,
+     "TX": 2
+    },
+    "halted": true
+   },
+   "status": "PARITY"
+  },
+  "rtl/programs/trap_hreg.hasm": {
+   "agreed_through_step": 113,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 25,
+    "HREG": 10,
+    "MMIO": 6,
+    "RAM": 5,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 25,
+     "HREG": 10,
+     "MMIO": 6,
+     "RAM": 5,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 25,
+     "HREG": 10,
+     "MMIO": 6,
+     "RAM": 5,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/trap_resume.hasm": {
+   "agreed_through_step": 12,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 72,
+    "HREG": 0,
+    "MMIO": 16,
+    "RAM": 0,
+    "TX": 9
+   },
+   "first_divergence": {
+    "index": 5,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 13,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 13,
+     "value": 14,
+     "where": "rtl/programs/trap_resume.hasm:45"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 18,
+     "key": 1,
+     "value": 17
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 119,
+     "HREG": 0,
+     "MMIO": 16,
+     "RAM": 0,
+     "TX": 9
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 251
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 7088,
+    "cycles": 1123,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 72,
+     "HREG": 0,
+     "MMIO": 16,
+     "RAM": 0,
+     "TX": 9
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/trap_shadow.hasm": {
+   "agreed_through_step": 12,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 73,
+    "HREG": 0,
+    "MMIO": 24,
+    "RAM": 0,
+    "TX": 27
+   },
+   "first_divergence": {
+    "index": 5,
+    "interpreter": {
+     "key": 1,
+     "opcode": "LOAD",
+     "pc": 13,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 13,
+     "value": 14,
+     "where": "rtl/programs/trap_shadow.hasm:48"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 18,
+     "key": 1,
+     "value": 17
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 113,
+     "HREG": 0,
+     "MMIO": 24,
+     "RAM": 0,
+     "TX": 27
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 258
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 9304,
+    "cycles": 2725,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 73,
+     "HREG": 0,
+     "MMIO": 24,
+     "RAM": 0,
+     "TX": 27
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/trap_timer.hasm": {
+   "agreed_through_step": 4,
+   "compared": {
+    "FLAGS": 2,
+    "GPR": 11,
+    "HREG": 0,
+    "MMIO": 4,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 1,
+    "interpreter": {
+     "key": 2,
+     "opcode": "LOAD",
+     "pc": 5,
+     "reads_mmio": [
+      "COUNTER"
+     ],
+     "step": 5,
+     "value": 6,
+     "where": "rtl/programs/trap_timer.hasm:35"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "cycle": 10,
+     "key": 2,
+     "value": 9
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 2,
+     "GPR": 11,
+     "HREG": 0,
+     "MMIO": 4,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 30
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4240,
+    "cycles": 41,
+    "events": {
+     "FLAGS": 2,
+     "GPR": 11,
+     "HREG": 0,
+     "MMIO": 4,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/programs/user_mode.hasm": {
+   "agreed_through_step": 21,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 10,
+    "HREG": 0,
+    "MMIO": 5,
+    "RAM": 0,
+    "TX": 0
+   },
+   "first_divergence": {
+    "index": 10,
+    "interpreter": {
+     "opcode": "HALT",
+     "pc": 13,
+     "reads_mmio": [],
+     "step": 22,
+     "stopped_here": true,
+     "where": "rtl/programs/user_mode.hasm:43"
+    },
+    "kind": "GPR",
+    "rtl": {
+     "after_stop": true,
+     "cycle": 37,
+     "key": 11,
+     "value": "xxxxxxxx"
+    }
+   },
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 10,
+     "HREG": 0,
+     "MMIO": 5,
+     "RAM": 0,
+     "TX": 0
+    },
+    "exit": "halt",
+    "exit_detail": "",
+    "steps": 23
+   },
+   "reason": "",
+   "rtl": {
+    "budget": 4184,
+    "cycles": 37,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 11,
+     "HREG": 0,
+     "MMIO": 5,
+     "RAM": 0,
+     "TX": 0
+    },
+    "halted": true
+   },
+   "status": "MISMATCH"
+  },
+  "rtl/tb/hfs_persist_probe.hasm": {
+   "agreed_through_step": 34,
+   "compared": {
+    "FLAGS": 1,
+    "GPR": 8,
+    "HREG": 1,
+    "MMIO": 0,
+    "RAM": 4,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 1,
+     "GPR": 8,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 4,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 1,
+     "GPR": 8,
+     "HREG": 1,
+     "MMIO": 0,
+     "RAM": 4,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  },
+  "rtl/tb/hfs_syscall_probe.hasm": {
+   "agreed_through_step": 27,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 3,
+    "MMIO": 0,
+    "RAM": 4,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 4,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 3,
+     "MMIO": 0,
+     "RAM": 4,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  },
+  "rtl/tb/prog_load_probe.hasm": {
+   "agreed_through_step": 15,
+   "compared": {
+    "FLAGS": 0,
+    "GPR": 4,
+    "HREG": 0,
+    "MMIO": 0,
+    "RAM": 3,
+    "TX": 0
+   },
+   "first_divergence": null,
+   "interpreter": {
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 3,
+     "TX": 0
+    },
+    "exit": "step_cap",
+    "exit_detail": "",
+    "steps": 5000
+   },
+   "reason": "interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran",
+   "rtl": {
+    "budget": 44000,
+    "cycles": 44000,
+    "events": {
+     "FLAGS": 0,
+     "GPR": 4,
+     "HREG": 0,
+     "MMIO": 0,
+     "RAM": 3,
+     "TX": 0
+    },
+    "halted": false
+   },
+   "status": "UNKNOWN"
+  }
+ },
+ "python": {
+  "HCADD": {
+   "checked": 49,
+   "executions": 49,
+   "mismatches": [],
+   "no_reference": 0,
+   "reference": "src/hijaiyyah/algebra/aggregametric.py::add_codex",
+   "status": "PARITY"
+  },
+  "HDIST": {
+   "checked": 4,
+   "executions": 4,
+   "mismatches": [],
+   "no_reference": 0,
+   "reference": "src/hijaiyyah/algebra/intrametric.py::distance_decomposition",
+   "status": "PARITY"
+  },
+  "HLOAD": {
+   "checked": 724,
+   "executions": 734,
+   "mismatches": [],
+   "no_reference": 10,
+   "reference": "src/hijaiyyah/core/master_table.py::MasterTable.get_by_index",
+   "status": "PARITY"
+  },
+  "HNRM2": {
+   "checked": 4,
+   "executions": 4,
+   "mismatches": [],
+   "no_reference": 0,
+   "reference": "src/hijaiyyah/algebra/vektronometry.py::norm2",
+   "status": "PARITY"
+  }
+ },
+ "unknown": {
+  "board_values_not_recorded": [
+   "print-ladder: 2^26",
+   "print-ladder: 2^27",
+   "print-ladder: 2^28",
+   "print-ladder: 2^29",
+   "print-ladder: 2^30"
+  ],
+  "opcodes_not_in_rtl": [
+   "CDOT",
+   "CHASH",
+   "CSIGN",
+   "CSUB",
+   "HCHK",
+   "HDCMP",
+   "HDES",
+   "HEXMT",
+   "HPROJ",
+   "HSER",
+   "JGF",
+   "JGP",
+   "JNP",
+   "PRINTH",
+   "VDIST",
+   "VNORM",
+   "VPROJ_K",
+   "VPROJ_N",
+   "VPROJ_Q",
+   "VPROJ_T",
+   "VSCL"
+  ],
+  "programs_not_halted": [
+   "rtl/programs/hijrah_sweep.hasm",
+   "rtl/programs/loader.hasm",
+   "rtl/programs/syscall_io.hasm",
+   "rtl/programs/trap_hreg.hasm",
+   "rtl/tb/hfs_persist_probe.hasm",
+   "rtl/tb/hfs_syscall_probe.hasm",
+   "rtl/tb/prog_load_probe.hasm"
+  ],
+  "rtl_opcodes_without_an_agreeing_execution": [
+   "EMITS",
+   "HALT_ERR",
+   "POP"
+  ],
+  "scope": [
+   "rtl/programs/loader.hasm#with-payload is not run on the RTL: tb_parity.v has no UART receiver input and no instruction-memory write port",
+   "the board is not run: it carries the 72-hour burn-in. Only records dated after e4c251e are read",
+   "board records of card, wire, generated or Ka'bah-slot programs are not compared: no other engine here has a card, a wire, or that slot",
+   "cosmictera-build/OFF.md's SD init after a mid-read reconfiguration is board-only: no other engine has a card or a reconfiguration"
+  ]
+ }
+}
