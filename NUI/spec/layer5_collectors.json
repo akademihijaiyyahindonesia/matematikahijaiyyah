@@ -4,13 +4,21 @@
  "host": {
   "rule": "Setiap perintah berjalan di VM Ubuntu Server 24.04 LTS ARM64 lewat `limactl shell`, tidak pernah di Mac host",
   "status": "ditetapkan",
-  "source": "pemilik, 21 September 2026 -- VM terisolasi, tidak menyentuh Mac host"
+  "source": "pemilik, 21 September 2026 -- VM terisolasi, tidak menyentuh Mac host",
+  "lima": "dipasang lewat Homebrew",
+  "lima_home": "~/cosmictera-layer5/lima-home",
+  "instance": "cosmictera-layer5",
+  "image_dir": "~/cosmictera-layer5/downloads/",
+  "lima_source": "pemilik, 22 September 2026, keputusan K-3 -- instalasi Lima tetap instalasi host biasa; seluruh state instance CosmicTera di LIMA_HOME terpisah"
  },
  "collectors": [
   {
    "name": "host_identity",
    "area": "host",
-   "argv": ["cat", "/etc/os-release"],
+   "argv": [
+    "cat",
+    "/etc/os-release"
+   ],
    "records": "versi persis sistem operasi tamu -- bagian baseline Lapis 5",
    "status": "usulan",
    "source": "pemilik, 22 September 2026 -- versi persis dicatat; `cat` di daftar izin"
@@ -26,7 +34,10 @@
   {
    "name": "mounts",
    "area": "filesystem",
-   "argv": ["cat", "/proc/mounts"],
+   "argv": [
+    "cat",
+    "/proc/mounts"
+   ],
    "records": "filesystem yang terpasang",
    "status": "usulan",
    "source": "`cat` di daftar izin; `df` dan `mount` tidak"
@@ -34,7 +45,11 @@
   {
    "name": "root_listing",
    "area": "filesystem",
-   "argv": ["ls", "-la", "/"],
+   "argv": [
+    "ls",
+    "-la",
+    "/"
+   ],
    "records": "isi direktori akar",
    "status": "usulan",
    "source": "`ls` di daftar izin"
@@ -42,7 +57,11 @@
   {
    "name": "systemd_overview",
    "area": "service",
-   "argv": ["systemctl", "status", "--no-pager"],
+   "argv": [
+    "systemctl",
+    "status",
+    "--no-pager"
+   ],
    "records": "keadaan systemd secara keseluruhan",
    "status": "usulan",
    "source": "`systemctl status` di daftar izin; katalog READ SERVICE memakai satu unit, bentuk tanpa unit ini usulan"
@@ -53,20 +72,49 @@
    "catalog": "READ JOURNAL",
    "records": "jurnal systemd",
    "status": "ditetapkan",
-   "source": "pemilik, 22 September 2026 -- katalog READ JOURNAL. Opsinya (misalnya -n) belum ditetapkan; bentuk pemilik dipakai apa adanya"
+   "source": "pemilik, 22 September 2026 -- katalog READ JOURNAL, dalam bentuk terbatas K-4"
   },
   {
    "name": "interfaces",
    "area": "jaringan",
-   "argv": ["ls", "/sys/class/net"],
-   "records": "nama antarmuka jaringan",
-   "status": "usulan",
-   "source": "katalog READ NETWORK memakai `ip`, yang tidak ada di daftar izin; `ls` ada"
+   "argv": [
+    "ip",
+    "-brief",
+    "addr"
+   ],
+   "records": "antarmuka jaringan dan alamatnya",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, keputusan K-4 -- `ip -brief addr`"
+  },
+  {
+   "name": "links",
+   "area": "jaringan",
+   "argv": [
+    "ip",
+    "link"
+   ],
+   "records": "keadaan link tiap antarmuka",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, keputusan K-4 -- `ip link`"
+  },
+  {
+   "name": "routes",
+   "area": "jaringan",
+   "argv": [
+    "ip",
+    "route"
+   ],
+   "records": "tabel routing",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, keputusan K-4 -- `ip route`"
   },
   {
    "name": "interface_counters",
    "area": "jaringan",
-   "argv": ["cat", "/proc/net/dev"],
+   "argv": [
+    "cat",
+    "/proc/net/dev"
+   ],
    "records": "pencacah byte dan paket per antarmuka",
    "status": "usulan",
    "source": "`cat` di daftar izin"
@@ -92,7 +140,47 @@
    "source": "keamanan: tidak bergantung pada cara `limactl` mengutip argumen, yang belum diukur"
   },
   {
-   "rule": "Opsi yang menulis atau mengirim ditolak walau perintahnya diizinkan: find -delete/-exec/-execdir/-ok/-okdir/-fprint/-fprint0/-fprintf/-fls; curl -o/-O/-T/-d/-F/-X/-K dan bentuk panjangnya; journalctl --vacuum-*/--rotate/--flush/--sync/--relinquish-var/--setup-keys/--update-catalog",
+   "rule": "`journalctl` dan `ip` hanya dalam bentuk ini, argv utuh; `<service>` satu nama unit",
+   "forms": {
+    "journalctl": [
+     [
+      "journalctl",
+      "-b",
+      "-n",
+      "200",
+      "--no-pager"
+     ],
+     [
+      "journalctl",
+      "-b",
+      "-u",
+      "<service>",
+      "-n",
+      "200",
+      "--no-pager"
+     ]
+    ],
+    "ip": [
+     [
+      "ip",
+      "-brief",
+      "addr"
+     ],
+     [
+      "ip",
+      "link"
+     ],
+     [
+      "ip",
+      "route"
+     ]
+    ]
+   },
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026, keputusan K-4 -- `journalctl` tidak dibuka sebagai perintah bebas; `ip` hanya observasi, tidak `addr add/del`, `link set`, `route add/del/replace`"
+  },
+  {
+   "rule": "Opsi yang menulis atau mengirim ditolak walau perintahnya diizinkan: find -delete/-exec/-execdir/-ok/-okdir/-fprint/-fprint0/-fprintf/-fls; curl -o/-O/-T/-d/-F/-X/-K dan bentuk panjangnya",
    "status": "usulan",
    "source": "tahap pertama Lapis 5 hanya baca (pemilik, 21 September 2026); opsi-opsi ini menulis berkas atau mengubah keadaan"
   },
@@ -103,8 +191,7 @@
   }
  ],
  "open": [
-  "Opsi `journalctl` (misalnya `-n <jumlah>`, `-u <unit>`) belum ditetapkan -- tanpa batas, keluarannya seluruh jurnal.",
-  "`ip` untuk READ NETWORK tidak ada di daftar izin; kolektor jaringan memakai `ls` dan `cat` sampai pemilik memutuskan.",
-  "Nama instance Lima dan apakah `limactl shell` mengutip argumen belum diukur -- host belum dipasang."
+  "Nama sementara untuk instance uji lokasi image di P7 (usulan: `cosmictera-layer5-uji`), supaya instance permanen tidak dibuat sebelum lokasi image lokal terbukti diterima Lima 2.2.0.",
+  "Apakah `limactl shell` mengutip argumen belum diukur -- host belum dipasang; pagar menolak karakter shell supaya itu tidak penting."
  ]
 }

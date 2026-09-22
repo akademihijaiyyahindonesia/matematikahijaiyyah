@@ -38,19 +38,34 @@
    "action": "READ",
    "object": "JOURNAL",
    "argv": [
-    "journalctl"
+    "journalctl",
+    "-b",
+    "-n",
+    "200",
+    "--no-pager"
    ],
    "status": "ditetapkan",
-   "source": "pemilik, 22 September 2026 -- READ JOURNAL -> journalctl"
+   "source": "pemilik, 22 September 2026 -- READ JOURNAL -> journalctl, dibatasi keputusan K-4",
+   "argv_target": [
+    "journalctl",
+    "-b",
+    "-u",
+    "{target}",
+    "-n",
+    "200",
+    "--no-pager"
+   ]
   },
   {
    "action": "READ",
    "object": "NETWORK",
    "argv": [
-    "ip"
+    "ip",
+    "-brief",
+    "addr"
    ],
    "status": "ditetapkan",
-   "source": "pemilik, 22 September 2026 -- READ NETWORK -> ip"
+   "source": "pemilik, 22 September 2026 -- READ NETWORK -> ip; bentuk observasi keputusan K-4"
   },
   {
    "action": "READ",
@@ -74,7 +89,6 @@
   }
  ],
  "open": [
-  "`ip` (READ NETWORK) tidak ada di daftar izin tahap pertama: masukkan ke daftar izin, atau petakan READ NETWORK ke perintah lain?",
-  "Opsi perintah (misalnya `journalctl -u <unit>`, `-n <jumlah>`) belum ditetapkan; katalog hanya memakai bentuk yang pemilik tulis."
+  "Opsi perintah selain `journalctl` (misalnya `ps` dengan kolom tertentu) belum ditetapkan; katalog memakai bentuk yang pemilik tulis."
  ]
 }

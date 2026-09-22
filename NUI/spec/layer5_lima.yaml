@@ -1,5 +1,12 @@
 # NUI layer 5 host -- Ubuntu Server 24.04 LTS ARM64 under Lima 2.2.0.
-# A proposal, not started: nothing here has been installed or run.
+# Prepared, not started: nothing here has been installed or run.
+#
+# Where it runs, the owner's decision K-3 of 22 September 2026, and not part
+# of this file because Lima takes them from outside it: Lima installed through
+# Homebrew; its state in LIMA_HOME=~/cosmictera-layer5/lima-home, apart from
+# ~/.lima; the instance named cosmictera-layer5; the image kept in
+# ~/cosmictera-layer5/downloads/. src/hijaiyyah/nui/layer5.py reads them from
+# NUI/spec/layer5_collectors.json.
 #
 # Every key below is one Lima's own default.yaml documents (lima-2.2.0,
 # share/lima/templates/default.yaml), and each is set against the owner's

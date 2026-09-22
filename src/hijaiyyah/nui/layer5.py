@@ -22,22 +22,27 @@ Three parts, each read from where it is written:
 guard() refuses before anything could run: a command off the owner's
 allowlist or on its not-yet list; an argument with a space or a shell
 character -- `limactl shell` hands the command to the guest's shell over SSH,
-and how it quotes has not been measured, so nothing is left to quoting; an
-option of an allowed command that writes or sends (find -delete, curl -o,
-journalctl --vacuum-...); and a command that would not stop by itself (ping
-without -c, top without -b and -n).
+and how it quotes has not been measured, so nothing is left to quoting; for
+`journalctl` and `ip`, anything but the owner's exact forms (K-4, 22 September
+2026: journalctl bounded to 200 lines of this boot, ip observing only); an
+option of another allowed command that writes or sends (find -delete, curl
+-o); and a command that would not stop by itself (ping without -c, top
+without -b and -n).
 
 -- the one way out ----------------------------------------------------------------
 observe() runs one collector as `limactl shell <instance> -- <argv>` and
-nothing else: never a shell, never on this Mac. It refuses when limactl is not
-installed -- which on 22 September 2026 it is not. An observation keeps argv,
-exit code, stdout, stderr and a hash of stdout; nothing is parsed, because no
-Ubuntu output exists yet to say what the parsing must be.
+nothing else: never a shell, never on this Mac. Lima's state lives in the
+owner's own LIMA_HOME and the instance has the owner's name (K-3). It refuses
+when limactl is not installed -- which on 22 September 2026 it is not. An
+observation keeps argv, exit code, stdout, stderr and a hash of stdout;
+nothing is parsed, because no Ubuntu output exists yet to say what the
+parsing must be.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -59,9 +64,6 @@ WRITES = {
     "curl": ("-o", "--output", "-O", "--remote-name", "--remote-name-all", "-T",
              "--upload-file", "-d", "--data", "-F", "--form", "-X", "--request", "-K",
              "--config"),
-    "journalctl": ("--vacuum-size", "--vacuum-time", "--vacuum-files", "--rotate",
-                   "--flush", "--sync", "--relinquish-var", "--smart-relinquish-var",
-                   "--setup-keys", "--update-catalog"),
 }
 #: Commands that run until stopped, and the options that stop them.
 BOUNDED = {"ping": ("-c",), "top": ("-b", "-n")}
@@ -88,6 +90,20 @@ def argv_of(collector: dict[str, Any]) -> list[str]:
     return list(entry["argv"])
 
 
+def forms() -> dict[str, list[list[str]]]:
+    """The owner's exact forms for journalctl and ip (K-4), from the spec."""
+    rule = next(g for g in load()["guard"] if "forms" in g)
+    data: dict[str, list[list[str]]] = rule["forms"]
+    return data
+
+
+def _matches(argv: list[str], form: list[str]) -> bool:
+    return len(argv) == len(form) and all(
+        a == f or (f.startswith("<") and f.endswith(">") and SAFE_ARG.fullmatch(a) is not None
+                   and not a.startswith("-"))
+        for a, f in zip(argv, form, strict=True))
+
+
 def guard(argv: list[str]) -> str:
     """The allowlist entry that permits argv, or Refused with the reason."""
     if not argv or not all(isinstance(a, str) and a for a in argv):
@@ -101,9 +117,11 @@ def guard(argv: list[str]) -> str:
     for arg in argv:
         if not SAFE_ARG.fullmatch(arg):
             raise Refused(f"argument {arg!r} holds a space or a shell character")
+    allowed_forms = forms().get(argv[0])
+    if allowed_forms is not None and not any(_matches(argv, f) for f in allowed_forms):
+        raise Refused(f"`{' '.join(argv)}` is not one of the owner's forms for {argv[0]}")
     for option in WRITES.get(argv[0], ()):
-        if any(a == option or a.startswith(option + "=") or
-               (option.startswith("--vacuum") and a.startswith("--vacuum")) for a in argv[1:]):
+        if any(a == option or a.startswith(option + "=") for a in argv[1:]):
             raise Refused(f"`{argv[0]} {option}` writes or sends")
     for option in BOUNDED.get(argv[0], ()):
         if option not in argv[1:]:
@@ -145,8 +163,17 @@ def lima_digest() -> str:
 Runner = Callable[..., Any]
 
 
-def observe(name: str, instance: str, run: Runner = subprocess.run) -> dict[str, Any]:
+def host() -> dict[str, str]:
+    """Where Lima keeps its state and what the VM is called (K-3)."""
+    h = load()["host"]
+    return {"lima_home": os.path.expanduser(h["lima_home"]), "instance": h["instance"]}
+
+
+def observe(name: str, instance: str | None = None,
+            run: Runner = subprocess.run) -> dict[str, Any]:
     """One collector, run in the VM through limactl, and what came back."""
+    where = host()
+    instance = instance or where["instance"]
     collector = next((c for c in load()["collectors"] if c["name"] == name), None)
     if collector is None:
         raise Refused(f"no collector named {name}")
@@ -159,9 +186,11 @@ def observe(name: str, instance: str, run: Runner = subprocess.run) -> dict[str,
     started = datetime.now(timezone.utc)
     t0 = time.monotonic()
     proc = run(["limactl", "shell", instance, "--", *argv],
-               capture_output=True, text=True, timeout=120)
+               capture_output=True, text=True, timeout=120,
+               env={**os.environ, "LIMA_HOME": where["lima_home"]})
     return {"collector": name, "argv": argv, "allowed_by": allowed_by,
-            "transport": {"kind": "lima", "instance": instance},
+            "transport": {"kind": "lima", "instance": instance,
+                          "lima_home": where["lima_home"]},
             "started_utc": started.isoformat(), "seconds": round(time.monotonic() - t0, 3),
             "exit_code": proc.returncode, "stdout": proc.stdout, "stderr": proc.stderr,
             "stdout_sha256": hashlib.sha256(proc.stdout.encode("utf-8")).hexdigest()}

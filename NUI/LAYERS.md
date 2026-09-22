@@ -176,7 +176,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **348 tes**
+`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **405 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -197,7 +197,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.249 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.258 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -205,11 +205,11 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
 | `board_parity.py` | apa yang dikirim ke papan, jawaban yang dibekukan sebelumnya, dan pembaca rekaman: PARITY/MISMATCH/UNKNOWN per program dan per opcode | `test_nui_board_parity.py` (20) |
 | `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
-| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (42) |
-| `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl` — disiapkan, belum dijalankan | `test_nui_layer5.py` (34) |
+| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
+| `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl` — disiapkan, belum dijalankan | `test_nui_layer5.py` (52) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
-| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (47) |
-| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC — dalam enam domain, tiap butir bersumber | `test_nui_knowledge.py` |
+| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (85) |
+| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam enam domain, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
 
 ---
 
@@ -264,8 +264,8 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 94 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 800 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.451 node, 3.775 edge**.
+`references`, tidak pernah dihitung sebagai import) dan 809 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.460 node, 3.797 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -314,7 +314,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.249 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.258 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -563,14 +563,18 @@ tidak ada satu pun sisi host di repositori ini, dan mesin pengembangannya
 macOS. Yang ada sejak 22 September 2026, atas permintaan pemilik sementara
 papan memikul burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
 
-- `NUI/spec/layer5_collectors.json` — sembilan kolektor observasi: identitas
-  host, proses, mount, isi `/`, systemd, jurnal, antarmuka jaringan dan
-  pencacahnya, kontainer. Dua dari katalog pemilik, tujuh usulan.
+- `NUI/spec/layer5_collectors.json` — sebelas kolektor observasi: identitas
+  host, proses, mount, isi `/`, systemd, jurnal, antarmuka, link, rute, pencacah
+  jaringan, kontainer. Lima milik pemilik — dua dari katalog, tiga bentuk `ip`
+  K-4 — dan enam usulan.
 - `src/hijaiyyah/nui/layer5.py` — pagar hanya-baca yang menolak perintah di
   luar daftar izin, argumen yang bisa dibaca shell, opsi yang menulis atau
   mengirim, dan perintah yang tidak berhenti sendiri; dan satu jalan keluar,
   `limactl shell <instance> -- <argv>`, yang menolak selama `limactl` belum
-  terpasang. Dijaga `tests/test_ai/test_nui_layer5.py` (34).
+  terpasang. Lima dipasang lewat Homebrew, state-nya di
+  `LIMA_HOME=~/cosmictera-layer5/lima-home`, instance `cosmictera-layer5`
+  (pemilik, 22 September 2026, K-3). Dijaga `tests/test_ai/test_nui_layer5.py`
+  (52).
 - `NUI/spec/layer5_lima.yaml` — VM yang mengunci image terverifikasi lewat
   digest, tanpa mount, mode plain. Template Ubuntu 24.04 bawaan Lima 2.2.0
   sendiri **tidak bisa dipakai**: ia mengunci `release-20260705`, jatuh ke URL
@@ -583,7 +587,14 @@ baca**:
 
 | diizinkan | belum diizinkan, sampai seluruh pipeline Lapis 5 tervalidasi |
 |---|---|
-| read file, `ls`, `find`, `cat`, `ps`, `top`, `ping`, `curl`, `journalctl`, `systemctl status`, `docker ps` | `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` |
+| read file, `ls`, `find`, `cat`, `ps`, `top`, `ping`, `curl`, `journalctl`, `systemctl status`, `docker ps`, `ip` | `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` |
+
+**`journalctl` dan `ip` hanya dalam bentuk terbatas** (pemilik, 22 September
+2026, K-4): `journalctl -b -n 200 --no-pager` dan `journalctl -b -u <service> -n
+200 --no-pager`; `ip -brief addr`, `ip link`, `ip route`. Bukan `ip addr add/del`,
+`ip link set`, atau `ip route add/del/replace` — Lapis 5 observasi dulu, bukan
+kendali jaringan. Bentuk persisnya tinggal di `NUI/spec/layer5_collectors.json`,
+dan pagar mencocokkan argv utuh.
 
 **Image VM adalah bagian baseline Lapis 5** (pemilik, 22 September 2026):
 SHA256-nya diverifikasi sebelum dipakai, checksum-nya disimpan di
@@ -597,7 +608,11 @@ dipasang dan belum dijalankan**: Lapis 5 dimulai sesudah langkah papan.
 | `lima-2.2.0-Darwin-arm64.tar.gz` | Lima v2.2.0, rilis resmi github.com/lima-vm/lima, Apache-2.0 | 37.586.365 | `bbdef91774885a0d05f7b048c4eb89ae2bcf3a0c252ae7ca7934e63df76d93c3` |
 | `ubuntu-24.04-server-cloudimg-arm64.img` | Ubuntu 24.04 LTS, seri `release-20260911`, cloud-images.ubuntu.com/releases/noble/release-20260911/ | 619.621.888 | `7b682958a67ff5de068e36de6af8b75fa645d296af5a70d6500527f6a33781db` |
 
-Keduanya **cocok** dengan `SHA256SUMS` resmi rilisnya masing-masing. Berkas
+Keduanya **cocok** dengan `SHA256SUMS` resmi rilisnya masing-masing. **Sejak
+K-3, tarball Lima di atas bukan yang akan terpasang**: Lima dipasang lewat
+Homebrew, yang formulanya pada 22 September 2026 menyebut versi yang sama,
+2.2.0. Baseline Lima karena itu dicatat ulang dari `brew info --json=v2 lima`
+saat dipasang (P7); baris tarball tetap sebagai catatan unduhan. Berkas
 `SHA256SUMS` Lima sendiri bernilai `7da5160e…97312a5f`, sama dengan yang
 ditampilkan halaman rilis GitHub; milik Ubuntu `89be81c6…0747b0185`. Yang
 **tidak** diverifikasi: tanda tangan GPG kedua berkas checksum itu
@@ -733,7 +748,19 @@ ditulis di `unknown`. Butir OFF-nya datang dari `src/hijaiyyah/nui/off_db.py`,
 yang membaca `cosmictera-build/OFF.md` jadi rekaman (`NUI/off_db.json`) tanpa
 menjadi salinan kedua; butir huruf dari registry Hijaiyyah
 (`src/hijaiyyah/nui/registry.py`). Dijaga `tests/test_ai/test_nui_knowledge.py`
-(47) dan `tests/test_ai/test_nui_registry.py` (7).
+(85) dan `tests/test_ai/test_nui_registry.py` (7).
+
+**Kontrak kuerinya**, 22 September 2026: tujuh pertanyaan pemilik, kata demi
+kata, dipetakan ke jenis kueri di `NUI/spec/query_contract.json` — apa itu
+HCPU (`term`), apa yang dilakukan opcode (`opcode`: baris definisinya dan baris
+tabel spesifikasinya), berkas ini dari program mana (`file`: medan
+`generated_by` berkas itu sendiri, dan relasinya di graf Lapis 1), apa yang
+dipanggil program (`program`: tiap `CALL` dengan barisnya), apa yang
+diinstansiasi modul RTL (`rtl`), apa yang terakhir diukur papan (`board
+latest`: rekaman yang di-commit saja), dan layanan apa yang dijalankan Ubuntu
+(`host`: `unknown`, karena host belum ada). Lima dijawab, satu sebagian — berkas
+yang tidak menyatakan pembuatnya tidak ditebak — dan satu menunggu Lapis 5.
+Tiap baris kontrak dijalankan oleh tesnya sendiri.
 
 **Yang belum ada.** Seluruh penalarannya. Lapis ini tidak bisa berdiri sebelum
 Lapis 1 punya grafnya dan Lapis 3 punya jejaknya — keduanya kini ada; yang

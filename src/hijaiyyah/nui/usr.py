@@ -167,7 +167,10 @@ def to_argv(usr: dict[str, Any]) -> tuple[list[str] | None, str]:
     if not _command(entry["argv"], allowed):
         return None, f"{' '.join(entry['argv'])} is not on the read-only allowlist"
     argv = []
-    for part in entry["argv"]:
+    # a catalog row may carry a second form for a target -- READ JOURNAL of
+    # one unit, K-4 -- so the target never leaves a dangling option behind
+    form = entry["argv_target"] if usr.get("TARGET") and "argv_target" in entry else entry["argv"]
+    for part in form:
         if part == "{target}":
             if usr.get("TARGET"):
                 argv.append(usr["TARGET"])

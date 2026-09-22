@@ -8,27 +8,25 @@ bawah sudah dijalankan; yang sudah disiapkan disebut dengan berkasnya.
 Burn-in `20260921T053430Z-burn-in-72h` mulai 21 September 2026 05:34:30 UTC,
 jadi selesai **24 September 2026 05:34:30 UTC — Kamis 12:34 WIB**. Papan tetap
 milik burn-in sampai `burn_in.py` keluar sendiri; `parity_board.py` menolak
-berjalan selama prosesnya hidup.
+berjalan selama prosesnya hidup. **Sampai itu** — pemilik, 22 September 2026 —
+`burn_in.py`, RTL, bitstream, dan eksperimen papan tidak disentuh; yang boleh
+maju hanya persiapan Lapis 5 dan kontrak kueri NUI.
 
-## Keputusan yang harus ada sebelum Kamis
+## Keputusan pemilik, 22 September 2026
 
-Tiap langkah di bawah bisa berjalan tanpa keputusan baru, **kecuali** yang
-disebut di sini. Kalau salah satunya belum dijawab pada hari itu, langkah yang
-bergantung padanya ditunda — tidak dijawab sendiri.
-
-| # | keputusan | menyentuh | usulan, bukan keputusan |
-|---|---|---|---|
-| K-1 | Pengurai `burn_in.py` menerima dua baris tergabung sebagai `error` (t = 11.713 dan 12.686 detik); papan sendiri 0 error. Dibetulkan dulu, atau baseline tingkat 2 ditulis dengan keduanya dicatat sebagai selisih yang diketahui? | P0 | catat sebagai selisih; perbaiki pengurai sesudahnya, lari berikutnya yang memakainya |
-| K-2 | Bentuk "freeze" Lapis 4: commit biasa, atau juga tag git? Namanya? | P6 | commit, tanpa tag |
-| K-3 | Lokasi Lima dan nama instance VM | P7 | `~/cosmictera-layer5/lima-2.2.0/`, instance `cosmictera` |
-| K-4 | Opsi `journalctl` (jumlah baris) dan `ip` untuk jaringan | P7 | bentuk pemilik apa adanya; jaringan lewat `ls`/`cat` |
+| # | keputusan | menyentuh |
+|---|---|---|
+| K-1 | Dua baris `error` di log lari yang sedang berjalan dicatat sebagai **selisih yang diketahui**. `burn_in.py` tidak diubah sebelum lari 72 jam selesai — pengurai yang aktif adalah bagian observasi, dan mengubahnya di tengah lari mencampur jejak pembuktiannya. Pengurai diperbaiki **sesudah** burn-in | P0 |
+| K-2 | Lapis 4 dibekukan dengan **commit dan annotated tag git**, misalnya `layer4-freeze-2026-09-24` — sesudah seluruh bukti Lapis 4 final, **tidak sekarang** | P6 |
+| K-3 | Lima dipasang lewat **Homebrew**; `LIMA_HOME=~/cosmictera-layer5/lima-home`; VM **`cosmictera-layer5`**; image di `~/cosmictera-layer5/downloads/`. Template bawaan Lima tidak dipakai | P7 |
+| K-4 | `journalctl` dan `ip` masuk daftar izin, **hanya** dalam bentuk `journalctl -b -n 200 --no-pager`, `journalctl -b -u <service> -n 200 --no-pager`, `ip -brief addr`, `ip link`, `ip route` | P7 |
 
 Yang **tidak** diputuskan di hari itu, dan tidak masuk urutan ini: perbaikan
 `PRINT` di silikon dan perbaikan instruksi sesudah berhenti. Keduanya RTL, K9
 berlaku, dan pemilik sudah menetapkan urutannya: diverifikasi di papan dulu,
 diputuskan sesudahnya.
 
-## P0 — tutup burn-in dan simpan jejaknya
+## P0 — tutup burn-in, dan K-1
 
 ```bash
 pgrep -f "rtl/scripts/burn_in.py" || echo "selesai"          # tunggu sampai keluar sendiri
@@ -41,14 +39,34 @@ python3 rtl/scripts/burn_in_report.py cosmictera-build/burn-in/20260921T053430Z-
 
 Syarat lanjut: `ended` berbunyi `duration reached`. Kalau berbunyi
 `STOPPED EARLY`, tingkat 2 **tidak** tutup: sebabnya dicatat, dan keputusan
-mengulang milik pemilik. Hasil, hash, dan baseline dicatat di
-`cosmictera-build/burn-in/README.md`, lalu di-commit dengan path disebut satu
-per satu.
+mengulang milik pemilik.
 
-Dua hal yang sudah diketahui dan harus terbaca di laporannya, bukan
-mengejutkan: diam ±926 detik antara detik ke-5.591 dan ke-20.725 (Mac tidur
-karena lid ditutup, 13:50–18:19 WIB 21 September, dari `pmset -g log`), dan
-dua baris `error` dari K-1.
+**K-1, dan satu hal yang terukur sebelum Kamis:** urutan pemilik adalah
+*simpan log mentah final → hitung ulang dengan parser yang diperbaiki →
+pastikan 0 error papan → dokumentasikan*. Tetapi **`burn_in.py` tidak menyimpan
+byte mentah dari kabel**: `<id>.jsonl` hanya memuat hasil uraian — sampel tiap
+menit, baris `error`, diam, dan teks yang tak terurai. Jadi lari ini tidak bisa
+diurai ulang dari byte-nya. Yang bisa, dan cukup untuk memastikan 0 error
+papan, adalah dari log yang ada:
+
+1. `rtl/programs/burn_in.hasm` menyatakan pencacah error-nya *"One more error,
+   and never a reset"* — kumulatif. Kalau papan pernah menghitung satu error,
+   setiap sampel sesudahnya membawa `errors ≥ 1`.
+2. Kedua baris `error` (t = 11.713 dan 12.686 detik) masing-masing didahului,
+   pada detik yang sama, oleh baris tak terurai `0H` — sebuah angka yang
+   menempel pada penanda detak, jadi pemisah barisnya hilang. Medan kedua baris
+   itu bergeser dari tetangganya: `errors` berisi 7.440 dan 8.058, angka seukuran
+   nomor detak sampel di sekitarnya; `wraps` berisi 0 sedangkan tetangganya
+   sekitar 70; `counter_hi` berisi 73 dan 79, seukuran `wraps`.
+3. Setiap sampel sesudah keduanya berbunyi `errors 0`.
+
+Pemeriksaan itu dijalankan pada JSONL final dan hasilnya dicatat di
+`cosmictera-build/burn-in/README.md`. Sesudah itu `burn_in.py` diperbaiki
+sebagai butir sendiri, dengan dua **usulan** yang menunggu pemilik: sebuah
+baris yang memuat `H` tetapi bukan `H` saja membuang detak yang sedang
+terkumpul; dan byte mentah disimpan di sebelah JSONL, supaya lari berikutnya
+bisa diurai ulang dari kabelnya. Perbaikan itu diuji pada kedua baris ini
+sebelum dipakai.
 
 ## P1 — paritas papan, seluruh korpus
 
@@ -105,48 +123,85 @@ RET gagal dan sesudah HALT). Papan hanya bisa menjawab yang lewat kabel:
 register dan RAM sesudah berhenti tidak pernah tercetak, dan laporannya
 menyebut itu, bukan mengisinya.
 
-## P5 — analisis selisih
+## P5 — klasifikasi selisih final
 
 Tiap MISMATCH dari P1–P4 dipilah dari laporannya: sudah dikenal
 (OFF-PRINT-SILICON, instruksi sesudah berhenti) atau baru. Yang baru jadi butir
 OFF.md dengan angkanya. **Tidak ada RTL yang diubah** di langkah ini.
 
-## P6 — bekukan Lapis 4
+## P6 — bekukan Lapis 4 (K-2)
 
-Rekaman dan laporan P1–P4 di-commit bersama pembaruan `NUI/PARITY.md`,
-`NUI/LAYERS.md`, dan `cosmictera-build/PAPAN.md`, dengan empat gerbang hijau
-di lari yang sama. Bentuk bekunya K-2.
-
-## P7 — mulai Lapis 5, hanya baca
-
-Yang sudah siap: `NUI/spec/layer5_lima.yaml` (image terverifikasi lewat
-digest, tanpa mount, mode plain), `NUI/spec/layer5_collectors.json` (sembilan
-kolektor), `src/hijaiyyah/nui/layer5.py` (pagar hanya-baca dan satu jalan keluar
-lewat `limactl shell`).
+Urutan pemilik: paritas papan → kolom opcode perangkat keras → PRINT di
+silikon → HALT/RET di silikon → klasifikasi selisih final → **commit
+terakhir** → **annotated tag**. Commit itu membawa rekaman dan laporan P1–P4
+bersama pembaruan `NUI/PARITY.md`, `NUI/LAYERS.md`, dan
+`cosmictera-build/PAPAN.md`, dengan empat gerbang hijau di lari yang sama.
+Sesudah tidak ada lagi perubahan pada artefak Lapis 4:
 
 ```bash
-shasum -a 256 ~/cosmictera-layer5/downloads/lima-2.2.0-Darwin-arm64.tar.gz   # bbdef917...
-# pasang di lokasi K-3, lalu:
-limactl start --name=cosmictera NUI/spec/layer5_lima.yaml
-limactl list
-PYTHONPATH=src python3 -m hijaiyyah.nui.layer5                                # rencana
+git tag -a layer4-freeze-2026-09-24 -m "Layer 4 frozen: <isi dari laporan P1-P5>"
+git show layer4-freeze-2026-09-24 --stat
 ```
 
-Diverifikasi pada `limactl start` pertama, karena belum pernah diukur: Lima
-menerima path lokal untuk image, menolak image dengan digest lain, dan
-instance berjalan tanpa mount. Sesudah itu baru kolektor dijalankan satu per
-satu dan observasinya disimpan.
+Annotated, bukan lightweight, supaya tonggaknya membawa metadata. Tag tidak
+dibuat sebelum bukti papan dan silikon masuk.
+
+## P7 — mulai Lapis 5, hanya baca (K-3, K-4)
+
+Yang sudah siap: `NUI/spec/layer5_lima.yaml` (image terverifikasi lewat
+digest, tanpa mount, mode plain), `NUI/spec/layer5_collectors.json` (sebelas
+kolektor, bentuk `journalctl` dan `ip` K-4), `src/hijaiyyah/nui/layer5.py`
+(pagar hanya-baca, dan satu jalan keluar lewat `limactl shell` dengan
+`LIMA_HOME` pemilik).
+
+**Langkah pertama, sebelum VM permanen dibuat** — pemilik: uji dulu apakah
+`images[].location` di Lima 2.2.0 menerima berkas lokal yang sudah
+diverifikasi. Dokumentasi Lima mendukung locator dan template dari berkas
+lokal; itu tidak sama dengan lokasi disk image instance, dan tidak dianggap
+sama tanpa diuji.
+
+```bash
+brew info --json=v2 lima          # versi dan sha256 bottle: baseline Lima yang baru
+brew install lima
+export LIMA_HOME=~/cosmictera-layer5/lima-home
+limactl --version
+
+# instance uji -- namanya usulan, belum ditetapkan
+limactl start --name=cosmictera-layer5-uji --tty=false NUI/spec/layer5_lima.yaml
+limactl list
+limactl shell cosmictera-layer5-uji -- cat /etc/os-release
+limactl shell cosmictera-layer5-uji -- cat /proc/mounts     # tidak ada mount dari Mac
+limactl delete --force cosmictera-layer5-uji
+```
+
+Tiga hal yang harus terbukti di instance uji: image diambil dari berkas lokal
+itu (bukan diunduh), versi di `/etc/os-release` adalah Ubuntu 24.04, dan
+`/proc/mounts` tidak memuat satu pun folder Mac. Lalu uji negatifnya: salinan
+YAML dengan satu digit digest diubah **harus ditolak** Lima. Kalau salah satu
+gagal, VM permanen tidak dibuat dan temuannya dilaporkan.
+
+Sesudah itu baru VM permanen, lalu kolektor satu per satu:
+
+```bash
+limactl start --name=cosmictera-layer5 --tty=false NUI/spec/layer5_lima.yaml
+PYTHONPATH=src python3 -m hijaiyyah.nui.layer5                               # rencana
+```
+
+**Satu konsekuensi K-3 yang dicatat:** tarball Lima yang SHA256-nya
+diverifikasi 22 September bukan yang dipasang Homebrew. Formula Homebrew hari
+itu menyebut versi yang sama, 2.2.0, tetapi baseline Lima dicatat ulang dari
+`brew info` saat dipasang, di `NUI/LAYERS.md`.
 
 ## Paket audit sesudah P7
 
 | isi | tempat |
 |---|---|
-| commit dan hasil empat gerbang | pesan commit P6 |
-| burn-in 72 jam, hash, baseline | `cosmictera-build/burn-in/` |
+| commit, hasil empat gerbang, dan tag beku | pesan commit P6, tag `layer4-freeze-…` |
+| burn-in 72 jam, hash, baseline, dan pemeriksaan K-1 | `cosmictera-build/burn-in/` |
 | paritas papan dan kolom per opcode | `cosmictera-build/parity-board/*-parity.*` |
 | PRINT di silikon | `cosmictera-build/parity-board/*-print.*` |
 | HALT/RET di silikon | `cosmictera-build/parity-board/*-stop.*` |
 | ekspektasi yang dibekukan sebelum papan ditanya | `NUI/board_expected.json` |
 | selisih yang diketahui | `cosmictera-build/OFF.md`, fakta `nui.tail_one_is_not_invertibility`, K-1 |
-| keputusan yang terbuka | tabel di atas, `NUI/SEMANTIK.md` "Yang belum ditetapkan", tabel checksum di `cosmictera-build/attack-lab/README.md` |
-| baseline Lapis 5 | SHA256 image dan Lima di `NUI/LAYERS.md`, konfigurasi VM, observasi pertama |
+| keputusan yang terbuka | `NUI/SEMANTIK.md` "Yang belum ditetapkan", tabel checksum di `cosmictera-build/attack-lab/README.md` |
+| baseline Lapis 5 | SHA256 image, versi dan sha256 Lima dari Homebrew, konfigurasi VM, observasi pertama |

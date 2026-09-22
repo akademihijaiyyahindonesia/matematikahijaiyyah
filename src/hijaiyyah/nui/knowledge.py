@@ -6,6 +6,11 @@ grouped by where that knowledge lives, with where each piece comes from.
     python3 -m hijaiyyah.nui.knowledge off OFF-PRINT-SILICON
     python3 -m hijaiyyah.nui.knowledge letter ج
     python3 -m hijaiyyah.nui.knowledge hc متغير
+    python3 -m hijaiyyah.nui.knowledge term HCPU
+    python3 -m hijaiyyah.nui.knowledge file NUI/board_expected.json
+    python3 -m hijaiyyah.nui.knowledge rtl hcpu_top
+    python3 -m hijaiyyah.nui.knowledge board latest
+    python3 -m hijaiyyah.nui.knowledge host services
 
 The owner's two shapes, both of 22 September 2026. The first is an answer:
 
@@ -30,6 +35,15 @@ its `board_findings` under PAPAN. `tests` stays beside the domains -- a test is
 how an item is verified, not a place it is held -- and `unknown` holds what no
 domain can say, never filled in.
 
+The owner's seven questions of 22 September 2026 -- what is HCPU, what does
+this opcode do, which program does this file come from, what does this
+program call, what does this RTL module instantiate, what did the board last
+measure, which services does this Ubuntu run -- are mapped to query kinds in
+NUI/spec/query_contract.json, the contract a test holds this module to. An
+answer walks back the owner's chain: the fact is the item, its `source` the
+place it was read, `evidence` the line or relation where one applies, and the
+verification the test the contract names.
+
 Nothing is inferred and nothing is scored. Every item is a lookup in something
 the repository already holds, and every item carries `source` -- a file and
 line, or a model and key -- so an answer walks back to its evidence. DOMAINS
@@ -45,7 +59,7 @@ from . import off_db, registry, usr
 from .facts import load as load_facts
 from .repository_index import ROOT, tracked
 
-KINDS = ("opcode", "program", "off", "letter", "hc")
+KINDS = ("opcode", "program", "off", "letter", "hc", "term", "file", "rtl", "board", "host")
 EXECUTION = ROOT / "NUI" / "execution_model.json"
 PARITY = ROOT / "NUI" / "parity_model.json"
 OPCODES = "src/hijaiyyah/hisa/opcodes.py"
@@ -62,7 +76,7 @@ DOMAINS: dict[str, tuple[str, ...]] = {
     "RTL": (r"rtl/(?!programs/)", r"NUI/parity_model\.json"),
     "OFF": (r"cosmictera-build/OFF\.md",),
     "PAPAN": (r"cosmictera-build/", r"NUI/parity_model\.json"),
-    "NUI": (r"facts/", r"NUI/hijaiyyah_registry\.json", r"NUI/spec/usr\.json"),
+    "NUI": (r"facts/", r"NUI/", r"src/hijaiyyah/nui/", r"teknologi/ISTILAH\.md"),
 }
 
 
@@ -123,8 +137,9 @@ def _definition(name: str) -> dict[str, Any] | None:
     if not hit:
         return None
     value = re.search(r"=\s+(0x[0-9A-Fa-f]+)", hit[0]["text"])
+    comment = hit[0]["text"].partition("#")[2].strip()
     return {"what": "definition", "opcode": name, "value": value.group(1) if value else None,
-            "source": hit[0]["source"]}
+            "does": comment or None, "source": hit[0]["source"]}
 
 
 # -- opcode ------------------------------------------------------------------------
@@ -135,6 +150,9 @@ def _opcode(name: str) -> Answer:
     definition = _definition(name)
     if definition:
         answer["HISA"].append(definition)
+    answer["HISA"] += [{"what": "specification", **line}
+                       for line in _lines("docs/HISA_SPEC.md", rf"\|\s*`{re.escape(name)}`\s*\|",
+                                          limit=5)]
     ran = [e for e in _json(EXECUTION)["edges"]
            if e["kind"] == "EXECUTES" and e["target"] == f"opcode:{name}"]
     answer["HISA"].append({"what": "execution", "programs": len(ran),
@@ -233,6 +251,16 @@ def _program(given: str) -> Answer:
                                **execution["programs"][scenario],
                                "control": _control(execution["edges"], scenario),
                                "source": f"NUI/execution_model.json#programs/{scenario}"})
+    from .program_graph import hasm_calls
+    from .program_index import programs
+    if path in programs().hasm:
+        calls, missing = hasm_calls(path)
+        for link in calls:
+            answer["HISA"].append({"what": "calls", "label": link.via.split(" ", 1)[1],
+                                   "defined_in": link.target.rsplit(":", 1)[0],
+                                   "source": f"{path}:{link.line}"})
+        answer["unknown"] += [f"CALL {label} at line {line} lands on no label"
+                              for label, line in missing]
     parity = _json(PARITY)
     if path in parity["programs"]:
         row = parity["programs"][path]
@@ -338,6 +366,164 @@ def _hc(word: str) -> Answer:
     return answer
 
 
+# -- the rest of the owner's seven questions ------------------------------------------
+
+TERMS = "teknologi/ISTILAH.md"
+GRAPH = "src/hijaiyyah/nui/repository_graph.py"
+#: Board records the repository keeps, by family; baselines and reports are
+#: derived from a record, not records themselves.
+FAMILIES = {"burn-in": "cosmictera-build/burn-in/*.json",
+            "attack-lab": "cosmictera-build/attack-lab/*.json",
+            "parity-board": "cosmictera-build/parity-board/*.json"}
+HEADLINES = {"burn-in": ("started", "ended", "heartbeats", "errors", "sd_read_failures"),
+             "attack-lab": ("attack_id", "target", "inputs", "rejected", "findings"),
+             "parity-board": ("experiment", "commit", "date")}
+MONTHS = {m: i for i, m in enumerate(
+    ("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus",
+     "September", "Oktober", "November", "Desember"), 1)}
+
+
+def _term(word: str) -> Answer:
+    """A row of the system's glossary, read as its table's own columns."""
+    answer = _empty()
+    header: list[str] = []
+    for number, line in enumerate((ROOT / TERMS).read_text(encoding="utf-8").splitlines(), 1):
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if cells and cells[0] == "Istilah":
+            header = cells
+            continue
+        name = cells[0].replace("\\", "").strip("*") if cells else ""
+        if header and name.lower() == word.lower():
+            answer["NUI"].append({"what": "term", **dict(zip(header, cells, strict=False)),
+                                  "source": f"{TERMS}:{number}"})
+    if not answer["NUI"]:
+        answer["unknown"].append(f"{word} is not a term in {TERMS}")
+    return answer
+
+
+def _file(path: str) -> Answer:
+    """What the repository graph knows of one file, and what wrote it where the
+    file itself says."""
+    from .repository_graph import build as graph
+    answer = _empty()
+    if not tracked(path):
+        answer["unknown"].append(f"{path} is not a file git tracks")
+        return answer
+    generated = None
+    if path.endswith(".json"):
+        data = json.loads((ROOT / path).read_text(encoding="utf-8"))
+        generated = data.get("generated_by") if isinstance(data, dict) else None
+    if generated:
+        answer["NUI"].append({"what": "generated by", "by": generated, "source": path})
+    elif path.endswith(".json"):
+        # A generated file here says so in its own `generated_by`; one that
+        # does not is not guessed at from who happens to mention it.
+        answer["unknown"].append(f"{path} does not say what writes it")
+    g = graph()
+    if path not in g.nodes:
+        answer["unknown"].append(f"{path} is not a node of the repository graph, which "
+                                 "indexes Python, tests, Verilog, HASM, facts and documents")
+        return answer
+    answer["NUI"].append({"what": "node", "path": path, "kind": g.nodes[path].kind,
+                          "source": GRAPH})
+    for e in g.out(path):
+        answer["NUI"].append({"what": f"{e.kind} ->", "other": e.target,
+                              "evidence": e.evidence, "source": GRAPH})
+    for e in g.into(path):
+        answer["NUI"].append({"what": f"<- {e.kind}", "other": e.source,
+                              "evidence": e.evidence, "source": GRAPH})
+    answer["tests"] = [{"file": t, "source": t} for t in g.verified_by(path)]
+    return answer
+
+
+def _rtl(module: str) -> Answer:
+    """What a Verilog module instantiates, and what instantiates it."""
+    from .program_graph import verilog_instances
+    from .program_index import programs
+    answer = _empty()
+    keys = [k for k in programs().verilog if k.split("::")[1] == module]
+    if not keys:
+        answer["unknown"].append(f"{module} is not a Verilog module in the repository")
+        return answer
+    for key in keys:
+        file = key.split("::")[0]
+        links, vendor, missing = verilog_instances(key)
+        for link in links:
+            answer["RTL"].append({"what": "instantiates", "instance": link.via,
+                                  "module": link.target.split("::")[1],
+                                  "defined_in": link.target.split("::")[0], "source": file})
+        answer["RTL"] += [{"what": "vendor primitive", "module": m, "source": file}
+                          for m in vendor]
+        answer["unknown"] += [f"{file} instantiates {m}, defined nowhere here" for m in missing]
+    # A module with two homes is linked once per home (program_graph), so the
+    # same instantiation would otherwise be listed twice.
+    by: set[tuple[str, str]] = set()
+    for key in programs().verilog:
+        for link in verilog_instances(key)[0]:
+            if link.target.split("::")[1] == module and (key, link.via) not in by:
+                by.add((key, link.via))
+                answer["RTL"].append({"what": "instantiated by", "module": key.split("::")[1],
+                                      "instance": link.via, "source": key.split("::")[0]})
+    return answer
+
+
+def _papan_latest() -> dict[str, Any] | None:
+    """The PAPAN.md heading with the latest date written in it."""
+    best: tuple[tuple[int, int, int], dict[str, Any]] | None = None
+    for line in _lines("cosmictera-build/PAPAN.md", r"^#+ .*\d{1,2} [A-Z][a-z]+ 20\d\d",
+                       limit=10_000):
+        m = re.search(r"(\d{1,2}) ([A-Z][a-z]+) (20\d\d)", line["text"])
+        if m and m.group(2) in MONTHS:
+            day = (int(m.group(3)), MONTHS[m.group(2)], int(m.group(1)))
+            if best is None or day > best[0]:
+                best = (day, {"what": "latest dated section", "heading": line["text"],
+                              "date": f"{day[0]}-{day[1]:02d}-{day[2]:02d}",
+                              "source": line["source"]})
+    return best[1] if best else None
+
+
+def _board(subject: str) -> Answer:
+    """The newest record the repository keeps from the board, per family."""
+    answer = _empty()
+    if subject != "latest":
+        answer["unknown"].append("the board query takes `latest`")
+        return answer
+    for family, pattern in FAMILIES.items():
+        files = [f for f in tracked(pattern)
+                 if re.search(r"\d{8}T\d{6}Z", f) and not f.endswith(("-baseline.json",
+                                                                       ".report.json"))]
+        if not files:
+            answer["unknown"].append(f"no {family} record is tracked yet")
+            continue
+        newest = max(files, key=lambda f: re.search(r"\d{8}T\d{6}Z", f).group(0))  # type: ignore[union-attr]
+        data = json.loads((ROOT / newest).read_text(encoding="utf-8"))
+        stamp = re.search(r"\d{8}T\d{6}Z", newest).group(0)  # type: ignore[union-attr]
+        answer["PAPAN"].append({"what": "latest record", "family": family, "stamp": stamp,
+                                **{k: data.get(k) for k in HEADLINES[family]},
+                                "source": newest})
+    section = _papan_latest()
+    if section:
+        answer["PAPAN"].append(section)
+    return answer
+
+
+def _host(subject: str) -> Answer:
+    """What the Ubuntu host runs: nothing is known, because there is no host."""
+    from . import layer5
+    answer = _empty()
+    answer["unknown"].append("no Ubuntu host exists yet: layer 5 has not started, so nothing "
+                             "has been observed (NUI/LAYERS.md)")
+    area = {"services": "service"}.get(subject)
+    for row in layer5.plan():
+        if area is None or row["area"] == area:
+            answer["NUI"].append({"what": "planned collector", "name": row["name"],
+                                  "argv": row.get("argv"), "status": row["status"],
+                                  "source": "NUI/spec/layer5_collectors.json"})
+    return answer
+
+
 def query(text: str) -> Answer:
     kind, _, subject = text.strip().partition(" ")
     if kind not in KINDS or not subject:
@@ -347,7 +533,12 @@ def query(text: str) -> Answer:
                "program": lambda: _program(subject),
                "off": lambda: _off_entry(subject),
                "letter": lambda: _letter(subject),
-               "hc": lambda: _hc(subject)}[kind]
+               "hc": lambda: _hc(subject),
+               "term": lambda: _term(subject),
+               "file": lambda: _file(subject),
+               "rtl": lambda: _rtl(subject),
+               "board": lambda: _board(subject),
+               "host": lambda: _host(subject)}[kind]
     return {"query": text.strip(), "kind": kind, "subject": subject, **handler()}
 
 

@@ -4,9 +4,11 @@ Nothing here runs a command. What is held: every collector the plan lists
 passes the read-only guard, and the guard refuses what the first stage must
 not do -- a forbidden command, a command off the allowlist, an argument a
 shell could read, an option that writes or sends, a command that never stops.
-The only way out is `limactl shell` in the VM, and on a machine without
-limactl it refuses before calling anything. The VM configuration pins the
-image digest recorded in NUI/LAYERS.md, mounts nothing, and names no URL.
+`journalctl` and `ip` pass only in the owner's exact forms (K-4). The only
+way out is `limactl shell` in the VM named cosmictera-layer5, with Lima's
+state in the owner's own LIMA_HOME (K-3); on a machine without limactl it
+refuses before calling anything. The VM configuration pins the image digest
+recorded in NUI/LAYERS.md, mounts nothing, and names no URL.
 """
 from __future__ import annotations
 
@@ -25,7 +27,7 @@ from hijaiyyah.nui import layer5, usr  # noqa: E402
 
 def test_every_collector_passes_the_guard() -> None:
     plan = layer5.plan()
-    assert len(plan) == 9
+    assert len(plan) == 11
     assert not [r for r in plan if "refused" in r], plan
     assert {r["area"] for r in plan} == {"host", "proses", "filesystem", "service",
                                         "jaringan", "kontainer"}
@@ -47,7 +49,17 @@ def test_a_catalog_collector_takes_its_argv_from_the_catalog() -> None:
     (["kill", "1"], "not-yet-allowed"),
     (["systemctl", "stop", "ssh"], "not-yet-allowed"),
     (["docker", "rm", "x"], "not-yet-allowed"),
-    (["ip", "addr"], "not on the read-only allowlist"),
+    (["ip", "addr"], "not one of the owner's forms"),
+    (["ip"], "not one of the owner's forms"),
+    (["ip", "addr", "add", "10.0.0.1/24", "dev", "eth0"], "not one of the owner's forms"),
+    (["ip", "addr", "del", "10.0.0.1/24", "dev", "eth0"], "not one of the owner's forms"),
+    (["ip", "link", "set", "eth0", "down"], "not one of the owner's forms"),
+    (["ip", "route", "add", "default", "via", "10.0.0.1"], "not one of the owner's forms"),
+    (["ip", "route", "del", "default"], "not one of the owner's forms"),
+    (["ip", "route", "replace", "default", "via", "10.0.0.1"], "not one of the owner's forms"),
+    (["journalctl"], "not one of the owner's forms"),
+    (["journalctl", "-b", "-n", "500", "--no-pager"], "not one of the owner's forms"),
+    (["journalctl", "-b", "-u", "-f", "-n", "200", "--no-pager"], "not one of the owner's forms"),
     (["bash", "-c", "ls"], "not on the read-only allowlist"),
     (["ls", "/;", "rm"], "shell character"),
     (["cat", "a b"], "shell character"),
@@ -58,8 +70,8 @@ def test_a_catalog_collector_takes_its_argv_from_the_catalog() -> None:
     (["curl", "-o", "/tmp/x", "http://h"], "writes or sends"),
     (["curl", "--output=/tmp/x", "http://h"], "writes or sends"),
     (["curl", "-X", "POST", "http://h"], "writes or sends"),
-    (["journalctl", "--vacuum-size=1M"], "writes or sends"),
-    (["journalctl", "--rotate"], "writes or sends"),
+    (["journalctl", "--vacuum-size=1M"], "not one of the owner's forms"),
+    (["journalctl", "--rotate"], "not one of the owner's forms"),
     (["ping", "host"], "does not stop"),
     (["top"], "does not stop"),
     (["top", "-b"], "does not stop"),
@@ -77,6 +89,11 @@ def test_the_guard_refuses_what_the_first_stage_must_not_do(argv: list[str],
     (["systemctl", "status", "ssh"], "systemctl status"),
     (["curl", "-s", "http://localhost"], "curl"),
     (["find", "/etc", "-maxdepth", "1", "-name", "hosts"], "find"),
+    (["journalctl", "-b", "-n", "200", "--no-pager"], "journalctl"),
+    (["journalctl", "-b", "-u", "ssh", "-n", "200", "--no-pager"], "journalctl"),
+    (["ip", "-brief", "addr"], "ip"),
+    (["ip", "link"], "ip"),
+    (["ip", "route"], "ip"),
 ])
 def test_the_guard_lets_bounded_reads_through(argv: list[str], entry: str) -> None:
     assert layer5.guard(argv) == entry
@@ -104,10 +121,14 @@ def test_the_one_way_out_is_limactl_in_the_vm(monkeypatch: pytest.MonkeyPatch) -
         return Done()
 
     monkeypatch.setattr(layer5.shutil, "which", lambda _: "/usr/local/bin/limactl")
-    record = layer5.observe("host_identity", "cosmictera", run=fake)
+    record = layer5.observe("host_identity", run=fake)
     (cmd, kwargs), = calls
-    assert cmd == ["limactl", "shell", "cosmictera", "--", "cat", "/etc/os-release"]
+    assert cmd == ["limactl", "shell", "cosmictera-layer5", "--", "cat", "/etc/os-release"]
     assert "shell" not in kwargs, "never through a shell on this Mac"
+    home = str(Path("~/cosmictera-layer5/lima-home").expanduser())
+    assert kwargs["env"]["LIMA_HOME"] == home, "the owner's own Lima namespace (K-3)"
+    assert record["transport"] == {"kind": "lima", "instance": "cosmictera-layer5",
+                                   "lima_home": home}
     assert record["allowed_by"] == "cat" and record["exit_code"] == 0
     assert set(record) == {"collector", "argv", "allowed_by", "transport", "started_utc",
                            "seconds", "exit_code", "stdout", "stderr", "stdout_sha256"}
@@ -138,3 +159,35 @@ def test_every_collector_says_whose_it_is() -> None:
     for item in spec["collectors"] + spec["guard"]:
         assert item["status"] in {"ditetapkan", "usulan"}, item
         assert item["source"], item
+
+
+def test_the_host_is_the_owners_k3() -> None:
+    """Lima through Homebrew, its state in its own LIMA_HOME, the VM named
+    cosmictera-layer5 -- the owner, 22 September 2026."""
+    h = layer5.load()["host"]
+    assert (h["lima"], h["lima_home"], h["instance"]) == (
+        "dipasang lewat Homebrew", "~/cosmictera-layer5/lima-home", "cosmictera-layer5")
+    assert layer5.host()["instance"] == "cosmictera-layer5"
+
+
+def test_every_catalog_form_passes_the_guard() -> None:
+    """What usr.to_argv returns for the host must be something the guard lets
+    run -- including the per-unit journal form."""
+    for e in usr.load("layer5_catalog")["entries"]:
+        for key in ("argv", "argv_target"):
+            if key not in e:
+                continue
+            argv = [("ssh" if part == "{target}" else part) for part in e[key]]
+            try:
+                layer5.guard(argv)
+            except layer5.Refused as why:
+                raise AssertionError(f"{e['action']} {e['object']} {key}: {why}") from None
+
+
+def test_the_owners_forms_are_exact() -> None:
+    """K-4: two journalctl forms, three ip forms, nothing else."""
+    forms = layer5.forms()
+    assert forms["journalctl"] == [["journalctl", "-b", "-n", "200", "--no-pager"],
+                                   ["journalctl", "-b", "-u", "<service>", "-n", "200",
+                                    "--no-pager"]]
+    assert forms["ip"] == [["ip", "-brief", "addr"], ["ip", "link"], ["ip", "route"]]

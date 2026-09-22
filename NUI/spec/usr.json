@@ -157,7 +157,8 @@
    "target": {
     "kind": "unit",
     "required": false,
-    "status": "usulan"
+    "status": "ditetapkan",
+    "source": "pemilik, 22 September 2026, keputusan K-4 -- `journalctl -b -u <service> -n 200 --no-pager`"
    }
   },
   {

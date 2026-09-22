@@ -1056,8 +1056,42 @@ selesai**: `rtl/scripts/burn_in.py`, checksum loader, RTL HCPU, bitstream, firmw
 - **Tabel keputusan checksum loader** di `cosmictera-build/attack-lab/README.md`;
   implementasinya tidak berubah. **Matriks uji STATE** di
   `tests/test_ai/test_nui_usr.py`; kosakatanya tidak berubah.
-- **Belum dikerjakan**: kontrak kueri NUI (prioritas 7) — tujuh pertanyaan
-  pemilik belum dipetakan ke jenis kueri.
+- **Kontrak kueri NUI (prioritas 7)** menyusul pada hari yang sama, sesudah
+  keputusan K-1–K-4 di bawah — lihat bagian berikutnya.
+
+### Keputusan pemilik, 22 September 2026 — K-1 sampai K-4
+
+Empat keputusan yang runbook Kamis minta sebelum hari itu. Rinciannya di
+`cosmictera-build/PASCA-BURN-IN.md`, tidak disalin ke sini (R1).
+
+- **K-1**: dua baris `error` burn-in yang sedang berjalan adalah **selisih yang
+  diketahui**; `rtl/scripts/burn_in.py` tidak diubah sebelum lari 72 jam
+  selesai, karena pengurai yang aktif adalah bagian observasi. **Terukur
+  sesudahnya: pengurai itu tidak menyimpan byte mentah dari kabel**, jadi lari
+  ini tidak bisa diurai ulang dari byte-nya. Yang memastikan 0 error papan
+  adalah pencacahnya sendiri: `rtl/programs/burn_in.hasm` menyebutnya *"never a
+  reset"*, dan tiap sampel sesudah kedua baris itu berbunyi 0.
+- **K-2**: Lapis 4 dibekukan dengan commit **dan annotated tag**, misalnya
+  `layer4-freeze-2026-09-24`, sesudah bukti papan dan silikon final — tidak
+  sekarang.
+- **K-3**: Lima lewat Homebrew, `LIMA_HOME=~/cosmictera-layer5/lima-home`, VM
+  `cosmictera-layer5`, image di `~/cosmictera-layer5/downloads/`; template
+  bawaan Lima tidak dipakai. Langkah P7 pertama menguji `images[].location`
+  berkas lokal di Lima 2.2.0 sebelum VM permanen dibuat. **Konsekuensi yang
+  dicatat**: tarball Lima yang SHA256-nya diverifikasi bukan yang dipasang
+  Homebrew; formula Homebrew hari itu menyebut versi yang sama, 2.2.0, dan
+  baseline Lima dicatat ulang saat dipasang.
+- **K-4**: `journalctl` dan `ip` masuk daftar izin hanya dalam bentuk
+  `journalctl -b -n 200 --no-pager`, `journalctl -b -u <service> -n 200
+  --no-pager`, `ip -brief addr`, `ip link`, `ip route`. Pagar Lapis 5
+  mencocokkan argv utuh; katalog READ JOURNAL dan READ NETWORK ikut bentuk itu.
+
+**Sampai Kamis**, kata pemilik: `rtl/scripts/burn_in.py`, RTL, bitstream, dan
+eksperimen papan tidak disentuh; yang boleh maju hanya persiapan Lapis 5 dan
+kontrak kueri NUI. **Kontrak kuerinya** — tujuh pertanyaan pemilik, dipetakan
+ke jenis kueri dan dijalankan tesnya sendiri — di
+`NUI/spec/query_contract.json`; lima dijawab, satu sebagian, dan satu (layanan
+Ubuntu) menunggu Lapis 5.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

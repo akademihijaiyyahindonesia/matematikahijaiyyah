@@ -110,14 +110,14 @@ def test_the_first_stage_only_reads() -> None:
 def test_the_allowlist_is_read_from_where_the_owner_set_it() -> None:
     allowed, forbidden = usr.allowlist()
     assert allowed == ["ls", "find", "cat", "ps", "top", "ping", "curl", "journalctl",
-                       "systemctl status", "docker ps"]
+                       "systemctl status", "docker ps", "ip"]
     assert "rm" in forbidden and "systemctl stop" in forbidden
 
 
 def test_the_catalog_stays_inside_the_allowlist() -> None:
-    """No catalog command is on the not-yet-allowed list, and every one on
-    neither list is refused by name -- `ip`, which the owner wrote for READ
-    NETWORK and which the owner's allowlist does not hold."""
+    """No catalog command is on the not-yet-allowed list, and none is on
+    neither list. `ip`, which the owner wrote for READ NETWORK, was the one
+    outside until K-4 put it on the allowlist in its observing forms."""
     allowed, forbidden = usr.allowlist()
     spec = usr.load("usr")
     actions = {a["name"] for a in spec["actions"]}
@@ -128,9 +128,18 @@ def test_the_catalog_stays_inside_the_allowlist() -> None:
         assert usr._command(e["argv"], forbidden) is None, e
         if usr._command(e["argv"], allowed) is None:
             outside.append(e["argv"][0])
-    assert outside == ["ip"]
-    assert usr.to_argv({"ACTION": "READ", "OBJECT": "NETWORK"})[0] is None
+    assert outside == []
+    assert usr.to_argv({"ACTION": "READ", "OBJECT": "NETWORK"})[0] == ["ip", "-brief", "addr"]
     assert usr.unmapped_allowlist() == ["find", "top", "ping", "curl"]
+
+
+def test_the_journal_is_read_in_the_owners_bounded_forms() -> None:
+    """K-4: this boot, 200 lines, no pager -- of the whole journal, or of one
+    unit when a target is given, never a dangling -u."""
+    assert usr.to_argv({"ACTION": "READ", "OBJECT": "JOURNAL"})[0] == [
+        "journalctl", "-b", "-n", "200", "--no-pager"]
+    assert usr.to_argv({"ACTION": "READ", "OBJECT": "JOURNAL", "TARGET": "ssh"})[0] == [
+        "journalctl", "-b", "-u", "ssh", "-n", "200", "--no-pager"]
 
 
 def test_every_hc_name_in_the_dictionary_exists_in_hc() -> None:
@@ -171,11 +180,13 @@ def test_the_parser_rules_rest_on_what_the_repository_holds() -> None:
 
 def test_a_proposal_never_rides_on_a_decision() -> None:
     """The owner decided the five fields and the objects; which fields are
-    required, and what target each object other than FILE takes, are mine."""
+    required, and what target each object takes, are mine -- except FILE's
+    path and JOURNAL's unit, which the owner wrote (K-4 for the unit)."""
     spec = usr.load("usr")
     assert {f["required_status"] for f in spec["fields"]} == {"usulan"}
     targets = {o["name"]: o["target"]["status"] for o in spec["objects"]}
     assert targets.pop("FILE") == "ditetapkan"
+    assert targets.pop("JOURNAL") == "ditetapkan"
     assert set(targets.values()) == {"usulan"}
 
 

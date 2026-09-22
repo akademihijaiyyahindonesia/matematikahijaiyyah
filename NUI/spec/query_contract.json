@@ -1,0 +1,69 @@
+{
+ "version": 1,
+ "title": "Kontrak kueri NUI -- tujuh pertanyaan pemilik, dan jenis kueri yang menjawabnya",
+ "status": "usulan",
+ "source": "pertanyaan pemilik, 22 September 2026, kata demi kata; pemetaannya ke jenis kueri usulan saya",
+ "chain": "fakta -> sumber -> bukti -> verifikasi: tiap butir jawaban adalah fakta, `source` tempat ia dibaca, `evidence` baris atau relasi bila ada, dan `verification` tes yang menjaga jenis kueri itu",
+ "questions": [
+  {
+   "question": "apa itu HCPU?",
+   "query": "term HCPU",
+   "answers_in": ["NUI"],
+   "status": "dijawab",
+   "reads": "teknologi/ISTILAH.md, tabel istilah",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
+  },
+  {
+   "question": "opcode ini melakukan apa?",
+   "query": "opcode PRINT",
+   "answers_in": ["HISA", "RTL", "PAPAN"],
+   "status": "dijawab",
+   "reads": "src/hijaiyyah/hisa/opcodes.py, docs/HISA_SPEC.md, jejak Lapis 3, paritas Lapis 4",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_what_is_known_about_print"
+  },
+  {
+   "question": "file ini berasal dari program mana?",
+   "query": "file NUI/board_expected.json",
+   "answers_in": ["NUI"],
+   "status": "sebagian",
+   "reads": "medan `generated_by` berkas itu sendiri, dan graf repositori Lapis 1 untuk relasinya. Berkas yang tidak menyatakan pembuatnya tidak ditebak",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
+  },
+  {
+   "question": "program ini memanggil apa?",
+   "query": "program rtl/programs/shell.hasm",
+   "answers_in": ["HISA"],
+   "status": "dijawab",
+   "reads": "CALL HASM dari graf program Lapis 2, tiap satunya dengan barisnya",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
+  },
+  {
+   "question": "modul RTL ini instantiate apa?",
+   "query": "rtl hcpu_top",
+   "answers_in": ["RTL"],
+   "status": "dijawab",
+   "reads": "instansiasi Verilog dari graf program Lapis 2, dan yang menginstansiasinya",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
+  },
+  {
+   "question": "board terakhir mengukur apa?",
+   "query": "board latest",
+   "answers_in": ["PAPAN"],
+   "status": "dijawab",
+   "reads": "rekaman papan yang di-commit -- burn-in, lab serangan, paritas papan -- dan bagian bertanggal terbaru cosmictera-build/PAPAN.md. Rekaman yang belum di-commit, seperti lari 72 jam yang sedang berjalan, tidak dibaca",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
+  },
+  {
+   "question": "Ubuntu ini menjalankan service apa?",
+   "query": "host services",
+   "answers_in": [],
+   "status": "menunggu Lapis 5",
+   "reads": "belum ada host; jawabannya `unknown`, beserta kolektor yang akan menjawabnya",
+   "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
+  }
+ ],
+ "open": [
+  "Jawaban tentang host Ubuntu tidak punya domain di antara enam domain pemilik (HC, HISA, RTL, OFF, PAPAN, NUI). Sampai Lapis 5 berjalan ia hanya `unknown`; sesudahnya, domain untuk observasi host adalah keputusan pemilik.",
+  "Istilah dari teknologi/ISTILAH.md dijawab di domain NUI, dibaca sebagai pengetahuan NUI tentang namanya sendiri -- usulan."
+ ]
+}

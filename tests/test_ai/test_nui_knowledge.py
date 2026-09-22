@@ -25,9 +25,12 @@ from hijaiyyah.nui import knowledge, off_db  # noqa: E402
 
 DOMAINS = ["HC", "HISA", "RTL", "OFF", "PAPAN", "NUI"]
 KEYS = {"query", "kind", "subject", *DOMAINS, "tests", "unknown"}
+CONTRACT = json.loads((ROOT / "NUI" / "spec" / "query_contract.json").read_text(encoding="utf-8"))
 QUERIES = ["opcode PRINT", "opcode HALT", "opcode ADD", "program loader.hasm",
            "program rtl/programs/test_codex.hasm", "off OFF-PRINT-SILICON", "letter ج",
-           "letter Kaf", "hc متغير", "hc cetak", "hc if", "hc read_file"]
+           "letter Kaf", "hc متغير", "hc cetak", "hc if", "hc read_file",
+           "file src/hijaiyyah/nui/board_parity.py",
+           *[q["query"] for q in CONTRACT["questions"]]]
 
 
 def _exists(source: str) -> bool:
@@ -148,8 +151,77 @@ def test_an_unknown_subject_says_so_rather_than_guessing() -> None:
     for text in ("opcode NOSUCH", "program nosuch.hasm", "off OFF-NOSUCH", "letter X",
                  "hc nosuch"):
         assert knowledge.query(text)["unknown"], text
-    with pytest.raises(ValueError, match="opcode, program, off, letter, hc"):
+    for text in ("term NOSUCH", "file nosuch.txt", "rtl nosuch_module", "board today"):
+        assert knowledge.query(text)["unknown"], text
+    with pytest.raises(ValueError, match="opcode, program, off, letter, hc, term, file, rtl"):
         knowledge.query("word ب")
+
+
+# -- the owner's seven questions ------------------------------------------------------
+
+
+@pytest.mark.parametrize("row", CONTRACT["questions"], ids=lambda r: r["query"])
+def test_the_query_contract_answers_as_it_says(row: dict) -> None:
+    """Each of the owner's questions, asked as its query, answers where the
+    contract says it does -- and one that waits says so in `unknown` -- and
+    the test named as its verification exists."""
+    a = knowledge.query(row["query"])
+    for domain in row["answers_in"]:
+        assert a[domain], (row["query"], domain)
+    if row["status"] in ("sebagian", "menunggu Lapis 5"):
+        assert a["unknown"], row["query"]
+    if row["status"] == "dijawab":
+        assert not [u for u in a["unknown"] if "not a" in u], a["unknown"]
+    path, _, name = row["verification"].partition("::")
+    assert f"def {name}(" in (ROOT / path).read_text(encoding="utf-8"), row["verification"]
+
+
+def test_what_hcpu_is_comes_from_the_glossary() -> None:
+    item = _one(knowledge.query("term HCPU")["NUI"], "term")
+    assert item["Kepanjangan"] == "Hijaiyyah Core Processing Unit"
+    assert item["source"].startswith("teknologi/ISTILAH.md:")
+
+
+def test_what_an_opcode_does_is_its_definition_and_its_specification_row() -> None:
+    a = knowledge.query("opcode PRINT")
+    assert _one(a["HISA"], "definition")["does"] == "Print value from GPR"
+    assert any("Print GPR[S1]" in s["text"] for s in a["HISA"] if s["what"] == "specification")
+
+
+def test_what_a_program_calls_is_each_call_with_its_line() -> None:
+    """Every call is checked against the line it cites, not trusted."""
+    a = knowledge.query("program rtl/programs/shell.hasm")
+    calls = [c for c in a["HISA"] if c["what"] == "calls"]
+    assert calls
+    lines = (ROOT / "rtl/programs/shell.hasm").read_text(encoding="utf-8").splitlines()
+    for c in calls:
+        line = int(c["source"].rsplit(":", 1)[1])
+        assert "CALL" in lines[line - 1] and c["label"] in lines[line - 1], c
+
+
+def test_what_an_rtl_module_instantiates_and_what_instantiates_it() -> None:
+    a = knowledge.query("rtl hcpu_top")
+    made = {(i["module"], i["instance"]) for i in a["RTL"] if i["what"] == "instantiates"}
+    assert ("hcpu_fetch", "instance u_fetch") in made
+    by = [(i["module"], i["source"]) for i in a["RTL"] if i["what"] == "instantiated by"]
+    assert ("tb_parity", "rtl/tb/tb_parity.v") in by
+    assert len(by) == len(set(by)), "a module with two homes is listed once"
+
+
+def test_what_the_board_last_measured_is_what_is_committed() -> None:
+    """Committed records only: the 72-hour run in progress is not read."""
+    a = knowledge.query("board latest")
+    families = {i["family"] for i in a["PAPAN"] if i["what"] == "latest record"}
+    assert {"burn-in", "attack-lab"} <= families
+    assert all("20260921T053430Z" not in i["source"] for i in a["PAPAN"])
+    assert _one(a["PAPAN"], "latest dated section")["source"].startswith(
+        "cosmictera-build/PAPAN.md:")
+
+
+def test_which_services_the_host_runs_is_not_known_and_says_so() -> None:
+    a = knowledge.query("host services")
+    assert "no Ubuntu host" in a["unknown"][0]
+    assert {i["name"] for i in a["NUI"]} == {"systemd_overview", "journal"}
 
 
 # -- the OFF database -------------------------------------------------------------
@@ -195,3 +267,14 @@ def test_off_md_counts_the_missing_opcodes_one_way() -> None:
     assert f"belum ada {missing} opcode" in text
     assert "top level gabungan" not in text
     assert "persisten tersimulasi, belum di papan" not in text
+
+
+def test_which_program_wrote_a_file_is_read_from_the_file_or_not_claimed() -> None:
+    """A JSON that names its maker is answered from its own `generated_by`; one
+    that does not -- a hand-written specification -- is `unknown`, not guessed
+    from who happens to mention it."""
+    made = knowledge.query("file NUI/board_expected.json")
+    assert _one(made["NUI"], "generated by")["by"] == "src/hijaiyyah/nui/board_parity.py"
+    written = knowledge.query("file NUI/spec/usr.json")
+    assert not [i for i in written["NUI"] if i["what"] == "generated by"]
+    assert any("does not say what writes it" in u for u in written["unknown"])

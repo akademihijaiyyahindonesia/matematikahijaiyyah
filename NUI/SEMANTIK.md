@@ -36,7 +36,7 @@ Huruf: Kunci medan huruf besar: ACTION, OBJECT, TARGET, CONTEXT, STATE. Nilai AC
 | `PROCESS` | none (usulan) | ditetapkan | pemilik, 22 September 2026 -- katalog: READ PROCESS |
 | `SERVICE` | unit (usulan) | ditetapkan | pemilik, 22 September 2026 -- katalog: READ SERVICE |
 | `NETWORK` | none (usulan) | ditetapkan | pemilik, 22 September 2026 -- katalog: READ NETWORK |
-| `JOURNAL` | unit (usulan) | ditetapkan | pemilik, 22 September 2026 -- katalog: READ JOURNAL |
+| `JOURNAL` | unit (ditetapkan) | ditetapkan | pemilik, 22 September 2026 -- katalog: READ JOURNAL |
 | `CONTAINER` | none (usulan) | usulan | wilayah Lapis 5 'Container' (pemilik, 21 September 2026) dan `docker ps` di daftar izin; belum ada OBJECT untuknya |
 | `DIRECTORY` | path, wajib (usulan) | usulan | `ls` di daftar izin; FILE dengan `cat` tidak bisa membaca direktori |
 | `VALUE` | ekspresi HC, wajib (usulan) | ditetapkan | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE |
@@ -94,15 +94,15 @@ Tata kalimat: <kata kerja> <objek> [<target>] -- target adalah sisa kalimat (usu
 
 ## Katalog Lapis 5
 
-Daftar izin dibaca dari NUI/LAYERS.md, Lapis 5, tabel diizinkan/belum diizinkan -- dibaca dari sana, tidak disalin (R1): diizinkan `ls`, `find`, `cat`, `ps`, `top`, `ping`, `curl`, `journalctl`, `systemctl status`, `docker ps`; belum diizinkan `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec`.
+Daftar izin dibaca dari NUI/LAYERS.md, Lapis 5, tabel diizinkan/belum diizinkan -- dibaca dari sana, tidak disalin (R1): diizinkan `ls`, `find`, `cat`, `ps`, `top`, `ping`, `curl`, `journalctl`, `systemctl status`, `docker ps`, `ip`; belum diizinkan `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec`.
 
 | USR | argv | di daftar izin | status | sumber |
 |---|---|---|---|---|
 | `READ FILE` | `cat {target}` | ya | ditetapkan | pemilik, 22 September 2026 -- READ FILE -> cat |
 | `READ PROCESS` | `ps aux` | ya | ditetapkan | pemilik, 22 September 2026 -- READ PROCESS -> ps; pemilik, 21 September 2026 -- اعرض العمليات النشطة -> ps aux |
 | `READ SERVICE` | `systemctl status {target}` | ya | ditetapkan | pemilik, 22 September 2026 -- READ SERVICE -> systemctl status |
-| `READ JOURNAL` | `journalctl` | ya | ditetapkan | pemilik, 22 September 2026 -- READ JOURNAL -> journalctl |
-| `READ NETWORK` | `ip` | **tidak** | ditetapkan | pemilik, 22 September 2026 -- READ NETWORK -> ip |
+| `READ JOURNAL` | `journalctl -b -n 200 --no-pager` | ya | ditetapkan | pemilik, 22 September 2026 -- READ JOURNAL -> journalctl, dibatasi keputusan K-4 |
+| `READ NETWORK` | `ip -brief addr` | ya | ditetapkan | pemilik, 22 September 2026 -- READ NETWORK -> ip; bentuk observasi keputusan K-4 |
 | `READ CONTAINER` | `docker ps` | ya | usulan | `docker ps` di daftar izin |
 | `READ DIRECTORY` | `ls {target}` | ya | usulan | `ls` di daftar izin |
 
@@ -297,8 +297,7 @@ Huruf -> operator -> HC -> HISA, dibangun `src/hijaiyyah/nui/registry.py` ke `NU
 - USR: Kosakata kata kerja dan objek selain read/file dalam tiga bahasa belum ditetapkan.
 - USR: Apakah satu kalimat boleh mencampur bahasa (`read ملف x`)?
 - USR: Contoh pemilik 21 September, `اعرض العمليات النشطة` -> `ps aux`, belum dipetakan: `اعرض` (tampilkan) sebagai READ, `العمليات` sebagai PROCESS, dan `النشطة` (aktif) sebagai STATE adalah tafsiran yang belum disahkan.
-- katalog: `ip` (READ NETWORK) tidak ada di daftar izin tahap pertama: masukkan ke daftar izin, atau petakan READ NETWORK ke perintah lain?
-- katalog: Opsi perintah (misalnya `journalctl -u <unit>`, `-n <jumlah>`) belum ditetapkan; katalog hanya memakai bentuk yang pemilik tulis.
+- katalog: Opsi perintah selain `journalctl` (misalnya `ps` dengan kolom tertentu) belum ditetapkan; katalog memakai bentuk yang pemilik tulis.
 - kamus: `print` atau `println` untuk `اطبع` / `cetak` -- tabel 21 September menulis `print`, dua tabel 22 September `println`; keduanya ada di HC dan keduanya dikompilasi ke PRINT.
 - kamus: Nama konsep untuk `if` dan `fn` (usulan: IF, FUNCTION) -- pemilik baru menamai VARIABLE dan PRINT.
 - kamus: Ejaan: `اذا` (tabel pemilik) atau `إذا` (dengan hamzah) -- apakah keduanya diterima?
