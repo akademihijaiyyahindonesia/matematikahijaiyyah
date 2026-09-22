@@ -1,0 +1,110 @@
+{
+ "version": 1,
+ "title": "Kolektor Lapis 5 -- observasi host Ubuntu, hanya baca",
+ "host": {
+  "rule": "Setiap perintah berjalan di VM Ubuntu Server 24.04 LTS ARM64 lewat `limactl shell`, tidak pernah di Mac host",
+  "status": "ditetapkan",
+  "source": "pemilik, 21 September 2026 -- VM terisolasi, tidak menyentuh Mac host"
+ },
+ "collectors": [
+  {
+   "name": "host_identity",
+   "area": "host",
+   "argv": ["cat", "/etc/os-release"],
+   "records": "versi persis sistem operasi tamu -- bagian baseline Lapis 5",
+   "status": "usulan",
+   "source": "pemilik, 22 September 2026 -- versi persis dicatat; `cat` di daftar izin"
+  },
+  {
+   "name": "processes",
+   "area": "proses",
+   "catalog": "READ PROCESS",
+   "records": "daftar proses",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- katalog READ PROCESS"
+  },
+  {
+   "name": "mounts",
+   "area": "filesystem",
+   "argv": ["cat", "/proc/mounts"],
+   "records": "filesystem yang terpasang",
+   "status": "usulan",
+   "source": "`cat` di daftar izin; `df` dan `mount` tidak"
+  },
+  {
+   "name": "root_listing",
+   "area": "filesystem",
+   "argv": ["ls", "-la", "/"],
+   "records": "isi direktori akar",
+   "status": "usulan",
+   "source": "`ls` di daftar izin"
+  },
+  {
+   "name": "systemd_overview",
+   "area": "service",
+   "argv": ["systemctl", "status", "--no-pager"],
+   "records": "keadaan systemd secara keseluruhan",
+   "status": "usulan",
+   "source": "`systemctl status` di daftar izin; katalog READ SERVICE memakai satu unit, bentuk tanpa unit ini usulan"
+  },
+  {
+   "name": "journal",
+   "area": "service",
+   "catalog": "READ JOURNAL",
+   "records": "jurnal systemd",
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- katalog READ JOURNAL. Opsinya (misalnya -n) belum ditetapkan; bentuk pemilik dipakai apa adanya"
+  },
+  {
+   "name": "interfaces",
+   "area": "jaringan",
+   "argv": ["ls", "/sys/class/net"],
+   "records": "nama antarmuka jaringan",
+   "status": "usulan",
+   "source": "katalog READ NETWORK memakai `ip`, yang tidak ada di daftar izin; `ls` ada"
+  },
+  {
+   "name": "interface_counters",
+   "area": "jaringan",
+   "argv": ["cat", "/proc/net/dev"],
+   "records": "pencacah byte dan paket per antarmuka",
+   "status": "usulan",
+   "source": "`cat` di daftar izin"
+  },
+  {
+   "name": "containers",
+   "area": "kontainer",
+   "catalog": "READ CONTAINER",
+   "records": "kontainer yang berjalan; exit 127 berarti docker tidak terpasang, dicatat sebagai tidak ada, bukan galat",
+   "status": "usulan",
+   "source": "katalog READ CONTAINER, yang sendiri masih usulan"
+  }
+ ],
+ "guard": [
+  {
+   "rule": "Perintahnya harus ada di daftar izin pemilik dan tidak di daftar belum-diizinkan -- dibaca dari NUI/LAYERS.md, tidak disalin (R1)",
+   "status": "ditetapkan",
+   "source": "pemilik, 21 September 2026"
+  },
+  {
+   "rule": "Tiap argumen hanya memuat huruf, angka, dan . _ / : @ % + = , - ; spasi dan karakter shell ditolak, karena `limactl shell` meneruskan perintah lewat SSH ke shell tamu",
+   "status": "usulan",
+   "source": "keamanan: tidak bergantung pada cara `limactl` mengutip argumen, yang belum diukur"
+  },
+  {
+   "rule": "Opsi yang menulis atau mengirim ditolak walau perintahnya diizinkan: find -delete/-exec/-execdir/-ok/-okdir/-fprint/-fprint0/-fprintf/-fls; curl -o/-O/-T/-d/-F/-X/-K dan bentuk panjangnya; journalctl --vacuum-*/--rotate/--flush/--sync/--relinquish-var/--setup-keys/--update-catalog",
+   "status": "usulan",
+   "source": "tahap pertama Lapis 5 hanya baca (pemilik, 21 September 2026); opsi-opsi ini menulis berkas atau mengubah keadaan"
+  },
+  {
+   "rule": "Perintah yang tidak berhenti sendiri harus dibatasi: `ping` wajib -c, `top` wajib -b dan -n",
+   "status": "usulan",
+   "source": "tanpa batas keduanya berjalan terus dan observasi tidak pernah selesai"
+  }
+ ],
+ "open": [
+  "Opsi `journalctl` (misalnya `-n <jumlah>`, `-u <unit>`) belum ditetapkan -- tanpa batas, keluarannya seluruh jurnal.",
+  "`ip` untuk READ NETWORK tidak ada di daftar izin; kolektor jaringan memakai `ls` dan `cat` sampai pemilik memutuskan.",
+  "Nama instance Lima dan apakah `limactl shell` mengutip argumen belum diukur -- host belum dipasang."
+ ]
+}

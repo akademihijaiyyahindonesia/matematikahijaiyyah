@@ -93,6 +93,32 @@ Keduanya konsisten dengan spesifikasi yang berlaku; yang belum ada adalah
 keputusan apakah cakupan jumlah diperluas ke header dan tabel relokasi. Itu
 perubahan spesifikasi, dan **keputusan pemilik**.
 
+### Tabel keputusan cakupan checksum
+
+Disiapkan 22 September 2026 atas permintaan pemilik: *"Belum perlu mengubah
+implementasi. Buat saja tabel keputusan."* Kolom "sekarang" dibaca dari
+`rtl/programs/hos_prog_load.hasm`, bukan dari ingatan; kolom "dilindungi?"
+milik pemilik, dan yang masih kosong adalah keputusannya.
+
+| bagian | sekarang | kasus lab | dilindungi? |
+|---|---|---|---|
+| kata program | dijumlah 32-bit dan dibandingkan dengan medan `CRC` sebelum satu kata pun ditulis ke memori instruksi. Medan itu jumlah, bukan CRC-32 | `crc_flip`, `program_word_flip` ditolak | **ya** (pemilik) |
+| header: MAGIC, VERSION, RELOC_CNT | tidak dijumlah; masing-masing dijaga pemeriksaan nilai — `HPG1`, versi 1, paling banyak 128 | ketiganya ditolak | keputusan |
+| header: WORDS | tidak dijumlah; ditolak kalau nol atau kalau kartu memuat lebih sedikit kata. **Satu kata lebih banyak lolos**: kata tambahannya padding nol, dan jumlahnya tidak berubah | `words_zero` ditolak, `words_plus_one` **diterima** | keputusan |
+| header: LOAD_ADDR dan ENTRY | tidak dijumlah; kata terakhir citra harus ≤ 4.095, dan ENTRY harus di dalam citra | keduanya ditolak | keputusan |
+| tabel relokasi | tidak dijumlah dan tidak diperiksa per entri | `reloc_index_moved` **diterima** | keputusan |
+| tabel program, sektor 16 | tidak dijumlah; FLAGS bit 0 dan SECTOR_COUNT ≠ 0 diperiksa, dan pembacaan tidak melewati SECTOR_COUNT | tidak ada kasus | keputusan — **baris ini tambahan saya**, tidak ada di tabel pemilik |
+
+**"Payload" dan "program body" di tabel pemilik adalah kata yang sama** di
+container ini — tujuh kata header, tabel relokasi, lalu kata program — jadi
+keduanya satu baris di atas. Kalau yang dimaksud pemilik berbeda, itu yang
+perlu dijawab lebih dulu.
+
+Sesudah cakupannya diputuskan: satu perubahan di loader, satu set kasus
+sabotase di lab ini untuk tiap bagian yang baru dilindungi, dan `VERSION` naik
+— jalan yang sudah pemilik tetapkan 18 September supaya loader lama tidak
+pecah diam-diam.
+
 ## Kelas C — Ka'bah, di luar bit tunggal
 
 `20260919T233812Z-kabah.json` (8 percobaan per lebar, benih 20260921);

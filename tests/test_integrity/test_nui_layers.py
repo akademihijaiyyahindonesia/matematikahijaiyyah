@@ -17,14 +17,16 @@ DOC = ROOT / "NUI" / "LAYERS.md"
 TEXT = DOC.read_text(encoding="utf-8")
 FIELDS = ("**Tujuan.**", "**Aset yang sudah ada", "**Yang belum ada.**",
           "**Cara verifikasi.**", "**Syarat selesai.**")
-# Measured 21 September 2026 against the fourth directive: Linux has no asset
-# in this repository at all. A layer leaving this set has been given
-# something, and that must be deliberate.
-EMPTY = {5}
+# Measured 21 September 2026 against the fourth directive: Linux had no asset
+# in this repository at all. It left this set on 22 September 2026, when its
+# skeleton -- collectors, a read-only guard, a VM configuration -- was built at
+# the owner's request with no host to run it on. A layer leaving this set has
+# been given something, and that must be deliberate.
+EMPTY: set[int] = set()
 #: Nothing as a NUI capability, with materials or hand-written tools nearby.
 #: Writing "none" would throw the materials away; listing them as assets
 #: would claim the capability.
-PARTIAL = {9, 10}
+PARTIAL = {5, 9, 10}
 
 
 def sections() -> dict[int, str]:
@@ -62,6 +64,7 @@ def test_the_layers_with_materials_but_no_capability_say_both() -> None:
         assert "**Tidak ada** sebagai" in sections()[number], number
     assert "Lapis 3 punya jejaknya" in sections()[9]
     assert "ditulis tangan" in sections()[10]
+    assert "disiapkan dan belum dijalankan" in sections()[5]
 
 
 def test_every_file_the_map_cites_exists() -> None:

@@ -1,0 +1,31 @@
+# NUI layer 5 host -- Ubuntu Server 24.04 LTS ARM64 under Lima 2.2.0.
+# A proposal, not started: nothing here has been installed or run.
+#
+# Every key below is one Lima's own default.yaml documents (lima-2.2.0,
+# share/lima/templates/default.yaml), and each is set against the owner's
+# decisions of 21-22 September 2026, not against Lima's defaults:
+#
+#   images   the one image whose SHA256 was verified and recorded in
+#            NUI/LAYERS.md -- a local file, with its digest, so Lima refuses
+#            any other bytes. No fallback URL: Lima's own ubuntu-24.04
+#            template pins release-20260705 and falls back to "latest" with
+#            no digest, and either would replace the baseline image.
+#   mounts   none. Lima's ubuntu-24.04 template inherits _default/mounts,
+#            which mounts the Mac home into the guest; the owner's host is
+#            isolated and does not touch the Mac.
+#   plain    true: Lima ignores mounts, port forwarding and containerd, and
+#            runs no guest agent (default.yaml's own description).
+#   upgradePackages false: the baseline is the image as verified.
+#
+# Not yet measured, and verified at the first `limactl start`: that Lima
+# accepts a local path for an image location. default.yaml shows local paths
+# for containerd archives and firmware, not for images.
+minimumLimaVersion: 2.2.0
+arch: "aarch64"
+images:
+- location: "~/cosmictera-layer5/downloads/ubuntu-24.04-server-cloudimg-arm64.img"
+  arch: "aarch64"
+  digest: "sha256:7b682958a67ff5de068e36de6af8b75fa645d296af5a70d6500527f6a33781db"
+mounts: []
+plain: true
+upgradePackages: false

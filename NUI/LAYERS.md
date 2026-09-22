@@ -176,7 +176,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **27 modul**; `tests/test_ai/` berisi **296 tes**
+`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **348 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -197,14 +197,16 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.223 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.249 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
 | `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
 | `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
-| `board_parity.py` | apa yang dikirim ke papan dan apa yang harus kembali, dengan epilog pembaca register | `test_nui_board_parity.py` (10) |
-| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (34) |
+| `board_parity.py` | apa yang dikirim ke papan, jawaban yang dibekukan sebelumnya, dan pembaca rekaman: PARITY/MISMATCH/UNKNOWN per program dan per opcode | `test_nui_board_parity.py` (20) |
+| `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
+| `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (42) |
+| `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl` — disiapkan, belum dijalankan | `test_nui_layer5.py` (34) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (47) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC — dalam enam domain, tiap butir bersumber | `test_nui_knowledge.py` |
@@ -261,9 +263,9 @@ dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
-*references*, dan sekarang keduanya ada: 93 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 773 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.420 node, 3.707 edge**.
+*references*, dan sekarang keduanya ada: 94 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 800 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.451 node, 3.775 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -312,7 +314,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.223 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.249 fungsi Python,
 120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -479,11 +481,27 @@ supaya tes lama dan lapis ini memakai satu korpus (R1).
 urutan pemilik. `src/hijaiyyah/nui/board_parity.py` menentukan apa yang
 dikirim dan apa yang harus kembali; `rtl/scripts/parity_board.py` mengirimnya
 lewat `loader.hasm` dan menyimpan tangkapan mentah, dan menolak jalan selama
-proses burn-in hidup. Dijaga `tests/test_ai/test_nui_board_parity.py` (10).
+proses burn-in hidup. Urutan hari Kamisnya di
+`cosmictera-build/PASCA-BURN-IN.md`. Dijaga
+`tests/test_ai/test_nui_board_parity.py` (20).
 
-- **83 dari 107 program akan dikirim.** Yang tidak: 9 menyentuh jendela SD —
-  kartunya milik burn-in —, 10 tidak berhenti, dan 5 pustaka berhenti sebagai
-  fault HC-05.
+- **Tiga eksperimen, bukan satu** (pemilik, 22 September 2026): paritas
+  korpus, PRINT di silikon, dan kata sesudah berhenti — masing-masing lari
+  dan rekamannya sendiri, supaya cacat yang satu tidak terbaca sebagai yang
+  lain. Tangga PRINT dan probe berhenti tinggal di
+  `src/hijaiyyah/nui/board_probes.py`.
+- **79 dari 103 program korpus akan dikirim.** Yang tidak: 9 menyentuh jendela
+  SD — tak ada mesin lain di sini yang punya kartu untuk pembanding — dan 15
+  tidak berhenti di bawah loader.
+- **Jawaban yang diharapkan dibekukan sebelum papan ditanya**, di
+  `NUI/board_expected.json`: teks interpreter di bawah loader, dan kedua mesin
+  pada payload yang sama di alamat 64. Runner menolak payload yang hash-nya
+  tidak sama dengan yang dibekukan.
+- **Pembacanya kini ada.** Docstring runner dulu menyatakan
+  `parity_model.py` membaca rekaman papan terbaru, dan tidak ada kode yang
+  melakukannya. Sekarang `classify()` memberi tiap program PARITY, MISMATCH,
+  atau UNKNOWN beserta sebabnya, dan `opcode_column()` menggulungnya jadi
+  kolom papan per opcode.
 - **Register dibaca lewat kabel.** Program yang tidak mencetak apa pun
   mendapat epilog: `HALT` yang benar-benar menghentikannya — diukur, bukan
   dibaca — diganti lompatan ke kode yang mencetak FLAGS, tiap GPR yang ia
@@ -493,12 +511,22 @@ proses burn-in hidup. Dijaga `tests/test_ai/test_nui_board_parity.py` (10).
 - **Acuannya interpreter di bawah loader**, dengan HCHECK berkala mati:
   HCHECK itu milik interpreter saja, dan di bawah loader jamnya bergeser
   hingga menghentikan dua program di titik yang tak pernah dihentikan papan.
-- **RTL memberi byte yang sama di kabel untuk 76 dari 80 payload**; empat
-  sisanya membaca `COUNTER`. Untuk `trap_resume`, RTL mencetak `86 86 27` —
-  persis catatan papan di `cosmictera-build/PAPAN.md`.
+- **RTL memberi byte yang sama di kabel untuk 75 dari 79 payload korpus**,
+  dibandingkan dengan interpreter pada konteks yang sama — alamat 64 di
+  belakang NOP; empat sisanya membaca `COUNTER`. Konteks loader mengubah yang
+  dicetak 47 program — FLAGS dan register yang ia tinggalkan — jadi teks
+  interpreter di bawah loader tidak dibandingkan dengan RTL. Untuk
+  `trap_resume`, RTL mencetak `86 86 27`, persis catatan papan di
+  `cosmictera-build/PAPAN.md`.
+- **Probe berhenti di RTL tersimulasi menjawab ya untuk keempat pertanyaan
+  pemilik**: R1 = 7 sesudah HALT dan sesudah RET gagal, `MEM[0x100]` = 5
+  sesudah HALT, dan `5` di kabel sesudah RET gagal dan sesudah HALT.
+  Interpreter berhenti di semuanya. Papan hanya bisa menjawab yang lewat
+  kabel.
 
-**Yang belum ada.** Kolom papan per opcode: lari di atas belum dijalankan,
-jadi kolom papan masih dari catatan lama, dan hanya lewat keluaran cetak. `loader.hasm`
+**Yang belum ada.** Kolom papan per opcode: pembacanya siap, larinya belum
+dijalankan, jadi kolom papan masih dari catatan lama, dan hanya lewat keluaran
+cetak. `loader.hasm`
 berpayload tidak dijalankan di RTL: `tb_parity.v` tidak punya masukan UART
 maupun port tulis memori instruksi. Tujuh program tidak berhenti dalam
 anggaran.
@@ -529,10 +557,24 @@ dari pemilik:
 | service | `systemctl`, `journalctl` |
 | kontainer | `docker`, `podman` |
 
-**Aset yang sudah ada.** **Tidak ada.** `AGENTS.md` sudah mencatatnya: tidak
-ada satu pun sisi host di repositori ini — tidak ada driver, layanan,
-pustaka, kontainer, atau aplikasi. Yang ada hanya perkakas serial di
-`rtl/scripts/`, dan mesin pengembangannya macOS, bukan Ubuntu.
+**Aset yang sudah ada.** **Tidak ada** sebagai integrasi: belum ada host, dan
+belum satu perintah pun dijalankan di Ubuntu. `AGENTS.md` sudah mencatatnya:
+tidak ada satu pun sisi host di repositori ini, dan mesin pengembangannya
+macOS. Yang ada sejak 22 September 2026, atas permintaan pemilik sementara
+papan memikul burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
+
+- `NUI/spec/layer5_collectors.json` — sembilan kolektor observasi: identitas
+  host, proses, mount, isi `/`, systemd, jurnal, antarmuka jaringan dan
+  pencacahnya, kontainer. Dua dari katalog pemilik, tujuh usulan.
+- `src/hijaiyyah/nui/layer5.py` — pagar hanya-baca yang menolak perintah di
+  luar daftar izin, argumen yang bisa dibaca shell, opsi yang menulis atau
+  mengirim, dan perintah yang tidak berhenti sendiri; dan satu jalan keluar,
+  `limactl shell <instance> -- <argv>`, yang menolak selama `limactl` belum
+  terpasang. Dijaga `tests/test_ai/test_nui_layer5.py` (34).
+- `NUI/spec/layer5_lima.yaml` — VM yang mengunci image terverifikasi lewat
+  digest, tanpa mount, mode plain. Template Ubuntu 24.04 bawaan Lima 2.2.0
+  sendiri **tidak bisa dipakai**: ia mengunci `release-20260705`, jatuh ke URL
+  "latest" tanpa digest, dan memasang home Mac ke dalam tamu.
 
 **Hostnya diputuskan pemilik, 21 September 2026: VM Ubuntu Server 24.04 LTS
 ARM64** — terisolasi, tidak menyentuh Mac host, dengan systemd sungguhan,

@@ -262,3 +262,21 @@ def test_the_owners_state_definition_is_held_as_a_proposal() -> None:
     assert definition["status"] == "usulan pemilik, belum dikunci"
     assert {s["name"] for s in spec["states"]} == {"latest", "requested", "compiled"}
     assert usr.validate(definition["example"]) == ["unknown state: present"]
+
+
+#: The owner's candidates for READ FILE /etc/hosts, 22 September 2026, and
+#: what the vocabulary says today. STATE is not locked: this matrix is the test
+#: that must change when it is, not a decision.
+STATE_MATRIX = [
+    ("REQUESTED", False), ("PRESENT", False), ("COMPILED", False), ("LATEST", False),
+    ("requested", True), ("present", False), ("compiled", True), ("latest", True),
+]
+
+
+@pytest.mark.parametrize("state, accepted", STATE_MATRIX)
+def test_state_candidates_against_todays_vocabulary(state: str, accepted: bool) -> None:
+    """Capitals are refused because STATE values are lowercase by the case
+    rule; `present`, the owner's proposed example, waits for the lock."""
+    usr_ = {"ACTION": "READ", "OBJECT": "FILE", "TARGET": "/etc/hosts",
+            "CONTEXT": "Ubuntu", "STATE": state}
+    assert (usr.validate(usr_) == []) is accepted, usr.validate(usr_)

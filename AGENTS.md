@@ -1025,6 +1025,40 @@ repositori → pemahaman program → pemahaman eksekusi → paritas perangkat lu
 ↔ keras → kueri pengetahuan → registry Hijaiyyah → sintaks HC multibahasa →
 fondasi USR.
 
+### Perintah pemilik, 22 September 2026 — yang disiapkan tanpa papan sampai burn-in selesai
+
+Sembilan prioritas, dan tiga yang pemilik sebut *"100% tidak mengganggu
+burn-in"*: siapkan paritas papan, siapkan eksperimen PRINT dan HALT/RET, siapkan
+kerangka Lapis 5 hanya-baca. **Yang tidak boleh disentuh sampai burn-in
+selesai**: `rtl/scripts/burn_in.py`, checksum loader, RTL HCPU, bitstream, firmware.
+
+- **Urutan hari Kamis, P0–P7**, beserta empat keputusan yang harus ada
+  sebelum hari itu, di `cosmictera-build/PASCA-BURN-IN.md` — tidak disalin ke
+  sini (R1).
+- **PRINT dan kata sesudah berhenti adalah eksperimen tersendiri**, tidak
+  dicampur ke paritas umum: tangga pemilik 2²², 2²³, 2²⁴, 2²⁵, 2²⁶, 2²⁷, 2³¹,
+  dan empat probe pemilik untuk HALT/RET. Jawaban yang diharapkan
+  **dibekukan sebelum papan ditanya** di `NUI/board_expected.json`.
+- **Temuan audit, dibetulkan sebagai cacat implementasi (K9):** docstring
+  `rtl/scripts/parity_board.py` menyatakan `src/hijaiyyah/nui/parity_model.py` membaca rekaman
+  papan, dan tidak ada kode yang melakukannya. Pembacanya kini ada:
+  PARITY/MISMATCH/UNKNOWN per program dan kolom papan per opcode.
+- **Cacat saya sendiri, tertangkap sebelum di-commit**: perbandingan pertama
+  mencatat 49 program "RTL ≠ interpreter" karena interpreter di bawah loader
+  dibandingkan dengan RTL yang mulai dari nol; dalam konteks yang sama
+  selisihnya empat, yang membaca `COUNTER` — angka yang sama dengan tes lama.
+- **RTL tersimulasi menjawab ya untuk keempat pertanyaan HALT/RET pemilik.**
+  Papan hanya bisa menjawab yang lewat kabel.
+- **Lapis 5 berpindah dari "tidak ada" ke "ada bahannya"**, labelnya tetap
+  AT: kolektor, pagar hanya-baca, dan konfigurasi VM, tanpa host dan tanpa
+  satu perintah pun dijalankan. Template Ubuntu 24.04 bawaan Lima 2.2.0 tidak
+  bisa dipakai — image lain, URL tanpa digest, dan home Mac terpasang.
+- **Tabel keputusan checksum loader** di `cosmictera-build/attack-lab/README.md`;
+  implementasinya tidak berubah. **Matriks uji STATE** di
+  `tests/test_ai/test_nui_usr.py`; kosakatanya tidak berubah.
+- **Belum dikerjakan**: kontrak kueri NUI (prioritas 7) — tujuh pertanyaan
+  pemilik belum dipetakan ke jenis kueri.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
