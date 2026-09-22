@@ -36,7 +36,7 @@ mana mereka TIDAK BOLEH beda (register, memori, guard, trap — semua
 diperiksa paritas).
 
 **Cara memeriksa:** `python3 -m pytest tests/test_integrity/` (paritas
-RTL/interpreter), `make -C rtl/tb all` (384 asersi, 35 testbench, Icarus
+RTL/interpreter), `make -C rtl/tb all` (408 asersi, 39 testbench, Icarus
 Verilog, siklus demi siklus).
 
 **Tampilan — dari timing generator ke layar sungguhan.**
@@ -153,6 +153,6 @@ python3 NUI/pipeline.py --quick     # NUI, ujung ke ujung, ~20 detik
 ```
 
 Angka hari ini (bisa berubah — jalankan ulang, jangan dikutip dari sini):
-5.393 tes Python lulus, 0 dilewati; 384 asersi RTL di 35 testbench
+5.393 tes Python lulus, 0 dilewati; 408 asersi RTL di 39 testbench
 `make all`, 0 gagal — dari 36 berkas bench yang seluruhnya dijalankan
 sesuatu, 16 di antaranya lewat pytest dan bukan lewat `make`.
