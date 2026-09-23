@@ -37,6 +37,12 @@ when limactl is not installed -- which on 22 September 2026 it is not. An
 observation keeps argv, exit code, stdout, stderr and a hash of stdout;
 nothing is parsed, because no Ubuntu output exists yet to say what the
 parsing must be.
+
+Where an observation is kept once one is made is decided (K-11, 23 September
+2026): ~/cosmictera-layer5/observations/<run_id>/, on the host and outside
+this repository, which holds code, specifications, tests and sealed facts --
+not live observations. observe() does not write it: that is implemented when
+the test instance is first measured, after the burn-in.
 """
 from __future__ import annotations
 

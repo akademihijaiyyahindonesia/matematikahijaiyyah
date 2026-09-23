@@ -59,7 +59,7 @@
    "answers_in": [],
    "answers_in_when_measured": ["HOST"],
    "status": "menunggu Lapis 5",
-   "reads": "belum ada host; jawabannya `unknown`, beserta kolektor yang akan menjawabnya. Sesudah kolektor mengukur, jawabannya di domain HOST (pemilik, 22 September 2026, keputusan K-6); sebelum itu HOST kosong, dan tempat rekaman kolektor disimpan belum ditetapkan (NUI/spec/layer5_collectors.json, `open`)",
+   "reads": "belum ada host; jawabannya `unknown`, beserta kolektor yang akan menjawabnya. Sesudah kolektor mengukur, jawabannya di domain HOST (pemilik, 22 September 2026, keputusan K-6); sebelum itu HOST kosong, dan rekaman kolektor disimpan di luar repositori, di `~/cosmictera-layer5/observations/<run_id>/` (pemilik, 23 September 2026, keputusan K-11)",
    "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
   }
  ],

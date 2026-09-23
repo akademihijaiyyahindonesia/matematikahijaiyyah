@@ -117,29 +117,37 @@ sampai loader diubah.
 "Payload" dan "program body" satu baris di tabel pemilik K-8, sama seperti di
 container ini — tujuh kata header, tabel relokasi, lalu kata program.
 
-Bentuk kanonik pemilik:
+**Algoritmanya dijawab pemilik 23 September 2026, keputusan K-10: jumlah
+32-bit, bukan CRC-32.** `CRC(...)` pada uraian K-8 adalah istilah yang keliru
+dan diperjelas jadi:
 
 ```
-CRC = CRC( rekaman program sektor 16
-         + header dengan medan CRC = 0
-         + tabel relokasi
-         + kata program )
+CHECKSUM32 = Σ canonical_container_words mod 2^32
+
+           canonical_container_words =
+               rekaman program sektor 16
+             + header dengan medan CHECKSUM = 0
+             + tabel relokasi
+             + badan program
+
+           data di luar container tidak ikut
 ```
 
-**Yang tidak dikatakan K-8, dan ditanyakan, bukan diputuskan: algoritmanya.**
-Rumus pemilik ditulis `CRC(...)`, sedangkan keputusan 18 September 2026
-menetapkan jumlah 32-bit, karena tabel CRC-32 256 entri tidak muat di arena
-heap 127 kata, dan naik ke CRC lewat `VERSION`. Kalau yang dimaksud jumlah
-32-bit atas cakupan baru, urutan keempat bagian tidak mengubah hasilnya;
-kalau CRC-32, urutan itu bagian dari definisinya.
+Jadi keputusan 18 September tetap berlaku: tidak ada tabel CRC-32 256 entri,
+dan arena heap 127 kata tidak perlu diperbesar. Karena jumlah tidak bergantung
+urutan, yang dijaga bukan urutannya melainkan **satu cara menghitung**:
+kata-kata yang dijumlah adalah representasi word container **sebagaimana ia
+tersimpan di kartu**, format on-disk yang sudah ada, supaya tidak ada dua
+perhitungan checksum untuk citra yang sama.
 
 **Tidak diimplementasikan sebelum burn-in 72 jam selesai** (pemilik). Sesudah
-Kamis, di P5 `cosmictera-build/PASCA-BURN-IN.md`: perubahan di
-`rtl/programs/hos_prog_load.hasm` dan `rtl/scripts/build_container.py`, satu
-kasus sabotase di lab ini untuk tiap bagian yang baru dilindungi — *"yang
-membuktikan setiap bagian tersebut memang terlindungi"* — dan `VERSION` naik,
-jalan yang sudah pemilik tetapkan 18 September supaya loader lama tidak pecah
-diam-diam.
+Kamis, di P5 `cosmictera-build/PASCA-BURN-IN.md`: nama `CRC` diganti
+`CHECKSUM32` di `rtl/programs/hos_prog_load.hasm` dan
+`rtl/scripts/build_container.py`, cakupannya diperluas, dan empat kasus
+sabotase ditambahkan di lab ini — header, tabel relokasi, badan program, dan
+rekaman tabel program diubah satu per satu, *"yang membuktikan setiap bagian
+tersebut memang terlindungi"*. `VERSION` naik, jalan yang sudah pemilik
+tetapkan 18 September supaya loader lama tidak pecah diam-diam.
 
 ## Kelas C — Ka'bah, di luar bit tunggal
 

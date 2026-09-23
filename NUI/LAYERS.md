@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **406 tes**
+`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **407 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -209,7 +209,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `board_parity.py` | apa yang dikirim ke papan, jawaban yang dibekukan sebelumnya, dan pembaca rekaman: PARITY/MISMATCH/UNKNOWN per program dan per opcode | `test_nui_board_parity.py` (20) |
 | `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
-| `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl` — disiapkan, belum dijalankan | `test_nui_layer5.py` (52) |
+| `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan evidence store di luar repositori — disiapkan, belum dijalankan | `test_nui_layer5.py` (53) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (86) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST kosong sampai kolektor mengukur, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -578,8 +578,12 @@ papan memikul burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
   `LIMA_HOME=~/cosmictera-layer5/lima-home`, instance `cosmictera-layer5`
   (pemilik, 22 September 2026, K-3). Instance uji sekali pakainya
   `cosmictera-layer5-uji` (K-9): jalurnya dibuktikan di sana lebih dulu, dan
-  `cosmictera-layer5` baru jadi instance utama sesudahnya. Dijaga
-  `tests/test_ai/test_nui_layer5.py` (52).
+  `cosmictera-layer5` baru jadi instance utama sesudahnya. Rekaman observasinya
+  disimpan **di host, di luar repositori** — satu direktori per sesi di
+  `~/cosmictera-layer5/observations/<run_id>/`, dengan `manifest.json` dan
+  keluaran mentah per kolektor (pemilik, 23 September 2026, K-11); `observe()`
+  hari ini mengembalikan rekaman tanpa menulisnya. Dijaga
+  `tests/test_ai/test_nui_layer5.py` (53).
 - `NUI/spec/layer5_lima.yaml` — VM yang mengunci image terverifikasi lewat
   digest, tanpa mount, mode plain. Template Ubuntu 24.04 bawaan Lima 2.2.0
   sendiri **tidak bisa dipakai**: ia mengunci `release-20260705`, jatuh ke URL

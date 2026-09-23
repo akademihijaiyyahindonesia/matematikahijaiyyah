@@ -189,6 +189,28 @@ def test_every_catalog_form_passes_the_guard() -> None:
                 raise AssertionError(f"{e['action']} {e['object']} {key}: {why}") from None
 
 
+def test_where_an_observation_is_kept_is_the_owners_k11() -> None:
+    """K-11: one directory per session under ~/cosmictera-layer5/observations/,
+    on the host and outside the repository -- the repo holds code, specs, tests
+    and sealed facts, not live observations. Every manifest field the owner
+    named comes from a field `observe()` already returns, except run_id, which
+    is the session itself."""
+    spec = layer5.load()["observations"]
+    assert spec["per_run"] == "~/cosmictera-layer5/observations/<run_id>/"
+    where = Path(spec["dir"]).expanduser().resolve()
+    assert not where.is_relative_to(ROOT), "an observation would land in the repository"
+    assert [f["field"] for f in spec["manifest"]] == [
+        "run_id", "timestamp", "collector", "vm_name", "command_identity", "exit_code",
+        "duration"]
+    record = {"collector", "argv", "allowed_by", "transport", "started_utc", "seconds",
+              "exit_code", "stdout", "stderr", "stdout_sha256"}
+    new = [f["field"] for f in spec["manifest"] if f["from"] == "baru"]
+    assert new == ["run_id"], new
+    for field in spec["manifest"]:
+        if field["from"] != "baru":
+            assert field["from"].split(".")[0] in record, field
+
+
 def test_the_owners_forms_are_exact() -> None:
     """K-4: two journalctl forms, three ip forms, nothing else."""
     forms = layer5.forms()

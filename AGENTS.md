@@ -1124,9 +1124,8 @@ tidak disalin ke sini (R1).
   yang di luar itu tidak. Tidak diimplementasikan sebelum burn-in selesai, dan
   sesudahnya harus datang bersama kasus sabotase untuk tiap bagian yang baru
   dilindungi. Tabelnya di `cosmictera-build/attack-lab/README.md`. Satu hal
-  yang K-8 tidak sebut dan **ditanyakan, bukan diputuskan**: algoritmanya —
-  rumus pemilik ditulis `CRC(...)`, sedangkan keputusan 18 September menetapkan
-  jumlah 32-bit karena tabel CRC-32 tidak muat di arena heap 127 kata.
+  yang K-8 tidak sebut, dan pemilik jawab sehari kemudian di K-10:
+  algoritmanya.
 - **K-9 — instance uji Lapis 5 bernama `cosmictera-layer5-uji`**, sekali pakai.
   Jalurnya dibuktikan di sana lebih dulu — lokasi image lokal, Lima create,
   boot Ubuntu, tanpa mount home Mac, kolektor hanya-baca, pagar perintah,
@@ -1140,6 +1139,34 @@ dikerjakan sebagai commit tersendiri: `cosmictera/COMPUTING.md` berhenti
 mengutip 384 asersi di 35 bench, angka terukurnya 408 di 39. Angka "36 berkas
 bench, 16 lewat pytest" di kalimat yang sama **tidak** diganti sampai diukur
 ulang — perintah pemilik.
+
+### Keputusan pemilik, 23 September 2026 — K-10 dan K-11
+
+Dua pertanyaan yang dilaporkan terbuka, dijawab pemilik sebagai **keputusan
+arsitektur, tanpa implementasi sampai burn-in selesai**.
+
+- **K-10 — checksum loader adalah jumlah 32-bit, bukan CRC-32.** `CRC(...)` di
+  uraian K-8 adalah istilah yang keliru, dan diperjelas jadi `CHECKSUM32 =
+  Σ canonical_container_words mod 2^32` atas cakupan K-8 yang sama. Keputusan
+  18 September karena itu tetap berlaku: tidak ada tabel CRC-32 256 entri, dan
+  arena heap 127 kata tidak diperbesar. Yang ditetapkan bersamanya: kata yang
+  dijumlah adalah representasi word container **sebagaimana tersimpan di
+  kartu**, supaya tidak ada dua cara menghitung checksum untuk citra yang sama.
+  Sesudah Kamis, penggantian nama `CRC` → `CHECKSUM32` datang bersama empat
+  kasus sabotase — header, tabel relokasi, badan program, rekaman tabel program.
+- **K-11 — rekaman observasi Lapis 5 tinggal di host, di luar repositori**:
+  `~/cosmictera-layer5/observations/<run_id>/`, satu direktori per sesi, dengan
+  sebuah manifest dan keluaran mentah per kolektor. *"Repository tidak menjadi
+  tempat penyimpanan observasi runtime"* — repo memuat kode, spesifikasi, tes,
+  dan fakta tersegel. Manifestnya mencatat tujuh medan: run_id, cap waktu,
+  kolektor, nama VM, identitas perintah, exit code, dan durasi; enam di
+  antaranya sudah ada di rekaman `observe()`, dan hanya run_id yang baru. HOST
+  (K-6) baru bisa menjawab sesudah ada rekaman pengukuran aktual; sebelum itu
+  `host services` tetap `unknown`.
+
+**Sampai Kamis 24 September 2026 12:34 WIB tetap burn-in saja.** K-10 masuk di
+tahap checksum (P5), K-11 dipakai ketika `cosmictera-layer5-uji` mulai diukur
+(P7).
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

@@ -27,6 +27,8 @@ pemilik menegaskannya dalam dua kata: sampai 24 September 2026 12:34 WIB,
 | K-7 | **Byte mentah kabel jadi bukti primer burn-in**; pengurai bekerja offline atasnya. Lari 72 jam sekarang tidak diubah — lognya rekaman historis, dan dua error semunya artefak pengurai | P0, pengurai |
 | K-8 | Checksum loader menutupi **seluruh container**: rekaman sektor 16, header dengan medan checksum dinolkan, tabel relokasi, kata program. Tabelnya di `cosmictera-build/attack-lab/README.md`. Tidak diimplementasikan sebelum burn-in selesai | P5 |
 | K-9 | Instance uji Lapis 5 **`cosmictera-layer5-uji`**, sekali pakai; `cosmictera-layer5` jadi instance utama sesudah jalurnya terbukti di sana | P7 |
+| K-10 | Algoritma checksum: **jumlah 32-bit mod 2³²**, bukan CRC-32. `CHECKSUM32 = Σ canonical_container_words mod 2^32`, dihitung atas representasi word container sebagaimana tersimpan di kartu — satu cara menghitung, tanpa tabel CRC-32 dan tanpa memperbesar arena heap (23 September 2026) | P5 |
+| K-11 | Rekaman observasi Lapis 5 disimpan **di host, di luar repositori**: `~/cosmictera-layer5/observations/<run_id>/`, dengan `manifest.json` dan keluaran mentah per kolektor (23 September 2026) | P7 |
 
 Yang **tidak** diputuskan di hari itu, dan tidak masuk urutan ini: perbaikan
 `PRINT` di silikon dan perbaikan instruksi sesudah berhenti. Keduanya RTL, K9
@@ -130,12 +132,13 @@ menyebut itu, bukan mengisinya.
 
 ## P5 — checksum (K-8) dan klasifikasi selisih final
 
-**Checksum.** Cakupan K-8 diterapkan di `rtl/programs/hos_prog_load.hasm` dan
-`rtl/scripts/build_container.py`, bersama satu kasus sabotase di lab serangan
-untuk tiap bagian yang baru dilindungi — header, medan checksum yang dinolkan,
-tabel relokasi, rekaman sektor 16 — dan `VERSION` naik. Tabel keputusannya dan
-satu pertanyaan yang harus dijawab pemilik lebih dulu, **algoritmanya**, ada di
-`cosmictera-build/attack-lab/README.md`. Terukur 22 September 2026: keempat
+**Checksum.** Cakupan K-8 dan algoritma K-10 diterapkan di
+`rtl/programs/hos_prog_load.hasm` dan `rtl/scripts/build_container.py`:
+`CHECKSUM32 = Σ canonical_container_words mod 2^32` atas rekaman sektor 16,
+header dengan medan checksum dinolkan, tabel relokasi, dan badan program —
+nama `CRC` ikut diganti `CHECKSUM32`. Empat kasus sabotase menyertainya, satu
+untuk tiap bagian yang baru dilindungi, dan `VERSION` naik. Tabel
+keputusannya di `cosmictera-build/attack-lab/README.md`. Terukur 22 September 2026: keempat
 program yang membawa loader kartu — `hos_prog_load`, `shell`, `test_prog_load`,
 `test_prog_run` — tidak termasuk yang dikirim P1, jadi mengubah loader di sini
 tidak menggeser bukti papan P1–P4. Model Lapis 3 dan Lapis 4 yang memuat
@@ -206,9 +209,12 @@ Yang harus terbukti di instance uji, berurutan:
    "cosmictera-layer5-uji")`;
 3. pagar perintah: perintah yang ditolak tidak pernah sampai ke `limactl`;
 4. kontrak kueri: `host services` dijawab dari rekaman kolektor di domain
-   HOST (K-6). **Tempat rekaman kolektor disimpan belum ditetapkan** —
-   `observe()` hari ini mengembalikan rekaman tanpa menulisnya — jadi langkah
-   ini menunggu keputusan itu.
+   HOST (K-6). Rekamannya ditulis lebih dulu ke evidence store K-11,
+   `~/cosmictera-layer5/observations/<run_id>/` — `manifest.json` (run_id, cap
+   waktu, kolektor, nama VM, identitas perintah, exit code, durasi), satu
+   berkas per wilayah, dan keluaran mentah di `raw/`. Store itu **di luar
+   repositori**; `observe()` hari ini mengembalikan rekaman tanpa menulisnya,
+   jadi penulisannya bagian dari langkah ini.
 
 Kalau salah satu gagal, VM permanen tidak dibuat dan temuannya dilaporkan.
 Sesudah keempatnya terbukti, instance uji dibuang:
@@ -260,5 +266,5 @@ pada JSONL.
 | HALT/RET di silikon | `cosmictera-build/parity-board/*-stop.*` |
 | ekspektasi yang dibekukan sebelum papan ditanya | `NUI/board_expected.json` |
 | selisih yang diketahui | `cosmictera-build/OFF.md`, fakta `nui.tail_one_is_not_invertibility`, K-1 |
-| keputusan yang terbuka | `NUI/SEMANTIK.md` "Yang belum ditetapkan" (migrasi kosakata STATE), algoritma checksum K-8 di `cosmictera-build/attack-lab/README.md`, `open` di `NUI/spec/layer5_collectors.json` |
+| keputusan yang terbuka | `NUI/SEMANTIK.md` "Yang belum ditetapkan" (migrasi kosakata STATE) dan `open` di `NUI/spec/layer5_collectors.json`. Algoritma checksum tidak lagi terbuka: K-10 |
 | baseline Lapis 5 | SHA256 image, versi dan sha256 Lima dari Homebrew, konfigurasi VM, observasi pertama |

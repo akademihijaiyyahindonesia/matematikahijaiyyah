@@ -13,6 +13,54 @@
   "lima_source": "pemilik, 22 September 2026, keputusan K-3 -- instalasi Lima tetap instalasi host biasa; seluruh state instance CosmicTera di LIMA_HOME terpisah",
   "test_instance_source": "pemilik, 22 September 2026, keputusan K-9 -- instance uji sekali pakai. Di sana lebih dulu dibuktikan: lokasi image lokal, Lima create, Ubuntu boot, tanpa mount home Mac, kolektor hanya-baca, pagar perintah, kontrak kueri; baru sesudahnya `cosmictera-layer5` jadi instance utama"
  },
+ "observations": {
+  "dir": "~/cosmictera-layer5/observations/",
+  "per_run": "~/cosmictera-layer5/observations/<run_id>/",
+  "rule": "Rekaman observasi disimpan di host, di luar repositori. Repositori memuat kode, spesifikasi, tes, dan fakta tersegel; hasil pengamatan live tinggal di evidence store terpisah",
+  "layout": [
+   "manifest.json",
+   "processes.json",
+   "services.json",
+   "filesystem.json",
+   "network.json",
+   "journal.jsonl",
+   "raw/"
+  ],
+  "manifest": [
+   {
+    "field": "run_id",
+    "from": "baru",
+    "note": "satu direktori per sesi observasi; tidak ada di rekaman `observe()` hari ini"
+   },
+   {
+    "field": "timestamp",
+    "from": "started_utc"
+   },
+   {
+    "field": "collector",
+    "from": "collector"
+   },
+   {
+    "field": "vm_name",
+    "from": "transport.instance"
+   },
+   {
+    "field": "command_identity",
+    "from": "argv"
+   },
+   {
+    "field": "exit_code",
+    "from": "exit_code"
+   },
+   {
+    "field": "duration",
+    "from": "seconds"
+   }
+  ],
+  "status": "ditetapkan",
+  "source": "pemilik, 23 September 2026, keputusan K-11 -- Ubuntu tamu -> kolektor hanya-baca -> hasil -> evidence store di host -> lapis pengetahuan HOST",
+  "implementation": "menunggu: `observe()` hari ini mengembalikan rekaman tanpa menulisnya ke mana pun. K-11 dipakai ketika instance `cosmictera-layer5-uji` mulai diukur (P7), sesudah burn-in selesai"
+ },
  "collectors": [
   {
    "name": "host_identity",
@@ -193,7 +241,6 @@
   }
  ],
  "open": [
-  "Tempat rekaman kolektor disimpan belum ditetapkan: `observe()` mengembalikan rekaman dan tidak menulisnya ke mana pun. Domain HOST (K-6) tidak membaca apa pun sampai tempat itu ada dan sebuah kolektor mengisinya.",
   "Apakah `limactl shell` mengutip argumen belum diukur -- host belum dipasang; pagar menolak karakter shell supaya itu tidak penting."
  ]
 }
