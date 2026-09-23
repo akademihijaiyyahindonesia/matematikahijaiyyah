@@ -1093,6 +1093,54 @@ ke jenis kueri dan dijalankan tesnya sendiri — di
 `NUI/spec/query_contract.json`; lima dijawab, satu sebagian, dan satu (layanan
 Ubuntu) menunggu Lapis 5.
 
+### Keputusan pemilik, 22 September 2026 — K-5 sampai K-9
+
+Lima keputusan lagi pada hari yang sama, dan pemilik menegaskan tak satu pun
+menyentuh burn-in yang sedang berjalan. Rinciannya di tempat masing-masing,
+tidak disalin ke sini (R1).
+
+- **K-5 — arti STATE dikunci**: *keadaan aktual OBJECT/TARGET pada saat
+  representasi semantik dibuat*, bukan tahap pipeline, status compiler, atau
+  riwayat proses. `requested` dan `compiled` bukan STATE semantik, melainkan
+  metadata lifecycle/eksekusi. Ini menutup butir 4 pesan ketiga di atas. **Yang
+  dikunci maknanya, bukan kosakatanya**: pemilik melarang `present` ditambahkan
+  ke daftar nilai pada commit yang sama tanpa migrasi kosakata, jadi
+  `NUI/spec/usr.json` memegang arti terkunci di samping kosakata lama yang
+  menunggu migrasi — selisih yang diperintahkan, bukan dirapikan.
+- **K-6 — domain ketujuh, HOST**: keadaan, proses, service, jaringan,
+  filesystem, dan runtime host/OS yang sedang diamati, sedangkan OFF tetap
+  fakta perangkat lunak yang tidak bergantung pada host aktif. *"Jangan
+  memasukkan fakta HOST ke NUI sebelum collector benar-benar mengukurnya"* —
+  karena itu HOST tidak membaca tempat mana pun di
+  `src/hijaiyyah/nui/knowledge.py`, dan tes yang menempatkan tiap butir
+  menurut sumbernya menolak apa pun yang diletakkan di sana.
+- **K-7 — byte mentah kabel jadi bukti primer burn-in**: capture mentah →
+  berkas biner → pengurai offline → log terstruktur → analisis, dengan tujuh
+  medan metadata per capture. Lari 72 jam sekarang tidak diubah: lognya rekaman
+  historis, dan dua baris `error`-nya artefak pengurai. Pengurai diperbaiki
+  sesudah lari itu selesai dan diuji terhadap capture mentah lari berikutnya.
+- **K-8 — checksum loader menutupi seluruh container**: rekaman program sektor
+  16, header dengan medan checksum dinolkan, tabel relokasi, dan kata program;
+  yang di luar itu tidak. Tidak diimplementasikan sebelum burn-in selesai, dan
+  sesudahnya harus datang bersama kasus sabotase untuk tiap bagian yang baru
+  dilindungi. Tabelnya di `cosmictera-build/attack-lab/README.md`. Satu hal
+  yang K-8 tidak sebut dan **ditanyakan, bukan diputuskan**: algoritmanya —
+  rumus pemilik ditulis `CRC(...)`, sedangkan keputusan 18 September menetapkan
+  jumlah 32-bit karena tabel CRC-32 tidak muat di arena heap 127 kata.
+- **K-9 — instance uji Lapis 5 bernama `cosmictera-layer5-uji`**, sekali pakai.
+  Jalurnya dibuktikan di sana lebih dulu — lokasi image lokal, Lima create,
+  boot Ubuntu, tanpa mount home Mac, kolektor hanya-baca, pagar perintah,
+  kontrak kueri — dan `cosmictera-layer5` baru jadi instance utama sesudahnya.
+
+**Urutannya ditegaskan: sampai 24 September 2026 12:34 WIB, burn-in saja.**
+Sesudah itu P0–P7 di `cosmictera-build/PASCA-BURN-IN.md`, dengan P5 kini
+checksum K-8 ditambah klasifikasi selisih, dan pengurai K-7 sebagai butir
+sendiri di luar P0–P7. Satu koreksi dokumentasi diizinkan lebih awal dan
+dikerjakan sebagai commit tersendiri: `cosmictera/COMPUTING.md` berhenti
+mengutip 384 asersi di 35 bench, angka terukurnya 408 di 39. Angka "36 berkas
+bench, 16 lewat pytest" di kalimat yang sama **tidak** diganti sampai diukur
+ulang — perintah pemilik.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

@@ -57,13 +57,13 @@
    "question": "Ubuntu ini menjalankan service apa?",
    "query": "host services",
    "answers_in": [],
+   "answers_in_when_measured": ["HOST"],
    "status": "menunggu Lapis 5",
-   "reads": "belum ada host; jawabannya `unknown`, beserta kolektor yang akan menjawabnya",
+   "reads": "belum ada host; jawabannya `unknown`, beserta kolektor yang akan menjawabnya. Sesudah kolektor mengukur, jawabannya di domain HOST (pemilik, 22 September 2026, keputusan K-6); sebelum itu HOST kosong, dan tempat rekaman kolektor disimpan belum ditetapkan (NUI/spec/layer5_collectors.json, `open`)",
    "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
   }
  ],
  "open": [
-  "Jawaban tentang host Ubuntu tidak punya domain di antara enam domain pemilik (HC, HISA, RTL, OFF, PAPAN, NUI). Sampai Lapis 5 berjalan ia hanya `unknown`; sesudahnya, domain untuk observasi host adalah keputusan pemilik.",
   "Istilah dari teknologi/ISTILAH.md dijawab di domain NUI, dibaca sebagai pengetahuan NUI tentang namanya sendiri -- usulan."
  ]
 }

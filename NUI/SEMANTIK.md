@@ -55,11 +55,14 @@ Huruf: Kunci medan huruf besar: ACTION, OBJECT, TARGET, CONTEXT, STATE. Nilai AC
 |---|---|---|
 | `Ubuntu` | ditetapkan | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- menggantikan `ubuntu_host` dari pesan sebelumnya pada 22 September: satu nama untuk satu hal, dan yang berlaku yang terakhir |
 | `HC` | ditetapkan | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE |
-| `latest` | contoh pemilik; artinya belum ditetapkan | pemilik, 22 September 2026, pesan sebelumnya -- contoh READ FILE /var/log/syslog |
-| `requested` | contoh pemilik; artinya belum ditetapkan | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh READ FILE /etc/hosts |
-| `compiled` | contoh pemilik; artinya belum ditetapkan | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE |
 
-**Arti STATE, usulan pemilik, belum dikunci.** STATE adalah keadaan aktual target/objek pada saat aksi dinyatakan, bukan tahap pipeline. `requested` dan `compiled` lebih mirip status proses/perintah; `compiled` lebih tepat metadata eksekusi/compiler, bukan STATE semantik. Contoh: `{"ACTION": "READ", "OBJECT": "FILE", "TARGET": "/etc/hosts", "CONTEXT": "Ubuntu", "STATE": "present"}` (pemilik, 22 September 2026, pesan ketiga -- 'Itu usulan definisi, bukan perubahan yang boleh dilakukan agent tanpa Anda menguncinya.' Kosakata STATE dan contoh di atas karena itu tidak diubah; `present` belum termasuk nilai STATE.).
+| name | status | k5 | source |
+|---|---|---|---|
+| `latest` | contoh pemilik; menunggu migrasi kosakata | tidak digolongkan K-5 -- apakah ia keadaan aktual target belum diputuskan | pemilik, 22 September 2026, pesan sebelumnya -- contoh READ FILE /var/log/syslog |
+| `requested` | contoh pemilik; menunggu migrasi kosakata | bukan STATE semantik -- metadata lifecycle/eksekusi | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh READ FILE /etc/hosts |
+| `compiled` | contoh pemilik; menunggu migrasi kosakata | bukan STATE semantik -- metadata lifecycle/eksekusi | pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE |
+
+**Arti STATE, ditetapkan.** STATE adalah keadaan aktual OBJECT/TARGET pada saat representasi semantik dibuat, bukan tahap pipeline, status compiler, atau riwayat proses. `requested` dan `compiled` bukan STATE semantik; keduanya metadata lifecycle/eksekusi. Contoh: `{"ACTION": "READ", "OBJECT": "FILE", "TARGET": "/etc/hosts", "CONTEXT": "Ubuntu", "STATE": "present"}` (pemilik, 22 September 2026, keputusan K-5 -- yang dikunci maknanya, bukan kosakatanya: `present` tidak ditambahkan ke daftar nilai pada commit yang sama tanpa migrasi kosakata. Menggantikan usulan pesan ketiga hari yang sama.).
 
 ### Contoh pemilik
 
@@ -290,7 +293,7 @@ Huruf -> operator -> HC -> HISA, dibangun `src/hijaiyyah/nui/registry.py` ke `NU
 
 ## Yang belum ditetapkan
 
-- USR: Arti STATE belum dikunci. Usulan pemilik ada di `state_definition`: keadaan aktual target/objek saat aksi dinyatakan, bukan tahap pipeline -- `present` sebagai contoh, `compiled` sebagai metadata eksekusi. Sampai dikunci, `latest`, `requested`, dan `compiled` tetap tercatat sebagai contoh pemilik.
+- USR: Migrasi kosakata STATE (K-5): arti STATE dikunci, kosakatanya belum. `present` belum menjadi nilai STATE; `requested` dan `compiled` -- metadata lifecycle/eksekusi menurut K-5 -- masih diterima, begitu juga dua contoh pemilik yang memakainya. Ke mana metadata itu pindah, dan apakah `latest` keadaan aktual target, menunggu migrasi.
 - USR: CONTEXT selain `Ubuntu` dan `HC` -- misalnya papan HCPU -- belum ada.
 - USR: TARGET di CONTEXT HC adalah ekspresi HC; aturan TARGET yang ada ditulis untuk argv host dan hanya berlaku di sana (usulan). Aturan untuk ekspresi HC belum ada.
 - USR: Apakah `اطبع angka + harga` diurai jadi USR PRINT VALUE seperti contoh pemilik? Penerjemahnya belum dibangun -- implementasi menunggu sesudah Lapis 5.

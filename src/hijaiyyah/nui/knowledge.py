@@ -26,10 +26,17 @@ The second, later the same day, is how the knowledge is organised:
     ├── RTL      the Verilog, and whether it agrees with the interpreter (layer 4)
     ├── OFF      what is blocked or not there yet (cosmictera-build/OFF.md)
     ├── PAPAN    what ran on the physical board and what came back
-    └── NUI      NUI's own inventory: the facts of layer 0, the Hijaiyyah
-                 Registry, and the USR specification
+    ├── NUI      NUI's own inventory: the facts of layer 0, the Hijaiyyah
+    │            Registry, and the USR specification
+    └── HOST     the host and OS being observed: processes, services,
+                 network, filesystem, runtime -- added by the owner's K-6
 
-The latest applies, so an answer carries the six domains as its keys; the
+OFF stays what does not depend on an active host. The owner's K-6 also says
+no HOST fact goes in before a collector has measured it, so HOST reads
+nowhere yet: the test that files every item by its source refuses anything
+placed there.
+
+The latest applies, so an answer carries the seven domains as its keys; the
 first shape's `facts` now sit under NUI, where the facts inventory lives, and
 its `board_findings` under PAPAN. `tests` stays beside the domains -- a test is
 how an item is verified, not a place it is held -- and `unknown` holds what no
@@ -65,10 +72,12 @@ PARITY = ROOT / "NUI" / "parity_model.json"
 OPCODES = "src/hijaiyyah/hisa/opcodes.py"
 Answer = dict[str, Any]
 
-#: The owner's six domains, and the places each one reads -- regular
+#: The owner's seven domains, and the places each one reads -- regular
 #: expressions over an item's source. HASM programs are HISA; everything else
 #: under rtl/ is RTL. The parity model is read by three: its interpreter column
-#: is HISA, its RTL column RTL, its board column PAPAN.
+#: is HISA, its RTL column RTL, its board column PAPAN. HOST reads nothing:
+#: no collector has measured a host, and where its records will be kept is
+#: not decided (K-6).
 DOMAINS: dict[str, tuple[str, ...]] = {
     "HC": (r"src/hijaiyyah/language/", r"src/hijaiyyah/compiler/", r"NUI/spec/hc_kamus\.json"),
     "HISA": (r"src/hijaiyyah/hisa/", r"docs/HISA_SPEC\.md", r"NUI/execution_model\.json",
@@ -77,6 +86,7 @@ DOMAINS: dict[str, tuple[str, ...]] = {
     "OFF": (r"cosmictera-build/OFF\.md",),
     "PAPAN": (r"cosmictera-build/", r"NUI/parity_model\.json"),
     "NUI": (r"facts/", r"NUI/", r"src/hijaiyyah/nui/", r"teknologi/ISTILAH\.md"),
+    "HOST": (),
 }
 
 
@@ -510,7 +520,8 @@ def _board(subject: str) -> Answer:
 
 
 def _host(subject: str) -> Answer:
-    """What the Ubuntu host runs: nothing is known, because there is no host."""
+    """What the Ubuntu host runs: nothing is known, because there is no host.
+    HOST stays empty; the collectors that would answer are NUI's own plan."""
     from . import layer5
     answer = _empty()
     answer["unknown"].append("no Ubuntu host exists yet: layer 5 has not started, so nothing "

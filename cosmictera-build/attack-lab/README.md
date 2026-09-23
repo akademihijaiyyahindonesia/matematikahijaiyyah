@@ -89,35 +89,57 @@ menunjukkan:
   18 September — jadi tabel yang rusak lolos, dan citra direlokasi di kata yang
   salah tanpa satu pun penolakan.
 
-Keduanya konsisten dengan spesifikasi yang berlaku; yang belum ada adalah
-keputusan apakah cakupan jumlah diperluas ke header dan tabel relokasi. Itu
-perubahan spesifikasi, dan **keputusan pemilik**.
+Keduanya konsisten dengan spesifikasi yang berlaku hari lab dijalankan.
+Pemilik memutuskan cakupannya diperluas ke seluruh container, 22 September 2026
+(K-8, tabel di bawah); implementasinya menunggu burn-in 72 jam selesai.
 
 ### Tabel keputusan cakupan checksum
 
 Disiapkan 22 September 2026 atas permintaan pemilik: *"Belum perlu mengubah
 implementasi. Buat saja tabel keputusan."* Kolom "sekarang" dibaca dari
-`rtl/programs/hos_prog_load.hasm`, bukan dari ingatan; kolom "dilindungi?"
-milik pemilik, dan yang masih kosong adalah keputusannya.
+`rtl/programs/hos_prog_load.hasm`, bukan dari ingatan. Kolom "dilindungi?"
+diisi pemilik pada hari yang sama, **keputusan K-8**: checksum adalah
+integritas container secara keseluruhan, bukan hanya badan program, *"supaya
+penyerang tidak cukup hanya mengubah body"*. Kolom "sekarang" tetap berlaku
+sampai loader diubah.
 
 | bagian | sekarang | kasus lab | dilindungi? |
 |---|---|---|---|
-| kata program | dijumlah 32-bit dan dibandingkan dengan medan `CRC` sebelum satu kata pun ditulis ke memori instruksi. Medan itu jumlah, bukan CRC-32 | `crc_flip`, `program_word_flip` ditolak | **ya** (pemilik) |
-| header: MAGIC, VERSION, RELOC_CNT | tidak dijumlah; masing-masing dijaga pemeriksaan nilai — `HPG1`, versi 1, paling banyak 128 | ketiganya ditolak | keputusan |
-| header: WORDS | tidak dijumlah; ditolak kalau nol atau kalau kartu memuat lebih sedikit kata. **Satu kata lebih banyak lolos**: kata tambahannya padding nol, dan jumlahnya tidak berubah | `words_zero` ditolak, `words_plus_one` **diterima** | keputusan |
-| header: LOAD_ADDR dan ENTRY | tidak dijumlah; kata terakhir citra harus ≤ 4.095, dan ENTRY harus di dalam citra | keduanya ditolak | keputusan |
-| tabel relokasi | tidak dijumlah dan tidak diperiksa per entri | `reloc_index_moved` **diterima** | keputusan |
-| tabel program, sektor 16 | tidak dijumlah; FLAGS bit 0 dan SECTOR_COUNT ≠ 0 diperiksa, dan pembacaan tidak melewati SECTOR_COUNT | tidak ada kasus | keputusan — **baris ini tambahan saya**, tidak ada di tabel pemilik |
+| kata program | dijumlah 32-bit dan dibandingkan dengan medan `CRC` sebelum satu kata pun ditulis ke memori instruksi. Medan itu jumlah, bukan CRC-32 | `crc_flip`, `program_word_flip` ditolak | **ya** |
+| header: MAGIC, VERSION, RELOC_CNT | tidak dijumlah; masing-masing dijaga pemeriksaan nilai — `HPG1`, versi 1, paling banyak 128 | ketiganya ditolak | **ya** |
+| header: WORDS | tidak dijumlah; ditolak kalau nol atau kalau kartu memuat lebih sedikit kata. **Satu kata lebih banyak lolos**: kata tambahannya padding nol, dan jumlahnya tidak berubah | `words_zero` ditolak, `words_plus_one` **diterima** | **ya** |
+| header: LOAD_ADDR dan ENTRY | tidak dijumlah; kata terakhir citra harus ≤ 4.095, dan ENTRY harus di dalam citra | keduanya ditolak | **ya** |
+| header: medan `CRC` sendiri | medan pembanding, tidak ikut dijumlah | `crc_flip` ditolak | **dinolkan saat menghitung** |
+| tabel relokasi | tidak dijumlah dan tidak diperiksa per entri | `reloc_index_moved` **diterima** | **ya** |
+| tabel program, sektor 16: rekaman program, termasuk FLAGS VALID | tidak dijumlah; FLAGS bit 0 dan SECTOR_COUNT ≠ 0 diperiksa, dan pembacaan tidak melewati SECTOR_COUNT | tidak ada kasus | **ya** |
+| data di luar container dan rekaman programnya | tidak dibaca loader | — | **tidak** |
 
-**"Payload" dan "program body" di tabel pemilik adalah kata yang sama** di
-container ini — tujuh kata header, tabel relokasi, lalu kata program — jadi
-keduanya satu baris di atas. Kalau yang dimaksud pemilik berbeda, itu yang
-perlu dijawab lebih dulu.
+"Payload" dan "program body" satu baris di tabel pemilik K-8, sama seperti di
+container ini — tujuh kata header, tabel relokasi, lalu kata program.
 
-Sesudah cakupannya diputuskan: satu perubahan di loader, satu set kasus
-sabotase di lab ini untuk tiap bagian yang baru dilindungi, dan `VERSION` naik
-— jalan yang sudah pemilik tetapkan 18 September supaya loader lama tidak
-pecah diam-diam.
+Bentuk kanonik pemilik:
+
+```
+CRC = CRC( rekaman program sektor 16
+         + header dengan medan CRC = 0
+         + tabel relokasi
+         + kata program )
+```
+
+**Yang tidak dikatakan K-8, dan ditanyakan, bukan diputuskan: algoritmanya.**
+Rumus pemilik ditulis `CRC(...)`, sedangkan keputusan 18 September 2026
+menetapkan jumlah 32-bit, karena tabel CRC-32 256 entri tidak muat di arena
+heap 127 kata, dan naik ke CRC lewat `VERSION`. Kalau yang dimaksud jumlah
+32-bit atas cakupan baru, urutan keempat bagian tidak mengubah hasilnya;
+kalau CRC-32, urutan itu bagian dari definisinya.
+
+**Tidak diimplementasikan sebelum burn-in 72 jam selesai** (pemilik). Sesudah
+Kamis, di P5 `cosmictera-build/PASCA-BURN-IN.md`: perubahan di
+`rtl/programs/hos_prog_load.hasm` dan `rtl/scripts/build_container.py`, satu
+kasus sabotase di lab ini untuk tiap bagian yang baru dilindungi — *"yang
+membuktikan setiap bagian tersebut memang terlindungi"* — dan `VERSION` naik,
+jalan yang sudah pemilik tetapkan 18 September supaya loader lama tidak pecah
+diam-diam.
 
 ## Kelas C — Ka'bah, di luar bit tunggal
 

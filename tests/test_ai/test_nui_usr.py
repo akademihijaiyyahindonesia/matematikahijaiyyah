@@ -30,7 +30,7 @@ OWNER_USR = [
      "STATE": "compiled"},
 ]
 STATUSES = {"ditetapkan", "usulan", "dinyatakan, belum diizinkan", "diukur",
-            "contoh pemilik; artinya belum ditetapkan", "ditetapkan tidak sah"}
+            "contoh pemilik; menunggu migrasi kosakata", "ditetapkan tidak sah"}
 
 
 @pytest.mark.parametrize("example", OWNER_USR)
@@ -262,22 +262,28 @@ def test_the_new_surfaces_are_designed_not_read() -> None:
         assert row["indonesia"] == [f"IDENTIFIER {indonesian[row['hc']]}"], row
 
 
-def test_the_owners_state_definition_is_held_as_a_proposal() -> None:
-    """STATE as the actual state of the target when the action is stated, not
-    a pipeline stage -- the owner's proposed definition, and the owner's own
-    words: not a change the agent may make before it is locked. So it is
-    recorded, and the vocabulary does not move: its example's `present` is
-    not yet a STATE value."""
+def test_the_owners_state_meaning_is_locked_and_the_vocabulary_waits() -> None:
+    """K-5: STATE is the actual state of the OBJECT/TARGET when the semantic
+    representation is made -- not a pipeline stage, a compiler status, or a
+    process history. The owner locked the meaning, not the vocabulary:
+    `present` is not added without a migration, so the example is still
+    refused, and `requested` and `compiled` stay -- marked as metadata, not
+    STATE -- until it comes."""
     spec = usr.load("usr")
     definition = spec["state_definition"]
-    assert definition["status"] == "usulan pemilik, belum dikunci"
+    assert definition["status"] == "ditetapkan"
+    assert "K-5" in definition["source"]
     assert {s["name"] for s in spec["states"]} == {"latest", "requested", "compiled"}
     assert usr.validate(definition["example"]) == ["unknown state: present"]
+    k5 = {s["name"]: s["k5"] for s in spec["states"]}
+    assert all("bukan STATE semantik" in k5[n] for n in ("requested", "compiled"))
+    assert any(q.startswith("Migrasi kosakata STATE") for q in spec["open"])
 
 
 #: The owner's candidates for READ FILE /etc/hosts, 22 September 2026, and
-#: what the vocabulary says today. STATE is not locked: this matrix is the test
-#: that must change when it is, not a decision.
+#: what the vocabulary says today. STATE's meaning is locked (K-5) and its
+#: vocabulary is not migrated: this matrix is the test that must change with
+#: the migration, not a decision.
 STATE_MATRIX = [
     ("REQUESTED", False), ("PRESENT", False), ("COMPILED", False), ("LATEST", False),
     ("requested", True), ("present", False), ("compiled", True), ("latest", True),
@@ -287,7 +293,8 @@ STATE_MATRIX = [
 @pytest.mark.parametrize("state, accepted", STATE_MATRIX)
 def test_state_candidates_against_todays_vocabulary(state: str, accepted: bool) -> None:
     """Capitals are refused because STATE values are lowercase by the case
-    rule; `present`, the owner's proposed example, waits for the lock."""
+    rule; `present`, the owner's canonical example, waits for the vocabulary
+    migration (K-5)."""
     usr_ = {"ACTION": "READ", "OBJECT": "FILE", "TARGET": "/etc/hosts",
             "CONTEXT": "Ubuntu", "STATE": state}
     assert (usr.validate(usr_) == []) is accepted, usr.validate(usr_)

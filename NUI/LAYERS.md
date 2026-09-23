@@ -143,10 +143,12 @@ dan tanpa mengubah compiler, dan semuanya ada di halaman yang sama:
   besar (`ACTION` … `STATE`), `ubuntu_host` menjadi `Ubuntu`, CONTEXT `HC`,
   ACTION `PRINT`, OBJECT `VALUE`, dan STATE `requested` serta `compiled`
   masuk dari dua contoh pemilik. Bentuk lama ditolak, tidak diterima
-  berdampingan. Arti STATE belum dikunci: pemilik mengusulkan *keadaan aktual
-  target/objek saat aksi dinyatakan, bukan tahap pipeline* — `present` sebagai
-  contoh, `compiled` sebagai metadata eksekusi — dan usulan itu dicatat tanpa
-  mengubah kosakata STATE.
+  berdampingan. Arti STATE **dikunci pemilik (K-5)**: *keadaan aktual
+  OBJECT/TARGET pada saat representasi semantik dibuat, bukan tahap pipeline,
+  status compiler, atau riwayat proses* — `present` contoh kanoniknya,
+  `requested` dan `compiled` metadata lifecycle/eksekusi. Yang dikunci maknanya,
+  bukan kosakatanya: `present` belum jadi nilai STATE sampai kosakata
+  dimigrasi.
 - **Kamus per konsep**, dalam bentuk pemilik `{KONSEP: {hc, arabic,
   indonesia}}`: VARIABLE dan PRINT milik pemilik, IF dan FUNCTION usulan.
   Diukur: `let` dan `println` sampai HISA; `if` dan `fn` diurai HC tetapi
@@ -162,7 +164,8 @@ dan tanpa mengubah compiler, dan semuanya ada di halaman yang sama:
   sedangkan tujuh huruf berekor 1 punya rank di bawah 5. Ia fakta Lapis 0,
   `nui.tail_one_is_not_invertibility`, dan NUI tidak memakai kalimat itu sebagai
   aturan sampai definisinya dibuktikan.
-- **Knowledge base dalam enam domain** — lihat Lapis 9.
+- **Knowledge base dalam tujuh domain** — enam, ditambah HOST (K-6) — lihat
+  Lapis 9.
 
 Prioritasnya bukan bahasa: Lapis 5 lebih dulu, karena NUI harus mampu
 mengendalikan sistem nyata sebelum diajak bicara.
@@ -176,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **405 tes**
+`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **406 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -208,8 +211,8 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
 | `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl` — disiapkan, belum dijalankan | `test_nui_layer5.py` (52) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
-| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (85) |
-| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam enam domain, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
+| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (86) |
+| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST kosong sampai kolektor mengukur, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
 
 ---
 
@@ -573,8 +576,10 @@ papan memikul burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
   `limactl shell <instance> -- <argv>`, yang menolak selama `limactl` belum
   terpasang. Lima dipasang lewat Homebrew, state-nya di
   `LIMA_HOME=~/cosmictera-layer5/lima-home`, instance `cosmictera-layer5`
-  (pemilik, 22 September 2026, K-3). Dijaga `tests/test_ai/test_nui_layer5.py`
-  (52).
+  (pemilik, 22 September 2026, K-3). Instance uji sekali pakainya
+  `cosmictera-layer5-uji` (K-9): jalurnya dibuktikan di sana lebih dulu, dan
+  `cosmictera-layer5` baru jadi instance utama sesudahnya. Dijaga
+  `tests/test_ai/test_nui_layer5.py` (52).
 - `NUI/spec/layer5_lima.yaml` — VM yang mengunci image terverifikasi lewat
   digest, tanpa mount, mode plain. Template Ubuntu 24.04 bawaan Lima 2.2.0
   sendiri **tidak bisa dipakai**: ia mengunci `release-20260705`, jatuh ke URL
@@ -737,10 +742,14 @@ jejak eksekusi (Lapis 3), dan paritas (Lapis 4).
 sebagai pondasi lapis ini: `src/hijaiyyah/nui/knowledge.py` menjawab *apa
 yang diketahui tentang* sebuah opcode, program, butir OFF, huruf, atau kata
 kunci HC dengan mengumpulkan yang sudah dipegang lapis-lapis itu, dan setiap
-butir jawaban membawa sumbernya. Jawabannya dikelompokkan ke **enam domain
-pemilik** — HC, HISA, RTL, OFF, PAPAN, NUI — dan tiap domain menyebut tempat
-yang ia baca; sebuah tes menolak butir yang duduk di domain yang tidak membaca
-sumbernya. Bentuk jawaban pertama pemilik hari itu (`facts`, `tests`,
+butir jawaban membawa sumbernya. Jawabannya dikelompokkan ke **tujuh domain
+pemilik** — HC, HISA, RTL, OFF, PAPAN, NUI, dan HOST sejak K-6 — dan tiap
+domain menyebut tempat yang ia baca; sebuah tes menolak butir yang duduk di
+domain yang tidak membaca sumbernya. HOST memegang keadaan, proses, service,
+jaringan, filesystem, dan runtime host yang diamati, sedangkan OFF tetap fakta
+yang tidak bergantung pada host aktif; HOST **tidak membaca tempat mana pun**
+sampai sebuah kolektor mengukur, jadi tes yang sama menolak butir apa pun di
+sana. Bentuk jawaban pertama pemilik hari itu (`facts`, `tests`,
 `board_findings`) masuk ke bentuk kedua: fakta di NUI, catatan papan di PAPAN,
 tes tetap di samping domain. Ia **penelusuran, bukan penalaran**: tidak ada
 inferensi dan tidak ada skor, dan yang tak bisa dijawab domain mana pun
@@ -748,7 +757,7 @@ ditulis di `unknown`. Butir OFF-nya datang dari `src/hijaiyyah/nui/off_db.py`,
 yang membaca `cosmictera-build/OFF.md` jadi rekaman (`NUI/off_db.json`) tanpa
 menjadi salinan kedua; butir huruf dari registry Hijaiyyah
 (`src/hijaiyyah/nui/registry.py`). Dijaga `tests/test_ai/test_nui_knowledge.py`
-(85) dan `tests/test_ai/test_nui_registry.py` (7).
+(86) dan `tests/test_ai/test_nui_registry.py` (7).
 
 **Kontrak kuerinya**, 22 September 2026: tujuh pertanyaan pemilik, kata demi
 kata, dipetakan ke jenis kueri di `NUI/spec/query_contract.json` — apa itu
@@ -758,7 +767,8 @@ tabel spesifikasinya), berkas ini dari program mana (`file`: medan
 dipanggil program (`program`: tiap `CALL` dengan barisnya), apa yang
 diinstansiasi modul RTL (`rtl`), apa yang terakhir diukur papan (`board
 latest`: rekaman yang di-commit saja), dan layanan apa yang dijalankan Ubuntu
-(`host`: `unknown`, karena host belum ada). Lima dijawab, satu sebagian — berkas
+(`host`: `unknown`, karena host belum ada; jawabannya akan duduk di HOST, yang
+kosong sampai sebuah kolektor mengukur — K-6). Lima dijawab, satu sebagian — berkas
 yang tidak menyatakan pembuatnya tidak ditebak — dan satu menunggu Lapis 5.
 Tiap baris kontrak dijalankan oleh tesnya sendiri.
 

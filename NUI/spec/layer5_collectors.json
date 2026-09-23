@@ -8,8 +8,10 @@
   "lima": "dipasang lewat Homebrew",
   "lima_home": "~/cosmictera-layer5/lima-home",
   "instance": "cosmictera-layer5",
+  "test_instance": "cosmictera-layer5-uji",
   "image_dir": "~/cosmictera-layer5/downloads/",
-  "lima_source": "pemilik, 22 September 2026, keputusan K-3 -- instalasi Lima tetap instalasi host biasa; seluruh state instance CosmicTera di LIMA_HOME terpisah"
+  "lima_source": "pemilik, 22 September 2026, keputusan K-3 -- instalasi Lima tetap instalasi host biasa; seluruh state instance CosmicTera di LIMA_HOME terpisah",
+  "test_instance_source": "pemilik, 22 September 2026, keputusan K-9 -- instance uji sekali pakai. Di sana lebih dulu dibuktikan: lokasi image lokal, Lima create, Ubuntu boot, tanpa mount home Mac, kolektor hanya-baca, pagar perintah, kontrak kueri; baru sesudahnya `cosmictera-layer5` jadi instance utama"
  },
  "collectors": [
   {
@@ -191,7 +193,7 @@
   }
  ],
  "open": [
-  "Nama sementara untuk instance uji lokasi image di P7 (usulan: `cosmictera-layer5-uji`), supaya instance permanen tidak dibuat sebelum lokasi image lokal terbukti diterima Lima 2.2.0.",
+  "Tempat rekaman kolektor disimpan belum ditetapkan: `observe()` mengembalikan rekaman dan tidak menulisnya ke mana pun. Domain HOST (K-6) tidak membaca apa pun sampai tempat itu ada dan sebuah kolektor mengisinya.",
   "Apakah `limactl shell` mengutip argumen belum diukur -- host belum dipasang; pagar menolak karakter shell supaya itu tidak penting."
  ]
 }

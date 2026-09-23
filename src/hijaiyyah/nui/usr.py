@@ -355,7 +355,8 @@ def page() -> str:
            *_rows([{**r, "applies_to": f"{r['applies_to']} ({r['applies_to_status']})"}
                    for r in usr["target_rules"]], ["rule", "applies_to", "status", "source"]),
            "", "### CONTEXT dan STATE", "",
-           *_rows(usr["contexts"] + usr["states"], ["name", "status", "source"]),
+           *_rows(usr["contexts"], ["name", "status", "source"]), "",
+           *_rows(usr["states"], ["name", "status", "k5", "source"]),
            "", f"**Arti STATE, {usr['state_definition']['status']}.** "
            f"{usr['state_definition']['text']} Contoh: "
            f"`{json.dumps(usr['state_definition']['example'], ensure_ascii=False)}` "

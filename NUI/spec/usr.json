@@ -233,22 +233,25 @@
  "states": [
   {
    "name": "latest",
-   "status": "contoh pemilik; artinya belum ditetapkan",
+   "status": "contoh pemilik; menunggu migrasi kosakata",
+   "k5": "tidak digolongkan K-5 -- apakah ia keadaan aktual target belum diputuskan",
    "source": "pemilik, 22 September 2026, pesan sebelumnya -- contoh READ FILE /var/log/syslog"
   },
   {
    "name": "requested",
-   "status": "contoh pemilik; artinya belum ditetapkan",
+   "status": "contoh pemilik; menunggu migrasi kosakata",
+   "k5": "bukan STATE semantik -- metadata lifecycle/eksekusi",
    "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh READ FILE /etc/hosts"
   },
   {
    "name": "compiled",
-   "status": "contoh pemilik; artinya belum ditetapkan",
+   "status": "contoh pemilik; menunggu migrasi kosakata",
+   "k5": "bukan STATE semantik -- metadata lifecycle/eksekusi",
    "source": "pemilik, 22 September 2026, pesan 'sambil menunggu burn-in' -- contoh PRINT VALUE"
   }
  ],
  "state_definition": {
-  "text": "STATE adalah keadaan aktual target/objek pada saat aksi dinyatakan, bukan tahap pipeline. `requested` dan `compiled` lebih mirip status proses/perintah; `compiled` lebih tepat metadata eksekusi/compiler, bukan STATE semantik.",
+  "text": "STATE adalah keadaan aktual OBJECT/TARGET pada saat representasi semantik dibuat, bukan tahap pipeline, status compiler, atau riwayat proses. `requested` dan `compiled` bukan STATE semantik; keduanya metadata lifecycle/eksekusi.",
   "example": {
    "ACTION": "READ",
    "OBJECT": "FILE",
@@ -256,8 +259,8 @@
    "CONTEXT": "Ubuntu",
    "STATE": "present"
   },
-  "status": "usulan pemilik, belum dikunci",
-  "source": "pemilik, 22 September 2026, pesan ketiga -- 'Itu usulan definisi, bukan perubahan yang boleh dilakukan agent tanpa Anda menguncinya.' Kosakata STATE dan contoh di atas karena itu tidak diubah; `present` belum termasuk nilai STATE."
+  "status": "ditetapkan",
+  "source": "pemilik, 22 September 2026, keputusan K-5 -- yang dikunci maknanya, bukan kosakatanya: `present` tidak ditambahkan ke daftar nilai pada commit yang sama tanpa migrasi kosakata. Menggantikan usulan pesan ketiga hari yang sama."
  },
  "phrases": {
   "grammar": "<kata kerja> <objek> [<target>] -- target adalah sisa kalimat",
@@ -319,7 +322,7 @@
   }
  ],
  "open": [
-  "Arti STATE belum dikunci. Usulan pemilik ada di `state_definition`: keadaan aktual target/objek saat aksi dinyatakan, bukan tahap pipeline -- `present` sebagai contoh, `compiled` sebagai metadata eksekusi. Sampai dikunci, `latest`, `requested`, dan `compiled` tetap tercatat sebagai contoh pemilik.",
+  "Migrasi kosakata STATE (K-5): arti STATE dikunci, kosakatanya belum. `present` belum menjadi nilai STATE; `requested` dan `compiled` -- metadata lifecycle/eksekusi menurut K-5 -- masih diterima, begitu juga dua contoh pemilik yang memakainya. Ke mana metadata itu pindah, dan apakah `latest` keadaan aktual target, menunggu migrasi.",
   "CONTEXT selain `Ubuntu` dan `HC` -- misalnya papan HCPU -- belum ada.",
   "TARGET di CONTEXT HC adalah ekspresi HC; aturan TARGET yang ada ditulis untuk argv host dan hanya berlaku di sana (usulan). Aturan untuk ekspresi HC belum ada.",
   "Apakah `اطبع angka + harga` diurai jadi USR PRINT VALUE seperti contoh pemilik? Penerjemahnya belum dibangun -- implementasi menunggu sesudah Lapis 5.",

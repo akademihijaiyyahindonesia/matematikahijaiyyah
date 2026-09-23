@@ -161,13 +161,18 @@ def test_every_collector_says_whose_it_is() -> None:
         assert item["source"], item
 
 
-def test_the_host_is_the_owners_k3() -> None:
+def test_the_host_is_the_owners_k3_and_k9() -> None:
     """Lima through Homebrew, its state in its own LIMA_HOME, the VM named
-    cosmictera-layer5 -- the owner, 22 September 2026."""
+    cosmictera-layer5 (K-3); the disposable instance that proves the path
+    first named cosmictera-layer5-uji (K-9) -- the owner, 22 September 2026.
+    The guard takes the test instance's name like any other."""
     h = layer5.load()["host"]
-    assert (h["lima"], h["lima_home"], h["instance"]) == (
-        "dipasang lewat Homebrew", "~/cosmictera-layer5/lima-home", "cosmictera-layer5")
+    assert (h["lima"], h["lima_home"], h["instance"], h["test_instance"]) == (
+        "dipasang lewat Homebrew", "~/cosmictera-layer5/lima-home", "cosmictera-layer5",
+        "cosmictera-layer5-uji")
+    assert "K-9" in h["test_instance_source"]
     assert layer5.host()["instance"] == "cosmictera-layer5"
+    assert layer5.SAFE_ARG.fullmatch(h["test_instance"])
 
 
 def test_every_catalog_form_passes_the_guard() -> None:

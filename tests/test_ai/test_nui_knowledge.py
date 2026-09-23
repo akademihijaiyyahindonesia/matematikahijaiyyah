@@ -3,7 +3,7 @@
 A knowledge answer is only as good as the walk back from it, so the test that
 matters is that every item cites a place that exists -- a file, and a line in
 it when it names one -- and sits in the domain that reads that place: the
-owner's six, HC HISA RTL OFF PAPAN NUI. Then the owner's questions are asked --
+owner's seven, HC HISA RTL OFF PAPAN NUI HOST. Then the owner's questions are asked --
 PRINT, loader.hasm, HALT, a letter, a keyword -- and their answers must hold
 what the layers measured. The OFF database must be OFF.md read, not a second
 copy of it.
@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED, OpCode  # noqa: E402
 from hijaiyyah.nui import knowledge, off_db  # noqa: E402
 
-DOMAINS = ["HC", "HISA", "RTL", "OFF", "PAPAN", "NUI"]
+DOMAINS = ["HC", "HISA", "RTL", "OFF", "PAPAN", "NUI", "HOST"]
 KEYS = {"query", "kind", "subject", *DOMAINS, "tests", "unknown"}
 CONTRACT = json.loads((ROOT / "NUI" / "spec" / "query_contract.json").read_text(encoding="utf-8"))
 QUERIES = ["opcode PRINT", "opcode HALT", "opcode ADD", "program loader.hasm",
@@ -42,8 +42,20 @@ def _exists(source: str) -> bool:
     return (ROOT / path).exists()
 
 
-def test_the_domains_are_the_owners_six() -> None:
+def test_the_domains_are_the_owners_seven() -> None:
     assert list(knowledge.DOMAINS) == DOMAINS
+
+
+def test_host_holds_nothing_until_a_collector_measures() -> None:
+    """K-6: no HOST fact before a collector has measured it. HOST reads
+    nowhere, so an item filed there fails the domain test below; the host
+    question still answers `unknown`, with the plan kept under NUI."""
+    assert knowledge.DOMAINS["HOST"] == ()
+    a = knowledge.query("host services")
+    assert a["HOST"] == [] and a["unknown"]
+    row, = [q for q in CONTRACT["questions"] if q["query"] == "host services"]
+    assert row["answers_in"] == [] and row["answers_in_when_measured"] == ["HOST"]
+    assert all(d in knowledge.DOMAINS for d in row["answers_in_when_measured"])
 
 
 @pytest.mark.parametrize("text", QUERIES)
