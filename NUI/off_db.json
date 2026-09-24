@@ -40,6 +40,8 @@
    "commits": [],
    "files": [
     "NUI/PARITY.md",
+    "NUI/board_expected.json",
+    "cosmictera-build/PASCA-BURN-IN.md",
     "rtl/hcpu_top.v",
     "rtl/programs/burn_in.hasm"
    ]
@@ -67,7 +69,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:138"
+  "source": "cosmictera-build/OFF.md:140"
  },
  {
   "key": "kartu-sd-gagal-init-sesudah-rekonfigurasi-di-tengah-pembacaan",
@@ -84,7 +86,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:166"
+  "source": "cosmictera-build/OFF.md:169"
  },
  {
   "key": "21-opcode-belum-di-rtl",
@@ -104,7 +106,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:193"
+  "source": "cosmictera-build/OFF.md:196"
  },
  {
   "key": "hfs-dan-hos",
@@ -125,7 +127,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:231"
+  "source": "cosmictera-build/OFF.md:234"
  },
  {
   "key": "m3-shell-jalur-keluaran-karakter-dan-resume-setelah-preemption",
@@ -156,7 +158,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:347"
+  "source": "cosmictera-build/OFF.md:350"
  },
  {
   "key": "yang-h-kernel-belum-punya",
@@ -171,7 +173,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:588"
+  "source": "cosmictera-build/OFF.md:591"
  },
  {
   "key": "asic",
@@ -186,6 +188,6 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:608"
+  "source": "cosmictera-build/OFF.md:611"
  }
 ]

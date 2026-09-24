@@ -1,0 +1,29 @@
+{
+  "target": "burn-in",
+  "program": "rtl/programs/burn_in.hasm",
+  "board": "Tang Nano 20K",
+  "clock_hz": 27000000,
+  "port": "/dev/tty.usbserial-20250303171",
+  "started": "2026-09-21T05:34:30.437711+00:00",
+  "first_cycle": {
+    "pulse_sum": 28,
+    "node_sum": 3072,
+    "codex_sum": 178,
+    "init_attempts": 1,
+    "read_attempts": 1,
+    "card_word": 1212568369,
+    "launches": 1
+  },
+  "host_seconds": 259204.9,
+  "board_seconds": 259198.5,
+  "board_minus_host_s": -6.4,
+  "heartbeats": 160967,
+  "cycles": 168620032,
+  "errors": 0,
+  "sd_read_failures": 0,
+  "longest_gap_s": 931.044,
+  "longest_gap_at_s": 7708.7,
+  "unparsed_lines": 11,
+  "heartbeat_cycles": 1024,
+  "ended": "duration reached"
+}

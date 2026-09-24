@@ -59,7 +59,7 @@
   ],
   "status": "ditetapkan",
   "source": "pemilik, 23 September 2026, keputusan K-11 -- Ubuntu tamu -> kolektor hanya-baca -> hasil -> evidence store di host -> lapis pengetahuan HOST",
-  "implementation": "menunggu: `observe()` hari ini mengembalikan rekaman tanpa menulisnya ke mana pun. K-11 dipakai ketika instance `cosmictera-layer5-uji` mulai diukur (P7), sesudah burn-in selesai"
+  "implementation": "menunggu: `observe()` hari ini mengembalikan rekaman tanpa menulisnya ke mana pun. K-11 dipakai ketika instance `cosmictera-layer5-uji` mulai diukur (P8), sesudah burn-in selesai"
  },
  "collectors": [
   {

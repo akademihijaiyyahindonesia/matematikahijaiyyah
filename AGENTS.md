@@ -1032,7 +1032,7 @@ burn-in"*: siapkan paritas papan, siapkan eksperimen PRINT dan HALT/RET, siapkan
 kerangka Lapis 5 hanya-baca. **Yang tidak boleh disentuh sampai burn-in
 selesai**: `rtl/scripts/burn_in.py`, checksum loader, RTL HCPU, bitstream, firmware.
 
-- **Urutan hari Kamis, P0–P7**, beserta empat keputusan yang harus ada
+- **Urutan hari Kamis, P0–P8**, beserta empat keputusan yang harus ada
   sebelum hari itu, di `cosmictera-build/PASCA-BURN-IN.md` — tidak disalin ke
   sini (R1).
 - **PRINT dan kata sesudah berhenti adalah eksperimen tersendiri**, tidak
@@ -1076,7 +1076,7 @@ Empat keputusan yang runbook Kamis minta sebelum hari itu. Rinciannya di
   sekarang.
 - **K-3**: Lima lewat Homebrew, `LIMA_HOME=~/cosmictera-layer5/lima-home`, VM
   `cosmictera-layer5`, image di `~/cosmictera-layer5/downloads/`; template
-  bawaan Lima tidak dipakai. Langkah P7 pertama menguji `images[].location`
+  bawaan Lima tidak dipakai. Langkah P8 pertama menguji `images[].location`
   berkas lokal di Lima 2.2.0 sebelum VM permanen dibuat. **Konsekuensi yang
   dicatat**: tarball Lima yang SHA256-nya diverifikasi bukan yang dipasang
   Homebrew; formula Homebrew hari itu menyebut versi yang sama, 2.2.0, dan
@@ -1132,9 +1132,7 @@ tidak disalin ke sini (R1).
   kontrak kueri — dan `cosmictera-layer5` baru jadi instance utama sesudahnya.
 
 **Urutannya ditegaskan: sampai 24 September 2026 12:34 WIB, burn-in saja.**
-Sesudah itu P0–P7 di `cosmictera-build/PASCA-BURN-IN.md`, dengan P5 kini
-checksum K-8 ditambah klasifikasi selisih, dan pengurai K-7 sebagai butir
-sendiri di luar P0–P7. Satu koreksi dokumentasi diizinkan lebih awal dan
+Sesudah itu P0–P8 di `cosmictera-build/PASCA-BURN-IN.md`. Satu koreksi dokumentasi diizinkan lebih awal dan
 dikerjakan sebagai commit tersendiri: `cosmictera/COMPUTING.md` berhenti
 mengutip 384 asersi di 35 bench, angka terukurnya 408 di 39. Angka "36 berkas
 bench, 16 lewat pytest" di kalimat yang sama **tidak** diganti sampai diukur
@@ -1165,8 +1163,40 @@ arsitektur, tanpa implementasi sampai burn-in selesai**.
   `host services` tetap `unknown`.
 
 **Sampai Kamis 24 September 2026 12:34 WIB tetap burn-in saja.** K-10 masuk di
-tahap checksum (P5), K-11 dipakai ketika `cosmictera-layer5-uji` mulai diukur
-(P7).
+tahap checksum (P6), K-11 dipakai ketika `cosmictera-layer5-uji` mulai diukur
+(P8).
+
+### 24 September 2026 — burn-in tingkat 2 tutup, dan urutan P0–P8 dikunci
+
+**Burn-in 72 jam tutup 24 September 2026 05:34:30 UTC dengan `duration reached`
+dan 0 error papan.** 259.204,9 detik jam host, 164.668 detak dipancarkan papan,
+168.620.032 siklus, 0 baca kartu gagal, dan kerja terhadap jam papan sendiri
+1,0002 — papan tidak pernah berhenti. Angka, hash, garis dasar, dan
+perbandingannya terhadap tingkat 1 ada di `cosmictera-build/burn-in/README.md`
+dan `cosmictera-build/PAPAN.md`, tidak disalin ke sini (R1).
+
+**K-1 terbukti pada log final, bukan pada log setengah jalan**: kedua baris
+`error` adalah artefak pengurai — masing-masing didahului pada detik yang sama
+oleh baris tak terurai `0H`, medannya bergeser, dan nilai `errors` tertinggi di
+seluruh 3.991 sampel adalah 0. **Yang tidak diklaim**, perintah pemilik hari
+itu: pengurai **belum** tervalidasi terhadap capture mentah kabel, karena lari
+ini tidak menyimpan byte mentah; validasi itu milik lari berikutnya (K-7).
+
+**Sidik jari loader yang berlaku adalah `84fdc912…`**, diukur dari
+`rtl/fpga/gowin/hcpu_gowin_top_loader.fs` yang dipakai lari ini. Catatan sesi
+sebelumnya menyebut `4a0a1bfd…`, dan angka itu tidak cocok dengan satu pun
+bitstream di direktori. Berkas `.fs` di-gitignore, jadi tidak ada riwayat yang
+bisa memutuskan. Pemilik: catat sebagai **selisih historis yang tidak bisa
+diverifikasi**, jangan direkonstruksi dan jangan "dibetulkan".
+
+**Urutan eksekusi pasca-burn-in dikunci pemilik 23 September 2026, P0–P8**, dan
+tidak diubah lagi: P0 tutup burn-in, P1 pengurai dan capture mentah, P2 paritas
+papan, P3 kolom opcode perangkat keras, P4 PRINT di silikon, P5 HALT/RET di
+silikon, P6 checksum dan sabotasenya, P7 laporan selisih final dan freeze Lapis
+4 beserta tag, P8 Lapis 5. Dua pergeseran dari susunan 22 September: pengurai
+naik ke P1, mendahului paritas papan, dan klasifikasi selisih pindah ke P7.
+**Penomoran ini urutan eksekusi, bukan lapis NUI** — dua belas lapis NUI tidak
+bergeser, dan itu perintah pemilik pada hari yang sama.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

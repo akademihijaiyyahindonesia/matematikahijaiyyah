@@ -122,7 +122,7 @@ dan itu prioritas 7.
 |---|---|---|
 | `20260920T013538Z-burn-in-24h` | 24 jam | **tutup, 0 error** — 21 September 2026 01:35 UTC |
 | `20260921T044023Z-burn-in-72h-attempt1` | 72 jam | **berhenti di menit ke-33** — host berhibernasi, bukan papan |
-| `20260921T053430Z-burn-in-72h` | 72 jam | **sedang berjalan**, host ditahan terjaga |
+| `20260921T053430Z-burn-in-72h` | 72 jam | **tutup, 0 error** — 24 September 2026 05:34 UTC, `duration reached` |
 
 Tingkat 168 jam belum dijalankan.
 
@@ -238,6 +238,119 @@ buktinya: ia satu lari, di satu papan, pada satu suhu ruangan yang tidak
 diukur, dengan satu kartu. Ia mengatakan mesin ini bekerja sehari penuh tanpa
 satu pun kesalahan yang bisa dilihat pemeriksaannya sendiri — bukan bahwa
 tiap papan akan begitu.
+
+## Tingkat 2 — hasil, 72 jam penuh
+
+Ditutup 24 September 2026 05:34:30 UTC (12:34 WIB), langkah P0 urutan pemilik.
+`burn_in.py` keluar sendiri; ringkasannya berbunyi **`duration reached`**, bukan
+`STOPPED EARLY`.
+
+```
+259.204,9 detik jam host      259.198,5 detik jam papan sendiri
+164.668 detak dipancarkan papan   160.967 terurai host
+168.620.032 siklus
+
+0 error                      0 baca kartu gagal
+kerja terhadap jam papan sendiri: 1,0002
+```
+
+**Keempat kriteria yang sama, dijawab dengan angka lari ini:**
+
+| kriteria pemilik | hasil |
+|---|---|
+| tidak ada deadlock | **kerja menutupi waktu, 1,0002** selama tiga hari — papan tidak pernah berhenti, termasuk di dalam 25 diam yang host tidak melihat |
+| tidak ada korupsi memori | **0 error** dari 164.668 detak; pencacah error papan kumulatif, dan sampel terakhir di t = 259.160 detik tetap 0 |
+| tidak ada watchdog timeout | **tidak bisa diukur — tidak ada watchdog di desain ini**, sama seperti tingkat 1 |
+| tidak ada serial menggantung | **11 baris tak terbaca**, semuanya berbentuk angka yang menempel pada penanda berikutnya, dan semuanya di enam jam pertama |
+
+**Bukti yang dibekukan (P0).** Ketiga artefak beserta sha256-nya:
+
+| artefak | byte | sha256 |
+|---|---:|---|
+| `20260921T053430Z-burn-in-72h.json` | 712 | `09302ae1de43e7d06430a9aa4c26acf2a45afca7cc60591c33e7cb62b31c6ddf` |
+| `20260921T053430Z-burn-in-72h.jsonl` | 855.293 | `910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae` |
+| `rtl/fpga/gowin/hcpu_gowin_top_loader.fs` | 7.261.470 | `84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261` |
+
+Bitstream itu bertanggal 18 September 2026 21:14, tiga hari sebelum lari mulai,
+dan **tidak dibangun ulang** selama lari. **Satu selisih historis yang tidak bisa
+diverifikasi:** catatan sesi sebelumnya menyebut sidik jari loader
+`4a0a1bfd…`, dan angka itu tidak cocok dengan satu pun dari sembilan `.fs` di
+direktori dan tidak ada di berkas mana pun di repositori. Berkas `.fs`
+di-gitignore, jadi tidak ada riwayat yang bisa memutuskan. Yang berlaku mulai
+sekarang adalah `84fdc912…`; angka lama dicatat sebagai selisih historis,
+**tidak direkonstruksi dan tidak "dibetulkan"** (perintah pemilik, 24 September
+2026).
+
+**Dua baris `error` adalah artefak pengurai, bukan error papan** — K-1, dan
+sekarang diperiksa pada JSONL final, bukan pada log setengah jalan:
+
+1. `rtl/programs/burn_in.hasm` menyebut pencacah error-nya *"One more error, and
+   never a reset"* — kumulatif. Satu error yang pernah dihitung papan akan
+   terbawa di **setiap** sampel sesudahnya.
+2. Kedua baris itu, di t = 11.713,148 dan 12.685,786 detik, masing-masing
+   didahului **pada detik yang sama** oleh baris tak terurai `0H`. Medannya
+   bergeser: `errors` berisi 7.440 dan 8.058 — seukuran nomor detak di
+   sekitarnya, yang berbunyi 7.194 dan 7.812 — sementara `wraps` berisi 0 dan
+   `counter_hi` 73 dan 79, seukuran `wraps` tetangganya. Kesebelas baris tak
+   terurai berbentuk sama: `33H`, `10H`, `52H`, `0H`, `0H`, `9729H`, `1H`,
+   `4400H`, `1H`, `2H`, `3777H`. Yang membedakan kedua baris ini hanyalah
+   angkanya kebetulan `0`.
+3. **3.901 sampel sesudah baris kedua semuanya berbunyi `errors 0`**, dan nilai
+   `errors` tertinggi di seluruh 3.991 sampel adalah **0** — dari sampel pertama
+   di t = 5,5 detik sampai terakhir di t = 259.160,2 detik.
+
+**Yang tidak diklaim lari ini: pengurainya belum tervalidasi terhadap capture
+mentah.** `burn_in.py` tidak menyimpan byte dari kabel, jadi lari ini tidak bisa
+diurai ulang dari byte-nya. Yang dibuktikan di atas adalah laporan pengurai,
+pencacah papan, dan artefak log yang ada — bukan pengurai yang diadu dengan
+kabelnya. Validasi itu menunggu lari berikutnya (K-7, langkah P1).
+
+**Diam berhenti sesudah enam jam pertama.** 25 diam, total 14.904 detik,
+seluruhnya antara t = 5,5 dan t = 20.724,9 detik; tujuh digolongkan milik host,
+tujuh belas "unclear" — kurasan yang mengikuti tiap diam, ratusan detak tiba
+sekaligus. Sesudah itu **66,2 jam tanpa satu pun diam**, dan tak satu diam pun
+milik papan.
+
+**Garis dasarnya**, beku di `20260921T053430Z-burn-in-72h-baseline.json`:
+
+```
+laju kerja        647,3 / 650,4 / 652,5 / 671,2 siklus per detik  (min p50 p95 maks)
+kerja per siklus  1,5375 ms
+irama detak papan 1,5744 detik
+jam papan − host  −4,3 detik (p50), −6,4 detik di akhir, kemiringan −0,0375 detik/jam
+```
+
+**Terhadap garis dasar 24 jam — selisih, bukan vonis:**
+
+| besaran | garis dasar 24 jam | terukur 72 jam | selisih |
+|---|---:|---:|---:|
+| siklus per detik, p50 | 650,4234527687 | 650,4234527688 | +0,000% |
+| siklus per detik, p95 | 660,099 | 652,549 | −1,144% |
+| irama detak seperti dilihat host, p50 | 2,012 s | 1,543 s | −23,310% |
+| irama detak seperti dilihat host, p95 | 2,021 s | 1,800 s | −10,935% |
+| jam papan − host, p50 | −3,8 s | −4,3 s | +13,158% |
+| kemiringan | −0,0292 s/jam | −0,0375 s/jam | +28,425% |
+| irama detak papan | 1,5744 s | 1,5744 s | +0,000% |
+| kerja per siklus | 1,5375 ms | 1,5375 ms | +0,000% |
+| kerja terhadap jam papan | 1,0002 | 1,0002 | +0,000% |
+| error | 0 | 0 | — |
+| baca kartu gagal | 0 | 0 | — |
+| baris tak terbaca | 9 | 11 | +2 |
+
+Dua di antaranya punya sebab terukur, bukan misteri. **Irama detak yang dilihat
+host turun 23%** karena tingkat 1 berjalan dengan timeout baca satu detik dan
+angkanya menumpuk di 1,0 dan 2,0 detik; lari ini memakai timeout lebih pendek,
+jadi angkanya lebih dekat ke irama papan yang sebenarnya, 1,5744 detik — yang
+**tidak bergerak sama sekali** di antara kedua lari. **Kemiringan jam** naik
+dari −0,0292 jadi −0,0375 detik/jam, yaitu dari 8,1 ppm ke 10,4 ppm terhadap
+jam host. Itu pengukuran burn-in, bukan kegagalan: osilator 27 MHz papan diukur
+relatif terhadap jam MacBook, bukan terhadap standar frekuensi, dan −6,4 detik
+dalam 72 jam adalah bentuk yang sama dengan −3,9 detik dalam 24 jam.
+
+**Yang tidak dibuktikan lari ini**: satu lari, satu papan, satu kartu, satu suhu
+ruangan yang tidak diukur, dan satu bitstream. Ia mengatakan mesin ini bekerja
+tiga hari penuh tanpa satu pun kesalahan yang bisa dilihat pemeriksaannya
+sendiri — bukan bahwa tiap papan akan begitu. Tingkat 168 jam belum dijalankan.
 
 ## Dua temuan dari membangun lab ini
 

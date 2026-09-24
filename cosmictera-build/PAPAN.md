@@ -948,6 +948,40 @@ pabrik LiteX. Percobaan kedua berjalan dengan host ditahan terjaga.
 
 ---
 
+## Burn-in tingkat 2 — 72 jam penuh, 0 error, 24 September 2026
+
+Mulai 21 September 2026 05:34:30 UTC, tutup 24 September 05:34:30 UTC.
+`burn_in.py` keluar sendiri dan ringkasannya berbunyi `duration reached`.
+Angka dan bukti lengkapnya di [burn-in/](burn-in/README.md), tidak disalin ke
+sini (R1).
+
+```
+259.204,9 detik jam host      259.198,5 detik jam papan sendiri
+164.668 detak dipancarkan papan   160.967 terurai host
+168.620.032 siklus
+
+0 error                      0 baca kartu gagal
+kerja terhadap jam papan sendiri: 1,0002 -- papan tidak pernah berhenti
+```
+
+Tiga hari, satu bitstream — `hcpu_gowin_top_loader.fs`, sha256 `84fdc912…`,
+tidak dibangun ulang selama lari. Pencacah error papan kumulatif, dan nilai
+tertingginya di seluruh 3.991 sampel adalah **0**. Dua baris `error` di log
+adalah artefak pengurai, bukan error papan: keduanya didahului pada detik yang
+sama oleh baris tak terurai `0H`, medannya bergeser, dan tiap sampel sesudahnya
+berbunyi 0 (K-1, diperiksa pada log final).
+
+Jam papan hanyut **−0,0375 detik per jam** terhadap jam host, 10,4 ppm, dan
+berakhir −6,4 detik dalam 72 jam. Irama detak papan **1,5744 detik**, sama
+persis dengan tingkat 1. Dua puluh lima diam, semuanya di enam jam pertama dan
+tak satu pun milik papan; **66,2 jam terakhir tanpa satu pun diam**.
+
+Yang **tidak** dibuktikan lari ini: pengurainya belum diadu dengan byte mentah
+kabel, karena lari ini tidak menyimpannya — validasi itu menunggu lari
+berikutnya.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah

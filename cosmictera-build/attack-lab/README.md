@@ -91,7 +91,7 @@ menunjukkan:
 
 Keduanya konsisten dengan spesifikasi yang berlaku hari lab dijalankan.
 Pemilik memutuskan cakupannya diperluas ke seluruh container, 22 September 2026
-(K-8, tabel di bawah); implementasinya menunggu burn-in 72 jam selesai.
+(K-8, tabel di bawah); implementasinya menunggu langkah P6, sesudah burn-in tutup.
 
 ### Tabel keputusan cakupan checksum
 
@@ -140,8 +140,9 @@ kata-kata yang dijumlah adalah representasi word container **sebagaimana ia
 tersimpan di kartu**, format on-disk yang sudah ada, supaya tidak ada dua
 perhitungan checksum untuk citra yang sama.
 
-**Tidak diimplementasikan sebelum burn-in 72 jam selesai** (pemilik). Sesudah
-Kamis, di P5 `cosmictera-build/PASCA-BURN-IN.md`: nama `CRC` diganti
+**Tidak diimplementasikan sebelum burn-in 72 jam selesai** (pemilik); burn-in
+tutup 24 September 2026, dan langkahnya **P6** di
+`cosmictera-build/PASCA-BURN-IN.md`: nama `CRC` diganti
 `CHECKSUM32` di `rtl/programs/hos_prog_load.hasm` dan
 `rtl/scripts/build_container.py`, cakupannya diperluas, dan empat kasus
 sabotase ditambahkan di lab ini — header, tabel relokasi, badan program, dan

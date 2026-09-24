@@ -130,8 +130,10 @@ Icarus, mencetak ke-32 nilai persis seperti interpreter, termasuk ketiga yang
 salah di papan. Jadi selisihnya muncul antara RTL yang disimulasikan dan
 silikon yang dibangun darinya, bukan di logika RTL sebagaimana disimulasikan.
 Karena itu pemilik memisahkannya, 21 September 2026, sebagai
-**OFF-PRINT-SILICON**: ia bukan selisih interpreter ↔ RTL. Verifikasinya di
-papan menunggu burn-in 72 jam selesai.
+**OFF-PRINT-SILICON**: ia bukan selisih interpreter ↔ RTL. Burn-in 72 jam tutup
+24 September 2026; verifikasinya di papan adalah langkah **P4**
+(`cosmictera-build/PASCA-BURN-IN.md`), dan harnessnya sudah dibekukan di
+`NUI/board_expected.json`.
 
 Label: **EH**.
 
@@ -155,11 +157,12 @@ register. Tiga probe berhenti, diukur 22 September 2026, menjawab jenis yang
 lain: `STORE` sesudah `HALT` menulis `MEM[0x100] = 5`, dan `PRINT` sesudah
 `HALT` — juga sesudah `RET` yang berhenti sebagai HC-05 — mengirim byte `'5'`
 ke kabel. Jadi cacat ini **bisa terlihat di papan**, lewat keluaran cetak; lari
-papannya sudah disiapkan (`rtl/scripts/parity_board.py`) dan menunggu burn-in.
+papannya sudah disiapkan (`rtl/scripts/parity_board.py`); burn-in tutup
+24 September 2026, dan larinya adalah langkah **P5**.
 
 **Dilaporkan, tidak diperbaiki** — ia di RTL, dan K9 berlaku. Pemilik,
 21 September 2026: tetap **EH**, dan masuk antrean perbaikan RTL sesudah
-burn-in 72 jam selesai — lebih dulu diverifikasi di papan.
+papan menjawab — lebih dulu diverifikasi di papan, langkah **P5**.
 
 Label: **EH**.
 

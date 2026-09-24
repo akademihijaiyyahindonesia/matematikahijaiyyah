@@ -50,7 +50,7 @@
    "query": "board latest",
    "answers_in": ["PAPAN"],
    "status": "dijawab",
-   "reads": "rekaman papan yang di-commit -- burn-in, lab serangan, paritas papan -- dan bagian bertanggal terbaru cosmictera-build/PAPAN.md. Rekaman yang belum di-commit, seperti lari 72 jam yang sedang berjalan, tidak dibaca",
+   "reads": "rekaman papan yang di-commit -- burn-in, lab serangan, paritas papan -- dan bagian bertanggal terbaru cosmictera-build/PAPAN.md. Rekaman yang belum di-commit tidak dibaca; lari 72 jam tutup 24 September 2026 dan artefaknya kini di-commit, jadi ia yang terbaru",
    "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
   },
   {

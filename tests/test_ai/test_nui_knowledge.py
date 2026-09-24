@@ -221,11 +221,21 @@ def test_what_an_rtl_module_instantiates_and_what_instantiates_it() -> None:
 
 
 def test_what_the_board_last_measured_is_what_is_committed() -> None:
-    """Committed records only: the 72-hour run in progress is not read."""
+    """Committed records only, and nothing summarised by hand: the 72-hour run
+    closed on 24 September 2026 and its artefacts are committed, so it is the
+    latest burn-in now -- read from the run's own summary, not from a page."""
+    from hijaiyyah.nui.repository_index import tracked
+
     a = knowledge.query("board latest")
-    families = {i["family"] for i in a["PAPAN"] if i["what"] == "latest record"}
+    records = [i for i in a["PAPAN"] if i["what"] == "latest record"]
+    families = {i["family"] for i in records}
     assert {"burn-in", "attack-lab"} <= families
-    assert all("20260921T053430Z" not in i["source"] for i in a["PAPAN"])
+    for item in records:
+        assert tracked(item["source"]) == (item["source"],), item
+    burn, = [i for i in records if i["family"] == "burn-in"]
+    assert burn["stamp"] == "20260921T053430Z"
+    assert (burn["ended"], burn["errors"], burn["sd_read_failures"]) == (
+        "duration reached", 0, 0)
     assert _one(a["PAPAN"], "latest dated section")["source"].startswith(
         "cosmictera-build/PAPAN.md:")
 

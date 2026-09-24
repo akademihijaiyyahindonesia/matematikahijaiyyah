@@ -621,7 +621,7 @@ Keduanya **cocok** dengan `SHA256SUMS` resmi rilisnya masing-masing. **Sejak
 K-3, tarball Lima di atas bukan yang akan terpasang**: Lima dipasang lewat
 Homebrew, yang formulanya pada 22 September 2026 menyebut versi yang sama,
 2.2.0. Baseline Lima karena itu dicatat ulang dari `brew info --json=v2 lima`
-saat dipasang (P7); baris tarball tetap sebagai catatan unduhan. Berkas
+saat dipasang (P8); baris tarball tetap sebagai catatan unduhan. Berkas
 `SHA256SUMS` Lima sendiri bernilai `7da5160e…97312a5f`, sama dengan yang
 ditampilkan halaman rilis GitHub; milik Ubuntu `89be81c6…0747b0185`. Yang
 **tidak** diverifikasi: tanda tangan GPG kedua berkas checksum itu

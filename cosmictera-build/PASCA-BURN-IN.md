@@ -2,40 +2,58 @@
 
 **Disusun 22 September 2026 atas permintaan pemilik**, sementara papan masih
 memikul burn-in tingkat 2: *"Dengan begitu Kamis tidak ada keputusan baru di
-tengah eksekusi."* Halaman ini perintah, bukan hasil. Tidak satu langkah pun di
-bawah sudah dijalankan; yang sudah disiapkan disebut dengan berkasnya.
+tengah eksekusi."* Halaman ini perintah, bukan hasil; langkah yang sudah
+dijalankan ditandai dengan tanggalnya dan menunjuk ke tempat hasilnya.
 
-Burn-in `20260921T053430Z-burn-in-72h` mulai 21 September 2026 05:34:30 UTC,
-jadi selesai **24 September 2026 05:34:30 UTC — Kamis 12:34 WIB**. Papan tetap
-milik burn-in sampai `burn_in.py` keluar sendiri; `parity_board.py` menolak
-berjalan selama prosesnya hidup. **Sampai itu** — pemilik, 22 September 2026 —
-`burn_in.py`, RTL, bitstream, dan eksperimen papan tidak disentuh; yang boleh
-maju hanya persiapan Lapis 5 dan kontrak kueri NUI. Sesudah K-5 sampai K-9
-pemilik menegaskannya dalam dua kata: sampai 24 September 2026 12:34 WIB,
-**burn-in saja**.
+Burn-in `20260921T053430Z-burn-in-72h` mulai 21 September 2026 05:34:30 UTC dan
+**tutup 24 September 2026 05:34:30 UTC — Kamis 12:34 WIB**, dengan `ended`
+berbunyi `duration reached` dan 0 error papan. Sampai jam itu, atas perintah
+pemilik, `burn_in.py`, RTL, bitstream, dan eksperimen papan tidak disentuh.
+
+**Urutan P0–P8 dikunci pemilik 23 September 2026**, dan tidak diubah lagi.
+Penomoran ini urutan eksekusi, **bukan** lapis NUI: dua belas lapis NUI tetap
+seperti di `NUI/LAYERS.md`. Dua pergeseran dari susunan 22 September dicatat
+supaya tidak diam: pengurai naik menjadi **P1**, mendahului paritas papan, dan
+klasifikasi selisih pindah ke **P7**, bersama pembekuan Lapis 4.
+
+```
+P0  tutup burn-in dan bekukan bukti          selesai 24 September 2026
+P1  pengurai + capture mentah
+P2  paritas papan
+P3  kolom opcode perangkat keras
+P4  PRINT di silikon
+P5  HALT/RET di silikon
+P6  checksum + sabotase
+P7  laporan selisih final, freeze Lapis 4, tag
+P8  Lapis 5
+```
 
 ## Keputusan pemilik, 22 September 2026
 
 | # | keputusan | menyentuh |
 |---|---|---|
 | K-1 | Dua baris `error` di log lari yang sedang berjalan dicatat sebagai **selisih yang diketahui**. `burn_in.py` tidak diubah sebelum lari 72 jam selesai — pengurai yang aktif adalah bagian observasi, dan mengubahnya di tengah lari mencampur jejak pembuktiannya. Pengurai diperbaiki **sesudah** burn-in | P0 |
-| K-2 | Lapis 4 dibekukan dengan **commit dan annotated tag git**, misalnya `layer4-freeze-2026-09-24` — sesudah seluruh bukti Lapis 4 final, **tidak sekarang** | P6 |
-| K-3 | Lima dipasang lewat **Homebrew**; `LIMA_HOME=~/cosmictera-layer5/lima-home`; VM **`cosmictera-layer5`**; image di `~/cosmictera-layer5/downloads/`. Template bawaan Lima tidak dipakai | P7 |
-| K-4 | `journalctl` dan `ip` masuk daftar izin, **hanya** dalam bentuk `journalctl -b -n 200 --no-pager`, `journalctl -b -u <service> -n 200 --no-pager`, `ip -brief addr`, `ip link`, `ip route` | P7 |
+| K-2 | Lapis 4 dibekukan dengan **commit dan annotated tag git**, misalnya `layer4-freeze-2026-09-24` — sesudah seluruh bukti Lapis 4 final | P7 |
+| K-3 | Lima dipasang lewat **Homebrew**; `LIMA_HOME=~/cosmictera-layer5/lima-home`; VM **`cosmictera-layer5`**; image di `~/cosmictera-layer5/downloads/`. Template bawaan Lima tidak dipakai | P8 |
+| K-4 | `journalctl` dan `ip` masuk daftar izin, **hanya** dalam bentuk `journalctl -b -n 200 --no-pager`, `journalctl -b -u <service> -n 200 --no-pager`, `ip -brief addr`, `ip link`, `ip route` | P8 |
 | K-5 | Arti STATE dikunci: keadaan aktual OBJECT/TARGET saat representasi semantik dibuat. Kosakatanya belum dimigrasi (`NUI/spec/usr.json`) | — |
-| K-6 | Domain ketujuh NUI, **HOST**: keadaan, proses, service, jaringan, filesystem, dan runtime host yang diamati. Tidak ada fakta HOST sebelum kolektor mengukur | P7 |
-| K-7 | **Byte mentah kabel jadi bukti primer burn-in**; pengurai bekerja offline atasnya. Lari 72 jam sekarang tidak diubah — lognya rekaman historis, dan dua error semunya artefak pengurai | P0, pengurai |
-| K-8 | Checksum loader menutupi **seluruh container**: rekaman sektor 16, header dengan medan checksum dinolkan, tabel relokasi, kata program. Tabelnya di `cosmictera-build/attack-lab/README.md`. Tidak diimplementasikan sebelum burn-in selesai | P5 |
-| K-9 | Instance uji Lapis 5 **`cosmictera-layer5-uji`**, sekali pakai; `cosmictera-layer5` jadi instance utama sesudah jalurnya terbukti di sana | P7 |
-| K-10 | Algoritma checksum: **jumlah 32-bit mod 2³²**, bukan CRC-32. `CHECKSUM32 = Σ canonical_container_words mod 2^32`, dihitung atas representasi word container sebagaimana tersimpan di kartu — satu cara menghitung, tanpa tabel CRC-32 dan tanpa memperbesar arena heap (23 September 2026) | P5 |
-| K-11 | Rekaman observasi Lapis 5 disimpan **di host, di luar repositori**: `~/cosmictera-layer5/observations/<run_id>/`, dengan `manifest.json` dan keluaran mentah per kolektor (23 September 2026) | P7 |
+| K-6 | Domain ketujuh NUI, **HOST**: keadaan, proses, service, jaringan, filesystem, dan runtime host yang diamati. Tidak ada fakta HOST sebelum kolektor mengukur | P8 |
+| K-7 | **Byte mentah kabel jadi bukti primer burn-in**; pengurai bekerja offline atasnya. Lari 72 jam sekarang tidak diubah — lognya rekaman historis, dan dua error semunya artefak pengurai | P0, P1 |
+| K-8 | Checksum loader menutupi **seluruh container**: rekaman sektor 16, header dengan medan checksum dinolkan, tabel relokasi, kata program. Tabelnya di `cosmictera-build/attack-lab/README.md`. Tidak diimplementasikan sebelum burn-in selesai | P6 |
+| K-9 | Instance uji Lapis 5 **`cosmictera-layer5-uji`**, sekali pakai; `cosmictera-layer5` jadi instance utama sesudah jalurnya terbukti di sana | P8 |
+| K-10 | Algoritma checksum: **jumlah 32-bit mod 2³²**, bukan CRC-32. `CHECKSUM32 = Σ canonical_container_words mod 2^32`, dihitung atas representasi word container sebagaimana tersimpan di kartu — satu cara menghitung, tanpa tabel CRC-32 dan tanpa memperbesar arena heap (23 September 2026) | P6 |
+| K-11 | Rekaman observasi Lapis 5 disimpan **di host, di luar repositori**: `~/cosmictera-layer5/observations/<run_id>/`, dengan `manifest.json` dan keluaran mentah per kolektor (23 September 2026) | P8 |
 
 Yang **tidak** diputuskan di hari itu, dan tidak masuk urutan ini: perbaikan
 `PRINT` di silikon dan perbaikan instruksi sesudah berhenti. Keduanya RTL, K9
 berlaku, dan pemilik sudah menetapkan urutannya: diverifikasi di papan dulu,
 diputuskan sesudahnya.
 
-## P0 — bekukan burn-in: log final (K-1, K-7)
+## P0 — bekukan burn-in: log final (K-1, K-7) — **selesai 24 September 2026**
+
+Hasilnya, beserta ketiga hash, garis dasar, pemeriksaan K-1, dan perbandingan
+terhadap tingkat 1, ada di `cosmictera-build/burn-in/README.md` bagian
+"Tingkat 2" dan di `cosmictera-build/PAPAN.md`. Tidak disalin ke sini (R1).
 
 ```bash
 pgrep -f "rtl/scripts/burn_in.py" || echo "selesai"          # tunggu sampai keluar sendiri
@@ -75,7 +93,33 @@ Pemeriksaan itu dijalankan pada JSONL final dan hasilnya dicatat di
 pengurai, bukan error papan. Pengurainya diperbaiki sesudahnya, sebagai butir
 sendiri — lihat bagian "Pengurai burn-in (K-7)" di bawah.
 
-## P1 — paritas papan, seluruh korpus
+## P1 — pengurai dan capture mentah (K-7)
+
+Pemilik menyetujui perbaikan pengurai dengan satu perubahan arsitektur:
+**pengurai tidak lagi menjadi sumber bukti primer**. Buktinya adalah byte yang
+benar-benar diterima dari kabel.
+
+```
+USB/serial → capture mentah → berkas .raw (bukti biner) → pengurai offline
+           → log burn-in terstruktur → analisis
+```
+
+Metadata minimal tiap capture, dari pemilik: cap waktu mulai, cap waktu
+selesai, identitas serial/perangkat, sidik jari bitstream, nama berkas capture,
+jumlah byte, dan versi pengurai.
+
+Lari 72 jam yang sudah tutup **tidak diubah apa pun**, dan lognya tetap rekaman
+historis. **Yang tidak boleh diklaim di langkah ini** — perintah pemilik, 24
+September 2026: pengurai **belum** tervalidasi terhadap capture mentah kabel,
+karena lari 72 jam tidak menyimpan byte mentah. Yang bisa dibuktikan sekarang
+adalah laporan pengurai, pencacah papan, dan artefak log yang sudah ada.
+Validasi capture mentah baru terjadi pada **lari berikutnya**. Cacat pengurainya sudah terukur (P0): sebuah angka yang menempel
+pada penanda detak, `0H`, kehilangan pemisah barisnya. Cara memperbaikinya —
+misalnya membuang detak yang sedang terkumpul ketika sebuah baris memuat `H`
+tetapi bukan `H` saja — tetap **usulan**, dan diuji pada byte mentah, bukan
+pada JSONL.
+
+## P2 — paritas papan, seluruh korpus
 
 ```bash
 python3 rtl/scripts/parity_board.py --experiment parity              # rencana
@@ -97,16 +141,16 @@ dikirim, semua jawaban disimpan. Rekonfigurasi di tengah pembacaan kartu
 merusak init kartu berikutnya (OFF.md), tapi tak satu program yang dikirim
 menyentuh kartu.
 
-## P2 — kolom perangkat keras per opcode
+## P3 — kolom perangkat keras per opcode
 
-Keluar dari laporan P1: `opcodes` di `<UTC>-parity.report.json`. Aturannya
+Keluar dari laporan P2: `opcodes` di `<UTC>-parity.report.json`. Aturannya
 ditulis di `src/hijaiyyah/nui/board_parity.py`: PARITY kalau opcode hanya
 muncul di program yang cocok, MISMATCH kalau hanya di program yang berbeda,
 UNKNOWN kalau di keduanya — kabel saja tidak bisa menunjuk instruksi mana yang
 berbeda — atau kalau tak satu program yang dikirim menjalankannya. Kolom itu
 lalu dipindah ke `NUI/PARITY.md`.
 
-## P3 — PRINT di silikon
+## P4 — PRINT di silikon
 
 ```bash
 python3 rtl/scripts/parity_board.py --experiment print --port /dev/tty.usbserial-20250303171
@@ -117,7 +161,7 @@ berisi `ladder`: nilai, Python, interpreter, RTL tersimulasi, papan, dan
 `first_divergence`. Yang diharapkan kedua mesin sudah beku — keduanya mencetak
 ketujuh nilai dengan benar. Yang dicari **batas pertama**, bukan perbaikan.
 
-## P4 — HALT dan RET di silikon
+## P5 — HALT dan RET di silikon
 
 ```bash
 python3 rtl/scripts/parity_board.py --experiment stop --port /dev/tty.usbserial-20250303171
@@ -130,7 +174,7 @@ RET gagal dan sesudah HALT). Papan hanya bisa menjawab yang lewat kabel:
 register dan RAM sesudah berhenti tidak pernah tercetak, dan laporannya
 menyebut itu, bukan mengisinya.
 
-## P5 — checksum (K-8) dan klasifikasi selisih final
+## P6 — checksum (K-8, K-10)
 
 **Checksum.** Cakupan K-8 dan algoritma K-10 diterapkan di
 `rtl/programs/hos_prog_load.hasm` dan `rtl/scripts/build_container.py`:
@@ -140,33 +184,33 @@ nama `CRC` ikut diganti `CHECKSUM32`. Empat kasus sabotase menyertainya, satu
 untuk tiap bagian yang baru dilindungi, dan `VERSION` naik. Tabel
 keputusannya di `cosmictera-build/attack-lab/README.md`. Terukur 22 September 2026: keempat
 program yang membawa loader kartu — `hos_prog_load`, `shell`, `test_prog_load`,
-`test_prog_run` — tidak termasuk yang dikirim P1, jadi mengubah loader di sini
-tidak menggeser bukti papan P1–P4. Model Lapis 3 dan Lapis 4 yang memuat
-program-program itu dibangun ulang sebelum P6.
+`test_prog_run` — tidak termasuk yang dikirim P2, jadi mengubah loader di sini
+tidak menggeser bukti papan P2–P5. Model Lapis 3 dan Lapis 4 yang memuat
+program-program itu dibangun ulang sebelum P7.
 
-**Klasifikasi selisih.** Tiap MISMATCH dari P1–P4 dipilah dari laporannya:
+## P7 — laporan selisih final dan bekukan Lapis 4 (K-2)
+
+**Laporan selisih final.** Tiap MISMATCH dari P2–P6 dipilah dari laporannya:
 sudah dikenal (OFF-PRINT-SILICON, instruksi sesudah berhenti) atau baru. Yang
 baru jadi butir OFF.md dengan angkanya. **Tidak ada RTL yang diubah** di
 langkah ini.
 
-## P6 — bekukan Lapis 4 (K-2)
-
 Urutan pemilik: paritas papan → kolom opcode perangkat keras → PRINT di
 silikon → HALT/RET di silikon → checksum dan klasifikasi selisih final →
-**commit terakhir** → **annotated tag**. Commit itu membawa rekaman dan laporan P1–P4
+**commit terakhir** → **annotated tag**. Commit itu membawa rekaman dan laporan P2–P5
 bersama pembaruan `NUI/PARITY.md`, `NUI/LAYERS.md`, dan
 `cosmictera-build/PAPAN.md`, dengan empat gerbang hijau di lari yang sama.
 Sesudah tidak ada lagi perubahan pada artefak Lapis 4:
 
 ```bash
-git tag -a layer4-freeze-2026-09-24 -m "Layer 4 frozen: <isi dari laporan P1-P5>"
+git tag -a layer4-freeze-2026-09-24 -m "Layer 4 frozen: <isi dari laporan P2-P6>"
 git show layer4-freeze-2026-09-24 --stat
 ```
 
 Annotated, bukan lightweight, supaya tonggaknya membawa metadata. Tag tidak
 dibuat sebelum bukti papan dan silikon masuk.
 
-## P7 — mulai Lapis 5, hanya baca (K-3, K-4, K-6, K-9)
+## P8 — mulai Lapis 5, hanya baca (K-3, K-4, K-6, K-9)
 
 Yang sudah siap: `NUI/spec/layer5_lima.yaml` (image terverifikasi lewat
 digest, tanpa mount, mode plain), `NUI/spec/layer5_collectors.json` (sebelas
@@ -232,34 +276,11 @@ diverifikasi 22 September bukan yang dipasang Homebrew. Formula Homebrew hari
 itu menyebut versi yang sama, 2.2.0, tetapi baseline Lima dicatat ulang dari
 `brew info` saat dipasang, di `NUI/LAYERS.md`.
 
-## Pengurai burn-in (K-7) — sesudah burn-in, di luar P0–P7
-
-Pemilik menyetujui perbaikan pengurai dengan satu perubahan arsitektur:
-**pengurai tidak lagi menjadi sumber bukti primer**. Buktinya adalah byte yang
-benar-benar diterima dari kabel.
-
-```
-USB/serial → capture mentah → berkas .raw (bukti biner) → pengurai offline
-           → log burn-in terstruktur → analisis
-```
-
-Metadata minimal tiap capture, dari pemilik: cap waktu mulai, cap waktu
-selesai, identitas serial/perangkat, sidik jari bitstream, nama berkas capture,
-jumlah byte, dan versi pengurai.
-
-Lari 72 jam yang sekarang **tidak diubah apa pun**. Pengurai diperbaiki
-sesudah lari itu selesai, lalu diuji terhadap capture mentah **lari
-berikutnya**. Cacat pengurainya sudah terukur (P0): sebuah angka yang menempel
-pada penanda detak, `0H`, kehilangan pemisah barisnya. Cara memperbaikinya —
-misalnya membuang detak yang sedang terkumpul ketika sebuah baris memuat `H`
-tetapi bukan `H` saja — tetap **usulan**, dan diuji pada byte mentah, bukan
-pada JSONL.
-
-## Paket audit sesudah P7
+## Paket audit sesudah P8
 
 | isi | tempat |
 |---|---|
-| commit, hasil empat gerbang, dan tag beku | pesan commit P6, tag `layer4-freeze-…` |
+| commit, hasil empat gerbang, dan tag beku | pesan commit P7, tag `layer4-freeze-…` |
 | burn-in 72 jam, hash, baseline, dan pemeriksaan K-1 | `cosmictera-build/burn-in/` |
 | paritas papan dan kolom per opcode | `cosmictera-build/parity-board/*-parity.*` |
 | PRINT di silikon | `cosmictera-build/parity-board/*-print.*` |
