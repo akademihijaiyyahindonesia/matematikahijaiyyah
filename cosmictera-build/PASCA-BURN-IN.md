@@ -20,7 +20,7 @@ klasifikasi selisih pindah ke **P7**, bersama pembekuan Lapis 4.
 P0  tutup burn-in dan bekukan bukti          selesai 24 September 2026
 P1  pengurai + capture mentah                selesai 24 September 2026
 P2  paritas papan                            selesai 24 September 2026
-P3  kolom opcode perangkat keras
+P3  kolom opcode perangkat keras             selesai 24 September 2026
 P4  PRINT di silikon
 P5  HALT/RET di silikon
 P6  checksum + sabotase
@@ -150,7 +150,11 @@ dikirim, semua jawaban disimpan. Rekonfigurasi di tengah pembacaan kartu
 merusak init kartu berikutnya (OFF.md), tapi tak satu program yang dikirim
 menyentuh kartu.
 
-## P3 — kolom perangkat keras per opcode
+## P3 — kolom perangkat keras per opcode — **selesai 24 September 2026**
+
+Matriksnya di `NUI/PARITY.md`, bagian "Kolom perangkat keras per opcode":
+74 PARITY, 0 MISMATCH, 29 UNKNOWN, tiap sel dengan cacah bukti dan program
+sumbernya, dihitung ulang dari byte mentah rekaman P2 (R1).
 
 Keluar dari laporan P2: `opcodes` di `<UTC>-parity.report.json`. Aturannya
 ditulis di `src/hijaiyyah/nui/board_parity.py`: PARITY kalau opcode hanya

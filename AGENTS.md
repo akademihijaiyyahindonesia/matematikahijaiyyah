@@ -1256,6 +1256,33 @@ lagi, lari pertama jadi 72 PARITY dan 3 MISMATCH — yang ketiga persis program
 yang tercemar — dan lari kedua 73 dan 2. Tidak ada RTL yang diubah, dan tidak
 ada ekspektasi yang digeser.
 
+### 24 September 2026 — P3: kolom perangkat keras per opcode
+
+Bukti 79 program jadi **matriks per opcode** di `NUI/PARITY.md`, bagian "Kolom
+perangkat keras per opcode": **74 PARITY, 0 MISMATCH, 29 UNKNOWN**, dan tiap
+baris membawa cacah buktinya — program yang menjalankannya, yang cocok, yang
+berbeda, yang tak bisa diputuskan — beserta program sumbernya. Angkanya tidak
+disalin ke sini (R1).
+
+**Tiap sel dihitung ulang dari byte mentah rekaman P2**, bukan ditulis tangan:
+`board_corpus()` di `src/hijaiyyah/nui/parity_model.py` memanggil
+`board_parity.opcode_column`, dan sebuah tes membandingkan matriks yang
+di-commit dengan yang dihitung ulang dari rekaman itu.
+
+**Aturan Lapis 4 yang pemilik tetapkan dari P2**: analisis membaca **byte
+mentah** rekaman lebih dulu, baru mengurai teksnya. Laporan `CYCLES=` yang
+tiba tergeser satu byte adalah alasannya.
+
+**Lima opcode tetap UNKNOWN selama bukti campur** — `HALT`, `HCRC`, `HLOAD`,
+`HPACK`, `PRINT` — dan tidak dipaksa PARITY untuk melengkapi tabel. Khusus
+`PRINT`: dua program yang berbeda adalah bukti silikon nyata dan tetap dicatat,
+tetapi **status dan selisih adalah dua hal berbeda** (kata pemilik), jadi
+kolomnya UNKNOWN sementara tangga PRINT yang terekam tetap MISMATCH.
+
+**Empat program pencacah** — `timer_poll`, `trap_resume`, `trap_shadow`,
+`trap_timer` — tetap **UNKNOWN karena semantik pencacah**, bukan cacat
+perangkat keras: interpreter menghitung instruksi, silikon menghitung clock.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

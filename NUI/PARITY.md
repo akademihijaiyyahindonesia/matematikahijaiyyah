@@ -210,6 +210,126 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `print-ladder` | 33554432 | `335544;<` | `33554432` | `33554432` | MISMATCH | `cosmictera-build/OFF.md:111` |
 | `print-ladder` | 2147483648 | `2147481?::` | `2147483648` | `2147483648` | MISMATCH | `cosmictera-build/OFF.md:112` |
 
+## Kolom perangkat keras per opcode — korpus papan
+
+Dari rekaman `cosmictera-build/parity-board/20260924T105400Z-parity.json`, 79 program yang dikirim ke papan pada commit `ce663be`. Ekspektasi beku `905cd6111790…`, bitstream `84fdc9123246…`. Tiap sel dihitung ulang dari byte mentah rekaman itu oleh `board_parity.opcode_column`, bukan ditulis tangan.
+
+**Aturan Lapis 4 sejak P2** (pemilik, 24 September 2026): analisis membaca **byte mentah** rekaman lebih dulu, baru mengurai teksnya. Laporan `CYCLES=` yang tiba tergeser satu byte adalah buktinya -- teks yang sebuah rekaman bawa sejak hari ia ditulis tidak bisa dibetulkan dengan membacanya ulang; byte-nya bisa.
+
+**PARITY** hanya bila tiap program yang menjalankannya cocok; **MISMATCH** bila tiap program yang menjalankannya berbeda dari ekspektasi beku; **UNKNOWN** bila belum ada bukti, atau bukti yang ada bercampur sehingga kabel tidak bisa menunjuk instruksi mana yang berbeda. Sebuah opcode tidak pernah dipindahkan ke PARITY untuk melengkapi tabel.
+
+| status | opcode |
+|---|---:|
+| PARITY | 74 |
+| MISMATCH | 0 |
+| UNKNOWN | 29 |
+
+| opcode | nama | program | bukti | PARITY | MISMATCH | UNKNOWN | papan | alasan | sumber |
+|---|---|---:|---:|---:|---:|---:|---|---|---|
+| `0x10` | `ADD` | 8 | 8 | 6 | 0 | 2 | PARITY | -- | `parity:integer_arithmetic` +5 |
+| `0x11` | `ADDI` | 19 | 19 | 15 | 0 | 4 | PARITY | -- | `parity:add_immediate_signed` +14 |
+| `0xB0` | `AND` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:bitwise_register` +1 |
+| `0xB6` | `ANDI` | 44 | 44 | 42 | 0 | 2 | PARITY | -- | `parity:add_immediate_signed` +41 |
+| `0x2E` | `CALL` | 4 | 4 | 4 | 0 | 0 | PARITY | -- | `rtl/programs/hfs_lifecycle.hasm` +3 |
+| `0x49` | `CDOT` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x48` | `CEQ` | 4 | 4 | 4 | 0 | 0 | PARITY | -- | `parity:codex_equality_sets_zero` +3 |
+| `0x44` | `CGET` | 35 | 35 | 35 | 0 | 0 | PARITY | -- | `parity:branch_on_guard` +34 |
+| `0x70` | `CHASH` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x4F` | `CMOD4` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:codex_turning_budget_and_residue` +1 |
+| `0x46` | `CMOV` | 4 | 4 | 4 | 0 | 0 | PARITY | -- | `parity:codex_copy_and_zero` +3 |
+| `0x20` | `CMP` | 5 | 5 | 5 | 0 | 0 | PARITY | -- | `parity:backward_branch_loop` +4 |
+| `0x21` | `CMPI` | 12 | 12 | 9 | 0 | 3 | PARITY | -- | `parity:compare_immediate` +8 |
+| `0x4C` | `CRHO` | 3 | 3 | 3 | 0 | 0 | PARITY | -- | `parity:codex_negative_residue` +2 |
+| `0x45` | `CSET` | 9 | 9 | 9 | 0 | 0 | PARITY | -- | `parity:cset_past_seventeen_names_nothing` +8 |
+| `0x72` | `CSIGN` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x43` | `CSUB` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x4D` | `CU` | 3 | 3 | 3 | 0 | 0 | PARITY | -- | `parity:codex_negative_residue` +2 |
+| `0x47` | `CZERO` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:codex_copy_and_zero` +1 |
+| `0xA2` | `EMITS` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x08` | `ERET` | 8 | 8 | 5 | 0 | 3 | PARITY | -- | `rtl/programs/mem_protect.hasm` +4 |
+| `0x0A` | `FRD` | 58 | 58 | 56 | 0 | 2 | PARITY | -- | `parity:add_immediate_signed` +55 |
+| `0x0B` | `FWR` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:flags_survive_a_compare` +1 |
+| `0x01` | `HALT` | 79 | 79 | 73 | 2 | 4 | UNKNOWN | executed in agreeing and differing runs: the wire alone cannot say which instruction differed | `rtl/programs/bench/e4_frame.hasm`, `rtl/programs/test_hisab.hasm` |
+| `0xFF` | `HALT_ERR` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x42` | `HCADD` | 11 | 11 | 11 | 0 | 0 | PARITY | -- | `parity:codex_add` +10 |
+| `0x68` | `HCHK` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x51` | `HCRC` | 4 | 4 | 2 | 2 | 0 | UNKNOWN | executed in agreeing and differing runs: the wire alone cannot say which instruction differed | `rtl/programs/bench/e4_frame.hasm`, `rtl/programs/test_hisab.hasm` |
+| `0x56` | `HDCMP` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x58` | `HDES` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x07` | `HDIST` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:distance_between_letters` +1 |
+| `0x55` | `HEXMT` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x60` | `HGRD` | 22 | 22 | 22 | 0 | 0 | PARITY | -- | `parity:branch_on_guard` +21 |
+| `0x40` | `HLOAD` | 42 | 42 | 40 | 2 | 0 | UNKNOWN | executed in agreeing and differing runs: the wire alone cannot say which instruction differed | `rtl/programs/bench/e4_frame.hasm`, `rtl/programs/test_hisab.hasm` |
+| `0x06` | `HNRM2` | 3 | 3 | 3 | 0 | 0 | PARITY | -- | `parity:norm_of_a_letter` +2 |
+| `0x50` | `HPACK` | 4 | 4 | 2 | 2 | 0 | UNKNOWN | executed in agreeing and differing runs: the wire alone cannot say which instruction differed | `rtl/programs/bench/e4_frame.hasm`, `rtl/programs/test_hisab.hasm` |
+| `0x80` | `HPROJ` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x57` | `HSER` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x23` | `JEQ` | 8 | 8 | 6 | 0 | 2 | PARITY | -- | `parity:forward_branch_taken` +5 |
+| `0x29` | `JGD` | 5 | 5 | 5 | 0 | 0 | PARITY | -- | `parity:branch_on_guard` +4 |
+| `0x2C` | `JGF` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x2B` | `JGP` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x22` | `JMP` | 62 | 62 | 58 | 0 | 4 | PARITY | -- | `parity:add_immediate_signed` +57 |
+| `0x24` | `JNE` | 10 | 10 | 9 | 0 | 1 | PARITY | -- | `parity:backward_branch_loop` +8 |
+| `0x2A` | `JNGD` | 9 | 9 | 9 | 0 | 0 | PARITY | -- | `parity:branch_on_guard_not_taken` +8 |
+| `0x2D` | `JNP` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x30` | `LOAD` | 16 | 16 | 12 | 0 | 4 | PARITY | -- | `parity:mmio_compare_round_trip` +11 |
+| `0xF1` | `L_AIN` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE0` | `L_ALIF` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE1` | `L_BA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE7` | `L_DAL` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xEE` | `L_DHAD` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE8` | `L_DZAL` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF3` | `L_FA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF2` | `L_GHAIN` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE5` | `L_HA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xFA` | `L_HAA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE4` | `L_JIM` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` +1 |
+| `0xF5` | `L_KAF` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE6` | `L_KHA` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` +1 |
+| `0xF6` | `L_LAM` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF7` | `L_MIM` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF8` | `L_NUN` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF4` | `L_QAF` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE9` | `L_RA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xED` | `L_SHAD` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xEB` | `L_SIN` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xEC` | `L_SYIN` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE2` | `L_TA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xEF` | `L_THA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xE3` | `L_TSA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF9` | `L_WAW` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xFB` | `L_YA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xEA` | `L_ZAY` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0xF0` | `L_ZHA` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/letters.hasm` |
+| `0x03` | `MOV` | 4 | 4 | 4 | 0 | 0 | PARITY | -- | `parity:move_and_immediate` +3 |
+| `0x04` | `MOVI` | 55 | 55 | 51 | 0 | 4 | PARITY | -- | `parity:add_immediate_signed` +50 |
+| `0x14` | `MUL` | 4 | 4 | 4 | 0 | 0 | PARITY | -- | `parity:integer_arithmetic` +3 |
+| `0x00` | `NOP` | 7 | 7 | 6 | 0 | 1 | PARITY | -- | `parity:move_and_immediate` +5 |
+| `0xB3` | `NOT` | 5 | 5 | 5 | 0 | 0 | PARITY | -- | `parity:bitwise_immediate_extension` +4 |
+| `0xB1` | `OR` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `parity:bitwise_register` |
+| `0xB7` | `ORI` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `parity:bitwise_immediate` |
+| `0x33` | `POP` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0xA0` | `PRINT` | 79 | 79 | 73 | 2 | 4 | UNKNOWN | executed in agreeing and differing runs: the wire alone cannot say which instruction differed | `rtl/programs/bench/e4_frame.hasm`, `rtl/programs/test_hisab.hasm` |
+| `0xA1` | `PRINTH` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x32` | `PUSH` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `rtl/programs/subroutine.hasm` |
+| `0x2F` | `RET` | 4 | 4 | 4 | 0 | 0 | PARITY | -- | `rtl/programs/hfs_lifecycle.hasm` +3 |
+| `0xB4` | `SHL` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:bitwise_shift` +1 |
+| `0xB9` | `SHLI` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:bitwise_shift` +1 |
+| `0xB5` | `SHR` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:bitwise_shift` +1 |
+| `0xBA` | `SHRI` | 46 | 46 | 44 | 0 | 2 | PARITY | -- | `parity:add_immediate_signed` +43 |
+| `0x31` | `STORE` | 17 | 17 | 14 | 0 | 3 | PARITY | -- | `parity:mmio_compare_round_trip` +13 |
+| `0x12` | `SUB` | 8 | 8 | 7 | 0 | 1 | PARITY | -- | `parity:integer_arithmetic` +6 |
+| `0x09` | `SYSCALL` | 3 | 3 | 3 | 0 | 0 | PARITY | -- | `rtl/programs/syscall.hasm` +2 |
+| `0x4B` | `VDIST` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x4A` | `VNORM` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x8A` | `VPROJ_K` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x89` | `VPROJ_N` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x8B` | `VPROJ_Q` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x88` | `VPROJ_T` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x59` | `VSCL` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0xB2` | `XOR` | 1 | 1 | 1 | 0 | 0 | PARITY | -- | `parity:bitwise_register` |
+| `0xB8` | `XORI` | 5 | 5 | 5 | 0 | 0 | PARITY | -- | `parity:bitwise_immediate` +4 |
+
 ## Python
 
 | opcode | referensi | diperiksa | status |

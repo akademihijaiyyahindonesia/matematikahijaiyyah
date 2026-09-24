@@ -153,6 +153,6 @@ python3 NUI/pipeline.py --quick     # NUI, ujung ke ujung, ~20 detik
 ```
 
 Angka hari ini (bisa berubah — jalankan ulang, jangan dikutip dari sini):
-5.431 tes Python lulus, 0 dilewati; 408 asersi RTL di 39 testbench
+5.437 tes Python lulus, 0 dilewati; 408 asersi RTL di 39 testbench
 `make all`, 0 gagal — dari 36 berkas bench yang seluruhnya dijalankan
 sesuatu, 16 di antaranya lewat pytest dan bukan lewat `make`.

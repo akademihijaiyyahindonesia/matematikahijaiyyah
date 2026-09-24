@@ -656,9 +656,63 @@ def build(jobs: int | None = None) -> Model:
         "python": _python_rollup(interp),
         "board": board,
         "opcodes": opcodes,
+        "board_corpus": board_corpus(),
         "mmio": _mmio_rollup(results),
         "unknown": _unknowns(results, board, opcodes),
     }
+
+
+def board_corpus() -> Model:
+    """The hardware column per opcode, from the newest committed board record.
+
+    The owner's step P3, 24 September 2026: the evidence of 79 programs turned
+    into a matrix per opcode. Nothing here decides anything a second time --
+    the status and its reason are `board_parity.opcode_column`, computed from
+    the record's own bytes, and this adds the counts and the programs each
+    cell rests on so every cell can be walked back.
+
+    The rule the owner set, and the one this must not soften: PARITY only
+    where the hardware evidence that bears on it agrees, MISMATCH where valid
+    board evidence differs from the frozen expectation, and UNKNOWN where
+    there is not enough evidence or the evidence available is mixed. An
+    opcode is never moved to PARITY to complete a table.
+    """
+    from .board_parity import classify, latest_record, load_expected, opcode_column, reparsed
+
+    record = latest_record("parity")
+    if record is None:
+        return {"record": None, "note": "no board parity record is committed yet",
+                "opcodes": {}}
+    section = load_expected()["parity"]
+    classified = classify(reparsed(record), section)
+    column = opcode_column(classified, section)
+    sent = {name for name, exp in section["programs"].items() if exp["sent"]}
+    out: Model = {}
+    for name, cell in column.items():
+        runs = sorted(p for p, exp in section["programs"].items()
+                      if name in exp.get("opcodes", []))
+        undecided_sent = [p for p in cell["undecided"] if p in sent]
+        out[name] = {
+            "opcode": f"0x{OpCode[name].value:02X}",
+            "name": name,
+            "programs": len(runs),
+            "evidence": len(cell["agreeing"]) + len(cell["differing"]) + len(undecided_sent),
+            "parity": len(cell["agreeing"]),
+            "mismatch": len(cell["differing"]),
+            "unknown": len(cell["undecided"]),
+            "unknown_sent": len(undecided_sent),
+            "board": cell["board"],
+            "reason": cell["reason"],
+            "agreeing_programs": cell["agreeing"],
+            "differing_programs": cell["differing"],
+            "undecided_programs": cell["undecided"],
+        }
+    counts = {s: sum(1 for c in out.values() if c["board"] == s)
+              for s in ("PARITY", "MISMATCH", "UNKNOWN")}
+    return {"record": record.get("date"), "commit": record.get("commit"),
+            "expected_sha256": record.get("expected_sha256"),
+            "bitstream_sha256": record.get("bitstream_sha256"),
+            "programs_sent": len(sent), "counts": counts, "opcodes": out}
 
 
 def _python_rollup(interp: dict[str, InterpreterRun]) -> Model:
@@ -948,6 +1002,46 @@ def page(model: Model) -> str:
     for r in model["board"]:
         out.append(f"| `{r['program']}` | {r.get('value', '')} | `{r['board']}` | "
                    f"`{r['interpreter']}` | `{r['rtl']}` | {r['status']} | `{r['record']}` |")
+    corpus = model.get("board_corpus") or {}
+    if corpus.get("opcodes"):
+        c = corpus["counts"]
+        out += ["", "## Kolom perangkat keras per opcode — korpus papan", "",
+                f"Dari rekaman `cosmictera-build/parity-board/{corpus['record']}-parity.json`, "
+                f"{corpus['programs_sent']} program yang dikirim ke papan pada commit "
+                f"`{corpus['commit']}`. Ekspektasi beku `{corpus['expected_sha256'][:12]}…`, "
+                f"bitstream `{corpus['bitstream_sha256'][:12]}…`. Tiap sel dihitung ulang dari "
+                "byte mentah rekaman itu oleh `board_parity.opcode_column`, bukan ditulis "
+                "tangan.", "",
+                "**Aturan Lapis 4 sejak P2** (pemilik, 24 September 2026): analisis membaca "
+                "**byte mentah** rekaman lebih dulu, baru mengurai teksnya. Laporan `CYCLES=` "
+                "yang tiba tergeser satu byte adalah buktinya -- teks yang sebuah rekaman bawa "
+                "sejak hari ia ditulis tidak bisa dibetulkan dengan membacanya ulang; byte-nya "
+                "bisa.", "",
+                "**PARITY** hanya bila tiap program yang menjalankannya cocok; **MISMATCH** "
+                "bila tiap program yang menjalankannya berbeda dari ekspektasi beku; "
+                "**UNKNOWN** bila belum ada bukti, atau bukti yang ada bercampur sehingga "
+                "kabel tidak bisa menunjuk instruksi mana yang berbeda. Sebuah opcode tidak "
+                "pernah dipindahkan ke PARITY untuk melengkapi tabel.", "",
+                "| status | opcode |", "|---|---:|"]
+        out += [f"| {s} | {c[s]} |" for s in ("PARITY", "MISMATCH", "UNKNOWN")]
+        out += ["", "| opcode | nama | program | bukti | PARITY | MISMATCH | UNKNOWN | "
+                "papan | alasan | sumber |",
+                "|---|---|---:|---:|---:|---:|---:|---|---|---|"]
+        for name, e in corpus["opcodes"].items():
+            if e["differing_programs"]:
+                trace = ", ".join(f"`{n}`" for n in e["differing_programs"][:2])
+            elif e["agreeing_programs"]:
+                trace = f"`{e['agreeing_programs'][0]}`"
+                if e["parity"] > 1:
+                    trace += f" +{e['parity'] - 1}"
+            elif e["undecided_programs"]:
+                trace = f"`{e['undecided_programs'][0]}`"
+            else:
+                trace = "--"
+            out.append(f"| `{e['opcode']}` | `{name}` | {e['programs']} | {e['evidence']} | "
+                       f"{e['parity']} | {e['mismatch']} | {e['unknown']} | {e['board']} | "
+                       f"{e['reason'] or '--'} | {trace} |")
+
     out += ["", "## Python", "", "| opcode | referensi | diperiksa | status |",
             "|---|---|---:|---|"]
     for name, p in model["python"].items():

@@ -81,6 +81,99 @@ def test_every_program_is_compared_and_every_opcode_has_a_row() -> None:
 # -- the owner's targets --------------------------------------------------------
 
 
+# -- P3: the hardware column, from the board corpus ---------------------------------
+
+#: The owner's five, 24 September 2026: these run in programs that agreed and
+#: in programs that did not, so the wire cannot say which instruction differed.
+#: They stay UNKNOWN while the evidence is mixed, and are never moved to
+#: PARITY to complete a table.
+MIXED = ("HALT", "HCRC", "HLOAD", "HPACK", "PRINT")
+#: The four that read the free-running counter. UNKNOWN for counter semantics:
+#: the interpreter counts instructions and silicon counts clocks. Not a
+#: hardware defect, and not written down as one.
+COUNTER = [f"rtl/programs/{n}.hasm" for n in
+           ("timer_poll", "trap_resume", "trap_shadow", "trap_timer")]
+
+
+def test_the_hardware_column_is_recomputed_from_the_record_not_written_down() -> None:
+    """Every cell of the matrix is what board_parity makes of the committed
+    record's own bytes. A page that could be edited by hand would be a claim,
+    not a measurement."""
+    from hijaiyyah.nui import board_parity as bp
+
+    corpus = COMMITTED["board_corpus"]
+    record = bp.latest_record("parity")
+    assert record is not None and record["date"] == corpus["record"]
+    section = bp.load_expected()["parity"]
+    again = bp.opcode_column(bp.classify(bp.reparsed(record), section), section)
+    assert {n: c["board"] for n, c in again.items()} == {
+        n: c["board"] for n, c in corpus["opcodes"].items()}
+    assert corpus["expected_sha256"] == record["expected_sha256"]
+    assert corpus["counts"] == {"PARITY": 74, "MISMATCH": 0, "UNKNOWN": 29}
+
+
+def test_no_opcode_is_called_parity_without_agreeing_evidence() -> None:
+    """The owner's rule, held cell by cell: PARITY only where hardware
+    evidence bears on it and agrees; MISMATCH only where valid board evidence
+    differs; UNKNOWN otherwise."""
+    for name, cell in COMMITTED["board_corpus"]["opcodes"].items():
+        if cell["board"] == "PARITY":
+            assert cell["parity"] > 0 and cell["mismatch"] == 0, (name, cell)
+        elif cell["board"] == "MISMATCH":
+            assert cell["mismatch"] > 0 and cell["parity"] == 0, (name, cell)
+        else:
+            assert cell["parity"] == 0 or cell["mismatch"] > 0, (name, cell)
+            assert cell["reason"], name
+
+
+def test_the_five_with_mixed_evidence_stay_unknown() -> None:
+    cells = COMMITTED["board_corpus"]["opcodes"]
+    for name in MIXED:
+        assert cells[name]["board"] == "UNKNOWN", (name, cells[name])
+        assert cells[name]["parity"] and cells[name]["mismatch"], name
+    mixed = {n for n, c in cells.items()
+             if c["parity"] and c["mismatch"]}
+    assert mixed == set(MIXED), mixed
+
+
+def test_print_is_unknown_in_the_column_and_a_discrepancy_beside_it() -> None:
+    """Status and discrepancy are two different things -- the owner, 24
+    September 2026. The corpus cannot decide PRINT, and the two programs that
+    differ are real silicon evidence all the same; both are written down."""
+    cell = COMMITTED["board_corpus"]["opcodes"]["PRINT"]
+    assert cell["board"] == "UNKNOWN"
+    assert cell["differing_programs"] == ["rtl/programs/bench/e4_frame.hasm",
+                                          "rtl/programs/test_hisab.hasm"]
+    assert COMMITTED["opcodes"]["PRINT"]["board"] == "MISMATCH", (
+        "the recorded ladder is the discrepancy, and it is not erased by the column")
+
+
+def test_the_counter_programs_are_unknown_for_their_semantics_not_for_a_defect() -> None:
+    from hijaiyyah.nui import board_parity as bp
+
+    record = bp.latest_record("parity")
+    assert record is not None
+    classified = bp.classify(bp.reparsed(record), bp.load_expected()["parity"])
+    for name in COUNTER:
+        row = classified[name]
+        assert row["status"] == "UNKNOWN", (name, row)
+        assert "counter" in row["reason"], row
+        assert "defect" not in row["reason"] and "bug" not in row["reason"]
+
+
+def test_every_program_a_cell_names_is_in_the_record() -> None:
+    """Source trace: no cell may rest on a program the record does not hold."""
+    from hijaiyyah.nui import board_parity as bp
+
+    record = bp.latest_record("parity")
+    assert record is not None
+    held = set(record["programs"])
+    for name, cell in COMMITTED["board_corpus"]["opcodes"].items():
+        for key in ("agreeing_programs", "differing_programs", "undecided_programs"):
+            assert set(cell[key]) <= held, (name, key, set(cell[key]) - held)
+        assert cell["evidence"] == cell["parity"] + cell["mismatch"] + cell["unknown_sent"]
+
+
 def test_print_is_a_board_mismatch_and_only_the_board() -> None:
     """The first of the two RTL defects the owner named as a layer-4 target.
     The RTL as simulated prints all thirty-two ladder values exactly as the

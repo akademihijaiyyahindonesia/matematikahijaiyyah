@@ -68,7 +68,7 @@ Rekaman lengkap tiap program beserta keluarannya:
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.431 tes Python. Simulasi bukan lalai
+langsung dari pytest — dan 5.437 tes Python. Simulasi bukan lalai
 — ia secara struktural buta terhadap ketiganya, dan itu justru pelajaran
 yang paling mahal dari hari itu.
 
