@@ -1224,6 +1224,38 @@ tervalidasi terhadap capture mentah — lari itu tidak menyimpan byte. Buktinya
 tetap yang dikunci di P0; yang tervalidasi P1 adalah capture pendek baru dan
 pengurai offline-nya.
 
+### 24 September 2026 — P2: paritas papan, 79 program
+
+**73 PARITY, 2 MISMATCH, 28 UNKNOWN**, dan kolom opcode **74 PARITY, 0
+MISMATCH, 29 UNKNOWN**. Dibandingkan **hanya** terhadap `NUI/board_expected.json`
+yang dibekukan sebelum papan ditanya; ekspektasi tidak diubah karena hasil
+papan, perintah pemilik. Angkanya di `cosmictera-build/PAPAN.md`, tidak disalin
+ke sini (R1).
+
+Kedua MISMATCH adalah angka besar dan keduanya **OFF-PRINT-SILICON**, bentuk
+yang sama dengan temuan 20 September. Opcode yang berjalan di program yang cocok
+**dan** yang berbeda tetap **UNKNOWN**, tidak dipaksa PARITY — kabel saja tidak
+bisa menunjuk instruksi mana yang berbeda.
+
+**Dua temuan alat, keduanya di sisi host:**
+
+1. **Lari pertama membaca 75 dari 79 sebagai MISMATCH**, dan penyebabnya
+   pembacanya. Laporan `CYCLES=` wrapper tiba **tergeser satu byte** — `0A`
+   di depan, bukan `0D 0A`, dan satu `0A` lebih di ujung; panjangnya tetap 19
+   byte. Terukur 79 tangkapan dari 79. Itu di RTL wrapper dan **dilaporkan,
+   tidak diperbaiki** (K9, `cosmictera-build/OFF.md`); yang dibetulkan
+   `src/hijaiyyah/nui/board_parity.py`, yang kini membuang satu baris baru
+   milik laporan dan menyimpan milik program.
+2. **Program pertama lari itu terkontaminasi 482 detak burn-in** yang masih
+   tersangkut di penyangga driver sesudah capture P1. `rtl/scripts/parity_board.py`
+   sekarang menguras kabel sebelum mengirim.
+
+Keduanya menaikkan satu aturan P1 ke Lapis 4: **laporan membaca byte mentah
+rekaman, bukan teks yang rekaman itu bawa**. Dibaca begitu, tanpa papan ditanya
+lagi, lari pertama jadi 72 PARITY dan 3 MISMATCH — yang ketiga persis program
+yang tercemar — dan lari kedua 73 dan 2. Tidak ada RTL yang diubah, dan tidak
+ada ekspektasi yang digeser.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

@@ -369,11 +369,19 @@ def parse_capture(raw: bytes) -> dict[str, Any]:
     Same rules as rtl/scripts/jamrah_board.py's parse: a byte outside printable
     ASCII other than a newline is dropped and COUNTED, never silently lost."""
     head, _, tail = raw.partition(b"CYCLES=")
-    # The wrapper's report is "\r\nCYCLES=" + 8 hex digits + "\r\n"
-    # (rtl/fpga/gowin/hcpu_gowin_top.v): the two bytes before CYCLES= are the
-    # report's, not the program's.
+    # The wrapper writes a 19-byte report, "\r\nCYCLES=" + 8 hex digits +
+    # "\r\n" (rtl/fpga/gowin/hcpu_gowin_top.v), so the bytes before CYCLES=
+    # are the report's and not the program's. Measured on the wire, 24
+    # September 2026, 79 captures of 79: the report arrives 19 bytes long and
+    # rotated one place -- "\nCYCLES=" + 8 hex digits + "\r\n\n" -- the
+    # leading \r missing and one \n over at the end. That is an observation
+    # about the wrapper, reported in cosmictera-build/OFF.md and not repaired
+    # here; what a reader must do either way is drop exactly ONE newline, the
+    # report's own, and keep the program's.
     if tail and head.endswith(b"\r\n"):
         head = head[:-2]
+    elif tail and head.endswith(b"\n"):
+        head = head[:-1]
     kept = bytes(c for c in head if c == 10 or 32 <= c < 127)
     cycles = re.match(rb"\s*([0-9A-Fa-f]+)", tail)
     return {"text": kept.decode("ascii").replace("\r", ""),
@@ -459,10 +467,30 @@ def opcode_column(classified: dict[str, dict[str, Any]],
     return out
 
 
+def reparsed(record: dict[str, Any]) -> dict[str, Any]:
+    """The record with every program read again from its own raw bytes.
+
+    The raw bytes are the evidence and the parse is a reading of them (P1,
+    24 September 2026), so a report must not rest on the text a record carried
+    from the day it was written. Measured the same day: the first parity run's
+    text was parsed by a reader that did not know the wrapper's report arrives
+    a byte out of place, and re-reading THAT text could never have corrected
+    it -- re-reading the bytes does, without asking the board again. A record
+    from before raw bytes were kept is left exactly as it is.
+    """
+    out = dict(record)
+    out["programs"] = {
+        name: ({**got, **parse_capture(bytes.fromhex(got["raw_hex"]))}
+               if isinstance(got, dict) and got.get("raw_hex") else got)
+        for name, got in record.get("programs", {}).items()}
+    return out
+
+
 def report(record: dict[str, Any], expected: dict[str, Any] | None = None) -> dict[str, Any]:
     """Everything one board record says, against what was frozen before it."""
     experiment = record["experiment"]
     section = (expected or load_expected())[experiment]
+    record = reparsed(record)
     classified = classify(record, section)
     counts = {s: sum(1 for c in classified.values() if c["status"] == s)
               for s in ("PARITY", "MISMATCH", "UNKNOWN")}

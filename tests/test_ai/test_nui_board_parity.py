@@ -225,10 +225,42 @@ def test_a_report_rolls_each_experiment_up() -> None:
 def test_a_capture_is_parsed_without_losing_a_byte_quietly() -> None:
     clean = bp.parse_capture(b"12\n7\n\r\nCYCLES=00001B89\r\n")
     assert clean == {"text": "12\n7\n", "dropped": 0, "halted": True, "cycles": 7049}
+    # The shape the wire actually delivered, 79 captures of 79 on 24 September
+    # 2026: the report is 19 bytes but rotated one place, so only a single \n
+    # sits before CYCLES=. One newline is the report's; the program's stays.
+    wire = bp.parse_capture(b"12\n7\n\nCYCLES=00001B89\r\n\n")
+    assert wire == {"text": "12\n7\n", "dropped": 0, "halted": True, "cycles": 7049}
+    silent = bp.parse_capture(b"\nCYCLES=00000002\r\n\n")
+    assert (silent["text"], silent["cycles"]) == ("", 2)
     noisy = bp.parse_capture(b"1\x002\n\r\nCYCLES=0000000A\r\n")
     assert (noisy["text"], noisy["dropped"]) == ("12\n", 1)
     cut = bp.parse_capture(b"12\n")
     assert (cut["halted"], cut["cycles"]) == (False, None)
+
+
+def test_a_report_reads_the_bytes_and_not_the_text_a_record_carried() -> None:
+    """P1's rule reaching layer 4: the raw bytes are the evidence, so a record
+    is read again from them. Measured 24 September 2026 -- the first parity
+    run's stored text came from a reader that did not know the wrapper's
+    report arrives a byte out of place, and re-reading that text could never
+    have corrected it. A record older than raw bytes is left as it is."""
+    record = {"experiment": "parity", "programs": {
+        "a": {"text": "WRONG\n", "raw_hex": b"7\n\nCYCLES=00000005\r\n\n".hex()},
+        "b": {"text": "kept\n"}}}
+    again = bp.reparsed(record)
+    assert again["programs"]["a"]["text"] == "7\n"
+    assert again["programs"]["a"]["cycles"] == 5
+    assert again["programs"]["b"] == {"text": "kept\n"}
+    assert record["programs"]["a"]["text"] == "WRONG\n", "the record is not edited"
+
+    # And the whole way through: a report classifies from the bytes, so a
+    # record whose stored text disagrees with its own wire still reads PARITY.
+    frozen = {"parity": {"programs": {"a": {
+        "sent": True, "payload_sha256": "", "interpreter": "7\n",
+        "interpreter_at_64": "7\n", "rtl_at_64": "7\n", "reads": [], "opcodes": []}}}}
+    record["programs"]["a"]["payload_sha256"] = ""
+    out = bp.report(record, frozen)
+    assert out["counts"] == {"PARITY": 1, "MISMATCH": 0, "UNKNOWN": 0}, out["programs"]
 
 
 def test_the_comparison_names_the_first_line_that_differs() -> None:

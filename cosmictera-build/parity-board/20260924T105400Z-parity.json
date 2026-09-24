@@ -1,0 +1,872 @@
+{
+ "bitstream": "rtl/fpga/gowin/hcpu_gowin_top_loader.fs",
+ "bitstream_sha256": "84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261",
+ "commit": "ce663be",
+ "date": "20260924T105400Z",
+ "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+ "experiment": "parity",
+ "programs": {
+  "parity:add_immediate_signed": {
+   "cycles": 28522698,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "93929365b2d022466ed891c26a6bf3488c25e96ec05e08abf5d3d4ed50c715c1",
+   "raw_hex": "320a300a300a300a31300a300a300a300a31350a300a300a300a380a0a4359434c45533d30314233333843410d0a0a",
+   "text": "2\n0\n0\n0\n10\n0\n0\n0\n15\n0\n0\n0\n8\n",
+   "timed_out": false,
+   "words": 40
+  },
+  "parity:backward_branch_loop": {
+   "cycles": 27996715,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "1c98e6464629f962c458693470be83178023902fbaee55a050b43ecfa5d964be",
+   "raw_hex": "320a300a300a300a330a300a300a300a330a0a4359434c45533d30314142333232420d0a0a",
+   "text": "2\n0\n0\n0\n3\n0\n0\n0\n3\n",
+   "timed_out": false,
+   "words": 31
+  },
+  "parity:bitwise_immediate": {
+   "cycles": 28195203,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "b4a7d44b89af89bb259e3e541c3ac808c1d3b80eb8fea690b4a80d34d221da2d",
+   "raw_hex": "320a300a300a300a3234300a300a300a300a3234300a300a300a300a3235350a300a300a300a31350a0a4359434c45533d30314145333938330d0a0a",
+   "text": "2\n0\n0\n0\n240\n0\n0\n0\n240\n0\n0\n0\n255\n0\n0\n0\n15\n",
+   "timed_out": false,
+   "words": 52
+  },
+  "parity:bitwise_immediate_extension": {
+   "cycles": 28612786,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "3c72ce76b344683a18e3e2d67f1a9f2b558d3914f94903e366161fde4055b9ae",
+   "raw_hex": "320a3235350a3235350a3235350a3235350a300a300a31350a3235350a300a300a380a300a3235350a3235350a3234300a300a0a4359434c45533d30314234393842320d0a0a",
+   "text": "2\n255\n255\n255\n255\n0\n0\n15\n255\n0\n0\n8\n0\n255\n255\n240\n0\n",
+   "timed_out": false,
+   "words": 53
+  },
+  "parity:bitwise_register": {
+   "cycles": 28775948,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "45d2c36388d1bb44a3a8d25ae97487657aa236d74bf447d7df1097e0081bd097",
+   "raw_hex": "320a300a300a300a3234300a300a300a300a36300a300a300a300a34380a300a300a300a3235320a300a300a300a3230340a3235350a3235350a3235350a31350a0a4359434c45533d30314237313630430d0a0a",
+   "text": "2\n0\n0\n0\n240\n0\n0\n0\n60\n0\n0\n0\n48\n0\n0\n0\n252\n0\n0\n0\n204\n255\n255\n255\n15\n",
+   "timed_out": false,
+   "words": 76
+  },
+  "parity:bitwise_shift": {
+   "cycles": 28449799,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "a688ac01d7843c1d587ed8bf18d4427351af9fb010999e15f747aa358c410275",
+   "raw_hex": "320a300a300a300a3234300a300a300a300a340a300a300a31350a300a300a300a300a31350a300a300a3234300a300a300a300a300a31350a0a4359434c45533d30314232314330370d0a0a",
+   "text": "2\n0\n0\n0\n240\n0\n0\n0\n4\n0\n0\n15\n0\n0\n0\n0\n15\n0\n0\n240\n0\n0\n0\n0\n15\n",
+   "timed_out": false,
+   "words": 76
+  },
+  "parity:branch_on_guard": {
+   "cycles": 28296894,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "c8da2885c6ab079935bc51a07ec3eb8c1a85e537895daca4833fd894226c79d8",
+   "raw_hex": "330a300a300a300a3232320a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314146433642450d0a0a",
+   "text": "3\n0\n0\n0\n222\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 56
+  },
+  "parity:branch_on_guard_not_taken": {
+   "cycles": 28324923,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "4bce7b8fd59fa199b4e3742d7c1078709c03f00fdb158225b5b61234e1d4d7ef",
+   "raw_hex": "330a300a300a300a3131310a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314230333433420d0a0a",
+   "text": "3\n0\n0\n0\n111\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 55
+  },
+  "parity:codex_add": {
+   "cycles": 29306983,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "0dbf666d922549d5b55d86d5db2a3b377c9620bc17f2e51ec2b29e0f2d81db1b",
+   "raw_hex": "320a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a360a300a300a310a300a310a300a300a300a320a320a300a300a300a310a310a340a300a0a4359434c45533d30314246333036370d0a0a",
+   "text": "2\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n6\n0\n0\n1\n0\n1\n0\n0\n0\n2\n2\n0\n0\n0\n1\n1\n4\n0\n",
+   "timed_out": false,
+   "words": 115
+  },
+  "parity:codex_copy_and_zero": {
+   "cycles": 28992295,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "79918e5580ea77eb7ec37e7352cf9338db68fb1bf0015343473c984e59164393",
+   "raw_hex": "320a380a300a300a300a300a300a300a300a310a300a300a300a300a320a300a310a320a300a380a300a300a300a300a300a300a300a310a300a300a300a300a320a300a310a320a300a300a300a300a300a300a300a300a300a300a300a300a300a300a300a300a300a300a300a0a4359434c45533d30314241363332370d0a0a",
+   "text": "2\n8\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n2\n0\n1\n2\n0\n8\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n2\n0\n1\n2\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n",
+   "timed_out": false,
+   "words": 116
+  },
+  "parity:codex_equality_sets_zero": {
+   "cycles": 29236780,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "e2c86b64419418f863fa20e34c239cb517cee9ac6c382fe3b8d9d271dea64492",
+   "raw_hex": "320a300a300a300a310a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314245314532430d0a0a",
+   "text": "2\n0\n0\n0\n1\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 93
+  },
+  "parity:codex_inequality_clears_zero": {
+   "cycles": 28778394,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "eeb8b6c850e1a83e06f9330c83bb735ce5dd406959ba3f721684b75e0644a8bb",
+   "raw_hex": "300a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a0a4359434c45533d30314237314639410d0a0a",
+   "text": "0\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n",
+   "timed_out": false,
+   "words": 82
+  },
+  "parity:codex_negative_residue": {
+   "cycles": 28758560,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "beea720a6e9eb42fcc05d4c1bad79c5f5c483fbc192cacc6d8c64d63787e0cac",
+   "raw_hex": "320a300a300a300a380a3235350a3235350a3235350a3234390a310a300a300a300a300a300a300a300a300a300a300a300a300a320a300a300a320a300a0a4359434c45533d30314236443232300d0a0a",
+   "text": "2\n0\n0\n0\n8\n255\n255\n255\n249\n1\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n2\n0\n0\n2\n0\n",
+   "timed_out": false,
+   "words": 66
+  },
+  "parity:codex_turning_budget_and_residue": {
+   "cycles": 29563741,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "4ce65160fea034cb481225f2a6d2a74e9e3030cce9f98540aa9327dee8b919ba",
+   "raw_hex": "320a300a300a300a380a300a300a300a300a300a300a300a350a300a300a300a310a380a300a300a300a300a300a300a300a310a300a300a300a300a320a300a310a320a300a350a300a300a300a300a300a300a300a300a300a300a310a300a310a300a300a320a300a0a4359434c45533d30314333314235440d0a0a",
+   "text": "2\n0\n0\n0\n8\n0\n0\n0\n0\n0\n0\n0\n5\n0\n0\n0\n1\n8\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n2\n0\n1\n2\n0\n5\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n1\n0\n0\n2\n0\n",
+   "timed_out": false,
+   "words": 128
+  },
+  "parity:compare_immediate": {
+   "cycles": 27943107,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "af5b5363dc51d025db23dcd15e4117c4c3178f61435797845af3e548c197c7d8",
+   "raw_hex": "320a300a300a300a390a0a4359434c45533d30314141363043330d0a0a",
+   "text": "2\n0\n0\n0\n9\n",
+   "timed_out": false,
+   "words": 17
+  },
+  "parity:compare_sets_flags": {
+   "cycles": 28198193,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "03d2714e21709d80005e4fd36e700f6298042335eee8030e4a9f0deb9c399cdd",
+   "raw_hex": "320a300a300a300a34320a300a300a300a34320a0a4359434c45533d30314145343533310d0a0a",
+   "text": "2\n0\n0\n0\n42\n0\n0\n0\n42\n",
+   "timed_out": false,
+   "words": 29
+  },
+  "parity:cset_past_seventeen_names_nothing": {
+   "cycles": 28491404,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "a6d4efc1817ebd15cd3dfae1f64ef924ecab83254bd3a12e3c7c369cf90689a0",
+   "raw_hex": "320a300a300a300a390a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a0a4359434c45533d30314232424538430d0a0a",
+   "text": "2\n0\n0\n0\n9\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n",
+   "timed_out": false,
+   "words": 54
+  },
+  "parity:cset_takes_the_low_byte": {
+   "cycles": 28741422,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "1527f7e84eaa1285d1899ac655978d44746535b49653f0201d831a74a68b2586",
+   "raw_hex": "320a300a300a310a34340a300a300a34340a300a300a300a300a300a300a300a300a300a300a300a300a300a300a300a0a4359434c45533d30314236384632450d0a0a",
+   "text": "2\n0\n0\n1\n44\n0\n0\n44\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n",
+   "timed_out": false,
+   "words": 53
+  },
+  "parity:cset_then_reads_it_back": {
+   "cycles": 28474183,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "9967219235731758ea73e518ec20816eb7fef4ebfc5e48aad9c83701d8120ebc",
+   "raw_hex": "320a300a300a300a370a300a300a300a370a300a300a300a340a340a300a300a300a300a300a300a300a310a300a300a300a300a310a300a310a310a370a0a4359434c45533d30314232374234370d0a0a",
+   "text": "2\n0\n0\n0\n7\n0\n0\n0\n7\n0\n0\n0\n4\n4\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n1\n1\n7\n",
+   "timed_out": false,
+   "words": 78
+  },
+  "parity:cset_twice_into_the_same_register": {
+   "cycles": 28415612,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "dc062da313a3fa0fd15b064bf0ea336df39ea8259ae2fe4acfa891ac57afc87b",
+   "raw_hex": "320a300a300a300a330a320a330a330a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314231393637430d0a0a",
+   "text": "2\n0\n0\n0\n3\n2\n3\n3\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 55
+  },
+  "parity:cset_writes_one_component": {
+   "cycles": 28465875,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "fa4c6b3926cd1c287ce42ce32f9dee6c6f261482a357f77c60606c9467ab60f1",
+   "raw_hex": "320a300a300a300a350a320a300a300a310a350a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314232354144330d0a0a",
+   "text": "2\n0\n0\n0\n5\n2\n0\n0\n1\n5\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 54
+  },
+  "parity:distance_between_letters": {
+   "cycles": 28991199,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "45ab893edfc0cf698b7c87167aab7023d2f65b605f554d79934fd5d22a696c06",
+   "raw_hex": "320a300a300a300a31300a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a0a4359434c45533d30314241354544460d0a0a",
+   "text": "2\n0\n0\n0\n10\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n",
+   "timed_out": false,
+   "words": 90
+  },
+  "parity:every_letter_loads": {
+   "cycles": 34771783,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "9ee319fe01df35372b421ddf1cf323d53c3b8bffb7927d0e123042ddf475521d",
+   "raw_hex": "320a340a310a300a300a300a300a310a300a300a300a300a300a300a310a310a310a310a300a330a300a300a300a300a300a300a300a300a310a310a300a300a300a300a300a320a300a330a310a300a300a300a300a300a300a300a310a310a300a300a300a310a300a320a300a350a310a300a300a300a310a300a300a300a310a300a300a300a310a310a310a320a300a360a320a300a300a300a300a300a300a300a310a300a300a300a310a320a300a320a300a320a300a300a300a300a300a300a310a300a300a300a300a300a300a300a310a300a310a310a300a300a300a300a310a300a300a300a310a300a300a300a300a300a310a310a300a340a300a300a300a300a300a300a300a310a300a300a300a300a310a300a310a310a300a320a310a300a300a300a300a300a300a300a310a300a300a300a300a310a300a310a300a350a300a300a300a300a300a300a300a300a300a300a310a300a310a300a300a320a300a380a300a300a300a300a300a300a300a310a300a300a300a300a320a300a310a320a300a330a300a300a320a300a300a300a300a300a310a310a300a300a300a320a300a320a300a340a330a300a300a300a300a300a300a300a310a320a300a300a300a330a300a330a300a360a300a300a300a300a300a300a300a300a310a300a300a300a310a300a300a320a300a360a310a300a300a300a300a300a300a300a310a300a300a300a310a310a300a320a300a340a300a300a300a300a300a310a300a300a300a300a300a300a310a300a310a310a300a0a4359434c45533d30323132393334370d0a0a",
+   "text": "2\n4\n1\n0\n0\n0\n0\n1\n0\n0\n0\n0\n0\n0\n1\n1\n1\n1\n0\n3\n0\n0\n0\n0\n0\n0\n0\n0\n1\n1\n0\n0\n0\n0\n0\n2\n0\n3\n1\n0\n0\n0\n0\n0\n0\n0\n1\n1\n0\n0\n0\n1\n0\n2\n0\n5\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n1\n1\n2\n0\n6\n2\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n1\n2\n0\n2\n0\n2\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n0\n0\n0\n1\n0\n1\n1\n0\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n0\n1\n1\n0\n4\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n1\n1\n0\n2\n1\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n1\n0\n5\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n1\n0\n0\n2\n0\n8\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n2\n0\n1\n2\n0\n3\n0\n0\n2\n0\n0\n0\n0\n0\n1\n1\n0\n0\n0\n2\n0\n2\n0\n4\n3\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n3\n0\n3\n0\n6\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n2\n0\n6\n1\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n1\n1\n0\n2\n0\n4\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n0\n0\n1\n0\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 608
+  },
+  "parity:flags_read_after_compare": {
+   "cycles": 27987889,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "c5c5ad87d49e232e960226b96795f78ccf9372bc5b530211b34af6d93b6448e5",
+   "raw_hex": "320a300a300a300a300a300a300a300a320a0a4359434c45533d30314142304642310d0a0a",
+   "text": "2\n0\n0\n0\n0\n0\n0\n0\n2\n",
+   "timed_out": false,
+   "words": 29
+  },
+  "parity:flags_survive_a_compare": {
+   "cycles": 28349161,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "d4f35eb85bcd8230870b608112f5e7a6ded0c8d9e43e0d908679f1c72e9c2f15",
+   "raw_hex": "31330a300a300a300a31350a300a300a300a370a300a300a300a31330a0a4359434c45533d30314230393245390d0a0a",
+   "text": "13\n0\n0\n0\n15\n0\n0\n0\n7\n0\n0\n0\n13\n",
+   "timed_out": false,
+   "words": 42
+  },
+  "parity:flags_write_then_read": {
+   "cycles": 28016990,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "d8c573b2792b70efdd3d51e1fafac550ba3214641143ef0773c1e63b9eaafe6b",
+   "raw_hex": "31350a300a300a300a31350a300a300a300a31350a0a4359434c45533d30314142383135450d0a0a",
+   "text": "15\n0\n0\n0\n15\n0\n0\n0\n15\n",
+   "timed_out": false,
+   "words": 29
+  },
+  "parity:forward_branch_taken": {
+   "cycles": 28008493,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "6dcc92d5e249e6925c152b51185278fe568adae67fc543c13413173f4ff16f9d",
+   "raw_hex": "320a300a300a300a310a300a300a300a350a0a4359434c45533d30314142363032440d0a0a",
+   "text": "2\n0\n0\n0\n1\n0\n0\n0\n5\n",
+   "timed_out": false,
+   "words": 33
+  },
+  "parity:guard_a_letter": {
+   "cycles": 28328385,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "a1a71d9d76e0f3076cfa537ac8f616915d60a2d2071fd5dea7f7441b6c375451",
+   "raw_hex": "330a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314230343143310d0a0a",
+   "text": "3\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 42
+  },
+  "parity:hisab_pack_and_crc": {
+   "cycles": 28284721,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "9f0fc7fc95d7208777215f2168887baf2f45494fe0b26c7768f1a08f93b1f559",
+   "raw_hex": "320a300a310a310a33320a3135340a34390a32310a3230340a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314146393733310d0a0a",
+   "text": "2\n0\n1\n1\n32\n154\n49\n21\n204\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 65
+  },
+  "parity:integer_arithmetic": {
+   "cycles": 28541404,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "280b9d5564b2bb143e41a25cbb254bf28662f3b38697853432b16aad422ce76a",
+   "raw_hex": "320a300a300a310a34340a300a300a300a370a300a300a310a35310a300a300a310a33370a300a300a380a35320a0a4359434c45533d30314233383144430d0a0a",
+   "text": "2\n0\n0\n1\n44\n0\n0\n0\n7\n0\n0\n1\n51\n0\n0\n1\n37\n0\n0\n8\n52\n",
+   "timed_out": false,
+   "words": 64
+  },
+  "parity:load_one_letter": {
+   "cycles": 28257079,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "e1d22c5ff194cbd4508030f52a9f2bb2190489eb6bdcc425e2b3e6004e0552e4",
+   "raw_hex": "320a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a0a4359434c45533d30314146324233370d0a0a",
+   "text": "2\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 41
+  },
+  "parity:load_three_letters": {
+   "cycles": 29017393,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "a7db7771c6eb5fdd10e7439c5a74f574d223a138295661a428b13e8aceb80e28",
+   "raw_hex": "320a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a340a300a300a300a300a300a300a300a310a300a300a300a300a310a300a310a310a300a0a4359434c45533d30314241433533310d0a0a",
+   "text": "2\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n4\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 115
+  },
+  "parity:mmio_compare_round_trip": {
+   "cycles": 27837403,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "ac0f5533cefc52a75aa74f68e8696d89a20b9af50ab82ae07408c4e16bd884f9",
+   "raw_hex": "320a300a300a310a33350a300a300a310a33350a0a4359434c45533d30314138433344420d0a0a",
+   "text": "2\n0\n0\n1\n35\n0\n0\n1\n35\n",
+   "timed_out": false,
+   "words": 30
+  },
+  "parity:mmio_does_not_disturb_ram": {
+   "cycles": 28174445,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "05448921afcb5500d89b3888fa1215fabf964b6265f3352a8e38962e374d1359",
+   "raw_hex": "320a300a300a300a3137300a300a300a300a3137300a300a300a370a3235350a0a4359434c45533d30314144453836440d0a0a",
+   "text": "2\n0\n0\n0\n170\n0\n0\n0\n170\n0\n0\n7\n255\n",
+   "timed_out": false,
+   "words": 43
+  },
+  "parity:mmio_status_when_idle": {
+   "cycles": 27853924,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "70d411b2924abde32364fb38b2c56cb8dd9c45d6e0bdd71d71409bad46c1d6a0",
+   "raw_hex": "320a300a300a300a300a0a4359434c45533d30314139303436340d0a0a",
+   "text": "2\n0\n0\n0\n0\n",
+   "timed_out": false,
+   "words": 18
+  },
+  "parity:move_and_immediate": {
+   "cycles": 28362908,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "79e0fa46ae2af1f34d7f0ddd0cc4239ece397c8de3ba467d815eae235d4aa0b9",
+   "raw_hex": "320a300a300a300a3130300a300a300a31350a3235350a300a300a31350a3235350a0a4359434c45533d30314230433839430d0a0a",
+   "text": "2\n0\n0\n0\n100\n0\n0\n15\n255\n0\n0\n15\n255\n",
+   "timed_out": false,
+   "words": 41
+  },
+  "parity:norm_of_a_letter": {
+   "cycles": 28471406,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "169690110872b7a6edc6615c1eba33625f5f3e81c4cc2c8c1d961059fe7df8c9",
+   "raw_hex": "320a300a300a300a31380a340a300a300a300a300a300a300a300a310a300a300a300a300a310a300a310a310a300a0a4359434c45533d30314232373036450d0a0a",
+   "text": "2\n0\n0\n0\n18\n4\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 53
+  },
+  "parity:shift_overflow": {
+   "cycles": 28578865,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "113cae6ad3f6420b0113ee637b0ea6a4659c4eff26dda7f8d725f7fa9834434c",
+   "raw_hex": "320a300a300a300a3234300a300a300a300a33330a300a300a310a3232340a300a300a300a3132300a300a300a310a3232340a0a4359434c45533d30314234313433310d0a0a",
+   "text": "2\n0\n0\n0\n240\n0\n0\n0\n33\n0\n0\n1\n224\n0\n0\n0\n120\n0\n0\n1\n224\n",
+   "timed_out": false,
+   "words": 64
+  },
+  "parity:store_then_load": {
+   "cycles": 28283813,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "856d73fe3eea4a8c949ca389a03980416e6c6569367a13e0be6419bd1e45cf76",
+   "raw_hex": "320a300a300a300a300a300a300a300a36340a300a300a340a3231300a0a4359434c45533d30314146393341350d0a0a",
+   "text": "2\n0\n0\n0\n0\n0\n0\n0\n64\n0\n0\n4\n210\n",
+   "timed_out": false,
+   "words": 45
+  },
+  "parity:string_integral_bsm": {
+   "cycles": 29444827,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "995b337b8721f78b5d77479dac53ddfeeaa658359eb54e29065fe4570e77ad3f",
+   "raw_hex": "330a320a300a300a310a300a310a300a300a300a310a300a300a300a300a310a310a310a300a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a31300a300a300a310a300a310a300a300a310a320a320a300a300a310a310a320a350a300a340a300a300a300a300a300a300a300a310a300a300a300a300a310a300a310a310a300a0a4359434c45533d30314331344144420d0a0a",
+   "text": "3\n2\n0\n0\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n10\n0\n0\n1\n0\n1\n0\n0\n1\n2\n2\n0\n0\n1\n1\n2\n5\n0\n4\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 154
+  },
+  "parity:subtraction_wraps_at_32_bits": {
+   "cycles": 28187289,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "07c7ef42b495997238021b61b82da8ec41bcb5a4d3bad0e2d9184934d958c275",
+   "raw_hex": "320a300a300a300a350a3235350a3235350a3235350a3235320a0a4359434c45533d30314145314139390d0a0a",
+   "text": "2\n0\n0\n0\n5\n255\n255\n255\n252\n",
+   "timed_out": false,
+   "words": 29
+  },
+  "rtl/programs/bench/e2_guard_x1.hasm": {
+   "cycles": 28815823,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "3756be357dc1b9ab99f082331fb80d0d3a9f140a4bad4914bc3a1d4958e3a2a9",
+   "raw_hex": "330a330a300a310a300a300a310a300a300a300a310a300a300a300a300a310a310a310a300a33300a310a310a310a310a330a310a300a320a340a320a300a300a350a330a370a31310a300a0a4359434c45533d30314237423143460d0a0a",
+   "text": "3\n3\n0\n1\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n30\n1\n1\n1\n1\n3\n1\n0\n2\n4\n2\n0\n0\n5\n3\n7\n11\n0\n",
+   "timed_out": false,
+   "words": 92
+  },
+  "rtl/programs/bench/e2_guard_x10.hasm": {
+   "cycles": 28711230,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "2d5b0c2d1cfcf91c18e2e0f37c15032bf410983ded6ce9aa529f19630ce9d10b",
+   "raw_hex": "330a330a300a310a300a300a310a300a300a300a310a300a300a300a300a310a310a310a300a33300a310a310a310a310a330a310a300a320a340a320a300a300a350a330a370a31310a300a0a4359434c45533d30314236313933450d0a0a",
+   "text": "3\n3\n0\n1\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n30\n1\n1\n1\n1\n3\n1\n0\n2\n4\n2\n0\n0\n5\n3\n7\n11\n0\n",
+   "timed_out": false,
+   "words": 101
+  },
+  "rtl/programs/bench/e2_hisab.hasm": {
+   "cycles": 29384279,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "a7ec14af148c25365fa3d8bfbdd6fd6c4a1c5e094d7a5b9d6d17b55d8e59a3d0",
+   "raw_hex": "320a31360a31390a31370a3232350a35350a350a33320a33360a300a300a36330a3137360a3230330a3131370a38350a3137380a330a300a310a300a300a310a300a300a300a310a300a300a300a300a310a310a310a300a33300a310a310a310a310a330a310a300a320a340a320a300a300a350a330a370a31310a300a0a4359434c45533d30314330354535370d0a0a",
+   "text": "2\n16\n19\n17\n225\n55\n5\n32\n36\n0\n0\n63\n176\n203\n117\n85\n178\n3\n0\n1\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n30\n1\n1\n1\n1\n3\n1\n0\n2\n4\n2\n0\n0\n5\n3\n7\n11\n0\n",
+   "timed_out": false,
+   "words": 139
+  },
+  "rtl/programs/bench/e2_scale_n02.hasm": {
+   "cycles": 28811733,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "940067ee1b1c0609866c8ac6801819ffac8c8b52fb423f604a347b12cd511437",
+   "raw_hex": "330a340a300a300a300a300a300a300a300a300a310a320a300a300a300a300a300a330a300a360a300a300a310a300a310a300a300a300a320a320a300a300a300a310a310a340a300a0a4359434c45533d30314237413144350d0a0a",
+   "text": "3\n4\n0\n0\n0\n0\n0\n0\n0\n0\n1\n2\n0\n0\n0\n0\n0\n3\n0\n6\n0\n0\n1\n0\n1\n0\n0\n0\n2\n2\n0\n0\n0\n1\n1\n4\n0\n",
+   "timed_out": false,
+   "words": 80
+  },
+  "rtl/programs/bench/e2_scale_n04.hasm": {
+   "cycles": 28680322,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "826b03a6f1a39959b414e98db03f439e0e52c90c00d0315c2a90a870a4caa3fa",
+   "raw_hex": "330a300a300a300a300a310a300a300a300a300a300a300a300a300a300a300a310a300a300a31300a300a300a310a310a310a300a300a310a320a320a300a300a310a310a330a350a300a0a4359434c45533d30314235413038320d0a0a",
+   "text": "3\n0\n0\n0\n0\n1\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n10\n0\n0\n1\n1\n1\n0\n0\n1\n2\n2\n0\n0\n1\n1\n3\n5\n0\n",
+   "timed_out": false,
+   "words": 84
+  },
+  "rtl/programs/bench/e2_scale_n08.hasm": {
+   "cycles": 28765115,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "3756be357dc1b9ab99f082331fb80d0d3a9f140a4bad4914bc3a1d4958e3a2a9",
+   "raw_hex": "330a330a300a310a300a300a310a300a300a300a310a300a300a300a300a310a310a310a300a33300a310a310a310a310a330a310a300a320a340a320a300a300a350a330a370a31310a300a0a4359434c45533d30314236454242420d0a0a",
+   "text": "3\n3\n0\n1\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n0\n1\n1\n1\n0\n30\n1\n1\n1\n1\n3\n1\n0\n2\n4\n2\n0\n0\n5\n3\n7\n11\n0\n",
+   "timed_out": false,
+   "words": 92
+  },
+  "rtl/programs/bench/e2_scale_n12.hasm": {
+   "cycles": 28742278,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "81bea34600988c0bb207fbae902cdf165e7f8a72bbc7e9b509d8e249635635ea",
+   "raw_hex": "330a350a300a300a300a300a300a300a300a300a300a300a310a300a310a300a300a320a300a34320a340a310a310a310a330a310a310a320a350a340a310a310a360a360a380a31370a310a0a4359434c45533d30314236393238360d0a0a",
+   "text": "3\n5\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n1\n0\n0\n2\n0\n42\n4\n1\n1\n1\n3\n1\n1\n2\n5\n4\n1\n1\n6\n6\n8\n17\n1\n",
+   "timed_out": false,
+   "words": 100
+  },
+  "rtl/programs/bench/e3_sweep28.hasm": {
+   "cycles": 28963574,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "bd30e16cbd709978a7275db98341ee3553ac66dcaebef2e672df892c69e6b690",
+   "raw_hex": "300a320a320a320a330a330a330a310a310a310a310a340a340a360a360a340a340a330a330a350a360a320a310a340a320a350a380a330a0a4359434c45533d30314239463246360d0a0a",
+   "text": "0\n2\n2\n2\n3\n3\n3\n1\n1\n1\n1\n4\n4\n6\n6\n4\n4\n3\n3\n5\n6\n2\n1\n4\n2\n5\n8\n3\n",
+   "timed_out": false,
+   "words": 113
+  },
+  "rtl/programs/bench/e4_frame.hasm": {
+   "cycles": 27699762,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "95098782e1ab347f33ddae48b23672abf293bbb887a32e74e8f42fc228e7edd2",
+   "raw_hex": "36353832340a32383532313235383f0a31363134340a3235383639303638323c0a0a4359434c45533d30314136414133320d0a0a",
+   "text": "65824\n28521258?\n16144\n258690682<\n",
+   "timed_out": false,
+   "words": 10
+  },
+  "rtl/programs/bench/e5_negative.hasm": {
+   "cycles": 27956044,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "5438c23d422a378d41ed66e84a222b1d926c02eebb8592c2456d7470693c7ff1",
+   "raw_hex": "3230300a0a4359434c45533d30314141393334430d0a0a",
+   "text": "200\n",
+   "timed_out": false,
+   "words": 9
+  },
+  "rtl/programs/bench/e6_record_triage.hasm": {
+   "cycles": 28119083,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "5e62c628de9d3571346b3e3f5acc9a53a4cc16703121d2ddedfb4742aaff6f1f",
+   "raw_hex": "3230300a0a4359434c45533d30314144313032420d0a0a",
+   "text": "200\n",
+   "timed_out": false,
+   "words": 54
+  },
+  "rtl/programs/burn_in.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/flags_board.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 35000 steps)"
+  },
+  "rtl/programs/flags_ctx.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 33800 steps)"
+  },
+  "rtl/programs/guard_negative.hasm": {
+   "cycles": 27997365,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "c995c0fde8012c2bd4a2d3cedb033071532d681f9de7039d38e7310146f3e3ca",
+   "raw_hex": "360a0a4359434c45533d30314142333442350d0a0a",
+   "text": "6\n",
+   "timed_out": false,
+   "words": 33
+  },
+  "rtl/programs/hal.hasm": {
+   "excluded": "does not halt under the loader (fault after 1901 steps)"
+  },
+  "rtl/programs/hal_sd.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/hfs_lifecycle.hasm": {
+   "cycles": 32038627,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "15657b0e72f03892fed7597308a9b6a36ff887da03f6f731e000e3a7238ce92e",
+   "raw_hex": "310a300a310a310a310a310a300a0a4359434c45533d30314538444545330d0a0a",
+   "text": "1\n0\n1\n1\n1\n1\n0\n",
+   "timed_out": false,
+   "words": 430
+  },
+  "rtl/programs/hijrah_sweep.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 41360 steps)"
+  },
+  "rtl/programs/hos.hasm": {
+   "excluded": "does not halt under the loader (fault after 17210 steps)"
+  },
+  "rtl/programs/hos_demo.hasm": {
+   "cycles": 34643324,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "d5395ddd0de1a835f28974e38a45b5aedc33fd1fc366c35f0987a5e7a3b6e505",
+   "raw_hex": "320a300a300a300a310a300a300a300a310a300a300a300a310a300a300a300a350a300a300a300a37390a300a300a31340a33350a300a300a300a310a300a300a300a310a3235350a3235350a3235340a3134330a300a300a300a300a300a300a31340a33370a310a300a300a300a300a300a300a300a300a300a300a310a300a300a300a300a310a300a320a300a300a300a300a300a300a310a300a300a300a300a300a300a300a310a300a310a0a4359434c45533d30323130394437430d0a0a",
+   "text": "2\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n5\n0\n0\n0\n79\n0\n0\n14\n35\n0\n0\n0\n1\n0\n0\n0\n1\n255\n255\n254\n143\n0\n0\n0\n0\n0\n0\n14\n37\n1\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n1\n0\n2\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n0\n0\n0\n0\n1\n0\n1\n",
+   "timed_out": false,
+   "words": 688
+  },
+  "rtl/programs/hos_hctx.hasm": {
+   "excluded": "does not halt under the loader (fault after 3407 steps)"
+  },
+  "rtl/programs/hos_hfs_disk.hasm": {
+   "excluded": "does not halt under the loader (fault after 25296 steps)"
+  },
+  "rtl/programs/hos_prog_load.hasm": {
+   "excluded": "does not halt under the loader (fault after 27016 steps)"
+  },
+  "rtl/programs/jamrah_gate.hasm": {
+   "cycles": 29875487,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "7c94c2334341b0b939102919524b55b92b685ab86753fa6b7b83ecea8d17265a",
+   "raw_hex": "320a300a300a300a3138310a300a300a300a350a300a300a300a300a300a300a300a300a300a300a300a310a300a300a300a310a300a300a300a310a300a300a300a320a300a300a300a310a300a300a300a320a300a300a300a330a300a300a300a32390a300a300a300a300a300a300a300a310a0a4359434c45533d30314337444431460d0a0a",
+   "text": "2\n0\n0\n0\n181\n0\n0\n0\n5\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n2\n0\n0\n0\n1\n0\n0\n0\n2\n0\n0\n0\n3\n0\n0\n0\n29\n0\n0\n0\n0\n0\n0\n0\n1\n",
+   "timed_out": false,
+   "words": 188
+  },
+  "rtl/programs/kernel.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 43220 steps)"
+  },
+  "rtl/programs/letters.hasm": {
+   "cycles": 28791344,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "009fc68ffaf6cad558af1891321dad2cf82f7f501ee0b02f58846eae16b04fb2",
+   "raw_hex": "320a300a300a300a3131320a300a300a34320a36320a39390a31380a310a340a310a390a320a310a330a31390a390a330a320a31310a32330a31360a34340a310a0a4359434c45533d30314237353233300d0a0a",
+   "text": "2\n0\n0\n0\n112\n0\n0\n42\n62\n99\n18\n1\n4\n1\n9\n2\n1\n3\n19\n9\n3\n2\n11\n23\n16\n44\n1\n",
+   "timed_out": false,
+   "words": 98
+  },
+  "rtl/programs/loader.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 22160 steps)"
+  },
+  "rtl/programs/mem_protect.hasm": {
+   "cycles": 28773659,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "f93d93e2e40e062a131e14079dbbb3be4f8d98604fd338c525d83e942f91848d",
+   "raw_hex": "320a300a300a300a320a300a300a300a38300a300a300a300a34320a300a300a300a310a300a300a300a340a300a300a300a38330a0a4359434c45533d30314237304431420d0a0a",
+   "text": "2\n0\n0\n0\n2\n0\n0\n0\n80\n0\n0\n0\n42\n0\n0\n0\n1\n0\n0\n0\n4\n0\n0\n0\n83\n",
+   "timed_out": false,
+   "words": 97
+  },
+  "rtl/programs/nui_embedding.hasm": {
+   "cycles": 28240518,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "22e2d89617343d1e7f42d59049f6b2da6139dc285d9a3c8645c1acc7453ea00b",
+   "raw_hex": "320a320a320a360a360a0a4359434c45533d30314145454138360d0a0a",
+   "text": "2\n2\n2\n6\n6\n",
+   "timed_out": false,
+   "words": 48
+  },
+  "rtl/programs/payload.hasm": {
+   "cycles": 28252525,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "3384555ac35ed1d7257d4787276d07f9ab2230798eeb2b7aa93b74adaf7960ae",
+   "raw_hex": "320a300a300a300a34320a300a300a300a370a0a4359434c45533d30314146313936440d0a0a",
+   "text": "2\n0\n0\n0\n42\n0\n0\n0\n7\n",
+   "timed_out": false,
+   "words": 28
+  },
+  "rtl/programs/sd_writer.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/sdio_probe.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/sdio_verify.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/sdio_write.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/shell.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/subroutine.hasm": {
+   "cycles": 28485984,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "b921558cb0faa3d9e063ed66bd9527d4327e9aa6b5cbed9e8280844a96717d79",
+   "raw_hex": "320a300a300a300a330a300a300a300a350a0a4359434c45533d30314232413936300d0a0a",
+   "text": "2\n0\n0\n0\n3\n0\n0\n0\n5\n",
+   "timed_out": false,
+   "words": 76
+  },
+  "rtl/programs/syscall.hasm": {
+   "cycles": 28835531,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "913802784644552d9b0649d921b14b93caa1f4edd35c63dc672c1cd2bb118a36",
+   "raw_hex": "320a300a300a300a34320a300a300a300a33350a300a300a300a320a300a300a300a350a300a300a300a310a300a300a300a310a300a300a300a350a300a300a300a38310a0a4359434c45533d30314237464543420d0a0a",
+   "text": "2\n0\n0\n0\n42\n0\n0\n0\n35\n0\n0\n0\n2\n0\n0\n0\n5\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n5\n0\n0\n0\n81\n",
+   "timed_out": false,
+   "words": 121
+  },
+  "rtl/programs/syscall_io.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 22760 steps)"
+  },
+  "rtl/programs/test_bsm.hasm": {
+   "cycles": 27925230,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "e9334837efc9bc276bf39137a6bfc75144919d07bc60a1004a6cca8ca84a58c9",
+   "raw_hex": "3131320a0a4359434c45533d30314141314145450d0a0a",
+   "text": "112\n",
+   "timed_out": false,
+   "words": 9
+  },
+  "rtl/programs/test_codex.hasm": {
+   "cycles": 28068931,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "1fc1a0a6956ec6fb9334f0f0ead982321950cf200b7417e2e5b48d4a08462066",
+   "raw_hex": "380a300a300a310a310a300a310a350a0a4359434c45533d30314143344334330d0a0a",
+   "text": "8\n0\n0\n1\n1\n0\n1\n5\n",
+   "timed_out": false,
+   "words": 32
+  },
+  "rtl/programs/test_cset.hasm": {
+   "cycles": 28004816,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "4628b85f8d11499dc2712f9f03aa58fd80dc0745bbdc192aab991385b34112ab",
+   "raw_hex": "350a360a320a300a0a4359434c45533d30314142353144300d0a0a",
+   "text": "5\n6\n2\n0\n",
+   "timed_out": false,
+   "words": 17
+  },
+  "rtl/programs/test_distance.hasm": {
+   "cycles": 27884911,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "b7425e5e82dfe826883c25361852faeac913d2e0066b11280bea506e4ac42dd9",
+   "raw_hex": "310a320a330a0a4359434c45533d30314139374436460d0a0a",
+   "text": "1\n2\n3\n",
+   "timed_out": false,
+   "words": 11
+  },
+  "rtl/programs/test_from_card.hasm": {
+   "cycles": 27825116,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "a9f0351e161fdfa65eb03c76849a4e7d1377b2ab0d0c628a5e0cc13f8a685008",
+   "raw_hex": "310a320a330a0a4359434c45533d30314138393344430d0a0a",
+   "text": "1\n2\n3\n",
+   "timed_out": false,
+   "words": 7
+  },
+  "rtl/programs/test_guard.hasm": {
+   "cycles": 29009598,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "b25a8f34f885af6288aa12277216432631bee4102720e35db163051137ec7b6e",
+   "raw_hex": "32380a0a4359434c45533d30314241413642450d0a0a",
+   "text": "28\n",
+   "timed_out": false,
+   "words": 143
+  },
+  "rtl/programs/test_hfs.hasm": {
+   "cycles": 31451739,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "e0752ad634680f58bf5e66db829d5a76a2831314a551775cc34522b7160d28a0",
+   "raw_hex": "310a310a310a320a310a0a4359434c45533d30314446454135420d0a0a",
+   "text": "1\n1\n1\n2\n1\n",
+   "timed_out": false,
+   "words": 418
+  },
+  "rtl/programs/test_hisab.hasm": {
+   "cycles": 27570432,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "15d854a7ee877d6a01719981d2f23d64e03dc0b2a6a98df6c6ee321923db1443",
+   "raw_hex": "36353832340a323538363930383931300a0a4359434c45533d30314134423130300d0a0a",
+   "text": "65824\n2586908910\n",
+   "timed_out": false,
+   "words": 6
+  },
+  "rtl/programs/test_loop.hasm": {
+   "cycles": 27762492,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "52900ed53ae3fbd96b5a24260dd1a301e529107ee6cee34a08c2011b880af4e0",
+   "raw_hex": "31300a0a4359434c45533d30314137394633430d0a0a",
+   "text": "10\n",
+   "timed_out": false,
+   "words": 7
+  },
+  "rtl/programs/test_negative.hasm": {
+   "cycles": 27670528,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "5438c23d422a378d41ed66e84a222b1d926c02eebb8592c2456d7470693c7ff1",
+   "raw_hex": "3230300a0a4359434c45533d30314136333830300d0a0a",
+   "text": "200\n",
+   "timed_out": false,
+   "words": 9
+  },
+  "rtl/programs/test_prog_load.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/test_prog_run.hasm": {
+   "excluded": "touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its"
+  },
+  "rtl/programs/timer_poll.hasm": {
+   "cycles": 28219080,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "96bb91fe3664408794cf4fc99fbd7203cdbcaff4440d9fa94e06b9a1d560b8d9",
+   "raw_hex": "320a310a3137320a3235300a3233330a310a3137320a3235300a3233380a300a300a300a350a300a300a300a330a0a4359434c45533d30314145393643380d0a0a",
+   "text": "2\n1\n172\n250\n233\n1\n172\n250\n238\n0\n0\n0\n5\n0\n0\n0\n3\n",
+   "timed_out": false,
+   "words": 56
+  },
+  "rtl/programs/trap_epc.hasm": {
+   "cycles": 28000058,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "3571712dbbded8442530a148d50be085dc8a7dec81422d03a1f8eb6d4e8b706c",
+   "raw_hex": "310a310a310a0a4359434c45533d30314142334633410d0a0a",
+   "text": "1\n1\n1\n",
+   "timed_out": false,
+   "words": 44
+  },
+  "rtl/programs/trap_flags.hasm": {
+   "cycles": 28149032,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "fbbf80087c3063ffee0ce17df7a6d03547e321acc3fa5b0f489273096dbb5e6a",
+   "raw_hex": "300a0a4359434c45533d30314144383532380d0a0a",
+   "text": "0\n",
+   "timed_out": false,
+   "words": 41
+  },
+  "rtl/programs/trap_hreg.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 27020 steps)"
+  },
+  "rtl/programs/trap_resume.hasm": {
+   "cycles": 28055429,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "10d10f85c866c7b1239f30e5a173b430e3dfd0a2b40e96b4e13c4468df8ae8e6",
+   "raw_hex": "38360a38360a32370a0a4359434c45533d30314143313738350d0a0a",
+   "text": "86\n86\n27\n",
+   "timed_out": false,
+   "words": 38
+  },
+  "rtl/programs/trap_shadow.hasm": {
+   "cycles": 28262972,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "30fc973beeec6690bb1ca163030a8d68dd9dd523d408f08125353222d35e54b6",
+   "raw_hex": "38380a38380a38380a38390a38380a38380a38380a38380a32310a0a4359434c45533d30314146343233430d0a0a",
+   "text": "88\n88\n88\n89\n88\n88\n88\n88\n21\n",
+   "timed_out": false,
+   "words": 43
+  },
+  "rtl/programs/trap_timer.hasm": {
+   "cycles": 28787802,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "46f1796105bcb96d143d790a3abc421ea6d36b92433975ee60f70f3135f4a6ba",
+   "raw_hex": "320a300a300a300a300a310a3138310a3135300a33390a300a300a300a330a300a300a300a310a300a300a300a37340a0a4359434c45533d30314237343435410d0a0a",
+   "text": "2\n0\n0\n0\n0\n1\n181\n150\n39\n0\n0\n0\n3\n0\n0\n0\n1\n0\n0\n0\n74\n",
+   "timed_out": false,
+   "words": 78
+  },
+  "rtl/programs/user_mode.hasm": {
+   "cycles": 28696687,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "7b6934599d84afb86502e28702b17b101ceb2edf11f45eae8c9b6f406cca498b",
+   "raw_hex": "320a300a300a300a320a300a300a300a310a300a300a300a310a300a300a300a310a300a300a300a330a300a300a300a37360a0a4359434c45533d30314235453036460d0a0a",
+   "text": "2\n0\n0\n0\n2\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n3\n0\n0\n0\n76\n",
+   "timed_out": false,
+   "words": 91
+  },
+  "rtl/tb/hfs_persist_probe.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 22220 steps)"
+  },
+  "rtl/tb/hfs_syscall_probe.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 21500 steps)"
+  },
+  "rtl/tb/prog_load_probe.hasm": {
+   "excluded": "does not halt under the loader (step_cap after 20720 steps)"
+  }
+ }
+}

@@ -982,6 +982,76 @@ berikutnya.
 
 ---
 
+## Paritas papan — 79 program, 24 September 2026
+
+Langkah P2 urutan pemilik. Seluruh korpus Lapis 4 yang bisa dikirim dijalankan
+di papan satu per satu, tiap program dengan bitstream loader dimuat ulang lebih
+dulu. Jawabannya dibandingkan **hanya** terhadap `NUI/board_expected.json` yang
+dibekukan sebelum papan ditanya; ekspektasi tidak diubah karena hasil papan.
+Rekaman dan laporannya di `parity-board/20260924T105400Z-parity.json` dan
+`.report.json`.
+
+| | program |
+|---|---:|
+| **PARITY** | **73** |
+| **MISMATCH** | **2** |
+| **UNKNOWN** | **28** |
+| dikirim | 79 dari 103 |
+
+24 UNKNOWN adalah program yang memang tidak dikirim — 9 menyentuh jendela
+kartu, 15 tidak berhenti di bawah loader — dan 4 sisanya membaca pencacah bebas
+(`timer_poll`, `trap_resume`, `trap_shadow`, `trap_timer`): interpreter
+menghitung instruksi, silikon menghitung clock, jadi kabel tidak bisa
+memutuskan.
+
+**Kedua MISMATCH keduanya angka besar, dan keduanya OFF-PRINT-SILICON:**
+
+| program | diharapkan | papan |
+|---|---|---|
+| `rtl/programs/bench/e4_frame.hasm` | `285212673` | `28521258?` |
+| `rtl/programs/test_hisab.hasm` | `2586908108` | `2586908910` |
+
+`?` adalah `'0'` + 15 — bentuk yang sama dengan yang burn-in temukan
+20 September. Tidak ada MISMATCH lain di seluruh korpus.
+
+### Kolom perangkat keras per opcode
+
+Diagregasi dari rekaman yang sama: sebuah opcode PARITY kalau setiap program
+yang menjalankannya cocok, MISMATCH kalau setiap program yang menjalankannya
+berbeda, dan **UNKNOWN kalau kabel tidak bisa memutuskan** — tidak pernah
+dipaksa jadi PARITY.
+
+| | opcode |
+|---|---:|
+| **PARITY** | **74** |
+| **MISMATCH** | **0** |
+| **UNKNOWN** | **29** |
+
+Dari 29 UNKNOWN: **24** karena tak satu program yang dikirim menjalankannya,
+dan **5** karena ia berjalan di program yang cocok **dan** di program yang
+berbeda — `HALT`, `HCRC`, `HLOAD`, `HPACK`, `PRINT`. Kabel saja tidak bisa
+menunjuk instruksi mana yang berbeda, dan itulah kenapa mereka UNKNOWN dan
+bukan MISMATCH, meskipun `PRINT` sudah punya butir OFF sendiri.
+
+**Dua temuan alat, keduanya di sisi host dan bukan di RTL:**
+
+1. **Lari pertama P2 membaca 75 dari 79 sebagai MISMATCH**, dan itu pembacanya,
+   bukan papan: laporan `CYCLES=` wrapper tiba tergeser satu byte, jadi tiap
+   teks papan membawa satu baris kosong ekstra. Dicatat di
+   [OFF.md](OFF.md) sebagai temuan RTL yang **dilaporkan, tidak diperbaiki**;
+   yang dibetulkan pembacanya.
+2. **Program pertama lari itu terkontaminasi 482 detak burn-in** yang masih
+   tersangkut di penyangga driver sesudah capture P1. Runner sekarang menguras
+   kabel sebelum mengirim, dan lari kedua bersih.
+
+Keduanya membuat satu aturan P1 naik ke Lapis 4: **laporan membaca byte mentah
+rekaman, bukan teks yang rekaman itu bawa sejak hari ia ditulis**. Dibaca ulang
+begitu, tanpa papan ditanya lagi, kedua rekaman sepakat — lari pertama
+**72 PARITY, 3 MISMATCH, 28 UNKNOWN**, dan yang ketiga persis program yang
+terkontaminasi; lari kedua 73 dan 2.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1166,7 +1236,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.430 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.431 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1209,7 +1279,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.430 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.431 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

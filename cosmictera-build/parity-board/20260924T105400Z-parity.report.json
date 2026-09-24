@@ -1,0 +1,2111 @@
+{
+ "commit": "ce663be",
+ "counts": {
+  "MISMATCH": 2,
+  "PARITY": 73,
+  "UNKNOWN": 28
+ },
+ "experiment": "parity",
+ "opcodes": {
+  "ADD": {
+   "agreeing": [
+    "parity:integer_arithmetic",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm"
+   ]
+  },
+  "ADDI": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "AND": {
+   "agreeing": [
+    "parity:bitwise_register",
+    "rtl/programs/jamrah_gate.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "ANDI": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "CALL": {
+   "agreeing": [
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CDOT": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "CEQ": {
+   "agreeing": [
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CGET": {
+   "agreeing": [
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:norm_of_a_letter",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CHASH": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "CMOD4": {
+   "agreeing": [
+    "parity:codex_turning_budget_and_residue",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CMOV": {
+   "agreeing": [
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CMP": {
+   "agreeing": [
+    "parity:backward_branch_loop",
+    "parity:compare_sets_flags",
+    "parity:forward_branch_taken",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_loop.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CMPI": {
+   "agreeing": [
+    "parity:compare_immediate",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_flags.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "CRHO": {
+   "agreeing": [
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CSET": {
+   "agreeing": [
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CSIGN": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "CSUB": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "CU": {
+   "agreeing": [
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "CZERO": {
+   "agreeing": [
+    "parity:codex_copy_and_zero",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "EMITS": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "ERET": {
+   "agreeing": [
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "FRD": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:string_integral_bsm",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "FWR": {
+   "agreeing": [
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "HALT": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:string_integral_bsm",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_distance.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "UNKNOWN",
+   "differing": [
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "reason": "executed in agreeing and differing runs: the wire alone cannot say which instruction differed",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "HALT_ERR": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "HCADD": {
+   "agreeing": [
+    "parity:codex_add",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "HCHK": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "HCRC": {
+   "agreeing": [
+    "parity:hisab_pack_and_crc",
+    "rtl/programs/bench/e2_hisab.hasm"
+   ],
+   "board": "UNKNOWN",
+   "differing": [
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "reason": "executed in agreeing and differing runs: the wire alone cannot say which instruction differed",
+   "undecided": []
+  },
+  "HDCMP": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "HDES": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "HDIST": {
+   "agreeing": [
+    "parity:distance_between_letters",
+    "rtl/programs/test_distance.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "HEXMT": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "HGRD": {
+   "agreeing": [
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_negative_residue",
+    "parity:guard_a_letter",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_negative.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "HLOAD": {
+   "agreeing": [
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:norm_of_a_letter",
+    "parity:string_integral_bsm",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_distance.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_negative.hasm"
+   ],
+   "board": "UNKNOWN",
+   "differing": [
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "reason": "executed in agreeing and differing runs: the wire alone cannot say which instruction differed",
+   "undecided": []
+  },
+  "HNRM2": {
+   "agreeing": [
+    "parity:norm_of_a_letter",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/test_bsm.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "HPACK": {
+   "agreeing": [
+    "parity:hisab_pack_and_crc",
+    "rtl/programs/bench/e2_hisab.hasm"
+   ],
+   "board": "UNKNOWN",
+   "differing": [
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "reason": "executed in agreeing and differing runs: the wire alone cannot say which instruction differed",
+   "undecided": []
+  },
+  "HPROJ": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "HSER": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "JEQ": {
+   "agreeing": [
+    "parity:forward_branch_taken",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_flags.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm"
+   ]
+  },
+  "JGD": {
+   "agreeing": [
+    "parity:branch_on_guard",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "JGF": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "JGP": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "JMP": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:string_integral_bsm",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "JNE": {
+   "agreeing": [
+    "parity:backward_branch_loop",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "JNGD": {
+   "agreeing": [
+    "parity:branch_on_guard_not_taken",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_negative.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "JNP": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "LOAD": {
+   "agreeing": [
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:store_then_load",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "L_AIN": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_ALIF": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_BA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_DAL": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_DHAD": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_DZAL": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_FA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_GHAIN": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_HA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_HAA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_JIM": {
+   "agreeing": [
+    "rtl/programs/letters.hasm",
+    "rtl/programs/nui_embedding.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_KAF": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_KHA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm",
+    "rtl/programs/nui_embedding.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_LAM": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_MIM": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_NUN": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_QAF": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_RA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_SHAD": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_SIN": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_SYIN": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_TA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_THA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_TSA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_WAW": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_YA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_ZAY": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "L_ZHA": {
+   "agreeing": [
+    "rtl/programs/letters.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "MOV": {
+   "agreeing": [
+    "parity:move_and_immediate",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "MOVI": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:integer_arithmetic",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "MUL": {
+   "agreeing": [
+    "parity:integer_arithmetic",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "NOP": {
+   "agreeing": [
+    "parity:move_and_immediate",
+    "parity:store_then_load",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_shadow.hasm"
+   ]
+  },
+  "NOT": {
+   "agreeing": [
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "OR": {
+   "agreeing": [
+    "parity:bitwise_register"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "ORI": {
+   "agreeing": [
+    "parity:bitwise_immediate"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "POP": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "PRINT": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_add",
+    "parity:codex_copy_and_zero",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_inequality_clears_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:every_letter_loads",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:guard_a_letter",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:load_one_letter",
+    "parity:load_three_letters",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:string_integral_bsm",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e2_guard_x1.hasm",
+    "rtl/programs/bench/e2_guard_x10.hasm",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/bench/e2_scale_n02.hasm",
+    "rtl/programs/bench/e2_scale_n04.hasm",
+    "rtl/programs/bench/e2_scale_n08.hasm",
+    "rtl/programs/bench/e2_scale_n12.hasm",
+    "rtl/programs/bench/e3_sweep28.hasm",
+    "rtl/programs/bench/e5_negative.hasm",
+    "rtl/programs/bench/e6_record_triage.hasm",
+    "rtl/programs/guard_negative.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_bsm.hasm",
+    "rtl/programs/test_codex.hasm",
+    "rtl/programs/test_cset.hasm",
+    "rtl/programs/test_distance.hasm",
+    "rtl/programs/test_from_card.hasm",
+    "rtl/programs/test_guard.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_loop.hasm",
+    "rtl/programs/test_negative.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "UNKNOWN",
+   "differing": [
+    "rtl/programs/bench/e4_frame.hasm",
+    "rtl/programs/test_hisab.hasm"
+   ],
+   "reason": "executed in agreeing and differing runs: the wire alone cannot say which instruction differed",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "PRINTH": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "PUSH": {
+   "agreeing": [
+    "rtl/programs/subroutine.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "RET": {
+   "agreeing": [
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "SHL": {
+   "agreeing": [
+    "parity:bitwise_shift",
+    "parity:shift_overflow"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "SHLI": {
+   "agreeing": [
+    "parity:bitwise_shift",
+    "parity:shift_overflow"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "SHR": {
+   "agreeing": [
+    "parity:bitwise_shift",
+    "parity:shift_overflow"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "SHRI": {
+   "agreeing": [
+    "parity:add_immediate_signed",
+    "parity:backward_branch_loop",
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "parity:bitwise_register",
+    "parity:bitwise_shift",
+    "parity:branch_on_guard",
+    "parity:branch_on_guard_not_taken",
+    "parity:codex_equality_sets_zero",
+    "parity:codex_negative_residue",
+    "parity:codex_turning_budget_and_residue",
+    "parity:compare_immediate",
+    "parity:compare_sets_flags",
+    "parity:cset_past_seventeen_names_nothing",
+    "parity:cset_takes_the_low_byte",
+    "parity:cset_then_reads_it_back",
+    "parity:cset_twice_into_the_same_register",
+    "parity:cset_writes_one_component",
+    "parity:distance_between_letters",
+    "parity:flags_read_after_compare",
+    "parity:flags_survive_a_compare",
+    "parity:flags_write_then_read",
+    "parity:forward_branch_taken",
+    "parity:hisab_pack_and_crc",
+    "parity:integer_arithmetic",
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:mmio_status_when_idle",
+    "parity:move_and_immediate",
+    "parity:norm_of_a_letter",
+    "parity:shift_overflow",
+    "parity:store_then_load",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/bench/e2_hisab.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "STORE": {
+   "agreeing": [
+    "parity:mmio_compare_round_trip",
+    "parity:mmio_does_not_disturb_ram",
+    "parity:store_then_load",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm",
+    "rtl/programs/user_mode.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/trap_resume.hasm",
+    "rtl/programs/trap_shadow.hasm",
+    "rtl/programs/trap_timer.hasm"
+   ]
+  },
+  "SUB": {
+   "agreeing": [
+    "parity:integer_arithmetic",
+    "parity:subtraction_wraps_at_32_bits",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/jamrah_gate.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": [
+    "rtl/programs/timer_poll.hasm"
+   ]
+  },
+  "SYSCALL": {
+   "agreeing": [
+    "rtl/programs/syscall.hasm",
+    "rtl/programs/trap_epc.hasm",
+    "rtl/programs/trap_flags.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "VDIST": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "VNORM": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "VPROJ_K": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "VPROJ_N": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "VPROJ_Q": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "VPROJ_T": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "VSCL": {
+   "agreeing": [],
+   "board": "UNKNOWN",
+   "differing": [],
+   "reason": "no program sent executes it",
+   "undecided": []
+  },
+  "XOR": {
+   "agreeing": [
+    "parity:bitwise_register"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  },
+  "XORI": {
+   "agreeing": [
+    "parity:bitwise_immediate",
+    "parity:bitwise_immediate_extension",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/test_hfs.hasm"
+   ],
+   "board": "PARITY",
+   "differing": [],
+   "reason": "",
+   "undecided": []
+  }
+ },
+ "programs": {
+  "parity:add_immediate_signed": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:backward_branch_loop": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:bitwise_immediate": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:bitwise_immediate_extension": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:bitwise_register": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:bitwise_shift": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:branch_on_guard": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:branch_on_guard_not_taken": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:codex_add": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:codex_copy_and_zero": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:codex_equality_sets_zero": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:codex_inequality_clears_zero": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:codex_negative_residue": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:codex_turning_budget_and_residue": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:compare_immediate": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:compare_sets_flags": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:cset_past_seventeen_names_nothing": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:cset_takes_the_low_byte": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:cset_then_reads_it_back": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:cset_twice_into_the_same_register": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:cset_writes_one_component": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:distance_between_letters": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:every_letter_loads": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:flags_read_after_compare": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:flags_survive_a_compare": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:flags_write_then_read": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:forward_branch_taken": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:guard_a_letter": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:hisab_pack_and_crc": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:integer_arithmetic": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:load_one_letter": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:load_three_letters": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:mmio_compare_round_trip": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:mmio_does_not_disturb_ram": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:mmio_status_when_idle": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:move_and_immediate": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:norm_of_a_letter": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:shift_overflow": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:store_then_load": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:string_integral_bsm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "parity:subtraction_wraps_at_32_bits": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_guard_x1.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_guard_x10.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_hisab.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n02.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n04.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n08.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e2_scale_n12.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e3_sweep28.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e4_frame.hasm": {
+   "board": "28521258?",
+   "board_equals_rtl": false,
+   "dropped": 0,
+   "expected": "285212673",
+   "line": 1,
+   "status": "MISMATCH"
+  },
+  "rtl/programs/bench/e5_negative.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/bench/e6_record_triage.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/burn_in.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/flags_board.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 35000 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/flags_ctx.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 33800 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/guard_negative.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/hal.hasm": {
+   "reason": "not sent: does not halt under the loader (fault after 1901 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hal_sd.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hfs_lifecycle.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/hijrah_sweep.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 41360 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hos.hasm": {
+   "reason": "not sent: does not halt under the loader (fault after 17210 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hos_demo.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/hos_hctx.hasm": {
+   "reason": "not sent: does not halt under the loader (fault after 3407 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hos_hfs_disk.hasm": {
+   "reason": "not sent: does not halt under the loader (fault after 25296 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/hos_prog_load.hasm": {
+   "reason": "not sent: does not halt under the loader (fault after 27016 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/jamrah_gate.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/kernel.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 43220 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/letters.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/loader.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 22160 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/mem_protect.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/nui_embedding.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/payload.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/sd_writer.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/sdio_probe.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/sdio_verify.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/sdio_write.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/shell.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/subroutine.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/syscall.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/syscall_io.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 22760 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/test_bsm.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_codex.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_cset.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_distance.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_from_card.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_guard.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_hfs.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_hisab.hasm": {
+   "board": "2586908910",
+   "board_equals_rtl": false,
+   "dropped": 0,
+   "expected": "2586908108",
+   "line": 1,
+   "status": "MISMATCH"
+  },
+  "rtl/programs/test_loop.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_negative.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/test_prog_load.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/test_prog_run.hasm": {
+   "reason": "not sent: touches the SD window: no other engine here has a card to compare with, and until the burn-in ends the card is its",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/timer_poll.hasm": {
+   "board": "2\n1\n172\n250\n233\n1\n172\n250\n238\n0\n0\n0\n5\n0\n0\n0\n3\n",
+   "reason": "reads the free-running counter: the interpreter counts instructions, silicon counts clocks",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/trap_epc.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/trap_flags.hasm": {
+   "board_equals_rtl": true,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/programs/trap_hreg.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 27020 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/trap_resume.hasm": {
+   "board": "86\n86\n27\n",
+   "reason": "reads the free-running counter: the interpreter counts instructions, silicon counts clocks",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/trap_shadow.hasm": {
+   "board": "88\n88\n88\n89\n88\n88\n88\n88\n21\n",
+   "reason": "reads the free-running counter: the interpreter counts instructions, silicon counts clocks",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/trap_timer.hasm": {
+   "board": "2\n0\n0\n0\n0\n1\n181\n150\n39\n0\n0\n0\n3\n0\n0\n0\n1\n0\n0\n0\n74\n",
+   "reason": "reads the free-running counter: the interpreter counts instructions, silicon counts clocks",
+   "status": "UNKNOWN"
+  },
+  "rtl/programs/user_mode.hasm": {
+   "board_equals_rtl": null,
+   "dropped": 0,
+   "status": "PARITY"
+  },
+  "rtl/tb/hfs_persist_probe.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 22220 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/tb/hfs_syscall_probe.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 21500 steps)",
+   "status": "UNKNOWN"
+  },
+  "rtl/tb/prog_load_probe.hasm": {
+   "reason": "not sent: does not halt under the loader (step_cap after 20720 steps)",
+   "status": "UNKNOWN"
+  }
+ },
+ "record": "20260924T105400Z"
+}

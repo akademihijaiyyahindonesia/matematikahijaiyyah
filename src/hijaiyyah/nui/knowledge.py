@@ -381,11 +381,20 @@ def _hc(word: str) -> Answer:
 TERMS = "teknologi/ISTILAH.md"
 GRAPH = "src/hijaiyyah/nui/repository_graph.py"
 #: Board records the repository keeps, by family; baselines and reports are
-#: derived from a record, not records themselves.
+#: derived from a record, not records themselves. A record is taken for a
+#: family only when its own `target` says so where it carries one: since P1
+#: (24 September 2026) the burn-in folder holds three kinds of file -- a run's
+#: summary, a raw capture's manifest, and what the offline parser made of it --
+#: and a capture manifest answering "what did the board last measure" would
+#: report a run's fields as empty.
 FAMILIES = {"burn-in": "cosmictera-build/burn-in/*.json",
+            "burn-in-capture": "cosmictera-build/burn-in/*-capture.json",
             "attack-lab": "cosmictera-build/attack-lab/*.json",
             "parity-board": "cosmictera-build/parity-board/*.json"}
+TARGETS = {"burn-in": "burn-in", "burn-in-capture": "burn-in-capture"}
 HEADLINES = {"burn-in": ("started", "ended", "heartbeats", "errors", "sd_read_failures"),
+             "burn-in-capture": ("started", "ended", "bytes", "raw_sha256",
+                                 "bitstream_sha256"),
              "attack-lab": ("attack_id", "target", "inputs", "rejected", "findings"),
              "parity-board": ("experiment", "commit", "date")}
 MONTHS = {m: i for i, m in enumerate(
@@ -503,7 +512,11 @@ def _board(subject: str) -> Answer:
     for family, pattern in FAMILIES.items():
         files = [f for f in tracked(pattern)
                  if re.search(r"\d{8}T\d{6}Z", f) and not f.endswith(("-baseline.json",
+                                                                       "-parsed.json",
                                                                        ".report.json"))]
+        if family in TARGETS:
+            files = [f for f in files
+                     if _json(ROOT / f).get("target") == TARGETS[family]]
         if not files:
             answer["unknown"].append(f"no {family} record is tracked yet")
             continue

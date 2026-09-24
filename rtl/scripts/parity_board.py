@@ -77,6 +77,14 @@ def run_one(port: str, payload: list[int], expected_bytes: int) -> tuple[bytes, 
     raw = bytearray()
     timed_out = True
     with serial.Serial(port, BAUD, timeout=0.2) as link:
+        # Drain what the wire still holds before this program is sent.
+        # reset_input_buffer() alone was not enough on 24 September 2026: the
+        # board had been left running the burn-in program, and the first
+        # capture of the parity corpus opened with 482 of its heartbeats --
+        # bytes the driver had buffered while nothing was reading. A program's
+        # answer must be the program's.
+        while link.read(4096):
+            pass
         link.reset_input_buffer()
         link.write(stream)
         link.flush()

@@ -35,8 +35,8 @@ simulasi.
 ## Angka utuh, hari ini
 
 ```
-5.430 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
-    1 dari 5.430 gagal hari ini: sidik jari HDMI, M5.2B ditunda (OFF.md)
+5.431 tes Python lulus, 0 dilewati          ruff bersih, mypy bersih
+    1 dari 5.431 gagal hari ini: sidik jari HDMI, M5.2B ditunda (OFF.md)
   408 asersi RTL di 39 testbench, 0 gagal
    82 dari 103 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL

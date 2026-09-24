@@ -236,6 +236,14 @@ def test_what_the_board_last_measured_is_what_is_committed() -> None:
     assert burn["stamp"] == "20260921T053430Z"
     assert (burn["ended"], burn["errors"], burn["sd_read_failures"]) == (
         "duration reached", 0, 0)
+    # Since P1 the burn-in folder holds three kinds of file. A run's summary
+    # and a capture's manifest answer different questions, and a manifest read
+    # as a run would report a run's fields as empty, so each is its own family
+    # and a record is taken for one only when its own `target` says so.
+    capture, = [i for i in records if i["family"] == "burn-in-capture"]
+    assert capture["source"].endswith("-capture.json")
+    assert capture["bytes"] and capture["raw_sha256"]
+    assert burn["source"].endswith("-72h.json")
     assert _one(a["PAPAN"], "latest dated section")["source"].startswith(
         "cosmictera-build/PAPAN.md:")
 
@@ -257,7 +265,7 @@ def test_the_database_holds_every_entry_and_invents_no_name() -> None:
     records = off_db.build()
     headings = [line for line in off_db.OFF.read_text(encoding="utf-8").splitlines()
                 if line.startswith("### ")]
-    assert len(records) == len(headings) == 10
+    assert len(records) == len(headings) == 11
     assert [r["id"] for r in records if r["id"]] == ["OFF-PRINT-SILICON"]
     assert all(r["fixed"] is False and r["reproduced"] is None for r in records)
     assert {r["status"] for r in records} <= {"EH", "AT"}

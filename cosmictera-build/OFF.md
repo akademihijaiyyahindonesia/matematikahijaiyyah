@@ -137,6 +137,40 @@ Karena itu pemilik memisahkannya, 21 September 2026, sebagai
 
 Label: **EH**.
 
+### Laporan `CYCLES=` wrapper tergeser satu byte di kabel
+
+Diukur 24 September 2026 pada paritas papan P2, **79 tangkapan dari 79**, dan
+ditemukan karena pembacanya membandingkan teks papan dengan ekspektasi beku.
+
+`rtl/fpga/gowin/hcpu_gowin_top.v` menulis laporan 19 byte:
+
+```
+0D 0A  C Y C L E S =  <8 digit heksadesimal>  0D 0A
+```
+
+Yang tiba di kabel juga **19 byte**, tetapi tergeser satu tempat:
+
+```
+0A  C Y C L E S =  <8 digit heksadesimal>  0D 0A 0A
+```
+
+`0D` pertama tidak ada, dan ada satu `0A` lebih di ujung. Panjangnya sama,
+jadi bukan byte yang hilang melainkan urutannya. Cacahan siklus di antaranya
+tidak tersentuh, dan tidak satu byte program pun hilang.
+
+**Dilaporkan, tidak diperbaiki** (K9): ia di RTL wrapper, dan tidak ada
+perintah pemilik untuk menyentuhnya. Yang dibetulkan hanya pembacanya —
+`src/hijaiyyah/nui/board_parity.py` membuang **satu** baris baru milik
+laporan, baik `\r\n` seperti yang ditulis sumbernya maupun `\n` seperti yang
+tiba, dan menyimpan baris baru milik program. Sebelum itu ia hanya mengenal
+`\r\n`, jadi tiap program papan membawa satu baris kosong ekstra dan **75 dari
+79 terbaca MISMATCH** pada lari pertama P2. Sesudah pembacanya dibetulkan dan
+laporan membaca **byte mentah** rekaman, lari pertama terbaca 72 PARITY dan 3
+MISMATCH — yang ketiga program yang tercemar sisa detak burn-in — dan lari
+kedua 73 PARITY dan 2 MISMATCH.
+
+Label: **EH**.
+
 ### Instruksi sesudah berhenti ikut menulis register
 
 Ditemukan 21 September 2026 oleh Lapis 4 NUI, di simulasi RTL. Instruksi tepat

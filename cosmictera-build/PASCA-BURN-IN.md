@@ -19,7 +19,7 @@ klasifikasi selisih pindah ke **P7**, bersama pembekuan Lapis 4.
 ```
 P0  tutup burn-in dan bekukan bukti          selesai 24 September 2026
 P1  pengurai + capture mentah                selesai 24 September 2026
-P2  paritas papan
+P2  paritas papan                            selesai 24 September 2026
 P3  kolom opcode perangkat keras
 P4  PRINT di silikon
 P5  HALT/RET di silikon
@@ -124,7 +124,11 @@ misalnya membuang detak yang sedang terkumpul ketika sebuah baris memuat `H`
 tetapi bukan `H` saja — tetap **usulan**, dan diuji pada byte mentah, bukan
 pada JSONL.
 
-## P2 — paritas papan, seluruh korpus
+## P2 — paritas papan, seluruh korpus — **selesai 24 September 2026**
+
+73 PARITY, 2 MISMATCH, 28 UNKNOWN dari 79 program yang dikirim; kolom opcode
+74 PARITY, 0 MISMATCH, 29 UNKNOWN. Rekaman `20260924T105400Z-parity.json`,
+angkanya di `cosmictera-build/PAPAN.md` (R1).
 
 ```bash
 python3 rtl/scripts/parity_board.py --experiment parity              # rencana
