@@ -1198,6 +1198,32 @@ naik ke P1, mendahului paritas papan, dan klasifikasi selisih pindah ke P7.
 **Penomoran ini urutan eksekusi, bukan lapis NUI** — dua belas lapis NUI tidak
 bergeser, dan itu perintah pemilik pada hari yang sama.
 
+### 24 September 2026 — P1: byte kabel jadi bukti primer
+
+**Pemilik memisahkan pengurai dari bukti.** Dua alat baru berdiri di samping
+`rtl/scripts/burn_in.py`, yang **tidak disentuh** atas perintah pemilik supaya
+rekaman lamanya tetap berarti: `rtl/scripts/burn_in_capture.py` menulis byte
+kabel apa adanya beserta manifesnya, dan `rtl/scripts/burn_in_parse.py`
+menguraikannya sesudahnya, jauh dari papan. Alat capture **tidak mengurai satu
+baris pun**, dan sebuah tes membaca sumbernya untuk menjaga itu.
+
+**Capture pendek pertama, 24 September 2026**: bitstream yang sama tanpa
+dibangun ulang, 12 menit, 9.940 byte, 457 detak, **0 error papan dan 0 parse
+error**, dengan irama detak 1,5736 detik melawan 1,5744 di garis dasar 72 jam.
+Angkanya di `cosmictera-build/burn-in/README.md`, tidak disalin ke sini (R1).
+
+**Pengurai baru membaca tata bahasa, bukan menghitung angka**: satu detak
+adalah `H` diikuti tepat enam angka desimal. Selebihnya `parse_error` dengan
+offset byte dan alasannya, dan medan yang tertunda dibuang — karena begitulah
+detak bergeser dibuat. **`parse_error` tidak pernah menjadi `board_error`**, dan
+bentuk dua baris tingkat 2 diputar ulang terhadap kedua pengurai untuk
+membuktikannya.
+
+**Yang tidak diklaim, perintah pemilik:** pengurai lari 72 jam **tidak**
+tervalidasi terhadap capture mentah — lari itu tidak menyimpan byte. Buktinya
+tetap yang dikunci di P0; yang tervalidasi P1 adalah capture pendek baru dan
+pengurai offline-nya.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

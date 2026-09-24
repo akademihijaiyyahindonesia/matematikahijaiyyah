@@ -18,7 +18,7 @@ klasifikasi selisih pindah ke **P7**, bersama pembekuan Lapis 4.
 
 ```
 P0  tutup burn-in dan bekukan bukti          selesai 24 September 2026
-P1  pengurai + capture mentah
+P1  pengurai + capture mentah                selesai 24 September 2026
 P2  paritas papan
 P3  kolom opcode perangkat keras
 P4  PRINT di silikon
@@ -93,7 +93,12 @@ Pemeriksaan itu dijalankan pada JSONL final dan hasilnya dicatat di
 pengurai, bukan error papan. Pengurainya diperbaiki sesudahnya, sebagai butir
 sendiri — lihat bagian "Pengurai burn-in (K-7)" di bawah.
 
-## P1 — pengurai dan capture mentah (K-7)
+## P1 — pengurai dan capture mentah (K-7) — **selesai 24 September 2026**
+
+Dua alat baru, `rtl/scripts/burn_in_capture.py` dan `rtl/scripts/burn_in_parse.py`; `burn_in.py` tidak disentuh. Capture pendek
+pertama `20260924T073655Z-burn-in` — 9.940 byte, 457 detak, 0 parse error,
+0 error papan — dan hasilnya di `cosmictera-build/burn-in/README.md` bagian
+"P1". Tidak disalin ke sini (R1).
 
 Pemilik menyetujui perbaikan pengurai dengan satu perubahan arsitektur:
 **pengurai tidak lagi menjadi sumber bukti primer**. Buktinya adalah byte yang

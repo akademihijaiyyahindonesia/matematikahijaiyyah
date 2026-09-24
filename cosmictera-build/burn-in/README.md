@@ -352,6 +352,100 @@ ruangan yang tidak diukur, dan satu bitstream. Ia mengatakan mesin ini bekerja
 tiga hari penuh tanpa satu pun kesalahan yang bisa dilihat pemeriksaannya
 sendiri — bukan bahwa tiap papan akan begitu. Tingkat 168 jam belum dijalankan.
 
+## P1 — byte kabel jadi bukti primer, 24 September 2026
+
+Perintah pemilik sesudah P0: *"raw capture menjadi evidence primer; parser
+tidak lagi menjadi sumber bukti primer."* Bentuknya sekarang dua alat, dan
+`burn_in.py` **tidak disentuh** — perintah pemilik hari yang sama, supaya
+seluruh rekaman yang pernah ditulisnya tetap berarti seperti dulu.
+
+```
+UART/USB → burn_in_capture.py → <id>-capture.raw       byte, apa adanya
+                              → <id>-capture.times.jsonl  offset dan jam host
+                              → <id>-capture.json         manifes
+         → burn_in_parse.py   → <id>-parsed.jsonl      detak dan parse error
+                              → <id>-parsed.json       ringkasan
+```
+
+`burn_in_capture.py` **tidak mengurai satu baris pun** — itu inti pemisahannya,
+dan sebuah tes membaca sumbernya untuk memastikan ia tidak belajar mengurai.
+Manifesnya mencatat tujuh hal yang pemilik minta: byte mentah, jam host, identitas
+perangkat, sidik jari bitstream, waktu mulai dan selesai, jumlah byte, dan
+SHA256. Sidik jari dihitung dari berkas yang dimuat, bukan dikutip dari catatan.
+
+### Capture pendek pertama
+
+Bitstream yang sama dengan lari 72 jam, **tanpa dibangun ulang**:
+`hcpu_gowin_top_loader.fs`, sha256 `84fdc912…`.
+
+| | |
+|---|---|
+| lari | `20260924T073655Z-burn-in` |
+| mulai / selesai | 2026-09-24 07:36:55 UTC → 07:48:59 UTC (12,0 menit) |
+| byte | **9.940** dalam 462 pembacaan |
+| sha256 raw | `31e69b52ae17d44063a5e18a6a2ec36bf0fe8e0629b358a3887ed691596a13ae` |
+| berhenti karena | `duration reached` |
+
+Diurai **offline** dari byte itu, bukan dari kabel:
+
+| | |
+|---|---|
+| baris | 3.206 |
+| detak | **457**, bernomor 1..457 |
+| siklus pertama | 28, 3072, 178 — dan kata kartu `0x48465331`, yaitu `HFS1` |
+| **board errors** | **0** |
+| gagal baca kartu | 0 |
+| **parse errors** | **0** |
+
+**Konsisten dengan garis dasar 72 jam**, dan itu yang membuat capture ini
+berarti: irama detak papan **1,5736 detik** melawan 1,5744 di garis dasar, dan
+**650,72 siklus per detik** melawan 650,423. Jam papan berjalan +0,124 detik
+terhadap jam host selama 717 detik — **bukan** pengukuran hanyut: pembacaan host
+bergrain 0,25 detik, sedangkan kemiringan garis dasar hanya −0,0075 detik
+sepanjang dua belas menit. Capture sependek ini tidak bisa mengukur hanyut, dan
+tidak mengklaimnya.
+
+Byte yang sama diurai dua kali memberi ringkasan yang identik, dan pengurai
+menolak berjalan kalau SHA256 berkas raw tidak lagi sama dengan yang dicatat
+manifes.
+
+### Baris rusak ditolak, dan tidak pernah jadi error papan
+
+Pengurainya membaca tata bahasa, bukan menghitung angka: satu detak adalah `H`
+diikuti **tepat enam** angka desimal di bawah 2³². Di luar itu **parse error**,
+membawa offset byte, teksnya apa adanya, dan alasannya — dan **fields yang
+sedang tertunda dibuang**, karena persis begitulah sebuah detak bergeser dibuat.
+
+| yang pemilik daftarkan | alasan yang dicatat |
+|---|---|
+| merged record | `merged_record` — `0H`, `HH`, `12H34` |
+| truncated record / medan hilang | `truncated_record` |
+| medan tidak sah | `non_numeric_field` — `335544;<`, `1A2B`, `error` |
+| jumlah medan tak terduga | `unexpected_field_count` |
+| baris sebagian | `partial_line` |
+
+Pemilik menulis "invalid hexadecimal field"; kabel ini desimal — PRINT mencetak
+desimal, dan programnya menjaga tiap angka di bawah sejuta karena PRINT salah di
+atas 2²² — jadi digit heksadesimal adalah satu kasus `non_numeric_field`, dan
+tidak disebut heksadesimal supaya format yang papan tidak pancarkan tidak ikut
+diklaim.
+
+**Bentuk tingkat 2 diputar ulang terhadap kedua pengurai**, dengan angkanya
+sendiri: sebuah detak terbuka dan memberi medan pertamanya 7.194; newline
+sebelum penanda berikutnya hilang, jadi `0H` tiba sebagai satu baris; medan
+sesudahnya milik detak lain, 7.440 di antaranya. Pengurai lama membuang baris
+gabungan itu tetapi **menyimpan yang tertunda**, jadi medan-medan itu menutup
+detak yang terbuka satu tempat bergeser — `errors` memegang nomor detak 7.440 —
+dan menulis baris `error` yang ada di log. Pengurai baru menolak baris gabungan
+itu, membuang yang tertunda, dan hitungan papan tetap 0.
+
+### Yang P1 tidak klaim
+
+**Pengurai lari 72 jam tidak tervalidasi terhadap capture mentah.** Lari itu
+tidak menyimpan byte, jadi tidak bisa diurai ulang dari kabelnya; buktinya tetap
+yang dikunci di P0. Yang tervalidasi di sini adalah **capture pendek baru dan
+pengurai offline**-nya.
+
 ## Dua temuan dari membangun lab ini
 
 Keduanya dicatat penuh di [OFF.md](../OFF.md), keduanya **dilaporkan bukan
