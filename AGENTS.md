@@ -1300,6 +1300,31 @@ Ulangan dua kali itu adalah eksperimen yang sama persis, bukan eksperimen
 diagnostik baru: tanpanya, selisih terhadap tangga 20 September tidak bisa
 dibedakan dari dua kondisi yang berbeda.
 
+### 25 September 2026 — P5: HALT dan RET di silikon
+
+**`PRINT` sesudah `HALT` dan sesudah RET fault sampai ke kabel di silikon**;
+interpreter berhenti sebelumnya. Pemilik meminta satu probe dengan sentinel
+yang dicetak **sebelum** jalur fault, supaya kabel kosong tidak bisa berarti
+"program tidak berjalan": di papan `1234` muncul, lalu `5`. Probe itu
+dibekukan di `NUI/board_expected.json` sebelum papan ditanya, dan terbukti
+tidak menggeser satu pun ekspektasi lama. Tabelnya di
+`cosmictera-build/OFF.md`, tidak disalin ke sini (R1).
+
+**Register dan RAM sesudah berhenti: UNKNOWN — tidak teramati dari luar.**
+Top-level papan tidak punya port yang membawa GPR atau kata RAM data, dan
+atas perintah pemilik tidak ada port debug yang ditambahkan. Alasannya ditulis
+di `src/hijaiyyah/nui/board_probes.py` dan dijaga tes yang membaca daftar pin
+papan, supaya alasan itu tidak basi kalau top-level kelak berubah. Laporan
+yang sempat menandai ketiganya PARITY — karena kabelnya sama-sama kosong —
+dibetulkan: kabel kosong berarti program berjalan dan berhenti, bukan isi
+register.
+
+**Dua selisih terhadap rekaman RTL tersimulasi tetap UNKNOWN**, bukan silikon
+yang menyimpang: rekaman RTL ditutup saat `halted` naik
+(`rtl/tb/tb_parity.v`), sedangkan wrapper papan menunggu UART diam
+(`rtl/fpga/gowin/hcpu_gowin_top.v`). Logika HALT, RET, dan writeback tidak
+diubah — perintah pemilik.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

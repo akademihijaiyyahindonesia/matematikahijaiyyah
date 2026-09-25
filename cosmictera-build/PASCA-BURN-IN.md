@@ -22,7 +22,7 @@ P1  pengurai + capture mentah                selesai 24 September 2026
 P2  paritas papan                            selesai 24 September 2026
 P3  kolom opcode perangkat keras             selesai 24 September 2026
 P4  PRINT di silikon                         selesai 25 September 2026
-P5  HALT/RET di silikon
+P5  HALT/RET di silikon                      selesai 25 September 2026
 P6  checksum + sabotase
 P7  laporan selisih final, freeze Lapis 4, tag
 P8  Lapis 5
@@ -178,7 +178,11 @@ berisi `ladder`: nilai, Python, interpreter, RTL tersimulasi, papan, dan
 `first_divergence`. Yang diharapkan kedua mesin sudah beku — keduanya mencetak
 ketujuh nilai dengan benar. Yang dicari **batas pertama**, bukan perbaikan.
 
-## P5 — HALT dan RET di silikon
+## P5 — HALT dan RET di silikon — **selesai 25 September 2026**
+
+`PRINT` sesudah `HALT` dan sesudah RET fault sampai ke kabel; probe sentinel
+membuktikan programnya berjalan. Register dan RAM sesudah berhenti UNKNOWN —
+tidak teramati dari luar. Tabelnya di `cosmictera-build/OFF.md` (R1).
 
 ```bash
 python3 rtl/scripts/parity_board.py --experiment stop --port /dev/tty.usbserial-20250303171

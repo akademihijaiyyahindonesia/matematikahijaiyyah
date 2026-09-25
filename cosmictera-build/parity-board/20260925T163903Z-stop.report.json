@@ -1,0 +1,140 @@
+{
+ "commit": "af9fd62",
+ "counts": {
+  "MISMATCH": 3,
+  "PARITY": 0,
+  "UNKNOWN": 3
+ },
+ "experiment": "stop",
+ "probes": [
+  {
+   "board": "not visible: nothing is printed after a stop",
+   "board_answer": "UNKNOWN -- not externally observable on current board interface: rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] (rtl/fpga/gowin/hcpu_gowin.cst); the core's tele_pc, tele_instr and tele_halted are left unconnected at the top, and no port carries a GPR or a data-RAM word",
+   "board_halted": true,
+   "board_wire": "",
+   "interpreter": 5,
+   "interpreter_wire": "",
+   "probe": "stop-probe:halt-then-register",
+   "question": "does a register change after HALT?",
+   "rtl": 7,
+   "rtl_wire": "",
+   "watch": "R1"
+  },
+  {
+   "board": "not visible: nothing is printed after a stop",
+   "board_answer": "UNKNOWN -- not externally observable on current board interface: rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] (rtl/fpga/gowin/hcpu_gowin.cst); the core's tele_pc, tele_instr and tele_halted are left unconnected at the top, and no port carries a GPR or a data-RAM word",
+   "board_halted": true,
+   "board_wire": "",
+   "interpreter": 0,
+   "interpreter_wire": "",
+   "probe": "stop-probe:halt-then-store",
+   "question": "does RAM change after HALT?",
+   "rtl": 5,
+   "rtl_wire": "",
+   "watch": "MEM[0x100]"
+  },
+  {
+   "board": "not visible: nothing is printed after a stop",
+   "board_answer": "UNKNOWN -- not externally observable on current board interface: rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] (rtl/fpga/gowin/hcpu_gowin.cst); the core's tele_pc, tele_instr and tele_halted are left unconnected at the top, and no port carries a GPR or a data-RAM word",
+   "board_halted": true,
+   "board_wire": "",
+   "interpreter": 5,
+   "interpreter_wire": "",
+   "probe": "stop-probe:ret-then-register",
+   "question": "does writeback happen after a RET fault?",
+   "rtl": 7,
+   "rtl_wire": "",
+   "watch": "R1"
+  },
+  {
+   "against_rtl": "UNKNOWN whether the RTL differs: the RTL record's window closes when halted rises, and the board's wire stays open until the UART is idle: a byte sent after the stop can appear on the board and cannot appear in the RTL record",
+   "board": "the wire: a '5' is the answer yes",
+   "board_answer": "yes",
+   "board_halted": true,
+   "board_wire": "5\n",
+   "evidence": "hardware evidence: the PRINT behind the stop reached the wire on silicon; the interpreter stops before it",
+   "interpreter_wire": "",
+   "probe": "stop-probe:ret-then-print",
+   "question": "does a PRINT happen after a RET fault?",
+   "rtl_wire": "5"
+  },
+  {
+   "against_rtl": "UNKNOWN whether the RTL differs: the RTL record's window closes when halted rises, and the board's wire stays open until the UART is idle: a byte sent after the stop can appear on the board and cannot appear in the RTL record",
+   "board": "the wire: a '5' is the answer yes",
+   "board_answer": "yes",
+   "board_halted": true,
+   "board_wire": "5\n",
+   "evidence": "hardware evidence: the PRINT behind the stop reached the wire on silicon; the interpreter stops before it",
+   "interpreter_wire": "",
+   "probe": "stop-probe:halt-then-print",
+   "question": "does a PRINT happen after HALT?",
+   "rtl_wire": "5"
+  },
+  {
+   "against_rtl": "UNKNOWN whether the RTL differs: the RTL record's window closes when halted rises, and the board's wire stays open until the UART is idle: a byte sent after the stop can appear on the board and cannot appear in the RTL record",
+   "board": "the wire: 1234 says the program ran; a '5' after it is the answer yes",
+   "board_answer": "yes",
+   "board_halted": true,
+   "board_wire": "1234\n5\n",
+   "evidence": "hardware evidence: the PRINT behind the stop reached the wire on silicon; the interpreter stops before it",
+   "interpreter_wire": "1234\n",
+   "probe": "stop-probe:ret-then-print-sentinel",
+   "question": "does a PRINT happen after a RET fault, with proof the program ran?",
+   "rtl_wire": "1234\n"
+  }
+ ],
+ "programs": {
+  "stop-probe:halt-then-print": {
+   "board": "5",
+   "board_equals_rtl": false,
+   "dropped": 0,
+   "expected": "",
+   "line": 0,
+   "status": "MISMATCH"
+  },
+  "stop-probe:halt-then-register": {
+   "reason": "UNKNOWN -- not externally observable on current board interface: rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] (rtl/fpga/gowin/hcpu_gowin.cst); the core's tele_pc, tele_instr and tele_halted are left unconnected at the top, and no port carries a GPR or a data-RAM word",
+   "status": "UNKNOWN",
+   "wire": {
+    "board_equals_rtl": true,
+    "dropped": 0,
+    "status": "PARITY"
+   }
+  },
+  "stop-probe:halt-then-store": {
+   "reason": "UNKNOWN -- not externally observable on current board interface: rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] (rtl/fpga/gowin/hcpu_gowin.cst); the core's tele_pc, tele_instr and tele_halted are left unconnected at the top, and no port carries a GPR or a data-RAM word",
+   "status": "UNKNOWN",
+   "wire": {
+    "board_equals_rtl": true,
+    "dropped": 0,
+    "status": "PARITY"
+   }
+  },
+  "stop-probe:ret-then-print": {
+   "board": "5",
+   "board_equals_rtl": false,
+   "dropped": 0,
+   "expected": "",
+   "line": 0,
+   "status": "MISMATCH"
+  },
+  "stop-probe:ret-then-print-sentinel": {
+   "board": "5",
+   "board_equals_rtl": false,
+   "dropped": 0,
+   "expected": "",
+   "line": 1,
+   "status": "MISMATCH"
+  },
+  "stop-probe:ret-then-register": {
+   "reason": "UNKNOWN -- not externally observable on current board interface: rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] (rtl/fpga/gowin/hcpu_gowin.cst); the core's tele_pc, tele_instr and tele_halted are left unconnected at the top, and no port carries a GPR or a data-RAM word",
+   "status": "UNKNOWN",
+   "wire": {
+    "board_equals_rtl": true,
+    "dropped": 0,
+    "status": "PARITY"
+   }
+  }
+ },
+ "record": "20260925T163903Z"
+}

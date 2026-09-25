@@ -1077,6 +1077,34 @@ OFF-PRINT-SILICON (R1). Tidak ada RTL yang disentuh.
 
 ---
 
+## HALT dan RET di silikon — enam probe, 25 September 2026
+
+Langkah P5, bitstream `84fdc912…` tanpa dibangun ulang. Rekaman
+`parity-board/20260925T163903Z-stop.json`.
+
+| probe | interpreter | RTL tersimulasi | Tang Nano |
+|---|---|---|---|
+| HALT → tulis register | R1 = 5 | R1 = 7 | UNKNOWN — tidak teramati dari luar |
+| HALT → tulis RAM | `MEM[0x100]` = 0 | `MEM[0x100]` = 5 | UNKNOWN — tidak teramati dari luar |
+| RET fault → tulis register | R1 = 5 | R1 = 7 | UNKNOWN — tidak teramati dari luar |
+| RET fault → PRINT | kosong | `5` | **`5`** |
+| HALT → PRINT | kosong | `5` | **`5`** |
+| RET fault → PRINT, sentinel `1234` | `1234` | `1234` | **`1234` lalu `5`** |
+
+**Silikon mengirim `PRINT` yang berada sesudah titik berhenti** — sesudah
+`HALT` dan sesudah RET fault — sedangkan interpreter berhenti sebelumnya.
+Sentinel `1234` membuktikan program probe itu benar-benar berjalan. Keenam
+probe mengirim `CYCLES=`, jadi mesinnya benar-benar berhenti.
+
+Register dan RAM sesudah berhenti tidak punya jalur keluar di papan ini, dan
+tidak ada port debug yang ditambahkan untuk membuatnya — ketiganya tetap
+UNKNOWN. Dua selisih terhadap rekaman RTL (baris baru sesudah `5`, dan `5`
+sesudah sentinel) juga tetap UNKNOWN: rekaman RTL ditutup saat `halted` naik,
+kabel papan tidak. Rinciannya di [OFF.md](OFF.md), "Instruksi sesudah berhenti
+ikut menulis register" (R1). Tidak ada RTL yang disentuh.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1261,7 +1289,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.438 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.444 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1304,7 +1332,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.438 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.444 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

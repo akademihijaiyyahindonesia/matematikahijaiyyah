@@ -504,8 +504,18 @@ def report(record: dict[str, Any], expected: dict[str, Any] | None = None) -> di
         got = record["programs"].get(PRINT_NAME, {})
         out["ladder"] = print_table(section, got.get("text"))
     if experiment == "stop":
-        from .board_probes import stop_table
+        from .board_probes import NOT_OBSERVABLE, stop_table
         out["probes"] = stop_table(section, record)
+        # A probe whose answer is a register or a RAM word has no wire to be
+        # compared on: an empty wire agreeing with an empty expectation says the
+        # program ran and stopped, not what the register holds. Its status is
+        # therefore UNKNOWN, never PARITY -- the owner's rule, 25 September 2026.
+        for name, exp in section["programs"].items():
+            if exp["after_stop"]["watch"] != "wire" and name in classified:
+                classified[name] = {"status": "UNKNOWN", "reason": NOT_OBSERVABLE,
+                                    "wire": classified[name]}
+        out["counts"] = {s: sum(1 for c in classified.values() if c["status"] == s)
+                         for s in ("PARITY", "MISMATCH", "UNKNOWN")}
     return out
 
 

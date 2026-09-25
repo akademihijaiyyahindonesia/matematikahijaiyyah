@@ -78,10 +78,12 @@
    "commits": [],
    "files": [
     "NUI/PARITY.md",
+    "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+    "rtl/fpga/gowin/hcpu_gowin_top.v",
     "rtl/hcpu_controller.v",
     "rtl/hcpu_writeback.v",
     "rtl/programs/subroutine.hasm",
-    "rtl/scripts/parity_board.py"
+    "rtl/tb/tb_parity.v"
    ]
   },
   "reproduced": null,
@@ -103,7 +105,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:235"
+  "source": "cosmictera-build/OFF.md:273"
  },
  {
   "key": "21-opcode-belum-di-rtl",
@@ -123,7 +125,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:262"
+  "source": "cosmictera-build/OFF.md:300"
  },
  {
   "key": "hfs-dan-hos",
@@ -144,7 +146,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:300"
+  "source": "cosmictera-build/OFF.md:338"
  },
  {
   "key": "m3-shell-jalur-keluaran-karakter-dan-resume-setelah-preemption",
@@ -175,7 +177,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:416"
+  "source": "cosmictera-build/OFF.md:454"
  },
  {
   "key": "yang-h-kernel-belum-punya",
@@ -190,7 +192,7 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:657"
+  "source": "cosmictera-build/OFF.md:695"
  },
  {
   "key": "asic",
@@ -205,6 +207,6 @@
   },
   "reproduced": null,
   "fixed": false,
-  "source": "cosmictera-build/OFF.md:677"
+  "source": "cosmictera-build/OFF.md:715"
  }
 ]

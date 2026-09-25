@@ -222,13 +222,51 @@ write-enable writeback tidak digerbang olehnya (`rtl/hcpu_writeback.v`,
 register. Tiga probe berhenti, diukur 22 September 2026, menjawab jenis yang
 lain: `STORE` sesudah `HALT` menulis `MEM[0x100] = 5`, dan `PRINT` sesudah
 `HALT` — juga sesudah `RET` yang berhenti sebagai HC-05 — mengirim byte `'5'`
-ke kabel. Jadi cacat ini **bisa terlihat di papan**, lewat keluaran cetak; lari
-papannya sudah disiapkan (`rtl/scripts/parity_board.py`); burn-in tutup
-24 September 2026, dan larinya adalah langkah **P5**.
+ke kabel. Jadi cacat ini **bisa terlihat di papan**, lewat keluaran cetak.
+
+**Diverifikasi di papan 25 September 2026, langkah P5**, bitstream `84fdc912…`
+tanpa dibangun ulang. Rekamannya
+`cosmictera-build/parity-board/20260925T163903Z-stop.json`:
+
+| probe | interpreter | RTL tersimulasi | Tang Nano |
+|---|---|---|---|
+| HALT → tulis register | R1 = 5 | R1 = 7 | **UNKNOWN** — tidak teramati dari luar |
+| HALT → tulis RAM | `MEM[0x100]` = 0 | `MEM[0x100]` = 5 | **UNKNOWN** — tidak teramati dari luar |
+| RET fault → tulis register | R1 = 5 | R1 = 7 | **UNKNOWN** — tidak teramati dari luar |
+| RET fault → PRINT | kosong | `5` | **`5`** — PRINT sampai ke kabel |
+| HALT → PRINT | kosong | `5` | **`5`** — PRINT sampai ke kabel |
+| RET fault → PRINT, sentinel `1234` | `1234` | `1234` | **`1234` lalu `5`** |
+
+**Yang terukur di silikon: `PRINT` sesudah `HALT` dan sesudah RET fault
+sampai ke kabel.** Interpreter berhenti sebelumnya. Probe sentinel adalah
+permintaan pemilik hari itu: `1234` dicetak **sebelum** jalur fault, jadi kabel
+yang kosong tidak bisa lagi berarti "program tidak berjalan". Di papan `1234`
+muncul, lalu `5`. Di keenam probe papan juga mengirim `CYCLES=`, yang wrapper
+kirim hanya sesudah `halted` naik — jadi mesinnya memang berhenti.
+
+**Tiga probe register dan RAM tetap UNKNOWN, dengan alasan yang bisa diaudit**:
+top-level `rtl/fpga/gowin/hcpu_gowin_top.v` hanya punya `clk_27m`,
+`btn_rst_n`, `uart_rxd`, `uart_txd`, `led[5:0]`, `sd_clk`, `sd_cmd`, dan
+`sd_dat[3:0]` (`rtl/fpga/gowin/hcpu_gowin.cst`); `tele_pc`, `tele_instr`, dan
+`tele_halted` milik inti dibiarkan tidak tersambung di top-level. Tidak ada port
+yang membawa GPR atau kata RAM data, dan atas perintah pemilik **tidak ada port
+debug yang ditambahkan** demi probe ini.
+
+**Dua selisih terhadap rekaman RTL tersimulasi, dan keduanya belum boleh
+dibaca sebagai silikon yang menyimpang.** Papan mencetak `5` **dengan** baris
+barunya, sedangkan rekaman RTL hanya `5`; dan pada probe sentinel rekaman RTL
+berhenti di `1234` tanpa `5`. Rekaman RTL ditutup begitu `halted` naik
+(`rtl/tb/tb_parity.v`, gelung larinya), sedangkan wrapper papan menunggu UART
+diam sesudah berhenti sebelum `CYCLES=` (`rtl/fpga/gowin/hcpu_gowin_top.v`).
+Byte yang diserahkan ke pemancar sesudah mesin berhenti karena itu **bisa**
+tampil di kabel papan dan **tidak bisa** tampil di rekaman RTL. Apakah RTL juga
+akan mengirim keduanya: **UNKNOWN**, sampai kedua jendela itu disamakan.
 
 **Dilaporkan, tidak diperbaiki** — ia di RTL, dan K9 berlaku. Pemilik,
 21 September 2026: tetap **EH**, dan masuk antrean perbaikan RTL sesudah
-papan menjawab — lebih dulu diverifikasi di papan, langkah **P5**.
+papan menjawab. Papan sudah menjawab untuk jalur yang bisa ia tunjukkan;
+**logika HALT, RET, dan writeback tidak diubah** karena hasilnya, perintah
+pemilik 25 September 2026.
 
 Label: **EH**.
 

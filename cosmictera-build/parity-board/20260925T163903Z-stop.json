@@ -1,0 +1,70 @@
+{
+ "bitstream": "rtl/fpga/gowin/hcpu_gowin_top_loader.fs",
+ "bitstream_sha256": "84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261",
+ "commit": "af9fd62",
+ "date": "20260925T163903Z",
+ "expected_sha256": "6d49df9bf1c3efd8551d9b86d111032413fd6b2fe807fe5943dd771f63c955fa",
+ "experiment": "stop",
+ "programs": {
+  "stop-probe:halt-then-print": {
+   "cycles": 27883317,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "673a6f1229d0a5c919b0af67e2fd60574532c70b677bca1ffdb4c98cfa5dc75b",
+   "raw_hex": "350a0a4359434c45533d30314139373733350d0a0a",
+   "text": "5\n",
+   "timed_out": false,
+   "words": 3
+  },
+  "stop-probe:halt-then-register": {
+   "cycles": 28110047,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "44bce276343dcd42646fc3aaefac5a374771c2c3b31d1c0b7db7ae8c7eabdd84",
+   "raw_hex": "0a4359434c45533d30314143454344460d0a0a",
+   "text": "",
+   "timed_out": false,
+   "words": 3
+  },
+  "stop-probe:halt-then-store": {
+   "cycles": 27940938,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "278022ff21d75f7d882e10d11e383a7d7afca7b9bfe3e9d24ffe6794d97e9562",
+   "raw_hex": "0a4359434c45533d30314141353834410d0a0a",
+   "text": "",
+   "timed_out": false,
+   "words": 4
+  },
+  "stop-probe:ret-then-print": {
+   "cycles": 27876565,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "43dad6c8dfb6059b7dce3d4f59190fb8aaf01a1fa4b8bb962e734efa0eaf6184",
+   "raw_hex": "350a0a4359434c45533d30314139354344350d0a0a",
+   "text": "5\n",
+   "timed_out": false,
+   "words": 4
+  },
+  "stop-probe:ret-then-print-sentinel": {
+   "cycles": 27982083,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "1dbd21a1694af4b3c3431e32d6430ef7a3dc331b7807aa1c3ec27289ec7fbf56",
+   "raw_hex": "313233340a350a0a4359434c45533d30314141463930330d0a0a",
+   "text": "1234\n5\n",
+   "timed_out": false,
+   "words": 6
+  },
+  "stop-probe:ret-then-register": {
+   "cycles": 27944171,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "bf003709b171a950ea83ef41dee3cc0d8ae53c82a98ad1ddab1577b6c5c082da",
+   "raw_hex": "0a4359434c45533d30314141363445420d0a0a",
+   "text": "",
+   "timed_out": false,
+   "words": 4
+  }
+ }
+}

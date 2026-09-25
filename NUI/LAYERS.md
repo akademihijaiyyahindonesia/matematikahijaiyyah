@@ -268,7 +268,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 94 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 809 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.465 node, 3.837 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.466 node, 3.846 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat

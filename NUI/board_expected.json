@@ -1871,6 +1871,23 @@
     "sent": true,
     "words": 4
    },
+   "stop-probe:ret-then-print-sentinel": {
+    "after_stop": {
+     "watch": "wire"
+    },
+    "interpreter": "1234\n",
+    "interpreter_at_64": "1234\n",
+    "opcodes": [
+     "MOVI",
+     "PRINT",
+     "RET"
+    ],
+    "payload_sha256": "1dbd21a1694af4b3c3431e32d6430ef7a3dc331b7807aa1c3ec27289ec7fbf56",
+    "reads": [],
+    "rtl_at_64": "1234\n",
+    "sent": true,
+    "words": 6
+   },
    "stop-probe:ret-then-register": {
     "after_stop": {
      "interpreter": 5,

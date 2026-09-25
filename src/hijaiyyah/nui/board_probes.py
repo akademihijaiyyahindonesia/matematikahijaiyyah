@@ -62,14 +62,26 @@ STOP_QUESTIONS: dict[str, dict[str, str]] = {
                                   "board": "the wire: a '5' is the answer yes"},
     "stop-probe:halt-then-print": {"question": "does a PRINT happen after HALT?",
                                    "board": "the wire: a '5' is the answer yes"},
+    "stop-probe:ret-then-print-sentinel": {
+        "question": "does a PRINT happen after a RET fault, with proof the program ran?",
+        "board": "the wire: 1234 says the program ran; a '5' after it is the answer yes"},
 }
 
 #: The two probes layer 4 does not have. Each writes R1 = 5, stops, and has one
 #: word behind the stop that would make R1 = 7 if it committed.
+#:
+#: And a third, the owner's of 25 September 2026 (P5): RET-then-PRINT with a
+#: sentinel printed BEFORE the fault path. Without it, an empty wire could
+#: mean either that the PRINT after the fault did not happen or that the
+#: program never ran; 1234 on the wire separates the two. It is below 2^22, so
+#: OFF-PRINT-SILICON cannot touch it -- 2^22 printed right in every run of P4.
 NEW_STOP_PROBES = {
     "stop-probe:halt-then-register": "        MOVI  R1, 5\n        HALT\n        MOVI  R1, 7\n",
     "stop-probe:ret-then-register": "        MOVI  R1, 5\n        RET\n        MOVI  R1, 7\n"
                                     "        HALT\n",
+    "stop-probe:ret-then-print-sentinel": "        MOVI  R2, 1234\n        PRINT R2\n"
+                                          "        MOVI  R1, 5\n        RET\n"
+                                          "        PRINT R1\n        HALT\n",
 }
 #: Where each probe's answer lives when it is not on the wire.
 WATCH = {"stop-probe:halt-then-register": ("gpr", 1),
@@ -165,10 +177,48 @@ def after_stop(name: str, interp: Any, rtl: Any) -> dict[str, Any]:
             "rtl": _ram(rtl.events["RAM"], where)}
 
 
+#: Why a register or a RAM word written after the machine stops cannot be read
+#: from this board -- checked against the board's own pin list, 25 September
+#: 2026 (P5). The owner's rule: no debug port is added to make a probe
+#: possible, so what has no path stays UNKNOWN, with this as its audit trail.
+NOT_OBSERVABLE = (
+    "UNKNOWN -- not externally observable on current board interface: "
+    "rtl/fpga/gowin/hcpu_gowin_top.v exposes clk_27m, btn_rst_n, uart_rxd, "
+    "uart_txd, led[5:0], sd_clk, sd_cmd and sd_dat[3:0] "
+    "(rtl/fpga/gowin/hcpu_gowin.cst); the "
+    "core's tele_pc, tele_instr and tele_halted are left unconnected at the top, "
+    "and no port carries a GPR or a data-RAM word")
+#: What the two records can and cannot be compared on. The simulated record
+#: ends when `halted` rises (rtl/tb/tb_parity.v, the run loop), so a byte handed
+#: to the transmitter after the stop cannot appear in it; the board's wrapper
+#: waits for the UART to go idle after the stop before its CYCLES= report
+#: (rtl/fpga/gowin/hcpu_gowin_top.v). Read, not inferred -- 25 September 2026.
+WINDOWS = ("the RTL record's window closes when halted rises, and the board's "
+           "wire stays open until the UART is idle: a byte sent after the stop can "
+           "appear on the board and cannot appear in the RTL record")
+SENTINEL = "1234"
+
+
+def _board_answer(name: str, text: str | None) -> str | None:
+    """Yes or no, from the wire alone: did the PRINT behind the stop come out?
+    With a sentinel, only after the sentinel shows the program ran."""
+    if text is None:
+        return None
+    lines = [ln for ln in text.split("\n") if ln]
+    if name.endswith("-sentinel"):
+        if not lines or lines[0] != SENTINEL:
+            return "no proof the program ran: the sentinel is missing"
+        lines = lines[1:]
+    return "yes" if lines == ["5"] else "no" if not lines else f"unexpected: {lines}"
+
+
 def stop_table(expected: dict[str, Any], record: dict[str, Any] | None = None
                ) -> list[dict[str, Any]]:
-    """Per probe: the owner's question, what the interpreter and the simulated
-    RTL answer, and what the board answered where the wire can carry it."""
+    """Per probe, the owner's four columns of 25 September 2026 (P5): the
+    interpreter's answer, the simulated RTL's, and the board's -- measured on
+    the wire, or UNKNOWN with the reason it cannot be. Every row also says
+    whether the board stopped: the wrapper sends CYCLES= only once `halted`
+    is up, so that one piece of machine state does reach the host."""
     rows = []
     for name, question in STOP_QUESTIONS.items():
         exp = expected["programs"][name]
@@ -176,10 +226,20 @@ def stop_table(expected: dict[str, Any], record: dict[str, Any] | None = None
         row: dict[str, Any] = {"probe": name, **question,
                                "interpreter_wire": exp["interpreter"],
                                "rtl_wire": exp["rtl_at_64"],
-                               "board_wire": got.get("text")}
+                               "board_wire": got.get("text"),
+                               "board_halted": got.get("halted")}
         if exp["after_stop"]["watch"] != "wire":
             row.update({"watch": exp["after_stop"]["watch"],
                         "interpreter": exp["after_stop"]["interpreter"],
-                        "rtl": exp["after_stop"]["rtl"]})
+                        "rtl": exp["after_stop"]["rtl"],
+                        "board_answer": NOT_OBSERVABLE if record else None})
+        else:
+            answer = _board_answer(name, got.get("text")) if record else None
+            row["board_answer"] = answer
+            if answer == "yes":
+                row["evidence"] = ("hardware evidence: the PRINT behind the stop reached "
+                                   "the wire on silicon; the interpreter stops before it")
+                if got.get("text") != exp["rtl_at_64"]:
+                    row["against_rtl"] = ("UNKNOWN whether the RTL differs: " + WINDOWS)
         rows.append(row)
     return rows

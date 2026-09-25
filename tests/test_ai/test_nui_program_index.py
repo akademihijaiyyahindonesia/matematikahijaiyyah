@@ -134,3 +134,15 @@ def test_the_authors_words_are_quoted_not_written() -> None:
         summary = explain(key)
         source = " ".join((ROOT / key.split("::")[0]).read_text().split())
         assert summary.stated in source, key
+
+
+def test_the_counts_the_page_quotes_are_the_counts_measured() -> None:
+    """NUI/PROGRAMS.md quotes three numbers that nothing regenerates. The
+    Python one drifted from 1,258 to 1,261 across P2, P3 and P5 of 24-25
+    September 2026 and no test noticed; now one does (R4)."""
+    counts = programs()
+    page = (ROOT / "NUI" / "PROGRAMS.md").read_text(encoding="utf-8")
+    fmt = lambda n: f"{n:,}".replace(",", ".")  # noqa: E731
+    assert f"{fmt(len(counts.hasm))} program HASM" in page
+    assert f"{fmt(len(counts.python))} fungsi Python" in page
+    assert f"{fmt(len(counts.verilog))} modul Verilog" in page

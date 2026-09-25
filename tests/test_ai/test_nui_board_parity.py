@@ -147,6 +147,81 @@ def test_the_rtl_answers_yes_to_all_four_stop_questions() -> None:
         assert (rows[probe]["interpreter_wire"], rows[probe]["rtl_wire"]) == ("", "5"), probe
 
 
+# -- P5: HALT and RET in silicon, 25 September 2026 ---------------------------------
+
+P5_RECORD = "20260925T163903Z-stop.json"
+UNSEEN = ("stop-probe:halt-then-register", "stop-probe:halt-then-store",
+          "stop-probe:ret-then-register")
+ON_WIRE = ("stop-probe:ret-then-print", "stop-probe:halt-then-print",
+           "stop-probe:ret-then-print-sentinel")
+
+
+def _p5() -> dict:  # type: ignore[type-arg]
+    record = json.loads((bp.RECORDS / P5_RECORD).read_text(encoding="utf-8"))
+    return bp.report(record)
+
+
+def test_a_register_or_ram_probe_is_unknown_never_parity() -> None:
+    """An empty wire agreeing with an empty expectation says the program ran
+    and stopped -- not what R1 or MEM[0x100] holds. The owner's rule: without
+    an observation path the status stays UNKNOWN, with a reason to audit."""
+    out = _p5()
+    for name in UNSEEN:
+        assert out["programs"][name]["status"] == "UNKNOWN", name
+        assert "not externally observable" in out["programs"][name]["reason"]
+    rows = {r["probe"]: r for r in out["probes"]}
+    for name in UNSEEN:
+        assert rows[name]["board_answer"].startswith("UNKNOWN"), name
+        assert rows[name]["board_halted"] is True, "the program ran and stopped"
+    assert out["counts"] == {"PARITY": 0, "MISMATCH": 3, "UNKNOWN": 3}
+
+
+def test_the_print_behind_a_stop_reached_the_wire_on_silicon() -> None:
+    """Measured, not assumed: all three wire probes answer yes on the board,
+    the sentinel one only after its 1234 shows the program ran."""
+    rows = {r["probe"]: r for r in _p5()["probes"]}
+    for name in ON_WIRE:
+        assert rows[name]["board_answer"] == "yes", (name, rows[name])
+        assert rows[name]["evidence"].startswith("hardware evidence"), name
+    assert rows["stop-probe:ret-then-print-sentinel"]["board_wire"].startswith("1234\n")
+
+
+def test_a_missing_sentinel_is_no_proof_rather_than_a_no() -> None:
+    assert board_probes._board_answer("x-sentinel", "") == (
+        "no proof the program ran: the sentinel is missing")
+    assert board_probes._board_answer("x-sentinel", "1234\n") == "no"
+    assert board_probes._board_answer("x-sentinel", "1234\n5\n") == "yes"
+    assert board_probes._board_answer("x", "") == "no"
+
+
+def test_a_difference_from_the_rtl_record_is_held_as_the_windows_not_as_silicon() -> None:
+    """The simulated record closes when halted rises; the board's wire stays
+    open until the UART is idle. Where board and RTL record differ on a wire
+    probe, that is the stated UNKNOWN -- not a claim that silicon diverged."""
+    rows = {r["probe"]: r for r in _p5()["probes"]}
+    for name in ON_WIRE:
+        if rows[name]["board_wire"] != rows[name]["rtl_wire"]:
+            assert rows[name]["against_rtl"].startswith("UNKNOWN"), name
+    bench = (ROOT / "rtl" / "tb" / "tb_parity.v").read_text(encoding="utf-8")
+    assert re.search(r"while \(!halted && cycle_count < max_cycles\)", bench)
+    wrapper = (ROOT / "rtl" / "fpga" / "gowin" / "hcpu_gowin_top.v").read_text(encoding="utf-8")
+    assert "halted_out && !report_armed" in wrapper and "IDLE_CLKS" in wrapper
+
+
+def test_the_unknown_reason_names_every_pin_the_board_has() -> None:
+    """The audit trail must stay true: if the top level ever gained a port --
+    a debug port, say -- the reason that nothing carries a register would be
+    stale, and this goes red before the report can repeat it."""
+    cst = (ROOT / "rtl" / "fpga" / "gowin" / "hcpu_gowin.cst").read_text(encoding="utf-8")
+    pins = {re.sub(r"\[\d+\]", "", m) for m in re.findall(r'IO_LOC\s+"([^"]+)"', cst)}
+    assert pins == {"clk_27m", "btn_rst_n", "uart_txd", "uart_rxd", "led", "sd_clk",
+                    "sd_cmd", "sd_dat"}, pins
+    for pin in pins:
+        assert pin in board_probes.NOT_OBSERVABLE, pin
+    wrapper = (ROOT / "rtl" / "fpga" / "gowin" / "hcpu_gowin_top.v").read_text(encoding="utf-8")
+    assert ".tele_pc(), .tele_instr(), .tele_halted()" in wrapper
+
+
 def test_print_in_silicon_is_expected_right_by_both_engines() -> None:
     entry = _frozen()["print"]["programs"]["print-silicon"]
     want = "".join(f"{v}\n" for v in board_probes.PRINT_VALUES)
@@ -218,7 +293,7 @@ def test_a_report_rolls_each_experiment_up() -> None:
     assert "opcodes" in parity
     stop = bp.report(_record("stop", {"stop-probe:halt-then-print": "5"}), expected)
     assert stop["programs"]["stop-probe:halt-then-print"]["board_equals_rtl"] is True
-    assert len(stop["probes"]) == 5
+    assert len(stop["probes"]) == 6  # the sentinel probe joined on 25 September (P5)
     printed = bp.report(_record("print"), expected)
     assert not any(r["first_divergence"] for r in printed["ladder"])
 
@@ -349,4 +424,4 @@ def test_the_runner_plans_without_a_board(monkeypatch: pytest.MonkeyPatch,
     out = capsys.readouterr().out
     assert "parity: 79 of 103 programs would be sent" in out
     assert "print: 1 of 1 programs would be sent" in out
-    assert "stop: 5 of 5 programs would be sent" in out
+    assert "stop: 6 of 6 programs would be sent" in out
