@@ -3062,7 +3062,7 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 207,
+     "pc": 210,
      "reads_mmio": [
       "SD_STATUS"
      ],
@@ -3083,7 +3083,7 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 215,
+     "pc": 218,
      "reads_mmio": [
       "SD_STATUS"
      ],
@@ -5438,7 +5438,7 @@
       "reads_mmio": [],
       "step": 5,
       "stopped_here": true,
-      "where": "rtl/programs/hos_prog_load.hasm:51"
+      "where": "rtl/programs/hos_prog_load.hasm:52"
      },
      "kind": "GPR",
      "program": "rtl/programs/hos_prog_load.hasm",
@@ -8598,7 +8598,7 @@
      "reads_mmio": [],
      "step": 5,
      "stopped_here": true,
-     "where": "rtl/programs/hos_prog_load.hasm:51"
+     "where": "rtl/programs/hos_prog_load.hasm:52"
     },
     "kind": "GPR",
     "rtl": {
@@ -9834,7 +9834,7 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 207,
+     "pc": 210,
      "reads_mmio": [
       "SD_STATUS"
      ],
@@ -9893,7 +9893,7 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 215,
+     "pc": 218,
      "reads_mmio": [
       "SD_STATUS"
      ],

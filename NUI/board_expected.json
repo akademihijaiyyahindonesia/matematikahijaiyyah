@@ -1164,7 +1164,7 @@
     "sent": false
    },
    "rtl/programs/hos_prog_load.hasm": {
-    "excluded": "does not halt under the loader (fault after 27016 steps)",
+    "excluded": "does not halt under the loader (fault after 27145 steps)",
     "sent": false
    },
    "rtl/programs/jamrah_gate.hasm": {

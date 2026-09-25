@@ -10,7 +10,7 @@
 // program has its own bench, which already proves those exact bytes reach
 // those exact sectors. This one answers a different question.
 //
-// LOAD_ADDR is 0x900, and the reason is measured: the shell image is 1,245
+// LOAD_ADDR is 0x900, and the reason is measured: the shell image is 1,248
 // words and the probe sits at 0x800, so anything below 0x820 would load on top
 // of the kernel that is doing the loading.
 //

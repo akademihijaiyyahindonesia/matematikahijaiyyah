@@ -136,13 +136,14 @@ Masing-masing, hari ini:
 | `container_loaded` | **ada** — `R1` yang dikembalikan `hos_prog_load.hasm`: 1 atau 0, jawaban `SYSCALL` 9 |
 | `entry_reached` | **bukan milik loader** — sesudah `ERET` loader tidak punya suara lagi; hanya program yang dimuat yang bisa bersaksi ia berjalan, dan hari ini kesaksiannya adalah keluarannya sendiri (`1 2 3` di papan) |
 
-**Kenapa `relocation_ok` ditinggalkan, dengan angkanya:** lab serangan mengukur
-satu entri tabel relokasi yang diarahkan ke kata program lain **lolos tanpa
-satu pun penolakan**, karena jumlah 32-bit hanya menutupi kata program
-([attack-lab/](../cosmictera-build/attack-lab/README.md)). Medan bernama "ok"
-akan berbohong pada kasus itu. Memperluasnya menuntut keputusan yang masih
-terbuka sejak kelas B: apakah cakupan jumlah diperluas ke header dan tabel
-relokasi.
+**Kenapa `relocation_ok` ditinggalkan, dengan angkanya:** lab serangan mengukur,
+20 September 2026, satu entri tabel relokasi yang diarahkan ke kata program
+lain **lolos tanpa satu pun penolakan**, karena jumlah 32-bit versi 1 hanya
+menutupi kata program ([attack-lab/](../cosmictera-build/attack-lab/README.md)).
+Medan bernama "ok" akan berbohong pada kasus itu. Pemilik kemudian memperluas
+cakupan jumlah ke seluruh container (K-8, K-10), dan **sejak P6, 26 September
+2026, kasus itu ditolak di papan**. Tiga medan pengganti tetap berlaku: yang
+kini dibuktikan adalah integritas container, bukan bahwa relokasinya benar.
 
 Satu batas lagi yang menempel di sini dan sudah tertulis di kodenya:
 **ENTRY tidak dikembalikan loader** — `rtl/programs/test_prog_run.hasm`

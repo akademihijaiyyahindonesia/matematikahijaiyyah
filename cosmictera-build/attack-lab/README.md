@@ -68,6 +68,54 @@ gelung, yang di sini dua.
 
 ## Kelas B — loader
 
+### Versi 2, CHECKSUM32 — P6, 26 September 2026
+
+`20260925T191528Z-loader.json`. Loader yang menghitung CHECKSUM32 (K-8, K-10)
+dikirim lewat kabel ke bitstream yang sama; tiap kasus ditulis ke kartu lewat
+`sd_writer`, lalu papan diminta memuatnya. Vonis yang diharapkan tiap kasus
+**tidak ditulis tangan**: ia vonis loader Python di
+`rtl/scripts/build_container.py` atas kartu yang sama, dan
+`tests/test_integrity/test_checksum32.py` memberikan kartu yang sama itu, bit
+demi bit, ke loader HCPU tersimulasi — ketiganya harus sepakat.
+
+| kategori pemilik | kasus | papan |
+|---|---|---|
+| header | `words_plus_one`, `load_addr_minus_one`, `entry_plus_one` — hanya CHECKSUM32 yang bisa melihatnya | **ditolak, 3** |
+| header, pemeriksaan nilai | MAGIC, `version_one`, WORDS = 0, LOAD_ADDR melewati IMEM, ENTRY di luar citra, RELOC_CNT > 128 | **ditolak, 6** |
+| tabel program | `table_flags_bit_one`, `table_sector_count` | **ditolak, 2** |
+| tabel relokasi | `reloc_index_moved` | **ditolak** |
+| badan program | `program_word_flip` | **ditolak** |
+| medan checksum | `checksum_flip`, `checksum_by_version_one_rule` | **ditolak, 2** |
+| di luar container | `words_after_container` | **diterima** |
+| di luar container | `another_table_entry`, `another_sector` | Python dan simulasi saja — `sd_writer` menulis satu entri dan sektor container sendiri |
+| kontrol | `intact` | **diterima** |
+| batas sebuah jumlah | `words_swapped`, `body_changed_and_resealed` | **diterima, 2** |
+
+**19 kasus di papan, 0 temuan**: 15 ditolak, 4 diterima, dan tiap satu
+sesuai vonis loader Python. **Dua kasus yang lolos di versi 1 kini ditolak** —
+`words_plus_one` dan `reloc_index_moved`, alasan K-8 ada.
+
+**Kasus tabel program ditulis lewat `sd_writer`** dengan cara yang bisa ia
+tulis: container disegel untuk entri yang berbeda — FLAGS 3, atau satu sektor
+lebih — sementara `sd_writer` menulis entri `1, 1, 17, n`. Bagi loader itu
+sama persis dengan entri yang dirusak sesudah disegel: entri di kartu bukan
+entri yang tertutup jumlahnya.
+
+**Batas sebuah jumlah, dan ini bukan cacat implementasi.** CHECKSUM32 adalah
+jumlah yang bisa dihitung siapa pun dan tidak melihat urutan. Dua kata program
+yang ditukar tempatnya lolos, dan badan program yang diubah lalu disegel ulang
+lolos. Keduanya sifat algoritma yang dipilih K-10, dicatat supaya "penyerang
+tidak cukup hanya mengubah body" tidak tumbuh jadi klaim bahwa pengubah yang
+menghitung ulang jumlahnya tertahan.
+
+**Satu lari gagal sebelum kasus pertama**, dan tidak menulis rekaman:
+`sd_writer` tidak mengirim tanda siap dalam lima detik. Itu cocok dengan
+cacat yang sudah tercatat di `cosmictera-build/OFF.md` — kartu gagal init
+pada lari sesudah papan direkonfigurasi di tengah pembacaan, dan lari
+berikutnya sehat. Lari ulang tanpa perubahan apa pun adalah rekaman di atas.
+
+### Versi 1 — 20 September 2026
+
 `20260919T225037Z-loader.json`. Container `test_from_card` @0x900 dibangun
 utuh, lalu satu field dirusak per kasus, ditulis ke kartu lewat `sd_writer`,
 dan papan diminta memuatnya.
@@ -91,28 +139,28 @@ menunjukkan:
 
 Keduanya konsisten dengan spesifikasi yang berlaku hari lab dijalankan.
 Pemilik memutuskan cakupannya diperluas ke seluruh container, 22 September 2026
-(K-8, tabel di bawah); implementasinya menunggu langkah P6, sesudah burn-in tutup.
+(K-8, tabel di bawah), dan versi 2 di atas menolak keduanya.
 
 ### Tabel keputusan cakupan checksum
 
 Disiapkan 22 September 2026 atas permintaan pemilik: *"Belum perlu mengubah
-implementasi. Buat saja tabel keputusan."* Kolom "sekarang" dibaca dari
-`rtl/programs/hos_prog_load.hasm`, bukan dari ingatan. Kolom "dilindungi?"
-diisi pemilik pada hari yang sama, **keputusan K-8**: checksum adalah
-integritas container secara keseluruhan, bukan hanya badan program, *"supaya
-penyerang tidak cukup hanya mengubah body"*. Kolom "sekarang" tetap berlaku
-sampai loader diubah.
+implementasi. Buat saja tabel keputusan."* Kolom "dilindungi?" diisi pemilik
+pada hari yang sama, **keputusan K-8**: checksum adalah integritas container
+secara keseluruhan, bukan hanya badan program, *"supaya penyerang tidak cukup
+hanya mengubah body"*. Kolom "versi 1" adalah loader sebelum P6; kolom "versi
+2" dibaca dari `rtl/programs/hos_prog_load.hasm` sesudah P6, 26 September 2026,
+dan kasusnya dijalankan di papan.
 
-| bagian | sekarang | kasus lab | dilindungi? |
+| bagian | versi 1 | versi 2, CHECKSUM32 | dilindungi? |
 |---|---|---|---|
-| kata program | dijumlah 32-bit dan dibandingkan dengan medan `CRC` sebelum satu kata pun ditulis ke memori instruksi. Medan itu jumlah, bukan CRC-32 | `crc_flip`, `program_word_flip` ditolak | **ya** |
-| header: MAGIC, VERSION, RELOC_CNT | tidak dijumlah; masing-masing dijaga pemeriksaan nilai — `HPG1`, versi 1, paling banyak 128 | ketiganya ditolak | **ya** |
-| header: WORDS | tidak dijumlah; ditolak kalau nol atau kalau kartu memuat lebih sedikit kata. **Satu kata lebih banyak lolos**: kata tambahannya padding nol, dan jumlahnya tidak berubah | `words_zero` ditolak, `words_plus_one` **diterima** | **ya** |
-| header: LOAD_ADDR dan ENTRY | tidak dijumlah; kata terakhir citra harus ≤ 4.095, dan ENTRY harus di dalam citra | keduanya ditolak | **ya** |
-| header: medan `CRC` sendiri | medan pembanding, tidak ikut dijumlah | `crc_flip` ditolak | **dinolkan saat menghitung** |
-| tabel relokasi | tidak dijumlah dan tidak diperiksa per entri | `reloc_index_moved` **diterima** | **ya** |
-| tabel program, sektor 16: rekaman program, termasuk FLAGS VALID | tidak dijumlah; FLAGS bit 0 dan SECTOR_COUNT ≠ 0 diperiksa, dan pembacaan tidak melewati SECTOR_COUNT | tidak ada kasus | **ya** |
-| data di luar container dan rekaman programnya | tidak dibaca loader | — | **tidak** |
+| kata program | dijumlah 32-bit | dijumlah — `program_word_flip` ditolak | **ya** |
+| header: MAGIC, VERSION, RELOC_CNT | tidak dijumlah; pemeriksaan nilai | dijumlah, dan pemeriksaan nilainya tetap | **ya** |
+| header: WORDS | tidak dijumlah; `words_plus_one` **diterima** | dijumlah — `words_plus_one` ditolak | **ya** |
+| header: LOAD_ADDR dan ENTRY | tidak dijumlah; pemeriksaan rentang | dijumlah — `load_addr_minus_one`, `entry_plus_one` ditolak | **ya** |
+| header: medan checksum sendiri | medan pembanding | **dinolkan saat menghitung** — `checksum_flip`, `checksum_by_version_one_rule` ditolak | **dinolkan saat menghitung** |
+| tabel relokasi | tidak dijumlah; `reloc_index_moved` **diterima** | dijumlah — `reloc_index_moved` ditolak | **ya** |
+| tabel program, sektor 16: entri program, termasuk FLAGS | tidak dijumlah | dijumlah, keempat kata entri — `table_flags_bit_one`, `table_sector_count` ditolak | **ya** |
+| data di luar container dan entrinya | tidak dibaca loader | tidak dijumlah — `words_after_container` diterima di papan; `another_table_entry`, `another_sector` di Python dan simulasi | **tidak** |
 
 "Payload" dan "program body" satu baris di tabel pemilik K-8, sama seperti di
 container ini — tujuh kata header, tabel relokasi, lalu kata program.
@@ -140,15 +188,15 @@ kata-kata yang dijumlah adalah representasi word container **sebagaimana ia
 tersimpan di kartu**, format on-disk yang sudah ada, supaya tidak ada dua
 perhitungan checksum untuk citra yang sama.
 
-**Tidak diimplementasikan sebelum burn-in 72 jam selesai** (pemilik); burn-in
-tutup 24 September 2026, dan langkahnya **P6** di
-`cosmictera-build/PASCA-BURN-IN.md`: nama `CRC` diganti
-`CHECKSUM32` di `rtl/programs/hos_prog_load.hasm` dan
-`rtl/scripts/build_container.py`, cakupannya diperluas, dan empat kasus
-sabotase ditambahkan di lab ini — header, tabel relokasi, badan program, dan
-rekaman tabel program diubah satu per satu, *"yang membuktikan setiap bagian
-tersebut memang terlindungi"*. `VERSION` naik, jalan yang sudah pemilik
-tetapkan 18 September supaya loader lama tidak pecah diam-diam.
+**Diterapkan di P6, 26 September 2026**, sesudah burn-in tutup: nama `CRC`
+diganti `CHECKSUM32` di `rtl/programs/hos_prog_load.hasm` dan
+`rtl/scripts/build_container.py`, cakupannya diperluas, dan `VERSION` naik ke
+2 — loader versi 2 menolak container versi 1 lewat pemeriksaan VERSION, bukan
+dengan salah membacanya. **Urutan kanonik ditetapkan dan diuji sebelum
+implementasi dianggap final**, syarat pemilik: satu kata adalah 32 bit tak
+bertanda, byte paling signifikan lebih dulu — cara `rtl/hcpu_sdio.v` mengisi
+penyangganya dan cara `send_program.py` mengirimnya. Kasus sabotasenya ada
+untuk keenam kategori pemilik, di papan dan di simulasi, di atas.
 
 ## Kelas C — Ka'bah, di luar bit tunggal
 

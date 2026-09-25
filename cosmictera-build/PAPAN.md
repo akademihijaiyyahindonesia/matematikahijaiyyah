@@ -828,7 +828,8 @@ Keduanya diterima sesuai spesifikasi yang berlaku, bukan karena cacat: jumlah
 32-bit **hanya menutupi kata program**, jadi tabel relokasi yang dirusak lolos,
 dan WORDS yang dinaikkan satu menjumlahkan padding nol yang tidak mengubah
 jumlah. Memperluas cakupan jumlah adalah perubahan spesifikasi, keputusan
-pemilik.
+pemilik — diambil sebagai K-8 dan K-10, dan **sejak P6, 26 September 2026,
+keduanya ditolak di papan** (bagian "Checksum loader" di bawah).
 
 Pembangkitnya `rtl/scripts/jim_stream.py`, mesin Jim: periode terukur ulang
 **31** atas GF(2) dan **3.124** atas GF(5), cocok dengan `cosmic-codex-jim/`.
@@ -1105,6 +1106,31 @@ ikut menulis register" (R1). Tidak ada RTL yang disentuh.
 
 ---
 
+## Checksum loader — CHECKSUM32 di papan, 26 September 2026
+
+Langkah P6: loader program menghitung CHECKSUM32 (K-8, K-10) atas entri tabel
+sektor 16, header dengan medannya sendiri dinolkan, tabel relokasi, dan kata
+program. Loader baru dikirim lewat kabel ke bitstream yang sama — tidak ada
+yang dibangun ulang. Rekaman `attack-lab/20260925T191528Z-loader.json`.
+
+| | kasus |
+|---|---:|
+| dijalankan di papan | 19 |
+| ditolak | **15** |
+| diterima | **4** |
+| **temuan** — papan tak sepakat dengan loader Python | **0** |
+| hanya Python dan simulasi — tak bisa ditulis `sd_writer` | 2 |
+
+Keenam kategori pemilik punya kasusnya: header, tabel program, tabel relokasi,
+badan program, dan medan checksum **ditolak**; yang di luar container
+**diterima**. `words_plus_one` dan `reloc_index_moved`, yang lolos di versi 1
+pada 20 September, kini ditolak. Dua kasus batas — kata ditukar tempat, dan
+badan diubah lalu disegel ulang — **diterima**, karena itulah sifat sebuah
+jumlah; dicatat, bukan disembunyikan. Rinciannya di
+[attack-lab/](attack-lab/README.md) (R1).
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1289,7 +1315,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.446 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.474 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1332,7 +1358,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.446 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.474 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

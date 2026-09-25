@@ -361,7 +361,7 @@ tb_hcpu_sd_writer.vvp: $(TB_DIR)/tb_hcpu_sd_writer.v $(TB_DIR)/sd_card_model.v \
 	$(IVERILOG) $(INC) -o $@ $^
 
 # SYSCALL 9, the kernel half. The container is subroutine.hasm at 0x900 --
-# past the 1,245-word shell image and past the probe at 0x800, so the load
+# past the 1,248-word shell image and past the probe at 0x800, so the load
 # cannot land on the kernel doing the loading -- and `--image` gives what
 # instruction memory must hold afterwards, straight from the assembler.
 progload_container.hex: $(RTL_DIR)/programs/subroutine.hasm $(RTL_DIR)/scripts/build_container.py
@@ -376,6 +376,14 @@ shell_progload.hex: $(SHELL_DEPS) $(TB_DIR)/prog_load_probe.hasm $(RTL_DIR)/scri
 
 tb_hcpu_prog_load.vvp: $(TB_DIR)/tb_hcpu_prog_load.v $(TB_DIR)/sd_card_model.v \
                        $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
+	$(IVERILOG) $(INC) -o $@ $^
+
+# P6, CHECKSUM32: SYSCALL 9 on a card image handed in from outside, one run per
+# case. tests/test_integrity/test_checksum32.py writes each image from the card
+# the Python loader judged and compares the two answers -- so this bench is not
+# in `all`, and prints a verdict rather than counting checks.
+tb_hcpu_prog_load_card.vvp: $(TB_DIR)/tb_hcpu_prog_load_card.v $(TB_DIR)/sd_card_model.v \
+                            $(RTL_DIR)/fpga/gowin/hcpu_gowin_top.v $(RTL_SRC)
 	$(IVERILOG) $(INC) -o $@ $^
 
 # 2B in its smallest form: the loaded program runs and says its own numbers,
@@ -396,8 +404,8 @@ tb_hcpu_prog_run.vvp: $(TB_DIR)/tb_hcpu_prog_run.v $(TB_DIR)/sd_card_model.v \
 sim_prog_run: tb_hcpu_prog_run.vvp test_prog_run.hex progrun_container.hex
 	$(VVP) $<
 
-# SYSCALL 9 across sector boundaries: the shell itself as the container, 1,245
-# words and 125 relocations = eleven sectors, so both the relocation table and
+# SYSCALL 9 across sector boundaries: the shell itself as the container, 1,248
+# words and 124 relocations = eleven sectors, so both the relocation table and
 # the program words cross a boundary. Every earlier test used one sector.
 multi_container.hex: $(SHELL_DEPS) $(RTL_DIR)/scripts/build_container.py
 	python3 $(RTL_DIR)/scripts/build_container.py $(RTL_DIR)/programs/shell.hasm 0x900 > $@

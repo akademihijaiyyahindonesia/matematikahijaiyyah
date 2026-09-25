@@ -18,18 +18,26 @@ SHOULD be refused, run against the machine to see whether they are. A case that
 is accepted is a finding; a case that is refused is one case, not a guarantee.
 
 -- target: loader --------------------------------------------------------
-Every case is a container built by rtl/scripts/build_container.py from
-rtl/programs/test_from_card.hasm at 0x900, with exactly one field damaged. The
-board writes it to the card through sd_writer.hasm and is then asked to load it
-with rtl/programs/test_prog_load.hasm, which prints 1 or 0.
+Every case starts from a container built by rtl/scripts/build_container.py
+from rtl/programs/test_from_card.hasm at 0x900. The board writes it to the
+card through sd_writer.hasm and is then asked to load it with
+rtl/programs/test_prog_load.hasm, which prints 1 or 0.
 
-The loader's checks are its own (rtl/programs/hos_prog_load.hasm): MAGIC,
-VERSION, a non-zero WORDS, the image inside instruction memory, ENTRY inside
-the image, RELOC_CNT within the 128-word buffer, enough words on the card, and
-the 32-bit sum. The sum covers THE PROGRAM WORDS ONLY -- the owner's decision
-of 18 September -- so a case that damages the header or the relocation table
-has to be caught by a range check or not at all. Which of those two it is, is
-what this run measures.
+Since P6 (26 September 2026) the loader's integrity check is CHECKSUM32, the
+owner's K-8 and K-10: one 32-bit sum over the sector-16 table entry, the header
+with its own checksum field counted as zero, the relocation table and the
+program words. The cases follow the owner's six categories -- header,
+program table, relocation table, program body, the checksum field itself, and
+what lies outside the container -- plus the range checks that were already
+there, and two cases that show where a sum's cover ends.
+
+Each case carries the owner's INTENT for its category, and its EXPECT is not
+written by hand: it is what the Python loader in build_container.py says
+about the very card image the case describes. tests/test_integrity/
+test_checksum32.py holds EXPECT to the intent and the simulated HCPU loader to
+EXPECT; the board is held to it here. A case sd_writer cannot put on a card --
+another table entry, another sector -- is marked so and runs in Python and the
+simulation only.
 
 -- target: jamrah --------------------------------------------------------
 The gate's whole input space is 256 bytes and cosmictera-build/validasi/JAMRAH.md
@@ -73,7 +81,16 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "rtl" / "scripts"))
 
-from build_container import HEADER_WORDS, build  # noqa: E402
+from build_container import (  # noqa: E402
+    HEADER_WORDS,
+    MASK,
+    TABLE_SECTOR,
+    build,
+    card_image,
+    load_check,
+    seal,
+    table_record,
+)
 from jamrah_board import GATE, gate_body, parse  # noqa: E402
 from jamrah_board import run_board as run_program  # noqa: E402
 from jim_stream import PERIODS, stream  # noqa: E402
@@ -112,45 +129,95 @@ def base_container() -> list[int]:
     return build(SOURCE.read_text(encoding="utf-8"), SOURCE.parent, LOAD_ADDR)
 
 
-def cases(container: list[int]) -> list[dict[str, object]]:
-    """One damaged field each, with the check that should catch it named.
+#: The owner's six categories for P6, 26 September 2026, and what each must
+#: do. Two more are the lab's own: the untouched container, and the limit of a
+#: sum -- a check anyone can recompute, and that does not see order.
+INTENT = {"control": "accept", "header": "reject", "program-table": "reject",
+          "relocation": "reject", "program-body": "reject",
+          "checksum-field": "reject", "out-of-container": "accept",
+          "limit-of-a-sum": "accept"}
 
-    `expect` is what hos_prog_load.hasm's own checks say should happen. It is a
-    prediction, not a verdict: the run measures, and a disagreement is the
-    finding.
-    """
+
+def _case(cid: str, category: str, stream: list[int], why: str,
+          card: dict[int, list[int]] | None = None,
+          word: int | None = None) -> dict[str, object]:
+    """One case: what goes to sd_writer, the card it makes, and the verdict the
+    Python loader gives that card."""
+    card = card if card is not None else card_image(stream)
+    ok, reason = load_check(card)
+    return {"id": cid, "category": category, "intent": INTENT[category],
+            "expect": "accept" if ok else "reject", "by": reason, "why": why,
+            "stream": [w & MASK for w in stream], "card": card,
+            "board": card == card_image(stream), "word": word}
+
+
+def cases(container: list[int]) -> list[dict[str, object]]:
+    """Every loader case, the owner's six categories and the range checks."""
     reloc_cnt = container[5]
-    first_program = HEADER_WORDS + reloc_cnt
-    out: list[dict[str, object]] = [
-        {"id": "magic_flip", "word": 0, "value": container[0] ^ 1,
-         "expect": "reject", "by": "MAGIC"},
-        {"id": "version_bump", "word": 1, "value": container[1] + 1,
-         "expect": "reject", "by": "VERSION"},
-        {"id": "words_zero", "word": 2, "value": 0,
-         "expect": "reject", "by": "WORDS = 0"},
-        {"id": "words_plus_one", "word": 2, "value": container[2] + 1,
-         "expect": "accept",
-         "by": "nothing -- the extra word read is the sector's zero padding, "
-               "so the sum is unchanged"},
-        {"id": "load_addr_past_imem", "word": 3, "value": 4090,
-         "expect": "reject", "by": "image past instruction memory"},
-        {"id": "entry_outside_image", "word": 4,
-         "value": container[3] + container[2] + 4,
-         "expect": "reject", "by": "ENTRY outside the image"},
-        {"id": "reloc_cnt_over_buffer", "word": 5, "value": 200,
-         "expect": "reject", "by": "RELOC_CNT over 128"},
-        {"id": "crc_flip", "word": 6, "value": container[6] ^ 1,
-         "expect": "reject", "by": "the 32-bit sum"},
-        {"id": "program_word_flip", "word": first_program + 1,
-         "value": container[first_program + 1] ^ 1,
-         "expect": "reject", "by": "the 32-bit sum"},
+    first = HEADER_WORDS + reloc_cnt
+    entry = table_record(len(container))
+
+    def one(cid: str, category: str, word: int, value: int, why: str) -> dict[str, object]:
+        stream = list(container)
+        stream[word] = value & MASK
+        return _case(cid, category, stream, why, word=word)
+
+    def sealed_for(cid: str, record: list[int], why: str) -> dict[str, object]:
+        return _case(cid, "program-table", seal(container, record), why)
+
+    swapped = list(container)
+    a, b = first, next(i for i in range(first + 1, len(container))
+                       if container[i] != container[first])
+    swapped[a], swapped[b] = swapped[b], swapped[a]
+    changed = list(container)
+    changed[first + 1] ^= 1
+    other_entry = card_image(container)
+    other_entry[TABLE_SECTOR][4:8] = [7, 1, 21, 1]
+    other_sector = card_image(container)
+    other_sector[21] = [0xA5A5A5A5] * 128
+
+    return [
+        _case("intact", "control", list(container), "the container as built"),
+        one("magic_flip", "header", 0, container[0] ^ 1, "MAGIC"),
+        one("version_one", "header", 1, 1, "a version-1 container"),
+        one("words_zero", "header", 2, 0, "WORDS = 0"),
+        one("words_plus_one", "header", 2, container[2] + 1,
+            "the extra word is zero padding; version 1 accepted it"),
+        one("load_addr_minus_one", "header", 3, container[3] - 1,
+            "ENTRY is still inside the moved image, so only the sum can see it"),
+        one("load_addr_past_imem", "header", 3, 4090, "the image runs past IMEM"),
+        one("entry_plus_one", "header", 4, container[4] + 1,
+            "still inside the image, so only the sum can see it"),
+        one("entry_outside_image", "header", 4, container[3] + container[2] + 4,
+            "ENTRY outside the image"),
+        one("reloc_cnt_over_buffer", "header", 5, 200, "RELOC_CNT over 128"),
+        sealed_for("table_flags_bit_one", [entry[0], entry[1] | 2, entry[2], entry[3]],
+                   "sealed for FLAGS 3; sd_writer writes FLAGS 1 -- the entry on the "
+                   "card is not the entry sealed"),
+        sealed_for("table_sector_count", [entry[0], entry[1], entry[2], entry[3] + 1],
+                   "sealed for one more sector than the card's entry names"),
+        one("reloc_index_moved", "relocation", HEADER_WORDS,
+            (container[HEADER_WORDS] + 1) % container[2],
+            "a relocation aimed at another word; version 1 accepted it"),
+        one("program_word_flip", "program-body", first + 1, container[first + 1] ^ 1,
+            "one bit of one program word"),
+        one("checksum_flip", "checksum-field", 6, container[6] ^ 1,
+            "one bit of CHECKSUM32"),
+        one("checksum_by_version_one_rule", "checksum-field", 6,
+            sum(container[first:]) & MASK, "sealed by version 1's rule, program words only"),
+        _case("words_after_container", "out-of-container",
+              [*container, 0xDEADBEEF, 0x12345678],
+              "two words past the container, inside its last sector"),
+        _case("another_table_entry", "out-of-container", list(container),
+              "a second VALID entry in sector 16", card=other_entry),
+        _case("another_sector", "out-of-container", list(container),
+              "sector 21, which no entry names, filled", card=other_sector),
+        _case("words_swapped", "limit-of-a-sum", swapped,
+              "two different program words exchanged: the sum does not see order"),
+        _case("body_changed_and_resealed", "limit-of-a-sum",
+              seal(changed, entry),
+              "one program word changed and CHECKSUM32 recomputed: a sum is public"),
     ]
-    if reloc_cnt:
-        out.append({"id": "reloc_index_moved", "word": HEADER_WORDS,
-                    "value": (container[HEADER_WORDS] + 1) % container[2],
-                    "expect": "accept",
-                    "by": "nothing -- the sum covers program words only"})
-    return out
 
 
 def jim_cases(container: list[int], src: JimSource,
@@ -171,10 +238,11 @@ def jim_cases(container: list[int], src: JimSource,
         value = src.randrange(1 << 32)
         if value == container[index]:
             continue
-        out.append({"id": f"jim{src.field}_{len(out):02d}_word_{index}",
-                    "word": index,
-                    "value": value, "expect": "reject",
-                    "by": "the 32-bit sum"})
+        stream = list(container)
+        stream[index] = value
+        out.append(_case(f"jim{src.field}_{len(out):02d}_word_{index}",
+                         "program-body", stream, "a codex-stream value in a program word",
+                         word=index))
     return out
 
 
@@ -226,24 +294,32 @@ def run_loader(port: str, bitstream: Path,
     container = base_container()
     results = []
     for case in plan if plan is not None else cases(container):
-        damaged = list(container)
-        damaged[int(case["word"])] = int(case["value"]) & 0xFFFFFFFF
+        kept = {k: v for k, v in case.items() if k not in ("stream", "card")}
+        if not case["board"]:
+            results.append({**kept, "written": False, "answer": None, "got": "not run",
+                            "agrees": None,
+                            "skipped": "sd_writer writes one table entry and the "
+                                       "container's own sectors; this card needs more"})
+            print(f"{case['id']:<30} not run on the board: {case['why']}")
+            continue
         configure(bitstream)
-        written = write_container(port, damaged)
+        written = write_container(port, list(case["stream"]))  # type: ignore[call-overload]
         configure(bitstream)
         answer = ask_loader(port) if written else None
         got = {None: "no answer", 0: "reject", 1: "accept"}.get(answer, str(answer))
-        results.append({**case, "written": written, "answer": answer, "got": got,
+        results.append({**kept, "written": written, "answer": answer, "got": got,
                         "agrees": got == case["expect"]})
-        print(f"{case['id']:<24} expect {case['expect']:<7} got {got:<9} "
+        print(f"{case['id']:<30} expect {case['expect']:<7} got {got:<9} "
               f"{'' if got == case['expect'] else '<-- FINDING'}")
+    ran = [r for r in results if r["got"] != "not run"]
     return {
         "target": "loader",
         "cases": results,
-        "inputs": len(results),
-        "rejected": sum(1 for r in results if r["got"] == "reject"),
-        "accepted": sum(1 for r in results if r["got"] == "accept"),
-        "findings": sum(1 for r in results if not r["agrees"]),
+        "inputs": len(ran),
+        "not_run": len(results) - len(ran),
+        "rejected": sum(1 for r in ran if r["got"] == "reject"),
+        "accepted": sum(1 for r in ran if r["got"] == "accept"),
+        "findings": sum(1 for r in ran if not r["agrees"]),
     }
 
 
@@ -692,8 +768,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(plan)} cases against the loader, container of "
               f"{len(container)} words at {LOAD_ADDR:#05x}:")
         for c in plan:
-            print(f"  {c['id']:<24} word {c['word']:<3} expect {c['expect']:<7} "
-                  f"caught by {c['by']}")
+            where = "" if c["board"] else "  (Python and simulation only)"
+            print(f"  {c['id']:<30} {c['category']:<17} expect {c['expect']:<7} "
+                  f"{c['by']}{where}")
         return 0
 
     record = run_loader(args.port, bitstream, plan)

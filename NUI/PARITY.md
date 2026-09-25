@@ -30,7 +30,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `rtl/programs/hijrah_sweep.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 212240 cycles -- compared as far as both ran |
 | `rtl/programs/hos_demo.hasm` | MISMATCH | step 600 `rtl/programs/hos.hasm:415` (`HCHECK`): the interpreter stops on its own check (HCHECK CORRUPTION: H0: guard check failed); the RTL halts later |
 | `rtl/programs/hos_hctx.hasm` | MISMATCH | step 3 `rtl/programs/hos_hctx.hasm:77` (`RET`): the interpreter stops here; the RTL then commits R6=0 at cycle 8 |
-| `rtl/programs/hos_prog_load.hasm` | MISMATCH | step 5 `rtl/programs/hos_prog_load.hasm:51` (`RET`): the interpreter stops here; the RTL then commits R11=1 at cycle 10 |
+| `rtl/programs/hos_prog_load.hasm` | MISMATCH | step 5 `rtl/programs/hos_prog_load.hasm:52` (`RET`): the interpreter stops here; the RTL then commits R11=1 at cycle 10 |
 | `rtl/programs/kernel.hasm` | MISMATCH | step 123 `rtl/programs/hal.hasm:117` (`LOAD`): interpreter R2=124, RTL R2=174 -- the step read COUNTER |
 | `rtl/programs/loader.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran |
 | `rtl/programs/mem_protect.hasm` | MISMATCH | step 28 `rtl/programs/mem_protect.hasm:46` (`HALT`): the interpreter stops here; the RTL then commits R10=xxxxxxxx at cycle 44 |

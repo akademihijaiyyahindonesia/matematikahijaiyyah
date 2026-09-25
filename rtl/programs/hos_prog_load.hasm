@@ -31,10 +31,11 @@
 ; cap rtl/scripts/build_container.py refuses to exceed, so the refusal normally
 ; happens on the host and this one is the backstop.
 ;
-; The margin is thin and measured: the shell's own table is 125 entries, because
-; this file brought JMPs and CALLs of its own (the shell was 85 before it). Three
-; more absolute jumps in the resident image and the shell can no longer be
-; loaded by this loader. rtl/tb/tb_hcpu_prog_load_multi.v loads the shell, so it
+; The margin is thin and measured: the shell's own table is 124 entries, because
+; this file brought JMPs and CALLs of its own (the shell was 85 before it; 125
+; before CHECKSUM32's pass one dropped a branch, 26 September 2026). Four more
+; absolute jumps in the resident image and the shell can no longer be loaded
+; by this loader. rtl/tb/tb_hcpu_prog_load_multi.v loads the shell, so it
 ; is where that will show first.
 ;
 ; ── what it does NOT do ─────────────────────────────────────────
@@ -106,9 +107,9 @@ pl_ent: CALL  hal_sd_get
         MOV   R13, R1               ; START_SECTOR
         CALL  hal_sd_get
         MOV   R14, R1               ; SECTOR_COUNT
-        ANDI  R4, R4, 1             ; bit 0 VALID; an all-zero sector is empty
-        CMPI  R4, 0
-        JEQ   pl_nxt
+        ANDI  R2, R4, 1             ; bit 0 VALID; an all-zero sector is empty.
+        CMPI  R2, 0                 ; Tested in R2, so R4 keeps the FLAGS word
+        JEQ   pl_nxt                ; whole: CHECKSUM32 covers all of it
         CMP   R3, R6
         JEQ   pl_hdr
 pl_nxt: ADDI  R9, R9, 1
@@ -117,7 +118,14 @@ pl_nxt: ADDI  R9, R9, 1
         JMP   pl_no                 ; no VALID entry carries that id
 
 ; ── the header, and every refusal it can earn ───────────────────
-pl_hdr: CMPI  R14, 0
+; CHECKSUM32 begins here, with the table entry itself: PROGRAM_ID + FLAGS +
+; START_SECTOR + SECTOR_COUNT, in R4. Nothing below touches R4 before pass one
+; -- hal_sd_run clobbers R1, R2, R9, R10, R12, the rest of hal_sd only R1 and
+; R12, hos_size_ge only R3.
+pl_hdr: ADD   R4, R4, R3
+        ADD   R4, R4, R13
+        ADD   R4, R4, R14
+        CMPI  R14, 0
         JEQ   pl_no                 ; an entry claiming no sectors
         ADDI  R11, R13, -1          ; pl_next_sec advances first
         CALL  pl_next_sec
@@ -129,8 +137,8 @@ pl_hdr: CMPI  R14, 0
         CMP   R15, R1
         JNE   pl_no
         CALL  hal_sd_get
-        CMPI  R1, 1                 ; VERSION this code can read
-        JNE   pl_no
+        CMPI  R1, 2                 ; VERSION 2: CHECKSUM32 over the container
+        JNE   pl_no                 ; (K-8, K-10); a version-1 image is refused
         CALL  hal_sd_get
         MOV   R8, R1                ; WORDS
         CALL  hal_sd_get
@@ -140,7 +148,7 @@ pl_hdr: CMPI  R14, 0
         CALL  hal_sd_get
         MOV   R7, R1                ; RELOC_CNT
         CALL  hal_sd_get
-        MOV   R15, R1               ; CRC
+        MOV   R15, R1               ; CHECKSUM32
 
         CMPI  R8, 0
         JEQ   pl_no                 ; a program of no words
@@ -170,32 +178,38 @@ pl_hdr: CMPI  R14, 0
         CMPI  R3, 0
         JEQ   pl_no
 
-; ── pass one: the sum, before anything is written ───────────────
-; R13 start, R14 sectors, R8 words left to sum, R15 the CRC to match.
-; R3 counts down what the sum skips, R4 accumulates, R11 is the cursor.
-        ADDI  R3, R7, 7             ; header and table are not in the sum
-        MOVI  R4, 0
+; ── pass one: CHECKSUM32, before anything is written ────────────
+; The whole container is summed -- seven header words, the relocation table,
+; the program -- onto the table entry already in R4, with the CHECKSUM32 word
+; itself counted as zero. The words are the ones hal_sd_get returns: most
+; significant byte first, as rtl/hcpu_sdio.v fills its buffer and as
+; rtl/scripts/build_container.py sums them. Zero padding past the container
+; is outside the sum.
+; R13 start, R14 sectors, R8 container words left, R15 the CHECKSUM32 to match,
+; R3 words until the CHECKSUM32 field, R4 the sum, R11 the cursor.
+        ADD   R8, R8, R7            ; WORDS + RELOC_CNT
+        ADDI  R8, R8, 7             ;   + the header: the whole container
+        MOVI  R3, 6                 ; CHECKSUM32 is header word 6
         ADDI  R11, R13, -1
 p1_sec: CALL  pl_next_sec
         CMPI  R1, 0
         JEQ   p1_end                ; the sectors ran out; the counts decide
 p1_w:   CALL  hal_sd_get            ; clobbers R1 and R12 only
-        CMPI  R3, 0
-        JEQ   p1_sum
-        ADDI  R3, R3, -1
-        JMP   p1_nx
-p1_sum: CMPI  R8, 0
-        JEQ   p1_nx                 ; past the program: zero padding
-        ADD   R4, R4, R1
+        CMPI  R8, 0
+        JEQ   p1_nx                 ; past the container: zero padding
         ADDI  R8, R8, -1
+        CMPI  R3, 0
+        JEQ   p1_cs                 ; the CHECKSUM32 field adds nothing
+        ADD   R4, R4, R1
+p1_cs:  ADDI  R3, R3, -1            ; below zero it never meets 0 again
 p1_nx:  ADDI  R10, R10, 1
         CMPI  R10, 128
         JNE   p1_w
         JMP   p1_sec
 p1_end: CMPI  R8, 0
-        JNE   pl_no                 ; fewer words on the card than WORDS said
+        JNE   pl_no                 ; fewer words on the card than the header said
         CMP   R4, R15
-        JNE   pl_no                 ; the image on the card is not the image
+        JNE   pl_no                 ; the container on the card is not the one sealed
 
 ; ── pass two: header again, table to 0x300, then the words ──────
         ADDI  R11, R13, -1

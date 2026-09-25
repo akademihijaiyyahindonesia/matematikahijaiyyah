@@ -26,8 +26,10 @@ from build_container import (  # noqa: E402
     MAGIC,
     VERSION,
     build,
+    checksum32,
     relocate,
     relocations,
+    table_record,
 )
 
 from hijaiyyah.hisa.assembler import assemble  # noqa: E402
@@ -54,13 +56,16 @@ def test_the_header_says_what_the_body_is(name: str) -> None:
     src = PROGRAMS / name
     text = src.read_text(encoding="utf-8")
     c = build(text, src.parent, 0x100)
-    magic, version, words, load_addr, entry, reloc_cnt, crc = c[:HEADER_WORDS]
+    magic, version, words, load_addr, entry, reloc_cnt, checksum = c[:HEADER_WORDS]
     assert (magic, version) == (MAGIC, VERSION)
     assert len(c) == HEADER_WORDS + reloc_cnt + words
     assert (load_addr, entry) == (0x100, 0x100)
     program = c[HEADER_WORDS + reloc_cnt:]
-    assert crc == sum(program) & 0xFFFFFFFF, "the sum covers the program words"
-    assert crc != sum(c) & 0xFFFFFFFF, "the header must not be inside its own sum"
+    # CHECKSUM32 (K-8, K-10): the table entry, the header with this field as
+    # zero, the relocation table and the program -- tests/test_integrity/
+    # test_checksum32.py holds the definition; this holds the builder to it.
+    assert checksum == checksum32(table_record(len(c)), c)
+    assert checksum != sum(program) & 0xFFFFFFFF, "version 1's rule is gone"
 
 
 def test_the_relocation_table_is_the_words_that_actually_move() -> None:

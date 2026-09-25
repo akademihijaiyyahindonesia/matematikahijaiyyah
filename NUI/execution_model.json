@@ -4867,7 +4867,7 @@
    "step": 0,
    "target": "opcode:MOVI",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:46"
+   "where": "rtl/programs/hos_prog_load.hasm:47"
   },
   {
    "kind": "EXECUTES",
@@ -4876,7 +4876,7 @@
    "step": 2,
    "target": "opcode:ORI",
    "times": 2,
-   "where": "rtl/programs/hos_prog_load.hasm:48"
+   "where": "rtl/programs/hos_prog_load.hasm:49"
   },
   {
    "kind": "EXECUTES",
@@ -4885,7 +4885,7 @@
    "step": 5,
    "target": "opcode:RET",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:51"
+   "where": "rtl/programs/hos_prog_load.hasm:52"
   },
   {
    "kind": "EXECUTES",
@@ -4894,7 +4894,7 @@
    "step": 1,
    "target": "opcode:SHLI",
    "times": 2,
-   "where": "rtl/programs/hos_prog_load.hasm:47"
+   "where": "rtl/programs/hos_prog_load.hasm:48"
   },
   {
    "kind": "MODIFIES",
@@ -4903,7 +4903,7 @@
    "step": 0,
    "target": "reg:R1",
    "times": 5,
-   "where": "rtl/programs/hos_prog_load.hasm:46"
+   "where": "rtl/programs/hos_prog_load.hasm:47"
   },
   {
    "kind": "RETURNS",
@@ -4912,7 +4912,7 @@
    "step": 5,
    "target": "label:pl_next_sec@0x006",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:51"
+   "where": "rtl/programs/hos_prog_load.hasm:52"
   },
   {
    "kind": "EXECUTES",
@@ -10715,9 +10715,9 @@
    "pc": 32,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 7,
-   "target": "label:hal_sd_run@0x0c7",
+   "target": "label:hal_sd_run@0x0ca",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:86"
+   "where": "rtl/programs/hos_prog_load.hasm:87"
   },
   {
    "kind": "CALLS",
@@ -10730,7 +10730,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 202,
+   "pc": 205,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 11,
    "target": "opcode:ADDI",
@@ -10739,7 +10739,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 208,
+   "pc": 211,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 314,
    "target": "opcode:ANDI",
@@ -10757,7 +10757,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 203,
+   "pc": 206,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 12,
    "target": "opcode:CMPI",
@@ -10775,7 +10775,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 210,
+   "pc": 213,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 316,
    "target": "opcode:JEQ",
@@ -10784,7 +10784,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 204,
+   "pc": 207,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 13,
    "target": "opcode:JNE",
@@ -10793,7 +10793,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 207,
+   "pc": 210,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 313,
    "target": "opcode:LOAD",
@@ -10807,7 +10807,7 @@
    "step": 5,
    "target": "opcode:MOV",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:83"
+   "where": "rtl/programs/hos_prog_load.hasm:84"
   },
   {
    "kind": "EXECUTES",
@@ -10820,12 +10820,12 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 195,
+   "pc": 198,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 323,
    "target": "opcode:POP",
    "times": 3,
-   "where": "rtl/programs/hos_prog_load.hasm:268"
+   "where": "rtl/programs/hos_prog_load.hasm:282"
   },
   {
    "kind": "EXECUTES",
@@ -10843,11 +10843,11 @@
    "step": 2,
    "target": "opcode:PUSH",
    "times": 3,
-   "where": "rtl/programs/hos_prog_load.hasm:80"
+   "where": "rtl/programs/hos_prog_load.hasm:81"
   },
   {
    "kind": "EXECUTES",
-   "pc": 218,
+   "pc": 221,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 318,
    "target": "opcode:RET",
@@ -10856,7 +10856,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 200,
+   "pc": 203,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 9,
    "target": "opcode:STORE",
@@ -10874,7 +10874,7 @@
   },
   {
    "kind": "MODIFIES",
-   "pc": 205,
+   "pc": 208,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 311,
    "target": "reg:R10",
@@ -10888,11 +10888,11 @@
    "step": 5,
    "target": "reg:R6",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:83"
+   "where": "rtl/programs/hos_prog_load.hasm:84"
   },
   {
    "kind": "MODIFIES",
-   "pc": 201,
+   "pc": 204,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 10,
    "target": "reg:R9",
@@ -10901,7 +10901,7 @@
   },
   {
    "kind": "OBSERVES",
-   "pc": 207,
+   "pc": 210,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 313,
    "target": "mmio:SD_STATUS@0xfe1",
@@ -10910,16 +10910,16 @@
   },
   {
    "kind": "RETURNS",
-   "pc": 198,
+   "pc": 201,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 326,
    "target": "pc:0x002",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:271"
+   "where": "rtl/programs/hos_prog_load.hasm:285"
   },
   {
    "kind": "RETURNS",
-   "pc": 218,
+   "pc": 221,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 318,
    "target": "pc:0x021",
@@ -10928,7 +10928,7 @@
   },
   {
    "kind": "WRITES",
-   "pc": 200,
+   "pc": 203,
    "source": "rtl/programs/test_prog_load.hasm",
    "step": 9,
    "target": "mmio:SD_CMD@0xfe0",
@@ -10940,9 +10940,9 @@
    "pc": 40,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 7,
-   "target": "label:hal_sd_run@0x0cf",
+   "target": "label:hal_sd_run@0x0d2",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:86"
+   "where": "rtl/programs/hos_prog_load.hasm:87"
   },
   {
    "kind": "CALLS",
@@ -10955,7 +10955,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 210,
+   "pc": 213,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 11,
    "target": "opcode:ADDI",
@@ -10964,7 +10964,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 216,
+   "pc": 219,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 314,
    "target": "opcode:ANDI",
@@ -10982,7 +10982,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 211,
+   "pc": 214,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 12,
    "target": "opcode:CMPI",
@@ -11000,7 +11000,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 218,
+   "pc": 221,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 316,
    "target": "opcode:JEQ",
@@ -11009,7 +11009,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 212,
+   "pc": 215,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 13,
    "target": "opcode:JNE",
@@ -11018,7 +11018,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 215,
+   "pc": 218,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 313,
    "target": "opcode:LOAD",
@@ -11032,7 +11032,7 @@
    "step": 5,
    "target": "opcode:MOV",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:83"
+   "where": "rtl/programs/hos_prog_load.hasm:84"
   },
   {
    "kind": "EXECUTES",
@@ -11045,12 +11045,12 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 203,
+   "pc": 206,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 323,
    "target": "opcode:POP",
    "times": 3,
-   "where": "rtl/programs/hos_prog_load.hasm:268"
+   "where": "rtl/programs/hos_prog_load.hasm:282"
   },
   {
    "kind": "EXECUTES",
@@ -11068,11 +11068,11 @@
    "step": 2,
    "target": "opcode:PUSH",
    "times": 3,
-   "where": "rtl/programs/hos_prog_load.hasm:80"
+   "where": "rtl/programs/hos_prog_load.hasm:81"
   },
   {
    "kind": "EXECUTES",
-   "pc": 226,
+   "pc": 229,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 318,
    "target": "opcode:RET",
@@ -11081,7 +11081,7 @@
   },
   {
    "kind": "EXECUTES",
-   "pc": 208,
+   "pc": 211,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 9,
    "target": "opcode:STORE",
@@ -11099,7 +11099,7 @@
   },
   {
    "kind": "MODIFIES",
-   "pc": 213,
+   "pc": 216,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 311,
    "target": "reg:R10",
@@ -11113,11 +11113,11 @@
    "step": 5,
    "target": "reg:R6",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:83"
+   "where": "rtl/programs/hos_prog_load.hasm:84"
   },
   {
    "kind": "MODIFIES",
-   "pc": 209,
+   "pc": 212,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 10,
    "target": "reg:R9",
@@ -11126,7 +11126,7 @@
   },
   {
    "kind": "OBSERVES",
-   "pc": 215,
+   "pc": 218,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 313,
    "target": "mmio:SD_STATUS@0xfe1",
@@ -11135,16 +11135,16 @@
   },
   {
    "kind": "RETURNS",
-   "pc": 206,
+   "pc": 209,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 326,
    "target": "pc:0x002",
    "times": 1,
-   "where": "rtl/programs/hos_prog_load.hasm:271"
+   "where": "rtl/programs/hos_prog_load.hasm:285"
   },
   {
    "kind": "RETURNS",
-   "pc": 226,
+   "pc": 229,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 318,
    "target": "pc:0x029",
@@ -11153,7 +11153,7 @@
   },
   {
    "kind": "WRITES",
-   "pc": 208,
+   "pc": 211,
    "source": "rtl/programs/test_prog_run.hasm",
    "step": 9,
    "target": "mmio:SD_CMD@0xfe0",
@@ -13893,7 +13893,7 @@
    "lines_executed": 6,
    "printed": 0,
    "steps": 6,
-   "trace_sha256": "df21112f76898022f44fa82c0236023e9d28be14d1a905c049995bffa1814ea6",
+   "trace_sha256": "4df7a843a3f4c4cbf4e49376f60ed6dc113f5f0058aa7744a5c406478515993d",
    "traps": []
   },
   "rtl/programs/jamrah_gate.hasm": {
@@ -14656,7 +14656,7 @@
    "lines_executed": 32,
    "printed": 1,
    "steps": 329,
-   "trace_sha256": "24363150ff42ed3d7b38b92af681a0e70c398c2726d3ad8f32960e97f8f49055",
+   "trace_sha256": "ee769ae08ed0845e8fd40c8f680b0e856d5714f352b05f5a1986d8c2ea81c177",
    "traps": []
   },
   "rtl/programs/test_prog_run.hasm": {
@@ -14675,7 +14675,7 @@
    "lines_executed": 34,
    "printed": 1,
    "steps": 331,
-   "trace_sha256": "6ae7fc536553331932ccaab2e4ac649a31f45e50722bc052a9ec1dc1b175cb32",
+   "trace_sha256": "66c1b4fec69ed1aebd1f333874a89151180bfac8afd17383a363e1ed2e2a169c",
    "traps": []
   },
   "rtl/programs/timer_poll.hasm": {

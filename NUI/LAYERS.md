@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **407 tes**
+`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **421 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,13 +200,13 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.258 fungsi Python, 120 modul Verilog, terurai | `test_nui_program_index.py` (9) |
+| `program_index.py` | 62 program HASM, 1.261 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
 | `execution_graph.py` | 63 lari, 1.478 edge eksekusi, inventaris UNKNOWN | `test_nui_execution.py` |
-| `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (19) |
-| `board_parity.py` | apa yang dikirim ke papan, jawaban yang dibekukan sebelumnya, dan pembaca rekaman: PARITY/MISMATCH/UNKNOWN per program dan per opcode | `test_nui_board_parity.py` (20) |
+| `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (25) |
+| `board_parity.py` | apa yang dikirim ke papan, jawaban yang dibekukan sebelumnya, dan pembaca rekaman: PARITY/MISMATCH/UNKNOWN per program dan per opcode | `test_nui_board_parity.py` (27) |
 | `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
 | `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan evidence store di luar repositori — disiapkan, belum dijalankan | `test_nui_layer5.py` (53) |
@@ -268,7 +268,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 94 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 809 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.466 node, 3.847 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.468 node, 3.871 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -317,8 +317,8 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.258 fungsi Python,
-120 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 125
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.261 fungsi Python,
+121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
 barisnya), dijaga `tests/test_ai/test_nui_program_index.py` dan dijelaskan di
@@ -430,7 +430,7 @@ membandingkan papan dengan Python dan **sudah menemukan beda**.
 (lewat perekam Lapis 3) dan di RTL (lewat `rtl/tb/tb_parity.v`, yang mendapat
 mode `+TRACE` — hanya membaca sinyal yang sudah ada, keluaran bawaannya tidak
 berubah), lalu membaca catatan papan. Hasilnya `NUI/parity_model.json`, ditarik
-ke [`PARITY.md`](PARITY.md), dijaga `tests/test_ai/test_nui_parity.py` (19).
+ke [`PARITY.md`](PARITY.md), dijaga `tests/test_ai/test_nui_parity.py` (25).
 Korpus 41 program paritas dipindah ke `src/hijaiyyah/hisa/parity_programs.py`
 supaya tes lama dan lapis ini memakai satu korpus (R1).
 
@@ -486,7 +486,7 @@ dikirim dan apa yang harus kembali; `rtl/scripts/parity_board.py` mengirimnya
 lewat `loader.hasm` dan menyimpan tangkapan mentah, dan menolak jalan selama
 proses burn-in hidup. Urutan hari Kamisnya di
 `cosmictera-build/PASCA-BURN-IN.md`. Dijaga
-`tests/test_ai/test_nui_board_parity.py` (20).
+`tests/test_ai/test_nui_board_parity.py` (27).
 
 - **Tiga eksperimen, bukan satu** (pemilik, 22 September 2026): paritas
   korpus, PRINT di silikon, dan kata sesudah berhenti — masing-masing lari

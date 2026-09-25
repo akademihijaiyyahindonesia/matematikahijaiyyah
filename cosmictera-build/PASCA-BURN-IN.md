@@ -23,7 +23,7 @@ P2  paritas papan                            selesai 24 September 2026
 P3  kolom opcode perangkat keras             selesai 24 September 2026
 P4  PRINT di silikon                         selesai 25 September 2026
 P5  HALT/RET di silikon                      selesai 25 September 2026
-P6  checksum + sabotase
+P6  checksum + sabotase                      selesai 26 September 2026
 P7  laporan selisih final, freeze Lapis 4, tag
 P8  Lapis 5
 ```
@@ -195,7 +195,11 @@ RET gagal dan sesudah HALT). Papan hanya bisa menjawab yang lewat kabel:
 register dan RAM sesudah berhenti tidak pernah tercetak, dan laporannya
 menyebut itu, bukan mengisinya.
 
-## P6 — checksum (K-8, K-10)
+## P6 — checksum (K-8, K-10) — **selesai 26 September 2026**
+
+CHECKSUM32 di builder, di loader Python, dan di loader HCPU, dengan urutan
+kanonik diuji lebih dulu. 19 kasus di papan, 0 temuan; 21 kasus di Python dan
+simulasi, vonis sama persis. Rinciannya di `cosmictera-build/attack-lab/README.md` (R1).
 
 **Checksum.** Cakupan K-8 dan algoritma K-10 diterapkan di
 `rtl/programs/hos_prog_load.hasm` dan `rtl/scripts/build_container.py`:

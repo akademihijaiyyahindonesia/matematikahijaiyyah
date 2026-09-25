@@ -583,7 +583,9 @@ Dua penetapan lain dari keputusan yang sama:
     terukur: arena heap hanya 127 kata, jadi tabel CRC-32 256 entri tidak muat,
     sementara yang dibutuhkan tahap ini hanya memisahkan citra utuh dari citra
     rusak. Yang dijumlah **hanya kata program**, header tidak ikut. Naik ke CRC
-    nanti lewat `VERSION`, tanpa memecahkan loader lama.
+    nanti lewat `VERSION`, tanpa memecahkan loader lama. *(Cakupannya diperluas
+    ke seluruh container oleh K-8 dan K-10, 22–23 September 2026, dan
+    diterapkan sebagai `VERSION` 2 di P6, 26 September 2026 — lihat di bawah.)*
   - **`SYSCALL` 9 `LOAD_PROGRAM`**, `R2` = PROGRAM_ID, `R1` = 1 berhasil atau 0
     gagal. Tabel izin sekarang 0xECE–0xED5 untuk panggilan 1–8 dan masih ada
     tempat sampai 0xEFF.
@@ -1340,6 +1342,36 @@ menurut nama penerbit, nama penulis, akhiran `.txt`, atau seluruh folder
 naskah — dan sebuah tes membangun pohon tiruan untuk membuktikan berkas
 saudaranya, berkas `.txt` lain, dan berkas bernama sama di subfolder tetap
 merah. Penjaga ejaan-varian nama tidak dikecualikan.
+
+### 26 September 2026 — P6: CHECKSUM32 di loader
+
+**Loader program kini menutupi seluruh container** (K-8, K-10): entri tabel
+sektor 16, header dengan medan checksumnya sendiri dinolkan, tabel relokasi,
+dan kata program, dijumlah 32-bit modulo 2³². `VERSION` naik ke 2, jadi loader
+lama menolak container baru lewat pemeriksaan VERSION, bukan salah membacanya.
+
+**Syarat pemilik dipenuhi lebih dulu: satu urutan kanonik.** Satu kata adalah
+32 bit tak bertanda, byte paling signifikan lebih dulu — cara
+`rtl/hcpu_sdio.v` mengisi penyangganya dan cara `rtl/scripts/send_program.py`
+mengirimnya. `tests/test_integrity/test_checksum32.py` menguji urutan itu, lalu
+memberikan **kartu yang sama persis** kepada loader Python di
+`rtl/scripts/build_container.py` dan kepada loader HCPU tersimulasi
+(`rtl/tb/tb_hcpu_prog_load_card.v`): vonisnya sama di ke-21 kasus. Papan
+sepakat di ke-19 kasus yang bisa ditulis ke kartu — **0 temuan**. Angkanya di
+`cosmictera-build/attack-lab/README.md`, tidak disalin ke sini (R1).
+
+**Kasus yang lolos di versi 1 kini ditolak**: WORDS yang dinaikkan di atas
+padding nol, dan entri relokasi yang digeser. **Batas sebuah jumlah dicatat,
+bukan disembunyikan**: dua kata program yang ditukar tempat, dan badan yang
+diubah lalu disegel ulang, keduanya lolos — sifat algoritma yang dipilih K-10.
+
+**Dua akibat yang diukur.** Shell memuat loader ini, dan tabel relokasinya
+berada 125 dari batas 128: pass satu yang baru kehilangan satu cabang, jadi
+shell tumbuh tiga kata dan relokasinya turun ke 124. Satu entri ekspektasi
+beku ikut bergeser — alasan pengecualian `rtl/programs/hos_prog_load.hasm`, program yang
+**tidak** dikirim ke papan, dari fault sesudah 27.016 langkah ke 27.145 —
+dan pembekuan ulangnya terbukti tidak menyentuh satu pun ekspektasi yang
+dipakai papan.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

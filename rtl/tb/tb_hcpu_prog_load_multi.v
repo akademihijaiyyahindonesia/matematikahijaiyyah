@@ -5,24 +5,26 @@
 // runtime, Ka'bah and Hijrah modules -- is larger than a sector, and the
 // loader's path from one sector to the next had never been run by anything.
 //
-// The container here is the shell itself, built for 0x900: 1,245 words, 125
-// relocations, 1,377 words in all = ELEVEN sectors. It crosses both boundaries
+// The container here is the shell itself, built for 0x900: 1,248 words, 124
+// relocations, 1,379 words in all = ELEVEN sectors. It crosses both boundaries
 // the loader has:
 //
-//   the relocation table   header 7 + table 125 = 132 words, so the table
+//   the relocation table   header 7 + table 124 = 131 words, so the table
 //                          itself runs out of sector 17 into sector 18
 //   the program words      then run on through sector 27
 //
 // and its relocations land in words spread across all of them, so the cursor
 // into the table at 0x300 has to survive every sector change as well.
 //
-// The shell's table is 125 entries against the owner's cap of 128, measured
-// while sizing this bench -- the loader added JMPs and CALLs of its own. That
-// margin is worth watching, and this bench is where it will show first.
+// The shell's table is 124 entries against the owner's cap of 128, measured
+// again on 26 September 2026 when CHECKSUM32 went in (K-8, K-10): the loader's
+// pass one lost a branch, so the shell grew three words and gave back one
+// relocation (it was 1,245 and 125). That margin is worth watching, and this
+// bench is where it will show first.
 //
 // What it checks: SYSCALL 9 answers 1; instruction memory at 0x900 is the
-// assembler's output at that address, all 1,245 words; the words either side
-// are untouched; all 125 table entries reached 0x300; an absent id answers 0.
+// assembler's output at that address, all 1,248 words; the words either side
+// are untouched; all 124 table entries reached 0x300; an absent id answers 0.
 
 `timescale 1ns/1ps
 
@@ -30,8 +32,8 @@ module tb_hcpu_prog_load_multi;
     localparam real    HALF_PERIOD = 18.5;          // 27 MHz
     localparam integer BAUD        = 115200;
     localparam integer LOAD_ADDR   = 12'h900;
-    localparam integer WORDS       = 1245;          // shell.hasm
-    localparam integer RELOC_CNT   = 125;
+    localparam integer WORDS       = 1248;          // shell.hasm
+    localparam integer RELOC_CNT   = 124;
     localparam integer C_WORDS     = 7 + RELOC_CNT + WORDS;
     localparam integer IMAGE_SEC   = 17;
     localparam integer TABLE_SEC   = 16;
