@@ -1325,6 +1325,22 @@ yang menyimpang: rekaman RTL ditutup saat `halted` naik
 (`rtl/fpga/gowin/hcpu_gowin_top.v`). Logika HALT, RET, dan writeback tidak
 diubah — perintah pemilik.
 
+### Keputusan pemilik, 26 September 2026 — satu pengecualian sempit untuk naskah pribadi
+
+Sebuah berkas koreksi naskah pribadi pemilik, di folder yang tidak di-commit,
+membuat dua penjaga `tests/test_integrity/test_authorship.py` merah: ia memuat
+nama penerbit dan nama penulis yang sudah digantikan. Pemilik: **jangan ubah
+dan jangan baca isinya**, dan jangan mengganti nama lama di dalamnya — berkas
+itu catatan koreksi yang boleh memuat nama historis. Penjaganya tetap perlu
+memeriksa folder itu, karena dokumen paten tinggal di sana.
+
+Jadi pengecualiannya **eksplisit dan sempit**: satu path persis, dengan
+alasannya di sebelahnya, hanya untuk dua penjaga nama yang digantikan. Bukan
+menurut nama penerbit, nama penulis, akhiran `.txt`, atau seluruh folder
+naskah — dan sebuah tes membangun pohon tiruan untuk membuktikan berkas
+saudaranya, berkas `.txt` lain, dan berkas bernama sama di subfolder tetap
+merah. Penjaga ejaan-varian nama tidak dikecualikan.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

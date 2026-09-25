@@ -61,6 +61,35 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+#: The owner's decision, 26 September 2026. ONE file, named by its exact path,
+#: may carry the superseded publisher and author names: it is the owner's list
+#: of manuscript corrections, kept outside the engineering source on purpose,
+#: and a list of corrections names what it corrects. The exception is by path
+#: only -- not by name, not by suffix, not by folder -- so any other file that
+#: carries an old name is still red, a sibling in the same folder included. It
+#: covers the two superseded-name guards and nothing else: a variant spelling
+#: of the name of record is still caught in this file. The guard does not read
+#: the file at all; neither did the change that put it here.
+HISTORICAL_NAMES_ALLOWED = frozenset({
+    "Buku Matematika Hijaiyyah/PERBAIKAN_NASKAH_EDISI_I_TAMBAHAN_2026-09-25.txt",
+})
+
+
+def superseded_in(pattern: re.Pattern[str], files: List[Path] | None = None,
+                  root: Path = ROOT) -> List[str]:
+    """Every file carrying `pattern`, less this file itself and the one path
+    the owner allowed to carry historical names -- which is skipped before it
+    is read, not read and then forgiven."""
+    out = []
+    for path in repo_text_files() if files is None else files:
+        rel = path.relative_to(root).as_posix()
+        if path.name == Path(__file__).name or rel in HISTORICAL_NAMES_ALLOWED:
+            continue
+        if pattern.search(read(path)):
+            out.append(rel)
+    return out
+
+
 # ── the canonical record itself ──────────────────────────────────
 
 def test_authors_file_exists_and_declares_the_canonical_form() -> None:
@@ -109,11 +138,7 @@ def test_no_superseded_publisher_remains() -> None:
     the publisher line is a factual claim about a legal entity, and it must
     track the deed rather than whichever draft it was copied from.
     """
-    offenders = [
-        str(p.relative_to(ROOT))
-        for p in repo_text_files()
-        if p.name != Path(__file__).name and SUPERSEDED_PUBLISHER.search(read(p))
-    ]
+    offenders = superseded_in(SUPERSEDED_PUBLISHER)
     assert not offenders, (
         f"superseded publisher (PT Puri Pertiwi International) still present "
         f"in: {offenders}. The publisher of record is "
@@ -169,12 +194,38 @@ def test_patent_instrument_names_the_foundation_and_its_website(tail: str) -> No
 
 
 def test_no_superseded_author_name_remains() -> None:
-    offenders = [
-        str(p.relative_to(ROOT))
-        for p in repo_text_files()
-        if p.name != Path(__file__).name and SUPERSEDED.search(read(p))
-    ]
+    offenders = superseded_in(SUPERSEDED)
     assert not offenders, f"superseded author name still present in: {offenders}"
+
+
+def test_the_historical_names_exception_is_one_exact_path() -> None:
+    """Narrow by construction: one entry, a whole path to one dated file, no
+    wildcard and no folder -- so it cannot quietly grow into 'the manuscript
+    folder' or 'every .txt'."""
+    assert len(HISTORICAL_NAMES_ALLOWED) == 1
+    for rel in HISTORICAL_NAMES_ALLOWED:
+        assert not any(c in rel for c in "*?[]"), rel
+        assert not rel.endswith("/") and "/" in rel, rel
+        assert re.search(r"_\d{4}-\d{2}-\d{2}\.txt$", rel), rel
+
+
+def test_the_exception_reaches_no_other_file(tmp_path: Path) -> None:
+    """R3 on the exception itself. The exact path is spared; a sibling in the
+    same folder, another .txt, and a file elsewhere carrying the same old
+    names are all still named. Built in a scratch tree -- the owner's file is
+    neither read nor copied."""
+    (allowed,) = HISTORICAL_NAMES_ALLOWED
+    old = "PT Puri Pertiwi International, Firman Arief Hidayatullah\n"
+    paths = [tmp_path / allowed,
+             tmp_path / "Buku Matematika Hijaiyyah" / "PERBAIKAN_NASKAH_LAIN.txt",
+             tmp_path / "Buku Matematika Hijaiyyah" / "sub" / Path(allowed).name,
+             tmp_path / "NOTES.txt"]
+    for path in paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(old, encoding="utf-8")
+    want = sorted(p.relative_to(tmp_path).as_posix() for p in paths[1:])
+    for pattern in (SUPERSEDED_PUBLISHER, SUPERSEDED):
+        assert sorted(superseded_in(pattern, paths, root=tmp_path)) == want
 
 
 # ── the canonical spelling must not drift ────────────────────────
