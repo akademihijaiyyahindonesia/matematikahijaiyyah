@@ -1,0 +1,20 @@
+{
+ "bitstream": "rtl/fpga/gowin/hcpu_gowin_top_loader.fs",
+ "bitstream_sha256": "84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261",
+ "commit": "626489c",
+ "date": "20260925T141737Z",
+ "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+ "experiment": "print",
+ "programs": {
+  "print-silicon": {
+   "cycles": 28321170,
+   "dropped": 0,
+   "halted": true,
+   "payload_sha256": "b03985256e32edd723e00c8a89522382f7bedf04a4726702fab602ca984fd9a9",
+   "raw_hex": "343139343330340a383338383630300a31363737373231360a3333353534343a300a3637313039313f3e0a313334323137373f3e0a323134373438363f39320a0a4359434c45533d30314230323539320d0a0a",
+   "text": "4194304\n8388600\n16777216\n335544:0\n671091?>\n1342177?>\n2147486?92\n",
+   "timed_out": false,
+   "words": 16
+  }
+ }
+}

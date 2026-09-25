@@ -1056,6 +1056,27 @@ terkontaminasi; lari kedua 73 dan 2.
 
 ---
 
+## PRINT di silikon — tangga tujuh titik, tiga lari, 25 September 2026
+
+Langkah P4. Satu program, tujuh `PRINT`: 2²², 2²³, 2²⁴, 2²⁵, 2²⁶, 2²⁷, 2³¹.
+Jawabannya dibekukan di `NUI/board_expected.json` sebelum papan ditanya, dan
+dijalankan **tiga kali** dengan bitstream `84fdc912…` dan payload yang sama.
+
+| | hasil |
+|---|---|
+| benar di ketiga lari | 2²², 2²⁴ |
+| salah di ketiga lari | 2²³, 2²⁵, 2²⁶, 2²⁷, 2³¹ |
+| batas pertama | **2²³**, sama dengan 20 September |
+| keluaran salah yang berbeda | **14 dari 15** |
+| interpreter, Python, RTL tersimulasi | benar di ketujuh titik |
+
+**Silikon tidak mengulang dirinya pada nilai-nilai ini**: lari yang identik
+mencetak angka salah yang berbeda untuk nilai yang sama. Tabel per lari, dan
+yang tidak diklaim tentang sebabnya, di [OFF.md](OFF.md) bagian
+OFF-PRINT-SILICON (R1). Tidak ada RTL yang disentuh.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1240,7 +1261,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.437 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.438 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1283,7 +1304,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.437 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.438 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

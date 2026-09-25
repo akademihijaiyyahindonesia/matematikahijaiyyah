@@ -130,10 +130,42 @@ Icarus, mencetak ke-32 nilai persis seperti interpreter, termasuk ketiga yang
 salah di papan. Jadi selisihnya muncul antara RTL yang disimulasikan dan
 silikon yang dibangun darinya, bukan di logika RTL sebagaimana disimulasikan.
 Karena itu pemilik memisahkannya, 21 September 2026, sebagai
-**OFF-PRINT-SILICON**: ia bukan selisih interpreter ↔ RTL. Burn-in 72 jam tutup
-24 September 2026; verifikasinya di papan adalah langkah **P4**
-(`cosmictera-build/PASCA-BURN-IN.md`), dan harnessnya sudah dibekukan di
-`NUI/board_expected.json`.
+**OFF-PRINT-SILICON**: ia bukan selisih interpreter ↔ RTL.
+
+**Diverifikasi di papan 25 September 2026, langkah P4.** Tangga tujuh titik
+pemilik, satu program berisi tujuh `PRINT`, dijalankan **tiga kali** dengan
+bitstream yang sama (`84fdc912…`) dan payload yang sama, tanpa satu variabel
+pun diubah. Rekamannya `cosmictera-build/parity-board/20260925T141701Z-print.json`,
+`…T141737Z-print.json`, dan `…T141744Z-print.json`:
+
+| titik | nilai | lari 1 | lari 2 | lari 3 |
+|---|---|---|---|---|
+| 2²² | 4.194.304 | benar | benar | benar |
+| 2²³ | 8.388.608 | `838861:` | `8388600` | `8388600` |
+| 2²⁴ | 16.777.216 | benar | benar | benar |
+| 2²⁵ | 33.554.432 | `33554436` | `335544:0` | `3355443<` |
+| 2²⁶ | 67.108.864 | `671090:<` | `671091?>` | `6710903<` |
+| 2²⁷ | 134.217.728 | `134218058` | `1342177?>` | `134217676` |
+| 2³¹ | 2.147.483.648 | `2147484:4<` | `2147486?92` | `2147482958` |
+
+Interpreter, Python, dan RTL tersimulasi mencetak ketujuhnya dengan benar di
+ketiga lari. Tiga hal terukur:
+
+1. **Batas pertama 2²³**, sama dengan tangga 20 September. 2²² dan 2²⁴ benar di
+   setiap lari, di kedua hari.
+2. **Keluaran salahnya tidak berulang.** Nilai yang sama, pada lari yang
+   identik, mencetak angka salah yang berbeda: lima titik yang gagal memberi
+   empat belas keluaran berbeda dari lima belas. Tangga 20 September berbeda
+   dari ketiganya pada 2²⁵ dan 2³¹; pada 2²³ ia sama dengan lari 2 dan 3,
+   `8388600`. Hal yang sama terlihat di
+   paritas papan P2: `test_hisab.hasm` mencetak `25869140?6` di satu lari dan
+   `2586908910` di lari lain.
+3. **Tidak semua keluaran salah memuat karakter di atas `9`**: `33554436`,
+   `134218058`, dan `2147482958` hanya berisi digit, tetapi angkanya salah.
+
+**Sebabnya tidak diukur, dan tidak ditulis di sini.** Yang terukur hanya bahwa
+silikon tidak mengulang dirinya pada nilai ini, sementara RTL tersimulasi
+selalu benar. Perbaikannya tetap keputusan pemilik, dan K9 berlaku.
 
 Label: **EH**.
 

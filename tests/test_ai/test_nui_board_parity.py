@@ -17,6 +17,7 @@ import functools
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -261,6 +262,32 @@ def test_a_report_reads_the_bytes_and_not_the_text_a_record_carried() -> None:
     record["programs"]["a"]["payload_sha256"] = ""
     out = bp.report(record, frozen)
     assert out["counts"] == {"PARITY": 1, "MISMATCH": 0, "UNKNOWN": 0}, out["programs"]
+
+
+#: P4's three runs, 25 September 2026, in the order OFF.md's table gives them.
+P4_RUNS = ("20260925T141701Z", "20260925T141737Z", "20260925T141744Z")
+P4_POWERS = {"2²²": 22, "2²³": 23, "2²⁴": 24, "2²⁵": 25, "2²⁶": 26, "2²⁷": 27, "2³¹": 31}
+
+
+def test_the_print_table_in_off_md_is_what_the_three_records_hold() -> None:
+    """OFF-PRINT-SILICON's P4 table, cell by cell, against the records it
+    cites -- each read again from its raw bytes, the layer 4 rule. A table
+    that drifted from its records would be a claim, not a measurement."""
+    text = (ROOT / "cosmictera-build" / "OFF.md").read_text(encoding="utf-8")
+    rows = {m.group(1): [c.strip().strip("`") for c in m.group(2).split("|")]
+            for m in re.finditer(r"^\| (2[²³⁴⁵⁶⁷¹]+) \| [\d.]+ \|(.+)\|$", text, re.M)}
+    assert set(rows) == set(P4_POWERS), sorted(rows)
+    printed = []
+    for stamp in P4_RUNS:
+        record = json.loads((bp.RECORDS / f"{stamp}-print.json").read_text(encoding="utf-8"))
+        assert record["bitstream_sha256"].startswith("84fdc912"), stamp
+        got = record["programs"]["print-silicon"]
+        printed.append(bp.parse_capture(bytes.fromhex(got["raw_hex"]))["text"].split("\n"))
+    for label, power in P4_POWERS.items():
+        for run, cell in enumerate(rows[label]):
+            board = printed[run][list(P4_POWERS).index(label)]
+            want = "benar" if board == str(1 << power) else board
+            assert cell == want, (label, run + 1, cell, board)
 
 
 def test_the_comparison_names_the_first_line_that_differs() -> None:

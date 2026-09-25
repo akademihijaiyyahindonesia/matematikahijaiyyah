@@ -21,7 +21,7 @@ P0  tutup burn-in dan bekukan bukti          selesai 24 September 2026
 P1  pengurai + capture mentah                selesai 24 September 2026
 P2  paritas papan                            selesai 24 September 2026
 P3  kolom opcode perangkat keras             selesai 24 September 2026
-P4  PRINT di silikon
+P4  PRINT di silikon                         selesai 25 September 2026
 P5  HALT/RET di silikon
 P6  checksum + sabotase
 P7  laporan selisih final, freeze Lapis 4, tag
@@ -163,7 +163,11 @@ UNKNOWN kalau di keduanya — kabel saja tidak bisa menunjuk instruksi mana yang
 berbeda — atau kalau tak satu program yang dikirim menjalankannya. Kolom itu
 lalu dipindah ke `NUI/PARITY.md`.
 
-## P4 — PRINT di silikon
+## P4 — PRINT di silikon — **selesai 25 September 2026**
+
+Tiga lari identik: batas pertama 2²³, 2²² dan 2²⁴ benar, dan keluaran salahnya
+**tidak berulang** — 14 dari 15 berbeda. Tabelnya di `cosmictera-build/OFF.md`
+bagian OFF-PRINT-SILICON (R1).
 
 ```bash
 python3 rtl/scripts/parity_board.py --experiment print --port /dev/tty.usbserial-20250303171

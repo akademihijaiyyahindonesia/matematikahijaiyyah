@@ -1,0 +1,85 @@
+{
+ "commit": "626489c",
+ "counts": {
+  "MISMATCH": 1,
+  "PARITY": 0,
+  "UNKNOWN": 0
+ },
+ "experiment": "print",
+ "ladder": [
+  {
+   "board": "4194304",
+   "first_divergence": false,
+   "interpreter": "4194304",
+   "power": 22,
+   "python": "4194304",
+   "rtl": "4194304",
+   "value": 4194304
+  },
+  {
+   "board": "838861:",
+   "first_divergence": true,
+   "interpreter": "8388608",
+   "power": 23,
+   "python": "8388608",
+   "rtl": "8388608",
+   "value": 8388608
+  },
+  {
+   "board": "16777216",
+   "first_divergence": false,
+   "interpreter": "16777216",
+   "power": 24,
+   "python": "16777216",
+   "rtl": "16777216",
+   "value": 16777216
+  },
+  {
+   "board": "33554436",
+   "first_divergence": false,
+   "interpreter": "33554432",
+   "power": 25,
+   "python": "33554432",
+   "rtl": "33554432",
+   "value": 33554432
+  },
+  {
+   "board": "671090:<",
+   "first_divergence": false,
+   "interpreter": "67108864",
+   "power": 26,
+   "python": "67108864",
+   "rtl": "67108864",
+   "value": 67108864
+  },
+  {
+   "board": "134218058",
+   "first_divergence": false,
+   "interpreter": "134217728",
+   "power": 27,
+   "python": "134217728",
+   "rtl": "134217728",
+   "value": 134217728
+  },
+  {
+   "board": "2147484:4<",
+   "first_divergence": false,
+   "interpreter": "2147483648",
+   "power": 31,
+   "python": "2147483648",
+   "rtl": "2147483648",
+   "value": 2147483648
+  }
+ ],
+ "programs": {
+  "print-silicon": {
+   "board": "838861:",
+   "board_equals_rtl": false,
+   "dropped": 0,
+   "expected": "8388608",
+   "line": 1,
+   "status": "MISMATCH"
+  }
+ },
+ "record": "20260925T141701Z"
+}

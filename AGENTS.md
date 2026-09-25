@@ -1283,6 +1283,23 @@ kolomnya UNKNOWN sementara tangga PRINT yang terekam tetap MISMATCH.
 `trap_timer` — tetap **UNKNOWN karena semantik pencacah**, bukan cacat
 perangkat keras: interpreter menghitung instruksi, silikon menghitung clock.
 
+### 25 September 2026 — P4: PRINT di silikon
+
+Tangga tujuh titik pemilik — 2²², 2²³, 2²⁴, 2²⁵, 2²⁶, 2²⁷, 2³¹ — dijalankan di
+papan **tiga kali**, bitstream dan payload sama, tanpa variabel diubah.
+**Batas pertama 2²³**, sama dengan 20 September; 2²² dan 2²⁴ benar di setiap
+lari. Interpreter, Python, dan RTL tersimulasi benar di ketujuhnya.
+
+**Temuan baru: keluaran salahnya tidak berulang.** Nilai yang sama pada lari
+yang identik mencetak angka salah yang berbeda — 14 dari 15 keluaran salah
+berbeda satu sama lain. Tabelnya di `cosmictera-build/OFF.md`, tidak disalin ke
+sini (R1). **Sebabnya tidak diukur dan tidak ditulis**; perbaikan tetap
+keputusan pemilik, K9 berlaku, dan tidak ada RTL yang disentuh.
+
+Ulangan dua kali itu adalah eksperimen yang sama persis, bukan eksperimen
+diagnostik baru: tanpanya, selisih terhadap tangga 20 September tidak bisa
+dibedakan dari dua kondisi yang berbeda.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
