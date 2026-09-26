@@ -61,7 +61,7 @@
   ],
   "status": "ditetapkan",
   "source": "pemilik, 23 September 2026, keputusan K-11 -- Ubuntu tamu -> kolektor hanya-baca -> hasil -> evidence store di host -> lapis pengetahuan HOST",
-  "implementation": "sebagian: evidence store dipakai 26 September 2026 untuk bukti P8.3 -- isolasi dan uji negatif digest -- ditulis oleh skrip yang disimpan di direktori run-nya sendiri (`produced_by.py`). `observe()` masih mengembalikan rekaman tanpa menulisnya; penulisannya lewat `observe()` datang bersama kolektor P8.4"
+  "implementation": "ada: `record()` di src/hijaiyyah/nui/layer5.py menjalankan semua kolektor lewat `observe()` sekali dan menulis lari itu -- raw/ per kolektor dan manifest.json yang menautkan tiap berkas ke kolektor, run_id, waktu, VM, argv, exit code, durasi, path dan sha256-nya. Lari pertama 26 September 2026 (P8.4), 20260926T053008Z-collectors. Bukti P8.3 ditulis sebelum `record()` ada, oleh skrip yang disimpan di direktori run-nya sendiri (`produced_by.py`)"
  },
  "collectors": [
   {
@@ -243,6 +243,6 @@
   }
  ],
  "open": [
-  "Apakah `limactl shell` mengutip argumen belum diukur -- host belum dipasang; pagar menolak karakter shell supaya itu tidak penting."
+  "Cara `limactl shell` mengutip argumen belum diukur. Yang terukur 26 September 2026 (P8.4): stderr kolektor containers, `/bin/bash: line 1: docker: command not found`, menunjukkan argv dijalankan bash tamu sebagai satu baris. Pagar tetap menolak karakter shell, supaya kutipan itu tidak penting."
  ]
 }

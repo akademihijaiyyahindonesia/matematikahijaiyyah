@@ -1434,6 +1434,15 @@ P7.4 tampak macet berjam-jam, padahal mesin ini **tidur** 159,7 menit selama
 lari itu — pytest sendiri mengukur 770 detik. Lari panjang di mesin ini perlu
 `caffeinate`, seperti yang `rtl/scripts/burn_in.py` sudah lakukan.
 
+**P8.4 dijalankan hari yang sama**, lewat `record()` di
+`src/hijaiyyah/nui/layer5.py`: kesebelas kolektor sekali, lewat pagar yang
+sama, ke satu direktori run di evidence store. Sembilan exit 0. `journal`
+gagal karena izin — pengguna tamu `lima` tidak boleh membaca jurnal, dan
+membukanya berarti `sudo` atau mengubah grup tamu, dua hal di luar pagar,
+jadi ia **didokumentasikan, tidak ditambal**, dan menunggu keputusan pemilik.
+`docker` tidak terpasang di tamu. HOST tetap `unknown`; alasan yang
+dicetak `src/hijaiyyah/nui/knowledge.py` sudah basi, dan itu wilayah P8.5.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **30 modul**; `tests/test_ai/` berisi **430 tes**
+`src/hijaiyyah/nui/` berisi **30 modul**; `tests/test_ai/` berisi **434 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.274 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.277 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -210,7 +210,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
 | `layer4_freeze.py` | Lapis 4 dibekukan: bukti P0–P6 dengan hash-nya, status tiap warna, dan laporan selisih final dalam empat kelas, dihitung ulang dari rekaman | `test_nui_layer4_freeze.py` (9) |
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
-| `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan evidence store di luar repositori — disiapkan, belum dijalankan | `test_nui_layer5.py` (53) |
+| `layer5.py` | Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan `record()` yang menulis evidence store di luar repositori — dijalankan pertama kali 26 September 2026 (P8.4) | `test_nui_layer5.py` (57) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (86) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST kosong sampai kolektor mengukur, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -268,8 +268,8 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 95 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 825 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.484 node, 3.932 edge**.
+`references`, tidak pernah dihitung sebagai import) dan 828 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.487 node, 3.936 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -318,7 +318,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.274 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.277 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -567,12 +567,13 @@ dari pemilik:
 | service | `systemctl`, `journalctl` |
 | kontainer | `docker`, `podman` |
 
-**Aset yang sudah ada.** **Tidak ada** sebagai integrasi: belum satu kolektor
-pun dijalankan lewat NUI, dan HOST belum membaca satu observasi pun. Host-nya
-sendiri ada sejak 26 September 2026 — instance uji `cosmictera-layer5-uji`,
-di luar repositori, dengan isolasinya terbukti (P8.1–P8.3, di bawah). Yang ada
-sejak 22 September 2026, atas permintaan pemilik sementara papan memikul
-burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
+**Aset yang sudah ada.** **Tidak ada** sebagai integrasi: HOST belum membaca
+satu observasi pun. Kesebelas kolektor sudah dijalankan lewat NUI (P8.4),
+tetapi pengetahuannya belum tersambung — itu P8.5. Host-nya ada sejak
+26 September 2026 — instance uji `cosmictera-layer5-uji`, di luar repositori,
+dengan isolasinya terbukti (P8.1–P8.3, di bawah). Kerangkanya ada sejak
+22 September 2026, disiapkan atas permintaan pemilik sementara papan memikul
+burn-in, tanpa host:
 
 - `NUI/spec/layer5_collectors.json` — sebelas kolektor observasi: identitas
   host, proses, mount, isi `/`, systemd, jurnal, antarmuka, link, rute, pencacah
@@ -589,9 +590,10 @@ burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
   `cosmictera-layer5` baru jadi instance utama sesudahnya. Rekaman observasinya
   disimpan **di host, di luar repositori** — satu direktori per sesi di
   `~/cosmictera-layer5/observations/<run_id>/`, dengan `manifest.json` dan
-  keluaran mentah per kolektor (pemilik, 23 September 2026, K-11); `observe()`
-  hari ini mengembalikan rekaman tanpa menulisnya. Dijaga
-  `tests/test_ai/test_nui_layer5.py` (53).
+  keluaran mentah per kolektor (pemilik, 23 September 2026, K-11). `observe()`
+  mengembalikan rekaman tanpa menulisnya; `record()` menjalankan semua kolektor
+  lewat `observe()` sekali dan menulis lari itu ke store, dan menolak store di
+  dalam repositori. Dijaga `tests/test_ai/test_nui_layer5.py` (57).
 - `NUI/spec/layer5_lima.yaml` — VM yang mengunci image terverifikasi lewat
   digest, tanpa mount, mode plain. Template Ubuntu 24.04 bawaan Lima 2.2.0
   sendiri **tidak bisa dipakai**: ia mengunci `release-20260705`, jatuh ke URL
@@ -669,6 +671,25 @@ luar repositori; yang dicatat di sini hanya vonis dan hash-nya.
   sha256:7b68…`, exit 1 dalam 0,57 detik — instance-nya Stopped dan tidak
   pernah Running, direktorinya tanpa disk, image, maupun cidata. Sesudah
   buktinya disimpan, instance itu dihapus.
+- **P8.4 — sebelas kolektor**, `observations/20260926T053008Z-collectors/`,
+  lewat `record()`, argv persis yang terkunci dan tiap satunya lolos pagar.
+  **Sembilan exit 0.** `journal` **exit 1**, stdout kosong: "No journal files
+  were opened due to insufficient permissions" — pengguna tamu `lima` bukan
+  anggota `adm` atau `systemd-journal`, dan membukanya butuh `sudo` atau
+  mengubah grup tamu, keduanya di luar pagar hanya-baca. Itu failure yang
+  didokumentasikan, tidak ditambal; jalan keluarnya keputusan pemilik.
+  `containers` **exit 127**, `docker: command not found` — spesifikasinya
+  sendiri membaca 127 sebagai tidak ada, bukan galat. `manifest.json`
+  (`89829f5c…`) menautkan 11 entri — kolektor, run_id, waktu, VM, argv, exit
+  code, durasi — ke 22 berkas evidence, masing-masing dengan path dan
+  sha256-nya, dan mencatat sha256 modul dan spesifikasi yang menghasilkannya.
+  Stderr `containers` juga menjawab separuh pertanyaan yang tercatat terbuka
+  di spesifikasi: `/bin/bash: line 1: …` — argv dijalankan bash tamu sebagai
+  satu baris. Cara ia mengutip argumen tetap belum diukur.
+- **HOST tetap kosong.** `host services` menjawab `unknown` tanpa satu
+  jawaban HOST pun. Alasan yang dicetaknya, "no Ubuntu host exists yet", kini
+  tidak benar lagi; itu `src/hijaiyyah/nui/knowledge.py`, wilayah P8.5, dan
+  tidak disentuh di P8.4.
 
 Tiap direktori run menyimpan skrip yang menghasilkannya di sampingnya —
 skrip itu tinggal di evidence store, bukan di repositori — sehingga rekamannya
@@ -678,17 +699,17 @@ komentarnya yang kini sudah terjawab ("Prepared, not started" dan "Not yet
 measured"). Menyuntingnya akan mengubah sha256-nya, padahal instance utama
 harus dibuat dari byte yang sama yang dibuktikan instance uji.
 
-**Yang belum ada.** Host-nya sudah ada; yang belum, dalam urutan pemilik
-26 September 2026: kesebelas kolektor dijalankan (P8.4), `observe()` menulis
-evidence store K-11, HOST mengenali observasi sebagai provenance sendiri yang
-tidak bercampur dengan fakta tersegel (P8.5), kontrak kueri atas rekaman nyata
-(P8.6), dan instance utama `cosmictera-layer5` sesudah instance uji hijau
-(P8.7).
+**Yang belum ada.** Host dan kolektornya sudah ada; yang belum, dalam urutan
+pemilik 26 September 2026: HOST mengenali observasi sebagai provenance sendiri
+yang tidak bercampur dengan fakta tersegel (P8.5), kontrak kueri atas rekaman
+nyata (P8.6), dan instance utama `cosmictera-layer5` sesudah instance uji hijau
+(P8.7). Ditambah satu keputusan pemilik: kolektor `journal`, yang tidak bisa
+membaca jurnal sebagai pengguna `lima`.
 
 **Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
 dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Host
-itu ada sejak P8.2, dan isolasinya dibaca dari dalam tamu (P8.3); kolektornya
-belum dijalankan.
+itu ada sejak P8.2, isolasinya dibaca dari dalam tamu (P8.3), dan kolektornya
+dijalankan di P8.4 dengan tiap berkas evidence dijaga hash di manifest.
 
 **Syarat selesai.** Belum ditetapkan.
 

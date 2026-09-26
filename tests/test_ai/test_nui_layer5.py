@@ -1,18 +1,26 @@
-"""Layer 5's skeleton, held before any host exists.
+"""Layer 5's read-only observation, held without a host.
 
-Nothing here runs a command. What is held: every collector the plan lists
-passes the read-only guard, and the guard refuses what the first stage must
-not do -- a forbidden command, a command off the allowlist, an argument a
-shell could read, an option that writes or sends, a command that never stops.
+Nothing here runs a command in a VM: the runner is faked throughout. What is
+held: every collector the plan lists passes the read-only guard, and the guard
+refuses what the first stage must not do -- a forbidden command, a command off
+the allowlist, an argument a shell could read, an option that writes or sends,
+a command that never stops.
 `journalctl` and `ip` pass only in the owner's exact forms (K-4). The only
 way out is `limactl shell` in the VM named cosmictera-layer5, with Lima's
 state in the owner's own LIMA_HOME (K-3); on a machine without limactl it
 refuses before calling anything. The VM configuration pins the image digest
-recorded in NUI/LAYERS.md, mounts nothing, and names no URL.
+recorded in NUI/LAYERS.md, mounts nothing, and names no URL. record() writes
+one run of every collector to the K-11 store with the owner's P8.4 fields --
+collector, run_id, timestamp, VM name, command identity, exit code, duration,
+evidence path and SHA-256 -- and refuses a store inside the repository.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -218,3 +226,107 @@ def test_the_owners_forms_are_exact() -> None:
                                    ["journalctl", "-b", "-u", "<service>", "-n", "200",
                                     "--no-pager"]]
     assert forms["ip"] == [["ip", "-brief", "addr"], ["ip", "link"], ["ip", "route"]]
+
+
+# -- the K-11 store, written by record() (P8.4, 26 September 2026) ----------------------
+
+OWNER_FIELDS = ("collector", "run_id", "timestamp", "vm_name", "command_identity",
+                "exit_code", "duration")
+
+
+class _Done:
+    def __init__(self, cmd: list[str]) -> None:
+        self.returncode = 127 if cmd[4:6] == ["docker", "ps"] else 0
+        self.stdout = "out of " + " ".join(cmd[4:]) + "\n"
+        self.stderr = "docker: not found\n" if self.returncode else ""
+
+
+def _recorded(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+              run: Any) -> tuple[Path, dict[str, Any]]:
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    out = layer5.record("cosmictera-layer5-uji", run=run, into=tmp_path)
+    return out, json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+
+
+def test_record_writes_every_collector_with_the_owners_fields(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """One run directory; every collector in the spec's order, each carrying
+    the owner's nine things -- the seven K-11 fields, the evidence path and its
+    SHA-256 -- and every hash is the hash of the file it names."""
+    calls: list[list[str]] = []
+
+    def fake(cmd: list[str], **_: Any) -> _Done:
+        calls.append(cmd)
+        return _Done(cmd)
+
+    out, manifest = _recorded(tmp_path, monkeypatch, fake)
+    assert re.fullmatch(r"\d{8}T\d{6}Z-collectors", out.name)
+    assert manifest["run_id"] == out.name and manifest["vm_name"] == "cosmictera-layer5-uji"
+    names = [c["name"] for c in layer5.load()["collectors"]]
+    assert [e["collector"] for e in manifest["collectors"]] == names
+    written = {"manifest.json"} | {f"raw/{n}.{s}" for n in names for s in ("stdout", "stderr")}
+    assert {str(p.relative_to(out)) for p in out.rglob("*") if p.is_file()} == written
+    for e, plan in zip(manifest["collectors"], layer5.plan(), strict=True):
+        assert all(e.get(f) is not None for f in OWNER_FIELDS), e
+        assert e["run_id"] == out.name and e["command_identity"] == plan["argv"]
+        for stream in ("stdout", "stderr"):
+            ev = e["evidence"][stream]
+            data = (out / ev["path"]).read_bytes()
+            assert ev["sha256"] == hashlib.sha256(data).hexdigest() and ev["bytes"] == len(data)
+    assert calls == [["limactl", "shell", "cosmictera-layer5-uji", "--", *p["argv"]]
+                     for p in layer5.plan()]
+    containers = manifest["collectors"][-1]
+    assert (containers["collector"], containers["exit_code"]) == ("containers", 127)
+    produced = manifest["produced_by"]
+    assert produced["spec_sha256"] == hashlib.sha256(layer5.SPEC.read_bytes()).hexdigest()
+
+
+def test_a_failing_collector_is_recorded_and_the_rest_still_run(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake(cmd: list[str], **_: Any) -> _Done:
+        if cmd[4] == "journalctl":
+            raise subprocess.TimeoutExpired(cmd, 120)
+        return _Done(cmd)
+
+    _, manifest = _recorded(tmp_path, monkeypatch, fake)
+    by_name = {e["collector"]: e for e in manifest["collectors"]}
+    assert "TimeoutExpired" in by_name["journal"]["failure"]
+    assert "evidence" not in by_name["journal"]
+    assert all("evidence" in e for n, e in by_name.items() if n != "journal")
+
+
+def test_a_command_off_the_allowlist_never_reaches_the_vm(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The store is written through observe(), so through the guard: a
+    collector the guard refuses is recorded as refused, and the runner never
+    sees it."""
+    spec = layer5.load()
+    spec["collectors"].append({"name": "wipe", "area": "filesystem", "argv": ["rm", "-rf", "/"],
+                               "status": "usulan", "source": "sabotage"})
+    monkeypatch.setattr(layer5, "load", lambda: spec)
+    seen: list[list[str]] = []
+
+    def fake(cmd: list[str], **_: Any) -> _Done:
+        seen.append(cmd)
+        return _Done(cmd)
+
+    _, manifest = _recorded(tmp_path, monkeypatch, fake)
+    wipe = manifest["collectors"][-1]
+    assert wipe["collector"] == "wipe" and wipe["failure"].startswith("Refused")
+    assert not [c for c in seen if "rm" in c]
+
+
+def test_the_store_is_refused_inside_the_repository(monkeypatch: pytest.MonkeyPatch) -> None:
+    def must_not(*_: Any, **__: Any) -> None:
+        raise AssertionError("a command was run")
+
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    inside = ROOT / "observations-sabotage"
+    assert not inside.exists(), f"{inside} is left over from an earlier run"
+    try:
+        with pytest.raises(layer5.Refused, match="inside the repository"):
+            layer5.record("cosmictera-layer5-uji", run=must_not, into=inside)
+        assert not inside.exists()
+    finally:
+        shutil.rmtree(inside, ignore_errors=True)
+    assert layer5.store() == Path("~/cosmictera-layer5/observations").expanduser()

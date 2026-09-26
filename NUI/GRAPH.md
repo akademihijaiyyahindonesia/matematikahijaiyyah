@@ -11,9 +11,9 @@ nyata — bukan inferensi LLM."*
 ## Bentuknya
 
 ```
-1.484 node    python 187 · tes 169 · verilog 119 · hasm 62 · fakta 27 ·
-              dokumen 95 · fungsi dan kelas 825
-3.932 edge    imports 853 · mentions 981 · references 1.195 · defines 825 ·
+1.487 node    python 187 · tes 169 · verilog 119 · hasm 62 · fakta 27 ·
+              dokumen 95 · fungsi dan kelas 828
+3.936 edge    imports 853 · mentions 981 · references 1.196 · defines 828 ·
               verifies 78
 ```
 

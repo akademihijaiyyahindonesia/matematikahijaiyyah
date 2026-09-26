@@ -1,13 +1,14 @@
-"""Layer 5's skeleton: observing an Ubuntu host, read only -- prepared, not run.
+"""Layer 5: observing an Ubuntu host, read only.
 
-    python3 -m hijaiyyah.nui.layer5            # the plan: every collector, guarded
+    python3 -m hijaiyyah.nui.layer5                       # the plan: every collector, guarded
+    python3 -m hijaiyyah.nui.layer5 --record <instance>   # every collector, into the K-11 store
 
 The owner's decisions: the host is a VM, Ubuntu Server 24.04 LTS ARM64, isolated
 from this Mac (21 September 2026); its first stage only reads; its image is
 part of the baseline, SHA256 verified and recorded (22 September 2026); and on
 22 September the owner asked for this skeleton while the board holds the
-burn-in -- observation first, no write, no control. Layer 5 itself starts after
-the board steps; nothing here has touched a host.
+burn-in -- observation first, no write, no control. The owner opened it on
+26 September 2026 (P8), on the test instance cosmictera-layer5-uji.
 
 Three parts, each read from where it is written:
 
@@ -33,16 +34,19 @@ without -b and -n).
 observe() runs one collector as `limactl shell <instance> -- <argv>` and
 nothing else: never a shell, never on this Mac. Lima's state lives in the
 owner's own LIMA_HOME and the instance has the owner's name (K-3). It refuses
-when limactl is not installed -- which on 22 September 2026 it is not. An
-observation keeps argv, exit code, stdout, stderr and a hash of stdout;
-nothing is parsed, because no Ubuntu output exists yet to say what the
-parsing must be.
+when limactl is not installed, as it was until Homebrew installed it on
+26 September 2026. An observation keeps argv, exit code, stdout, stderr and a
+hash of stdout; nothing is parsed -- what the parsing must be is not decided.
 
-Where an observation is kept once one is made is decided (K-11, 23 September
-2026): ~/cosmictera-layer5/observations/<run_id>/, on the host and outside
-this repository, which holds code, specifications, tests and sealed facts --
-not live observations. observe() does not write it: that is implemented when
-the test instance is first measured, after the burn-in.
+-- where it is kept ----------------------------------------------------------------
+K-11, 23 September 2026: ~/cosmictera-layer5/observations/<run_id>/, on the
+host and outside this repository, which holds code, specifications, tests and
+sealed facts -- not runtime observations. observe() returns a record and
+writes nothing; record() runs every collector through it once and writes the
+run: each collector's stdout and stderr under raw/, and a manifest.json that
+links each to its collector, run, time, VM, command, exit code, duration,
+path and SHA-256 (the owner's fields for P8.4, 26 September 2026). A store
+inside this repository is refused.
 """
 from __future__ import annotations
 
@@ -52,8 +56,10 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable
 
 from . import usr
@@ -202,7 +208,79 @@ def observe(name: str, instance: str | None = None,
             "stdout_sha256": hashlib.sha256(proc.stdout.encode("utf-8")).hexdigest()}
 
 
-def main() -> int:
+def store() -> Path:
+    """The K-11 evidence store on the host, read from the spec (R1)."""
+    return Path(os.path.expanduser(load()["observations"]["dir"]))
+
+
+def _sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def record(instance: str, run: Runner = subprocess.run, into: Path | None = None) -> Path:
+    """Every collector once, through observe() and its guard, written to one
+    run directory of the K-11 store: each collector's stdout and stderr under
+    raw/, and a manifest.json that links every one of them to its collector,
+    run, time, VM, command, exit code, duration, path and SHA-256.
+
+    A collector that fails is recorded with why, and the others still run. The
+    store is refused inside this repository: it holds code, specs, tests and
+    sealed facts, not runtime observations (K-11)."""
+    base = (into or store()).resolve()
+    if base == ROOT or ROOT in base.parents:
+        raise Refused(f"{base} is inside the repository; observations live outside it (K-11)")
+    started = datetime.now(timezone.utc)
+    run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-collectors"
+    out = base / run_id
+    (out / "raw").mkdir(parents=True, exist_ok=False)
+    entries: list[dict[str, Any]] = []
+    for collector in load()["collectors"]:
+        name = collector["name"]
+        entry: dict[str, Any] = {"collector": name, "run_id": run_id, "vm_name": instance}
+        try:
+            got = observe(name, instance, run=run)
+        except (Refused, subprocess.TimeoutExpired, UnicodeDecodeError, OSError) as why:
+            entry.update({"timestamp": datetime.now(timezone.utc).isoformat(),
+                          "failure": f"{type(why).__name__}: {why}"})
+            entries.append(entry)
+            continue
+        evidence = {}
+        for stream in ("stdout", "stderr"):
+            data = got[stream].encode("utf-8")
+            path = f"raw/{name}.{stream}"
+            (out / path).write_bytes(data)
+            evidence[stream] = {"path": path, "bytes": len(data), "sha256": _sha(data)}
+        entry.update({"timestamp": got["started_utc"], "vm_name": got["transport"]["instance"],
+                      "command_identity": got["argv"], "allowed_by": got["allowed_by"],
+                      "exit_code": got["exit_code"], "duration": got["seconds"],
+                      "evidence": evidence})
+        entries.append(entry)
+    manifest = {
+        "run_id": run_id, "vm_name": instance, "started_utc": started.isoformat(),
+        "lima_home": host()["lima_home"],
+        "transport": "limactl shell <instance> -- <argv>, guarded by layer5.guard()",
+        "produced_by": {
+            "module": "src/hijaiyyah/nui/layer5.py",
+            "module_sha256": _sha((ROOT / "src" / "hijaiyyah" / "nui" / "layer5.py").read_bytes()),
+            "spec": "NUI/spec/layer5_collectors.json", "spec_sha256": _sha(SPEC.read_bytes())},
+        "collectors": entries,
+    }
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n",
+                                       encoding="utf-8")
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    if args[:1] == ["--record"] and len(args) == 2:
+        out = record(args[1])
+        manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+        print(out)
+        for e in manifest["collectors"]:
+            what = e.get("failure") or (f"exit {e['exit_code']}  {e['duration']}s  "
+                                        f"stdout {e['evidence']['stdout']['bytes']} B")
+            print(f"  {e['collector']:<20} {what}")
+        return 0
     base = image_baseline()
     print(f"image {base['file']} sha256 {base['sha256'][:16]}... "
           f"(VM config pins {'the same' if lima_digest() == base['sha256'] else 'ANOTHER'})")
