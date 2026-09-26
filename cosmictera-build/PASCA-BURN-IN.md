@@ -25,7 +25,7 @@ P4  PRINT di silikon                         selesai 25 September 2026
 P5  HALT/RET di silikon                      selesai 25 September 2026
 P6  checksum + sabotase                      selesai 26 September 2026
 P7  laporan selisih final, freeze Lapis 4, tag selesai 26 September 2026
-P8  Lapis 5
+P8  Lapis 5                                  P8.1–P8.3 selesai 26 September 2026
 ```
 
 ## Keputusan pemilik, 22 September 2026
@@ -241,6 +241,27 @@ Annotated, bukan lightweight, supaya tonggaknya membawa metadata. Tag tidak
 dibuat sebelum bukti papan dan silikon masuk.
 
 ## P8 — mulai Lapis 5, hanya baca (K-3, K-4, K-6, K-9)
+
+**Dibuka pemilik 26 September 2026**, dengan izin memasang Lima lewat Homebrew
+dan memakai image yang sudah diverifikasi — template bawaan Lima tidak. Urutan
+pemilik hari itu:
+
+```
+P8.1  persiapan host: LIMA_HOME, evidence store di luar repo    selesai
+P8.2  uji image lokal: diterima, VM ARM64, Ubuntu boot          selesai
+P8.3  isolasi tamu, dan uji negatif digest                      selesai
+      commit bukti host/image
+P8.4  sebelas kolektor hanya-baca -> evidence store
+P8.5  provenance HOST: facts/ tersegel, observations/ runtime
+P8.6  tujuh kueri yang dibekukan
+P8.7  cosmictera-layer5-uji hijau -> baru cosmictera-layer5
+```
+
+Uji negatif digest memakai instance sekali pakai dengan nama dari pemilik,
+`cosmictera-layer5-digest-uji`, bukan instance uji. Angka dan vonis P8.1–P8.3
+ada di `NUI/LAYERS.md`, Lapis 5; rekaman mentahnya di
+`~/cosmictera-layer5/observations/`, dan **tidak pernah** masuk `facts/` —
+pagar pemilik.
 
 Yang sudah siap: `NUI/spec/layer5_lima.yaml` (image terverifikasi lewat
 digest, tanpa mount, mode plain), `NUI/spec/layer5_collectors.json` (sebelas

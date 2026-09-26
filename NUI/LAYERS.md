@@ -269,7 +269,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 95 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 825 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.484 node, 3.931 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.484 node, 3.932 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -567,11 +567,12 @@ dari pemilik:
 | service | `systemctl`, `journalctl` |
 | kontainer | `docker`, `podman` |
 
-**Aset yang sudah ada.** **Tidak ada** sebagai integrasi: belum ada host, dan
-belum satu perintah pun dijalankan di Ubuntu. `AGENTS.md` sudah mencatatnya:
-tidak ada satu pun sisi host di repositori ini, dan mesin pengembangannya
-macOS. Yang ada sejak 22 September 2026, atas permintaan pemilik sementara
-papan memikul burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
+**Aset yang sudah ada.** **Tidak ada** sebagai integrasi: belum satu kolektor
+pun dijalankan lewat NUI, dan HOST belum membaca satu observasi pun. Host-nya
+sendiri ada sejak 26 September 2026 — instance uji `cosmictera-layer5-uji`,
+di luar repositori, dengan isolasinya terbukti (P8.1–P8.3, di bawah). Yang ada
+sejak 22 September 2026, atas permintaan pemilik sementara papan memikul
+burn-in, adalah **kerangkanya, disiapkan dan belum dijalankan**:
 
 - `NUI/spec/layer5_collectors.json` — sebelas kolektor observasi: identitas
   host, proses, mount, isi `/`, systemd, jurnal, antarmuka, link, rute, pencacah
@@ -616,19 +617,23 @@ dan pagar mencocokkan argv utuh.
 SHA256-nya diverifikasi sebelum dipakai, checksum-nya disimpan di
 dokumentasi, dan versi persisnya dicatat. **Diunduh 22 September 2026**, atas
 izin pemilik hari itu, ke `~/cosmictera-layer5/downloads/` — di luar
-repositori, karena repositori ini publik dan image-nya 591 MiB. **Belum
-dipasang dan belum dijalankan**: Lapis 5 dimulai sesudah langkah papan.
+repositori, karena repositori ini publik dan image-nya 591 MiB. **Dipakai
+26 September 2026** oleh instance uji (P8.2), sesudah diukur ulang hari itu:
+masih `7b682958…`.
 
 | berkas | versi persis dan sumber | byte | SHA256 |
 |---|---|---:|---|
 | `lima-2.2.0-Darwin-arm64.tar.gz` | Lima v2.2.0, rilis resmi github.com/lima-vm/lima, Apache-2.0 | 37.586.365 | `bbdef91774885a0d05f7b048c4eb89ae2bcf3a0c252ae7ca7934e63df76d93c3` |
 | `ubuntu-24.04-server-cloudimg-arm64.img` | Ubuntu 24.04 LTS, seri `release-20260911`, cloud-images.ubuntu.com/releases/noble/release-20260911/ | 619.621.888 | `7b682958a67ff5de068e36de6af8b75fa645d296af5a70d6500527f6a33781db` |
+| `lima--2.2.0.arm64_tahoe.bottle.tar.gz` | Lima 2.2.0 dari Homebrew, `homebrew/core`, tanpa dependensi runtime — **yang terpasang**, 26 September 2026 | 37.584.563 | `9dfb60d4c7d0c6721eee679ab188d8b502ad61d1063c9914b830b66ce795b4a4` |
 
-Keduanya **cocok** dengan `SHA256SUMS` resmi rilisnya masing-masing. **Sejak
-K-3, tarball Lima di atas bukan yang akan terpasang**: Lima dipasang lewat
-Homebrew, yang formulanya pada 22 September 2026 menyebut versi yang sama,
-2.2.0. Baseline Lima karena itu dicatat ulang dari `brew info --json=v2 lima`
-saat dipasang (P8); baris tarball tetap sebagai catatan unduhan. Berkas
+Dua baris pertama **cocok** dengan `SHA256SUMS` resmi rilisnya masing-masing.
+**Sejak K-3, tarball Lima di baris pertama bukan yang terpasang**: Lima
+dipasang lewat Homebrew, dan baris ketiga adalah bottle yang benar-benar
+dituang — sha256-nya diukur dari berkasnya dan sama dengan yang
+`brew info --json=v2 lima` sebut untuk `arm64_tahoe`, versi yang sama, 2.2.0.
+Dipasang tanpa auto-update, jadi yang terpasang persis formula yang diukur
+sebelumnya. Baris tarball tetap sebagai catatan unduhan. Berkas
 `SHA256SUMS` Lima sendiri bernilai `7da5160e…97312a5f`, sama dengan yang
 ditampilkan halaman rilis GitHub; milik Ubuntu `89be81c6…0747b0185`. Yang
 **tidak** diverifikasi: tanda tangan GPG kedua berkas checksum itu
@@ -636,15 +641,54 @@ ditampilkan halaman rilis GitHub; milik Ubuntu `89be81c6…0747b0185`. Yang
 lain. Jadi yang terbukti adalah berkas utuh sesuai yang diumumkan server,
 bukan bahwa server itu sendiri asli.
 
-**Yang belum ada.** Seluruhnya, mulai dari host itu sendiri: diukur
-21 September 2026, mesin ini macOS 26.6.2 arm64 tanpa satu pun perkakas VM
-atau kontainer, dan tanpa host SSH yang terdaftar. Memasangnya adalah unduhan
-pihak ketiga, dan tiap unduhan butuh izin pemilik atas berkas, sumber, dan
-ukurannya. Lapis ini dimulai sesudah langkah papan pasca-burn-in (`AGENTS.md`).
+**Host uji, 26 September 2026 — P8.1 sampai P8.3.** Atas izin pemilik hari
+itu. Rekaman mentahnya bukti runtime dan tinggal di evidence store K-11, di
+luar repositori; yang dicatat di sini hanya vonis dan hash-nya.
+
+- **P8.1.** Lima terpasang (baris ketiga tabel di atas);
+  `LIMA_HOME=~/cosmictera-layer5/lima-home` dan
+  `~/cosmictera-layer5/observations/` dibuat, keduanya di luar repositori.
+- **P8.2 — image lokal.** Lima menerima berkas lokal lewat digest-nya —
+  "Downloaded the image from `~/cosmictera-layer5/downloads/…`", tanpa satu URL
+  pun di lognya — dan menjawab pertanyaan yang ditinggalkan komentar
+  `NUI/spec/layer5_lima.yaml` sendiri. `lima.yaml` di instance **identik
+  byte-per-byte** dengan berkas repo (`84849c1e…`). VM `vz`, `aarch64`, 4 CPU,
+  4 GiB; dari dalam tamu: `Ubuntu 24.04.5 LTS`, `aarch64`.
+- **P8.3 — isolasi**, `observations/20260926T013117Z-isolation/`. Ke-25 mount
+  di `/proc/mounts`, `findmnt`, dan `mount` dipilah: 3 disk tamu sendiri, 1 ISO
+  cloud-init Lima yang read-only (`/dev/vdb`, 348 sektor = 178.176 byte =
+  `cidata.iso` instance), 21 filesystem kernel atau virtual. Tidak satu pun
+  virtiofs, 9p, sshfs, nfs, cifs, atau fuse; `/Users` dan `/Volumes` tidak ada
+  di tamu; konfigurasi efektif Lima tidak punya medan `mounts` sama sekali dan
+  `plain` bernilai true. Kriteria pemilik: Ubuntu PASS, ARM64 PASS, mount home
+  Mac ABSENT, filesystem host bersama ABSENT, mount folder host otomatis ABSENT.
+- **P8.3 — uji negatif digest**, `observations/20260926T013234Z-digest-negative/`,
+  instance sekali pakai `cosmictera-layer5-digest-uji` (nama dari pemilik).
+  Satu digit digest diubah, `7b68…` → `8b68…`, tidak ada perubahan lain, dan
+  image-nya tidak disentuh. Lima menolak — `expected digest sha256:8b68…, got
+  sha256:7b68…`, exit 1 dalam 0,57 detik — instance-nya Stopped dan tidak
+  pernah Running, direktorinya tanpa disk, image, maupun cidata. Sesudah
+  buktinya disimpan, instance itu dihapus.
+
+Tiap direktori run menyimpan skrip yang menghasilkannya di sampingnya —
+skrip itu tinggal di evidence store, bukan di repositori — sehingga rekamannya
+bisa dibaca kembali ke perintahnya.
+`NUI/spec/layer5_lima.yaml` sengaja **tidak disunting**, termasuk dua kalimat
+komentarnya yang kini sudah terjawab ("Prepared, not started" dan "Not yet
+measured"). Menyuntingnya akan mengubah sha256-nya, padahal instance utama
+harus dibuat dari byte yang sama yang dibuktikan instance uji.
+
+**Yang belum ada.** Host-nya sudah ada; yang belum, dalam urutan pemilik
+26 September 2026: kesebelas kolektor dijalankan (P8.4), `observe()` menulis
+evidence store K-11, HOST mengenali observasi sebagai provenance sendiri yang
+tidak bercampur dengan fakta tersegel (P8.5), kontrak kueri atas rekaman nyata
+(P8.6), dan instance utama `cosmictera-layer5` sesudah instance uji hijau
+(P8.7).
 
 **Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
-dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Belum
-bisa dijalankan: host belum ada.
+dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Host
+itu ada sejak P8.2, dan isolasinya dibaca dari dalam tamu (P8.3); kolektornya
+belum dijalankan.
 
 **Syarat selesai.** Belum ditetapkan.
 

@@ -11,7 +11,9 @@
   "test_instance": "cosmictera-layer5-uji",
   "image_dir": "~/cosmictera-layer5/downloads/",
   "lima_source": "pemilik, 22 September 2026, keputusan K-3 -- instalasi Lima tetap instalasi host biasa; seluruh state instance CosmicTera di LIMA_HOME terpisah",
-  "test_instance_source": "pemilik, 22 September 2026, keputusan K-9 -- instance uji sekali pakai. Di sana lebih dulu dibuktikan: lokasi image lokal, Lima create, Ubuntu boot, tanpa mount home Mac, kolektor hanya-baca, pagar perintah, kontrak kueri; baru sesudahnya `cosmictera-layer5` jadi instance utama"
+  "test_instance_source": "pemilik, 22 September 2026, keputusan K-9 -- instance uji sekali pakai. Di sana lebih dulu dibuktikan: lokasi image lokal, Lima create, Ubuntu boot, tanpa mount home Mac, kolektor hanya-baca, pagar perintah, kontrak kueri; baru sesudahnya `cosmictera-layer5` jadi instance utama",
+  "digest_test_instance": "cosmictera-layer5-digest-uji",
+  "digest_test_instance_source": "pemilik, 26 September 2026 -- instance sekali pakai hanya untuk uji negatif digest P8.3: satu digit digest di salinan konfigurasi diubah dan image asli tidak disentuh; `cosmictera-layer5-uji` tidak dipakai ulang untuknya. Dijalankan dan dihapus hari itu"
  },
  "observations": {
   "dir": "~/cosmictera-layer5/observations/",
@@ -59,7 +61,7 @@
   ],
   "status": "ditetapkan",
   "source": "pemilik, 23 September 2026, keputusan K-11 -- Ubuntu tamu -> kolektor hanya-baca -> hasil -> evidence store di host -> lapis pengetahuan HOST",
-  "implementation": "menunggu: `observe()` hari ini mengembalikan rekaman tanpa menulisnya ke mana pun. K-11 dipakai ketika instance `cosmictera-layer5-uji` mulai diukur (P8), sesudah burn-in selesai"
+  "implementation": "sebagian: evidence store dipakai 26 September 2026 untuk bukti P8.3 -- isolasi dan uji negatif digest -- ditulis oleh skrip yang disimpan di direktori run-nya sendiri (`produced_by.py`). `observe()` masih mengembalikan rekaman tanpa menulisnya; penulisannya lewat `observe()` datang bersama kolektor P8.4"
  },
  "collectors": [
   {

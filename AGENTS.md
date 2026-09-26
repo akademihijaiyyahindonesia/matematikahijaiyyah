@@ -1402,6 +1402,38 @@ yang tidak dikirim yang digeser P6 — dan jalur itu dinamai, bukan dihapus.
 catatan P2 adalah nomor detak pertama yang terbaca sebagai jumlahnya. Diukur
 dari rekamannya: 350 detak, bernomor 482 sampai 831.
 
+### Keputusan pemilik, 26 September 2026 — P8 dibuka: host uji Lapis 5
+
+Sesudah tag P7, pemilik membuka P8 dan memberi **izin eksplisit** untuk
+memasang Lima lewat Homebrew dan memakai image Ubuntu ARM64 yang sudah diunduh
+dan diverifikasi — **bukan** template bawaan Lima yang pernah diaudit. Lapis 4
+tetap beku di `9764d5a` dan tagnya tidak diubah.
+
+**Urutannya tujuh langkah, P8.1 sampai P8.7**, di
+`cosmictera-build/PASCA-BURN-IN.md`, tidak disalin ke sini (R1). Tiga pagar
+yang paling mudah dilanggar:
+
+- **Tidak ada mount ke home Mac.** Kalau satu muncul di tamu, berhenti — jangan
+  lanjut ke kolektor.
+- **Bukti runtime tidak pernah masuk `facts/`**, sekalipun hasilnya tampak
+  benar: `facts/` adalah pengetahuan rekayasa tersegel, sedangkan
+  `/proc/mounts` atau status service adalah bukti keadaan, dan tinggal di
+  `~/cosmictera-layer5/observations/<run_id>/`. HOST tetap `unknown` sampai
+  observasinya ada.
+- **Instance utama `cosmictera-layer5` tidak dibuat** sebelum
+  `cosmictera-layer5-uji` hijau di semua pagar. Uji negatif digest memakai
+  instance sekali pakai tersendiri, `cosmictera-layer5-digest-uji` — nama dari
+  pemilik, dicatat di `NUI/spec/layer5_collectors.json`.
+
+**P8.1–P8.3 tutup hari itu**: Lima 2.2.0 terpasang, image lokal diterima lewat
+digest-nya, Ubuntu 24.04.5 ARM64 boot, kelima kriteria isolasi pemilik
+terpenuhi, dan satu digit digest yang diubah ditolak Lima sebelum VM pernah
+berjalan. Vonis dan hash-nya di `NUI/LAYERS.md`, Lapis 5; rekaman mentahnya di
+luar repositori. Satu pengamatan lingkungan yang ikut terukur: lari pytest
+P7.4 tampak macet berjam-jam, padahal mesin ini **tidur** 159,7 menit selama
+lari itu — pytest sendiri mengukur 770 detik. Lari panjang di mesin ini perlu
+`caffeinate`, seperti yang `rtl/scripts/burn_in.py` sudah lakukan.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
