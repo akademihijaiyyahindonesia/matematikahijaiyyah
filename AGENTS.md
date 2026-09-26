@@ -1248,8 +1248,10 @@ bisa menunjuk instruksi mana yang berbeda.
    tidak diperbaiki** (K9, `cosmictera-build/OFF.md`); yang dibetulkan
    `src/hijaiyyah/nui/board_parity.py`, yang kini membuang satu baris baru
    milik laporan dan menyimpan milik program.
-2. **Program pertama lari itu terkontaminasi 482 detak burn-in** yang masih
-   tersangkut di penyangga driver sesudah capture P1. `rtl/scripts/parity_board.py`
+2. **Program pertama lari itu terkontaminasi 350 detak burn-in** — bernomor
+   482 sampai 831 — yang masih tersangkut di penyangga driver sesudah capture P1.
+   Angka "482" yang semula tertulis di sini adalah nomor detak pertama yang
+   terbaca sebagai jumlahnya; diukur ulang saat P7. `rtl/scripts/parity_board.py`
    sekarang menguras kabel sebelum mengirim.
 
 Keduanya menaikkan satu aturan P1 ke Lapis 4: **laporan membaca byte mentah
@@ -1372,6 +1374,33 @@ beku ikut bergeser — alasan pengecualian `rtl/programs/hos_prog_load.hasm`, pr
 **tidak** dikirim ke papan, dari fault sesudah 27.016 langkah ke 27.145 —
 dan pembekuan ulangnya terbukti tidak menyentuh satu pun ekspektasi yang
 dipakai papan.
+
+### 26 September 2026 — P7: Lapis 4 dibekukan
+
+**Lapis 4 resmi dibekukan dengan tag `layer4-freeze-2026-09-26`** — tanggal
+freeze, bukan tanggal burn-in selesai, kata pemilik. Tanpa eksperimen baru dan
+tanpa ekspektasi yang digeser: laporan selisih finalnya, `NUI/LAYER4.md`,
+dihitung ulang dari rekaman P0–P6 oleh `src/hijaiyyah/nui/layer4_freeze.py`.
+
+**Empat kelas pemilik, dan yang terakhir terpisah**: selisih terukur (PRINT
+angka besar di P2 dan tangga P4, dan PRINT sesudah berhenti di P5), beda
+semantik yang diketahui (empat program pencacah), UNKNOWN atau tidak teramati
+(register dan RAM sesudah berhenti, jendela rekaman RTL, opcode dengan bukti
+campur atau tanpa bukti, program yang tidak dikirim), dan **selisih alat** —
+artefak pengurai burn-in, laporan `CYCLES=` yang tergeser, dan byte burn-in
+basi di lari P2 pertama. Alat yang salah membaca kabel bukan papan yang salah
+menjawab, dan tes menolak keduanya bercampur.
+
+**Yang dijaga selamanya dan yang tidak.** Rekaman bukti dijaga hash-nya, dan
+vonisnya atas rekaman beku tidak boleh berubah. Turunan pada saat freeze —
+model paritas dan ekspektasi beku — dicatat hash-nya untuk tag, dan boleh
+dibangun ulang sesudahnya. Laporan P2 **tidak ditulis ulang**: dihitung ulang
+hari ini, keduanya berbeda di tepat satu jalur, alasan pengecualian program
+yang tidak dikirim yang digeser P6 — dan jalur itu dinamai, bukan dihapus.
+
+**Satu kekeliruan saya sendiri dibetulkan di sini**: "482 detak burn-in" di
+catatan P2 adalah nomor detak pertama yang terbaca sebagai jumlahnya. Diukur
+dari rekamannya: 350 detak, bernomor 482 sampai 831.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

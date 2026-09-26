@@ -1,0 +1,449 @@
+{
+ "generated_by": "src/hijaiyyah/nui/layer4_freeze.py",
+ "tag": "layer4-freeze-2026-09-26",
+ "bitstream_sha256": "84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261",
+ "bitstream_carried_by": {
+  "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json": true,
+  "cosmictera-build/parity-board/20260924T104300Z-parity.json": true,
+  "cosmictera-build/parity-board/20260924T105400Z-parity.json": true,
+  "cosmictera-build/parity-board/20260925T141701Z-print.json": true,
+  "cosmictera-build/parity-board/20260925T141737Z-print.json": true,
+  "cosmictera-build/parity-board/20260925T141744Z-print.json": true,
+  "cosmictera-build/parity-board/20260925T163903Z-stop.json": true
+ },
+ "evidence": [
+  {
+   "phase": "P0",
+   "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.json",
+   "bytes": 712,
+   "sha256": "09302ae1de43e7d06430a9aa4c26acf2a45afca7cc60591c33e7cb62b31c6ddf"
+  },
+  {
+   "phase": "P0",
+   "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "bytes": 855293,
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+  },
+  {
+   "phase": "P0",
+   "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+   "bytes": 5654,
+   "sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c"
+  },
+  {
+   "phase": "P1",
+   "path": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json",
+   "bytes": 849,
+   "sha256": "768fdfb0db49ec69ed678d55895268379869c309cd1be418965aa3df52bee5cc"
+  },
+  {
+   "phase": "P1",
+   "path": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.raw",
+   "bytes": 9940,
+   "sha256": "31e69b52ae17d44063a5e18a6a2ec36bf0fe8e0629b358a3887ed691596a13ae"
+  },
+  {
+   "phase": "P1",
+   "path": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.times.jsonl",
+   "bytes": 31817,
+   "sha256": "fe62931ba62f6432babe6863ef9fc28b69e154ecfda577609bf821d04dda918c"
+  },
+  {
+   "phase": "P1",
+   "path": "cosmictera-build/burn-in/20260924T073655Z-burn-in-parsed.json",
+   "bytes": 840,
+   "sha256": "34514d9d91d358e7e894023a08aebd086d1514b8d78fb5eccd67d7e5303faa09"
+  },
+  {
+   "phase": "P1",
+   "path": "cosmictera-build/burn-in/20260924T073655Z-burn-in-parsed.jsonl",
+   "bytes": 102107,
+   "sha256": "019f2fe519192a5913184fd0357e33cce15139a8cb5905779ffbaf705b271021"
+  },
+  {
+   "phase": "P2",
+   "path": "cosmictera-build/parity-board/20260924T104300Z-parity.json",
+   "bytes": 67100,
+   "sha256": "71ec64ceb7f4b796c7020f09461968acea1c8900650e9cbef09a09048d748c8a"
+  },
+  {
+   "phase": "P2",
+   "path": "cosmictera-build/parity-board/20260924T104300Z-parity.report.json",
+   "bytes": 55915,
+   "sha256": "a0c9a070a5a05f8c3af6dfc77fd5177935dbdb182baecc39cf74506aea4b6c74"
+  },
+  {
+   "phase": "P2",
+   "path": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "bytes": 41457,
+   "sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6"
+  },
+  {
+   "phase": "P2",
+   "path": "cosmictera-build/parity-board/20260924T105400Z-parity.report.json",
+   "bytes": 55285,
+   "sha256": "623f60cd70cef2497ac5b98a330c1bae3d116792c2c53d3d274ecc8ef4b4aac2"
+  },
+  {
+   "phase": "P4",
+   "path": "cosmictera-build/parity-board/20260925T141701Z-print.json",
+   "bytes": 812,
+   "sha256": "6c825a3475a4105674434e15b9ee5c01870a4f1a7a0be15920b3371726f4dac6"
+  },
+  {
+   "phase": "P4",
+   "path": "cosmictera-build/parity-board/20260925T141701Z-print.report.json",
+   "bytes": 1581,
+   "sha256": "116b76417bc97186d5d770c5ace100fe57f79d8f6b1755c8a4040a4ae8fa9a1c"
+  },
+  {
+   "phase": "P4",
+   "path": "cosmictera-build/parity-board/20260925T141737Z-print.json",
+   "bytes": 812,
+   "sha256": "23a414fc26e9a7822c446441ff8dcea112c59ad3df317ef07b8126cccb6293fa"
+  },
+  {
+   "phase": "P4",
+   "path": "cosmictera-build/parity-board/20260925T141737Z-print.report.json",
+   "bytes": 1581,
+   "sha256": "acd288008782a28ce7d93bbb2b4de6a29316fa0c1e22858f3a4409f42bc6a38a"
+  },
+  {
+   "phase": "P4",
+   "path": "cosmictera-build/parity-board/20260925T141744Z-print.json",
+   "bytes": 812,
+   "sha256": "a4abfed1ec42c3c5005fa29a753038f5be5d564cd4a334d1a4dd1bc12662586f"
+  },
+  {
+   "phase": "P4",
+   "path": "cosmictera-build/parity-board/20260925T141744Z-print.report.json",
+   "bytes": 1581,
+   "sha256": "ebc785b20c07ad23d529018a2a44ceac1e44a2921b2d51368f61c87a02cf9d01"
+  },
+  {
+   "phase": "P5",
+   "path": "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+   "bytes": 2148,
+   "sha256": "33c9bbc949c3a6d58ee9735f1eed867bb385a7f24c18ad361444e57bd6d4e09e"
+  },
+  {
+   "phase": "P5",
+   "path": "cosmictera-build/parity-board/20260925T163903Z-stop.report.json",
+   "bytes": 6264,
+   "sha256": "aac473019a506abeb036e7f71e19017a73995dc099d9fe0815ba05308228a5f5"
+  },
+  {
+   "phase": "P6",
+   "path": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+   "bytes": 7718,
+   "sha256": "5e4a2a52ac26677a4330849ca75d09d234b6d4195975a928a325a3c781e2747a"
+  }
+ ],
+ "derived_at_freeze": [
+  {
+   "path": "NUI/parity_model.json",
+   "sha256": "62a300199b6266abfee5cc37cbb6fe2a7422cc88bf2d72ad93988e5476f02c54"
+  },
+  {
+   "path": "NUI/board_expected.json",
+   "sha256": "ebcc2c7bb6843dfb242da1612e49eaa0fc7f7b5809a0487318a2607a8e3f5a4e"
+  }
+ ],
+ "expectation_today": "ebcc2c7bb6843dfb242da1612e49eaa0fc7f7b5809a0487318a2607a8e3f5a4e",
+ "reproducibility": [
+  {
+   "record": "cosmictera-build/parity-board/20260924T104300Z-parity.json",
+   "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+   "verdicts_reproduce": true,
+   "differs_at": [
+    "/programs/rtl/programs/hos_prog_load.hasm/reason"
+   ]
+  },
+  {
+   "record": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+   "verdicts_reproduce": true,
+   "differs_at": [
+    "/programs/rtl/programs/hos_prog_load.hasm/reason"
+   ]
+  },
+  {
+   "record": "cosmictera-build/parity-board/20260925T141701Z-print.json",
+   "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+   "verdicts_reproduce": true,
+   "differs_at": []
+  },
+  {
+   "record": "cosmictera-build/parity-board/20260925T141737Z-print.json",
+   "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+   "verdicts_reproduce": true,
+   "differs_at": []
+  },
+  {
+   "record": "cosmictera-build/parity-board/20260925T141744Z-print.json",
+   "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
+   "verdicts_reproduce": true,
+   "differs_at": []
+  },
+  {
+   "record": "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+   "expected_sha256": "6d49df9bf1c3efd8551d9b86d111032413fd6b2fe807fe5943dd771f63c955fa",
+   "verdicts_reproduce": true,
+   "differs_at": []
+  }
+ ],
+ "status": {
+  "programs": {
+   "MISMATCH": 2,
+   "PARITY": 73,
+   "UNKNOWN": 28
+  },
+  "opcodes": {
+   "PARITY": 74,
+   "MISMATCH": 0,
+   "UNKNOWN": 29
+  },
+  "print_ladder": {
+   "22": {
+    "expected": "4194304",
+    "board": [
+     "4194304",
+     "4194304",
+     "4194304"
+    ]
+   },
+   "23": {
+    "expected": "8388608",
+    "board": [
+     "838861:",
+     "8388600",
+     "8388600"
+    ]
+   },
+   "24": {
+    "expected": "16777216",
+    "board": [
+     "16777216",
+     "16777216",
+     "16777216"
+    ]
+   },
+   "25": {
+    "expected": "33554432",
+    "board": [
+     "33554436",
+     "335544:0",
+     "3355443<"
+    ]
+   },
+   "26": {
+    "expected": "67108864",
+    "board": [
+     "671090:<",
+     "671091?>",
+     "6710903<"
+    ]
+   },
+   "27": {
+    "expected": "134217728",
+    "board": [
+     "134218058",
+     "1342177?>",
+     "134217676"
+    ]
+   },
+   "31": {
+    "expected": "2147483648",
+    "board": [
+     "2147484:4<",
+     "2147486?92",
+     "2147482958"
+    ]
+   }
+  },
+  "stop_probes": {
+   "MISMATCH": 3,
+   "PARITY": 0,
+   "UNKNOWN": 3
+  },
+  "loader_cases": {
+   "inputs": 19,
+   "rejected": 15,
+   "accepted": 4,
+   "findings": 0,
+   "not_run": 2
+  }
+ },
+ "discrepancies": {
+  "measured_mismatch": [
+   {
+    "id": "print_large_values_in_p2",
+    "items": [
+     "rtl/programs/bench/e4_frame.hasm",
+     "rtl/programs/test_hisab.hasm"
+    ],
+    "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+    "off": "OFF-PRINT-SILICON"
+   },
+   {
+    "id": "print_ladder_in_p4",
+    "items": [
+     "2^23",
+     "2^25",
+     "2^26",
+     "2^27",
+     "2^31"
+    ],
+    "first": "2^23",
+    "wrong_outputs": 15,
+    "distinct_wrong_outputs": 14,
+    "evidence": "cosmictera-build/parity-board/20260925T141701Z-print.json",
+    "off": "OFF-PRINT-SILICON"
+   },
+   {
+    "id": "print_behind_a_stop_in_p5",
+    "items": [
+     "stop-probe:ret-then-print",
+     "stop-probe:halt-then-print",
+     "stop-probe:ret-then-print-sentinel"
+    ],
+    "evidence": "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+    "off": "Instruksi sesudah berhenti ikut menulis register",
+    "note": "the board differs from the interpreter, which stops before the PRINT; the simulated RTL gives the same yes"
+   }
+  ],
+  "known_semantic_difference": [
+   {
+    "id": "counter_programs",
+    "items": [
+     "rtl/programs/timer_poll.hasm",
+     "rtl/programs/trap_resume.hasm",
+     "rtl/programs/trap_shadow.hasm",
+     "rtl/programs/trap_timer.hasm"
+    ],
+    "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+    "note": "the interpreter counts instructions, silicon counts clocks"
+   }
+  ],
+  "unknown_not_observable": [
+   {
+    "id": "register_and_ram_after_a_stop",
+    "items": [
+     "stop-probe:halt-then-register",
+     "stop-probe:halt-then-store",
+     "stop-probe:ret-then-register"
+    ],
+    "evidence": "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+    "note": "no port of the board carries a GPR or a data-RAM word"
+   },
+   {
+    "id": "rtl_record_window",
+    "items": [
+     "stop-probe:ret-then-print",
+     "stop-probe:halt-then-print",
+     "stop-probe:ret-then-print-sentinel"
+    ],
+    "evidence": "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+    "note": "the RTL record closes when halted rises and the board's wire does not, so these differences from it are unknown"
+   },
+   {
+    "id": "opcodes_with_mixed_evidence",
+    "items": [
+     "HALT",
+     "HCRC",
+     "HLOAD",
+     "HPACK",
+     "PRINT"
+    ],
+    "evidence": "NUI/parity_model.json"
+   },
+   {
+    "id": "opcodes_no_sent_program_executes",
+    "items": [
+     "CDOT",
+     "CHASH",
+     "CSIGN",
+     "CSUB",
+     "EMITS",
+     "HALT_ERR",
+     "HCHK",
+     "HDCMP",
+     "HDES",
+     "HEXMT",
+     "HPROJ",
+     "HSER",
+     "JGF",
+     "JGP",
+     "JNP",
+     "POP",
+     "PRINTH",
+     "VDIST",
+     "VNORM",
+     "VPROJ_K",
+     "VPROJ_N",
+     "VPROJ_Q",
+     "VPROJ_T",
+     "VSCL"
+    ],
+    "evidence": "NUI/parity_model.json"
+   },
+   {
+    "id": "programs_not_sent",
+    "items": [
+     "rtl/programs/burn_in.hasm",
+     "rtl/programs/flags_board.hasm",
+     "rtl/programs/flags_ctx.hasm",
+     "rtl/programs/hal.hasm",
+     "rtl/programs/hal_sd.hasm",
+     "rtl/programs/hijrah_sweep.hasm",
+     "rtl/programs/hos.hasm",
+     "rtl/programs/hos_hctx.hasm",
+     "rtl/programs/hos_hfs_disk.hasm",
+     "rtl/programs/hos_prog_load.hasm",
+     "rtl/programs/kernel.hasm",
+     "rtl/programs/loader.hasm",
+     "rtl/programs/sd_writer.hasm",
+     "rtl/programs/sdio_probe.hasm",
+     "rtl/programs/sdio_verify.hasm",
+     "rtl/programs/sdio_write.hasm",
+     "rtl/programs/shell.hasm",
+     "rtl/programs/syscall_io.hasm",
+     "rtl/programs/test_prog_load.hasm",
+     "rtl/programs/test_prog_run.hasm",
+     "rtl/programs/trap_hreg.hasm",
+     "rtl/tb/hfs_persist_probe.hasm",
+     "rtl/tb/hfs_syscall_probe.hasm",
+     "rtl/tb/prog_load_probe.hasm"
+    ],
+    "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json"
+   }
+  ],
+  "known_tooling_discrepancy": [
+   {
+    "id": "burn_in_parser_artifacts",
+    "what": "two `error` rows in the 72-hour log that the board never raised",
+    "count": 2,
+    "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+    "measured": "each row shares its second with an unparsed `0H` (2 of 2); the board's own cumulative counter never exceeds 0",
+    "kept_as": "known parser artefact (K-1); the run keeps no raw bytes"
+   },
+   {
+    "id": "cycles_report_one_byte_out",
+    "what": "the wrapper's CYCLES= report arrives rotated one byte -- `\\n` in front instead of `\\r\\n`, one `\\n` over at the end, nineteen bytes either way",
+    "count": 167,
+    "of": 167,
+    "records": 6,
+    "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+    "kept_as": "the reader drops exactly one newline, the report's; the wrapper is reported in cosmictera-build/OFF.md and not repaired (K9)"
+   },
+   {
+    "id": "stale_burn_in_bytes_in_the_first_p2_run",
+    "what": "the first program of the first P2 run opened with the burn-in's heartbeats still buffered by the driver (350 of them)",
+    "count": 1,
+    "program": "parity:add_immediate_signed",
+    "evidence": "cosmictera-build/parity-board/20260924T104300Z-parity.json",
+    "kept_as": "the runner drains the wire before sending; the run after is the record of P2, and both records are kept"
+   }
+  ]
+ }
+}

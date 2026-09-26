@@ -24,7 +24,7 @@ P3  kolom opcode perangkat keras             selesai 24 September 2026
 P4  PRINT di silikon                         selesai 25 September 2026
 P5  HALT/RET di silikon                      selesai 25 September 2026
 P6  checksum + sabotase                      selesai 26 September 2026
-P7  laporan selisih final, freeze Lapis 4, tag
+P7  laporan selisih final, freeze Lapis 4, tag selesai 26 September 2026
 P8  Lapis 5
 ```
 
@@ -213,23 +213,28 @@ program yang membawa loader kartu — `hos_prog_load`, `shell`, `test_prog_load`
 tidak menggeser bukti papan P2–P5. Model Lapis 3 dan Lapis 4 yang memuat
 program-program itu dibangun ulang sebelum P7.
 
-## P7 — laporan selisih final dan bekukan Lapis 4 (K-2)
+## P7 — laporan selisih final dan bekukan Lapis 4 (K-2) — **selesai 26 September 2026**
+
+Laporannya `NUI/LAYER4.md`, tag `layer4-freeze-2026-09-26`. Tanggal tag adalah
+tanggal freeze, bukan tanggal burn-in selesai — perintah pemilik.
 
 **Laporan selisih final.** Tiap MISMATCH dari P2–P6 dipilah dari laporannya:
-sudah dikenal (OFF-PRINT-SILICON, instruksi sesudah berhenti) atau baru. Yang
-baru jadi butir OFF.md dengan angkanya. **Tidak ada RTL yang diubah** di
-langkah ini.
+sudah dikenal (OFF-PRINT-SILICON, instruksi sesudah berhenti) atau baru.
+**Tidak ada yang baru**: ketiga selisih terukur sudah punya butir OFF.md.
+Selisih alat dicatat di kelasnya sendiri, tidak pernah di kelas perangkat
+keras. **Tidak ada RTL yang diubah** di langkah ini, dan tidak ada ekspektasi
+yang digeser.
 
-Urutan pemilik: paritas papan → kolom opcode perangkat keras → PRINT di
-silikon → HALT/RET di silikon → checksum dan klasifikasi selisih final →
-**commit terakhir** → **annotated tag**. Commit itu membawa rekaman dan laporan P2–P5
-bersama pembaruan `NUI/PARITY.md`, `NUI/LAYERS.md`, dan
-`cosmictera-build/PAPAN.md`, dengan empat gerbang hijau di lari yang sama.
-Sesudah tidak ada lagi perubahan pada artefak Lapis 4:
+Rekaman dan laporan P0–P6 sudah di-commit di langkahnya masing-masing; commit
+P7 membawa pembekuannya — `src/hijaiyyah/nui/layer4_freeze.py`,
+`NUI/layer4_freeze.json`, `NUI/LAYER4.md` — sesudah pemeriksaan P7.4 pemilik
+(`git status --short`, `git diff --check`, `parity_model --verify`, pytest
+penuh, `make -C rtl/tb all`) di lari yang sama. Lalu, perintah pemilik:
 
 ```bash
-git tag -a layer4-freeze-2026-09-24 -m "Layer 4 frozen: <isi dari laporan P2-P6>"
-git show layer4-freeze-2026-09-24 --stat
+git commit -m "freeze Layer 4 hardware parity evidence"
+git tag -a layer4-freeze-2026-09-26 -m "CosmicTera Layer 4 hardware parity freeze"
+git show layer4-freeze-2026-09-26 --no-patch
 ```
 
 Annotated, bukan lightweight, supaya tonggaknya membawa metadata. Tag tidak

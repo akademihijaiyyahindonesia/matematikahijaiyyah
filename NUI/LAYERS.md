@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **29 modul**; `tests/test_ai/` berisi **421 tes**
+`src/hijaiyyah/nui/` berisi **30 modul**; `tests/test_ai/` berisi **430 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.261 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.274 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -208,6 +208,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `parity_model.py` | interpreter ↔ RTL ↔ papan per program dan per opcode, selisih pertama dengan langkahnya | `test_nui_parity.py` (25) |
 | `board_parity.py` | apa yang dikirim ke papan, jawaban yang dibekukan sebelumnya, dan pembaca rekaman: PARITY/MISMATCH/UNKNOWN per program dan per opcode | `test_nui_board_parity.py` (27) |
 | `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
+| `layer4_freeze.py` | Lapis 4 dibekukan: bukti P0–P6 dengan hash-nya, status tiap warna, dan laporan selisih final dalam empat kelas, dihitung ulang dari rekaman | `test_nui_layer4_freeze.py` (9) |
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
 | `layer5.py` | kerangka Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan evidence store di luar repositori — disiapkan, belum dijalankan | `test_nui_layer5.py` (53) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
@@ -266,9 +267,9 @@ dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
-*references*, dan sekarang keduanya ada: 94 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 809 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.468 node, 3.871 edge**.
+*references*, dan sekarang keduanya ada: 95 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 825 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.484 node, 3.931 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -317,7 +318,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.261 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.274 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -540,9 +541,15 @@ papan palsu, dan status opcode palsu merah. Mesinnya sendiri juga disabotase:
 interpreter yang menambah satu pada `ADD` dinamai di langkah 2, R3, 308 lawan
 307. Tujuh penjaga baru dirusak satu per satu dan ketujuhnya merah.
 
-**Syarat selesai.** Tercapai untuk interpreter ↔ RTL atas korpus ini, dan
-untuk papan sejauh catatannya. Kolom papan per opcode menunggu lari papan
-yang sudah disiapkan, sesudah burn-in.
+**Syarat selesai.** Tercapai, dan **dibekukan 26 September 2026** dengan tag
+`layer4-freeze-2026-09-26` (P7). Bukan karena semuanya hijau: tiap warna —
+PARITY, MISMATCH, UNKNOWN — punya sumber dan alasan yang bisa diaudit. Laporan
+selisih finalnya di `NUI/LAYER4.md`, dihitung ulang dari rekaman P0–P6 oleh
+`src/hijaiyyah/nui/layer4_freeze.py`, dalam empat kelas pemilik: selisih
+terukur, beda semantik yang diketahui, UNKNOWN atau tidak teramati, dan selisih
+alat — yang terakhir tidak pernah dicampur dengan perangkat keras. Rekaman
+buktinya dijaga hash-nya selamanya; vonisnya atas rekaman beku tidak boleh
+berubah.
 
 ---
 

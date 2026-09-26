@@ -1045,9 +1045,9 @@ bukan MISMATCH, meskipun `PRINT` sudah punya butir OFF sendiri.
    teks papan membawa satu baris kosong ekstra. Dicatat di
    [OFF.md](OFF.md) sebagai temuan RTL yang **dilaporkan, tidak diperbaiki**;
    yang dibetulkan pembacanya.
-2. **Program pertama lari itu terkontaminasi 482 detak burn-in** yang masih
-   tersangkut di penyangga driver sesudah capture P1. Runner sekarang menguras
-   kabel sebelum mengirim, dan lari kedua bersih.
+2. **Program pertama lari itu terkontaminasi 350 detak burn-in**, bernomor 482
+   sampai 831, yang masih tersangkut di penyangga driver sesudah capture P1.
+   Runner sekarang menguras kabel sebelum mengirim, dan lari kedua bersih.
 
 Keduanya membuat satu aturan P1 naik ke Lapis 4: **laporan membaca byte mentah
 rekaman, bukan teks yang rekaman itu bawa sejak hari ia ditulis**. Dibaca ulang
@@ -1315,7 +1315,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.474 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.483 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1358,7 +1358,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.474 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.483 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
