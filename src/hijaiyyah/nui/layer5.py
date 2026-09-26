@@ -46,7 +46,17 @@ writes nothing; record() runs every collector through it once and writes the
 run: each collector's stdout and stderr under raw/, and a manifest.json that
 links each to its collector, run, time, VM, command, exit code, duration,
 path and SHA-256 (the owner's fields for P8.4, 26 September 2026). A store
-inside this repository is refused.
+inside this repository is refused. The evidence is the command's output as
+UTF-8 text, not raw bytes (K-15): a host command's output already is the
+observation, unlike the UART wire, whose parsing is a question of bytes.
+
+-- reading it back ------------------------------------------------------------------
+latest() hands NUI's HOST domain the newest observation of one collector, and
+only after checking it: the run's manifest and its entry name that run, and
+every evidence file has the size and SHA-256 the manifest recorded. Anything
+else is returned as rejected, with why. outcome() classes a run by the
+owner's rules in the spec (K-12, K-13) -- PASS, unavailable for permissions,
+unavailable because the command is absent, otherwise a collector error.
 """
 from __future__ import annotations
 
@@ -268,6 +278,76 @@ def record(instance: str, run: Runner = subprocess.run, into: Path | None = None
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n",
                                        encoding="utf-8")
     return out
+
+
+RUN = re.compile(r"\d{8}T\d{6}Z-collectors")
+
+
+def outcome(exit_code: int | None, stderr: str) -> str:
+    """One run of a collector, classed by its own exit code and stderr, by the
+    owner's rules in the spec (K-12, K-13): the first class that matches."""
+    rules = load()["outcomes"]
+    for rule in rules["classes"]:
+        if "exit_code" in rule and rule["exit_code"] != exit_code:
+            continue
+        if "stderr_contains" in rule and rule["stderr_contains"] not in stderr:
+            continue
+        return str(rule["status"])
+    return str(rules["otherwise"])
+
+
+def resolve(source: str) -> Path:
+    """Where an observation source, `observations/<run_id>/...`, lies on the host."""
+    return store().parent / source
+
+
+def latest(collector: str) -> dict[str, Any] | None:
+    """The newest observation of one collector in the store, verified before
+    it is handed out: the run's manifest names this run, the entry names this
+    run and collector, and every evidence file has the size and SHA-256 the
+    manifest recorded. A run that fails any of that is returned as rejected,
+    with why, and never as an observation. None when no run has the
+    collector."""
+    base = store()
+    runs = sorted((p for p in base.iterdir() if p.is_dir() and RUN.fullmatch(p.name)),
+                  reverse=True) if base.is_dir() else []
+    for run_dir in runs:
+        prefix = f"{base.name}/{run_dir.name}"
+        try:
+            manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError) as why:
+            return {"collector": collector, "run_id": run_dir.name,
+                    "rejected": f"manifest unreadable: {why}"}
+        entry = next((e for e in manifest.get("collectors", [])
+                      if e.get("collector") == collector), None)
+        if entry is None:
+            continue
+        found: dict[str, Any] = {"collector": collector, "run_id": run_dir.name,
+                                 "manifest": f"{prefix}/manifest.json"}
+        if manifest.get("run_id") != run_dir.name or entry.get("run_id") != run_dir.name:
+            return {**found, "rejected": "the manifest does not name this run"}
+        found.update({k: entry.get(k) for k in ("vm_name", "timestamp", "command_identity",
+                                                 "exit_code")})
+        if "failure" in entry:
+            return {**found, "status": "collector_error", "failure": entry["failure"]}
+        texts = {}
+        for stream in ("stdout", "stderr"):
+            ev = entry.get("evidence", {}).get(stream)
+            if not ev:
+                return {**found, "rejected": f"no {stream} evidence recorded"}
+            path = run_dir / ev["path"]
+            try:
+                data = path.read_bytes()
+            except OSError:
+                return {**found, "rejected": f"{ev['path']} is missing"}
+            if len(data) != ev["bytes"] or _sha(data) != ev["sha256"]:
+                return {**found, "rejected": f"{ev['path']} does not match its recorded SHA-256"}
+            texts[stream] = data.decode("utf-8")
+            found[stream] = {"source": f"{prefix}/{ev['path']}", "sha256": ev["sha256"]}
+        found["status"] = outcome(entry["exit_code"], texts["stderr"])
+        found["stdout_text"], found["stderr_text"] = texts["stdout"], texts["stderr"]
+        return found
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:

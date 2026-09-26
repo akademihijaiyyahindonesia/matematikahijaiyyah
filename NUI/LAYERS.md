@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **30 modul**; `tests/test_ai/` berisi **434 tes**
+`src/hijaiyyah/nui/` berisi **30 modul**; `tests/test_ai/` berisi **442 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.277 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.280 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -212,8 +212,8 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
 | `layer5.py` | Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan `record()` yang menulis evidence store di luar repositori — dijalankan pertama kali 26 September 2026 (P8.4) | `test_nui_layer5.py` (57) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
-| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (86) |
-| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST kosong sampai kolektor mengukur, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
+| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (94) |
+| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
 
 ---
 
@@ -268,8 +268,8 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 95 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 828 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.487 node, 3.936 edge**.
+`references`, tidak pernah dihitung sebagai import) dan 831 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.490 node, 3.939 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -318,7 +318,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.277 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.280 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -567,9 +567,9 @@ dari pemilik:
 | service | `systemctl`, `journalctl` |
 | kontainer | `docker`, `podman` |
 
-**Aset yang sudah ada.** **Tidak ada** sebagai integrasi: HOST belum membaca
-satu observasi pun. Kesebelas kolektor sudah dijalankan lewat NUI (P8.4),
-tetapi pengetahuannya belum tersambung — itu P8.5. Host-nya ada sejak
+**Aset yang sudah ada.** **Tidak ada** sebagai integrasi kendali: NUI kini
+membaca host lewat observasi terverifikasi (P8.4, P8.5), tetapi belum
+mengendalikannya — tahap pertamanya memang hanya baca. Host-nya ada sejak
 26 September 2026 — instance uji `cosmictera-layer5-uji`, di luar repositori,
 dengan isolasinya terbukti (P8.1–P8.3, di bawah). Kerangkanya ada sejak
 22 September 2026, disiapkan atas permintaan pemilik sementara papan memikul
@@ -686,10 +686,26 @@ luar repositori; yang dicatat di sini hanya vonis dan hash-nya.
   Stderr `containers` juga menjawab separuh pertanyaan yang tercatat terbuka
   di spesifikasi: `/bin/bash: line 1: …` — argv dijalankan bash tamu sebagai
   satu baris. Cara ia mengutip argumen tetap belum diukur.
-- **HOST tetap kosong.** `host services` menjawab `unknown` tanpa satu
-  jawaban HOST pun. Alasan yang dicetaknya, "no Ubuntu host exists yet", kini
-  tidak benar lagi; itu `src/hijaiyyah/nui/knowledge.py`, wilayah P8.5, dan
-  tidak disentuh di P8.4.
+- **P8.5 — provenance HOST.** Dua kelas provenance dari pemilik: `facts/`
+  pengetahuan rekayasa tersegel yang dibaca NUI, `observations/` bukti runtime
+  yang hanya dibaca HOST, dan tes yang menempatkan tiap butir menurut
+  sumbernya menjaga keduanya tidak bercampur. `layer5.latest()` mengambil
+  observasi terbaru satu kolektor dan **memverifikasinya lebih dulu**: manifest
+  dan entrinya menyebut run ini, dan tiap berkas evidence cocok ukuran dan
+  sha256 yang tercatat; yang gagal ditolak beserta alasannya, tidak pernah
+  dijawab darinya. Tiap butir HOST membawa run_id, kolektor, berkas evidence,
+  cap waktu, dan sha256. Keadaannya dibaca dari aturan pemilik di
+  spesifikasi (K-12, K-13): 9 `PASS`, `journal` `unavailable_due_to_permissions`
+  dengan stderr-nya sebagai provenance, `containers`
+  `unavailable_command_absent`. Alasan `unknown` kini "no supporting HOST
+  observation" — bukti belum cukup, bukan host belum ada (K-14).
+- **Kontrak tujuh kueri dijalankan** atas store nyata: lima dijawab dan satu
+  sebagian, seperti sebelumnya, dan `host services` **unknown** — "no
+  supporting journal/service observation", karena `journal` tidak bisa membaca
+  dan `systemctl status` bukan daftar semua service yang aktif. Dua observasi
+  yang diperiksa tampil di HOST beserta provenance-nya. Nol sumber yang hilang,
+  dan hash tiap butir HOST cocok dengan berkasnya. `host host_identity`
+  dijawab dari observasinya: `Ubuntu 24.04.5 LTS`.
 
 Tiap direktori run menyimpan skrip yang menghasilkannya di sampingnya —
 skrip itu tinggal di evidence store, bukan di repositori — sehingga rekamannya
@@ -699,17 +715,15 @@ komentarnya yang kini sudah terjawab ("Prepared, not started" dan "Not yet
 measured"). Menyuntingnya akan mengubah sha256-nya, padahal instance utama
 harus dibuat dari byte yang sama yang dibuktikan instance uji.
 
-**Yang belum ada.** Host dan kolektornya sudah ada; yang belum, dalam urutan
-pemilik 26 September 2026: HOST mengenali observasi sebagai provenance sendiri
-yang tidak bercampur dengan fakta tersegel (P8.5), kontrak kueri atas rekaman
-nyata (P8.6), dan instance utama `cosmictera-layer5` sesudah instance uji hijau
-(P8.7). Ditambah satu keputusan pemilik: kolektor `journal`, yang tidak bisa
-membaca jurnal sebagai pengguna `lima`.
+**Yang belum ada.** Kendali atas host — tahap sesudah hanya-baca, yang belum
+dibuka pemilik — dan instance utama `cosmictera-layer5`, yang dibuat sesudah
+instance uji hijau (P8.7). Langkah P8 sesudah P8.5 diputuskan pemilik.
 
 **Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
 dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Host
-itu ada sejak P8.2, isolasinya dibaca dari dalam tamu (P8.3), dan kolektornya
-dijalankan di P8.4 dengan tiap berkas evidence dijaga hash di manifest.
+itu ada sejak P8.2, isolasinya dibaca dari dalam tamu (P8.3), kolektornya
+dijalankan di P8.4 dengan tiap berkas evidence dijaga hash di manifest, dan
+jawaban HOST diverifikasi terhadap hash itu setiap kali dibaca (P8.5).
 
 **Syarat selesai.** Belum ditetapkan.
 
@@ -823,9 +837,9 @@ pemilik** — HC, HISA, RTL, OFF, PAPAN, NUI, dan HOST sejak K-6 — dan tiap
 domain menyebut tempat yang ia baca; sebuah tes menolak butir yang duduk di
 domain yang tidak membaca sumbernya. HOST memegang keadaan, proses, service,
 jaringan, filesystem, dan runtime host yang diamati, sedangkan OFF tetap fakta
-yang tidak bergantung pada host aktif; HOST **tidak membaca tempat mana pun**
-sampai sebuah kolektor mengukur, jadi tes yang sama menolak butir apa pun di
-sana. Bentuk jawaban pertama pemilik hari itu (`facts`, `tests`,
+yang tidak bergantung pada host aktif; HOST **hanya membaca observasi** di
+evidence store K-11 — tidak pernah `facts/`, yang dibaca NUI — dan tes yang
+sama menolak butir yang melintasi batas itu (P8.5, 26 September 2026). Bentuk jawaban pertama pemilik hari itu (`facts`, `tests`,
 `board_findings`) masuk ke bentuk kedua: fakta di NUI, catatan papan di PAPAN,
 tes tetap di samping domain. Ia **penelusuran, bukan penalaran**: tidak ada
 inferensi dan tidak ada skor, dan yang tak bisa dijawab domain mana pun
@@ -833,7 +847,7 @@ ditulis di `unknown`. Butir OFF-nya datang dari `src/hijaiyyah/nui/off_db.py`,
 yang membaca `cosmictera-build/OFF.md` jadi rekaman (`NUI/off_db.json`) tanpa
 menjadi salinan kedua; butir huruf dari registry Hijaiyyah
 (`src/hijaiyyah/nui/registry.py`). Dijaga `tests/test_ai/test_nui_knowledge.py`
-(86) dan `tests/test_ai/test_nui_registry.py` (7).
+(94) dan `tests/test_ai/test_nui_registry.py` (7).
 
 **Kontrak kuerinya**, 22 September 2026: tujuh pertanyaan pemilik, kata demi
 kata, dipetakan ke jenis kueri di `NUI/spec/query_contract.json` — apa itu
@@ -843,9 +857,10 @@ tabel spesifikasinya), berkas ini dari program mana (`file`: medan
 dipanggil program (`program`: tiap `CALL` dengan barisnya), apa yang
 diinstansiasi modul RTL (`rtl`), apa yang terakhir diukur papan (`board
 latest`: rekaman yang di-commit saja), dan layanan apa yang dijalankan Ubuntu
-(`host`: `unknown`, karena host belum ada; jawabannya akan duduk di HOST, yang
-kosong sampai sebuah kolektor mengukur — K-6). Lima dijawab, satu sebagian — berkas
-yang tidak menyatakan pembuatnya tidak ditebak — dan satu menunggu Lapis 5.
+(`host`: `unknown` — belum ada observasi yang mendukung jawabannya, dan yang
+diperiksa tampil di HOST beserta provenance-nya, K-14). Lima dijawab, satu
+sebagian — berkas yang tidak menyatakan pembuatnya tidak ditebak — dan satu
+unknown karena buktinya belum cukup.
 Tiap baris kontrak dijalankan oleh tesnya sendiri.
 
 **Yang belum ada.** Seluruh penalarannya. Lapis ini tidak bisa berdiri sebelum

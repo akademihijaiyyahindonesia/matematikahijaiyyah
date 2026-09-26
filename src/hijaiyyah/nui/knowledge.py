@@ -32,9 +32,15 @@ The second, later the same day, is how the knowledge is organised:
                  network, filesystem, runtime -- added by the owner's K-6
 
 OFF stays what does not depend on an active host. The owner's K-6 also says
-no HOST fact goes in before a collector has measured it, so HOST reads
-nowhere yet: the test that files every item by its source refuses anything
-placed there.
+no HOST fact goes in before a collector has measured it. So HOST reads one
+place only, the observations layer 5's collectors wrote to the K-11 store on
+the host, outside this repository -- never facts/, which NUI reads. The two
+are the two classes of provenance the owner named on 26 September 2026 (P8.5):
+facts/ sealed engineering facts, observations/ runtime HOST evidence, and the
+test that files every item by its source keeps them apart. A HOST item is one
+observation that passed its checks -- run, collector, evidence file, time and
+SHA-256 -- and a HOST question no observation supports stays `unknown`,
+because the evidence is not enough, not because the host is missing (K-14).
 
 The latest applies, so an answer carries the seven domains as its keys; the
 first shape's `facts` now sit under NUI, where the facts inventory lives, and
@@ -75,9 +81,9 @@ Answer = dict[str, Any]
 #: The owner's seven domains, and the places each one reads -- regular
 #: expressions over an item's source. HASM programs are HISA; everything else
 #: under rtl/ is RTL. The parity model is read by three: its interpreter column
-#: is HISA, its RTL column RTL, its board column PAPAN. HOST reads nothing:
-#: no collector has measured a host, and where its records will be kept is
-#: not decided (K-6).
+#: is HISA, its RTL column RTL, its board column PAPAN. HOST reads only the
+#: observations in the K-11 store, `observations/<run_id>/...` (K-6, K-11),
+#: which no other domain reads; facts/ is NUI's, and never HOST's (P8.5).
 DOMAINS: dict[str, tuple[str, ...]] = {
     "HC": (r"src/hijaiyyah/language/", r"src/hijaiyyah/compiler/", r"NUI/spec/hc_kamus\.json"),
     "HISA": (r"src/hijaiyyah/hisa/", r"docs/HISA_SPEC\.md", r"NUI/execution_model\.json",
@@ -86,8 +92,9 @@ DOMAINS: dict[str, tuple[str, ...]] = {
     "OFF": (r"cosmictera-build/OFF\.md",),
     "PAPAN": (r"cosmictera-build/", r"NUI/parity_model\.json"),
     "NUI": (r"facts/", r"NUI/", r"src/hijaiyyah/nui/", r"teknologi/ISTILAH\.md"),
-    "HOST": (),
+    "HOST": (r"observations/",),
 }
+CONTRACT = ROOT / "NUI" / "spec" / "query_contract.json"
 
 
 def _json(path: Any) -> Any:
@@ -533,18 +540,61 @@ def _board(subject: str) -> Answer:
 
 
 def _host(subject: str) -> Answer:
-    """What the Ubuntu host runs: nothing is known, because there is no host.
-    HOST stays empty; the collectors that would answer are NUI's own plan."""
+    """What the host shows, read only from verified observations (K-6, K-11).
+
+    The subject is a collector or an area of NUI/spec/layer5_collectors.json,
+    or `services`, the service area. Each HOST item is the newest observation
+    of one collector that passed layer5.latest()'s checks, with its run,
+    collector, evidence file, time and SHA-256; a collector that is not PASS
+    shows its stderr as the provenance of why. What no observation supports
+    stays unknown, with the reason (K-14). For `services` the owner's contract
+    names the collectors whose evidence would answer, and none yet does."""
     from . import layer5
     answer = _empty()
-    answer["unknown"].append("no Ubuntu host exists yet: layer 5 has not started, so nothing "
-                             "has been observed (NUI/LAYERS.md)")
-    area = {"services": "service"}.get(subject)
+    collectors = layer5.load()["collectors"]
+    area = {"services": "service"}.get(subject, subject)
+    chosen = [c["name"] for c in collectors if subject == c["name"] or area == c["area"]]
+    if not chosen:
+        answer["unknown"].append(f"`{subject}` is not a collector or an area of "
+                                 "NUI/spec/layer5_collectors.json")
     for row in layer5.plan():
-        if area is None or row["area"] == area:
+        if not chosen or row["name"] in chosen:
             answer["NUI"].append({"what": "planned collector", "name": row["name"],
                                   "argv": row.get("argv"), "status": row["status"],
                                   "source": "NUI/spec/layer5_collectors.json"})
+    passed = set()
+    for name in chosen:
+        seen = layer5.latest(name)
+        if seen is None:
+            answer["unknown"].append(f"no supporting HOST observation: {name} has no run in "
+                                     "the observation store")
+            continue
+        if "rejected" in seen:
+            answer["unknown"].append(f"no supporting HOST observation: {name} in "
+                                     f"{seen['run_id']} was rejected -- {seen['rejected']}")
+            continue
+        if "failure" in seen:
+            answer["unknown"].append(f"no supporting HOST observation: {name} failed in "
+                                     f"{seen['run_id']} -- {seen['failure']}")
+            continue
+        stream = "stdout" if seen["status"] == "PASS" else "stderr"
+        answer["HOST"].append({
+            "what": "observation", "provenance": "observation", "collector": name,
+            "status": seen["status"], "run_id": seen["run_id"], "vm_name": seen["vm_name"],
+            "timestamp": seen["timestamp"], "command_identity": seen["command_identity"],
+            "exit_code": seen["exit_code"], "evidence": seen[stream]["source"],
+            "sha256": seen[stream]["sha256"], "text": seen[f"{stream}_text"],
+            "source": seen[stream]["source"]})
+        if seen["status"] == "PASS":
+            passed.add(name)
+        else:
+            said = seen["stderr_text"].strip().splitlines() or [f"exit {seen['exit_code']}"]
+            answer["unknown"].append(f"{name} is {seen['status']} in {seen['run_id']}: "
+                                     f"{said[-1]}")
+    if subject == "services":
+        row = next(q for q in _json(CONTRACT)["questions"] if q["query"] == "host services")
+        if not passed & set(row["supported_by"]):
+            answer["unknown"].insert(0, row["unknown_reason"])
     return answer
 
 

@@ -7,13 +7,22 @@ owner's seven, HC HISA RTL OFF PAPAN NUI HOST. Then the owner's questions are as
 PRINT, loader.hasm, HALT, a letter, a keyword -- and their answers must hold
 what the layers measured. The OFF database must be OFF.md read, not a second
 copy of it.
+
+HOST reads only observations in the K-11 store, never facts/ (P8.5, 26
+September 2026). Every test here sees an empty store unless it builds one
+itself through layer5.record(), so what this file holds does not depend on
+the machine it runs on. A HOST item must walk back to its run, collector,
+evidence file, time and SHA-256, and an observation whose evidence no longer
+matches its hash is refused, not answered from.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -21,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED, OpCode  # noqa: E402
-from hijaiyyah.nui import knowledge, off_db  # noqa: E402
+from hijaiyyah.nui import knowledge, layer5, off_db  # noqa: E402
 
 DOMAINS = ["HC", "HISA", "RTL", "OFF", "PAPAN", "NUI", "HOST"]
 KEYS = {"query", "kind", "subject", *DOMAINS, "tests", "unknown"}
@@ -42,20 +51,43 @@ def _exists(source: str) -> bool:
     return (ROOT / path).exists()
 
 
+@pytest.fixture(autouse=True)
+def _empty_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    where = tmp_path / "observations"
+    where.mkdir()
+    monkeypatch.setattr(layer5, "store", lambda: where)
+    return where
+
+
 def test_the_domains_are_the_owners_seven() -> None:
     assert list(knowledge.DOMAINS) == DOMAINS
 
 
-def test_host_holds_nothing_until_a_collector_measures() -> None:
-    """K-6: no HOST fact before a collector has measured it. HOST reads
-    nowhere, so an item filed there fails the domain test below; the host
-    question still answers `unknown`, with the plan kept under NUI."""
-    assert knowledge.DOMAINS["HOST"] == ()
-    a = knowledge.query("host services")
-    assert a["HOST"] == [] and a["unknown"]
+def test_host_reads_observations_and_nothing_else_reads_them() -> None:
+    """The owner's two classes of provenance (P8.5): facts/ is sealed
+    engineering knowledge and NUI's; observations/ is runtime HOST evidence and
+    HOST's alone. Neither domain may read the other's place."""
+    assert knowledge.DOMAINS["HOST"] == (r"observations/",)
+    for domain, reads in knowledge.DOMAINS.items():
+        takes_observation = any(re.match(r, "observations/x/raw/y.stdout") for r in reads)
+        assert takes_observation == (domain == "HOST"), domain
+    assert not any(re.match(r, "facts/burnin/x.json") for r in knowledge.DOMAINS["HOST"])
+    assert any(re.match(r, "facts/burnin/x.json") for r in knowledge.DOMAINS["NUI"])
     row, = [q for q in CONTRACT["questions"] if q["query"] == "host services"]
     assert row["answers_in"] == [] and row["answers_in_when_measured"] == ["HOST"]
     assert all(d in knowledge.DOMAINS for d in row["answers_in_when_measured"])
+
+
+def test_with_no_observation_host_is_unknown_for_want_of_evidence() -> None:
+    """K-14: unknown means the evidence is not enough, not that the host is
+    missing -- the stale "no Ubuntu host exists yet" is gone."""
+    a = knowledge.query("host services")
+    assert a["HOST"] == []
+    assert a["unknown"][0] == "no supporting journal/service observation"
+    assert not [u for u in a["unknown"] if "no Ubuntu host" in u]
+    b = knowledge.query("host host_identity")
+    assert b["HOST"] == [] and b["unknown"] == [
+        "no supporting HOST observation: host_identity has no run in the observation store"]
 
 
 @pytest.mark.parametrize("text", QUERIES)
@@ -180,7 +212,7 @@ def test_the_query_contract_answers_as_it_says(row: dict) -> None:
     a = knowledge.query(row["query"])
     for domain in row["answers_in"]:
         assert a[domain], (row["query"], domain)
-    if row["status"] in ("sebagian", "menunggu Lapis 5"):
+    if row["status"] in ("sebagian", "unknown"):
         assert a["unknown"], row["query"]
     if row["status"] == "dijawab":
         assert not [u for u in a["unknown"] if "not a" in u], a["unknown"]
@@ -250,8 +282,126 @@ def test_what_the_board_last_measured_is_what_is_committed() -> None:
 
 def test_which_services_the_host_runs_is_not_known_and_says_so() -> None:
     a = knowledge.query("host services")
-    assert "no Ubuntu host" in a["unknown"][0]
+    assert a["unknown"][0] == "no supporting journal/service observation"
     assert {i["name"] for i in a["NUI"]} == {"systemd_overview", "journal"}
+
+
+# -- HOST, from observations (P8.5) ---------------------------------------------------
+
+GUEST = {"cat /etc/os-release": 'PRETTY_NAME="Ubuntu 24.04.5 LTS"\n',
+         "systemctl status --no-pager": "State: running\n"}
+
+
+class _Ran:
+    def __init__(self, cmd: list[str]) -> None:
+        argv = " ".join(cmd[4:])
+        self.returncode, self.stdout, self.stderr = 0, GUEST.get(argv, f"out of {argv}\n"), ""
+        if cmd[4] == "journalctl":
+            self.returncode, self.stdout = 1, ""
+            self.stderr = "No journal files were opened due to insufficient permissions.\n"
+        if cmd[4] == "docker":
+            self.returncode, self.stdout = 127, ""
+            self.stderr = "/bin/bash: line 1: docker: command not found\n"
+
+
+@pytest.fixture()
+def observed(_empty_store: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """One run of all eleven collectors, written by record() itself."""
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    return layer5.record("cosmictera-layer5-uji", run=lambda cmd, **_: _Ran(cmd),
+                         into=_empty_store)
+
+
+def _manifest(run: Path) -> dict[str, Any]:
+    data: dict[str, Any] = json.loads((run / "manifest.json").read_text(encoding="utf-8"))
+    return data
+
+
+def test_a_host_answer_walks_back_to_run_collector_file_time_and_hash(observed: Path) -> None:
+    """The owner's chain, query -> observation -> collector -> evidence file ->
+    timestamp, with the SHA-256 that ties the file to the manifest."""
+    a = knowledge.query("host host_identity")
+    item, = a["HOST"]
+    entry, = [e for e in _manifest(observed)["collectors"] if e["collector"] == "host_identity"]
+    assert a["unknown"] == [] and item["provenance"] == "observation"
+    assert (item["collector"], item["run_id"], item["status"]) == (
+        "host_identity", observed.name, "PASS")
+    assert item["timestamp"] == entry["timestamp"] and item["vm_name"] == "cosmictera-layer5-uji"
+    path = f"observations/{observed.name}/raw/host_identity.stdout"
+    assert item["source"] == item["evidence"] == path
+    data = layer5.resolve(item["source"]).read_bytes()
+    recorded = entry["evidence"]["stdout"]["sha256"]
+    assert item["sha256"] == hashlib.sha256(data).hexdigest() == recorded
+    assert item["text"] == data.decode("utf-8")
+    for domain, reads in knowledge.DOMAINS.items():
+        for got in a[domain]:
+            assert any(re.match(r, got["source"]) for r in reads), (domain, got)
+
+
+def test_host_services_stays_unknown_and_shows_what_it_looked_at(observed: Path) -> None:
+    """No collector's evidence answers which services run: journal cannot read
+    (K-12) and `systemctl status` is not a list of every active service. The
+    two observations looked at stand in HOST with their provenance."""
+    a = knowledge.query("host services")
+    assert a["unknown"][0] == "no supporting journal/service observation"
+    status = {i["collector"]: (i["status"], i["evidence"].rsplit(".", 1)[1]) for i in a["HOST"]}
+    assert status == {"systemd_overview": ("PASS", "stdout"),
+                      "journal": ("unavailable_due_to_permissions", "stderr")}
+    assert "insufficient permissions" in a["unknown"][1]
+
+
+def test_the_eleven_are_classed_by_the_owners_rules(observed: Path) -> None:
+    """K-12, K-13: nine PASS, journal unavailable for permissions, containers
+    unavailable because the command is absent -- neither of the two is PASS,
+    and neither is a collector error. Anything else not 0 is one."""
+    got = {c["name"]: layer5.latest(c["name"])["status"]  # type: ignore[index]
+           for c in layer5.load()["collectors"]}
+    assert got.pop("journal") == "unavailable_due_to_permissions"
+    assert got.pop("containers") == "unavailable_command_absent"
+    assert set(got.values()) == {"PASS"} and len(got) == 9
+    assert layer5.outcome(2, "boom") == "collector_error"
+    assert layer5.outcome(127, "something else") == "collector_error"
+
+
+def _flip_byte(run: Path) -> str:
+    path = run / "raw" / "host_identity.stdout"
+    data = bytearray(path.read_bytes())
+    data[0] ^= 1
+    path.write_bytes(bytes(data))
+    return "does not match its recorded SHA-256"
+
+
+def _drop_file(run: Path) -> str:
+    (run / "raw" / "host_identity.stdout").unlink()
+    return "is missing"
+
+
+def _rename_run(run: Path) -> str:
+    m = _manifest(run)
+    m["run_id"] = "20200101T000000Z-collectors"
+    (run / "manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    return "does not name this run"
+
+
+def _forge_hash(run: Path) -> str:
+    m = _manifest(run)
+    for e in m["collectors"]:
+        if e["collector"] == "host_identity":
+            e["evidence"]["stdout"]["sha256"] = "0" * 64
+    (run / "manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    return "does not match its recorded SHA-256"
+
+
+@pytest.mark.parametrize("tamper", [_flip_byte, _drop_file, _rename_run, _forge_hash],
+                         ids=lambda f: f.__name__)
+def test_an_observation_that_fails_its_provenance_is_refused(observed: Path, tamper: Any) -> None:
+    """Evidence changed after the run, a file gone, a manifest that names
+    another run, a hash that is not the file's: the observation is refused
+    with the reason, and HOST says nothing from it."""
+    why = tamper(observed)
+    a = knowledge.query("host host_identity")
+    assert a["HOST"] == []
+    assert len(a["unknown"]) == 1 and why in a["unknown"][0], a["unknown"]
 
 
 # -- the OFF database -------------------------------------------------------------

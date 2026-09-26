@@ -58,8 +58,10 @@
    "query": "host services",
    "answers_in": [],
    "answers_in_when_measured": ["HOST"],
-   "status": "menunggu Lapis 5",
-   "reads": "belum ada host; jawabannya `unknown`, beserta kolektor yang akan menjawabnya. Sesudah kolektor mengukur, jawabannya di domain HOST (pemilik, 22 September 2026, keputusan K-6); sebelum itu HOST kosong, dan rekaman kolektor disimpan di luar repositori, di `~/cosmictera-layer5/observations/<run_id>/` (pemilik, 23 September 2026, keputusan K-11)",
+   "status": "unknown",
+   "supported_by": [],
+   "unknown_reason": "no supporting journal/service observation",
+   "reads": "observasi terverifikasi di evidence store K-11, `~/cosmictera-layer5/observations/<run_id>/` -- tiap butir HOST membawa run_id, kolektor, berkas evidence, cap waktu, dan sha256-nya. Belum ada kolektor yang buktinya menjawab pertanyaan ini, jadi `supported_by` kosong dan jawabannya `unknown`: `journal` unavailable_due_to_permissions (K-12), dan `systemctl status` bukan otomatis daftar semua service yang aktif (pemilik, 26 September 2026). Observasi yang diperiksa tetap ditampilkan di HOST beserta provenance-nya. `unknown` berarti bukti belum cukup, bukan host belum ada (K-14)",
    "verification": "tests/test_ai/test_nui_knowledge.py::test_the_query_contract_answers_as_it_says"
   }
  ],

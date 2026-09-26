@@ -64,7 +64,7 @@ def test_the_layers_with_materials_but_no_capability_say_both() -> None:
         assert "**Tidak ada** sebagai" in sections()[number], number
     assert "Lapis 3 punya jejaknya" in sections()[9]
     assert "ditulis tangan" in sections()[10]
-    assert "HOST belum membaca" in sections()[5]
+    assert "belum\nmengendalikannya" in sections()[5]
 
 
 def test_every_file_the_map_cites_exists() -> None:

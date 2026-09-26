@@ -61,6 +61,7 @@
   ],
   "status": "ditetapkan",
   "source": "pemilik, 23 September 2026, keputusan K-11 -- Ubuntu tamu -> kolektor hanya-baca -> hasil -> evidence store di host -> lapis pengetahuan HOST",
+  "evidence_form": "teks UTF-8 keluaran perintah, bukan byte mentah -- pemilik, 26 September 2026, keputusan K-15: bukti kabel UART (P1) adalah byte mentah karena penguraiannya persoalan byte, sedangkan keluaran perintah host sudah merupakan representasi hasil observasi. Kolektor yang kelak menghasilkan format bukan teks direkam sebagai bukti biner secara eksplisit",
   "implementation": "ada: `record()` di src/hijaiyyah/nui/layer5.py menjalankan semua kolektor lewat `observe()` sekali dan menulis lari itu -- raw/ per kolektor dan manifest.json yang menautkan tiap berkas ke kolektor, run_id, waktu, VM, argv, exit code, durasi, path dan sha256-nya. Lari pertama 26 September 2026 (P8.4), 20260926T053008Z-collectors. Bukti P8.3 ditulis sebelum `record()` ada, oleh skrip yang disimpan di direktori run-nya sendiri (`produced_by.py`)"
  },
  "collectors": [
@@ -72,8 +73,8 @@
     "/etc/os-release"
    ],
    "records": "versi persis sistem operasi tamu -- bagian baseline Lapis 5",
-   "status": "usulan",
-   "source": "pemilik, 22 September 2026 -- versi persis dicatat; `cat` di daftar izin"
+   "status": "ditetapkan",
+   "source": "pemilik, 22 September 2026 -- versi persis dicatat; `cat` di daftar izin; ditetapkan pemilik 26 September 2026, keputusan K-13 -- kontraknya dikunci, bukan berarti selalu exit 0"
   },
   {
    "name": "processes",
@@ -91,8 +92,8 @@
     "/proc/mounts"
    ],
    "records": "filesystem yang terpasang",
-   "status": "usulan",
-   "source": "`cat` di daftar izin; `df` dan `mount` tidak"
+   "status": "ditetapkan",
+   "source": "`cat` di daftar izin; `df` dan `mount` tidak; ditetapkan pemilik 26 September 2026, keputusan K-13 -- kontraknya dikunci, bukan berarti selalu exit 0"
   },
   {
    "name": "root_listing",
@@ -103,8 +104,8 @@
     "/"
    ],
    "records": "isi direktori akar",
-   "status": "usulan",
-   "source": "`ls` di daftar izin"
+   "status": "ditetapkan",
+   "source": "`ls` di daftar izin; ditetapkan pemilik 26 September 2026, keputusan K-13 -- kontraknya dikunci, bukan berarti selalu exit 0"
   },
   {
    "name": "systemd_overview",
@@ -115,8 +116,8 @@
     "--no-pager"
    ],
    "records": "keadaan systemd secara keseluruhan",
-   "status": "usulan",
-   "source": "`systemctl status` di daftar izin; katalog READ SERVICE memakai satu unit, bentuk tanpa unit ini usulan"
+   "status": "ditetapkan",
+   "source": "`systemctl status` di daftar izin; katalog READ SERVICE memakai satu unit, bentuk tanpa unit ini usulan; ditetapkan pemilik 26 September 2026, keputusan K-13 -- kontraknya dikunci, bukan berarti selalu exit 0"
   },
   {
    "name": "journal",
@@ -168,18 +169,41 @@
     "/proc/net/dev"
    ],
    "records": "pencacah byte dan paket per antarmuka",
-   "status": "usulan",
-   "source": "`cat` di daftar izin"
+   "status": "ditetapkan",
+   "source": "`cat` di daftar izin; ditetapkan pemilik 26 September 2026, keputusan K-13 -- kontraknya dikunci, bukan berarti selalu exit 0"
   },
   {
    "name": "containers",
    "area": "kontainer",
    "catalog": "READ CONTAINER",
    "records": "kontainer yang berjalan; exit 127 berarti docker tidak terpasang, dicatat sebagai tidak ada, bukan galat",
-   "status": "usulan",
-   "source": "katalog READ CONTAINER, yang sendiri masih usulan"
+   "status": "ditetapkan",
+   "source": "katalog READ CONTAINER, yang sendiri masih usulan; ditetapkan pemilik 26 September 2026, keputusan K-13 -- kontraknya dikunci, bukan berarti selalu exit 0"
   }
  ],
+ "outcomes": {
+  "rule": "Keadaan satu lari kolektor dibaca dari exit code dan stderr-nya sendiri, dalam urutan ini; yang pertama cocok berlaku, dan yang tidak cocok satu pun adalah collector_error. Ditetapkan berarti kontrak kolektornya dikunci, bukan berarti ia selalu exit 0",
+  "classes": [
+   {
+    "status": "PASS",
+    "exit_code": 0
+   },
+   {
+    "status": "unavailable_due_to_permissions",
+    "stderr_contains": "insufficient permissions",
+    "source": "pemilik, 26 September 2026, keputusan K-12 -- journalctl hanya-baca tetapi butuh privilege tambahan; sudo tidak diizinkan dan grup `lima` tidak diubah. Stderr-nya sendiri adalah provenance-nya"
+   },
+   {
+    "status": "unavailable_command_absent",
+    "exit_code": 127,
+    "stderr_contains": "command not found",
+    "source": "pemilik, 26 September 2026, keputusan K-13 -- `docker ps` 127 membuktikan Docker tidak tersedia; dipisahkan dari collector error"
+   }
+  ],
+  "otherwise": "collector_error",
+  "status": "ditetapkan",
+  "source": "pemilik, 26 September 2026, keputusan K-12 dan K-13 -- sembilan PASS, satu UNAVAILABLE karena izin, satu UNAVAILABLE karena perintahnya tidak ada; keduanya bukan PASS"
+ },
  "guard": [
   {
    "rule": "Perintahnya harus ada di daftar izin pemilik dan tidak di daftar belum-diizinkan -- dibaca dari NUI/LAYERS.md, tidak disalin (R1)",

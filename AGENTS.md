@@ -1443,6 +1443,25 @@ jadi ia **didokumentasikan, tidak ditambal**, dan menunggu keputusan pemilik.
 `docker` tidak terpasang di tamu. HOST tetap `unknown`; alasan yang
 dicetak `src/hijaiyyah/nui/knowledge.py` sudah basi, dan itu wilayah P8.5.
 
+**Keputusan pemilik, hari yang sama — K-12 sampai K-15**, lalu P8.5. Tabelnya
+di `cosmictera-build/PASCA-BURN-IN.md`, tidak disalin ke sini (R1). Yang
+paling mudah dilanggar:
+
+- **Tidak memperluas allowlist demi PASS.** `journal` tetap
+  `unavailable_due_to_permissions` (K-12); `sudo` dan grup tamu tidak disentuh.
+- **Ditetapkan tidak sama dengan exit 0** (K-13). Keadaan kolektor dibaca dari
+  exit code dan stderr-nya lewat aturan di spesifikasi, bukan dipaksa jadi
+  PASS.
+- **`unknown` berarti bukti belum cukup, bukan sistem belum ada** (K-14).
+
+**P8.5 tutup hari itu**: HOST membaca evidence store
+`~/cosmictera-layer5/observations/` dan hanya itu, sedangkan `facts/` tetap
+milik NUI. Tiap observasi diverifikasi terhadap hash-nya
+sebelum dipakai, dan tiap butir HOST membawa run_id, kolektor, berkas
+evidence, cap waktu, dan sha256-nya. Ketujuh kueri kontrak dijalankan, dan
+`host services` tetap `unknown` karena tidak ada observasi service yang
+mendukungnya. Angkanya di `NUI/LAYERS.md`, Lapis 5.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
