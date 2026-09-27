@@ -47,6 +47,10 @@ QUERIES = ["opcode PRINT", "opcode HALT", "opcode ADD", "program loader.hasm",
            "hardware observed opcode PRINT", "hardware observed board clock",
            "hardware current program", "hardware provenance HCPU",
            "hardware current board clock", "hardware observed peripheral",
+           "hardware correlation hardware HCPU",
+           "hardware correlation program rtl/programs/test_hisab.hasm",
+           "hardware correlation opcode PRINT", "hardware correlation run 20260925T141701Z-print",
+           "hardware correlation run 20260925T191528Z-loader",
            *[q["query"] for q in CONTRACT["questions"]]]
 
 

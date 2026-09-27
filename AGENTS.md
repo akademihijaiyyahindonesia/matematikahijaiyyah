@@ -1570,7 +1570,7 @@ berikutnya:
 - **`cycle_rate` 649,4 dan `drift` −3,3 di `cosmictera/TELEMETRY.md` adalah
   selisih historis**: dicatat di model provenance, tidak disunting (pemilik).
 
-**6.4 dibangun sesudah 6.3 GREEN**: model keadaan hardware,
+**6.4 GREEN (`d6cfd6c`)**: model keadaan hardware,
 `NUI/HARDWARE_STATE.md`, dibangun `src/hijaiyyah/nui/hardware_state.py` —
 arti jawaban NUI atas pertanyaan hardware, bukan telemetri baru. Empat jenis
 keadaan pemilik: IDENTITY, CAPABILITY, OBSERVED, CURRENT. Pagar yang paling
@@ -1578,9 +1578,29 @@ penting kalimat pemilik sendiri: **rekaman papan historis bukan keadaan
 hardware sekarang** — lari papan terakhir menjawab apa yang terukur pada lari
 itu, bukan apa yang sedang terjadi. Kueri CURRENT hanya dijawab sumber live
 yang `access()` temukan, dan hari ini tidak ada. Precedence LIVE > MEASURED >
-SIMULATED > UNKNOWN. Angkanya di `NUI/LAYERS.md`, Lapis 6. Sesudah 6.4 hijau,
-pemilik baru menentukan 6.5 — korelasi hardware dengan program, eksekusi
-HISA/HCPU, dan observasi host.
+SIMULATED > UNKNOWN. Angkanya di `NUI/LAYERS.md`, Lapis 6. Dua penilaian
+pemilik saat menutupnya:
+
+- **Clock 27 MHz dan UART 115200 adalah CAPABILITY/konfigurasi, bukan
+  IDENTITY — koreksinya tercatat, belum diterapkan.** `d6cfd6c` tidak diubah
+  surut; koreksinya perubahan tersendiri sesudah taksonomi dikunci.
+- **P4 dan P5 bukan bukti tingkat opcode**: kolom P3 bukti tingkat opcode, P4
+  dan P5 bukti tingkat program atau eksperimen. Jangan memaksakannya demi
+  cakupan. Premis saya bahwa rekaman P4/P5 menautkan opcode hanya lewat nama
+  keliru, dan dibetulkan di `NUI/LAYERS.md`: yang membuat P5 bukan bukti opcode
+  adalah silikon yang menjalankan PRINT sesudah HALT, yang interpreter tidak
+  pernah jalankan.
+
+**6.5 dibangun sesudah 6.4 GREEN**: korelasi hardware,
+`NUI/HARDWARE_CORRELATION.md`, dibangun
+`src/hijaiyyah/nui/hardware_correlation.py` — tautan hardware ↔ lari papan ↔
+program ↔ opcode ↔ keluaran papan, bukan telemetri baru. Tiap tautan DIRECT
+(tertulis eksplisit di bukti), DERIVED (dihitung dari struktur yang ada), atau
+UNKNOWN (dengan alasannya). **Tidak ada tautan karena nama program tampak
+mengandung sesuatu** — rekaman yang hanya menyebut sasaran punya program
+UNKNOWN. `executes` adalah yang interpreter jalankan untuk payload dengan hash
+yang sama, bukan yang papan jalankan, dan bukti tingkat opcode tetap kolom P3
+saja. Angkanya di `NUI/LAYERS.md`, Lapis 6.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

@@ -14,6 +14,7 @@ grouped by where that knowledge lives, with where each piece comes from.
     python3 -m hijaiyyah.nui.knowledge host delta processes
     python3 -m hijaiyyah.nui.knowledge hardware current-state
     python3 -m hijaiyyah.nui.knowledge hardware current program
+    python3 -m hijaiyyah.nui.knowledge hardware correlation opcode PRINT
 
 The owner's two shapes, both of 22 September 2026. The first is an answer:
 
@@ -70,7 +71,9 @@ no live source is registered, never the newest historical run. Asked by a
 kind of state (layer 6.4) -- `hardware identity|capability|observed|current|
 provenance <subject>` -- the answer carries one headline state by the owner's
 precedence over the claims of that kind, and a current question is answered by
-a live source or not at all.
+a live source or not at all. And `hardware correlation <hardware|program|
+opcode|run> <subject>` (layer 6.5) walks the links between them -- each one
+DIRECT, DERIVED or UNKNOWN, none drawn from a name.
 
 Nothing is inferred and nothing is scored. Every item is a lookup in something
 the repository already holds, and every item carries `source` -- a file and
@@ -697,6 +700,8 @@ def _hardware(subject: str) -> Answer:
     of the state model instead."""
     from . import hardware_provenance, hardware_state, telemetry_sources
     group, _, rest = subject.partition(" ")
+    if group == "correlation":
+        return _hardware_correlation(rest.strip())
     if group in hardware_state.load()["groups"]:
         return _hardware_state(group, rest.strip())
     answer = _empty()
@@ -743,6 +748,39 @@ def _hardware_state(group: str, subject: str) -> Answer:
         answer["unknown"] += _incomplete(objects[cid])
     if a["state"] == "UNKNOWN":
         answer["unknown"].insert(0, a["reason"])
+    return answer
+
+
+def _hardware_correlation(text: str) -> Answer:
+    """How hardware, board runs, programs and opcodes are linked (layer 6.5):
+    `correlation <hardware|program|opcode|run> <subject>`. Each item is one
+    correlation -- DIRECT, DERIVED or UNKNOWN -- filed where its evidence
+    lives; an UNKNOWN one says why in `unknown`, and nothing is linked by a
+    name. For an opcode, what counts as opcode-level evidence is P3's column
+    only; programs of other experiments are named apart."""
+    from . import hardware_correlation
+    answer = _empty()
+    kind, _, subject = text.partition(" ")
+    model = _json(hardware_correlation.MODEL)
+    try:
+        a = hardware_correlation.answer(kind, subject.strip(), model,
+                                        hardware_correlation.context())
+    except LookupError as why:
+        answer["unknown"].append(str(why))
+        return answer
+    edges = {e["id"]: e for e in model["correlations"]}
+    head = {"what": "hardware correlation", "kind": a["kind"], "subject": a["subject"],
+            "correlations": len(a["correlations"]), "source": "NUI/hardware_correlation.json"}
+    if "opcode_evidence" in a:
+        head["opcode_evidence"] = a["opcode_evidence"]
+    answer["NUI"].append(head)
+    for cid in a["correlations"]:
+        e = edges[cid]
+        domain = "PAPAN" if e["evidence"].startswith("cosmictera-build/") else "NUI"
+        answer[domain].append({"what": "correlation", **{k: e[k] for k in (
+            "id", "relation", "class", "run_id", "from", "to", "payload_sha256", "value",
+            "evidence_key", "evidence_sha256")}, "source": e["evidence"]})
+    answer["unknown"] += a["unknown"]
     return answer
 
 

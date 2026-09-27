@@ -1,0 +1,99 @@
+{
+ "version": 1,
+ "title": "Korelasi hardware Lapis 6.5 -- hardware, program, opcode, eksekusi, dan pengamatan papan, dari bukti yang sudah ada",
+ "source": "pemilik, 28 September 2026 -- 6.5 bukan menambah telemetri hardware (LIVE = 0), melainkan menghubungkan bukti lintas tingkat: hardware <-> program <-> opcode <-> eksekusi <-> pengamatan papan. Tiap korelasi DIRECT, DERIVED, atau UNKNOWN; tidak ada hubungan karena nama program tampak mengandung opcode; P4/P5 tidak dijadikan bukti tingkat opcode",
+ "rule": "Spec ini menyebut lari mana yang dikorelasikan dan di kunci mana tiap rekaman menyebut programnya, hash payload-nya, keluarannya, dan nilai hardware-nya. Korelasinya dibangun dan diperiksa src/hijaiyyah/nui/hardware_correlation.py terhadap berkas-berkas itu sendiri",
+ "classes": {
+  "DIRECT": "hubungan tertulis eksplisit di bukti: rekaman lari menyebut program dan hash payload-nya, mencetak keluarannya, atau mencatat nilai hardware yang sama dengan klaimnya; atau rantai 6.3 klaim ke larinya",
+  "DERIVED": "hubungan yang dihitung dari struktur yang sudah ada: opcode yang interpreter jalankan untuk payload dengan hash yang sama, atau vonis keluaran papan terhadap ekspektasi yang dibekukan sebelum papan ditanya",
+  "UNKNOWN": "hubungan yang tidak bisa dibuktikan dari bukti yang ada -- dengan alasannya, dan tanpa nilai"
+ },
+ "relations": {
+  "supports": {"from": "run", "to": "hardware", "classes": ["DIRECT"], "means": "lari ini menopang klaim hardware itu -- rantai provenance 6.3 atau kolom P3"},
+  "records": {"from": "run", "to": "hardware", "classes": ["DIRECT"], "means": "rekaman lari mencatat, di kunci yang disebut, nilai yang sama dengan nilai klaim hardware itu"},
+  "ran": {"from": "run", "to": "program", "classes": ["DIRECT", "UNKNOWN"], "means": "rekaman lari menyebut program itu -- beserta hash payload yang dikirim, bila rekaman menyimpannya"},
+  "printed": {"from": "run", "to": "program", "classes": ["DIRECT"], "means": "yang papan cetak untuk program itu pada lari itu, apa adanya di rekaman"},
+  "judged": {"from": "run", "to": "program", "classes": ["DERIVED"], "means": "vonis keluaran itu terhadap ekspektasi beku, dari laporan lari itu"},
+  "executes": {"from": "program", "to": "opcode", "classes": ["DERIVED", "UNKNOWN"], "means": "opcode yang interpreter jalankan untuk payload dengan hash yang sama, di bawah loader -- yang interpreter jalankan, bukan yang papan jalankan"}
+ },
+ "runs": [
+  {"record": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "date", "format": "stamp"},
+   "programs": {"key": "programs", "payload": "payload_sha256", "text": "text"},
+   "expected": "parity", "report": "cosmictera-build/parity-board/20260924T105400Z-parity.report.json",
+   "records": {"bitstream_sha256": "6.1:bitstream_last_measured"}},
+  {"record": "cosmictera-build/parity-board/20260925T141701Z-print.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "date", "format": "stamp"},
+   "programs": {"key": "programs", "payload": "payload_sha256", "text": "text"},
+   "expected": "print", "report": "cosmictera-build/parity-board/20260925T141701Z-print.report.json",
+   "records": {"bitstream_sha256": "6.1:bitstream_last_measured"}},
+  {"record": "cosmictera-build/parity-board/20260925T141737Z-print.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "date", "format": "stamp"},
+   "programs": {"key": "programs", "payload": "payload_sha256", "text": "text"},
+   "expected": "print", "report": "cosmictera-build/parity-board/20260925T141737Z-print.report.json",
+   "records": {"bitstream_sha256": "6.1:bitstream_last_measured"}},
+  {"record": "cosmictera-build/parity-board/20260925T141744Z-print.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "date", "format": "stamp"},
+   "programs": {"key": "programs", "payload": "payload_sha256", "text": "text"},
+   "expected": "print", "report": "cosmictera-build/parity-board/20260925T141744Z-print.report.json",
+   "records": {"bitstream_sha256": "6.1:bitstream_last_measured"}},
+  {"record": "cosmictera-build/parity-board/20260925T163903Z-stop.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "date", "format": "stamp"},
+   "programs": {"key": "programs", "payload": "payload_sha256", "text": "text"},
+   "expected": "stop", "report": "cosmictera-build/parity-board/20260925T163903Z-stop.report.json",
+   "records": {"bitstream_sha256": "6.1:bitstream_last_measured"}},
+  {"record": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "started"},
+   "program": {"key": "program"},
+   "records": {"board": "6.1:board"}},
+  {"record": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.json",
+   "run_id": {"stem": true}, "observed_at": {"key": "started"},
+   "program": {"key": "program"},
+   "records": {"board": "6.1:board"}},
+  {"record": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json",
+   "run_id": {"key": "run_id"}, "observed_at": {"key": "started"},
+   "program": {"key": "program"},
+   "records": {"board": "6.1:board", "bitstream_sha256": "6.1:bitstream_last_measured"}},
+  {"record": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+   "run_id": {"key": "attack_id"}, "observed_at": {"key": "timestamp"},
+   "program": null,
+   "program_why": "rekaman menyebut sasaran (target `loader`), bukan program; tautan ke sebuah berkas program tidak ditarik dari nama",
+   "records": {"board": "6.1:board"}},
+  {"record": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "run_id": {"key": "attack_id"}, "observed_at": {"key": "timestamp"},
+   "program": null,
+   "program_why": "rekaman menyebut sasaran (target `jamrah`), bukan program; tautan ke sebuah berkas program tidak ditarik dari nama",
+   "records": {"board": "6.1:board"}}
+ ],
+ "not_correlated": [
+  {"record": "cosmictera-build/parity-board/20260924T104300Z-parity.json",
+   "why": "lari P2 pertama: program pertamanya tercemar 350 detak burn-in basi, selisih alat yang Lapis 4 catat (NUI/LAYER4.md). Kolom P3 dan rantai 6.3 memakai lari P2 kedua, dan korelasi ini juga"}
+ ],
+ "expected": {"file": "NUI/board_expected.json", "why": "ekspektasi yang dibekukan sebelum papan ditanya: per program, hash payload dan opcode yang interpreter jalankan untuk payload itu di bawah loader. Satu entrinya bergeser di P6 untuk program yang tidak dikirim (NUI/LAYER4.md), jadi korelasi membaca entri per program dan menuntut hash payload-nya sama dengan yang rekaman simpan, bukan hash berkasnya"},
+ "opcode_evidence": {
+  "run": "20260924T105400Z-parity",
+  "column": {"model": "NUI/parity_model.json", "key": "board_corpus.opcodes"},
+  "why": "pemilik, 27-28 September 2026: kolom P3 adalah bukti hardware tingkat opcode, dihitung dari lari ini; P4 dan P5 adalah bukti tingkat program atau eksperimen. Korelasi executes dari program lari lain tetap DERIVED dan ditampilkan sebagai tingkat eksperimen, tidak pernah sebagai bukti opcode"
+ },
+ "divergence": {
+  "run": "20260925T163903Z-stop",
+  "why": "P5 mengukur bahwa silikon menjalankan PRINT sesudah HALT atau RET fault, sedangkan interpreter berhenti sebelumnya -- executes untuk probe itu adalah yang interpreter jalankan, dan papan terbukti menjalankan lebih dari itu (NUI/LAYER4.md)"
+ },
+ "contract": [
+  {"query": "hardware correlation hardware HCPU", "includes": [["ran", "20260924T105400Z-parity", "rtl/programs/test_hisab.hasm", "DIRECT"]]},
+  {"query": "hardware correlation program rtl/programs/test_hisab.hasm", "includes": [["supports", "20260924T105400Z-parity", "6.1:cpu", "DIRECT"], ["executes", "rtl/programs/test_hisab.hasm", "PRINT", "DERIVED"], ["printed", "20260924T105400Z-parity", "rtl/programs/test_hisab.hasm", "DIRECT"], ["judged", "20260924T105400Z-parity", "rtl/programs/test_hisab.hasm", "DERIVED"]]},
+  {"query": "hardware correlation opcode PRINT", "evidence_programs": 79, "includes": [["executes", "print-silicon", "PRINT", "DERIVED"]]},
+  {"query": "hardware correlation run 20260925T141701Z-print", "includes": [["ran", "20260925T141701Z-print", "print-silicon", "DIRECT"], ["printed", "20260925T141701Z-print", "print-silicon", "DIRECT"], ["judged", "20260925T141701Z-print", "print-silicon", "DERIVED"]]},
+  {"query": "hardware correlation run 20260925T191528Z-loader", "includes": [["ran", "20260925T191528Z-loader", null, "UNKNOWN"]]},
+  {"query": "hardware correlation program rtl/programs/burn_in.hasm", "includes": [["ran", "20260921T053430Z-burn-in-72h", "rtl/programs/burn_in.hasm", "DIRECT"], ["executes", "rtl/programs/burn_in.hasm", null, "UNKNOWN"]]}
+ ],
+ "contract_why": "keenam arah pemilik: hardware -> program, program -> hardware, program -> opcode, opcode -> bukti program, program -> lari papan, lari papan -> hasil teramati -- termasuk rantai contoh pemilik HCPU -> test_hisab.hasm -> PRINT -> rekaman papan -> keluaran, dan dua yang tetap UNKNOWN",
+ "checks": [
+  {"id": "X1", "label": "kelas korelasi diizinkan relasinya: UNKNOWN tidak jadi DIRECT, executes tidak pernah DIRECT"},
+  {"id": "X2", "label": "berkas bukti ada dan SHA-256-nya cocok"},
+  {"id": "X3", "label": "kunci bukti menunjuk nilai korelasi itu sendiri: program ada di rekaman larinya, opcode ada di daftar yang dijalankan untuk payload yang sama"},
+  {"id": "X4", "label": "lari korelasi adalah lari yang rekamannya menjadi bukti: provenance lintas lari tidak tercampur"},
+  {"id": "X5", "label": "UNKNOWN membawa alasan dan tanpa nilai; DIRECT dan DERIVED membawa bukti"},
+  {"id": "X6", "label": "bukti tingkat opcode hanya dari lari kolom P3, dan sama dengan kolomnya"}
+ ]
+}

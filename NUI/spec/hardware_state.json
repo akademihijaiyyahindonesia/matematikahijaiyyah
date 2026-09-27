@@ -38,7 +38,7 @@
   "key": "board_corpus.opcodes",
   "stamp": "board_corpus.record",
   "record": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
-  "why": "kolom perangkat keras per opcode P3, dihitung dari byte mentah rekaman P2 dan dibekukan di layer4-freeze-2026-09-26. MEASURED bila sekurangnya satu program yang dikirim ke papan menjalankan opcode itu -- vonis kolomnya dibawa di klaim, sebab status dan selisih adalah dua hal berbeda (pemilik, P3); UNKNOWN bila tak satu pun. Eksperimen P4 dan P5 menautkan opcode hanya lewat nama programnya, jadi tidak digabung di sini"
+  "why": "kolom perangkat keras per opcode P3, dihitung dari byte mentah rekaman P2 dan dibekukan di layer4-freeze-2026-09-26. MEASURED bila sekurangnya satu program yang dikirim ke papan menjalankan opcode itu -- vonis kolomnya dibawa di klaim, sebab status dan selisih adalah dua hal berbeda (pemilik, P3); UNKNOWN bila tak satu pun. Eksperimen P4 dan P5 tidak digabung: pemilik menetapkannya bukti tingkat program atau eksperimen, bukan tingkat opcode (27-28 September 2026). Rekamannya membawa hash payload yang sama dengan ekspektasi beku, dan ekspektasi itu mencatat opcode yang interpreter jalankan -- tetapi P5 mengukur silikon menjalankan PRINT sesudah HALT atau RET fault yang interpreter tidak pernah jalankan, jadi opcode turunan interpreter bukan yang papan jalankan"
  },
  "contract": [
   {"query": "hardware identity HCPU", "state": "MEASURED", "basis": ["6.1:cpu"]},
