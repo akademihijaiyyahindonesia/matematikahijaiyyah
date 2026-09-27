@@ -1,0 +1,1774 @@
+{
+ "generated_by": "src/hijaiyyah/nui/hardware_provenance.py",
+ "spec": "NUI/spec/hardware_provenance.json",
+ "reads": [
+  "NUI/hardware_inventory.json",
+  "NUI/telemetry_sources.json"
+ ],
+ "counts": {
+  "MEASURED": 42,
+  "SIMULATED": 17,
+  "UNKNOWN": 9,
+  "LIVE": 0,
+  "historical_board_evidence": 42,
+  "live": 0,
+  "simulated": 17,
+  "unknown": 9,
+  "claims": 68,
+  "verified": 65,
+  "incomplete": 3
+ },
+ "runs": [
+  {
+   "run_id": "20260925T191528Z-loader",
+   "form": "record",
+   "observed_at": "2026-09-25T19:15:28.544410+00:00",
+   "evidence": [
+    "cosmictera-build/attack-lab/20260925T191528Z-loader.json"
+   ],
+   "claims": [
+    "6.1:board",
+    "6.1:loader",
+    "6.2:last_container"
+   ]
+  },
+  {
+   "run_id": "20260920T000027Z-jamrah",
+   "form": "record",
+   "observed_at": "2026-09-20T00:00:27.125391+00:00",
+   "evidence": [
+    "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json"
+   ],
+   "claims": [
+    "6.2:pass_count",
+    "6.2:reject_count",
+    "6.2:latency"
+   ]
+  },
+  {
+   "run_id": "20260924T073655Z-burn-in",
+   "form": "record",
+   "observed_at": "2026-09-24T07:36:55.695105+00:00",
+   "evidence": [
+    "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json",
+    "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.raw"
+   ],
+   "claims": [
+    "6.1:fpga_device",
+    "6.1:fpga_family",
+    "6.1:uart",
+    "6.1:bitstream_last_measured",
+    "6.1:telemetry_path"
+   ]
+  },
+  {
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "form": "record",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": [
+    "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.json",
+    "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+    "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json"
+   ],
+   "claims": [
+    "6.1:telemetry_fields",
+    "6.2:uptime",
+    "6.2:cycle_rate",
+    "6.2:drift",
+    "6.2:memory_check",
+    "6.2:stack_check",
+    "6.2:consistency",
+    "6.2:sd_sector_read",
+    "6.2:hfs_signature",
+    "6.2:read_error_count"
+   ]
+  },
+  {
+   "run_id": "20260920T013538Z-burn-in-24h",
+   "form": "record",
+   "observed_at": "2026-09-20T01:35:38.015192+00:00",
+   "evidence": [
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.json",
+    "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json"
+   ],
+   "claims": [
+    "6.1:clock",
+    "6.1:clock_drift"
+   ]
+  },
+  {
+   "run_id": "20260924T105400Z-parity",
+   "form": "record",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": [
+    "cosmictera-build/parity-board/20260924T105400Z-parity.json"
+   ],
+   "claims": [
+    "6.1:cpu",
+    "6.1:isa_board"
+   ]
+  },
+  {
+   "run_id": "M3 — shell menjawab kabel serial, 12 September 2026",
+   "form": "page",
+   "observed_at": "2026-09-12",
+   "evidence": [
+    "cosmictera-build/PAPAN.md"
+   ],
+   "claims": [
+    "6.1:hos_shell"
+   ]
+  },
+  {
+   "run_id": "M4.2 — kartu menjawab, dan menyimpan, 15 September 2026",
+   "form": "page",
+   "observed_at": "2026-09-15",
+   "evidence": [
+    "cosmictera-build/PAPAN.md"
+   ],
+   "claims": [
+    "6.1:sd_card"
+   ]
+  },
+  {
+   "run_id": "Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026",
+   "form": "page",
+   "observed_at": "2026-09-18",
+   "evidence": [
+    "cosmictera-build/PAPAN.md"
+   ],
+   "claims": [
+    "6.1:hfs"
+   ]
+  },
+  {
+   "run_id": "2B kecil — program dari kartu berjalan sendiri, 18 September 2026",
+   "form": "page",
+   "observed_at": "2026-09-18",
+   "evidence": [
+    "cosmictera-build/PAPAN.md"
+   ],
+   "claims": [
+    "6.2:last_boot"
+   ]
+  },
+  {
+   "run_id": "Lintas sektor dan ACK — shell naik dari sebelas sektor kartu, 18 September 2026",
+   "form": "page",
+   "observed_at": "2026-09-18",
+   "evidence": [
+    "cosmictera-build/PAPAN.md"
+   ],
+   "claims": [
+    "6.1:shell_from_card"
+   ]
+  },
+  {
+   "run_id": "Tiga cacat yang hanya papan bisa temukan",
+   "form": "page",
+   "observed_at": null,
+   "evidence": [
+    "cosmictera-build/PAPAN.md"
+   ],
+   "claims": [
+    "6.1:reset_button"
+   ]
+  },
+  {
+   "run_id": "Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan",
+   "form": "page",
+   "observed_at": "2026-09-20",
+   "evidence": [
+    "cosmictera-build/OFF.md"
+   ],
+   "claims": [
+    "6.1:sd_init_defect"
+   ]
+  },
+  {
+   "run_id": "Pixel HDMI rusak, dan sambungannya sendiri sehat",
+   "form": "page",
+   "observed_at": null,
+   "evidence": [
+    "cosmictera-build/OFF.md"
+   ],
+   "claims": [
+    "6.1:hdmi"
+   ]
+  },
+  {
+   "run_id": "Validasi Ka'bah — Tang Nano 20K",
+   "form": "page",
+   "observed_at": "2026-09-20",
+   "evidence": [
+    "cosmictera-build/validasi/KABAH.md"
+   ],
+   "claims": [
+    "6.2:avalanche",
+    "6.2:integrity",
+    "6.2:replay_state"
+   ]
+  },
+  {
+   "run_id": "Validasi Hijrah — Tang Nano 20K",
+   "form": "page",
+   "observed_at": "2026-09-20",
+   "evidence": [
+    "cosmictera-build/validasi/HIJRAH.md"
+   ],
+   "claims": [
+    "6.2:last_validation",
+    "6.2:density_mod2",
+    "6.2:density_mod4",
+    "6.2:density_mod5",
+    "6.2:collapse_count"
+   ]
+  }
+ ],
+ "claims": [
+  {
+   "id": "6.1:board",
+   "hardware": "papan",
+   "claim": "papan = Tang Nano 20K",
+   "source": {
+    "path": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+    "key": "board"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260925T191528Z-loader",
+   "observed_at": "2026-09-25T19:15:28.544410+00:00",
+   "evidence": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+   "evidence_lines": null,
+   "evidence_bytes": 7718,
+   "evidence_sha256": "5e4a2a52ac26677a4330849ca75d09d234b6d4195975a928a325a3c781e2747a",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:fpga_device",
+   "hardware": "FPGA",
+   "claim": "FPGA = GW2AR-LV18QN88C8/I7",
+   "source": {
+    "path": "rtl/fpga/gowin/Makefile",
+    "line": 24
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T073655Z-burn-in",
+   "observed_at": "2026-09-24T07:36:55.695105+00:00",
+   "evidence": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json",
+   "evidence_lines": null,
+   "evidence_bytes": 849,
+   "evidence_sha256": "768fdfb0db49ec69ed678d55895268379869c309cd1be418965aa3df52bee5cc",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:fpga_family",
+   "hardware": "FPGA",
+   "claim": "FPGA = GW2A-18C",
+   "source": {
+    "path": "rtl/fpga/gowin/Makefile",
+    "line": 25
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T073655Z-burn-in",
+   "observed_at": "2026-09-24T07:36:55.695105+00:00",
+   "evidence": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json",
+   "evidence_lines": null,
+   "evidence_bytes": 849,
+   "evidence_sha256": "768fdfb0db49ec69ed678d55895268379869c309cd1be418965aa3df52bee5cc",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:fpga_lut4",
+   "hardware": "sumber daya FPGA",
+   "claim": "sumber daya FPGA = 15,744 / 20,736",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 47
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "PNR/build-derived",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:fpga_dff",
+   "hardware": "sumber daya FPGA",
+   "claim": "sumber daya FPGA = 5,065 / 15,552",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 48
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "PNR/build-derived",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:fpga_bsram",
+   "hardware": "sumber daya FPGA",
+   "claim": "sumber daya FPGA = 18 /     46",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 49
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "PNR/build-derived",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:fpga_fmax",
+   "hardware": "sumber daya FPGA",
+   "claim": "sumber daya FPGA = 86.18 MHz",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 52
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "PNR/build-derived",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:cpu",
+   "hardware": "CPU",
+   "claim": "CPU = Hijaiyyah Core Processing Unit",
+   "source": {
+    "path": "teknologi/ISTILAH.md",
+    "line": 44
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:cpu_pipeline",
+   "hardware": "CPU",
+   "claim": "CPU = 5-stage pipeline with forwarding",
+   "source": {
+    "path": "rtl/hcpu_top.v",
+    "line": 3
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/hcpu_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 37028,
+   "evidence_sha256": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:isa_rtl",
+   "hardware": "H-ISA",
+   "claim": "H-ISA = 82",
+   "source": {
+    "path": "teknologi/README.md",
+    "line": 34
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/hcpu_pkg.vh",
+   "evidence_lines": null,
+   "evidence_bytes": 21087,
+   "evidence_sha256": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:isa_board",
+   "hardware": "H-ISA",
+   "claim": "H-ISA = 74",
+   "source": {
+    "path": "NUI/layer4_freeze.json",
+    "key": "status.opcodes.PARITY"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:isa_board_unknown",
+   "hardware": "H-ISA",
+   "claim": "H-ISA = UNKNOWN",
+   "source": null,
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "opcode tanpa bukti papan yang bisa memutuskan: tak satu pun program yang dikirim menjalankannya, atau buktinya campur. Jumlahnya di status.opcodes.UNKNOWN freeze Lapis 4",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:clock",
+   "hardware": "clock",
+   "claim": "clock = 27 MHz",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin.cst",
+    "line": 6
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260920T013538Z-burn-in-24h",
+   "observed_at": "2026-09-20T01:35:38.015192+00:00",
+   "evidence": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json",
+   "evidence_lines": null,
+   "evidence_bytes": 4041,
+   "evidence_sha256": "0733c06ad3c2caf85c348cba287d182e5fc25c59d20ce4d3d39eefa401e226e5",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:clock_drift",
+   "hardware": "clock",
+   "claim": "clock = -0.0292",
+   "source": {
+    "path": "facts/burnin/tier1_clock_drift.json",
+    "key": "value"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260920T013538Z-burn-in-24h",
+   "observed_at": "2026-09-20T01:35:38.015192+00:00",
+   "evidence": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json",
+   "evidence_lines": null,
+   "evidence_bytes": 4041,
+   "evidence_sha256": "0733c06ad3c2caf85c348cba287d182e5fc25c59d20ce4d3d39eefa401e226e5",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:clock_pll",
+   "hardware": "clock",
+   "claim": "clock = 0",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 280
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:imem_words",
+   "hardware": "memori instruksi",
+   "claim": "memori instruksi = 4096",
+   "source": {
+    "path": "facts/hisa/instruction_memory_words.json",
+    "key": "value"
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "facts/hisa/instruction_memory_words.json",
+   "evidence_lines": null,
+   "evidence_bytes": 469,
+   "evidence_sha256": "1f605f86edf95987a8e0ab54684fa9ea2cb15694685da0700105a5674a8908e9",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:dmem_words",
+   "hardware": "memori data",
+   "claim": "memori data = 4096",
+   "source": {
+    "path": "facts/repository/data_memory_words.json",
+    "key": "value"
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "facts/repository/data_memory_words.json",
+   "evidence_lines": null,
+   "evidence_bytes": 533,
+   "evidence_sha256": "9a23240237e796f2f91f7ada818789857496eb9c5942daa63767ff199a9ba0c0",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:uart",
+   "hardware": "UART",
+   "claim": "UART = 115200",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 291
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T073655Z-burn-in",
+   "observed_at": "2026-09-24T07:36:55.695105+00:00",
+   "evidence": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.raw",
+   "evidence_lines": null,
+   "evidence_bytes": 9940,
+   "evidence_sha256": "31e69b52ae17d44063a5e18a6a2ec36bf0fe8e0629b358a3887ed691596a13ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:sd_card",
+   "hardware": "kartu SD/TF",
+   "claim": "kartu SD/TF = M4.2 — kartu menjawab, dan menyimpan, 15 September 2026",
+   "source": {
+    "path": "cosmictera-build/PAPAN.md",
+    "line": 485
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "M4.2 — kartu menjawab, dan menyimpan, 15 September 2026",
+   "observed_at": "2026-09-15",
+   "evidence": "cosmictera-build/PAPAN.md",
+   "evidence_lines": [
+    485
+   ],
+   "evidence_bytes": 60,
+   "evidence_sha256": "140ac8ca79e5faa393a5bfe2292e976445bce5622726233b2fde1440673d7090",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:sd_init_defect",
+   "hardware": "kartu SD/TF",
+   "claim": "kartu SD/TF = 8",
+   "source": {
+    "path": "facts/fpga/sd_init_fails_after_interrupted_read.json",
+    "key": "value"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/OFF.md",
+   "evidence_lines": [
+    273,
+    275
+   ],
+   "evidence_bytes": 146,
+   "evidence_sha256": "39b22a313f97667e0c5177c964d53812c0800d3ec67b14789030510948e3f7e8",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:hdmi",
+   "hardware": "HDMI",
+   "claim": "HDMI = Pixel HDMI rusak, dan sambungannya sendiri sehat",
+   "source": {
+    "path": "cosmictera-build/OFF.md",
+    "line": 20
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "Pixel HDMI rusak, dan sambungannya sendiri sehat",
+   "observed_at": null,
+   "evidence": "cosmictera-build/OFF.md",
+   "evidence_lines": [
+    20
+   ],
+   "evidence_bytes": 52,
+   "evidence_sha256": "39c89c0af55f0573fd1881dcbb216493dc073ce0e18b4b6a2ffeeadfb86eb3eb",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "incomplete",
+   "failed_checks": [
+    {
+     "check": 6,
+     "label": "observed_at valid",
+     "why": "bagian ini menanggali keputusan pembekuan pemilik, bukan pengamatan papannya"
+    }
+   ]
+  },
+  {
+   "id": "6.1:leds",
+   "hardware": "LED",
+   "claim": "LED = 6",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin.cst",
+    "line": 50
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin.cst",
+   "evidence_lines": null,
+   "evidence_bytes": 4788,
+   "evidence_sha256": "eaa86f79a1fc2e41ace6f65c0e4b70a82b5415514e0893f5a84534e90776623c",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:reset_button",
+   "hardware": "tombol reset",
+   "claim": "tombol reset = Reset yang digerbangi level pin MODE1",
+   "source": {
+    "path": "cosmictera-build/PAPAN.md",
+    "line": 1321
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "Tiga cacat yang hanya papan bisa temukan",
+   "observed_at": null,
+   "evidence": "cosmictera-build/PAPAN.md",
+   "evidence_lines": [
+    1315,
+    1321
+   ],
+   "evidence_bytes": 116,
+   "evidence_sha256": "fcdddebec21b18937f6c4d6549db8b634ba1c3d2ee349bcd00e3c0b7e4e6117b",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "incomplete",
+   "failed_checks": [
+    {
+     "check": 6,
+     "label": "observed_at valid",
+     "why": "bagian ini tidak mencatat tanggal lari papannya"
+    }
+   ]
+  },
+  {
+   "id": "6.1:loader",
+   "hardware": "loader program",
+   "claim": "loader program = 0",
+   "source": {
+    "path": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+    "key": "findings"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260925T191528Z-loader",
+   "observed_at": "2026-09-25T19:15:28.544410+00:00",
+   "evidence": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+   "evidence_lines": null,
+   "evidence_bytes": 7718,
+   "evidence_sha256": "5e4a2a52ac26677a4330849ca75d09d234b6d4195975a928a325a3c781e2747a",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:shell_from_card",
+   "hardware": "program dari kartu",
+   "claim": "program dari kartu = Lintas sektor dan ACK — shell naik dari sebelas sektor kartu, 18 September 2026",
+   "source": {
+    "path": "cosmictera-build/PAPAN.md",
+    "line": 782
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "Lintas sektor dan ACK — shell naik dari sebelas sektor kartu, 18 September 2026",
+   "observed_at": "2026-09-18",
+   "evidence": "cosmictera-build/PAPAN.md",
+   "evidence_lines": [
+    782
+   ],
+   "evidence_bytes": 84,
+   "evidence_sha256": "bf95c4bc981dddd097e8546c11439dc4acc46c40343c8436358835af5ed2c275",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:hfs",
+   "hardware": "HOS/HFS",
+   "claim": "HOS/HFS = Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026",
+   "source": {
+    "path": "cosmictera-build/PAPAN.md",
+    "line": 608
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026",
+   "observed_at": "2026-09-18",
+   "evidence": "cosmictera-build/PAPAN.md",
+   "evidence_lines": [
+    608
+   ],
+   "evidence_bytes": 68,
+   "evidence_sha256": "d4587623fe18f2b4066ff3d7b3baa331c96f99415d895e78b078912e4abc9012",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:hos_shell",
+   "hardware": "HOS",
+   "claim": "HOS = M3 — shell menjawab kabel serial, 12 September 2026",
+   "source": {
+    "path": "cosmictera-build/PAPAN.md",
+    "line": 253
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "M3 — shell menjawab kabel serial, 12 September 2026",
+   "observed_at": "2026-09-12",
+   "evidence": "cosmictera-build/PAPAN.md",
+   "evidence_lines": [
+    253
+   ],
+   "evidence_bytes": 56,
+   "evidence_sha256": "3789496d48e3d27a13065d306ee19d55d5128f855621689755ff081cc429bbaa",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:bitstream_last_measured",
+   "hardware": "bitstream",
+   "claim": "bitstream = 84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261",
+   "source": {
+    "path": "NUI/layer4_freeze.json",
+    "key": "bitstream_sha256"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T073655Z-burn-in",
+   "observed_at": "2026-09-24T07:36:55.695105+00:00",
+   "evidence": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json",
+   "evidence_lines": null,
+   "evidence_bytes": 849,
+   "evidence_sha256": "768fdfb0db49ec69ed678d55895268379869c309cd1be418965aa3df52bee5cc",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:program_now",
+   "hardware": "program yang sedang dimuat",
+   "claim": "program yang sedang dimuat = UNKNOWN",
+   "source": null,
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "tidak ada jalur yang membaca konfigurasi papan saat ini; rekaman papan paling baru adalah lab loader P6, 25 September 2026 19:15 UTC",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:telemetry_fields",
+   "hardware": "telemetri",
+   "claim": "telemetri = 23",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 36
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.json",
+   "evidence_lines": null,
+   "evidence_bytes": 712,
+   "evidence_sha256": "09302ae1de43e7d06430a9aa4c26acf2a45afca7cc60591c33e7cb62b31c6ddf",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:telemetry_no_source",
+   "hardware": "telemetri",
+   "claim": "telemetri = UNKNOWN",
+   "source": null,
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "anomaly_score, corruption_score, state_hash, last_relocation belum punya sumber (fakta telemetry.four_fields_have_no_source)",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:telemetry_path",
+   "hardware": "telemetri",
+   "claim": "telemetri = UART",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 188
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T073655Z-burn-in",
+   "observed_at": "2026-09-24T07:36:55.695105+00:00",
+   "evidence": "cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.raw",
+   "evidence_lines": null,
+   "evidence_bytes": 9940,
+   "evidence_sha256": "31e69b52ae17d44063a5e18a6a2ec36bf0fe8e0629b358a3887ed691596a13ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:telemetry_live",
+   "hardware": "telemetri yang sedang mengalir",
+   "claim": "telemetri yang sedang mengalir = UNKNOWN",
+   "source": null,
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "tidak ada lari papan yang sedang diamati; irama dan jalur pelaporan telemetri belum ditetapkan pemilik",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.1:watchdog",
+   "hardware": "watchdog",
+   "claim": "watchdog = 0",
+   "source": {
+    "path": "facts/burnin/no_watchdog_exists.json",
+    "key": "value"
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "facts/burnin/no_watchdog_exists.json",
+   "evidence_lines": null,
+   "evidence_bytes": 552,
+   "evidence_sha256": "a94c18f81455caf817bb889dc10a86f1792af73f0eea7cd227bdbaf500c2e4fa",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:uptime",
+   "hardware": "telemetri",
+   "claim": "uptime: putaran pencacah dan pencacah >> 12, di tiap detak",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 36
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:cycle_rate",
+   "hardware": "telemetri",
+   "claim": "cycle_rate: cycles_per_second, median yang dihitung host dari detak papan",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 37
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "host_from_board",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+   "evidence_lines": null,
+   "evidence_bytes": 5654,
+   "evidence_sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:drift",
+   "hardware": "telemetri",
+   "claim": "drift: board_minus_host_s dan drift_per_hour_s, dihitung host dari detak papan dan jamnya sendiri",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 38
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "host_from_board",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+   "evidence_lines": null,
+   "evidence_bytes": 5654,
+   "evidence_sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:anomaly_score",
+   "hardware": "telemetri",
+   "claim": "anomaly_score = UNKNOWN",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 39
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "turunan yang menunggu NUI dan garis dasar",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:memory_check",
+   "hardware": "telemetri",
+   "claim": "memory_check: kegagalannya menaikkan pencacah errors di tiap detak",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 40
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:stack_check",
+   "hardware": "telemetri",
+   "claim": "stack_check: kegagalannya menaikkan pencacah errors di tiap detak",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 41
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:corruption_score",
+   "hardware": "telemetri",
+   "claim": "corruption_score = UNKNOWN",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 42
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "turunan dari pencacah kesalahan yang sudah ada, belum dibuat",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:pass_count",
+   "hardware": "telemetri",
+   "claim": "pass_count: accepted_per_run, lima lari",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 43
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "20260920T000027Z-jamrah",
+   "observed_at": "2026-09-20T00:00:27.125391+00:00",
+   "evidence": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "evidence_lines": null,
+   "evidence_bytes": 23236,
+   "evidence_sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:reject_count",
+   "hardware": "telemetri",
+   "claim": "reject_count: rejected_per_run, lima lari",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 44
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "20260920T000027Z-jamrah",
+   "observed_at": "2026-09-20T00:00:27.125391+00:00",
+   "evidence": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "evidence_lines": null,
+   "evidence_bytes": 23236,
+   "evidence_sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:latency",
+   "hardware": "telemetri",
+   "claim": "latency: clocks_per_byte, lima lari",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 45
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "20260920T000027Z-jamrah",
+   "observed_at": "2026-09-20T00:00:27.125391+00:00",
+   "evidence": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "evidence_lines": null,
+   "evidence_bytes": 23236,
+   "evidence_sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:consistency",
+   "hardware": "telemetri",
+   "claim": "consistency: dua jumlah dibandingkan tiap siklus burn-in; lima lari Jamrah identik byte demi byte (runs_identical)",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 46
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:avalanche",
+   "hardware": "telemetri",
+   "claim": "avalanche: validasi 20 September 2026, dicatat di halamannya; rekaman kabah di attack-lab adalah lari lab serangan yang lain",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 47
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "Validasi Ka'bah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/KABAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    39
+   ],
+   "evidence_bytes": 235,
+   "evidence_sha256": "86a324ea85a07348cf15dcc58ca8e3e3c2dc31f38fa5153f70abb269f6d0f3e6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:integrity",
+   "hardware": "telemetri",
+   "claim": "integrity: 8/8 frame berantai dan 32/32 masukan termutasi, dicatat di halaman validasi",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 48
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "Validasi Ka'bah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/KABAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    36,
+    40
+   ],
+   "evidence_bytes": 270,
+   "evidence_sha256": "0a88540b31fc4bccf7928dc40e6ff0fe6b9902a3577a3061a644faa746655085",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:replay_state",
+   "hardware": "telemetri",
+   "claim": "replay_state: dicatat di halaman validasi",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 49
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "Validasi Ka'bah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/KABAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    38
+   ],
+   "evidence_bytes": 215,
+   "evidence_sha256": "45b29f32bd941e9e59727c898d4feadf959b14be367c5e85c5642a64f6591d94",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:state_hash",
+   "hardware": "telemetri",
+   "claim": "state_hash = UNKNOWN",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 50
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "bentuk ringkasannya keputusan pemilik; tidak ada inti SHA-256 di RTL (R10)",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:sd_sector_read",
+   "hardware": "telemetri",
+   "claim": "sd_sector_read: status SD di tiap detak",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 51
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:hfs_signature",
+   "hardware": "telemetri",
+   "claim": "hfs_signature: card_word siklus pertama, 1212568369 = 0x48465331",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 52
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:read_error_count",
+   "hardware": "telemetri",
+   "claim": "read_error_count: pencacah sd failures di tiap detak",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 53
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_program",
+   "run_id": "20260921T053430Z-burn-in-72h",
+   "observed_at": "2026-09-21T05:34:30.437711+00:00",
+   "evidence": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence_lines": null,
+   "evidence_bytes": 855293,
+   "evidence_sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:last_boot",
+   "hardware": "telemetri",
+   "claim": "last_boot: 2B kecil, 18 September 2026",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 54
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "2B kecil — program dari kartu berjalan sendiri, 18 September 2026",
+   "observed_at": "2026-09-18",
+   "evidence": "cosmictera-build/PAPAN.md",
+   "evidence_lines": [
+    725,
+    727
+   ],
+   "evidence_bytes": 142,
+   "evidence_sha256": "40448d0012bd6a2e4e2f61b59c44dea51da7f92c9847a195e1153e30928f36e6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:last_container",
+   "hardware": "telemetri",
+   "claim": "last_container: keputusan loader per container; lari terbaru P6",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 55
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "20260925T191528Z-loader",
+   "observed_at": "2026-09-25T19:15:28.544410+00:00",
+   "evidence": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+   "evidence_lines": null,
+   "evidence_bytes": 7718,
+   "evidence_sha256": "5e4a2a52ac26677a4330849ca75d09d234b6d4195975a928a325a3c781e2747a",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:last_relocation",
+   "hardware": "telemetri",
+   "claim": "last_relocation = UNKNOWN",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 56
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "relokasi diterapkan di dalam pemuatan dan tidak dilaporkan sendiri",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:boot_duration",
+   "hardware": "telemetri",
+   "claim": "boot_duration: diukur sekali, dicatat di CHECKLIST.md",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 57
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "cosmictera-build/CHECKLIST.md",
+   "evidence_lines": [
+    196
+   ],
+   "evidence_bytes": 397,
+   "evidence_sha256": "6bd0a327f6579d9e220afde7276cc84654885fde51e604254177fbd8ab793fb9",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "incomplete",
+   "failed_checks": [
+    {
+     "check": 1,
+     "label": "run_id ada",
+     "why": "CHECKLIST.md mencatat 579.255 siklus di satu baris tabel, tanpa judul bagian dan tanpa tanggal lari"
+    },
+    {
+     "check": 6,
+     "label": "observed_at valid",
+     "why": "CHECKLIST.md mencatat 579.255 siklus di satu baris tabel, tanpa judul bagian dan tanpa tanggal lari"
+    }
+   ]
+  },
+  {
+   "id": "6.2:last_validation",
+   "hardware": "telemetri",
+   "claim": "last_validation: tiga lari dari tiga, dicatat di halaman validasi",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 58
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "Validasi Hijrah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    25,
+    26,
+    29
+   ],
+   "evidence_bytes": 350,
+   "evidence_sha256": "5649d5f2ce8f527f48691552d27bb0eea21ac5941e32c10d22050ce8c02eb9f2",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:density_mod2",
+   "hardware": "telemetri",
+   "claim": "density_mod2: log2 dikerjakan host atas hitungan yang dibuktikan papan",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 59
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "host_from_board",
+   "run_id": "Validasi Hijrah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    26,
+    35,
+    38
+   ],
+   "evidence_bytes": 318,
+   "evidence_sha256": "4d8f63594f15cbdf6b091c736d17a7e7a52e44be4febb23a78d07df2475d3af2",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:density_mod4",
+   "hardware": "telemetri",
+   "claim": "density_mod4: log2 dikerjakan host atas hitungan yang dibuktikan papan",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 60
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "host_from_board",
+   "run_id": "Validasi Hijrah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    26,
+    35,
+    38
+   ],
+   "evidence_bytes": 318,
+   "evidence_sha256": "4d8f63594f15cbdf6b091c736d17a7e7a52e44be4febb23a78d07df2475d3af2",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:density_mod5",
+   "hardware": "telemetri",
+   "claim": "density_mod5: log2 dikerjakan host atas hitungan yang dibuktikan papan",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 61
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "host_from_board",
+   "run_id": "Validasi Hijrah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    26,
+    35,
+    38
+   ],
+   "evidence_bytes": 318,
+   "evidence_sha256": "4d8f63594f15cbdf6b091c736d17a7e7a52e44be4febb23a78d07df2475d3af2",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:collapse_count",
+   "hardware": "telemetri",
+   "claim": "collapse_count: dicatat di halaman validasi",
+   "source": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 62
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board_validation",
+   "run_id": "Validasi Hijrah — Tang Nano 20K",
+   "observed_at": "2026-09-20",
+   "evidence": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence_lines": [
+    1,
+    3,
+    27
+   ],
+   "evidence_bytes": 215,
+   "evidence_sha256": "4cf4615537fb9e8065109322cb6c88acb64c32ab3422939477e65128abe09e94",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:tele_pc",
+   "hardware": "telemetri RTL",
+   "claim": "tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:327",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 327
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:tele_instr",
+   "hardware": "telemetri RTL",
+   "claim": "tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:328",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 328
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:tele_halted",
+   "hardware": "telemetri RTL",
+   "claim": "tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:329",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 329
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:tele_guard",
+   "hardware": "telemetri RTL",
+   "claim": "tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:330",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 330
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:tele_cycles",
+   "hardware": "telemetri RTL",
+   "claim": "tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:331",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 331
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.2:tele_flags",
+   "hardware": "telemetri RTL",
+   "claim": "tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:332",
+   "source": {
+    "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "line": 332
+   },
+   "source_kind": "simulated",
+   "evidence_kind": "rtl",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "evidence_lines": null,
+   "evidence_bytes": 33930,
+   "evidence_sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+   "status": "SIMULATED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "6.3:current-state",
+   "hardware": "keadaan hardware sekarang",
+   "claim": "keadaan hardware sekarang = UNKNOWN",
+   "source": {
+    "path": "NUI/telemetry_sources.json",
+    "key": "live_sources"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no live hardware telemetry source",
+   "verification": "verified",
+   "failed_checks": []
+  }
+ ],
+ "discrepancies": [
+  {
+   "field": "cycle_rate",
+   "says": "649,4",
+   "where": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 37
+   },
+   "measured": [
+    {
+     "path": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json",
+     "key": "cycles_per_second.p50",
+     "value": 650.4234527687142
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+     "key": "cycles_per_second.p50",
+     "value": 650.4234527687913
+    }
+   ]
+  },
+  {
+   "field": "drift",
+   "says": "−3,3",
+   "where": {
+    "path": "cosmictera/TELEMETRY.md",
+    "line": 38
+   },
+   "measured": [
+    {
+     "path": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json",
+     "key": "board_minus_host_s.p50",
+     "value": -3.8000000000029104
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+     "key": "board_minus_host_s.p50",
+     "value": -4.300000000017462
+    }
+   ]
+  }
+ ],
+ "discrepancies_why": "angka kontrak ditulis 20 September 2026 (68b684f) ketika burn-in tingkat 1 masih berjalan; garis dasar yang di-commit sesudahnya memberi median yang lain. Dicatat sebagai selisih historis, tidak disunting (pemilik, 27 September 2026)"
+}

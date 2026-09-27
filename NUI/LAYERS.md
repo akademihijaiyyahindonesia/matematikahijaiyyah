@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **33 modul**; `tests/test_ai/` berisi **497 tes**
+`src/hijaiyyah/nui/` berisi **34 modul**; `tests/test_ai/` berisi **561 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.324 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.351 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -213,10 +213,11 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `layer5.py` | Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan `record()` yang menulis evidence store di luar repositori, di namespace tiap VM (K-16); kesegaran menurut aturan eksplisit, dan delta antar-run — dijalankan pertama kali 26 September 2026 (P8.4) | `test_nui_layer5.py` (63) |
 | `hardware.py` | inventaris hardware Lapis 6.1: tiap butir MEASURED, SIMULATED, atau UNKNOWN, dibaca dari bukti yang sudah ada dengan sumber dan hash-nya | `test_nui_hardware.py` (14) |
 | `telemetry_sources.py` | registry sumber telemetri Lapis 6.2: 27 medan kontrak, jenis sumber, historis atau hidup, lari papan, dan hash; batas akses historical / live / simulated / unknown | `test_nui_telemetry_sources.py` (17) |
+| `hardware_provenance.py` | provenance hardware Lapis 6.3: tiap klaim 6.1 dan 6.2 jadi satu objek kanonik — jenis sumber, lari papan, bukti, `observed_at`, `evidence_sha256`, status — diperiksa terhadap berkasnya sendiri; keadaan hardware sekarang UNKNOWN | `test_nui_hardware_provenance.py` (37) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
-| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (102) |
-| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
+| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (129) |
+| `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host, hardware — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
 
 ---
 
@@ -272,7 +273,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.543 node, 4.040 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.573 node, 4.096 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -321,7 +322,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.324 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.351 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -882,13 +883,42 @@ telemetry, dan unknown. Yang ditemukan dan **dilaporkan, tidak diubah**:
 baseline yang di-commit memberi median 650,42 dan −3,8 (24 jam) atau −4,3
 (72 jam) detik.
 
+**6.3, 27 September 2026 — provenance hardware**, `NUI/HARDWARE_PROVENANCE.md`,
+dibangun `src/hijaiyyah/nui/hardware_provenance.py` dari
+`NUI/spec/hardware_provenance.json`. Bukan telemetri baru: karena 6.2
+membuktikan 0 sumber live, NUI **tidak boleh mengklaim keadaan hardware saat
+ini**. Tiap klaim 6.1 dan 6.2 — 34 butir inventaris, 27 medan kontrak, enam
+sinyal `tele_*` — ditambah satu pertanyaan pemilik, keadaan hardware sekarang,
+jadi satu objek kanonik dalam kosakata Lapis 5: `observed_at` dan
+`evidence_sha256`, tanpa `timestamp` atau `sha256` kedua. Jenis sumbernya satu
+dari empat yang 6.2 buktikan — historical_board_evidence, live, simulated,
+unknown — tanpa kelas baru. Identitas lari papan dibaca dari buktinya sendiri:
+`attack_id` atau `run_id` rekaman, nama berkas yang diberi alatnya, atau, untuk
+lari yang hanya dicatat halaman, judul bagian yang mencatatnya; bukti papan
+tidak diberi `vm_name`, karena (vm_name, run_id) milik bukti VM. **68 klaim:
+42 MEASURED, 17 SIMULATED, 9 UNKNOWN, 0 LIVE.** Sepuluh pemeriksaan pemilik,
+ditambah objek kanonik dan UNKNOWN yang tetap UNKNOWN, dijalankan terhadap
+berkasnya: **65 terverifikasi, 3 belum lengkap**, dan ketiganya dilaporkan,
+tidak diisi — HDMI dan reset pin MODE bersandar pada bagian halaman yang tidak
+menanggali pengamatan papannya, dan `boot_duration` pada satu baris
+`cosmictera-build/CHECKLIST.md` tanpa identitas run dan tanpa tanggal. Kueri
+`hardware current-state` menjawab **UNKNOWN — no live hardware telemetry
+source**, bukan lari historis terakhir; `hardware FPGA resources` SIMULATED
+dengan `PNR/build-derived`; `hardware tele_pc` SIMULATED, bukan telemetri papan
+yang hidup. Angka kontrak `cycle_rate` 649,4 dan `drift` −3,3 dicatat di
+modelnya sebagai **selisih historis** terhadap baseline, tidak disunting
+(pemilik). Satu nama dua peran, **dilaporkan, tidak diganti**: `source_kind`
+di registry 6.2 berarti program papan, dihitung host, atau validasi, sedangkan
+di 6.3 pemilik menetapkannya empat kelas; objek 6.3 membawa yang pertama
+sebagai `evidence_kind`.
+
 **Yang belum ada.** Model RTL sebagai fungsi. Yang ada mengurai antarmuka dan
-memodelkan dua protokol, bukan perilaku umum. Dari langkah pemilik: 6.3 dan
-6.4.
+memodelkan dua protokol, bukan perilaku umum. Dari langkah pemilik: 6.4.
 
 **Cara verifikasi.** 26 testbench di `rtl/tb/` adalah oracle-nya. Untuk
 inventarisnya, `python3 -m hijaiyyah.nui.hardware --verify` membacanya ulang
-dari buktinya.
+dari buktinya, dan `python3 -m hijaiyyah.nui.hardware_provenance --verify`
+membaca ulang tiap rantai provenance dari berkasnya.
 
 **Syarat selesai.** Prediksi keadaan berikutnya untuk modul yang disebut cocok
 dengan benchnya.

@@ -40,6 +40,9 @@ QUERIES = ["opcode PRINT", "opcode HALT", "opcode ADD", "program loader.hasm",
            "program rtl/programs/test_codex.hasm", "off OFF-PRINT-SILICON", "letter ج",
            "letter Kaf", "hc متغير", "hc cetak", "hc if", "hc read_file",
            "file src/hijaiyyah/nui/board_parity.py",
+           "hardware HCPU", "hardware FPGA", "hardware FPGA resources", "hardware clock",
+           "hardware memory", "hardware peripheral", "hardware telemetry",
+           "hardware current-state", "hardware tele_pc",
            *[q["query"] for q in CONTRACT["questions"]]]
 
 

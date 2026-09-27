@@ -12,6 +12,7 @@ grouped by where that knowledge lives, with where each piece comes from.
     python3 -m hijaiyyah.nui.knowledge board latest
     python3 -m hijaiyyah.nui.knowledge host services
     python3 -m hijaiyyah.nui.knowledge host delta processes
+    python3 -m hijaiyyah.nui.knowledge hardware current-state
 
 The owner's two shapes, both of 22 September 2026. The first is an answer:
 
@@ -60,6 +61,12 @@ answer walks back the owner's chain: the fact is the item, its `source` the
 place it was read, `evidence` the line or relation where one applies, and the
 verification the test the contract names.
 
+A hardware question (layer 6.3, 27 September 2026) is answered from the
+provenance model alone: each item is one canonical provenance object -- claim,
+source kind, board run, evidence, observed_at, SHA-256, status -- filed where
+its evidence lives, and what the hardware is doing now is `unknown`, because
+no live source is registered, never the newest historical run.
+
 Nothing is inferred and nothing is scored. Every item is a lookup in something
 the repository already holds, and every item carries `source` -- a file and
 line, or a model and key -- so an answer walks back to its evidence. DOMAINS
@@ -75,7 +82,8 @@ from . import off_db, registry, usr
 from .facts import load as load_facts
 from .repository_index import ROOT, tracked
 
-KINDS = ("opcode", "program", "off", "letter", "hc", "term", "file", "rtl", "board", "host")
+KINDS = ("opcode", "program", "off", "letter", "hc", "term", "file", "rtl", "board", "host",
+         "hardware")
 EXECUTION = ROOT / "NUI" / "execution_model.json"
 PARITY = ROOT / "NUI" / "parity_model.json"
 OPCODES = "src/hijaiyyah/hisa/opcodes.py"
@@ -653,6 +661,40 @@ def _host_delta(collector: str) -> Answer:
     return answer
 
 
+def _hardware(subject: str) -> Answer:
+    """Hardware claims with their provenance (layer 6.3). Each item is filed
+    in the domain that reads its evidence -- a board record or page under
+    PAPAN, RTL under RTL, a fact under NUI -- and a claim with no evidence
+    points at the provenance model. What is UNKNOWN, and every check a claim
+    fails, is said in `unknown`; nothing is taken from the newest run to stand
+    for the hardware now."""
+    from . import hardware_provenance, telemetry_sources
+    answer = _empty()
+    claims = hardware_provenance.claims_for(subject)
+    if claims is None:
+        answer["unknown"].append(f"`{subject}` is not a hardware subject or claim of "
+                                 "NUI/hardware_provenance.json")
+        return answer
+    registry = _json(telemetry_sources.MODEL)
+    for c in claims:
+        where = c["evidence"]
+        source = ("NUI/hardware_provenance.json" if where is None else
+                  f"{where}:{c['evidence_lines'][0]}" if c["evidence_lines"] else where)
+        domain = ("PAPAN" if source.startswith("cosmictera-build/") else
+                  "RTL" if source.startswith("rtl/") else "NUI")
+        item = {"what": "hardware claim", "id": c["id"], "status": c["status"],
+                "source_kind": c["source_kind"], "provenance": c, "source": source}
+        if c["id"].startswith("6.2:"):
+            item["boundary"] = telemetry_sources.access(c["id"][4:], registry)
+        answer[domain].append(item)
+        if c["status"] == "UNKNOWN":
+            answer["unknown"].append(f"{c['id']}: {c['reason']}")
+        for f in c["failed_checks"]:
+            answer["unknown"].append(f"{c['id']}: check {f['check']} ({f['label']}) fails -- "
+                                     f"{f['why']}")
+    return answer
+
+
 def query(text: str) -> Answer:
     kind, _, subject = text.strip().partition(" ")
     if kind not in KINDS or not subject:
@@ -667,7 +709,8 @@ def query(text: str) -> Answer:
                "file": lambda: _file(subject),
                "rtl": lambda: _rtl(subject),
                "board": lambda: _board(subject),
-               "host": lambda: _host(subject)}[kind]
+               "host": lambda: _host(subject),
+               "hardware": lambda: _hardware(subject)}[kind]
     return {"query": text.strip(), "kind": kind, "subject": subject, **handler()}
 
 

@@ -1542,6 +1542,30 @@ sedang mengalir.** Hari ini tidak ada sumber hidup; jalur UART pernah
 menghasilkan telemetri, dan itu historis. Keempat medan tanpa sumber tetap
 UNKNOWN dan tidak diisi dari nama sinyal RTL.
 
+**6.3 dibangun sesudah 6.2 diterima GREEN (`091e611`)**: provenance hardware,
+`NUI/HARDWARE_PROVENANCE.md`, dibangun `src/hijaiyyah/nui/hardware_provenance.py`.
+Karena tidak ada sumber live, **NUI tidak boleh mengklaim keadaan hardware
+saat ini**: `hardware current-state` menjawab UNKNOWN — *no live hardware
+telemetry source* — dan tidak pernah dari lari historis terakhir. Tiap klaim
+6.1 dan 6.2 jadi satu objek kanonik dalam kosakata Lapis 5 — `observed_at` dan
+`evidence_sha256`, tanpa `timestamp` atau `sha256` kedua — dengan satu dari
+empat jenis sumber: historical_board_evidence, live, simulated, unknown.
+Identitas lari papan dibaca dari buktinya sendiri, dan bukti papan tidak diberi
+`vm_name`. Angkanya di `NUI/LAYERS.md`, Lapis 6. Yang harus diketahui kuli
+berikutnya:
+
+- **Tiga klaim MEASURED rantainya belum lengkap, dan tidak diisi**: HDMI dan
+  reset pin MODE bersandar pada bagian halaman yang tidak menanggali
+  pengamatan papannya, dan `boot_duration` pada satu baris CHECKLIST.md tanpa
+  identitas run. Kelasnya tetap seperti di 6.1 dan 6.2; nasibnya keputusan
+  pemilik.
+- **`source_kind` kini punya dua peran — dilaporkan, tidak diganti.** Di
+  registry 6.2 ia berarti program papan, dihitung host, atau validasi; di 6.3
+  pemilik menetapkannya empat kelas. Objek 6.3 membawa yang pertama sebagai
+  `evidence_kind`, dan registry 6.2 tidak disentuh.
+- **`cycle_rate` 649,4 dan `drift` −3,3 di `cosmictera/TELEMETRY.md` adalah
+  selisih historis**: dicatat di model provenance, tidak disunting (pemilik).
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
