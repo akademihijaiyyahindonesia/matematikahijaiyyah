@@ -34,7 +34,9 @@ The second, later the same day, is how the knowledge is organised:
 OFF stays what does not depend on an active host. The owner's K-6 also says
 no HOST fact goes in before a collector has measured it. So HOST reads one
 place only, the observations layer 5's collectors wrote to the K-11 store on
-the host, outside this repository -- never facts/, which NUI reads. The two
+the host, outside this repository -- never facts/, which NUI reads -- and of
+those only the main instance's own: an observation is (vm_name, run_id),
+K-16, 27 September 2026. The two
 are the two classes of provenance the owner named on 26 September 2026 (P8.5):
 facts/ sealed engineering facts, observations/ runtime HOST evidence, and the
 test that files every item by its source keeps them apart. A HOST item is one
@@ -542,7 +544,11 @@ def _board(subject: str) -> Answer:
 def _host(subject: str) -> Answer:
     """What the host shows, read only from verified observations (K-6, K-11).
 
-    The subject is a collector or an area of NUI/spec/layer5_collectors.json,
+    The host is the main instance the spec names, cosmictera-layer5, and only
+    its own observations answer: the canonical identity of an observation is
+    (vm_name, run_id), so the test instance's evidence never stands for the
+    main one (K-16). The subject is a collector or an area of
+    NUI/spec/layer5_collectors.json,
     or `services`, the service area. Each HOST item is the newest observation
     of one collector that passed layer5.latest()'s checks, with its run,
     collector, evidence file, time and SHA-256; a collector that is not PASS
@@ -551,6 +557,7 @@ def _host(subject: str) -> Answer:
     names the collectors whose evidence would answer, and none yet does."""
     from . import layer5
     answer = _empty()
+    vm = layer5.host()["instance"]
     collectors = layer5.load()["collectors"]
     area = {"services": "service"}.get(subject, subject)
     chosen = [c["name"] for c in collectors if subject == c["name"] or area == c["area"]]
@@ -564,10 +571,10 @@ def _host(subject: str) -> Answer:
                                   "source": "NUI/spec/layer5_collectors.json"})
     passed = set()
     for name in chosen:
-        seen = layer5.latest(name)
+        seen = layer5.latest(name, vm)
         if seen is None:
-            answer["unknown"].append(f"no supporting HOST observation: {name} has no run in "
-                                     "the observation store")
+            answer["unknown"].append(f"no supporting HOST observation: {name} has no run for "
+                                     f"{vm} in the observation store")
             continue
         if "rejected" in seen:
             answer["unknown"].append(f"no supporting HOST observation: {name} in "

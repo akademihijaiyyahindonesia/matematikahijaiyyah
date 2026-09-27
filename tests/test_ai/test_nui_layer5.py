@@ -200,11 +200,12 @@ def test_every_catalog_form_passes_the_guard() -> None:
 def test_where_an_observation_is_kept_is_the_owners_k11() -> None:
     """K-11: one directory per session under ~/cosmictera-layer5/observations/,
     on the host and outside the repository -- the repo holds code, specs, tests
-    and sealed facts, not live observations. Every manifest field the owner
-    named comes from a field `observe()` already returns, except run_id, which
-    is the session itself."""
+    and sealed facts, not live observations -- and since K-16 under the VM's
+    own namespace. Every manifest field the owner named comes from a field
+    `observe()` already returns, except run_id, which is the session itself."""
     spec = layer5.load()["observations"]
-    assert spec["per_run"] == "~/cosmictera-layer5/observations/<run_id>/"
+    assert spec["per_run"] == "~/cosmictera-layer5/observations/<vm_name>/<run_id>/"
+    assert spec["identity"].startswith("(vm_name, run_id)") and "K-16" in spec["identity"]
     where = Path(spec["dir"]).expanduser().resolve()
     assert not where.is_relative_to(ROOT), "an observation would land in the repository"
     assert [f["field"] for f in spec["manifest"]] == [
@@ -261,6 +262,7 @@ def test_record_writes_every_collector_with_the_owners_fields(
 
     out, manifest = _recorded(tmp_path, monkeypatch, fake)
     assert re.fullmatch(r"\d{8}T\d{6}Z-collectors", out.name)
+    assert out.parent == tmp_path / "cosmictera-layer5-uji", "K-16: the VM's own namespace"
     assert manifest["run_id"] == out.name and manifest["vm_name"] == "cosmictera-layer5-uji"
     names = [c["name"] for c in layer5.load()["collectors"]]
     assert [e["collector"] for e in manifest["collectors"]] == names
@@ -330,3 +332,37 @@ def test_the_store_is_refused_inside_the_repository(monkeypatch: pytest.MonkeyPa
     finally:
         shutil.rmtree(inside, ignore_errors=True)
     assert layer5.store() == Path("~/cosmictera-layer5/observations").expanduser()
+
+
+def test_record_can_run_the_first_collector_alone(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The owner's order for the main instance: one collector first, then the
+    provenance checked, then the rest. `only` runs the ones named and writes
+    only them; a name the spec does not have is refused before anything runs."""
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    calls: list[list[str]] = []
+
+    def fake(cmd: list[str], **_: Any) -> _Done:
+        calls.append(cmd)
+        return _Done(cmd)
+
+    out = layer5.record("cosmictera-layer5", run=fake, into=tmp_path, only=["host_identity"])
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert out.parent == tmp_path / "cosmictera-layer5"
+    assert [e["collector"] for e in manifest["collectors"]] == ["host_identity"]
+    assert calls == [["limactl", "shell", "cosmictera-layer5", "--", "cat", "/etc/os-release"]]
+    for bad in (["no_such_collector"], []):
+        with pytest.raises(layer5.Refused):
+            layer5.record("cosmictera-layer5", run=fake, into=tmp_path, only=bad)
+
+
+def test_an_instance_name_cannot_leave_its_namespace(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def must_not(*_: Any, **__: Any) -> None:
+        raise AssertionError("a command was run")
+
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    for bad in ("../cosmictera-layer5", "a/b", ".", "..", ""):
+        with pytest.raises(layer5.Refused, match="instance name"):
+            layer5.record(bad, run=must_not, into=tmp_path)
+    assert list(tmp_path.iterdir()) == []

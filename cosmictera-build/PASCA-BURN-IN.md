@@ -25,7 +25,7 @@ P4  PRINT di silikon                         selesai 25 September 2026
 P5  HALT/RET di silikon                      selesai 25 September 2026
 P6  checksum + sabotase                      selesai 26 September 2026
 P7  laporan selisih final, freeze Lapis 4, tag selesai 26 September 2026
-P8  Lapis 5                                  P8.1–P8.5 selesai 26 September 2026
+P8  Lapis 5                                  P8.1–P8.7 selesai 26–27 September 2026
 ```
 
 ## Keputusan pemilik, 22 September 2026
@@ -47,6 +47,8 @@ P8  Lapis 5                                  P8.1–P8.5 selesai 26 September 20
 | K-13 | Keenam kolektor yang masih usulan **ditetapkan**; kesebelasnya berbagi satu kontrak. Ditetapkan berarti kontraknya dikunci, bukan selalu exit 0: 9 PASS, 1 unavailable karena izin, 1 unavailable karena perintahnya tidak ada (26 September 2026) | P8.4, P8.5 |
 | K-14 | Alasan `unknown` HOST adalah **bukti belum cukup, bukan sistem belum ada**: "no supporting HOST observation"; `host services` menjawab "no supporting journal/service observation" (26 September 2026) | P8.5 |
 | K-15 | Evidence Lapis 5 tetap **teks UTF-8** keluaran perintah; `observe()` tidak diubah jadi tangkapan byte mentah. Bukti kabel UART (P1) byte mentah karena penguraiannya persoalan byte; kolektor yang kelak menghasilkan format bukan teks direkam sebagai biner secara eksplisit (26 September 2026) | P8 |
+| K-16 | Identitas kanonik sebuah observasi adalah **`(vm_name, run_id)`**: `layer5.latest(vm_name)` hanya membaca observasi milik VM itu, dan observasi instance uji tidak pernah menjawab untuk instance utama. Run berikutnya di `~/cosmictera-layer5/observations/<vm_name>/<run_id>/`; run lama tidak dipindahkan, dibedakan oleh `vm_name` di manifest-nya (27 September 2026) | P8.6 |
+| K-17 | `cosmictera-layer5-uji` **dihentikan, tidak dihapus**: disk dan direktorinya dipertahankan sampai instance utama menjalankan kolektor pertamanya dan provenance-nya terbukti (27 September 2026) | P8.6 |
 
 Yang **tidak** diputuskan di hari itu, dan tidak masuk urutan ini: perbaikan
 `PRINT` di silikon dan perbaikan instruksi sesudah berhenti. Keduanya RTL, K9
@@ -259,8 +261,14 @@ P8.4  sebelas kolektor hanya-baca -> evidence store             selesai,
       9 exit 0, journal gagal karena izin (terdokumentasi), docker tidak ada
 P8.5  provenance HOST: facts/ tersegel, observations/ runtime   selesai
 P8.6  tujuh kueri yang dibekukan        dijalankan di dalam P8.5, perintah pemilik
-P8.7  cosmictera-layer5-uji hijau -> baru cosmictera-layer5
+P8.7  cosmictera-layer5-uji hijau -> baru cosmictera-layer5   selesai 26 September
+P8.6  (pemilik, 27 September) namespace per VM K-16, uji dihentikan K-17,
+      kolektor pertama instance utama                          selesai
 ```
+
+Nomor P8.6 dipakai pemilik dua kali: 26 September untuk tujuh kueri, yang lalu
+dijalankan di dalam P8.5, dan 27 September untuk namespace per VM. Yang
+berlaku yang terakhir; yang pertama dicatat supaya pergeserannya tidak diam.
 
 Uji negatif digest memakai instance sekali pakai dengan nama dari pemilik,
 `cosmictera-layer5-digest-uji`, bukan instance uji. Kolektor P8.4 dijalankan

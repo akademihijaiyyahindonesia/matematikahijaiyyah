@@ -1,7 +1,8 @@
 """Layer 5: observing an Ubuntu host, read only.
 
     python3 -m hijaiyyah.nui.layer5                       # the plan: every collector, guarded
-    python3 -m hijaiyyah.nui.layer5 --record <instance>   # every collector, into the K-11 store
+    python3 -m hijaiyyah.nui.layer5 --record <instance> [<collector> ...]
+                                                          # into the store, under the VM's namespace
 
 The owner's decisions: the host is a VM, Ubuntu Server 24.04 LTS ARM64, isolated
 from this Mac (21 September 2026); its first stage only reads; its image is
@@ -39,9 +40,14 @@ when limactl is not installed, as it was until Homebrew installed it on
 hash of stdout; nothing is parsed -- what the parsing must be is not decided.
 
 -- where it is kept ----------------------------------------------------------------
-K-11, 23 September 2026: ~/cosmictera-layer5/observations/<run_id>/, on the
-host and outside this repository, which holds code, specifications, tests and
-sealed facts -- not runtime observations. observe() returns a record and
+K-11, 23 September 2026: the observations store on the host, outside this
+repository, which holds code, specifications, tests and sealed facts -- not
+runtime observations. K-16, 27 September 2026: an observation's canonical
+identity is (vm_name, run_id), and a run is written under its VM's own
+namespace, ~/cosmictera-layer5/observations/<vm_name>/<run_id>/. The runs
+written before that sit at observations/<run_id>/ and are not moved: they are
+frozen evidence, and the vm_name in their manifests tells them apart.
+observe() returns a record and
 writes nothing; record() runs every collector through it once and writes the
 run: each collector's stdout and stderr under raw/, and a manifest.json that
 links each to its collector, run, time, VM, command, exit code, duration,
@@ -51,8 +57,9 @@ UTF-8 text, not raw bytes (K-15): a host command's output already is the
 observation, unlike the UART wire, whose parsing is a question of bytes.
 
 -- reading it back ------------------------------------------------------------------
-latest() hands NUI's HOST domain the newest observation of one collector, and
-only after checking it: the run's manifest and its entry name that run, and
+latest() hands NUI's HOST domain the newest observation of one collector on
+one VM -- never another VM's -- and only after checking it: the run's
+manifest and its entry name that VM and that run, and
 every evidence file has the size and SHA-256 the manifest recorded. Anything
 else is returned as rejected, with why. outcome() classes a run by the
 owner's rules in the spec (K-12, K-13) -- PASS, unavailable for permissions,
@@ -227,25 +234,37 @@ def _sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def record(instance: str, run: Runner = subprocess.run, into: Path | None = None) -> Path:
-    """Every collector once, through observe() and its guard, written to one
-    run directory of the K-11 store: each collector's stdout and stderr under
-    raw/, and a manifest.json that links every one of them to its collector,
-    run, time, VM, command, exit code, duration, path and SHA-256.
+VM_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
+
+
+def record(instance: str, run: Runner = subprocess.run, into: Path | None = None,
+           only: list[str] | None = None) -> Path:
+    """Every collector once -- or the ones `only` names, in the spec's order --
+    through observe() and its guard, written to one run directory under the
+    VM's own namespace of the K-11 store, observations/<vm_name>/<run_id>/
+    (K-16): each collector's stdout and stderr under raw/, and a manifest.json
+    that links every one of them to its VM, run, collector, time, command,
+    exit code, duration, path and SHA-256.
 
     A collector that fails is recorded with why, and the others still run. The
     store is refused inside this repository: it holds code, specs, tests and
     sealed facts, not runtime observations (K-11)."""
+    if not VM_NAME.fullmatch(instance):
+        raise Refused(f"instance name {instance!r} cannot name a directory of its own")
+    names = [c["name"] for c in load()["collectors"]]
+    if only is not None and (not only or set(only) - set(names)):
+        raise Refused(f"no collector named {sorted(set(only) - set(names))}")
     base = (into or store()).resolve()
     if base == ROOT or ROOT in base.parents:
         raise Refused(f"{base} is inside the repository; observations live outside it (K-11)")
     started = datetime.now(timezone.utc)
     run_id = started.strftime("%Y%m%dT%H%M%SZ") + "-collectors"
-    out = base / run_id
+    out = base / instance / run_id
     (out / "raw").mkdir(parents=True, exist_ok=False)
     entries: list[dict[str, Any]] = []
-    for collector in load()["collectors"]:
-        name = collector["name"]
+    for name in names:
+        if only is not None and name not in only:
+            continue
         entry: dict[str, Any] = {"collector": name, "run_id": run_id, "vm_name": instance}
         try:
             got = observe(name, instance, run=run)
@@ -267,7 +286,7 @@ def record(instance: str, run: Runner = subprocess.run, into: Path | None = None
         entries.append(entry)
     manifest = {
         "run_id": run_id, "vm_name": instance, "started_utc": started.isoformat(),
-        "lima_home": host()["lima_home"],
+        "identity": "(vm_name, run_id), K-16", "lima_home": host()["lima_home"],
         "transport": "limactl shell <instance> -- <argv>, guarded by layer5.guard()",
         "produced_by": {
             "module": "src/hijaiyyah/nui/layer5.py",
@@ -297,33 +316,53 @@ def outcome(exit_code: int | None, stderr: str) -> str:
 
 
 def resolve(source: str) -> Path:
-    """Where an observation source, `observations/<run_id>/...`, lies on the host."""
+    """Where an observation source, `observations/...`, lies on the host."""
     return store().parent / source
 
 
-def latest(collector: str) -> dict[str, Any] | None:
-    """The newest observation of one collector in the store, verified before
-    it is handed out: the run's manifest names this run, the entry names this
-    run and collector, and every evidence file has the size and SHA-256 the
-    manifest recorded. A run that fails any of that is returned as rejected,
-    with why, and never as an observation. None when no run has the
+def _runs(vm_name: str) -> list[tuple[Path, bool]]:
+    """Collector runs that may belong to one VM, newest first: those in its
+    own namespace, observations/<vm_name>/<run_id>/ (K-16), and the runs
+    written before K-16 at observations/<run_id>/, frozen where they are and
+    told apart by the vm_name in their manifests. True marks the namespace."""
+    base = store()
+    found = []
+    for where, own in ((base / vm_name, True), (base, False)):
+        if where.is_dir():
+            found += [(p, own) for p in where.iterdir() if p.is_dir() and RUN.fullmatch(p.name)]
+    return sorted(found, key=lambda r: r[0].name, reverse=True)
+
+
+def latest(collector: str, vm_name: str) -> dict[str, Any] | None:
+    """The newest observation of one collector on one VM, verified before it
+    is handed out. The canonical identity of an observation is (vm_name,
+    run_id) (K-16): another VM's run never answers for this one. The run's
+    manifest names this VM and this run, the entry names this VM, run and
+    collector, and every evidence file has the size and SHA-256 the manifest
+    recorded. A run that fails any of that is returned as rejected, with why,
+    and never as an observation. None when no run of this VM has the
     collector."""
     base = store()
-    runs = sorted((p for p in base.iterdir() if p.is_dir() and RUN.fullmatch(p.name)),
-                  reverse=True) if base.is_dir() else []
-    for run_dir in runs:
-        prefix = f"{base.name}/{run_dir.name}"
+    for run_dir, own in _runs(vm_name):
+        prefix = "/".join([base.name, *([vm_name] if own else []), run_dir.name])
         try:
             manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
         except (OSError, ValueError) as why:
-            return {"collector": collector, "run_id": run_dir.name,
+            if not own:
+                continue
+            return {"collector": collector, "run_id": run_dir.name, "vm_name": vm_name,
                     "rejected": f"manifest unreadable: {why}"}
+        if not own and manifest.get("vm_name") != vm_name:
+            continue
         entry = next((e for e in manifest.get("collectors", [])
                       if e.get("collector") == collector), None)
         if entry is None:
             continue
         found: dict[str, Any] = {"collector": collector, "run_id": run_dir.name,
                                  "manifest": f"{prefix}/manifest.json"}
+        if manifest.get("vm_name") != vm_name or entry.get("vm_name") != vm_name:
+            return {**found, "vm_name": vm_name,
+                    "rejected": f"the manifest names another VM than {vm_name}"}
         if manifest.get("run_id") != run_dir.name or entry.get("run_id") != run_dir.name:
             return {**found, "rejected": "the manifest does not name this run"}
         found.update({k: entry.get(k) for k in ("vm_name", "timestamp", "command_identity",
@@ -352,8 +391,8 @@ def latest(collector: str) -> dict[str, Any] | None:
 
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
-    if args[:1] == ["--record"] and len(args) == 2:
-        out = record(args[1])
+    if args[:1] == ["--record"] and len(args) >= 2:
+        out = record(args[1], only=args[2:] or None)
         manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
         print(out)
         for e in manifest["collectors"]:

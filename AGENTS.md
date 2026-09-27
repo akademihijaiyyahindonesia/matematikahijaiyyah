@@ -1462,6 +1462,22 @@ evidence, cap waktu, dan sha256-nya. Ketujuh kueri kontrak dijalankan, dan
 `host services` tetap `unknown` karena tidak ada observasi service yang
 mendukungnya. Angkanya di `NUI/LAYERS.md`, Lapis 5.
 
+**Instance utama, 26–27 September 2026.** `cosmictera-layer5` dibuat dari
+artefak yang sama persis — identity check sembilan dari sembilan sebelum boot,
+tanpa eksperimen baru — lalu boot, `aarch64`, dan isolasinya identik dengan
+instance uji. Sesudah itu dua keputusan pemilik, di tabel runbook yang sama:
+
+- **K-16 — observasi adalah `(vm_name, run_id)`.** `layer5.latest()` menuntut
+  VM-nya, dan bukti instance uji **tidak pernah** menjawab untuk instance
+  utama. Run baru di `~/cosmictera-layer5/observations/<vm_name>/<run_id>/`;
+  run lama tidak dipindahkan.
+- **K-17 — instance uji dihentikan, tidak dihapus.** Pensiunnya menunggu
+  provenance instance utama terbukti.
+
+Kolektor pertama instance utama, `host_identity` saja, dijalankan ke namespace
+barunya dan provenance-nya diperiksa sebelum kolektor lain — perintah pemilik.
+Lapis 5 tetap **AT** sampai bukti instance utama benar-benar terkumpul.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
