@@ -33,6 +33,7 @@ ON = (FOLDER / "ON.md").read_text(encoding="utf-8")
 CHECKLIST = (FOLDER / "CHECKLIST.md").read_text(encoding="utf-8")
 OFF = (FOLDER / "OFF.md").read_text(encoding="utf-8")
 PAPAN = (FOLDER / "PAPAN.md").read_text(encoding="utf-8")
+LAYERS = (ROOT / "NUI" / "LAYERS.md").read_text(encoding="utf-8")
 PKG = (ROOT / "rtl" / "hcpu_pkg.vh").read_text(encoding="utf-8")
 WRAPPER = (ROOT / "rtl" / "fpga" / "gowin" / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 TB_MAKEFILE = (ROOT / "rtl" / "tb" / "Makefile").read_text(encoding="utf-8")
@@ -427,6 +428,12 @@ def test_the_counts_agree_across_the_folder() -> None:
     assert f"{measured} asersi RTL di {benches} testbench" in README
     assert f"{measured} asersi, {benches} bench, 0 gagal" in ON
     assert f"{benches} testbench, {measured} pemeriksaan, 0 gagal" in PAPAN
+    # NUI/LAYERS.md's layer 6 quoted "26 testbench" from 13 September until
+    # 28 September 2026, when it was measured: 26 was what this same count
+    # gave then. Held here, by the owner's definition, so it cannot go stale
+    # unseen again.
+    layers = " ".join(LAYERS.split())
+    assert layers.count(f"{benches} testbench yang dijalankan `make -C rtl/tb all`") == 2
 
 
 def _quoted_pytest_counts() -> dict[str, tuple[int, int]]:

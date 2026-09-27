@@ -831,8 +831,9 @@ masing-masing dan tidak dipaksa jadi EH.
 
 **Tujuan.** Memahami HCPU, UART, SRAM, pipeline, loader, peta memori.
 
-**Aset yang sudah ada.** `rtl/` (30 modul HCPU, 13 modul Ka'bah, 26
-testbench), `rtl/fpga/`, `rtl/mpw/`; `rtl/scripts/lint_hcpu.py`;
+**Aset yang sudah ada.** `rtl/` (30 modul HCPU, 13 modul Ka'bah, 39
+testbench yang dijalankan `make -C rtl/tb all`), `rtl/fpga/`, `rtl/mpw/`;
+`rtl/scripts/lint_hcpu.py`;
 `tests/test_integrity/test_board_wiring.py` yang mengurai port Verilog;
 `rtl/scripts/rack.py` untuk biaya slot bitstream; dan dua model perangkat
 keras yang sudah berjalan di Python — `src/hijaiyyah/nui/sram_mock.py`
@@ -1029,7 +1030,8 @@ tujuan lapis ini — UART TX, peta memori, SRAM, pipeline, loader, HCPU; UART RX
 sudah. Yang ada selain itu mengurai antarmuka dan memodelkan dua protokol,
 bukan perilaku umum.
 
-**Cara verifikasi.** 26 testbench di `rtl/tb/` adalah oracle-nya. Untuk
+**Cara verifikasi.** 39 testbench yang dijalankan `make -C rtl/tb all` adalah
+oracle-nya. Untuk
 inventarisnya, `python3 -m hijaiyyah.nui.hardware --verify` membacanya ulang
 dari buktinya, `python3 -m hijaiyyah.nui.hardware_provenance --verify`
 membaca ulang tiap rantai provenance dari berkasnya, dan
