@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **31 modul**; `tests/test_ai/` berisi **466 tes**
+`src/hijaiyyah/nui/` berisi **32 modul**; `tests/test_ai/` berisi **479 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.299 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.313 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -211,6 +211,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `layer4_freeze.py` | Lapis 4 dibekukan: bukti P0–P6 dengan hash-nya, status tiap warna, dan laporan selisih final dalam empat kelas, dihitung ulang dari rekaman | `test_nui_layer4_freeze.py` (9) |
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
 | `layer5.py` | Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan `record()` yang menulis evidence store di luar repositori, di namespace tiap VM (K-16); kesegaran menurut aturan eksplisit, dan delta antar-run — dijalankan pertama kali 26 September 2026 (P8.4) | `test_nui_layer5.py` (63) |
+| `hardware.py` | inventaris hardware Lapis 6.1: tiap butir MEASURED, SIMULATED, atau UNKNOWN, dibaca dari bukti yang sudah ada dengan sumber dan hash-nya | `test_nui_hardware.py` (13) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (102) |
@@ -268,9 +269,9 @@ dijelaskan di [`GRAPH.md`](GRAPH.md). Ia menjawab kelima pertanyaan yang
 pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
-*references*, dan sekarang keduanya ada: 96 dokumen yang **git lacak** (edge
-`references`, tidak pernah dihitung sebagai import) dan 850 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.512 node, 3.969 edge**.
+*references*, dan sekarang keduanya ada: 97 dokumen yang **git lacak** (edge
+`references`, tidak pernah dihitung sebagai import) dan 864 definisi tingkat
+atas di `src/` (edge `defines`). Graf kini **1.529 node, 4.007 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -319,7 +320,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.299 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.313 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -833,10 +834,38 @@ keras yang sudah berjalan di Python — `src/hijaiyyah/nui/sram_mock.py`
 (protokol twin-port) dan `src/hijaiyyah/nui/freeze.py` (protokol kabel
 loader).
 
-**Yang belum ada.** Model RTL sebagai fungsi. Yang ada mengurai antarmuka dan
-memodelkan dua protokol, bukan perilaku umum.
+**Dibuka pemilik 27 September 2026 sebagai *Hardware Intelligence***, sesudah
+Lapis 5 final di `80ea5f8` (tag `layer5-freeze-2026-09-27-final`). Empat
+langkah: 6.1 inventaris hardware yang sudah terbukti, 6.2 sumber telemetri
+yang benar-benar tersedia, 6.3 provenance hardware, 6.4 kueri hardware
+pertama. Aturannya: mulai dari bukti hardware yang sudah ada — tanpa menyentuh
+RTL atau papan, tanpa sensor, port debug, telemetri baru, atau arsitektur KV260
+untuk mengisi kolom kosong — dan pisahkan tegas MEASURED (dibuktikan secara
+fisik), SIMULATED (RTL/interpreter), dan UNKNOWN (belum ada jalur observasi).
+Lapis 6 tidak berangkat dari asumsi bahwa Lapis 5 sudah memahami perangkat
+keras.
 
-**Cara verifikasi.** 26 testbench di `rtl/tb/` adalah oracle-nya.
+**6.1, 27 September 2026 — inventaris hardware**, `NUI/HARDWARE.md`, dibangun
+`src/hijaiyyah/nui/hardware.py` dari `NUI/spec/hardware_inventory.json`, yang
+hanya menyebut *di mana* tiap nilai dibaca: 19 MEASURED, 11 SIMULATED, 4
+UNKNOWN, menjawab kedelapan pertanyaan pemilik. Tiap butir membawa rantai
+hardware → bukti → sumber → run → hash: berkas dan rekaman di-hash utuh,
+halaman Markdown hanya baris yang dikutip. Semua buktinya sudah di-commit; tak
+satu pun dibuat untuk inventaris ini. Yang menonjol: papan `Tang Nano 20K` dan
+FPGA `GW2AR-LV18QN88C8/I7` terukur lewat lari papan; clock 27 MHz terukur
+lewat hanyutan 8,1 ppm terhadap jam host; 74 opcode terukur di papan dan 29
+UNKNOWN; program yang sedang dimuat **UNKNOWN** — tidak ada jalur yang membaca
+konfigurasi papan saat ini. Angka sumber daya FPGA (LUT4, DFF, BSRAM, Fmax)
+adalah laporan nextpnr, bukan dibaca dari papan, jadi masuk SIMULATED — usulan
+kuli, menunggu pemilik.
+
+**Yang belum ada.** Model RTL sebagai fungsi. Yang ada mengurai antarmuka dan
+memodelkan dua protokol, bukan perilaku umum. Dari langkah pemilik: 6.2, 6.3,
+dan 6.4.
+
+**Cara verifikasi.** 26 testbench di `rtl/tb/` adalah oracle-nya. Untuk
+inventarisnya, `python3 -m hijaiyyah.nui.hardware --verify` membacanya ulang
+dari buktinya.
 
 **Syarat selesai.** Prediksi keadaan berikutnya untuk modul yang disebut cocok
 dengan benchnya.

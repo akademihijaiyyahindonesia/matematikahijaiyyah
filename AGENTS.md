@@ -1516,6 +1516,25 @@ dikunci — identitas USER + COMMAND, dan `kworker` saja dipisah sebagai
 tes dan `layer5_freeze --verify` kembali *reproduced exactly*, **Lapis 5
 selesai**, dan Lapis 6 dibuka atas aba-aba pemilik.
 
+Konfigurasi final Lapis 5 ditandai pemilik dengan tag kedua,
+`layer5-freeze-2026-09-27-final` di `80ea5f8`; tag pertama tetap di `02584d6`
+dan **tidak dipindahkan**.
+
+### Keputusan pemilik, 27 September 2026 — Lapis 6 dibuka: Hardware Intelligence
+
+Empat langkah — 6.1 inventaris, 6.2 sumber telemetri, 6.3 provenance hardware,
+6.4 kueri hardware pertama — dan satu aturan yang paling mudah dilanggar:
+**mulai dari bukti hardware yang sudah ada.** Jangan membuat sensor, port
+debug, telemetri baru, atau memilih arsitektur KV260 hanya untuk mengisi kolom
+yang kosong; yang tidak punya jalur observasi tetap **UNKNOWN**. MEASURED
+berarti dibuktikan secara fisik, SIMULATED berarti RTL atau interpreter.
+
+**6.1 tutup hari itu**, tanpa menyentuh RTL atau papan: `NUI/HARDWARE.md`,
+dibangun `src/hijaiyyah/nui/hardware.py`. Angkanya di `NUI/LAYERS.md`, Lapis
+6. Satu klasifikasi menunggu pemilik: laporan nextpnr (LUT4, DFF, BSRAM,
+Fmax) ditaruh di SIMULATED, karena dihitung dari desain, bukan dibaca dari
+papan.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
