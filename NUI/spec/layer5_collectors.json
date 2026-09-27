@@ -206,6 +206,93 @@
   "status": "ditetapkan",
   "source": "pemilik, 26 September 2026, keputusan K-12 dan K-13 -- sembilan PASS, satu UNAVAILABLE karena izin, satu UNAVAILABLE karena perintahnya tidak ada; keduanya bukan PASS"
  },
+ "freshness": {
+  "stale_after_seconds": null,
+  "clock": "cap waktu UTC jam host Mac saat observe() mulai (medan `timestamp` manifest, `observed_at` di jawaban), dibandingkan jam host yang sama saat kueri dijawab",
+  "rule": "known current bila umur observasi tidak lebih dari stale_after_seconds; known but stale bila lebih, bila jam mundur, atau bila stale_after_seconds belum ditetapkan -- tanpa nilai, tidak ada observasi yang diklaim current; unknown bila tidak ada observasi yang mendukung",
+  "status": "ditetapkan",
+  "value_status": "menunggu pemilik: nilainya tidak ditebak",
+  "source": "pemilik, 27 September 2026 -- penutupan operasional Lapis 5: bedakan known current, known but stale, dan unknown, dan jangan menebak batas stale; buat dulu parameter atau aturan yang eksplisit"
+ },
+ "delta": {
+  "rule": "Delta satu kolektor antara dua run VM yang sama: butir yang muncul, yang hilang, dan yang berubah nilainya, dibaca dari stdout kedua run dengan aturan butir di bawah, beserta provenance kedua run. Hanya observasi; tidak ada tindakan",
+  "status": "usulan",
+  "source": "pemilik, 27 September 2026 -- delta antar-run, dengan provenance ke kedua run, tanpa tindakan otomatis. Aturan butir tiap kolektor usulan kuli, diturunkan dari bentuk keluaran P8.4 dan menunggu dikunci pemilik",
+  "items": {
+   "host_identity": {
+    "kind": "kv",
+    "sep": "="
+   },
+   "processes": {
+    "kind": "fields",
+    "skip": 1,
+    "key": [
+     0
+    ],
+    "rest_from": 10,
+    "count": true,
+    "why": "USER dan COMMAND; PID, CPU, memori, dan waktu berubah tiap lari"
+   },
+   "mounts": {
+    "kind": "fields",
+    "skip": 0,
+    "key": [
+     1,
+     2
+    ],
+    "why": "titik mount dan tipe"
+   },
+   "root_listing": {
+    "kind": "fields",
+    "skip": 1,
+    "key": [],
+    "rest_from": 8,
+    "why": "nama entri; baris `total` dilewati"
+   },
+   "systemd_overview": {
+    "kind": "findall",
+    "pattern": "[A-Za-z0-9@:._-]+\\.(?:service|socket|timer|mount|scope|slice|target|path|swap|automount)",
+    "why": "nama unit yang muncul di keluaran, bukan daftar semua service yang aktif"
+   },
+   "journal": {
+    "kind": "line",
+    "skip": 0
+   },
+   "interfaces": {
+    "kind": "fields",
+    "skip": 0,
+    "key": [
+     0
+    ],
+    "why": "nama antarmuka"
+   },
+   "links": {
+    "kind": "match",
+    "pattern": "^\\d+: (?P<key>[^:@\\s]+)",
+    "why": "nama antarmuka di baris kepala tiap link"
+   },
+   "routes": {
+    "kind": "line",
+    "skip": 0
+   },
+   "interface_counters": {
+    "kind": "fields",
+    "skip": 2,
+    "key": [
+     0
+    ],
+    "why": "nama antarmuka; dua baris kepala dilewati"
+   },
+   "containers": {
+    "kind": "fields",
+    "skip": 1,
+    "key": [
+     0
+    ],
+    "why": "ID kontainer; baris kepala dilewati"
+   }
+  }
+ },
  "guard": [
   {
    "rule": "Perintahnya harus ada di daftar izin pemilik dan tidak di daftar belum-diizinkan -- dibaca dari NUI/LAYERS.md, tidak disalin (R1)",

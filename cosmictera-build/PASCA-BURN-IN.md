@@ -271,6 +271,12 @@ P8.6  (pemilik, 27 September) namespace per VM K-16, uji dihentikan K-17,
 Sesudah itu Lapis 5 masuk **baseline utama**: `cosmictera-layer5` satu-satunya
 instance aktif, dan tiap kueri HOST berbasis namespace VM yang eksplisit.
 
+**Penutupan operasional Lapis 5, 27 September 2026** — perintah pemilik,
+sebelum Lapis 6: baseline utama dibekukan, kesegaran (aturan eksplisit, nilai
+batas menunggu pemilik), delta antar-run dengan provenance kedua run, lalu
+laporan `NUI/LAYER5.md`, commit, dan tag `layer5-freeze-2026-09-27`. Angkanya di
+`NUI/LAYERS.md`, Lapis 5.
+
 Nomor P8.6 dipakai pemilik dua kali: 26 September untuk tujuh kueri, yang lalu
 dijalankan di dalam P8.5, dan 27 September untuk namespace per VM. Yang
 berlaku yang terakhir; yang pertama dicatat supaya pergeserannya tidak diam.

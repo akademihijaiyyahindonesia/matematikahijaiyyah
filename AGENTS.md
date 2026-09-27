@@ -1487,6 +1487,28 @@ berkas kecil direktorinya disalin lebih dulu ke namespace-nya sendiri di
 evidence store — **yang dipensiunkan adalah VM, bukan bukti P8.1–P8.5**.
 Lapis 5 kini baseline utama dengan satu instance aktif, dan tetap **AT**.
 
+### Perintah pemilik, 27 September 2026 — penutupan operasional Lapis 5
+
+Sebelum Lapis 6 dibuka, dan **tanpa kolektor baru**: bekukan baseline utama,
+beri HOST konsep kesegaran, beri NUI delta antar-run, lalu bekukan dengan
+laporan, commit, dan annotated tag — bentuk Lapis 4, sebagai *host intelligence
+baseline freeze*. Laporannya `NUI/LAYER5.md`, tagnya `layer5-freeze-2026-09-27`.
+
+Tiga hal yang harus diketahui kuli berikutnya:
+
+- **Batas "stale" tidak ditebak** — perintah pemilik. `stale_after_seconds` di
+  `NUI/spec/layer5_collectors.json` bernilai `null` sampai pemilik
+  menetapkannya, dan selama itu tidak ada observasi yang diklaim current.
+- **Delta adalah observasi, bukan tindakan.** Aturan butir tiap kolektor masih
+  usulan; `processes` yang dibandingkan pada data nyata hanya menunjukkan
+  thread kernel yang berganti nama.
+- **Freeze Lapis 5 memuat pointer dan hash saja** (K-11); isi observasinya
+  tetap di evidence store, dan `--verify` hanya bisa dijalankan di mesin yang
+  punya store itu.
+
+Lapis 6 — *Hardware Intelligence* — tidak boleh berangkat dari asumsi bahwa
+Lapis 5 sudah memahami perangkat keras.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

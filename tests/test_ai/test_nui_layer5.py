@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -366,3 +367,60 @@ def test_an_instance_name_cannot_leave_its_namespace(
         with pytest.raises(layer5.Refused, match="instance name"):
             layer5.record(bad, run=must_not, into=tmp_path)
     assert list(tmp_path.iterdir()) == []
+
+
+# -- freshness and delta rules (27 September 2026) ------------------------------------------
+
+
+def test_every_collector_has_an_item_rule_and_the_stale_value_waits() -> None:
+    """Delta needs an explicit item rule per collector, and freshness an
+    explicit parameter -- whose value the owner has not set, so it is null
+    rather than guessed."""
+    spec = layer5.load()
+    assert set(spec["delta"]["items"]) == {c["name"] for c in spec["collectors"]}
+    assert spec["freshness"]["stale_after_seconds"] is None
+    assert "pemilik" in spec["freshness"]["value_status"]
+
+
+def test_items_follow_each_rule() -> None:
+    ps = ("USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\n"
+          "root 1 0.0 0.3 22260 12564 ? Ss 04:37 0:01 /sbin/init\n"
+          "root 7 0.0 0.0 0 0 ? I< 04:37 0:00 [kworker/R-rcu_g]\n"
+          "root 8 0.0 0.0 0 0 ? I< 04:37 0:00 [kworker/R-rcu_g]\n")
+    assert layer5.items("processes", ps) == {"root /sbin/init": "1",
+                                              "root [kworker/R-rcu_g]": "2"}
+    ls = ("total 84\n"
+          "lrwxrwxrwx 1 root root 7 Apr 22 2024 bin -> usr/bin\n"
+          "drwxr-xr-x 4 root root 4096 Sep 26 09:16 boot\n")
+    assert set(layer5.items("root_listing", ls)) == {"bin -> usr/bin", "boot"}
+    links = ("1: lo: <LOOPBACK,UP> mtu 65536\n    link/loopback 00:00\n"
+             "2: eth0: <BROADCAST,UP> mtu 1500\n    link/ether 52:55\n")
+    assert set(layer5.items("links", links)) == {"lo", "eth0"}
+    dev = ("Inter-|   Receive\n face |bytes packets\n"
+           "    lo:   17381 212\n  eth0: 196686714 138592\n")
+    assert set(layer5.items("interface_counters", dev)) == {"lo:", "eth0:"}
+    mounts = "/dev/vda1 / ext4 rw 0 0\nproc /proc proc rw 0 0\n"
+    assert set(layer5.items("mounts", mounts)) == {"/ ext4", "/proc proc"}
+    units = "├─systemd-journald.service\n│ └─ssh.service\n└─user@502.service\n"
+    assert layer5.items("systemd_overview", units) == {
+        "systemd-journald.service": "1", "ssh.service": "1", "user@502.service": "1"}
+    assert layer5.items("host_identity", 'NAME="Ubuntu"\nVERSION_ID="24.04"\n') == {
+        "NAME": '"Ubuntu"', "VERSION_ID": '"24.04"'}
+    assert layer5.items("routes", "default via 1.2.3.4 dev eth0\n") == {
+        "default via 1.2.3.4 dev eth0": ""}
+
+
+def test_freshness_is_the_rule_and_a_clock_that_went_back_is_never_current(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    spec = layer5.load()
+    now = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
+    at = (now - timedelta(seconds=10)).isoformat()
+    assert layer5.freshness(at, now)["freshness"] == "stale"
+    spec["freshness"]["stale_after_seconds"] = 60
+    monkeypatch.setattr(layer5, "load", lambda: spec)
+    assert layer5.freshness(at, now) == {"age_seconds": 10.0, "stale_after_seconds": 60,
+                                         "freshness": "current"}
+    old = (now - timedelta(seconds=61)).isoformat()
+    assert layer5.freshness(old, now)["freshness"] == "stale"
+    ahead = (now + timedelta(seconds=5)).isoformat()
+    assert "went back" in layer5.freshness(ahead, now)["freshness_why"]

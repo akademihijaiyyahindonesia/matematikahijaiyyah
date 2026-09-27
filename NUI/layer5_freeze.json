@@ -1,0 +1,412 @@
+{
+ "generated_by": "src/hijaiyyah/nui/layer5_freeze.py",
+ "tag": "layer5-freeze-2026-09-27",
+ "vm_name": "cosmictera-layer5",
+ "baseline": {
+  "host_identity": {
+   "run_id": "20260927T050203Z-collectors",
+   "observed_at": "2026-09-27T05:02:03.098742+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T050203Z-collectors/raw/host_identity.stdout",
+   "stdout_sha256": "87458b3b1f1ca0e5c693ade771de7007c3783bdc692fa6b39eb6414bf2af2763",
+   "stderr": "observations/cosmictera-layer5/20260927T050203Z-collectors/raw/host_identity.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processes": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:14.973533+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/processes.stdout",
+   "stdout_sha256": "f01fcfdd25110892e2a248bc0d7a65fe129081b7e09664a80a7e91f3779fb13a",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/processes.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "mounts": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.020828+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/mounts.stdout",
+   "stdout_sha256": "da590b49988b963a692b1abfde1c2ac91a00b616aacf647c956a9a583d04c6c1",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/mounts.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "root_listing": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.061557+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/root_listing.stdout",
+   "stdout_sha256": "6ddd418bf2a3a4a06eb62cdddb64990ad8dbf82fe42a180bb95bfcec87da3216",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/root_listing.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "systemd_overview": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.103577+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/systemd_overview.stdout",
+   "stdout_sha256": "cb0e9545cf979c03cd90af408b31bc4ba7876a3cc2006e3130c526ca0f7bb8f8",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/systemd_overview.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "journal": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.148053+00:00",
+   "status": "unavailable_due_to_permissions",
+   "exit_code": 1,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/journal.stdout",
+   "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/journal.stderr",
+   "stderr_sha256": "f67710d9a2901ed73c6ffb7283752a127502cee6e3949edb2d1b676123a97ccb"
+  },
+  "interfaces": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.190900+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/interfaces.stdout",
+   "stdout_sha256": "f93525acf046ab310f671cd63118f4c89ff1a4c2c9a4b1750a447a82a30119f8",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/interfaces.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "links": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.231773+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/links.stdout",
+   "stdout_sha256": "62adece1620575dbdbc3a7a3bd77a44988979480fbc8de93c8966a78521aa158",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/links.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "routes": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.271302+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/routes.stdout",
+   "stdout_sha256": "70ba1421db04882768e4663fffa1d01a2043ff8838ca5de128a0ca40c4de7835",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/routes.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "interface_counters": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.311829+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/interface_counters.stdout",
+   "stdout_sha256": "d204d15706d86414e4ba1b13e581c29da788eff22361228f6f10a0fec8beae19",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/interface_counters.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "containers": {
+   "run_id": "20260927T083814Z-collectors",
+   "observed_at": "2026-09-27T08:38:15.353191+00:00",
+   "status": "unavailable_command_absent",
+   "exit_code": 127,
+   "stdout": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/containers.stdout",
+   "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "stderr": "observations/cosmictera-layer5/20260927T083814Z-collectors/raw/containers.stderr",
+   "stderr_sha256": "92a1d429ddffc7727f257629ef4b895c07a2433f6c6677f9f7202ff85523b722"
+  }
+ },
+ "compared_with": {
+  "host_identity": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:39.795655+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/host_identity.stdout",
+   "stdout_sha256": "87458b3b1f1ca0e5c693ade771de7007c3783bdc692fa6b39eb6414bf2af2763",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/host_identity.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "processes": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:39.842405+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/processes.stdout",
+   "stdout_sha256": "0929d413c2b623d2c68a154307ffd8f682dcfb35e8d92e09eb199b21a4e3f0cb",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/processes.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "mounts": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:39.886857+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/mounts.stdout",
+   "stdout_sha256": "da590b49988b963a692b1abfde1c2ac91a00b616aacf647c956a9a583d04c6c1",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/mounts.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "root_listing": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:39.927321+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/root_listing.stdout",
+   "stdout_sha256": "87250c4ddf81ca51b30a8bf980e7fe496d1721026bf50eec62c61b1f0123045b",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/root_listing.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "systemd_overview": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:39.968280+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/systemd_overview.stdout",
+   "stdout_sha256": "eb542cb05ced1e4527df130d175dee71c791dc6186b7d465873b3bd4315b3e9e",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/systemd_overview.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "journal": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:40.013804+00:00",
+   "status": "unavailable_due_to_permissions",
+   "exit_code": 1,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/journal.stdout",
+   "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/journal.stderr",
+   "stderr_sha256": "f67710d9a2901ed73c6ffb7283752a127502cee6e3949edb2d1b676123a97ccb"
+  },
+  "interfaces": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:40.055526+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/interfaces.stdout",
+   "stdout_sha256": "f93525acf046ab310f671cd63118f4c89ff1a4c2c9a4b1750a447a82a30119f8",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/interfaces.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "links": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:40.098086+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/links.stdout",
+   "stdout_sha256": "62adece1620575dbdbc3a7a3bd77a44988979480fbc8de93c8966a78521aa158",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/links.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "routes": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:40.138067+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/routes.stdout",
+   "stdout_sha256": "70ba1421db04882768e4663fffa1d01a2043ff8838ca5de128a0ca40c4de7835",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/routes.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "interface_counters": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:40.180060+00:00",
+   "status": "PASS",
+   "exit_code": 0,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/interface_counters.stdout",
+   "stdout_sha256": "3512cb7365e2f0d8ea1696e397fd9012bd9632cdf1e6b61be6f7d5f6ceaaca38",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/interface_counters.stderr",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "containers": {
+   "run_id": "20260927T095339Z-collectors",
+   "observed_at": "2026-09-27T09:53:40.220723+00:00",
+   "status": "unavailable_command_absent",
+   "exit_code": 127,
+   "stdout": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/containers.stdout",
+   "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "stderr": "observations/cosmictera-layer5/20260927T095339Z-collectors/raw/containers.stderr",
+   "stderr_sha256": "92a1d429ddffc7727f257629ef4b895c07a2433f6c6677f9f7202ff85523b722"
+  }
+ },
+ "delta": {
+  "host_identity": {
+   "from": "20260927T050203Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "processes": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 8,
+   "disappeared": 6,
+   "changed": 0,
+   "items_sha256": "457d2d0b6110e28b13e97c3198ba5878cd4180f7e375d108cf951d169507b5bd"
+  },
+  "mounts": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "root_listing": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 2,
+   "items_sha256": "83df9f12a926edbca487926aedbcc001c2acc76e8bb787f0a06a1044b9904665"
+  },
+  "systemd_overview": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "journal": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "unavailable_due_to_permissions",
+    "unavailable_due_to_permissions"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "interfaces": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "links": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "routes": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  },
+  "interface_counters": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "PASS",
+    "PASS"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 2,
+   "items_sha256": "5aa0cef9702ceada2cc7112eec32d3d102624dc4ca8f4f1b0ed4f27384e58643"
+  },
+  "containers": {
+   "from": "20260927T083814Z-collectors",
+   "to": "20260927T095339Z-collectors",
+   "status": [
+    "unavailable_command_absent",
+    "unavailable_command_absent"
+   ],
+   "appeared": 0,
+   "disappeared": 0,
+   "changed": 0,
+   "items_sha256": "0d268d725e43ae3f545516d55d5fde6555a2efe529aae511be48ec4a0cbefc46"
+  }
+ },
+ "history": [
+  {
+   "step": "P8.3 isolation, test instance",
+   "manifest": "observations/20260926T013117Z-isolation/manifest.json",
+   "sha256": "83f0932f317e35ff3e361badb99e13c5c0860dc400f63144c3446adc0042af76"
+  },
+  {
+   "step": "P8.3 negative digest",
+   "manifest": "observations/20260926T013234Z-digest-negative/manifest.json",
+   "sha256": "b0ee2b79e85559b243c92a265ccd3b9c4800fae95620840633b464f2944b22dd"
+  },
+  {
+   "step": "P8.4 eleven collectors, test instance",
+   "manifest": "observations/20260926T053008Z-collectors/manifest.json",
+   "sha256": "89829f5c1f0013bb480a06a42bca63ce895fe285d23d52a452aa44a09a4015be"
+  },
+  {
+   "step": "P8.7 promotion, main instance",
+   "manifest": "observations/20260926T091643Z-isolation/manifest.json",
+   "sha256": "a5f590c2827e6da579248c2a67a5e14085b485f79ff1ef8c203a6fe91a5829ba"
+  },
+  {
+   "step": "P8.6 first main collector",
+   "manifest": "observations/cosmictera-layer5/20260927T050203Z-collectors/manifest.json",
+   "sha256": "0786a762704603890de47367e859361ce5f08efc9601b0239f810c8fb2919e21"
+  },
+  {
+   "step": "ten main collectors",
+   "manifest": "observations/cosmictera-layer5/20260927T083814Z-collectors/manifest.json",
+   "sha256": "cfaa3484f0fa8ba500e9892faace7f21b90490c0a75c2aab078d88c7f70ab492"
+  },
+  {
+   "step": "first run after the baseline",
+   "manifest": "observations/cosmictera-layer5/20260927T095339Z-collectors/manifest.json",
+   "sha256": "b31b7571af744ff27872694f04142bd577158f25f8d1b6865a6003595d401c54"
+  },
+  {
+   "step": "test instance retired (K-17)",
+   "manifest": "observations/cosmictera-layer5-uji/20260927T083913Z-retirement/manifest.json",
+   "sha256": "8325041a4995a731f5d9998f52d0b1aa2c7795ff95ee567ac5c53473549e8067"
+  }
+ ],
+ "freshness_rule": {
+  "stale_after_seconds": null,
+  "clock": "cap waktu UTC jam host Mac saat observe() mulai (medan `timestamp` manifest, `observed_at` di jawaban), dibandingkan jam host yang sama saat kueri dijawab",
+  "rule": "known current bila umur observasi tidak lebih dari stale_after_seconds; known but stale bila lebih, bila jam mundur, atau bila stale_after_seconds belum ditetapkan -- tanpa nilai, tidak ada observasi yang diklaim current; unknown bila tidak ada observasi yang mendukung",
+  "value_status": "menunggu pemilik: nilainya tidak ditebak"
+ },
+ "delta_rule_status": "usulan"
+}

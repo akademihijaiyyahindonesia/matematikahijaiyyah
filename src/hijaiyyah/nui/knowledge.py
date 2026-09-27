@@ -11,6 +11,7 @@ grouped by where that knowledge lives, with where each piece comes from.
     python3 -m hijaiyyah.nui.knowledge rtl hcpu_top
     python3 -m hijaiyyah.nui.knowledge board latest
     python3 -m hijaiyyah.nui.knowledge host services
+    python3 -m hijaiyyah.nui.knowledge host delta processes
 
 The owner's two shapes, both of 22 September 2026. The first is an answer:
 
@@ -556,6 +557,8 @@ def _host(subject: str) -> Answer:
     stays unknown, with the reason (K-14). For `services` the owner's contract
     names the collectors whose evidence would answer, and none yet does."""
     from . import layer5
+    if subject.startswith("delta "):
+        return _host_delta(subject[len("delta "):].strip())
     answer = _empty()
     vm = layer5.host()["instance"]
     collectors = layer5.load()["collectors"]
@@ -585,13 +588,14 @@ def _host(subject: str) -> Answer:
                                      f"{seen['run_id']} -- {seen['failure']}")
             continue
         stream = "stdout" if seen["status"] == "PASS" else "stderr"
+        fresh = layer5.freshness(seen["observed_at"])
         answer["HOST"].append({
             "what": "observation", "provenance": "observation", "collector": name,
             "status": seen["status"], "run_id": seen["run_id"], "vm_name": seen["vm_name"],
-            "timestamp": seen["timestamp"], "command_identity": seen["command_identity"],
+            "observed_at": seen["observed_at"], "command_identity": seen["command_identity"],
             "exit_code": seen["exit_code"], "evidence": seen[stream]["source"],
-            "sha256": seen[stream]["sha256"], "text": seen[f"{stream}_text"],
-            "source": seen[stream]["source"]})
+            "evidence_sha256": seen[stream]["sha256"], "text": seen[f"{stream}_text"],
+            **fresh, "source": seen[stream]["source"]})
         if seen["status"] == "PASS":
             passed.add(name)
         else:
@@ -602,6 +606,42 @@ def _host(subject: str) -> Answer:
         row = next(q for q in _json(CONTRACT)["questions"] if q["query"] == "host services")
         if not passed & set(row["supported_by"]):
             answer["unknown"].insert(0, row["unknown_reason"])
+    return answer
+
+
+def _host_delta(collector: str) -> Answer:
+    """What changed in one collector's output between the main instance's two
+    newest runs of it, each item with the provenance of both runs (layer5.delta).
+    An observation of change, never an action on it."""
+    from . import layer5
+    answer = _empty()
+    vm = layer5.host()["instance"]
+    if collector not in {c["name"] for c in layer5.load()["collectors"]}:
+        answer["unknown"].append(f"`{collector}` is not a collector of "
+                                 "NUI/spec/layer5_collectors.json")
+        return answer
+    d = layer5.delta(collector, vm)
+    if "unknown" in d:
+        answer["unknown"].append(d["unknown"])
+        return answer
+    common = {"provenance": "observation", "collector": collector, "vm_name": vm,
+              "from_run": d["from"]["run_id"], "to_run": d["to"]["run_id"],
+              "between": {"from": d["from"], "to": d["to"]}}
+    for key in d["appeared"]:
+        answer["HOST"].append({"what": "appeared", "item": key, **common,
+                               "source": d["to"]["evidence"]})
+    for key in d["disappeared"]:
+        answer["HOST"].append({"what": "disappeared", "item": key, **common,
+                               "source": d["from"]["evidence"]})
+    for change in d["changed"]:
+        answer["HOST"].append({"what": "changed", **change, **common,
+                               "source": d["to"]["evidence"]})
+    if d["from"]["status"] != d["to"]["status"]:
+        answer["HOST"].append({"what": "status changed", "from": d["from"]["status"],
+                               "to": d["to"]["status"], **common,
+                               "source": d["to"]["stderr"]})
+    if not answer["HOST"]:
+        answer["HOST"].append({"what": "unchanged", **common, "source": d["to"]["evidence"]})
     return answer
 
 

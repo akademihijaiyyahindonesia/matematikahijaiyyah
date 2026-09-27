@@ -333,60 +333,175 @@ def _runs(vm_name: str) -> list[tuple[Path, bool]]:
     return sorted(found, key=lambda r: r[0].name, reverse=True)
 
 
+def _verified(run_dir: Path, own: bool, collector: str, vm_name: str) -> dict[str, Any] | None:
+    """One collector's observation in one run of one VM, checked: the run's
+    manifest names this VM and this run, the entry names this VM, run and
+    collector, and every evidence file has the size and SHA-256 the manifest
+    recorded. A run that fails any of that comes back rejected, with why.
+    None when the run is not this VM's or does not hold the collector."""
+    prefix = "/".join([store().name, *([vm_name] if own else []), run_dir.name])
+    try:
+        manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as why:
+        if not own:
+            return None
+        return {"collector": collector, "run_id": run_dir.name, "vm_name": vm_name,
+                "rejected": f"manifest unreadable: {why}"}
+    if not own and manifest.get("vm_name") != vm_name:
+        return None
+    entry = next((e for e in manifest.get("collectors", [])
+                  if e.get("collector") == collector), None)
+    if entry is None:
+        return None
+    found: dict[str, Any] = {"collector": collector, "run_id": run_dir.name,
+                             "manifest": f"{prefix}/manifest.json"}
+    if manifest.get("vm_name") != vm_name or entry.get("vm_name") != vm_name:
+        return {**found, "vm_name": vm_name,
+                "rejected": f"the manifest names another VM than {vm_name}"}
+    if manifest.get("run_id") != run_dir.name or entry.get("run_id") != run_dir.name:
+        return {**found, "rejected": "the manifest does not name this run"}
+    found.update({"vm_name": entry.get("vm_name"), "observed_at": entry.get("timestamp"),
+                  "command_identity": entry.get("command_identity"),
+                  "exit_code": entry.get("exit_code")})
+    if "failure" in entry:
+        return {**found, "status": "collector_error", "failure": entry["failure"]}
+    texts = {}
+    for stream in ("stdout", "stderr"):
+        ev = entry.get("evidence", {}).get(stream)
+        if not ev:
+            return {**found, "rejected": f"no {stream} evidence recorded"}
+        try:
+            data = (run_dir / ev["path"]).read_bytes()
+        except OSError:
+            return {**found, "rejected": f"{ev['path']} is missing"}
+        if len(data) != ev["bytes"] or _sha(data) != ev["sha256"]:
+            return {**found, "rejected": f"{ev['path']} does not match its recorded SHA-256"}
+        texts[stream] = data.decode("utf-8")
+        found[stream] = {"source": f"{prefix}/{ev['path']}", "sha256": ev["sha256"]}
+    found["status"] = outcome(entry["exit_code"], texts["stderr"])
+    found["stdout_text"], found["stderr_text"] = texts["stdout"], texts["stderr"]
+    return found
+
+
+def observations(collector: str, vm_name: str) -> list[dict[str, Any]]:
+    """Every run of one VM that holds the collector, newest first, each one
+    checked by _verified() -- rejected ones included, so a caller never skips
+    past a run that failed its checks without seeing it."""
+    out = []
+    for run_dir, own in _runs(vm_name):
+        seen = _verified(run_dir, own, collector, vm_name)
+        if seen is not None:
+            out.append(seen)
+    return out
+
+
 def latest(collector: str, vm_name: str) -> dict[str, Any] | None:
     """The newest observation of one collector on one VM, verified before it
     is handed out. The canonical identity of an observation is (vm_name,
-    run_id) (K-16): another VM's run never answers for this one. The run's
-    manifest names this VM and this run, the entry names this VM, run and
-    collector, and every evidence file has the size and SHA-256 the manifest
-    recorded. A run that fails any of that is returned as rejected, with why,
-    and never as an observation. None when no run of this VM has the
-    collector."""
-    base = store()
-    for run_dir, own in _runs(vm_name):
-        prefix = "/".join([base.name, *([vm_name] if own else []), run_dir.name])
-        try:
-            manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
-        except (OSError, ValueError) as why:
-            if not own:
-                continue
-            return {"collector": collector, "run_id": run_dir.name, "vm_name": vm_name,
-                    "rejected": f"manifest unreadable: {why}"}
-        if not own and manifest.get("vm_name") != vm_name:
-            continue
-        entry = next((e for e in manifest.get("collectors", [])
-                      if e.get("collector") == collector), None)
-        if entry is None:
-            continue
-        found: dict[str, Any] = {"collector": collector, "run_id": run_dir.name,
-                                 "manifest": f"{prefix}/manifest.json"}
-        if manifest.get("vm_name") != vm_name or entry.get("vm_name") != vm_name:
-            return {**found, "vm_name": vm_name,
-                    "rejected": f"the manifest names another VM than {vm_name}"}
-        if manifest.get("run_id") != run_dir.name or entry.get("run_id") != run_dir.name:
-            return {**found, "rejected": "the manifest does not name this run"}
-        found.update({k: entry.get(k) for k in ("vm_name", "timestamp", "command_identity",
-                                                 "exit_code")})
-        if "failure" in entry:
-            return {**found, "status": "collector_error", "failure": entry["failure"]}
-        texts = {}
-        for stream in ("stdout", "stderr"):
-            ev = entry.get("evidence", {}).get(stream)
-            if not ev:
-                return {**found, "rejected": f"no {stream} evidence recorded"}
-            path = run_dir / ev["path"]
-            try:
-                data = path.read_bytes()
-            except OSError:
-                return {**found, "rejected": f"{ev['path']} is missing"}
-            if len(data) != ev["bytes"] or _sha(data) != ev["sha256"]:
-                return {**found, "rejected": f"{ev['path']} does not match its recorded SHA-256"}
-            texts[stream] = data.decode("utf-8")
-            found[stream] = {"source": f"{prefix}/{ev['path']}", "sha256": ev["sha256"]}
-        found["status"] = outcome(entry["exit_code"], texts["stderr"])
-        found["stdout_text"], found["stderr_text"] = texts["stdout"], texts["stderr"]
-        return found
-    return None
+    run_id) (K-16): another VM's run never answers for this one. A run that
+    fails its checks is returned as rejected, with why, and never as an
+    observation. None when no run of this VM has the collector."""
+    seen = observations(collector, vm_name)
+    return seen[0] if seen else None
+
+
+def freshness(observed_at: str, now: datetime | None = None) -> dict[str, Any]:
+    """How old one observation is and whether it is current, by the explicit
+    rule in the spec: current only when its age is within stale_after_seconds.
+    With no value set, or a clock that went back, nothing is claimed current."""
+    rule = load()["freshness"]
+    limit = rule["stale_after_seconds"]
+    age = round(((now or datetime.now(timezone.utc))
+                 - datetime.fromisoformat(observed_at)).total_seconds(), 3)
+    judged: dict[str, Any] = {"age_seconds": age, "stale_after_seconds": limit}
+    if limit is None:
+        return {**judged, "freshness": "stale",
+                "freshness_why": "no stale_after_seconds is set in "
+                                 "NUI/spec/layer5_collectors.json, so no observation is "
+                                 "claimed current"}
+    if age < 0:
+        return {**judged, "freshness": "stale",
+                "freshness_why": "observed after now: the host clock went back"}
+    return {**judged, "freshness": "current" if age <= limit else "stale"}
+
+
+def items(collector: str, text: str) -> dict[str, str]:
+    """The items of one collector's output, keyed by the spec's rule for it:
+    what the delta between two runs is taken over. Nothing else is parsed."""
+    rule = load()["delta"]["items"][collector]
+    kind = rule["kind"]
+    lines = [ln for ln in text.splitlines()[rule.get("skip", 0):] if ln.strip()]
+    out: dict[str, str] = {}
+    if kind == "findall":
+        for name in re.findall(rule["pattern"], text):
+            out[name] = str(int(out.get(name, "0")) + 1)
+        return out
+    for line in lines:
+        if kind == "kv":
+            key, sep, value = line.partition(rule["sep"])
+            if sep:
+                out[key.strip()] = value.strip()
+        elif kind == "line":
+            out[line.strip()] = ""
+        elif kind == "match":
+            m = re.match(rule["pattern"], line)
+            if m:
+                out[m.group("key")] = line.strip()
+        elif kind == "fields":
+            fields = line.split()
+            parts = [fields[i] for i in rule["key"] if i < len(fields)]
+            if "rest_from" in rule:
+                parts.append(" ".join(fields[rule["rest_from"]:]))
+            key = " ".join(p for p in parts if p)
+            if rule.get("count"):
+                out[key] = str(int(out.get(key, "0")) + 1)
+            else:
+                out[key] = line.strip()
+        else:
+            raise ValueError(f"no item rule of kind {kind!r}")
+    return out
+
+
+def _provenance(seen: dict[str, Any]) -> dict[str, Any]:
+    """Where one side of a delta comes from: the items are read from stdout,
+    and stderr is kept beside it as the provenance of a status that is not
+    PASS."""
+    return {"vm_name": seen["vm_name"], "run_id": seen["run_id"],
+            "observed_at": seen["observed_at"], "status": seen["status"],
+            "evidence": seen["stdout"]["source"], "evidence_sha256": seen["stdout"]["sha256"],
+            "stderr": seen["stderr"]["source"], "stderr_sha256": seen["stderr"]["sha256"]}
+
+
+def delta(collector: str, vm_name: str, run_from: str | None = None,
+          run_to: str | None = None) -> dict[str, Any]:
+    """What changed in one collector's output between two runs of the same VM
+    -- by default its two newest -- with the provenance of both. Items that
+    appeared, disappeared, or kept their key and changed their value, by the
+    spec's item rule. Only an observation: nothing acts on it. Two runs that
+    are not both verified give no delta, and say why."""
+    seen = observations(collector, vm_name)
+    by_id = {s["run_id"]: s for s in seen}
+    pair: list[dict[str, Any] | None]
+    if run_to is None and run_from is None:
+        pair = list(seen[1::-1]) if len(seen) >= 2 else []
+    else:
+        pair = [by_id.get(run_from or ""), by_id.get(run_to or "")]
+    if len(pair) != 2 or None in pair:
+        return {"collector": collector, "vm_name": vm_name,
+                "unknown": f"no two runs of {collector} for {vm_name} to compare"}
+    old, new = pair[0], pair[1]
+    for s in (old, new):
+        if s is not None and ("rejected" in s or "failure" in s):
+            return {"collector": collector, "vm_name": vm_name,
+                    "unknown": f"{collector} in {s['run_id']} cannot be compared -- "
+                               f"{s.get('rejected') or s.get('failure')}"}
+    assert old is not None and new is not None
+    a, b = items(collector, old["stdout_text"]), items(collector, new["stdout_text"])
+    return {"collector": collector, "vm_name": vm_name,
+            "from": _provenance(old), "to": _provenance(new),
+            "appeared": sorted(set(b) - set(a)), "disappeared": sorted(set(a) - set(b)),
+            "changed": [{"item": k, "from": a[k], "to": b[k]}
+                        for k in sorted(set(a) & set(b)) if a[k] != b[k]]}
 
 
 def main(argv: list[str] | None = None) -> int:

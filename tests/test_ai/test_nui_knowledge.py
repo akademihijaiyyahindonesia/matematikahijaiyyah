@@ -335,12 +335,12 @@ def test_a_host_answer_walks_back_to_run_collector_file_time_and_hash(observed: 
     assert a["unknown"] == [] and item["provenance"] == "observation"
     assert (item["collector"], item["run_id"], item["status"]) == (
         "host_identity", observed.name, "PASS")
-    assert item["timestamp"] == entry["timestamp"] and item["vm_name"] == MAIN
+    assert item["observed_at"] == entry["timestamp"] and item["vm_name"] == MAIN
     path = f"observations/{MAIN}/{observed.name}/raw/host_identity.stdout"
     assert item["source"] == item["evidence"] == path
     data = layer5.resolve(item["source"]).read_bytes()
     recorded = entry["evidence"]["stdout"]["sha256"]
-    assert item["sha256"] == hashlib.sha256(data).hexdigest() == recorded
+    assert item["evidence_sha256"] == hashlib.sha256(data).hexdigest() == recorded
     assert item["text"] == data.decode("utf-8")
     for domain, reads in knowledge.DOMAINS.items():
         for got in a[domain]:
@@ -511,3 +511,99 @@ def test_a_run_in_one_vms_namespace_naming_another_is_refused(
     assert seen is not None and "names another VM" in seen["rejected"]
     a = knowledge.query("host host_identity")
     assert a["HOST"] == [] and "names another VM" in a["unknown"][0]
+
+
+# -- freshness and delta (Layer 5 operational baseline, 27 September 2026) -------------------
+
+
+def _with_rule(monkeypatch: pytest.MonkeyPatch, seconds: Any) -> None:
+    spec = layer5.load()
+    spec["freshness"]["stale_after_seconds"] = seconds
+    monkeypatch.setattr(layer5, "load", lambda: spec)
+
+
+def test_a_host_item_carries_the_owners_freshness_fields(observed: Path) -> None:
+    """observed_at, run_id, vm_name, collector and evidence_sha256 on every
+    HOST item, and its freshness. The committed rule sets no value, so
+    nothing is claimed current and the item says why."""
+    item, = knowledge.query("host host_identity")["HOST"]
+    for field in ("observed_at", "run_id", "vm_name", "collector", "evidence_sha256"):
+        assert item[field], field
+    assert layer5.load()["freshness"]["stale_after_seconds"] is None
+    assert item["freshness"] == "stale" and "no stale_after_seconds" in item["freshness_why"]
+
+
+def test_known_current_known_but_stale_and_unknown(
+        observed: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The owner's three states, by the explicit rule and nothing else."""
+    _with_rule(monkeypatch, 3600)
+    item, = knowledge.query("host host_identity")["HOST"]
+    assert item["freshness"] == "current" and 0 <= item["age_seconds"] <= 3600
+    _with_rule(monkeypatch, 0)
+    time.sleep(0.01)
+    item, = knowledge.query("host host_identity")["HOST"]
+    assert item["freshness"] == "stale"
+    for run in (observed.parent).iterdir():
+        for f in sorted(run.rglob("*"), reverse=True):
+            f.unlink() if f.is_file() else f.rmdir()
+        run.rmdir()
+    a = knowledge.query("host host_identity")
+    assert a["HOST"] == [] and a["unknown"], "unknown: no observation at all"
+
+
+def _second_run(store: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A later run of the main instance whose process list gained one line and
+    whose counters moved."""
+    time.sleep(1.1)  # run_ids are to the second; the next one must differ
+
+    class _Later(_Ran):
+        def __init__(self, cmd: list[str]) -> None:
+            super().__init__(cmd)
+            if cmd[4:] == ["ps", "aux"]:
+                self.stdout = ("USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\n"
+                               "root 1 0.0 0.1 1 1 ? Ss 04:37 0:01 /sbin/init\n"
+                               "root 99 0.0 0.1 1 1 ? S 05:00 0:00 /usr/bin/newcomer --x\n")
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    return layer5.record(MAIN, run=lambda cmd, **_: _Later(cmd), into=store)
+
+
+def test_host_delta_says_what_appeared_with_both_runs(
+        _empty_store: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run A, then run B with one more process: NUI says the process appeared
+    in B, and the item walks back to both runs -- run_id, time, evidence and
+    its hash. Nothing acts on it."""
+    class _First(_Ran):
+        def __init__(self, cmd: list[str]) -> None:
+            super().__init__(cmd)
+            if cmd[4:] == ["ps", "aux"]:
+                self.stdout = ("USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\n"
+                               "root 1 0.0 0.1 1 1 ? Ss 04:37 0:01 /sbin/init\n")
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    first = layer5.record(MAIN, run=lambda cmd, **_: _First(cmd), into=_empty_store)
+    second = _second_run(_empty_store, monkeypatch)
+    a = knowledge.query("host delta processes")
+    item, = a["HOST"]
+    assert (item["what"], item["item"]) == ("appeared", "root /usr/bin/newcomer --x")
+    assert (item["from_run"], item["to_run"]) == (first.name, second.name)
+    for side, run in (("from", first), ("to", second)):
+        prov = item["between"][side]
+        data = layer5.resolve(prov["evidence"]).read_bytes()
+        assert prov["run_id"] == run.name and prov["vm_name"] == MAIN
+        assert prov["evidence_sha256"] == hashlib.sha256(data).hexdigest()
+    assert item["source"].startswith(f"observations/{MAIN}/{second.name}/")
+    b = knowledge.query("host delta host_identity")
+    assert [i["what"] for i in b["HOST"]] == ["unchanged"]
+
+
+def test_a_delta_needs_two_verified_runs_of_the_same_vm(
+        _empty_store: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """One run of the main instance and one of the test instance are not two
+    runs to compare (K-16); and a run that fails its checks is never compared."""
+    _record(_empty_store, monkeypatch, UJI)
+    first = _record(_empty_store, monkeypatch, MAIN)
+    a = knowledge.query("host delta processes")
+    assert a["HOST"] == [] and "no two runs" in a["unknown"][0]
+    _second_run(_empty_store, monkeypatch)
+    _flip_byte(first)
+    d = layer5.delta("host_identity", MAIN)
+    assert "cannot be compared" in d["unknown"] and "SHA-256" in d["unknown"]
