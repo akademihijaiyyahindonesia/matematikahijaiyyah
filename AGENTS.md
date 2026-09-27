@@ -1608,6 +1608,16 @@ dimasukkan lagi hanya karena hasilnya bisa dibaca; model korelasinya baseline
 6.5. **Lapis 6 keseluruhan belum selesai**, dan nama atau arsitektur 6.6 tidak
 dikarang — butir berikutnya diambil dari yang roadmap tetapkan.
 
+Koreksi taksonomi 6.4 diterapkan sebagai commit pemeliharaan tersendiri
+(`5e4aa03`). Lalu butir yang roadmap tetapkan, **model RTL sebagai fungsi**:
+pemilik memilih `rtl/hcpu_uart_rx.v` lebih dulu (28 September 2026) karena
+punya bench khusus, dan melarang mulai dari `rtl/hcpu_top.v`. RTL UART RX tidak
+diubah. Fungsinya dicocokkan per siklus dengan jejak RTL di bawah benchnya
+sendiri, lewat probe yang hanya membaca register — angkanya di
+`NUI/LAYERS.md`, Lapis 6. Pemilik juga menetapkan: angka "26 testbench" di
+`NUI/LAYERS.md` **tidak diganti** dengan jumlah berkas .v sebelum definisi
+"testbench" di kalimat itu terukur.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

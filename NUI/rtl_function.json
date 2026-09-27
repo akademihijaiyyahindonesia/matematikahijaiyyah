@@ -1,0 +1,181 @@
+{
+ "generated_by": "src/hijaiyyah/nui/rtl_function.py",
+ "spec": "NUI/spec/rtl_function.json",
+ "simulator": "Icarus Verilog version 14.0 (devel) (s20260301-394-g9edaf7b6a-dirty)",
+ "modules": [
+  {
+   "name": "hcpu_uart_rx",
+   "rtl": "rtl/hcpu_uart_rx.v",
+   "rtl_sha256": "3dbb9f127825ef6afe83f016b84b81360d02f85dcb8d7c16c7ca6ce596a728ad",
+   "bench": "rtl/tb/tb_hcpu_uart_rx.v",
+   "bench_sha256": "0b422f1855e6644c91de097e64cbb8209d99e6df156dfdf542ab15baa2edff1e",
+   "trace_sha256": "106c5aaa8cbdf849cf8e7cad3e18854877fb0198a8c5e16054c67be6fd903461",
+   "parameters": {
+    "DIVISOR": 234,
+    "HALF": 117,
+    "CNT_W": 8,
+    "CLK_HZ": 27000000,
+    "BAUD": 115200
+   },
+   "cycles": 15916,
+   "input_timing": {
+    "line_changes": 24,
+    "captured_new": 24,
+    "captured_old": 0
+   },
+   "one_step_mismatches": [],
+   "open_loop_mismatches": [],
+   "frames": [
+    65,
+    0,
+    255,
+    90,
+    60
+   ],
+   "frame_errors": [
+    false,
+    false,
+    false,
+    false,
+    true
+   ],
+   "bench_said": "PASS: 5 frames, glitch rejected, framing error caught",
+   "bench_pass": true,
+   "rules_fired": {
+    "reset": 2,
+    "sync": 15913,
+    "outputs_drop": 15913,
+    "idle_wait": 4557,
+    "idle_falling_edge": 7,
+    "start_count": 812,
+    "start_confirmed": 5,
+    "start_glitch": 2,
+    "data_count": 9320,
+    "data_sample": 35,
+    "data_last": 5,
+    "stop_count": 1165,
+    "stop_deliver": 5
+   },
+   "rules": [
+    {
+     "id": "reset",
+     "lines": [
+      52,
+      57,
+      64
+     ],
+     "fired": 2
+    },
+    {
+     "id": "sync",
+     "lines": [
+      53
+     ],
+     "fired": 15913
+    },
+    {
+     "id": "outputs_drop",
+     "lines": [
+      66,
+      67
+     ],
+     "fired": 15913
+    },
+    {
+     "id": "idle_wait",
+     "lines": [
+      70,
+      75
+     ],
+     "fired": 4557
+    },
+    {
+     "id": "idle_falling_edge",
+     "lines": [
+      71,
+      72,
+      73
+     ],
+     "fired": 7
+    },
+    {
+     "id": "start_count",
+     "lines": [
+      86,
+      87
+     ],
+     "fired": 812
+    },
+    {
+     "id": "start_confirmed",
+     "lines": [
+      78,
+      79,
+      80,
+      81,
+      82
+     ],
+     "fired": 5
+    },
+    {
+     "id": "start_glitch",
+     "lines": [
+      78,
+      83,
+      84
+     ],
+     "fired": 2
+    },
+    {
+     "id": "data_count",
+     "lines": [
+      97,
+      98
+     ],
+     "fired": 9320
+    },
+    {
+     "id": "data_sample",
+     "lines": [
+      92,
+      93,
+      94,
+      96
+     ],
+     "fired": 35
+    },
+    {
+     "id": "data_last",
+     "lines": [
+      92,
+      93,
+      94,
+      95
+     ],
+     "fired": 5
+    },
+    {
+     "id": "stop_count",
+     "lines": [
+      109,
+      110
+     ],
+     "fired": 1165
+    },
+    {
+     "id": "stop_deliver",
+     "lines": [
+      103,
+      104,
+      105,
+      106,
+      107,
+      108
+     ],
+     "fired": 5
+    }
+   ],
+   "not_covered": []
+  }
+ ]
+}

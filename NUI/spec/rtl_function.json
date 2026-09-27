@@ -1,0 +1,47 @@
+{
+ "version": 1,
+ "title": "Model RTL sebagai fungsi -- Lapis 6, modul pertama hcpu_uart_rx",
+ "source": "pemilik, 28 September 2026 -- butir Lapis 6 yang roadmap tetapkan: prediksi keadaan berikutnya untuk modul yang disebut cocok dengan benchnya. Modul pertama hcpu_uart_rx.v, karena punya bench khusus tb_hcpu_uart_rx.v; bukan hcpu_top.v. Model dibangun sebagai fungsi transisi keadaan: state_t + input_t -> state_t+1 + output_t, dicocokkan dengan bench, dan sabotase atas aturan transisinya harus merah. RTL UART RX tidak diubah",
+ "rule": "Spec ini menyebut modul, bench, sinyal keadaan, dan cabang aturan transisi beserta baris RTL-nya. Fungsinya ditulis di src/hijaiyyah/nui/rtl_function.py dari RTL itu, dan dicocokkan dengan jejak per siklus yang RTL sendiri hasilkan ketika bench khususnya dijalankan -- tanpa mengubah RTL atau bench",
+ "modules": [
+  {"name": "hcpu_uart_rx",
+   "rtl": "rtl/hcpu_uart_rx.v",
+   "bench": "rtl/tb/tb_hcpu_uart_rx.v",
+   "top": "tb_hcpu_uart_rx",
+   "instance": "dut",
+   "clock": "clk",
+   "stimulus": {"rst_n": "rst_n", "rx_in": "line"},
+   "parameters": {"from": "rtl/tb/tb_hcpu_uart_rx.v", "pattern": "^\\s*localparam integer (CLK_HZ|BAUD)\\s*=\\s*([\\d_]+);"},
+   "state": ["rx_meta", "rx_sync", "state", "count", "index", "shifter"],
+   "outputs": ["rx_data", "rx_valid", "rx_frame_err"],
+   "rules": [
+    {"id": "reset", "lines": [52, 57, 64], "means": "rst_n rendah: sinkroniser 11, IDLE, semua nol"},
+    {"id": "sync", "lines": [53], "means": "dua flop sinkroniser: rx_meta <- rx_in, rx_sync <- rx_meta"},
+    {"id": "outputs_drop", "lines": [66, 67], "means": "rx_valid dan rx_frame_err hanya satu siklus"},
+    {"id": "idle_wait", "lines": [70, 75], "means": "IDLE, rx_sync tinggi: tetap"},
+    {"id": "idle_falling_edge", "lines": [71, 72, 73], "means": "IDLE, rx_sync rendah: START, count 0"},
+    {"id": "start_count", "lines": [86, 87], "means": "START sebelum tengah bit: count + 1"},
+    {"id": "start_confirmed", "lines": [78, 79, 80, 81, 82], "means": "START di tengah bit dan masih rendah: DATA, count 0, index 0"},
+    {"id": "start_glitch", "lines": [78, 83, 84], "means": "START di tengah bit dan sudah tinggi: kembali IDLE"},
+    {"id": "data_count", "lines": [97, 98], "means": "DATA sebelum tengah bit: count + 1"},
+    {"id": "data_sample", "lines": [92, 93, 94, 96], "means": "DATA di tengah bit: geser rx_sync masuk dari atas (LSB dulu), index + 1"},
+    {"id": "data_last", "lines": [92, 93, 94, 95], "means": "DATA di tengah bit ke-8: geser, lalu STOP"},
+    {"id": "stop_count", "lines": [109, 110], "means": "STOP sebelum tengah bit: count + 1"},
+    {"id": "stop_deliver", "lines": [103, 104, 105, 106, 107, 108], "means": "STOP di tengah bit: IDLE, rx_data <- shifter, rx_valid 1, rx_frame_err <- bukan rx_sync"}
+   ],
+   "input_timing": {
+    "rule": "input transisi t -> t+1 adalah line sesudah posedge t+1",
+    "why": "bench mengubah line di region aktif yang sama dengan posedge tempat DUT menyampel rx_in; iverilog menjalankan penugasan bench lebih dulu. Diukur ulang tiap build dan disimpan di model (input_timing): di tiap perubahan line, rx_meta menangkap nilai baru, tidak pernah nilai lama. Ini sifat penjadwalan bench di simulator, bukan sifat kabel -- di papan line asinkron dan dua flop sinkroniser menanggungnya"
+   },
+   "bench_verdict": {"pattern": "^PASS: (\\d+) frames, glitch rejected, framing error caught$"},
+   "bench_expects": {"frames": [65, 0, 255, 90, 60], "frame_errors": [false, false, false, false, true]}
+  }
+ ],
+ "checks": [
+  {"id": "F1", "label": "satu langkah: fungsi atas keadaan RTL siklus t dan input t+1 memberi keadaan dan keluaran RTL siklus t+1, di setiap siklus bench"},
+  {"id": "F2", "label": "lingkar terbuka: dari reset, hanya dengan input bench, fungsi menghasilkan seluruh lintasan RTL"},
+  {"id": "F3", "label": "vonis bench: frame, data, glitch, dan framing error yang diprediksi sama dengan yang bench periksa, dan bench sendiri PASS"},
+  {"id": "F4", "label": "cakupan: tiap aturan transisi dijalankan bench sekurangnya sekali, atau disebut tidak tercakup"},
+  {"id": "F5", "label": "RTL dan bench yang dicocokkan adalah berkas yang hash-nya dicatat model"}
+ ]
+}
