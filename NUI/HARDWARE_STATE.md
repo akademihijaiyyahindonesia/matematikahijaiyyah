@@ -8,8 +8,8 @@ Dihasilkan `src/hijaiyyah/nui/hardware_state.py` dari `NUI/spec/hardware_state.j
 
 | kategori | arti | status klaim | menjawab kueri | klaim |
 |---|---|---|---|---|
-| IDENTITY | apa perangkatnya? | MEASURED, SIMULATED | MEASURED, SIMULATED | 6 |
-| CAPABILITY | apa yang desain/build menyatakan perangkat mampu? | SIMULATED | SIMULATED | 17 |
+| IDENTITY | apa perangkatnya? | MEASURED, SIMULATED | MEASURED, SIMULATED | 4 |
+| CAPABILITY | apa yang dirancang/dikonfigurasi dapat dilakukannya? | MEASURED, SIMULATED | MEASURED, SIMULATED | 19 |
 | OBSERVED | apa yang pernah benar-benar diukur? | MEASURED, UNKNOWN | MEASURED | 145 |
 | CURRENT | apa keadaan perangkat sekarang? | LIVE, UNKNOWN | LIVE | 3 |
 
@@ -29,6 +29,7 @@ Precedence: **LIVE > MEASURED > SIMULATED > UNKNOWN**. Pemilik: LIVE > MEASURED 
 | `hardware observed peripheral` | **MEASURED** (historical_board_evidence) | `6.1:sd_card`, `6.1:sd_init_defect`, `6.1:hdmi`, `6.1:reset_button`, `6.1:telemetry_path` | `6.1:hdmi`, `6.1:reset_button` | — |
 | `hardware observed telemetry` | **MEASURED** (historical_board_evidence) | `6.1:telemetry_fields`, `6.1:telemetry_path`, `6.2:uptime`, `6.2:cycle_rate`, `6.2:drift`, `6.2:memory_check`, `6.2:stack_check`, `6.2:pass_count`, `6.2:reject_count`, `6.2:latency`, `6.2:consistency`, `6.2:avalanche`, `6.2:integrity`, `6.2:replay_state`, `6.2:sd_sector_read`, `6.2:hfs_signature`, `6.2:read_error_count`, `6.2:last_boot`, `6.2:last_container`, `6.2:boot_duration`, `6.2:last_validation`, `6.2:density_mod2`, `6.2:density_mod4`, `6.2:density_mod5`, `6.2:collapse_count` | `6.2:boot_duration` | — |
 | `hardware observed opcode CDOT` | **UNKNOWN** (unknown) | — | — | no OBSERVED claim of `opcode CDOT` is MEASURED |
+| `hardware capability clock` | **MEASURED** (historical_board_evidence) | `6.1:clock` | — | — |
 
 ## Klasifikasi klaim 6.3
 
@@ -46,12 +47,12 @@ Precedence: **LIVE > MEASURED > SIMULATED > UNKNOWN**. Pemilik: LIVE > MEASURED 
 | `6.1:isa_rtl` | CAPABILITY | SIMULATED | simulated | verified |
 | `6.1:isa_board` | OBSERVED | MEASURED | historical_board_evidence | verified |
 | `6.1:isa_board_unknown` | OBSERVED | UNKNOWN | unknown | verified |
-| `6.1:clock` | IDENTITY | MEASURED | historical_board_evidence | verified |
+| `6.1:clock` | CAPABILITY | MEASURED | historical_board_evidence | verified |
 | `6.1:clock_drift` | OBSERVED | MEASURED | historical_board_evidence | verified |
 | `6.1:clock_pll` | CAPABILITY | SIMULATED | simulated | verified |
 | `6.1:imem_words` | CAPABILITY | SIMULATED | simulated | verified |
 | `6.1:dmem_words` | CAPABILITY | SIMULATED | simulated | verified |
-| `6.1:uart` | IDENTITY | MEASURED | historical_board_evidence | verified |
+| `6.1:uart` | CAPABILITY | MEASURED | historical_board_evidence | verified |
 | `6.1:sd_card` | OBSERVED | MEASURED | historical_board_evidence | verified |
 | `6.1:sd_init_defect` | OBSERVED | MEASURED | historical_board_evidence | verified |
 | `6.1:hdmi` | OBSERVED | MEASURED | historical_board_evidence | incomplete |

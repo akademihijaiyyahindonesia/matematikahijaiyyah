@@ -12,7 +12,7 @@ Every claim 6.3 walked back to its evidence is filed under one of four kinds
 of state, and a query names the kind it asks for:
 
     IDENTITY     what the device is                              MEASURED, SIMULATED
-    CAPABILITY   what the design or build says it can do        SIMULATED
+    CAPABILITY   what it is designed or configured to do         MEASURED, SIMULATED
     OBSERVED     what was ever really measured                  MEASURED, UNKNOWN
     CURRENT      what the device is doing now                   LIVE, UNKNOWN
 
@@ -27,6 +27,10 @@ UNKNOWN, over the claims allowed to answer that kind of query, so it is the
 same every time. Each claim keeps its 6.3 provenance, and a claim whose chain
 6.3 left incomplete still answers a historical question as MEASURED -- with
 its incomplete provenance named in the answer, never polished into verified.
+
+CAPABILITY is SIMULATED when only the design or build says it, and MEASURED
+when a board run proved the configuration -- the 27 MHz clock and UART
+115200, which the owner moved there from IDENTITY on 28 September 2026.
 
 OBSERVED also takes the opcodes the board ran: the per-opcode hardware column
 of P3, frozen with Layer 4, one claim per opcode, each built and checked by

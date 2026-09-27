@@ -63,21 +63,25 @@ def test_every_claim_has_one_kind_its_status_allows(model: dict[str, Any]) -> No
     for e in model["claims"]:
         assert hs.check_entry(e, objects[e["id"]], ctx) == [], e["id"]
     assert {k: model["counts"][k] for k in hs.CATEGORIES} == {
-        "IDENTITY": 6, "CAPABILITY": 17, "OBSERVED": 145, "CURRENT": 3}
+        "IDENTITY": 4, "CAPABILITY": 19, "OBSERVED": 145, "CURRENT": 3}
 
 
 @BOTH
 def test_capability_is_never_an_observation_and_history_never_the_present(
         model: dict[str, Any]) -> None:
+    """The owner, 28 September 2026: a configuration the board proved is a
+    capability, not an identity -- the 27 MHz clock and UART 115200 -- and
+    stays MEASURED; everything else a capability holds is SIMULATED."""
     for e in model["claims"]:
         if e["category"] == "CAPABILITY":
-            assert e["status"] == "SIMULATED", e["id"]
+            assert e["status"] == ("MEASURED" if e["id"] in ("6.1:clock", "6.1:uart")
+                                   else "SIMULATED"), e["id"]
         if e["category"] == "OBSERVED":
             assert e["status"] in ("MEASURED", "UNKNOWN"), e["id"]
         if e["category"] == "CURRENT":
             assert e["status"] == "UNKNOWN" and e["source_kind"] == "unknown", e["id"]
         if e["source_kind"] == "historical_board_evidence":
-            assert e["category"] in ("IDENTITY", "OBSERVED"), e["id"]
+            assert e["category"] != "CURRENT", e["id"]
 
 
 @BOTH

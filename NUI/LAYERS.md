@@ -929,8 +929,9 @@ dibangun `src/hijaiyyah/nui/hardware_state.py` dari
 `NUI/spec/hardware_state.json`. Bukan telemetri baru: arti jawaban NUI atas
 pertanyaan hardware — kueri → klaim → klasifikasi → semantik keadaan →
 provenance. Tiap klaim diberi satu dari empat jenis keadaan pemilik: IDENTITY
-(apa perangkatnya, 6), CAPABILITY (apa yang desain atau build nyatakan, 17,
-semuanya SIMULATED), OBSERVED (apa yang pernah diukur, 145), dan CURRENT (apa
+(apa perangkatnya, 4), CAPABILITY (apa yang dirancang atau dikonfigurasi, 19 —
+17 SIMULATED, dan clock serta UART MEASURED sesudah koreksi taksonomi di bawah),
+OBSERVED (apa yang pernah diukur, 145), dan CURRENT (apa
 keadaannya sekarang, 3). OBSERVED ikut memuat kolom perangkat keras per opcode
 P3 yang dibekukan Lapis 4 — 103 opcode, 79 dijalankan sekurangnya satu program
 yang dikirim ke papan dan 24 tidak pernah — masing-masing dibangun dan
@@ -950,10 +951,14 @@ dan P5 tidak digabung ke kueri opcode: pemilik menetapkannya bukti tingkat
 program atau eksperimen, bukan tingkat opcode.
 
 **6.4 dinyatakan GREEN oleh pemilik (`d6cfd6c`)**, dengan dua penilaian.
-**Koreksi taksonomi tercatat, belum diterapkan**: clock 27 MHz dan UART 115200
-secara semantik adalah CAPABILITY/konfigurasi, bukan IDENTITY. `d6cfd6c` tidak
-diubah surut — ia baseline 6.4 yang terverifikasi — dan koreksinya menunggu
-jadi perubahan tersendiri sesudah taksonomi 6.4/6.5 dikunci. Keputusan tidak
+**Koreksi taksonomi**: clock 27 MHz dan UART 115200 secara semantik adalah
+CAPABILITY/konfigurasi, bukan IDENTITY. `d6cfd6c` tidak diubah surut — ia
+baseline 6.4 yang terverifikasi — dan koreksinya diterapkan sebagai commit
+pemeliharaan tersendiri sesudah 6.5 GREEN. Ia sempat ditolak build 6.4 sendiri:
+CAPABILITY hanya mengizinkan SIMULATED, sedangkan kedua klaim itu MEASURED
+dengan bukti papan. Pemilik memutuskan, 28 September 2026: **CAPABILITY
+menerima MEASURED** — konfigurasi yang dibuktikan papan — dan status klaimnya
+tetap seperti di 6.1 dan 6.3. Keputusan tidak
 menggabungkan P4/P5 ke kueri opcode dinilai benar: kolom P3 adalah bukti
 tingkat opcode, P4 dan P5 bukti tingkat program atau eksperimen. **Satu premis
 saya dibetulkan**: saya sempat menulis bahwa rekaman P4/P5 menautkan opcode
@@ -989,9 +994,15 @@ vonis MISMATCH (DERIVED), dengan lari dan hash di tiap langkah. Lari P2
 pertama tidak dikorelasikan: program pertamanya tercemar byte burn-in basi,
 selisih alat yang Lapis 4 catat.
 
+**6.5 dinyatakan GREEN oleh pemilik (`3617a31`)**, dan tiga hal dikunci: P4/P5
+tetap tingkat eksperimen, tetapi korelasi ke programnya sah karena payload-nya
+terbukti identik dengan ekspektasi beku; lari P2 `104300Z` tetap dikeluarkan —
+jangan dimasukkan lagi hanya karena hasil akhirnya bisa dibaca; dan model
+korelasi 19.379 baris jadi baseline 6.5 karena `--verify` menghasilkannya ulang
+persis. **Lapis 6 keseluruhan belum selesai.**
+
 **Yang belum ada.** Model RTL sebagai fungsi. Yang ada mengurai antarmuka dan
-memodelkan dua protokol, bukan perilaku umum. Koreksi taksonomi clock dan UART
-menunggu taksonomi dikunci pemilik.
+memodelkan dua protokol, bukan perilaku umum.
 
 **Cara verifikasi.** 26 testbench di `rtl/tb/` adalah oracle-nya. Untuk
 inventarisnya, `python3 -m hijaiyyah.nui.hardware --verify` membacanya ulang

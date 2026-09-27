@@ -5,19 +5,19 @@
  "rule": "Klaim dan provenance-nya dibaca dari Lapis 6.3 (NUI/hardware_provenance.json), tidak ditulis ulang. Spec ini hanya menyebut kategori keadaan tiap klaim, urutan precedence, dan subjek kueri; src/hijaiyyah/nui/hardware_state.py membangun jawaban dan memeriksanya",
  "categories": {
   "IDENTITY": {"means": "apa perangkatnya?", "status": ["MEASURED", "SIMULATED"], "answers_with": ["MEASURED", "SIMULATED"]},
-  "CAPABILITY": {"means": "apa yang desain/build menyatakan perangkat mampu?", "status": ["SIMULATED"], "answers_with": ["SIMULATED"]},
+  "CAPABILITY": {"means": "apa yang dirancang/dikonfigurasi dapat dilakukannya?", "status": ["MEASURED", "SIMULATED"], "answers_with": ["MEASURED", "SIMULATED"]},
   "OBSERVED": {"means": "apa yang pernah benar-benar diukur?", "status": ["MEASURED", "UNKNOWN"], "answers_with": ["MEASURED"]},
   "CURRENT": {"means": "apa keadaan perangkat sekarang?", "status": ["LIVE", "UNKNOWN"], "answers_with": ["LIVE"]}
  },
- "categories_why": "status adalah yang boleh dibawa klaim berkategori itu; answers_with adalah status yang boleh menjawab kueri kategori itu. CAPABILITY hanya SIMULATED dan OBSERVED tidak pernah SIMULATED: kemampuan desain bukan pengamatan. CURRENT hanya dijawab LIVE: rekaman papan historis menjawab apa yang terukur pada lari itu, bukan apa yang sedang terjadi",
+ "categories_why": "status adalah yang boleh dibawa klaim berkategori itu; answers_with adalah status yang boleh menjawab kueri kategori itu. CAPABILITY adalah yang dirancang atau dikonfigurasi: SIMULATED dari desain atau build, atau MEASURED bila konfigurasi itu dibuktikan papan (keputusan pemilik, 28 September 2026, sesudah 6.5 GREEN). OBSERVED tidak pernah SIMULATED: kemampuan desain bukan pengamatan. CURRENT hanya dijawab LIVE: rekaman papan historis menjawab apa yang terukur pada lari itu, bukan apa yang sedang terjadi",
  "precedence": ["LIVE", "MEASURED", "SIMULATED", "UNKNOWN"],
  "precedence_why": "pemilik: LIVE > MEASURED observed > SIMULATED capability > UNKNOWN, dan LIVE hanya bila access() menemukan sumber live terdaftar -- keberadaan data historis tidak pernah mengalahkan ketiadaan sumber live untuk kueri CURRENT",
  "groups": {"identity": "IDENTITY", "capability": "CAPABILITY", "observed": "OBSERVED", "current": "CURRENT", "provenance": null},
  "groups_why": "kelompok kueri pemilik; provenance menjawab semua klaim subjek dengan kategori dan rantai 6.3-nya, dan kepalanya dipilih menurut precedence",
  "claims": {
   "6.1": {
-   "IDENTITY": ["board", "fpga_device", "fpga_family", "cpu", "clock", "uart"],
-   "CAPABILITY": ["fpga_lut4", "fpga_dff", "fpga_bsram", "fpga_fmax", "cpu_pipeline", "isa_rtl", "clock_pll", "imem_words", "dmem_words", "leds", "watchdog"],
+   "IDENTITY": ["board", "fpga_device", "fpga_family", "cpu"],
+   "CAPABILITY": ["fpga_lut4", "fpga_dff", "fpga_bsram", "fpga_fmax", "cpu_pipeline", "isa_rtl", "clock", "clock_pll", "imem_words", "dmem_words", "uart", "leds", "watchdog"],
    "OBSERVED": ["isa_board", "isa_board_unknown", "clock_drift", "sd_card", "sd_init_defect", "hdmi", "reset_button", "loader", "shell_from_card", "hfs", "hos_shell", "bitstream_last_measured", "telemetry_fields", "telemetry_no_source", "telemetry_path"],
    "CURRENT": ["program_now", "telemetry_live"]
   },
@@ -26,8 +26,8 @@
   "P3": "OBSERVED"
  },
  "claims_why": {
-  "IDENTITY": "apa perangkatnya: papan, part dan keluarga FPGA, CPU, osilator, dan laju tautan serial -- sifat perangkat yang dibuktikan lari papan",
-  "CAPABILITY": "yang desain atau build nyatakan: RTL, parameter, pin, fakta yang dihitung ulang, hasil nextpnr, dan sinyal tele_* -- semuanya SIMULATED",
+  "IDENTITY": "apa perangkatnya: papan, part dan keluarga FPGA, dan CPU",
+  "CAPABILITY": "yang dirancang atau dikonfigurasi: RTL, parameter, pin, fakta yang dihitung ulang, hasil nextpnr, dan sinyal tele_* (SIMULATED); dan clock 27 MHz serta UART 115200, konfigurasi yang dibuktikan lari papan (MEASURED). Koreksi pemilik, 28 September 2026: keduanya konfigurasi, bukan identitas perangkat",
   "OBSERVED": "yang pernah diukur di papan, termasuk yang dicari dan tak pernah teramati (UNKNOWN): opcode di papan, hanyutan jam, kartu, cacat yang ditemukan papan, loader, HOS/HFS, sidik jari bitstream yang dipakai lari-lari itu, dan medan telemetri kontrak",
   "CURRENT": "yang menanyakan sekarang: program yang sedang dimuat, telemetri yang sedang mengalir, dan keadaan hardware saat ini -- dan medan 6.2 mana pun yang access() temukan live; hari ini tidak ada"
  },
@@ -50,9 +50,10 @@
   {"query": "hardware current board clock", "state": "UNKNOWN", "basis": [], "reason": "no live hardware telemetry source"},
   {"query": "hardware observed peripheral", "state": "MEASURED", "incomplete_provenance": ["6.1:hdmi", "6.1:reset_button"]},
   {"query": "hardware observed telemetry", "state": "MEASURED", "incomplete_provenance": ["6.2:boot_duration"]},
-  {"query": "hardware observed opcode CDOT", "state": "UNKNOWN", "basis": []}
+  {"query": "hardware observed opcode CDOT", "state": "UNKNOWN", "basis": []},
+  {"query": "hardware capability clock", "state": "MEASURED", "basis": ["6.1:clock"]}
  ],
- "contract_why": "keenam contoh pemilik, ditambah empat pagar: kueri CURRENT atas subjek yang punya rekaman historis tetap UNKNOWN, dua kueri historis yang memuat klaim provenance belum lengkap membawa penandanya, dan opcode yang tak pernah dijalankan papan tetap UNKNOWN",
+ "contract_why": "keenam contoh pemilik, ditambah empat pagar: kueri CURRENT atas subjek yang punya rekaman historis tetap UNKNOWN, dua kueri historis yang memuat klaim provenance belum lengkap membawa penandanya, dan opcode yang tak pernah dijalankan papan tetap UNKNOWN; lalu satu baris koreksi taksonomi pemilik 28 September 2026 -- clock 27 MHz adalah kemampuan terkonfigurasi yang dibuktikan papan, MEASURED di atas SIMULATED menurut precedence",
  "checks": [
   {"id": "E1", "label": "satu kategori untuk tiap klaim"},
   {"id": "E2", "label": "status klaim diizinkan kategorinya"},

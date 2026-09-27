@@ -1582,8 +1582,10 @@ SIMULATED > UNKNOWN. Angkanya di `NUI/LAYERS.md`, Lapis 6. Dua penilaian
 pemilik saat menutupnya:
 
 - **Clock 27 MHz dan UART 115200 adalah CAPABILITY/konfigurasi, bukan
-  IDENTITY — koreksinya tercatat, belum diterapkan.** `d6cfd6c` tidak diubah
-  surut; koreksinya perubahan tersendiri sesudah taksonomi dikunci.
+  IDENTITY.** `d6cfd6c` tidak diubah surut; koreksinya commit pemeliharaan
+  tersendiri sesudah 6.5 GREEN. Karena keduanya MEASURED, pemilik memutuskan
+  (28 September 2026) **CAPABILITY menerima MEASURED** — konfigurasi yang
+  dibuktikan papan — bukan menurunkan status klaimnya.
 - **P4 dan P5 bukan bukti tingkat opcode**: kolom P3 bukti tingkat opcode, P4
   dan P5 bukti tingkat program atau eksperimen. Jangan memaksakannya demi
   cakupan. Premis saya bahwa rekaman P4/P5 menautkan opcode hanya lewat nama
@@ -1591,7 +1593,7 @@ pemilik saat menutupnya:
   adalah silikon yang menjalankan PRINT sesudah HALT, yang interpreter tidak
   pernah jalankan.
 
-**6.5 dibangun sesudah 6.4 GREEN**: korelasi hardware,
+**6.5 GREEN (`3617a31`)**: korelasi hardware,
 `NUI/HARDWARE_CORRELATION.md`, dibangun
 `src/hijaiyyah/nui/hardware_correlation.py` — tautan hardware ↔ lari papan ↔
 program ↔ opcode ↔ keluaran papan, bukan telemetri baru. Tiap tautan DIRECT
@@ -1600,7 +1602,11 @@ UNKNOWN (dengan alasannya). **Tidak ada tautan karena nama program tampak
 mengandung sesuatu** — rekaman yang hanya menyebut sasaran punya program
 UNKNOWN. `executes` adalah yang interpreter jalankan untuk payload dengan hash
 yang sama, bukan yang papan jalankan, dan bukti tingkat opcode tetap kolom P3
-saja. Angkanya di `NUI/LAYERS.md`, Lapis 6.
+saja. Angkanya di `NUI/LAYERS.md`, Lapis 6. Dikunci pemilik saat menutupnya:
+P4/P5 tetap tingkat eksperimen; lari P2 `104300Z` tetap dikeluarkan dan tidak
+dimasukkan lagi hanya karena hasilnya bisa dibaca; model korelasinya baseline
+6.5. **Lapis 6 keseluruhan belum selesai**, dan nama atau arsitektur 6.6 tidak
+dikarang — butir berikutnya diambil dari yang roadmap tetapkan.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

@@ -7,8 +7,8 @@
  ],
  "live_sources": [],
  "counts": {
-  "IDENTITY": 6,
-  "CAPABILITY": 17,
+  "IDENTITY": 4,
+  "CAPABILITY": 19,
   "OBSERVED": 145,
   "CURRENT": 3,
   "claims": 171,
@@ -102,7 +102,7 @@
   },
   {
    "id": "6.1:clock",
-   "category": "IDENTITY",
+   "category": "CAPABILITY",
    "status": "MEASURED",
    "source_kind": "historical_board_evidence",
    "verification": "verified"
@@ -137,7 +137,7 @@
   },
   {
    "id": "6.1:uart",
-   "category": "IDENTITY",
+   "category": "CAPABILITY",
    "status": "MEASURED",
    "source_kind": "historical_board_evidence",
    "verification": "verified"
@@ -3738,6 +3738,27 @@
    ],
    "incomplete_provenance": [],
    "reason": "no OBSERVED claim of `opcode CDOT` is MEASURED"
+  },
+  {
+   "query": "hardware capability clock",
+   "group": "capability",
+   "category": "CAPABILITY",
+   "subject": "clock",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board"
+   ],
+   "basis": [
+    "6.1:clock"
+   ],
+   "claims": [
+    "6.1:clock",
+    "6.1:fpga_fmax",
+    "6.1:clock_pll"
+   ],
+   "incomplete_provenance": [],
+   "reason": null
   }
  ]
 }
