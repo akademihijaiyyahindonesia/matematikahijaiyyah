@@ -10,7 +10,9 @@ hardware is, from what is already recorded, and keep three classes apart --
     MEASURED   proven physically: a committed board record, a board-measured
                fact, or a section of PAPAN.md or OFF.md that records a board run
     SIMULATED  derived from the design: RTL, pin constraints, parameters, facts
-               recomputed from the repository, and nextpnr's reports
+               recomputed from the repository -- and nextpnr's synthesis and
+               place-and-route results, marked PNR/build-derived: not a
+               behavioural simulation and not a physical measurement (K-18)
     UNKNOWN    no path observes it -- and so no value
 
 NUI/spec/hardware_inventory.json says where each item is read, never what it
@@ -188,18 +190,21 @@ def page(model: dict[str, Any]) -> str:
            "papan, sensor, port debug, atau telemetri baru yang disentuh untuknya: tiap "
            "nilai dibaca dari bukti yang sudah ada.", "",
            f"**{c['MEASURED']} MEASURED** (dibuktikan secara fisik), **{c['SIMULATED']} "
-           f"SIMULATED** (RTL, interpreter, atau laporan toolchain), **{c['UNKNOWN']} "
-           "UNKNOWN** (belum ada jalur observasi, jadi tanpa nilai).", ""]
+           "SIMULATED** (RTL atau interpreter — dan hasil synthesis, place-and-route, dan "
+           "analisis build yang ditandai `PNR/build-derived`: **bukan simulasi perilaku "
+           "dan bukan pengukuran fisik**, K-18), "
+           f"**{c['UNKNOWN']} UNKNOWN** (belum ada jalur observasi, jadi tanpa nilai).", ""]
     for key, question in model["questions"].items():
-        out += [f"## {question}", "", "| hardware | nilai | kelas | sumber | run | bukti |",
-                "|---|---|---|---|---|---|"]
+        out += [f"## {question}", "",
+                "| hardware | nilai | kelas | jenis bukti | sumber | run | bukti |",
+                "|---|---|---|---|---|---|---|"]
         for i in model["items"]:
             if key not in i["answers"]:
                 continue
             value = "—" if i["value"] is None else f"`{i['value']}`"
             proof = "<br>".join(f"`{e['path']}` `{e['sha256'][:12]}…`" for e in i["evidence"])
-            out.append(f"| {i['hardware']} | {value} | {i['class']} | {_where(i['source'])} | "
-                       f"{i['run'] or '—'} | {proof} |")
+            out.append(f"| {i['hardware']} | {value} | {i['class']} | {i['evidence_kind']} | "
+                       f"{_where(i['source'])} | {i['run'] or '—'} | {proof} |")
         out.append("")
     out += ["## Kenapa", ""]
     out += [f"- `{i['id']}` — {i['why']}." for i in model["items"]]

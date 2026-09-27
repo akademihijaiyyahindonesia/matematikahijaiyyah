@@ -1531,9 +1531,16 @@ berarti dibuktikan secara fisik, SIMULATED berarti RTL atau interpreter.
 
 **6.1 tutup hari itu**, tanpa menyentuh RTL atau papan: `NUI/HARDWARE.md`,
 dibangun `src/hijaiyyah/nui/hardware.py`. Angkanya di `NUI/LAYERS.md`, Lapis
-6. Satu klasifikasi menunggu pemilik: laporan nextpnr (LUT4, DFF, BSRAM,
-Fmax) ditaruh di SIMULATED, karena dihitung dari desain, bukan dibaca dari
-papan.
+6. Laporan nextpnr (LUT4, DFF, BSRAM, Fmax) tetap SIMULATED dengan
+`evidence_kind` = PNR/build-derived — bukan simulasi perilaku, bukan
+pengukuran fisik (K-18). Judul Lapis 6 tetap *Pemahaman perangkat keras*;
+*Hardware Intelligence* aliasnya (K-19).
+
+**6.2 tutup hari yang sama**: registry sumber telemetri, `NUI/TELEMETRY_SOURCES.md`.
+Pagarnya kalimat pemilik: **sumber yang ada tidak sama dengan sumber yang
+sedang mengalir.** Hari ini tidak ada sumber hidup; jalur UART pernah
+menghasilkan telemetri, dan itu historis. Keempat medan tanpa sumber tetap
+UNKNOWN dan tidak diisi dari nama sinyal RTL.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

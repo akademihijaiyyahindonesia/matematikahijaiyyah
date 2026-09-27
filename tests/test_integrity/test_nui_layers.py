@@ -158,3 +158,11 @@ def test_what_may_not_be_claimed_is_written_down() -> None:
     for forbidden in ("AGI", "kesadaran", "inteligensi manusia"):
         assert forbidden in TEXT, forbidden
     assert "R2" in TEXT
+
+
+def test_layer_six_keeps_its_title_and_carries_its_alias() -> None:
+    """K-19, 27 September 2026: the official title stays the one in the locked
+    map of twelve layers; Hardware Intelligence is its working name."""
+    assert "## Lapis 6 — Pemahaman perangkat keras" in TEXT
+    layer6 = sections()[6]
+    assert "*Hardware\nIntelligence* adalah nama kerja atau aliasnya" in layer6

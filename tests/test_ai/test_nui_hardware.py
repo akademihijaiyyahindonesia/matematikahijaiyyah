@@ -127,3 +127,16 @@ def test_a_page_hash_moves_only_with_the_lines_it_cites(
     assert hardware._evidence("PAGE.md", item)["sha256"] != before["sha256"]
     with pytest.raises(LookupError, match="without the lines it cites"):
         hardware._evidence("PAGE.md", {"id": "y", "value": None})
+
+
+def test_nextpnr_is_simulated_and_says_it_is_build_derived() -> None:
+    """K-18: LUT4, DFF, BSRAM and Fmax stay SIMULATED, marked
+    PNR/build-derived, and the inventory says in words that this is neither a
+    behavioural simulation nor a physical measurement."""
+    items = {i["id"]: i for i in MODEL["items"]}
+    for key in ("fpga_lut4", "fpga_dff", "fpga_bsram", "fpga_fmax"):
+        assert (items[key]["class"], items[key]["evidence_kind"]) == (
+            "SIMULATED", "PNR/build-derived"), key
+    words = SPEC["kinds"]["PNR/build-derived"]
+    assert "bukan simulasi perilaku" in words and "bukan pengukuran fisik" in words
+    assert "bukan simulasi perilaku" in hardware.PAGE.read_text(encoding="utf-8")

@@ -106,7 +106,7 @@
     "fpga"
    ],
    "class": "SIMULATED",
-   "evidence_kind": "toolchain",
+   "evidence_kind": "PNR/build-derived",
    "value": "15,744 / 20,736",
    "source": {
     "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
@@ -129,7 +129,7 @@
     "fpga"
    ],
    "class": "SIMULATED",
-   "evidence_kind": "toolchain",
+   "evidence_kind": "PNR/build-derived",
    "value": "5,065 / 15,552",
    "source": {
     "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
@@ -153,7 +153,7 @@
     "memory"
    ],
    "class": "SIMULATED",
-   "evidence_kind": "toolchain",
+   "evidence_kind": "PNR/build-derived",
    "value": "18 /     46",
    "source": {
     "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
@@ -177,7 +177,7 @@
     "clock"
    ],
    "class": "SIMULATED",
-   "evidence_kind": "toolchain",
+   "evidence_kind": "PNR/build-derived",
    "value": "86.18 MHz",
    "source": {
     "path": "rtl/fpga/gowin/hcpu_gowin_top.v",

@@ -49,6 +49,8 @@ P8  Lapis 5                                  P8.1–P8.7 selesai 26–27 Septemb
 | K-15 | Evidence Lapis 5 tetap **teks UTF-8** keluaran perintah; `observe()` tidak diubah jadi tangkapan byte mentah. Bukti kabel UART (P1) byte mentah karena penguraiannya persoalan byte; kolektor yang kelak menghasilkan format bukan teks direkam sebagai biner secara eksplisit (26 September 2026) | P8 |
 | K-16 | Identitas kanonik sebuah observasi adalah **`(vm_name, run_id)`**: `layer5.latest(vm_name)` hanya membaca observasi milik VM itu, dan observasi instance uji tidak pernah menjawab untuk instance utama. Run berikutnya di `~/cosmictera-layer5/observations/<vm_name>/<run_id>/`; run lama tidak dipindahkan, dibedakan oleh `vm_name` di manifest-nya (27 September 2026) | P8.6 |
 | K-17 | `cosmictera-layer5-uji` **dihentikan, tidak dihapus**: disk dan direktorinya dipertahankan sampai instance utama menjalankan kolektor pertamanya dan provenance-nya terbukti (27 September 2026) | P8.6 |
+| K-18 | Laporan nextpnr (LUT4, DFF, BSRAM, Fmax) **tetap SIMULATED** di inventaris 6.1, dengan `evidence_kind` = `PNR/build-derived`, dan dokumentasinya menyatakan eksplisit: hasil synthesis/place-and-route/build analysis, bukan simulasi perilaku dan bukan pengukuran fisik. Tidak ada kelas keempat (27 September 2026) | Lapis 6.1 |
+| K-19 | Judul resmi Lapis 6 **tetap *Pemahaman perangkat keras***, bagian peta dua belas lapis yang dikunci; *Hardware Intelligence* adalah nama kerja atau alias (27 September 2026) | Lapis 6 |
 
 Yang **tidak** diputuskan di hari itu, dan tidak masuk urutan ini: perbaikan
 `PRINT` di silikon dan perbaikan instruksi sesudah berhenti. Keduanya RTL, K9

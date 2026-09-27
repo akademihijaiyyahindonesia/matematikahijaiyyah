@@ -1,0 +1,838 @@
+{
+ "generated_by": "src/hijaiyyah/nui/telemetry_sources.py",
+ "spec": "NUI/spec/telemetry_sources.json",
+ "contract": "cosmictera/TELEMETRY.md",
+ "matrix": [
+  {
+   "source": "UART/Tang Nano board runs",
+   "status": "MEASURED source",
+   "coverage": "23/27 medan kontrak"
+  },
+  {
+   "source": "historical board recordings",
+   "status": "MEASURED evidence",
+   "coverage": "8 lari papan atau halamannya, semuanya di-commit"
+  },
+  {
+   "source": "live hardware telemetry sekarang",
+   "status": "UNKNOWN / tidak mengalir",
+   "coverage": "0 sumber hidup terdaftar -- belum ada stream aktif"
+  },
+  {
+   "source": "4 medan tanpa sumber",
+   "status": "UNKNOWN",
+   "coverage": "anomaly_score, corruption_score, state_hash, last_relocation"
+  },
+  {
+   "source": "RTL telemetry signals tele_*",
+   "status": "SIMULATED / available in design",
+   "coverage": "6 sinyal -- bukan aliran papan yang hidup"
+  }
+ ],
+ "registry": [
+  {
+   "field": "uptime",
+   "source": "`rtl/programs/burn_in.hasm`, tiap detak",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      36
+     ],
+     "sha256": "35ba9037d7b952b48ec58701a57f0f430ee36de3e49d32829aacd532522d101a"
+    },
+    {
+     "path": "rtl/programs/burn_in.hasm",
+     "sha256": "f3d1ec2b8ba1385dc563d50a01210fb7b5eccfa86c458780b2152a385b0c7233"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "putaran pencacah dan pencacah >> 12, di tiap detak"
+  },
+  {
+   "field": "cycle_rate",
+   "source": "[burn-in/](../cosmictera-build/burn-in/README.md)",
+   "source_kind": "host_from_board",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      37
+     ],
+     "sha256": "1856333d9cb66d57de816e09ccf0b0379da59854284cc68ee845537efe2f3ac9"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+     "sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json",
+     "sha256": "0733c06ad3c2caf85c348cba287d182e5fc25c59d20ce4d3d39eefa401e226e5"
+    }
+   ],
+   "sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c",
+   "status": "MEASURED",
+   "note": "cycles_per_second, median yang dihitung host dari detak papan"
+  },
+  {
+   "field": "drift",
+   "source": "[burn-in/](../cosmictera-build/burn-in/README.md)",
+   "source_kind": "host_from_board",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      38
+     ],
+     "sha256": "0e1fecf7e2067d0dbb01d1d3fa5044f088d5981255d1f64db7db2d810dbd3cb9"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json",
+     "sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json",
+     "sha256": "0733c06ad3c2caf85c348cba287d182e5fc25c59d20ce4d3d39eefa401e226e5"
+    }
+   ],
+   "sha256": "6fb0ea23bbe0a9838e5cc88855c5e34b75ca9a0f8768eb9765f5d441e6263e0c",
+   "status": "MEASURED",
+   "note": "board_minus_host_s dan drift_per_hour_s, dihitung host dari detak papan dan jamnya sendiri"
+  },
+  {
+   "field": "anomaly_score",
+   "source": "—",
+   "source_kind": "none",
+   "live_or_historical": "unknown",
+   "board_run": null,
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      39
+     ],
+     "sha256": "a634669a474417453fb68ea3aaff3aa536d1ccd0b4c259108ff9b0c69373969f"
+    },
+    {
+     "path": "facts/telemetry/four_fields_have_no_source.json",
+     "sha256": "afa9e6d85331f81f4e849f62d35d565b7e3b84063a1b8e7df3d9a020890d7853"
+    }
+   ],
+   "sha256": null,
+   "status": "UNKNOWN",
+   "note": "turunan yang menunggu NUI dan garis dasar"
+  },
+  {
+   "field": "memory_check",
+   "source": "`rtl/programs/burn_in.hasm`",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      40
+     ],
+     "sha256": "71a86f4defaf37f40e0286910410285897b99cc94dfc7af55bea0fa5ac465b2e"
+    },
+    {
+     "path": "rtl/programs/burn_in.hasm",
+     "sha256": "f3d1ec2b8ba1385dc563d50a01210fb7b5eccfa86c458780b2152a385b0c7233"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "kegagalannya menaikkan pencacah errors di tiap detak"
+  },
+  {
+   "field": "stack_check",
+   "source": "`rtl/programs/burn_in.hasm`",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      41
+     ],
+     "sha256": "19fd2d3b8bc5d0d3e42e8910aa72e5e743917bd923ff48559778411ccd0058a7"
+    },
+    {
+     "path": "rtl/programs/burn_in.hasm",
+     "sha256": "f3d1ec2b8ba1385dc563d50a01210fb7b5eccfa86c458780b2152a385b0c7233"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "kegagalannya menaikkan pencacah errors di tiap detak"
+  },
+  {
+   "field": "corruption_score",
+   "source": "—",
+   "source_kind": "none",
+   "live_or_historical": "unknown",
+   "board_run": null,
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      42
+     ],
+     "sha256": "67048e52c2e14e17976154f629cb243fd5a252b9bc7dc2c4fde084ea7954d7d9"
+    },
+    {
+     "path": "facts/telemetry/four_fields_have_no_source.json",
+     "sha256": "afa9e6d85331f81f4e849f62d35d565b7e3b84063a1b8e7df3d9a020890d7853"
+    }
+   ],
+   "sha256": null,
+   "status": "UNKNOWN",
+   "note": "turunan dari pencacah kesalahan yang sudah ada, belum dibuat"
+  },
+  {
+   "field": "pass_count",
+   "source": "[validasi/JAMRAH.md](../cosmictera-build/validasi/JAMRAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      43
+     ],
+     "sha256": "578bbc50048077bde9b789758880608f550aa388b0c5593438fd17948b643988"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+     "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e"
+    },
+    {
+     "path": "cosmictera-build/validasi/JAMRAH.md",
+     "lines": [
+      30
+     ],
+     "sha256": "35051252382bb98acd359aadfb63348c97f434f01249508f3f2478d2bc2bef35"
+    }
+   ],
+   "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e",
+   "status": "MEASURED",
+   "note": "accepted_per_run, lima lari"
+  },
+  {
+   "field": "reject_count",
+   "source": "[validasi/JAMRAH.md](../cosmictera-build/validasi/JAMRAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      44
+     ],
+     "sha256": "f081a9b0ae582db203a69ba75c9506b4232569d03c87fd07512255bc69fcc93e"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+     "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e"
+    },
+    {
+     "path": "cosmictera-build/validasi/JAMRAH.md",
+     "lines": [
+      30
+     ],
+     "sha256": "35051252382bb98acd359aadfb63348c97f434f01249508f3f2478d2bc2bef35"
+    }
+   ],
+   "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e",
+   "status": "MEASURED",
+   "note": "rejected_per_run, lima lari"
+  },
+  {
+   "field": "latency",
+   "source": "[attack-lab/](../cosmictera-build/attack-lab/README.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      45
+     ],
+     "sha256": "56c61ff440640b176074e699ab5d29291fcc80c284f61f05adf488603e85dfb1"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+     "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/README.md",
+     "lines": [
+      53
+     ],
+     "sha256": "aa0a4cd28238e3419d988d53a9aeb6826368a3f634380522d3ff481a76994c21"
+    }
+   ],
+   "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e",
+   "status": "MEASURED",
+   "note": "clocks_per_byte, lima lari"
+  },
+  {
+   "field": "consistency",
+   "source": "`rtl/programs/burn_in.hasm`",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      46
+     ],
+     "sha256": "15f2cc84cfd65fe254d38d00410422ed9ac991938b592769384362bbddcd0dce"
+    },
+    {
+     "path": "rtl/programs/burn_in.hasm",
+     "sha256": "f3d1ec2b8ba1385dc563d50a01210fb7b5eccfa86c458780b2152a385b0c7233"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260920T000027Z-jamrah.json",
+     "sha256": "ff5856ba173205b03c89cbc04d03d7ba4eff76a3fcc641c45080e8ec570ba28e"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "dua jumlah dibandingkan tiap siklus burn-in; lima lari Jamrah identik byte demi byte (runs_identical)"
+  },
+  {
+   "field": "avalanche",
+   "source": "[validasi/KABAH.md](../cosmictera-build/validasi/KABAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/KABAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      47
+     ],
+     "sha256": "7a184d8483b0195a391bd84cb62f93aa1551317e5deb9033e2c19b4a347f44ab"
+    },
+    {
+     "path": "cosmictera-build/validasi/KABAH.md",
+     "lines": [
+      39
+     ],
+     "sha256": "d49358d0f8d0e3d153bf29150f41d7a8cd21e9b787eb5dd23eb1e04d3e56e1f0"
+    }
+   ],
+   "sha256": "d49358d0f8d0e3d153bf29150f41d7a8cd21e9b787eb5dd23eb1e04d3e56e1f0",
+   "status": "MEASURED",
+   "note": "validasi 20 September 2026, dicatat di halamannya; rekaman kabah di attack-lab adalah lari lab serangan yang lain"
+  },
+  {
+   "field": "integrity",
+   "source": "[validasi/KABAH.md](../cosmictera-build/validasi/KABAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/KABAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      48
+     ],
+     "sha256": "dfa6b87bb84ec197a37391922b5a74c93671b1e524dde9e03a39a895e2be1074"
+    },
+    {
+     "path": "cosmictera-build/validasi/KABAH.md",
+     "lines": [
+      36,
+      40
+     ],
+     "sha256": "01e225a4f09c72800a99683d540c9feca2f68349194ef52b9681c6e501fe32db"
+    }
+   ],
+   "sha256": "01e225a4f09c72800a99683d540c9feca2f68349194ef52b9681c6e501fe32db",
+   "status": "MEASURED",
+   "note": "8/8 frame berantai dan 32/32 masukan termutasi, dicatat di halaman validasi"
+  },
+  {
+   "field": "replay_state",
+   "source": "[validasi/KABAH.md](../cosmictera-build/validasi/KABAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/KABAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      49
+     ],
+     "sha256": "1cfbe4ca2ffcaee236cd691b807055f4eec63795c89e2c2583f1f59124f98df9"
+    },
+    {
+     "path": "cosmictera-build/validasi/KABAH.md",
+     "lines": [
+      38
+     ],
+     "sha256": "9aad7b8f698dc99772f38c9fa89d6a74edb3bf943b911306204901ae74dc4328"
+    }
+   ],
+   "sha256": "9aad7b8f698dc99772f38c9fa89d6a74edb3bf943b911306204901ae74dc4328",
+   "status": "MEASURED",
+   "note": "dicatat di halaman validasi"
+  },
+  {
+   "field": "state_hash",
+   "source": "—",
+   "source_kind": "none",
+   "live_or_historical": "unknown",
+   "board_run": null,
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      50
+     ],
+     "sha256": "f5997abd1937dc10240ad122e73d634baee993f651bbd70ba707bd8c300e279a"
+    },
+    {
+     "path": "facts/telemetry/four_fields_have_no_source.json",
+     "sha256": "afa9e6d85331f81f4e849f62d35d565b7e3b84063a1b8e7df3d9a020890d7853"
+    }
+   ],
+   "sha256": null,
+   "status": "UNKNOWN",
+   "note": "bentuk ringkasannya keputusan pemilik; tidak ada inti SHA-256 di RTL (R10)"
+  },
+  {
+   "field": "sd_sector_read",
+   "source": "`rtl/programs/burn_in.hasm`",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      51
+     ],
+     "sha256": "854bb8537ab245a5a91463326fa64e032d23aa939f973d27a8ab1b7d2498b761"
+    },
+    {
+     "path": "rtl/programs/burn_in.hasm",
+     "sha256": "f3d1ec2b8ba1385dc563d50a01210fb7b5eccfa86c458780b2152a385b0c7233"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "status SD di tiap detak"
+  },
+  {
+   "field": "hfs_signature",
+   "source": "[burn-in/](../cosmictera-build/burn-in/README.md)",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      52
+     ],
+     "sha256": "06e3e090ca4d63498bdea8fd4b009b778f7e9e66cb9a588622a7bd63e3a919f8"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    },
+    {
+     "path": "cosmictera-build/burn-in/README.md",
+     "lines": [
+      395
+     ],
+     "sha256": "fa046b8dbd2fd45a2d1a16b9e648af951aa9fad7ca897ce5674d76a8ba8a81c6"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "card_word siklus pertama, 1212568369 = 0x48465331"
+  },
+  {
+   "field": "read_error_count",
+   "source": "`rtl/programs/burn_in.hasm`",
+   "source_kind": "board_program",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      53
+     ],
+     "sha256": "d167b188820409a68c299c2bef91357ae505d896c3ea91c1e07de63c1615b9a8"
+    },
+    {
+     "path": "rtl/programs/burn_in.hasm",
+     "sha256": "f3d1ec2b8ba1385dc563d50a01210fb7b5eccfa86c458780b2152a385b0c7233"
+    },
+    {
+     "path": "cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl",
+     "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae"
+    }
+   ],
+   "sha256": "910deac1b8ebde20efbde3c96ececf408891aa50baebb1e1e45d7458b12a45ae",
+   "status": "MEASURED",
+   "note": "pencacah sd failures di tiap detak"
+  },
+  {
+   "field": "last_boot",
+   "source": "[PAPAN.md](../cosmictera-build/PAPAN.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/PAPAN.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      54
+     ],
+     "sha256": "83fc7d12f50e21ac2873636eb2f932191668d9b7d1db2ded2b75bc28ba594228"
+    },
+    {
+     "path": "cosmictera-build/PAPAN.md",
+     "lines": [
+      727
+     ],
+     "sha256": "39472cc1126d7358900c2351abf05bb9dfdaf5540d4db6e83a500c88234a4226"
+    }
+   ],
+   "sha256": "39472cc1126d7358900c2351abf05bb9dfdaf5540d4db6e83a500c88234a4226",
+   "status": "MEASURED",
+   "note": "2B kecil, 18 September 2026"
+  },
+  {
+   "field": "last_container",
+   "source": "[attack-lab/](../cosmictera-build/attack-lab/README.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      55
+     ],
+     "sha256": "79d241ba3e4cd59fbd0733ef2647fdb1b373ce4c518877668952545eceee2bc9"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260919T225037Z-loader.json",
+     "sha256": "7eb56f399971e98da76c4a091029c85dced8efc6fda2f7095b663ef47976d95c"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260919T234551Z-loader-jim5.json",
+     "sha256": "5101e0e19d8d4a493c106866920aa9e2b3705ae9b55d28c0832ee3bdfea69e26"
+    },
+    {
+     "path": "cosmictera-build/attack-lab/20260925T191528Z-loader.json",
+     "sha256": "5e4a2a52ac26677a4330849ca75d09d234b6d4195975a928a325a3c781e2747a"
+    }
+   ],
+   "sha256": "5e4a2a52ac26677a4330849ca75d09d234b6d4195975a928a325a3c781e2747a",
+   "status": "MEASURED",
+   "note": "keputusan loader per container; lari terbaru P6"
+  },
+  {
+   "field": "last_relocation",
+   "source": "—",
+   "source_kind": "none",
+   "live_or_historical": "unknown",
+   "board_run": null,
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      56
+     ],
+     "sha256": "89aa92382f1127c0d72d65879bfee57a82f2d7a2beb45db9bb0fc5498e4c523f"
+    },
+    {
+     "path": "facts/telemetry/four_fields_have_no_source.json",
+     "sha256": "afa9e6d85331f81f4e849f62d35d565b7e3b84063a1b8e7df3d9a020890d7853"
+    }
+   ],
+   "sha256": null,
+   "status": "UNKNOWN",
+   "note": "relokasi diterapkan di dalam pemuatan dan tidak dilaporkan sendiri"
+  },
+  {
+   "field": "boot_duration",
+   "source": "[CHECKLIST.md](../cosmictera-build/CHECKLIST.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/CHECKLIST.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      57
+     ],
+     "sha256": "39a31c865ff125b77224df9e8315641bd3ae7daf35595e9323265acfcf33ccff"
+    },
+    {
+     "path": "cosmictera-build/CHECKLIST.md",
+     "lines": [
+      196
+     ],
+     "sha256": "6bd0a327f6579d9e220afde7276cc84654885fde51e604254177fbd8ab793fb9"
+    }
+   ],
+   "sha256": "6bd0a327f6579d9e220afde7276cc84654885fde51e604254177fbd8ab793fb9",
+   "status": "MEASURED",
+   "note": "diukur sekali, dicatat di CHECKLIST.md"
+  },
+  {
+   "field": "last_validation",
+   "source": "[validasi/HIJRAH.md](../cosmictera-build/validasi/HIJRAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      58
+     ],
+     "sha256": "0178406f4f49fae7e1e2ddaa3d84e01f11af50a198b0b4dff8234037839892e6"
+    },
+    {
+     "path": "cosmictera-build/validasi/HIJRAH.md",
+     "lines": [
+      25,
+      26,
+      29
+     ],
+     "sha256": "d5574a4988a01d7bb2a08b94b5c3a0a69afa9efde6874d8d41d19e86590cff90"
+    }
+   ],
+   "sha256": "d5574a4988a01d7bb2a08b94b5c3a0a69afa9efde6874d8d41d19e86590cff90",
+   "status": "MEASURED",
+   "note": "tiga lari dari tiga, dicatat di halaman validasi"
+  },
+  {
+   "field": "density_mod2",
+   "source": "[validasi/HIJRAH.md](../cosmictera-build/validasi/HIJRAH.md)",
+   "source_kind": "host_from_board",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      59
+     ],
+     "sha256": "868618787c504ad48f995cc0c8397fd56ad52047327e383e3c8b758580436e99"
+    },
+    {
+     "path": "cosmictera-build/validasi/HIJRAH.md",
+     "lines": [
+      26,
+      35,
+      38
+     ],
+     "sha256": "3741e2f3cedb4dd5835d5790329dd4b8c7e36a6e6e1d25b1718f11e5fca297e4"
+    }
+   ],
+   "sha256": "3741e2f3cedb4dd5835d5790329dd4b8c7e36a6e6e1d25b1718f11e5fca297e4",
+   "status": "MEASURED",
+   "note": "log2 dikerjakan host atas hitungan yang dibuktikan papan"
+  },
+  {
+   "field": "density_mod4",
+   "source": "[validasi/HIJRAH.md](../cosmictera-build/validasi/HIJRAH.md)",
+   "source_kind": "host_from_board",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      60
+     ],
+     "sha256": "b2fec2e3f777eca56b8ac535eba4ff9c8fbf131d3daedc1d4d4dabe9377ec5cc"
+    },
+    {
+     "path": "cosmictera-build/validasi/HIJRAH.md",
+     "lines": [
+      26,
+      35,
+      38
+     ],
+     "sha256": "3741e2f3cedb4dd5835d5790329dd4b8c7e36a6e6e1d25b1718f11e5fca297e4"
+    }
+   ],
+   "sha256": "3741e2f3cedb4dd5835d5790329dd4b8c7e36a6e6e1d25b1718f11e5fca297e4",
+   "status": "MEASURED",
+   "note": "log2 dikerjakan host atas hitungan yang dibuktikan papan"
+  },
+  {
+   "field": "density_mod5",
+   "source": "[validasi/HIJRAH.md](../cosmictera-build/validasi/HIJRAH.md)",
+   "source_kind": "host_from_board",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      61
+     ],
+     "sha256": "f044859be588bb6117245a6d1f6621627063bdfca837faa3422527758d939c8f"
+    },
+    {
+     "path": "cosmictera-build/validasi/HIJRAH.md",
+     "lines": [
+      26,
+      35,
+      38
+     ],
+     "sha256": "3741e2f3cedb4dd5835d5790329dd4b8c7e36a6e6e1d25b1718f11e5fca297e4"
+    }
+   ],
+   "sha256": "3741e2f3cedb4dd5835d5790329dd4b8c7e36a6e6e1d25b1718f11e5fca297e4",
+   "status": "MEASURED",
+   "note": "log2 dikerjakan host atas hitungan yang dibuktikan papan"
+  },
+  {
+   "field": "collapse_count",
+   "source": "[validasi/HIJRAH.md](../cosmictera-build/validasi/HIJRAH.md)",
+   "source_kind": "board_validation",
+   "live_or_historical": "historical board evidence",
+   "board_run": "cosmictera-build/validasi/HIJRAH.md",
+   "evidence": [
+    {
+     "path": "cosmictera/TELEMETRY.md",
+     "lines": [
+      62
+     ],
+     "sha256": "df605e5bdab7db982610bc5d9ed20ef457d6841c2786376212b44147d749ca60"
+    },
+    {
+     "path": "cosmictera-build/validasi/HIJRAH.md",
+     "lines": [
+      27
+     ],
+     "sha256": "b9a22d3b74677c003eff6751a8b3d84740c9ff2a3d856d812b34f7921d57679c"
+    }
+   ],
+   "sha256": "b9a22d3b74677c003eff6751a8b3d84740c9ff2a3d856d812b34f7921d57679c",
+   "status": "MEASURED",
+   "note": "dicatat di halaman validasi"
+  }
+ ],
+ "missing": [
+  {
+   "field": "anomaly_score",
+   "status": "UNKNOWN",
+   "note": "turunan yang menunggu NUI dan garis dasar"
+  },
+  {
+   "field": "corruption_score",
+   "status": "UNKNOWN",
+   "note": "turunan dari pencacah kesalahan yang sudah ada, belum dibuat"
+  },
+  {
+   "field": "state_hash",
+   "status": "UNKNOWN",
+   "note": "bentuk ringkasannya keputusan pemilik; tidak ada inti SHA-256 di RTL (R10)"
+  },
+  {
+   "field": "last_relocation",
+   "status": "UNKNOWN",
+   "note": "relokasi diterapkan di dalam pemuatan dan tidak dilaporkan sendiri"
+  }
+ ],
+ "live_sources": [],
+ "live_sources_why": "tidak ada lari papan yang sedang diamati: inventaris 6.1 mencatat telemetri yang mengalir sebagai UNKNOWN, dan irama serta jalur pelaporan belum ditetapkan pemilik",
+ "rtl_signals": {
+  "file": "rtl/fpga/gowin/hcpu_gowin_top.v",
+  "sha256": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+  "signals": [
+   {
+    "name": "tele_pc",
+    "line": 327,
+    "boundary": "simulated RTL telemetry",
+    "status": "SIMULATED"
+   },
+   {
+    "name": "tele_instr",
+    "line": 328,
+    "boundary": "simulated RTL telemetry",
+    "status": "SIMULATED"
+   },
+   {
+    "name": "tele_halted",
+    "line": 329,
+    "boundary": "simulated RTL telemetry",
+    "status": "SIMULATED"
+   },
+   {
+    "name": "tele_guard",
+    "line": 330,
+    "boundary": "simulated RTL telemetry",
+    "status": "SIMULATED"
+   },
+   {
+    "name": "tele_cycles",
+    "line": 331,
+    "boundary": "simulated RTL telemetry",
+    "status": "SIMULATED"
+   },
+   {
+    "name": "tele_flags",
+    "line": 332,
+    "boundary": "simulated RTL telemetry",
+    "status": "SIMULATED"
+   }
+  ]
+ },
+ "boundary": {
+  "historical board evidence": "pernah diukur di papan dan terekam; tidak ada yang mengalirkannya sekarang",
+  "live board source": "sumber papan yang sedang mengalir dan diamati sekarang -- hari ini tidak ada",
+  "simulated RTL telemetry": "sinyal yang ada di desain RTL, bukan aliran papan yang hidup",
+  "unknown": "tidak ada jalur, atau tidak dikenal"
+ }
+}
