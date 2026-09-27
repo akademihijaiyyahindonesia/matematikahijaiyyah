@@ -730,6 +730,29 @@ luar repositori; yang dicatat di sini hanya vonis dan hash-nya.
   sendiri, instance uji tetap membaca run-nya sendiri, `host services` untuk
   instance utama `unknown` tanpa satu butir bukti instance uji, dan hash run
   yang dibekukan tidak bergerak.
+- **Sepuluh kolektor lainnya di instance utama, 27 September 2026**,
+  `observations/cosmictera-layer5/20260927T083814Z-collectors/` (manifest
+  `cfaa3484…`), dalam urutan kontrak. Instance utama kini punya kesebelasnya:
+  9 `PASS`, `journal` `unavailable_due_to_permissions`, `containers`
+  `unavailable_command_absent` — sama dengan instance uji, dan izinnya tidak
+  diperluas (K-12). Pemeriksaan akhir sebelum apa pun dipensiunkan: 22 berkas
+  evidence dalam dua run cocok dengan hash-nya; `latest(…, cosmictera-layer5)`
+  mengambil namespace utama untuk kesebelasnya, `latest(…,
+  cosmictera-layer5-uji)` tetap mengambil run historisnya; 18 kueri host atas
+  instance utama menghasilkan 24 butir HOST, tanpa satu pun dari instance uji.
+  `host services` **tidak dipaksa berubah**: `systemd_overview` kini ada di
+  instance utama, tetapi ia bukan daftar semua service, dan `journal` yang
+  tetap unavailable tidak digantikan — jawabannya tetap "no supporting
+  journal/service observation".
+- **Instance uji dipensiunkan, 27 September 2026** (K-17): VM dan disknya
+  dihapus dengan `limactl delete`. Sebelumnya, berkas kecil di direktorinya —
+  `lima.yaml` (`84849c1e…`), log host agent dan serial, `cloud-config.yaml`,
+  `cidata.iso` — dan log `limactl start` P8.2 disalin ke namespace-nya sendiri,
+  `observations/cosmictera-layer5-uji/20260927T083913Z-retirement/`, beserta
+  sha256-nya. Evidence P8.1–P8.5 tidak dipindahkan dan tidak berubah; run
+  historisnya tetap terbaca dan terverifikasi tanpa VM-nya. **Lapis 5 masuk
+  baseline utama**: `cosmictera-layer5` satu-satunya instance aktif, dan tiap
+  kueri HOST berbasis namespace VM yang eksplisit.
 
 Tiap direktori run menyimpan skrip yang menghasilkannya di sampingnya —
 skrip itu tinggal di evidence store, bukan di repositori — sehingga rekamannya
@@ -739,10 +762,8 @@ komentarnya yang kini sudah terjawab ("Prepared, not started" dan "Not yet
 measured"). Menyuntingnya akan mengubah sha256-nya, padahal instance utama
 harus dibuat dari byte yang sama yang dibuktikan instance uji.
 
-**Yang belum ada.** Sepuluh kolektor lain di instance utama, yang dijalankan
-atas aba-aba pemilik sesudah provenance kolektor pertamanya diperiksa; pensiun
-instance uji, sesudah provenance instance utama terbukti (K-17); dan kendali
-atas host — tahap sesudah hanya-baca, yang belum dibuka pemilik.
+**Yang belum ada.** Kendali atas host — tahap sesudah hanya-baca, yang belum
+dibuka pemilik. Label lapis ini tetap AT sampai pemilik memutuskan lain.
 
 **Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
 dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Host

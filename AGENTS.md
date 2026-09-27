@@ -1478,6 +1478,15 @@ Kolektor pertama instance utama, `host_identity` saja, dijalankan ke namespace
 barunya dan provenance-nya diperiksa sebelum kolektor lain — perintah pemilik.
 Lapis 5 tetap **AT** sampai bukti instance utama benar-benar terkumpul.
 
+**Sepuluh kolektor lainnya menyusul hari yang sama**, atas aba-aba pemilik,
+dengan hasil yang sama dengan instance uji — `journal` dan `containers` tetap
+unavailable, izin tidak diperluas. Pemeriksaan akhir membuktikan kueri instance
+utama tidak pernah jatuh ke bukti uji, dan `host services` **tidak dipaksa
+berubah**. Lalu instance uji dipensiunkan: VM dan disknya dihapus, tetapi
+berkas kecil direktorinya disalin lebih dulu ke namespace-nya sendiri di
+evidence store — **yang dipensiunkan adalah VM, bukan bukti P8.1–P8.5**.
+Lapis 5 kini baseline utama dengan satu instance aktif, dan tetap **AT**.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

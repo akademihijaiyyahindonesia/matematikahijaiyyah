@@ -264,7 +264,12 @@ P8.6  tujuh kueri yang dibekukan        dijalankan di dalam P8.5, perintah pemil
 P8.7  cosmictera-layer5-uji hijau -> baru cosmictera-layer5   selesai 26 September
 P8.6  (pemilik, 27 September) namespace per VM K-16, uji dihentikan K-17,
       kolektor pertama instance utama                          selesai
+      sepuluh kolektor lainnya di instance utama, pemeriksaan
+      akhir, instance uji dipensiunkan                          selesai
 ```
+
+Sesudah itu Lapis 5 masuk **baseline utama**: `cosmictera-layer5` satu-satunya
+instance aktif, dan tiap kueri HOST berbasis namespace VM yang eksplisit.
 
 Nomor P8.6 dipakai pemilik dua kali: 26 September untuk tujuh kueri, yang lalu
 dijalankan di dalam P8.5, dan 27 September untuk namespace per VM. Yang
