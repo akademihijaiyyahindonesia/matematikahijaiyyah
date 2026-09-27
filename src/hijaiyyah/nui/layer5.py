@@ -477,8 +477,11 @@ def delta(collector: str, vm_name: str, run_from: str | None = None,
     """What changed in one collector's output between two runs of the same VM
     -- by default its two newest -- with the provenance of both. Items that
     appeared, disappeared, or kept their key and changed their value, by the
-    spec's item rule. Only an observation: nothing acts on it. Two runs that
-    are not both verified give no delta, and say why."""
+    spec's item rule. An item the rule sets apart -- for processes, kworker,
+    by the owner's decision of 27 September 2026 -- is kept under the rule's
+    own name and never counted as a change of the collector itself. Only an
+    observation: nothing acts on it. Two runs that are not both verified give
+    no delta, and say why."""
     seen = observations(collector, vm_name)
     by_id = {s["run_id"]: s for s in seen}
     pair: list[dict[str, Any] | None]
@@ -497,11 +500,23 @@ def delta(collector: str, vm_name: str, run_from: str | None = None,
                                f"{s.get('rejected') or s.get('failure')}"}
     assert old is not None and new is not None
     a, b = items(collector, old["stdout_text"]), items(collector, new["stdout_text"])
-    return {"collector": collector, "vm_name": vm_name,
-            "from": _provenance(old), "to": _provenance(new),
-            "appeared": sorted(set(b) - set(a)), "disappeared": sorted(set(a) - set(b)),
-            "changed": [{"item": k, "from": a[k], "to": b[k]}
-                        for k in sorted(set(a) & set(b)) if a[k] != b[k]]}
+    found: dict[str, Any] = {
+        "appeared": sorted(set(b) - set(a)), "disappeared": sorted(set(a) - set(b)),
+        "changed": [{"item": k, "from": a[k], "to": b[k]}
+                    for k in sorted(set(a) & set(b)) if a[k] != b[k]]}
+    out: dict[str, Any] = {"collector": collector, "vm_name": vm_name,
+                           "from": _provenance(old), "to": _provenance(new)}
+    rule = load()["delta"]["items"][collector].get("separate")
+    if rule is None:
+        return {**out, **found}
+    apart = re.compile(rule["key_pattern"])
+
+    def kept_apart(x: Any) -> bool:
+        return apart.match(x["item"] if isinstance(x, dict) else x) is not None
+
+    out.update({part: [x for x in found[part] if not kept_apart(x)] for part in found})
+    out[rule["as"]] = {part: [x for x in found[part] if kept_apart(x)] for part in found}
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:

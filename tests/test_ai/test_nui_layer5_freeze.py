@@ -59,17 +59,28 @@ def test_the_freeze_holds_pointers_and_hashes_never_the_observation() -> None:
     for part in ("baseline", "compared_with"):
         for pointer in FROZEN[part].values():
             assert set(pointer) == POINTER
-    for d in FROZEN["delta"].values():
+    for c, d in FROZEN["delta"].items():
+        apart = {"kernel_thread_changes"} if c == "processes" else set()
         assert set(d) == {"from", "to", "status", "appeared", "disappeared", "changed",
-                          "items_sha256"}
+                          "items_sha256"} | apart, c
         assert all(isinstance(d[k], int) for k in ("appeared", "disappeared", "changed"))
 
 
+def test_kworker_is_not_the_baselines_process_change() -> None:
+    """From the baseline, eight kworker threads appeared and six went: none
+    of them is a process change, and none of them is dropped."""
+    d = FROZEN["delta"]["processes"]
+    assert (d["appeared"], d["disappeared"], d["changed"]) == (0, 0, 0)
+    assert d["kernel_thread_changes"] == {"appeared": 8, "disappeared": 6, "changed": 0}
+    assert FROZEN["delta_rule_status"]["locked"] == ["processes"]
+
+
 def test_the_freshness_rule_is_recorded_and_not_held() -> None:
-    """Its value is the owner's to set after the freeze; at the freeze it is
-    unset, and so nothing was claimed current."""
+    """Its value is the owner's -- 300 seconds, set on 27 September 2026 --
+    and it is recorded, not held: freshness is judged when a query is
+    answered, not frozen."""
     assert "freshness_rule" not in l5.HELD
-    assert FROZEN["freshness_rule"]["stale_after_seconds"] is None
+    assert FROZEN["freshness_rule"]["stale_after_seconds"] == 300
 
 
 def test_the_tag_carries_the_day_of_the_freeze() -> None:

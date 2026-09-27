@@ -372,14 +372,15 @@ def test_an_instance_name_cannot_leave_its_namespace(
 # -- freshness and delta rules (27 September 2026) ------------------------------------------
 
 
-def test_every_collector_has_an_item_rule_and_the_stale_value_waits() -> None:
+def test_every_collector_has_an_item_rule_and_the_stale_value_is_the_owners() -> None:
     """Delta needs an explicit item rule per collector, and freshness an
-    explicit parameter -- whose value the owner has not set, so it is null
-    rather than guessed."""
+    explicit parameter -- 300 seconds, set by the owner on 27 September 2026,
+    one global limit with no per-collector exception."""
     spec = layer5.load()
     assert set(spec["delta"]["items"]) == {c["name"] for c in spec["collectors"]}
-    assert spec["freshness"]["stale_after_seconds"] is None
-    assert "pemilik" in spec["freshness"]["value_status"]
+    assert spec["freshness"]["stale_after_seconds"] == 300
+    assert spec["freshness"]["value_status"].startswith("ditetapkan pemilik")
+    assert not [k for k in spec["freshness"] if k in {c["name"] for c in spec["collectors"]}]
 
 
 def test_items_follow_each_rule() -> None:
@@ -415,7 +416,15 @@ def test_freshness_is_the_rule_and_a_clock_that_went_back_is_never_current(
     spec = layer5.load()
     now = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
     at = (now - timedelta(seconds=10)).isoformat()
-    assert layer5.freshness(at, now)["freshness"] == "stale"
+    assert layer5.freshness((now - timedelta(seconds=300)).isoformat(), now)["freshness"] == \
+        "current", "300 s is the owner's limit, inclusive"
+    assert layer5.freshness((now - timedelta(seconds=301)).isoformat(), now)["freshness"] == \
+        "stale"
+    assert "went back" in layer5.freshness((now + timedelta(seconds=1)).isoformat(),
+                                           now)["freshness_why"], "even by one second"
+    spec["freshness"]["stale_after_seconds"] = None
+    monkeypatch.setattr(layer5, "load", lambda: spec)
+    assert "no stale_after_seconds" in layer5.freshness(at, now)["freshness_why"]
     spec["freshness"]["stale_after_seconds"] = 60
     monkeypatch.setattr(layer5, "load", lambda: spec)
     assert layer5.freshness(at, now) == {"age_seconds": 10.0, "stale_after_seconds": 60,
@@ -424,3 +433,15 @@ def test_freshness_is_the_rule_and_a_clock_that_went_back_is_never_current(
     assert layer5.freshness(old, now)["freshness"] == "stale"
     ahead = (now + timedelta(seconds=5)).isoformat()
     assert "went back" in layer5.freshness(ahead, now)["freshness_why"]
+
+
+
+def test_only_kworker_is_set_apart_from_the_process_delta() -> None:
+    """The owner's rule: identity is USER + COMMAND, and kworker -- only
+    kworker -- is kept apart as kernel_thread_changes."""
+    rule = layer5.load()["delta"]["items"]["processes"]
+    pattern = re.compile(rule["separate"]["key_pattern"])
+    assert rule["status"] == "ditetapkan" and rule["separate"]["as"] == "kernel_thread_changes"
+    assert pattern.match("root [kworker/0:2-cgroup_free]")
+    assert not pattern.match("root [kthreadd]"), "not the whole kernel-thread class"
+    assert not pattern.match("root /usr/bin/kworker-like")

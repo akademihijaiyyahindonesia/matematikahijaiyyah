@@ -612,7 +612,9 @@ def _host(subject: str) -> Answer:
 def _host_delta(collector: str) -> Answer:
     """What changed in one collector's output between the main instance's two
     newest runs of it, each item with the provenance of both runs (layer5.delta).
-    An observation of change, never an action on it."""
+    What the spec's rule sets apart -- kworker, for processes -- comes as one
+    item of its own and is never reported as the collector's change. An
+    observation of change, never an action on it."""
     from . import layer5
     answer = _empty()
     vm = layer5.host()["instance"]
@@ -642,6 +644,12 @@ def _host_delta(collector: str) -> Answer:
                                "source": d["to"]["stderr"]})
     if not answer["HOST"]:
         answer["HOST"].append({"what": "unchanged", **common, "source": d["to"]["evidence"]})
+    for name in [k for k in d if k not in ("collector", "vm_name", "from", "to", "appeared",
+                                            "disappeared", "changed")]:
+        apart = d[name]
+        if any(apart.values()):
+            answer["HOST"].append({"what": name, **apart, **common,
+                                   "source": d["to"]["evidence"]})
     return answer
 
 

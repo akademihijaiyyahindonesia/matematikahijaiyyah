@@ -274,8 +274,10 @@ instance aktif, dan tiap kueri HOST berbasis namespace VM yang eksplisit.
 **Penutupan operasional Lapis 5, 27 September 2026** — perintah pemilik,
 sebelum Lapis 6: baseline utama dibekukan, kesegaran (aturan eksplisit, nilai
 batas menunggu pemilik), delta antar-run dengan provenance kedua run, lalu
-laporan `NUI/LAYER5.md`, commit, dan tag `layer5-freeze-2026-09-27`. Angkanya di
-`NUI/LAYERS.md`, Lapis 5.
+laporan `NUI/LAYER5.md`, commit, dan tag `layer5-freeze-2026-09-27`. Lalu tiga
+keputusan pemilik hari itu: batas kesegaran 300 detik, `kworker` dipisah dari
+delta proses sebagai `kernel_thread_changes`, dan label Lapis 5 EH. **Lapis 5
+selesai.** Angkanya di `NUI/LAYERS.md`, Lapis 5.
 
 Nomor P8.6 dipakai pemilik dua kali: 26 September untuk tujuh kueri, yang lalu
 dijalankan di dalam P8.5, dan 27 September untuk namespace per VM. Yang

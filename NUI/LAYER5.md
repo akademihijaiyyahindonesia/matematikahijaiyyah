@@ -20,7 +20,7 @@ Dihasilkan `src/hijaiyyah/nui/layer5_freeze.py` dari evidence store, untuk tag `
 
 ## Kesegaran
 
-`stale_after_seconds` = `null` — menunggu pemilik: nilainya tidak ditebak.
+`stale_after_seconds` = `300` — ditetapkan pemilik, 27 September 2026: 300 detik, satu ambang global untuk semua kolektor tanpa pengecualian -- cukup ketat supaya current berarti dekat dengan keadaan runtime, tanpa menuntut kolektor berjalan terus.
 
 Aturannya: known current bila umur observasi tidak lebih dari stale_after_seconds; known but stale bila lebih, bila jam mundur, atau bila stale_after_seconds belum ditetapkan -- tanpa nilai, tidak ada observasi yang diklaim current; unknown bila tidak ada observasi yang mendukung.
 
@@ -30,12 +30,12 @@ Kesegaran dinilai saat kueri dijawab, bukan dibekukan di sini: yang dibekukan ad
 
 ## Delta dari baseline ke run berikutnya
 
-Run pembanding: `20260927T095339Z-collectors`. Aturan butir: usulan.
+Run pembanding: `20260927T095339Z-collectors`. Aturan butir: usulan, kecuali yang dikunci pemilik: `processes`.
 
 | kolektor | muncul | hilang | berubah | status | sha256 butir |
 |---|---:|---:|---:|---|---|
 | `host_identity` | 0 | 0 | 0 | PASS | `0d268d725e43…` |
-| `processes` | 8 | 6 | 0 | PASS | `457d2d0b6110…` |
+| `processes` | 0 | 0 | 0 | PASS | `a354e3b1a200…` |
 | `mounts` | 0 | 0 | 0 | PASS | `0d268d725e43…` |
 | `root_listing` | 0 | 0 | 2 | PASS | `83df9f12a926…` |
 | `systemd_overview` | 0 | 0 | 0 | PASS | `0d268d725e43…` |
@@ -45,6 +45,8 @@ Run pembanding: `20260927T095339Z-collectors`. Aturan butir: usulan.
 | `routes` | 0 | 0 | 0 | PASS | `0d268d725e43…` |
 | `interface_counters` | 0 | 0 | 2 | PASS | `5aa0cef9702c…` |
 | `containers` | 0 | 0 | 0 | unavailable_command_absent | `0d268d725e43…` |
+
+`processes` — dicatat terpisah sebagai `kernel_thread_changes`, bukan perubahan `processes` itu sendiri: 8 muncul, 6 hilang, 0 berubah.
 
 Isi butirnya dibaca dari evidence store dengan `python3 -m hijaiyyah.nui.knowledge host delta <kolektor>`, lengkap dengan provenance kedua run. Tidak ada tindakan otomatis atas delta.
 

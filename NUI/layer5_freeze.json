@@ -246,10 +246,15 @@
     "PASS",
     "PASS"
    ],
-   "appeared": 8,
-   "disappeared": 6,
+   "appeared": 0,
+   "disappeared": 0,
    "changed": 0,
-   "items_sha256": "457d2d0b6110e28b13e97c3198ba5878cd4180f7e375d108cf951d169507b5bd"
+   "kernel_thread_changes": {
+    "appeared": 8,
+    "disappeared": 6,
+    "changed": 0
+   },
+   "items_sha256": "a354e3b1a2003109488a493592a047e63e8077be001f9eed20f46364b5739a37"
   },
   "mounts": {
    "from": "20260927T083814Z-collectors",
@@ -403,10 +408,15 @@
   }
  ],
  "freshness_rule": {
-  "stale_after_seconds": null,
+  "stale_after_seconds": 300,
   "clock": "cap waktu UTC jam host Mac saat observe() mulai (medan `timestamp` manifest, `observed_at` di jawaban), dibandingkan jam host yang sama saat kueri dijawab",
   "rule": "known current bila umur observasi tidak lebih dari stale_after_seconds; known but stale bila lebih, bila jam mundur, atau bila stale_after_seconds belum ditetapkan -- tanpa nilai, tidak ada observasi yang diklaim current; unknown bila tidak ada observasi yang mendukung",
-  "value_status": "menunggu pemilik: nilainya tidak ditebak"
+  "value_status": "ditetapkan pemilik, 27 September 2026: 300 detik, satu ambang global untuk semua kolektor tanpa pengecualian -- cukup ketat supaya current berarti dekat dengan keadaan runtime, tanpa menuntut kolektor berjalan terus"
  },
- "delta_rule_status": "usulan"
+ "delta_rule_status": {
+  "block": "usulan",
+  "locked": [
+   "processes"
+  ]
+ }
 }

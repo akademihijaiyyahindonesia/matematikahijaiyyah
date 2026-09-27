@@ -1509,6 +1509,13 @@ Tiga hal yang harus diketahui kuli berikutnya:
 Lapis 6 — *Hardware Intelligence* — tidak boleh berangkat dari asumsi bahwa
 Lapis 5 sudah memahami perangkat keras.
 
+**Tiga keputusan pemilik menutupnya, hari yang sama**: `stale_after_seconds` =
+**300**, satu ambang global, dan jam mundur tetap *stale*; delta `processes`
+dikunci — identitas USER + COMMAND, dan `kworker` saja dipisah sebagai
+`kernel_thread_changes`, tidak dibuang; **label Lapis 5 naik ke EH**. Dengan
+tes dan `layer5_freeze --verify` kembali *reproduced exactly*, **Lapis 5
+selesai**, dan Lapis 6 dibuka atas aba-aba pemilik.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

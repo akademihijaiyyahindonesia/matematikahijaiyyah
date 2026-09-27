@@ -91,11 +91,15 @@ def _delta(collector: str) -> dict[str, Any]:
     d = layer5.delta(collector, VM, run_from=BASELINE[collector], run_to=COMPARED_WITH)
     if "unknown" in d:
         raise LookupError(d["unknown"])
-    body = {k: d[k] for k in ("appeared", "disappeared", "changed")}
+    apart = [k for k in d if k not in ("collector", "vm_name", "from", "to", "appeared",
+                                        "disappeared", "changed")]
+    body = {k: d[k] for k in ("appeared", "disappeared", "changed", *apart)}
     return {"from": d["from"]["run_id"], "to": d["to"]["run_id"],
             "status": [d["from"]["status"], d["to"]["status"]],
             "appeared": len(d["appeared"]), "disappeared": len(d["disappeared"]),
             "changed": len(d["changed"]),
+            **{name: {part: len(d[name][part]) for part in ("appeared", "disappeared", "changed")}
+               for name in apart},
             "items_sha256": _sha(json.dumps(body, sort_keys=True, ensure_ascii=False).encode())}
 
 
@@ -115,7 +119,9 @@ def build() -> dict[str, Any]:
                     for step, run in HISTORY],
         "freshness_rule": {k: rule[k] for k in ("stale_after_seconds", "clock", "rule",
                                                   "value_status")},
-        "delta_rule_status": layer5.load()["delta"]["status"],
+        "delta_rule_status": {"block": layer5.load()["delta"]["status"],
+                              "locked": sorted(c for c, r in layer5.load()["delta"]["items"].items()
+                                               if r.get("status") == "ditetapkan")},
     }
 
 
@@ -171,13 +177,21 @@ def page(model: dict[str, Any]) -> str:
             "adalah `observed_at` tiap observasi dan aturannya.", "",
             "## Delta dari baseline ke run berikutnya", "",
             f"Run pembanding: `{next(iter(model['compared_with'].values()))['run_id']}`. "
-            f"Aturan butir: {model['delta_rule_status']}.", "",
+            f"Aturan butir: {model['delta_rule_status']['block']}, kecuali yang dikunci "
+            "pemilik: " + ", ".join(f"`{c}`" for c in model["delta_rule_status"]["locked"])
+            + ".", "",
             "| kolektor | muncul | hilang | berubah | status | sha256 butir |",
             "|---|---:|---:|---:|---|---|"]
     for c, d in model["delta"].items():
         status = d["status"][0] if d["status"][0] == d["status"][1] else " → ".join(d["status"])
         out.append(f"| `{c}` | {d['appeared']} | {d['disappeared']} | {d['changed']} | "
                    f"{status} | {_short(d['items_sha256'])} |")
+    for c, d in model["delta"].items():
+        for name, n in d.items():
+            if isinstance(n, dict):
+                out += ["", f"`{c}` — dicatat terpisah sebagai `{name}`, bukan perubahan "
+                        f"`{c}` itu sendiri: {n['appeared']} muncul, {n['disappeared']} hilang, "
+                        f"{n['changed']} berubah."]
     out += ["", "Isi butirnya dibaca dari evidence store dengan "
             "`python3 -m hijaiyyah.nui.knowledge host delta <kolektor>`, lengkap dengan "
             "provenance kedua run. Tidak ada tindakan otomatis atas delta.", "",

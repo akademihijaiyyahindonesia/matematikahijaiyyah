@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **31 modul**; `tests/test_ai/` berisi **463 tes**
+`src/hijaiyyah/nui/` berisi **31 modul**; `tests/test_ai/` berisi **466 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -210,10 +210,10 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `board_probes.py` | dua eksperimen papan tersendiri: PRINT di silikon, dan kata sesudah HALT atau RET yang gagal | `test_nui_board_parity.py` |
 | `layer4_freeze.py` | Lapis 4 dibekukan: bukti P0–P6 dengan hash-nya, status tiap warna, dan laporan selisih final dalam empat kelas, dihitung ulang dari rekaman | `test_nui_layer4_freeze.py` (9) |
 | `usr.py` | spesifikasi USR, katalog Lapis 5, kamus HC per konsep, contoh pemilik sampai HISA — divalidasi, tidak dijalankan | `test_nui_usr.py` (43) |
-| `layer5.py` | Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan `record()` yang menulis evidence store di luar repositori, di namespace tiap VM (K-16); kesegaran menurut aturan eksplisit, dan delta antar-run — dijalankan pertama kali 26 September 2026 (P8.4) | `test_nui_layer5.py` (62) |
-| `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (9) |
+| `layer5.py` | Lapis 5: kolektor, pagar hanya-baca, satu jalan keluar lewat `limactl`, dan `record()` yang menulis evidence store di luar repositori, di namespace tiap VM (K-16); kesegaran menurut aturan eksplisit, dan delta antar-run — dijalankan pertama kali 26 September 2026 (P8.4) | `test_nui_layer5.py` (63) |
+| `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
-| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (101) |
+| `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (102) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
 
 ---
@@ -594,7 +594,7 @@ burn-in, tanpa host:
   keluaran mentah per kolektor (pemilik, 23 September 2026, K-11). `observe()`
   mengembalikan rekaman tanpa menulisnya; `record()` menjalankan semua kolektor
   lewat `observe()` sekali dan menulis lari itu ke store, dan menolak store di
-  dalam repositori. Dijaga `tests/test_ai/test_nui_layer5.py` (62).
+  dalam repositori. Dijaga `tests/test_ai/test_nui_layer5.py` (63).
 - `NUI/spec/layer5_lima.yaml` — VM yang mengunci image terverifikasi lewat
   digest, tanpa mount, mode plain. Template Ubuntu 24.04 bawaan Lima 2.2.0
   sendiri **tidak bisa dipakai**: ia mengunci `release-20260705`, jatuh ke URL
@@ -761,17 +761,22 @@ luar repositori; yang dicatat di sini hanya vonis dan hash-nya.
     dan `containers` tetap apa adanya.
   - **Kesegaran**: tiap butir HOST membawa `observed_at`, `run_id`, `vm_name`,
     `collector`, dan `evidence_sha256`, dan dinilai *known current*, *known but
-    stale*, atau *unknown* oleh aturan eksplisit di spesifikasi. Nilai batasnya,
-    `stale_after_seconds`, **tidak ditebak**: ia `null` sampai pemilik
-    menetapkannya, dan selama itu tidak ada observasi yang diklaim current.
+    stale*, atau *unknown* oleh aturan eksplisit di spesifikasi. Nilai batasnya
+    tidak ditebak: ia `null` sampai pemilik menetapkannya pada hari yang sama —
+    **`stale_after_seconds` = 300**, satu ambang global tanpa pengecualian per
+    kolektor, dan jam yang mundur tetap *stale* sekecil apa pun selisihnya.
   - **Delta antar-run**: `host delta <kolektor>` menyebut butir yang muncul,
     hilang, dan berubah di antara dua run VM yang sama, dengan provenance ke
     kedua run; tidak ada tindakan otomatis. Aturan butir tiap kolektor ada di
-    spesifikasi dan masih usulan. Untuk membuktikannya pada data nyata, kesebelas
-    kolektor dijalankan sekali lagi (`20260927T095339Z`): dari baseline,
-    `processes` 8 muncul dan 6 hilang — semuanya thread kernel `kworker`, yang
-    namanya berganti mengikuti antrean kerjanya — `root_listing` 2 berubah,
-    `interface_counters` 2 berubah, delapan lainnya tetap.
+    spesifikasi; yang `processes` **dikunci pemilik**: identitas USER + COMMAND,
+    dan `kworker` — hanya `kworker`, bukan seluruh kelas thread kernel —
+    dikeluarkan dari delta proses utama dan dicatat terpisah sebagai
+    `kernel_thread_changes`, tidak dibuang. Yang lain masih usulan. Untuk
+    membuktikannya pada data nyata, kesebelas kolektor dijalankan sekali lagi
+    (`20260927T095339Z`): dari baseline, delta `processes` **nol** — delapan
+    `kworker` yang muncul dan enam yang hilang duduk di `kernel_thread_changes`
+    — `root_listing` 2 berubah, `interface_counters` 2 berubah, delapan lainnya
+    tetap.
   - **Dibekukan** dengan tag `layer5-freeze-2026-09-27`: `NUI/LAYER5.md` dan
     `NUI/layer5_freeze.json`, dibangun `src/hijaiyyah/nui/layer5_freeze.py`.
     Berbeda dari Lapis 4, yang di-commit hanya pointer dan hash — isi
@@ -786,10 +791,8 @@ komentarnya yang kini sudah terjawab ("Prepared, not started" dan "Not yet
 measured"). Menyuntingnya akan mengubah sha256-nya, padahal instance utama
 harus dibuat dari byte yang sama yang dibuktikan instance uji.
 
-**Yang belum ada.** Nilai `stale_after_seconds` dan penguncian aturan butir
-delta — keduanya keputusan pemilik — dan kendali atas host, tahap sesudah
-hanya-baca yang belum dibuka pemilik. Label lapis ini tetap AT sampai pemilik
-memutuskan lain.
+**Yang belum ada.** Kendali atas host — tahap sesudah hanya-baca, yang belum
+dibuka pemilik — dan penguncian aturan butir delta selain `processes`.
 
 **Cara verifikasi.** Tiap operasi dijalankan di host Ubuntu nyata dan hasilnya
 dibaca kembali dari host itu sendiri — prinsip ketiga arahan kelima. Host
@@ -799,13 +802,22 @@ jawaban HOST diverifikasi terhadap hash itu setiap kali dibaca (P8.5).
 
 **Syarat selesai.** Penutupan operasional pemilik, 27 September 2026:
 baseline utama dibekukan, kesegaran dan delta terbukti, lalu laporan, commit,
-dan annotated tag `layer5-freeze-2026-09-27`. Kendali atas host tidak termasuk
-di dalamnya.
+dan annotated tag `layer5-freeze-2026-09-27`; lalu tiga keputusan pemilik hari
+yang sama — batas 300 detik, `kworker` dipisah dari delta proses, dan label EH —
+diterapkan, dengan tes dan `layer5_freeze --verify` kembali *reproduced
+exactly*. **Lapis 5 selesai.** Kendali atas host tidak termasuk di dalamnya.
 
 **Labelnya sudah diputuskan: AT.** Pesan kedua menandai lapis ini EH; selisih
 terhadap definisi `cosmictera/RULES.md` sendiri — EH "terukur, belum
 dikriptanalisis" melawan AT "belum dikerjakan" — dilaporkan, dan pesan ketiga
 menjawabnya dengan **AT**. Itu label yang cocok dengan tabelnya.
+
+**Label kini EH** — pemilik, 27 September 2026: terukur, belum dikriptanalisis.
+Lapis ini kini punya host runtime yang nyata, kolektor, evidence, provenance,
+kesegaran, delta, dan baseline yang dibekukan, tetapi bukan pembuktian
+menyeluruh atas seluruh perilaku host, dan bukan analisis keamanan. Label itu
+untuk lapisnya secara keseluruhan; bukti individualnya tetap dengan statusnya
+masing-masing dan tidak dipaksa jadi EH.
 
 ---
 
@@ -922,7 +934,7 @@ ditulis di `unknown`. Butir OFF-nya datang dari `src/hijaiyyah/nui/off_db.py`,
 yang membaca `cosmictera-build/OFF.md` jadi rekaman (`NUI/off_db.json`) tanpa
 menjadi salinan kedua; butir huruf dari registry Hijaiyyah
 (`src/hijaiyyah/nui/registry.py`). Dijaga `tests/test_ai/test_nui_knowledge.py`
-(101) dan `tests/test_ai/test_nui_registry.py` (7).
+(102) dan `tests/test_ai/test_nui_registry.py` (7).
 
 **Kontrak kuerinya**, 22 September 2026: tujuh pertanyaan pemilik, kata demi
 kata, dipetakan ke jenis kueri di `NUI/spec/query_contract.json` — apa itu

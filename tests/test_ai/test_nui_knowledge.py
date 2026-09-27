@@ -524,13 +524,13 @@ def _with_rule(monkeypatch: pytest.MonkeyPatch, seconds: Any) -> None:
 
 def test_a_host_item_carries_the_owners_freshness_fields(observed: Path) -> None:
     """observed_at, run_id, vm_name, collector and evidence_sha256 on every
-    HOST item, and its freshness. The committed rule sets no value, so
-    nothing is claimed current and the item says why."""
+    HOST item, and its freshness by the owner's rule: 300 seconds, one global
+    limit. An observation just made is current."""
     item, = knowledge.query("host host_identity")["HOST"]
     for field in ("observed_at", "run_id", "vm_name", "collector", "evidence_sha256"):
         assert item[field], field
-    assert layer5.load()["freshness"]["stale_after_seconds"] is None
-    assert item["freshness"] == "stale" and "no stale_after_seconds" in item["freshness_why"]
+    assert layer5.load()["freshness"]["stale_after_seconds"] == 300
+    assert item["freshness"] == "current" and 0 <= item["age_seconds"] <= 300
 
 
 def test_known_current_known_but_stale_and_unknown(
@@ -607,3 +607,35 @@ def test_a_delta_needs_two_verified_runs_of_the_same_vm(
     _flip_byte(first)
     d = layer5.delta("host_identity", MAIN)
     assert "cannot be compared" in d["unknown"] and "SHA-256" in d["unknown"]
+
+
+
+def test_kworker_is_never_reported_as_a_new_process(
+        _empty_store: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The owner, 27 September 2026: kworker threads come and go with the
+    kernel's work queues. They are kept, as kernel_thread_changes, and never
+    counted as a process that appeared -- only kworker, not every kernel
+    thread."""
+    def ps(lines: str) -> Any:
+        class _Ps(_Ran):
+            def __init__(self, cmd: list[str]) -> None:
+                super().__init__(cmd)
+                if cmd[4:] == ["ps", "aux"]:
+                    self.stdout = ("USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\n"
+                                   + lines)
+        return lambda cmd, **_: _Ps(cmd)
+
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    layer5.record(MAIN, run=ps("root 1 0 0 1 1 ? Ss 04:37 0:01 /sbin/init\n"
+                               "root 9 0 0 0 0 ? I 04:37 0:00 [kworker/0:0-events]\n"),
+                  into=_empty_store)
+    time.sleep(1.1)  # run_ids are to the second
+    layer5.record(MAIN, run=ps("root 1 0 0 1 1 ? Ss 04:37 0:01 /sbin/init\n"
+                               "root 12 0 0 0 0 ? I 05:00 0:00 [kworker/1:1-cgroup_free]\n"),
+                  into=_empty_store)
+    a = knowledge.query("host delta processes")
+    assert [i["what"] for i in a["HOST"]] == ["unchanged", "kernel_thread_changes"]
+    kernel = a["HOST"][1]
+    assert kernel["appeared"] == ["root [kworker/1:1-cgroup_free]"]
+    assert kernel["disappeared"] == ["root [kworker/0:0-events]"]
+    assert kernel["between"]["to"]["run_id"] == kernel["to_run"]

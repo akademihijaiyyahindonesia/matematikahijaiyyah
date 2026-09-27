@@ -117,10 +117,12 @@ def test_the_layers_dropped_along_the_way_keep_their_assets() -> None:
 def test_the_label_disagreement_and_its_answer_are_both_kept() -> None:
     """The second message marked Linux EH, which disagreed with RULES.md's own
     table; the third answered AT. Both halves stay: a page that kept only the
-    answer would lose why it was asked."""
+    answer would lose why it was asked. On 27 September 2026 the owner raised
+    it to EH, once the host was measured -- and that stays beside the history."""
     layer5 = sections()[5]
     assert "EH" in layer5 and "**AT**" in layer5
     assert "dilaporkan" in layer5
+    assert "**Label kini EH**" in layer5
     rules = (ROOT / "cosmictera" / "RULES.md").read_text(encoding="utf-8")
     assert "belum dikerjakan" in rules, "AT's definition moved"
 
