@@ -1542,7 +1542,7 @@ sedang mengalir.** Hari ini tidak ada sumber hidup; jalur UART pernah
 menghasilkan telemetri, dan itu historis. Keempat medan tanpa sumber tetap
 UNKNOWN dan tidak diisi dari nama sinyal RTL.
 
-**6.3 dibangun sesudah 6.2 diterima GREEN (`091e611`)**: provenance hardware,
+**6.3 GREEN (`08ffbed`)**: provenance hardware,
 `NUI/HARDWARE_PROVENANCE.md`, dibangun `src/hijaiyyah/nui/hardware_provenance.py`.
 Karena tidak ada sumber live, **NUI tidak boleh mengklaim keadaan hardware
 saat ini**: `hardware current-state` menjawab UNKNOWN — *no live hardware
@@ -1554,17 +1554,33 @@ Identitas lari papan dibaca dari buktinya sendiri, dan bukti papan tidak diberi
 `vm_name`. Angkanya di `NUI/LAYERS.md`, Lapis 6. Yang harus diketahui kuli
 berikutnya:
 
-- **Tiga klaim MEASURED rantainya belum lengkap, dan tidak diisi**: HDMI dan
-  reset pin MODE bersandar pada bagian halaman yang tidak menanggali
-  pengamatan papannya, dan `boot_duration` pada satu baris CHECKLIST.md tanpa
-  identitas run. Kelasnya tetap seperti di 6.1 dan 6.2; nasibnya keputusan
-  pemilik.
-- **`source_kind` kini punya dua peran — dilaporkan, tidak diganti.** Di
-  registry 6.2 ia berarti program papan, dihitung host, atau validasi; di 6.3
-  pemilik menetapkannya empat kelas. Objek 6.3 membawa yang pertama sebagai
-  `evidence_kind`, dan registry 6.2 tidak disentuh.
+- **Tiga klaim MEASURED rantainya belum lengkap — jangan diisi dan jangan
+  diturunkan paksa** (pemilik): HDMI dan reset pin MODE bersandar pada bagian
+  halaman yang tidak menanggali pengamatan papannya, dan `boot_duration` pada
+  satu baris CHECKLIST.md tanpa identitas run. Status klaim tetap MEASURED,
+  verifikasi provenance tetap `incomplete`, dan ketiganya tidak boleh jadi
+  dasar keadaan hardware sekarang.
+- **Identitas run dari judul bagian ditandai, bukan diberi id baru**
+  (pemilik): medan `run_identity` membawa
+  *non-instrumented/inferred-from-record* untuk judul halaman yang dipertahankan
+  persis, dan `instrumented` untuk run_id yang ditulis alat.
+- **`evidence_kind` adalah istilah 6.3 yang tepat, dan registry 6.2 tidak
+  diubah** (pemilik) — sekalipun `source_kind` di 6.2 memegang peran yang di
+  6.3 bernama `evidence_kind`.
 - **`cycle_rate` 649,4 dan `drift` −3,3 di `cosmictera/TELEMETRY.md` adalah
   selisih historis**: dicatat di model provenance, tidak disunting (pemilik).
+
+**6.4 dibangun sesudah 6.3 GREEN**: model keadaan hardware,
+`NUI/HARDWARE_STATE.md`, dibangun `src/hijaiyyah/nui/hardware_state.py` —
+arti jawaban NUI atas pertanyaan hardware, bukan telemetri baru. Empat jenis
+keadaan pemilik: IDENTITY, CAPABILITY, OBSERVED, CURRENT. Pagar yang paling
+penting kalimat pemilik sendiri: **rekaman papan historis bukan keadaan
+hardware sekarang** — lari papan terakhir menjawab apa yang terukur pada lari
+itu, bukan apa yang sedang terjadi. Kueri CURRENT hanya dijawab sumber live
+yang `access()` temukan, dan hari ini tidak ada. Precedence LIVE > MEASURED >
+SIMULATED > UNKNOWN. Angkanya di `NUI/LAYERS.md`, Lapis 6. Sesudah 6.4 hijau,
+pemilik baru menentukan 6.5 — korelasi hardware dengan program, eksekusi
+HISA/HCPU, dan observasi host.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

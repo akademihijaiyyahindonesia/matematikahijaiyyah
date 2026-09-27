@@ -28,7 +28,11 @@ key or the file name its tool gave it, and its start time; or, for a run only
 a page records, the heading of the section that records it and the date the
 page gives. Nothing is dated that the evidence does not date, and nothing
 without a run is given one: such a claim stays MEASURED, as 6.1 and 6.2 class
-it, and its verification says which check it fails and why.
+it, and its verification says which check it fails and why. Where a run_id
+came from is said beside it (the owner, after 6.3 was GREEN): `instrumented`
+when a tool wrote it, `non-instrumented/inferred-from-record` when it is a
+page's section heading kept exactly as written -- never passed off as a
+tool's run id.
 
 Every object is checked against the files themselves -- the owner's ten
 checks, plus that the object is canonical and that UNKNOWN stays UNKNOWN --
@@ -264,8 +268,9 @@ def _object(cid: str, ctx: Context) -> dict[str, Any]:
     obj: dict[str, Any] = {
         "id": cid, "hardware": o["hardware"], "claim": o["claim"], "source": o["source"],
         "source_kind": kind, "evidence_kind": o["evidence_kind"], "run_id": None,
-        "observed_at": None, "evidence": None, "evidence_lines": None, "evidence_bytes": None,
-        "evidence_sha256": None, "status": spec["source_kinds"][kind]["status"], "reason": None}
+        "run_identity": None, "observed_at": None, "evidence": None, "evidence_lines": None,
+        "evidence_bytes": None, "evidence_sha256": None,
+        "status": spec["source_kinds"][kind]["status"], "reason": None}
     if kind == "live":
         live = ctx["registry"]["live_sources"]
         obj["claim"] = f"{o['hardware']} = live"
@@ -289,6 +294,7 @@ def _object(cid: str, ctx: Context) -> dict[str, Any]:
             obj["evidence"] = o["board_run"] or next(p for p in paths if p.startswith(BOARD))
         else:
             obj["run_id"], obj["observed_at"] = run["run_id"], run["observed_at"]
+            obj["run_identity"] = spec["run_identity"]["labels"][run["form"]]
             obj["evidence"] = next((p for p in paths if p in run["files"]), run["files"][0])
     if obj["evidence"].endswith(".md"):
         lines = set(next((e.get("lines") or [] for e in o["evidence"]
@@ -361,6 +367,9 @@ def check(c: dict[str, Any], ctx: Context) -> list[dict[str, Any]]:
         fail(1, why or f"run {c.get('run_id')!r} is no board run the evidence names")
     if not historical and c.get("run_id") is not None:
         fail(1, f"a {kind} claim names a board run")
+    label = spec["run_identity"]["labels"][run["form"]] if run is not None else None
+    if c.get("run_identity") != label:
+        fail(1, f"its run_id is {label or 'no run'}, not {c.get('run_identity')}")
     # 2 -- the run belongs to the right source
     if run is not None:
         ev = c.get("evidence")
@@ -478,22 +487,28 @@ def _discrepancies(spec: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def claim(cid: str, ctx: Context) -> dict[str, Any]:
+    """One claim's canonical object, checked: `verification` says whether
+    every check held, and `failed_checks` which did not."""
+    obj = _object(cid, ctx)
+    obj["verification"], obj["failed_checks"] = "verified", []
+    failed = check(obj, ctx)
+    if failed:
+        obj["verification"], obj["failed_checks"] = "incomplete", failed
+    return obj
+
+
 def build(ctx: Context | None = None) -> dict[str, Any]:
     ctx = ctx if ctx is not None else context()
     spec = ctx["spec"]
     for cid in [*ctx["carried"], *spec["no_run"]]:
         if cid not in ctx["origins"]:
             raise LookupError(f"the spec names {cid}, which 6.1 and 6.2 do not")
-    claims = []
-    for cid in ctx["origins"]:
-        obj = _object(cid, ctx)
-        obj["verification"], obj["failed_checks"] = "verified", []
-        failed = check(obj, ctx)
-        if failed:
-            obj["verification"], obj["failed_checks"] = "incomplete", failed
-        claims.append(obj)
-    runs = [{"run_id": r["run_id"], "form": r["form"], "observed_at": r["observed_at"],
-             "evidence": r["files"], "claims": r["claims"]} for r in ctx["runs"]]
+    claims = [claim(cid, ctx) for cid in ctx["origins"]]
+    runs = [{"run_id": r["run_id"], "form": r["form"],
+             "run_identity": spec["run_identity"]["labels"][r["form"]],
+             "observed_at": r["observed_at"], "evidence": r["files"], "claims": r["claims"]}
+            for r in ctx["runs"]]
     counts = {**{s: sum(1 for c in claims if c["status"] == s) for s in STATUSES},
               **{k: sum(1 for c in claims if c["source_kind"] == k) for k in SOURCE_KINDS},
               "claims": len(claims),
@@ -551,12 +566,16 @@ def page(model: dict[str, Any]) -> str:
     out += ["## Keadaan hardware sekarang", "",
             f"**{now['status']}** — {now['reason']}. Rekaman historis terakhir bukan keadaan "
             "sekarang.", "",
-            "## Lari papan", "", "| run_id | bentuk | observed_at | bukti | klaim |",
-            "|---|---|---|---|---|"]
+            "## Lari papan", "",
+            "Identitas run: `instrumented` bila alat yang menulisnya; "
+            "`non-instrumented/inferred-from-record` bila ia judul bagian halaman, dipertahankan "
+            "persis seperti sumbernya.", "",
+            "| run_id | bentuk | identitas | observed_at | bukti | klaim |",
+            "|---|---|---|---|---|---|"]
     for r in model["runs"]:
         ev = "<br>".join(f"`{p}`" for p in r["evidence"])
-        out.append(f"| `{r['run_id']}` | {r['form']} | {r['observed_at'] or '—'} | {ev} | "
-                   f"{', '.join(r['claims'])} |")
+        out.append(f"| `{r['run_id']}` | {r['form']} | {r['run_identity']} | "
+                   f"{r['observed_at'] or '—'} | {ev} | {', '.join(r['claims'])} |")
     out += ["", "## Klaim", "",
             "| id | status | source_kind | jenis bukti | run_id | observed_at | evidence | "
             "sha256 | verifikasi |", "|---|---|---|---|---|---|---|---|---|"]

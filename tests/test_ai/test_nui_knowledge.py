@@ -43,6 +43,10 @@ QUERIES = ["opcode PRINT", "opcode HALT", "opcode ADD", "program loader.hasm",
            "hardware HCPU", "hardware FPGA", "hardware FPGA resources", "hardware clock",
            "hardware memory", "hardware peripheral", "hardware telemetry",
            "hardware current-state", "hardware tele_pc",
+           "hardware identity HCPU", "hardware capability FPGA resources",
+           "hardware observed opcode PRINT", "hardware observed board clock",
+           "hardware current program", "hardware provenance HCPU",
+           "hardware current board clock", "hardware observed peripheral",
            *[q["query"] for q in CONTRACT["questions"]]]
 
 

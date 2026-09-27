@@ -1,0 +1,67 @@
+{
+ "version": 1,
+ "title": "Model keadaan hardware Lapis 6.4 -- arti jawaban NUI atas pertanyaan hardware",
+ "source": "pemilik, 27 September 2026 -- 6.4 menentukan arti jawaban NUI ketika pengguna bertanya tentang hardware, bukan menambah telemetri: QUERY -> HARDWARE CLAIM -> CLASSIFICATION -> STATE SEMANTICS -> PROVENANCE. Seluruhnya perangkat lunak, model, kueri, dan provenance: tanpa RTL, port debug, bitstream, lari papan baru, atau telemetri baru",
+ "rule": "Klaim dan provenance-nya dibaca dari Lapis 6.3 (NUI/hardware_provenance.json), tidak ditulis ulang. Spec ini hanya menyebut kategori keadaan tiap klaim, urutan precedence, dan subjek kueri; src/hijaiyyah/nui/hardware_state.py membangun jawaban dan memeriksanya",
+ "categories": {
+  "IDENTITY": {"means": "apa perangkatnya?", "status": ["MEASURED", "SIMULATED"], "answers_with": ["MEASURED", "SIMULATED"]},
+  "CAPABILITY": {"means": "apa yang desain/build menyatakan perangkat mampu?", "status": ["SIMULATED"], "answers_with": ["SIMULATED"]},
+  "OBSERVED": {"means": "apa yang pernah benar-benar diukur?", "status": ["MEASURED", "UNKNOWN"], "answers_with": ["MEASURED"]},
+  "CURRENT": {"means": "apa keadaan perangkat sekarang?", "status": ["LIVE", "UNKNOWN"], "answers_with": ["LIVE"]}
+ },
+ "categories_why": "status adalah yang boleh dibawa klaim berkategori itu; answers_with adalah status yang boleh menjawab kueri kategori itu. CAPABILITY hanya SIMULATED dan OBSERVED tidak pernah SIMULATED: kemampuan desain bukan pengamatan. CURRENT hanya dijawab LIVE: rekaman papan historis menjawab apa yang terukur pada lari itu, bukan apa yang sedang terjadi",
+ "precedence": ["LIVE", "MEASURED", "SIMULATED", "UNKNOWN"],
+ "precedence_why": "pemilik: LIVE > MEASURED observed > SIMULATED capability > UNKNOWN, dan LIVE hanya bila access() menemukan sumber live terdaftar -- keberadaan data historis tidak pernah mengalahkan ketiadaan sumber live untuk kueri CURRENT",
+ "groups": {"identity": "IDENTITY", "capability": "CAPABILITY", "observed": "OBSERVED", "current": "CURRENT", "provenance": null},
+ "groups_why": "kelompok kueri pemilik; provenance menjawab semua klaim subjek dengan kategori dan rantai 6.3-nya, dan kepalanya dipilih menurut precedence",
+ "claims": {
+  "6.1": {
+   "IDENTITY": ["board", "fpga_device", "fpga_family", "cpu", "clock", "uart"],
+   "CAPABILITY": ["fpga_lut4", "fpga_dff", "fpga_bsram", "fpga_fmax", "cpu_pipeline", "isa_rtl", "clock_pll", "imem_words", "dmem_words", "leds", "watchdog"],
+   "OBSERVED": ["isa_board", "isa_board_unknown", "clock_drift", "sd_card", "sd_init_defect", "hdmi", "reset_button", "loader", "shell_from_card", "hfs", "hos_shell", "bitstream_last_measured", "telemetry_fields", "telemetry_no_source", "telemetry_path"],
+   "CURRENT": ["program_now", "telemetry_live"]
+  },
+  "6.2": {"fields": "OBSERVED", "fields_live": "CURRENT", "rtl_signals": "CAPABILITY"},
+  "6.3": {"current-state": "CURRENT"},
+  "P3": "OBSERVED"
+ },
+ "claims_why": {
+  "IDENTITY": "apa perangkatnya: papan, part dan keluarga FPGA, CPU, osilator, dan laju tautan serial -- sifat perangkat yang dibuktikan lari papan",
+  "CAPABILITY": "yang desain atau build nyatakan: RTL, parameter, pin, fakta yang dihitung ulang, hasil nextpnr, dan sinyal tele_* -- semuanya SIMULATED",
+  "OBSERVED": "yang pernah diukur di papan, termasuk yang dicari dan tak pernah teramati (UNKNOWN): opcode di papan, hanyutan jam, kartu, cacat yang ditemukan papan, loader, HOS/HFS, sidik jari bitstream yang dipakai lari-lari itu, dan medan telemetri kontrak",
+  "CURRENT": "yang menanyakan sekarang: program yang sedang dimuat, telemetri yang sedang mengalir, dan keadaan hardware saat ini -- dan medan 6.2 mana pun yang access() temukan live; hari ini tidak ada"
+ },
+ "subjects": {"board clock": "clock"},
+ "subjects_why": "alias subjek kueri pemilik ke subjek 6.3 (NUI/spec/hardware_provenance.json queries); 'opcode <nama>' menunjuk klaim P3 opcode itu",
+ "observed_opcodes": {
+  "model": "NUI/parity_model.json",
+  "key": "board_corpus.opcodes",
+  "stamp": "board_corpus.record",
+  "record": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+  "why": "kolom perangkat keras per opcode P3, dihitung dari byte mentah rekaman P2 dan dibekukan di layer4-freeze-2026-09-26. MEASURED bila sekurangnya satu program yang dikirim ke papan menjalankan opcode itu -- vonis kolomnya dibawa di klaim, sebab status dan selisih adalah dua hal berbeda (pemilik, P3); UNKNOWN bila tak satu pun. Eksperimen P4 dan P5 menautkan opcode hanya lewat nama programnya, jadi tidak digabung di sini"
+ },
+ "contract": [
+  {"query": "hardware identity HCPU", "state": "MEASURED", "basis": ["6.1:cpu"]},
+  {"query": "hardware capability FPGA resources", "state": "SIMULATED", "evidence_kinds": ["PNR/build-derived"], "basis": ["6.1:fpga_lut4", "6.1:fpga_dff", "6.1:fpga_bsram", "6.1:fpga_fmax"]},
+  {"query": "hardware observed opcode PRINT", "state": "MEASURED", "source_kind": "historical_board_evidence", "basis": ["P3:PRINT"]},
+  {"query": "hardware observed board clock", "state": "MEASURED", "source_kind": "historical_board_evidence", "basis": ["6.1:clock_drift"]},
+  {"query": "hardware current program", "state": "UNKNOWN", "basis": [], "reason": "no live hardware telemetry source"},
+  {"query": "hardware provenance HCPU", "state": "MEASURED", "basis": ["6.1:cpu", "6.1:isa_board"]},
+  {"query": "hardware current board clock", "state": "UNKNOWN", "basis": [], "reason": "no live hardware telemetry source"},
+  {"query": "hardware observed peripheral", "state": "MEASURED", "incomplete_provenance": ["6.1:hdmi", "6.1:reset_button"]},
+  {"query": "hardware observed telemetry", "state": "MEASURED", "incomplete_provenance": ["6.2:boot_duration"]},
+  {"query": "hardware observed opcode CDOT", "state": "UNKNOWN", "basis": []}
+ ],
+ "contract_why": "keenam contoh pemilik, ditambah empat pagar: kueri CURRENT atas subjek yang punya rekaman historis tetap UNKNOWN, dua kueri historis yang memuat klaim provenance belum lengkap membawa penandanya, dan opcode yang tak pernah dijalankan papan tetap UNKNOWN",
+ "checks": [
+  {"id": "E1", "label": "satu kategori untuk tiap klaim"},
+  {"id": "E2", "label": "status klaim diizinkan kategorinya"},
+  {"id": "E3", "label": "status dan source_kind sama dengan provenance-nya: tidak ada promosi"},
+  {"id": "E4", "label": "verifikasi sama dengan provenance-nya: yang belum lengkap tidak jadi terverifikasi"},
+  {"id": "E5", "label": "LIVE hanya bila access() menemukan sumber live terdaftar"},
+  {"id": "A1", "label": "kueri CURRENT hanya dijawab LIVE, tidak pernah dari lari historis"},
+  {"id": "A2", "label": "tiap klaim jawaban berkategori yang ditanyakan"},
+  {"id": "A3", "label": "keadaan jawaban mengikuti precedence atas klaim yang boleh menjawab"},
+  {"id": "A4", "label": "klaim yang provenance-nya belum lengkap ditandai"}
+ ]
+}

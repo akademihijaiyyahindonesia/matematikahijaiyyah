@@ -10,24 +10,26 @@ Dihasilkan `src/hijaiyyah/nui/hardware_provenance.py` dari `NUI/spec/hardware_pr
 
 ## Lari papan
 
-| run_id | bentuk | observed_at | bukti | klaim |
-|---|---|---|---|---|
-| `20260925T191528Z-loader` | record | 2026-09-25T19:15:28.544410+00:00 | `cosmictera-build/attack-lab/20260925T191528Z-loader.json` | 6.1:board, 6.1:loader, 6.2:last_container |
-| `20260920T000027Z-jamrah` | record | 2026-09-20T00:00:27.125391+00:00 | `cosmictera-build/attack-lab/20260920T000027Z-jamrah.json` | 6.2:pass_count, 6.2:reject_count, 6.2:latency |
-| `20260924T073655Z-burn-in` | record | 2026-09-24T07:36:55.695105+00:00 | `cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json`<br>`cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.raw` | 6.1:fpga_device, 6.1:fpga_family, 6.1:uart, 6.1:bitstream_last_measured, 6.1:telemetry_path |
-| `20260921T053430Z-burn-in-72h` | record | 2026-09-21T05:34:30.437711+00:00 | `cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.json`<br>`cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl`<br>`cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json` | 6.1:telemetry_fields, 6.2:uptime, 6.2:cycle_rate, 6.2:drift, 6.2:memory_check, 6.2:stack_check, 6.2:consistency, 6.2:sd_sector_read, 6.2:hfs_signature, 6.2:read_error_count |
-| `20260920T013538Z-burn-in-24h` | record | 2026-09-20T01:35:38.015192+00:00 | `cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.json`<br>`cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json` | 6.1:clock, 6.1:clock_drift |
-| `20260924T105400Z-parity` | record | 2026-09-24T10:54:00+00:00 | `cosmictera-build/parity-board/20260924T105400Z-parity.json` | 6.1:cpu, 6.1:isa_board |
-| `M3 — shell menjawab kabel serial, 12 September 2026` | page | 2026-09-12 | `cosmictera-build/PAPAN.md` | 6.1:hos_shell |
-| `M4.2 — kartu menjawab, dan menyimpan, 15 September 2026` | page | 2026-09-15 | `cosmictera-build/PAPAN.md` | 6.1:sd_card |
-| `Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026` | page | 2026-09-18 | `cosmictera-build/PAPAN.md` | 6.1:hfs |
-| `2B kecil — program dari kartu berjalan sendiri, 18 September 2026` | page | 2026-09-18 | `cosmictera-build/PAPAN.md` | 6.2:last_boot |
-| `Lintas sektor dan ACK — shell naik dari sebelas sektor kartu, 18 September 2026` | page | 2026-09-18 | `cosmictera-build/PAPAN.md` | 6.1:shell_from_card |
-| `Tiga cacat yang hanya papan bisa temukan` | page | — | `cosmictera-build/PAPAN.md` | 6.1:reset_button |
-| `Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan` | page | 2026-09-20 | `cosmictera-build/OFF.md` | 6.1:sd_init_defect |
-| `Pixel HDMI rusak, dan sambungannya sendiri sehat` | page | — | `cosmictera-build/OFF.md` | 6.1:hdmi |
-| `Validasi Ka'bah — Tang Nano 20K` | page | 2026-09-20 | `cosmictera-build/validasi/KABAH.md` | 6.2:avalanche, 6.2:integrity, 6.2:replay_state |
-| `Validasi Hijrah — Tang Nano 20K` | page | 2026-09-20 | `cosmictera-build/validasi/HIJRAH.md` | 6.2:last_validation, 6.2:density_mod2, 6.2:density_mod4, 6.2:density_mod5, 6.2:collapse_count |
+Identitas run: `instrumented` bila alat yang menulisnya; `non-instrumented/inferred-from-record` bila ia judul bagian halaman, dipertahankan persis seperti sumbernya.
+
+| run_id | bentuk | identitas | observed_at | bukti | klaim |
+|---|---|---|---|---|---|
+| `20260925T191528Z-loader` | record | instrumented | 2026-09-25T19:15:28.544410+00:00 | `cosmictera-build/attack-lab/20260925T191528Z-loader.json` | 6.1:board, 6.1:loader, 6.2:last_container |
+| `20260920T000027Z-jamrah` | record | instrumented | 2026-09-20T00:00:27.125391+00:00 | `cosmictera-build/attack-lab/20260920T000027Z-jamrah.json` | 6.2:pass_count, 6.2:reject_count, 6.2:latency |
+| `20260924T073655Z-burn-in` | record | instrumented | 2026-09-24T07:36:55.695105+00:00 | `cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json`<br>`cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.raw` | 6.1:fpga_device, 6.1:fpga_family, 6.1:uart, 6.1:bitstream_last_measured, 6.1:telemetry_path |
+| `20260921T053430Z-burn-in-72h` | record | instrumented | 2026-09-21T05:34:30.437711+00:00 | `cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.json`<br>`cosmictera-build/burn-in/20260921T053430Z-burn-in-72h.jsonl`<br>`cosmictera-build/burn-in/20260921T053430Z-burn-in-72h-baseline.json` | 6.1:telemetry_fields, 6.2:uptime, 6.2:cycle_rate, 6.2:drift, 6.2:memory_check, 6.2:stack_check, 6.2:consistency, 6.2:sd_sector_read, 6.2:hfs_signature, 6.2:read_error_count |
+| `20260920T013538Z-burn-in-24h` | record | instrumented | 2026-09-20T01:35:38.015192+00:00 | `cosmictera-build/burn-in/20260920T013538Z-burn-in-24h.json`<br>`cosmictera-build/burn-in/20260920T013538Z-burn-in-24h-baseline.json` | 6.1:clock, 6.1:clock_drift |
+| `20260924T105400Z-parity` | record | instrumented | 2026-09-24T10:54:00+00:00 | `cosmictera-build/parity-board/20260924T105400Z-parity.json` | 6.1:cpu, 6.1:isa_board |
+| `M3 — shell menjawab kabel serial, 12 September 2026` | page | non-instrumented/inferred-from-record | 2026-09-12 | `cosmictera-build/PAPAN.md` | 6.1:hos_shell |
+| `M4.2 — kartu menjawab, dan menyimpan, 15 September 2026` | page | non-instrumented/inferred-from-record | 2026-09-15 | `cosmictera-build/PAPAN.md` | 6.1:sd_card |
+| `Tahap 1 — berkas bertahan melewati mati daya, 18 September 2026` | page | non-instrumented/inferred-from-record | 2026-09-18 | `cosmictera-build/PAPAN.md` | 6.1:hfs |
+| `2B kecil — program dari kartu berjalan sendiri, 18 September 2026` | page | non-instrumented/inferred-from-record | 2026-09-18 | `cosmictera-build/PAPAN.md` | 6.2:last_boot |
+| `Lintas sektor dan ACK — shell naik dari sebelas sektor kartu, 18 September 2026` | page | non-instrumented/inferred-from-record | 2026-09-18 | `cosmictera-build/PAPAN.md` | 6.1:shell_from_card |
+| `Tiga cacat yang hanya papan bisa temukan` | page | non-instrumented/inferred-from-record | — | `cosmictera-build/PAPAN.md` | 6.1:reset_button |
+| `Kartu SD gagal init sesudah rekonfigurasi di tengah pembacaan` | page | non-instrumented/inferred-from-record | 2026-09-20 | `cosmictera-build/OFF.md` | 6.1:sd_init_defect |
+| `Pixel HDMI rusak, dan sambungannya sendiri sehat` | page | non-instrumented/inferred-from-record | — | `cosmictera-build/OFF.md` | 6.1:hdmi |
+| `Validasi Ka'bah — Tang Nano 20K` | page | non-instrumented/inferred-from-record | 2026-09-20 | `cosmictera-build/validasi/KABAH.md` | 6.2:avalanche, 6.2:integrity, 6.2:replay_state |
+| `Validasi Hijrah — Tang Nano 20K` | page | non-instrumented/inferred-from-record | 2026-09-20 | `cosmictera-build/validasi/HIJRAH.md` | 6.2:last_validation, 6.2:density_mod2, 6.2:density_mod4, 6.2:density_mod5, 6.2:collapse_count |
 
 ## Klaim
 

@@ -118,6 +118,22 @@ def test_measured_ends_on_a_board_run_the_evidence_names(model: dict[str, Any]) 
         assert c["observed_at"] == run["observed_at"]
 
 
+@BOTH
+def test_a_run_id_says_where_it_came_from(model: dict[str, Any]) -> None:
+    """The owner, after 6.3 was GREEN: a section heading is kept exactly as
+    written and marked non-instrumented/inferred-from-record, never passed off
+    as a run id a tool wrote."""
+    labels = hp.load()["run_identity"]["labels"]
+    forms = {r["run_id"]: r["form"] for r in model["runs"]}
+    for r in model["runs"]:
+        assert r["run_identity"] == labels[r["form"]], r["run_id"]
+    for c in model["claims"]:
+        want = labels[forms[c["run_id"]]] if c["run_id"] is not None else None
+        assert c["run_identity"] == want, c["id"]
+    pages = [c for c in model["claims"] if c["run_identity"] == labels["page"]]
+    assert len(pages) == 16 and all(not hp.STAMP.match(c["run_id"]) for c in pages)
+
+
 def test_a_record_run_is_named_by_its_own_record() -> None:
     """The board run identity that already exists -- the tool's own id or
     file name -- and never a vm_name; the raw capture is the file its
@@ -257,6 +273,8 @@ SABOTAGES: dict[str, tuple[str, Callable[[dict[str, Any]], dict[str, Any]], int]
         **c, "evidence": "cosmictera-build/PAPAN.md"}, 7),
     "evidence file missing": ("6.1:cpu", lambda c: {
         **c, "evidence": "cosmictera-build/parity-board/20990101T000000Z-parity.json"}, 3),
+    "a heading passed off as a tool's run id": ("6.1:sd_card", lambda c: {
+        **c, "run_identity": "instrumented"}, 1),
 }
 
 

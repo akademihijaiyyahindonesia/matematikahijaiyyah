@@ -1,0 +1,3743 @@
+{
+ "generated_by": "src/hijaiyyah/nui/hardware_state.py",
+ "spec": "NUI/spec/hardware_state.json",
+ "reads": [
+  "NUI/hardware_provenance.json",
+  "NUI/parity_model.json"
+ ],
+ "live_sources": [],
+ "counts": {
+  "IDENTITY": 6,
+  "CAPABILITY": 17,
+  "OBSERVED": 145,
+  "CURRENT": 3,
+  "claims": 171,
+  "observed_opcodes": 103,
+  "observed_opcodes_measured": 79
+ },
+ "claims": [
+  {
+   "id": "6.1:board",
+   "category": "IDENTITY",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:fpga_device",
+   "category": "IDENTITY",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:fpga_family",
+   "category": "IDENTITY",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:fpga_lut4",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:fpga_dff",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:fpga_bsram",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:fpga_fmax",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:cpu",
+   "category": "IDENTITY",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:cpu_pipeline",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:isa_rtl",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:isa_board",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:isa_board_unknown",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:clock",
+   "category": "IDENTITY",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:clock_drift",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:clock_pll",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:imem_words",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:dmem_words",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:uart",
+   "category": "IDENTITY",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:sd_card",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:sd_init_defect",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:hdmi",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "incomplete"
+  },
+  {
+   "id": "6.1:leds",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:reset_button",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "incomplete"
+  },
+  {
+   "id": "6.1:loader",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:shell_from_card",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:hfs",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:hos_shell",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:bitstream_last_measured",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:program_now",
+   "category": "CURRENT",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:telemetry_fields",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:telemetry_no_source",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:telemetry_path",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:telemetry_live",
+   "category": "CURRENT",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.1:watchdog",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:uptime",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:cycle_rate",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:drift",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:anomaly_score",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:memory_check",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:stack_check",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:corruption_score",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:pass_count",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:reject_count",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:latency",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:consistency",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:avalanche",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:integrity",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:replay_state",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:state_hash",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:sd_sector_read",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:hfs_signature",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:read_error_count",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:last_boot",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:last_container",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:last_relocation",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:boot_duration",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "incomplete"
+  },
+  {
+   "id": "6.2:last_validation",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:density_mod2",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:density_mod4",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:density_mod5",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:collapse_count",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:tele_pc",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:tele_instr",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:tele_halted",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:tele_guard",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:tele_cycles",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.2:tele_flags",
+   "category": "CAPABILITY",
+   "status": "SIMULATED",
+   "source_kind": "simulated",
+   "verification": "verified"
+  },
+  {
+   "id": "6.3:current-state",
+   "category": "CURRENT",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:ADD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:ADDI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:AND",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:ANDI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CALL",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CDOT",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CEQ",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CGET",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CHASH",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CMOD4",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CMOV",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CMP",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CMPI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CRHO",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CSET",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CSIGN",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CSUB",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CU",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:CZERO",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:EMITS",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:ERET",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:FRD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:FWR",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HALT",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HALT_ERR",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HCADD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HCHK",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HCRC",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HDCMP",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HDES",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HDIST",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HEXMT",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HGRD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HLOAD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HNRM2",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HPACK",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HPROJ",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HSER",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JEQ",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JGD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JGF",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JGP",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JMP",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JNE",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JNGD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:JNP",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:LOAD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_AIN",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_ALIF",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_BA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_DAL",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_DHAD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_DZAL",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_FA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_GHAIN",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_HA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_HAA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_JIM",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_KAF",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_KHA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_LAM",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_MIM",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_NUN",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_QAF",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_RA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_SHAD",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_SIN",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_SYIN",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_TA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_THA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_TSA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_WAW",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_YA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_ZAY",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:L_ZHA",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:MOV",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:MOVI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:MUL",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:NOP",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:NOT",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:OR",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:ORI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:POP",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:PRINT",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:PRINTH",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:PUSH",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:RET",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:SHL",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:SHLI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:SHR",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:SHRI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:STORE",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:SUB",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:SYSCALL",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VDIST",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VNORM",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VPROJ_K",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VPROJ_N",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VPROJ_Q",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VPROJ_T",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:VSCL",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:XOR",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:XORI",
+   "category": "OBSERVED",
+   "status": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  }
+ ],
+ "observed_opcodes": [
+  {
+   "id": "P3:ADD",
+   "hardware": "opcode",
+   "claim": "ADD di papan = kolom PARITY; 6 PARITY, 0 MISMATCH, 2 UNKNOWN dari 8 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.ADD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:ADDI",
+   "hardware": "opcode",
+   "claim": "ADDI di papan = kolom PARITY; 15 PARITY, 0 MISMATCH, 4 UNKNOWN dari 19 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.ADDI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:AND",
+   "hardware": "opcode",
+   "claim": "AND di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.AND"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:ANDI",
+   "hardware": "opcode",
+   "claim": "ANDI di papan = kolom PARITY; 42 PARITY, 0 MISMATCH, 2 UNKNOWN dari 44 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.ANDI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CALL",
+   "hardware": "opcode",
+   "claim": "CALL di papan = kolom PARITY; 4 PARITY, 0 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CALL"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CDOT",
+   "hardware": "opcode",
+   "claim": "CDOT di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CDOT"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CEQ",
+   "hardware": "opcode",
+   "claim": "CEQ di papan = kolom PARITY; 4 PARITY, 0 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CEQ"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CGET",
+   "hardware": "opcode",
+   "claim": "CGET di papan = kolom PARITY; 35 PARITY, 0 MISMATCH, 0 UNKNOWN dari 35 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CGET"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CHASH",
+   "hardware": "opcode",
+   "claim": "CHASH di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CHASH"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CMOD4",
+   "hardware": "opcode",
+   "claim": "CMOD4 di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CMOD4"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CMOV",
+   "hardware": "opcode",
+   "claim": "CMOV di papan = kolom PARITY; 4 PARITY, 0 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CMOV"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CMP",
+   "hardware": "opcode",
+   "claim": "CMP di papan = kolom PARITY; 5 PARITY, 0 MISMATCH, 0 UNKNOWN dari 5 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CMP"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CMPI",
+   "hardware": "opcode",
+   "claim": "CMPI di papan = kolom PARITY; 9 PARITY, 0 MISMATCH, 3 UNKNOWN dari 12 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CMPI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CRHO",
+   "hardware": "opcode",
+   "claim": "CRHO di papan = kolom PARITY; 3 PARITY, 0 MISMATCH, 0 UNKNOWN dari 3 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CRHO"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CSET",
+   "hardware": "opcode",
+   "claim": "CSET di papan = kolom PARITY; 9 PARITY, 0 MISMATCH, 0 UNKNOWN dari 9 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CSET"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CSIGN",
+   "hardware": "opcode",
+   "claim": "CSIGN di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CSIGN"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CSUB",
+   "hardware": "opcode",
+   "claim": "CSUB di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CSUB"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CU",
+   "hardware": "opcode",
+   "claim": "CU di papan = kolom PARITY; 3 PARITY, 0 MISMATCH, 0 UNKNOWN dari 3 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CU"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:CZERO",
+   "hardware": "opcode",
+   "claim": "CZERO di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CZERO"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:EMITS",
+   "hardware": "opcode",
+   "claim": "EMITS di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.EMITS"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:ERET",
+   "hardware": "opcode",
+   "claim": "ERET di papan = kolom PARITY; 5 PARITY, 0 MISMATCH, 3 UNKNOWN dari 8 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.ERET"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:FRD",
+   "hardware": "opcode",
+   "claim": "FRD di papan = kolom PARITY; 56 PARITY, 0 MISMATCH, 2 UNKNOWN dari 58 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.FRD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:FWR",
+   "hardware": "opcode",
+   "claim": "FWR di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.FWR"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HALT",
+   "hardware": "opcode",
+   "claim": "HALT di papan = kolom UNKNOWN; 73 PARITY, 2 MISMATCH, 4 UNKNOWN dari 79 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HALT"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HALT_ERR",
+   "hardware": "opcode",
+   "claim": "HALT_ERR di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HALT_ERR"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HCADD",
+   "hardware": "opcode",
+   "claim": "HCADD di papan = kolom PARITY; 11 PARITY, 0 MISMATCH, 0 UNKNOWN dari 11 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HCADD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HCHK",
+   "hardware": "opcode",
+   "claim": "HCHK di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HCHK"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HCRC",
+   "hardware": "opcode",
+   "claim": "HCRC di papan = kolom UNKNOWN; 2 PARITY, 2 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HCRC"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HDCMP",
+   "hardware": "opcode",
+   "claim": "HDCMP di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HDCMP"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HDES",
+   "hardware": "opcode",
+   "claim": "HDES di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HDES"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HDIST",
+   "hardware": "opcode",
+   "claim": "HDIST di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HDIST"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HEXMT",
+   "hardware": "opcode",
+   "claim": "HEXMT di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HEXMT"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HGRD",
+   "hardware": "opcode",
+   "claim": "HGRD di papan = kolom PARITY; 22 PARITY, 0 MISMATCH, 0 UNKNOWN dari 22 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HGRD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HLOAD",
+   "hardware": "opcode",
+   "claim": "HLOAD di papan = kolom UNKNOWN; 40 PARITY, 2 MISMATCH, 0 UNKNOWN dari 42 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HLOAD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HNRM2",
+   "hardware": "opcode",
+   "claim": "HNRM2 di papan = kolom PARITY; 3 PARITY, 0 MISMATCH, 0 UNKNOWN dari 3 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HNRM2"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HPACK",
+   "hardware": "opcode",
+   "claim": "HPACK di papan = kolom UNKNOWN; 2 PARITY, 2 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HPACK"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HPROJ",
+   "hardware": "opcode",
+   "claim": "HPROJ di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HPROJ"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HSER",
+   "hardware": "opcode",
+   "claim": "HSER di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HSER"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JEQ",
+   "hardware": "opcode",
+   "claim": "JEQ di papan = kolom PARITY; 6 PARITY, 0 MISMATCH, 2 UNKNOWN dari 8 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JEQ"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JGD",
+   "hardware": "opcode",
+   "claim": "JGD di papan = kolom PARITY; 5 PARITY, 0 MISMATCH, 0 UNKNOWN dari 5 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JGD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JGF",
+   "hardware": "opcode",
+   "claim": "JGF di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JGF"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JGP",
+   "hardware": "opcode",
+   "claim": "JGP di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JGP"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JMP",
+   "hardware": "opcode",
+   "claim": "JMP di papan = kolom PARITY; 58 PARITY, 0 MISMATCH, 4 UNKNOWN dari 62 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JMP"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JNE",
+   "hardware": "opcode",
+   "claim": "JNE di papan = kolom PARITY; 9 PARITY, 0 MISMATCH, 1 UNKNOWN dari 10 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JNE"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JNGD",
+   "hardware": "opcode",
+   "claim": "JNGD di papan = kolom PARITY; 9 PARITY, 0 MISMATCH, 0 UNKNOWN dari 9 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JNGD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:JNP",
+   "hardware": "opcode",
+   "claim": "JNP di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.JNP"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:LOAD",
+   "hardware": "opcode",
+   "claim": "LOAD di papan = kolom PARITY; 12 PARITY, 0 MISMATCH, 4 UNKNOWN dari 16 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.LOAD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_AIN",
+   "hardware": "opcode",
+   "claim": "L_AIN di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_AIN"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_ALIF",
+   "hardware": "opcode",
+   "claim": "L_ALIF di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_ALIF"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_BA",
+   "hardware": "opcode",
+   "claim": "L_BA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_BA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_DAL",
+   "hardware": "opcode",
+   "claim": "L_DAL di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_DAL"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_DHAD",
+   "hardware": "opcode",
+   "claim": "L_DHAD di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_DHAD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_DZAL",
+   "hardware": "opcode",
+   "claim": "L_DZAL di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_DZAL"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_FA",
+   "hardware": "opcode",
+   "claim": "L_FA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_FA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_GHAIN",
+   "hardware": "opcode",
+   "claim": "L_GHAIN di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_GHAIN"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_HA",
+   "hardware": "opcode",
+   "claim": "L_HA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_HA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_HAA",
+   "hardware": "opcode",
+   "claim": "L_HAA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_HAA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_JIM",
+   "hardware": "opcode",
+   "claim": "L_JIM di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_JIM"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_KAF",
+   "hardware": "opcode",
+   "claim": "L_KAF di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_KAF"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_KHA",
+   "hardware": "opcode",
+   "claim": "L_KHA di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_KHA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_LAM",
+   "hardware": "opcode",
+   "claim": "L_LAM di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_LAM"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_MIM",
+   "hardware": "opcode",
+   "claim": "L_MIM di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_MIM"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_NUN",
+   "hardware": "opcode",
+   "claim": "L_NUN di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_NUN"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_QAF",
+   "hardware": "opcode",
+   "claim": "L_QAF di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_QAF"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_RA",
+   "hardware": "opcode",
+   "claim": "L_RA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_RA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_SHAD",
+   "hardware": "opcode",
+   "claim": "L_SHAD di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_SHAD"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_SIN",
+   "hardware": "opcode",
+   "claim": "L_SIN di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_SIN"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_SYIN",
+   "hardware": "opcode",
+   "claim": "L_SYIN di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_SYIN"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_TA",
+   "hardware": "opcode",
+   "claim": "L_TA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_TA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_THA",
+   "hardware": "opcode",
+   "claim": "L_THA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_THA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_TSA",
+   "hardware": "opcode",
+   "claim": "L_TSA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_TSA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_WAW",
+   "hardware": "opcode",
+   "claim": "L_WAW di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_WAW"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_YA",
+   "hardware": "opcode",
+   "claim": "L_YA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_YA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_ZAY",
+   "hardware": "opcode",
+   "claim": "L_ZAY di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_ZAY"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:L_ZHA",
+   "hardware": "opcode",
+   "claim": "L_ZHA di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.L_ZHA"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:MOV",
+   "hardware": "opcode",
+   "claim": "MOV di papan = kolom PARITY; 4 PARITY, 0 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.MOV"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:MOVI",
+   "hardware": "opcode",
+   "claim": "MOVI di papan = kolom PARITY; 51 PARITY, 0 MISMATCH, 4 UNKNOWN dari 55 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.MOVI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:MUL",
+   "hardware": "opcode",
+   "claim": "MUL di papan = kolom PARITY; 4 PARITY, 0 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.MUL"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:NOP",
+   "hardware": "opcode",
+   "claim": "NOP di papan = kolom PARITY; 6 PARITY, 0 MISMATCH, 1 UNKNOWN dari 7 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.NOP"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:NOT",
+   "hardware": "opcode",
+   "claim": "NOT di papan = kolom PARITY; 5 PARITY, 0 MISMATCH, 0 UNKNOWN dari 5 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.NOT"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:OR",
+   "hardware": "opcode",
+   "claim": "OR di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.OR"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:ORI",
+   "hardware": "opcode",
+   "claim": "ORI di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.ORI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:POP",
+   "hardware": "opcode",
+   "claim": "POP di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.POP"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:PRINT",
+   "hardware": "opcode",
+   "claim": "PRINT di papan = kolom UNKNOWN; 73 PARITY, 2 MISMATCH, 4 UNKNOWN dari 79 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.PRINT"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:PRINTH",
+   "hardware": "opcode",
+   "claim": "PRINTH di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.PRINTH"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:PUSH",
+   "hardware": "opcode",
+   "claim": "PUSH di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.PUSH"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:RET",
+   "hardware": "opcode",
+   "claim": "RET di papan = kolom PARITY; 4 PARITY, 0 MISMATCH, 0 UNKNOWN dari 4 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.RET"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:SHL",
+   "hardware": "opcode",
+   "claim": "SHL di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.SHL"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:SHLI",
+   "hardware": "opcode",
+   "claim": "SHLI di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.SHLI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:SHR",
+   "hardware": "opcode",
+   "claim": "SHR di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.SHR"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:SHRI",
+   "hardware": "opcode",
+   "claim": "SHRI di papan = kolom PARITY; 44 PARITY, 0 MISMATCH, 2 UNKNOWN dari 46 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.SHRI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:STORE",
+   "hardware": "opcode",
+   "claim": "STORE di papan = kolom PARITY; 14 PARITY, 0 MISMATCH, 3 UNKNOWN dari 17 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.STORE"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:SUB",
+   "hardware": "opcode",
+   "claim": "SUB di papan = kolom PARITY; 7 PARITY, 0 MISMATCH, 1 UNKNOWN dari 8 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.SUB"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:SYSCALL",
+   "hardware": "opcode",
+   "claim": "SYSCALL di papan = kolom PARITY; 3 PARITY, 0 MISMATCH, 0 UNKNOWN dari 3 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.SYSCALL"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VDIST",
+   "hardware": "opcode",
+   "claim": "VDIST di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VDIST"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VNORM",
+   "hardware": "opcode",
+   "claim": "VNORM di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VNORM"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VPROJ_K",
+   "hardware": "opcode",
+   "claim": "VPROJ_K di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VPROJ_K"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VPROJ_N",
+   "hardware": "opcode",
+   "claim": "VPROJ_N di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VPROJ_N"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VPROJ_Q",
+   "hardware": "opcode",
+   "claim": "VPROJ_Q di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VPROJ_Q"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VPROJ_T",
+   "hardware": "opcode",
+   "claim": "VPROJ_T di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VPROJ_T"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:VSCL",
+   "hardware": "opcode",
+   "claim": "VSCL di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.VSCL"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:XOR",
+   "hardware": "opcode",
+   "claim": "XOR di papan = kolom PARITY; 1 PARITY, 0 MISMATCH, 0 UNKNOWN dari 1 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.XOR"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:XORI",
+   "hardware": "opcode",
+   "claim": "XORI di papan = kolom PARITY; 5 PARITY, 0 MISMATCH, 0 UNKNOWN dari 5 program yang dikirim",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.XORI"
+   },
+   "source_kind": "historical_board_evidence",
+   "evidence_kind": "board",
+   "run_id": "20260924T105400Z-parity",
+   "run_identity": "instrumented",
+   "observed_at": "2026-09-24T10:54:00+00:00",
+   "evidence": "cosmictera-build/parity-board/20260924T105400Z-parity.json",
+   "evidence_lines": null,
+   "evidence_bytes": 41457,
+   "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
+   "status": "MEASURED",
+   "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  }
+ ],
+ "contract": [
+  {
+   "query": "hardware identity HCPU",
+   "group": "identity",
+   "category": "IDENTITY",
+   "subject": "HCPU",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board"
+   ],
+   "basis": [
+    "6.1:cpu"
+   ],
+   "claims": [
+    "6.1:cpu"
+   ],
+   "incomplete_provenance": [],
+   "reason": null
+  },
+  {
+   "query": "hardware capability FPGA resources",
+   "group": "capability",
+   "category": "CAPABILITY",
+   "subject": "FPGA resources",
+   "state": "SIMULATED",
+   "source_kind": "simulated",
+   "evidence_kinds": [
+    "PNR/build-derived"
+   ],
+   "basis": [
+    "6.1:fpga_lut4",
+    "6.1:fpga_dff",
+    "6.1:fpga_bsram",
+    "6.1:fpga_fmax"
+   ],
+   "claims": [
+    "6.1:fpga_lut4",
+    "6.1:fpga_dff",
+    "6.1:fpga_bsram",
+    "6.1:fpga_fmax"
+   ],
+   "incomplete_provenance": [],
+   "reason": null
+  },
+  {
+   "query": "hardware observed opcode PRINT",
+   "group": "observed",
+   "category": "OBSERVED",
+   "subject": "opcode PRINT",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board"
+   ],
+   "basis": [
+    "P3:PRINT"
+   ],
+   "claims": [
+    "P3:PRINT"
+   ],
+   "incomplete_provenance": [],
+   "reason": null
+  },
+  {
+   "query": "hardware observed board clock",
+   "group": "observed",
+   "category": "OBSERVED",
+   "subject": "board clock",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board"
+   ],
+   "basis": [
+    "6.1:clock_drift"
+   ],
+   "claims": [
+    "6.1:clock_drift"
+   ],
+   "incomplete_provenance": [],
+   "reason": null
+  },
+  {
+   "query": "hardware current program",
+   "group": "current",
+   "category": "CURRENT",
+   "subject": "program",
+   "state": "UNKNOWN",
+   "source_kind": "unknown",
+   "evidence_kinds": [],
+   "basis": [],
+   "claims": [
+    "6.1:program_now"
+   ],
+   "incomplete_provenance": [],
+   "reason": "no live hardware telemetry source"
+  },
+  {
+   "query": "hardware provenance HCPU",
+   "group": "provenance",
+   "category": null,
+   "subject": "HCPU",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board"
+   ],
+   "basis": [
+    "6.1:cpu",
+    "6.1:isa_board"
+   ],
+   "claims": [
+    "6.1:cpu",
+    "6.1:isa_board",
+    "6.1:cpu_pipeline",
+    "6.1:isa_rtl",
+    "6.1:isa_board_unknown"
+   ],
+   "incomplete_provenance": [],
+   "reason": null
+  },
+  {
+   "query": "hardware current board clock",
+   "group": "current",
+   "category": "CURRENT",
+   "subject": "board clock",
+   "state": "UNKNOWN",
+   "source_kind": "unknown",
+   "evidence_kinds": [],
+   "basis": [],
+   "claims": [],
+   "incomplete_provenance": [],
+   "reason": "no live hardware telemetry source"
+  },
+  {
+   "query": "hardware observed peripheral",
+   "group": "observed",
+   "category": "OBSERVED",
+   "subject": "peripheral",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board"
+   ],
+   "basis": [
+    "6.1:sd_card",
+    "6.1:sd_init_defect",
+    "6.1:hdmi",
+    "6.1:reset_button",
+    "6.1:telemetry_path"
+   ],
+   "claims": [
+    "6.1:sd_card",
+    "6.1:sd_init_defect",
+    "6.1:hdmi",
+    "6.1:reset_button",
+    "6.1:telemetry_path"
+   ],
+   "incomplete_provenance": [
+    "6.1:hdmi",
+    "6.1:reset_button"
+   ],
+   "reason": null
+  },
+  {
+   "query": "hardware observed telemetry",
+   "group": "observed",
+   "category": "OBSERVED",
+   "subject": "telemetry",
+   "state": "MEASURED",
+   "source_kind": "historical_board_evidence",
+   "evidence_kinds": [
+    "board",
+    "board_program",
+    "board_validation",
+    "host_from_board"
+   ],
+   "basis": [
+    "6.1:telemetry_fields",
+    "6.1:telemetry_path",
+    "6.2:uptime",
+    "6.2:cycle_rate",
+    "6.2:drift",
+    "6.2:memory_check",
+    "6.2:stack_check",
+    "6.2:pass_count",
+    "6.2:reject_count",
+    "6.2:latency",
+    "6.2:consistency",
+    "6.2:avalanche",
+    "6.2:integrity",
+    "6.2:replay_state",
+    "6.2:sd_sector_read",
+    "6.2:hfs_signature",
+    "6.2:read_error_count",
+    "6.2:last_boot",
+    "6.2:last_container",
+    "6.2:boot_duration",
+    "6.2:last_validation",
+    "6.2:density_mod2",
+    "6.2:density_mod4",
+    "6.2:density_mod5",
+    "6.2:collapse_count"
+   ],
+   "claims": [
+    "6.1:telemetry_fields",
+    "6.1:telemetry_path",
+    "6.2:uptime",
+    "6.2:cycle_rate",
+    "6.2:drift",
+    "6.2:memory_check",
+    "6.2:stack_check",
+    "6.2:pass_count",
+    "6.2:reject_count",
+    "6.2:latency",
+    "6.2:consistency",
+    "6.2:avalanche",
+    "6.2:integrity",
+    "6.2:replay_state",
+    "6.2:sd_sector_read",
+    "6.2:hfs_signature",
+    "6.2:read_error_count",
+    "6.2:last_boot",
+    "6.2:last_container",
+    "6.2:boot_duration",
+    "6.2:last_validation",
+    "6.2:density_mod2",
+    "6.2:density_mod4",
+    "6.2:density_mod5",
+    "6.2:collapse_count",
+    "6.1:telemetry_no_source",
+    "6.2:anomaly_score",
+    "6.2:corruption_score",
+    "6.2:state_hash",
+    "6.2:last_relocation"
+   ],
+   "incomplete_provenance": [
+    "6.2:boot_duration"
+   ],
+   "reason": null
+  },
+  {
+   "query": "hardware observed opcode CDOT",
+   "group": "observed",
+   "category": "OBSERVED",
+   "subject": "opcode CDOT",
+   "state": "UNKNOWN",
+   "source_kind": "unknown",
+   "evidence_kinds": [],
+   "basis": [],
+   "claims": [
+    "P3:CDOT"
+   ],
+   "incomplete_provenance": [],
+   "reason": "no OBSERVED claim of `opcode CDOT` is MEASURED"
+  }
+ ]
+}

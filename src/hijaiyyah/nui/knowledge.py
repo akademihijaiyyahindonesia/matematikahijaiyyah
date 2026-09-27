@@ -13,6 +13,7 @@ grouped by where that knowledge lives, with where each piece comes from.
     python3 -m hijaiyyah.nui.knowledge host services
     python3 -m hijaiyyah.nui.knowledge host delta processes
     python3 -m hijaiyyah.nui.knowledge hardware current-state
+    python3 -m hijaiyyah.nui.knowledge hardware current program
 
 The owner's two shapes, both of 22 September 2026. The first is an answer:
 
@@ -65,7 +66,11 @@ A hardware question (layer 6.3, 27 September 2026) is answered from the
 provenance model alone: each item is one canonical provenance object -- claim,
 source kind, board run, evidence, observed_at, SHA-256, status -- filed where
 its evidence lives, and what the hardware is doing now is `unknown`, because
-no live source is registered, never the newest historical run.
+no live source is registered, never the newest historical run. Asked by a
+kind of state (layer 6.4) -- `hardware identity|capability|observed|current|
+provenance <subject>` -- the answer carries one headline state by the owner's
+precedence over the claims of that kind, and a current question is answered by
+a live source or not at all.
 
 Nothing is inferred and nothing is scored. Every item is a lookup in something
 the repository already holds, and every item carries `source` -- a file and
@@ -661,14 +666,39 @@ def _host_delta(collector: str) -> Answer:
     return answer
 
 
+def _hardware_item(c: dict[str, Any], registry: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    """One claim as an answer item, and the domain that reads its evidence --
+    a board record or page under PAPAN, RTL under RTL, a fact under NUI; a
+    claim with no evidence points at the provenance model."""
+    from . import telemetry_sources
+    where = c["evidence"]
+    source = ("NUI/hardware_provenance.json" if where is None else
+              f"{where}:{c['evidence_lines'][0]}" if c["evidence_lines"] else where)
+    domain = ("PAPAN" if source.startswith("cosmictera-build/") else
+              "RTL" if source.startswith("rtl/") else "NUI")
+    item = {"what": "hardware claim", "id": c["id"], "status": c["status"],
+            "source_kind": c["source_kind"], "provenance": c, "source": source}
+    if c["id"].startswith("6.2:"):
+        item["boundary"] = telemetry_sources.access(c["id"][4:], registry)
+    return domain, item
+
+
+def _incomplete(c: dict[str, Any]) -> list[str]:
+    return [f"{c['id']}: check {f['check']} ({f['label']}) fails -- {f['why']}"
+            for f in c["failed_checks"]]
+
+
 def _hardware(subject: str) -> Answer:
     """Hardware claims with their provenance (layer 6.3). Each item is filed
-    in the domain that reads its evidence -- a board record or page under
-    PAPAN, RTL under RTL, a fact under NUI -- and a claim with no evidence
-    points at the provenance model. What is UNKNOWN, and every check a claim
-    fails, is said in `unknown`; nothing is taken from the newest run to stand
-    for the hardware now."""
-    from . import hardware_provenance, telemetry_sources
+    in the domain that reads its evidence. What is UNKNOWN, and every check a
+    claim fails, is said in `unknown`; nothing is taken from the newest run to
+    stand for the hardware now. A subject that begins with one of layer 6.4's
+    groups -- identity, capability, observed, current, provenance -- is asked
+    of the state model instead."""
+    from . import hardware_provenance, hardware_state, telemetry_sources
+    group, _, rest = subject.partition(" ")
+    if group in hardware_state.load()["groups"]:
+        return _hardware_state(group, rest.strip())
     answer = _empty()
     claims = hardware_provenance.claims_for(subject)
     if claims is None:
@@ -677,21 +707,42 @@ def _hardware(subject: str) -> Answer:
         return answer
     registry = _json(telemetry_sources.MODEL)
     for c in claims:
-        where = c["evidence"]
-        source = ("NUI/hardware_provenance.json" if where is None else
-                  f"{where}:{c['evidence_lines'][0]}" if c["evidence_lines"] else where)
-        domain = ("PAPAN" if source.startswith("cosmictera-build/") else
-                  "RTL" if source.startswith("rtl/") else "NUI")
-        item = {"what": "hardware claim", "id": c["id"], "status": c["status"],
-                "source_kind": c["source_kind"], "provenance": c, "source": source}
-        if c["id"].startswith("6.2:"):
-            item["boundary"] = telemetry_sources.access(c["id"][4:], registry)
+        domain, item = _hardware_item(c, registry)
         answer[domain].append(item)
         if c["status"] == "UNKNOWN":
             answer["unknown"].append(f"{c['id']}: {c['reason']}")
-        for f in c["failed_checks"]:
-            answer["unknown"].append(f"{c['id']}: check {f['check']} ({f['label']}) fails -- "
-                                     f"{f['why']}")
+        answer["unknown"] += _incomplete(c)
+    return answer
+
+
+def _hardware_state(group: str, subject: str) -> Answer:
+    """What a hardware answer means (layer 6.4): the claims of the kind of
+    state asked for -- IDENTITY, CAPABILITY, OBSERVED, CURRENT, or all of them
+    for provenance -- and one headline state by the owner's precedence. A
+    CURRENT question is answered only by a registered live source; with none,
+    it is unknown, never the newest historical run. A claim whose provenance
+    6.3 left incomplete is named as such in `unknown`, not polished."""
+    from . import hardware_state, telemetry_sources
+    answer = _empty()
+    ctx = hardware_state.context()
+    model = _json(hardware_state.MODEL)
+    a = hardware_state.answer(group, subject, model, ctx)
+    answer["NUI"].append({"what": "hardware answer",
+                          **{k: a[k] for k in ("group", "category", "state", "source_kind",
+                                               "evidence_kinds", "basis",
+                                               "incomplete_provenance", "reason")},
+                          "source": "NUI/hardware_state.json"})
+    objects = {o["id"]: o for o in [*ctx["provenance"]["claims"], *model["observed_opcodes"]]}
+    categories = {e["id"]: e["category"] for e in model["claims"]}
+    registry = _json(telemetry_sources.MODEL)
+    for cid in a["claims"]:
+        domain, item = _hardware_item(objects[cid], registry)
+        answer[domain].append({**item, "category": categories[cid]})
+        if objects[cid]["status"] == "UNKNOWN":
+            answer["unknown"].append(f"{cid}: {objects[cid]['reason']}")
+        answer["unknown"] += _incomplete(objects[cid])
+    if a["state"] == "UNKNOWN":
+        answer["unknown"].insert(0, a["reason"])
     return answer
 
 
