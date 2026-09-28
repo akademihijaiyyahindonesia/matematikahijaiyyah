@@ -45,22 +45,31 @@ claimed to what that bench makes the transmitter do. Measured, that is its
 reset and its idle: the bench runs no PRINT and no EMITS. Every rule that
 sends a bit is written here, branch for branch, and named not covered in the
 spec -- not claimed because the top-level bench passes through the module.
+
+The fourth, hcpu_dataram, has no bench of its own, and none is made. The
+owner named rtl/tb/tb_parity.v over the Lapis 4 corpus its oracle: every
+program, run the way parity_model runs it, with the probe beside the
+harness. sram_mock.py models another device -- the sky130 macro -- and is
+not its oracle.
 """
 from __future__ import annotations
 
+import hashlib
 import itertools
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from . import hardware
+from . import hardware, parity_model
 from .hardware import _sha
 from .repository_index import ROOT
 
@@ -347,6 +356,41 @@ def uart_tx_outputs(s: State, inp: dict[str, Any], p: dict[str, int]) -> dict[st
     return {"tx_busy": int(s["state"] != IDLE), "uart_tx": s["tx_out"]}
 
 
+# -- hcpu_dataram, as a function ---------------------------------------------------------
+
+
+def dataram_reset() -> dict[str, Any]:
+    """rtl/hcpu_dataram.v lines 36-37 and 55-58: every word zero -- the
+    initial block, simulation only -- and rdata_r with no reset at all, so x
+    until the first read. mem holds only the words written through the port."""
+    return {"mem": {}, "rdata": "x"}
+
+
+def dataram_step(s: dict[str, Any], inp: dict[str, Any],
+                 p: dict[str, int]) -> tuple[dict[str, Any], list[str]]:
+    """One rising clock edge of hcpu_dataram (lines 43-48). One port, one
+    addr: a read and a write in the same edge are the same word, and both
+    right-hand sides see it as it was before the edge."""
+    re_, we_, addr = inp["re"] == 1, inp["we"] == 1, inp["addr"]
+    n, fired = {"mem": s["mem"], "rdata": s["rdata"]}, []
+    if we_:
+        n["mem"] = {**s["mem"], addr: inp["wdata"]}
+        fired.append("write")
+    if not re_:
+        fired.append("hold")
+        return n, fired
+    n["rdata"] = s["mem"].get(addr, 0)
+    fired.append("read_first" if we_ else "read")
+    if addr not in s["mem"]:
+        fired.append("initial_zero")
+    return n, fired
+
+
+def dataram_outputs(s: dict[str, Any], inp: dict[str, Any], p: dict[str, int]) -> dict[str, Any]:
+    """Line 50: the port is the register."""
+    return {"rdata": s["rdata"]}
+
+
 # -- the drivers: how each module's trace is read into its function -------------------------
 
 
@@ -530,6 +574,8 @@ def _parameters(m: dict[str, Any], root: Path) -> dict[str, int]:
         hit = re.match(rule["pattern"], ln)
         if hit:
             got[hit.group(1)] = int(hit.group(2).replace("_", ""))
+    if "CLK_HZ" not in got:
+        return got      # a module with no clock-derived parameters: the values as read
     params: dict[str, int] = DRIVERS[m["name"]]["parameters"](got["CLK_HZ"], got["BAUD"])
     return params | {"CLK_HZ": got["CLK_HZ"], "BAUD": got["BAUD"]}
 
@@ -543,6 +589,197 @@ def rules(m: dict[str, Any]) -> list[dict[str, Any]]:
         own += [{**r, "id": f"{sub['instance']}.{r['id']}", "file": other["rtl"]}
                 for r in other["rules"] if r["id"] != "reset"]
     return own
+
+
+# -- hcpu_dataram's oracle: tb_parity.v over the Lapis 4 corpus -----------------------------
+
+RAM_TAKEN = ("re", "we", "addr", "wdata", "rdata_before", "word_before")
+RAM_AFTER = ("rdata", "port", "word_after", "re_after", "we_after", "addr_after", "wdata_after")
+RAM_INPUTS = ("re", "we", "addr", "wdata")
+
+
+def _dataram_probe(m: dict[str, Any], p: dict[str, int]) -> str:
+    """Beside the harness, reading only. In each rising edge's active region
+    -- before any non-blocking update lands -- it holds what the edge takes:
+    the port, rdata_r, and the word at the address. At the end of that
+    timestep it prints them with what the edge left: rdata_r, the port, the
+    same word, and the inputs the next edge will see. At $finish it prints
+    every non-zero word of mem. Icarus takes only plain signals in $strobe,
+    so the word after the edge reaches it through a net."""
+    inst, clock = f"{m['top']}.{m['instance']}", f"{m['top']}.{m['clock']}"
+    xlen, aw = p["XLEN"], p["DATA_ADDR_W"]
+    fmt = " ".join(["%0d"] * (len(RAM_TAKEN) + len(RAM_AFTER)))
+    return (
+        "module rtl_function_probe;\n"
+        f"  reg t_re, t_we;\n  reg [{aw - 1}:0] t_addr;\n"
+        f"  reg [{xlen - 1}:0] t_wdata, t_rdata, t_word;\n  integer k;\n"
+        f"  wire [{xlen - 1}:0] word_after = {inst}.mem[t_addr];\n"
+        f"  always @(posedge {clock}) begin\n"
+        f"    t_re = {inst}.re; t_we = {inst}.we; t_addr = {inst}.addr;"
+        f" t_wdata = {inst}.wdata;\n"
+        f"    t_rdata = {inst}.rdata_r; t_word = {inst}.mem[{inst}.addr];\n"
+        f"    $strobe(\"P {fmt}\", t_re, t_we, t_addr, t_wdata, t_rdata, t_word,\n"
+        f"            {inst}.rdata_r, {inst}.rdata, word_after,\n"
+        f"            {inst}.re, {inst}.we, {inst}.addr, {inst}.wdata);\n"
+        "  end\n"
+        f"  final for (k = 0; k < {p['DATA_DEPTH']}; k = k + 1)\n"
+        f"    if ({inst}.mem[k] !== 0) $display(\"M %0d %0d\", k, {inst}.mem[k]);\n"
+        "endmodule\n")
+
+
+def dataram_runs(m: dict[str, Any], root: Path | None = None) -> list[dict[str, Any]]:
+    """Every program of the Lapis 4 corpus through tb_parity.v with +TRACE,
+    as parity_model.run_rtl runs it, and the probe beside the harness. The
+    corpus and each run's cycle budget are read from parity_model, not
+    copied; the harness and the RTL are compiled unchanged."""
+    root = root or ROOT
+    if shutil.which("iverilog") is None or shutil.which("vvp") is None:
+        raise RuntimeError("Icarus Verilog is required to run the harness")
+    progs = parity_model.corpus()
+    budgets = {p.name: parity_model.cycle_budget(parity_model.run_interpreter(p))
+               for p in progs}
+    sources = [str(f) for pattern in m["compile"] for f in sorted(root.glob(pattern))]
+    work = Path(tempfile.mkdtemp())
+    try:
+        (work / "probe.v").write_text(_dataram_probe(m, _parameters(m, root)),
+                                      encoding="utf-8")
+        compiled = subprocess.run(
+            ["iverilog", "-g2012", "-I", str(root / m["include"]), "-o", str(work / "sim"),
+             str(root / m["bench"]), *sources, str(work / "probe.v")],
+            capture_output=True, text=True, timeout=600)
+        if compiled.returncode != 0:
+            raise RuntimeError(f"iverilog failed:\n{compiled.stderr}")
+
+        def one(i: int) -> dict[str, Any]:
+            prog = progs[i]
+            hexfile = work / f"program{i}.hex"
+            hexfile.write_text("".join(f"{w:08X}\n" for w in prog.words), encoding="utf-8")
+            ran = subprocess.run(["vvp", "-n", str(work / "sim"), f"+PROGRAM={hexfile}",
+                                  f"+CYCLES={budgets[prog.name]}", "+TRACE"],
+                                 capture_output=True, text=True, timeout=1800, cwd=work)
+            rows, harness, final, said = [], [], {}, []
+            for ln in ran.stdout.splitlines():
+                f = ln.split()
+                if f[:1] == ["P"]:
+                    rows.append(dict(zip((*RAM_TAKEN, *RAM_AFTER), map(_value, f[1:]),
+                                         strict=True)))
+                elif f[:1] == ["M"]:
+                    final[int(f[1])] = _value(f[2])
+                elif f[:1] == ["T"] and f[2:3] == ["RAM"]:
+                    harness.append([int(f[3], 16), int(f[4], 16)])
+                elif f[:1] != ["T"]:
+                    said.append(ln)
+            if ran.returncode != 0 or not rows:
+                raise RuntimeError(f"{prog.name}: the harness printed no probe row, "
+                                   f"exit {ran.returncode}:\n{ran.stdout[-1500:]}{ran.stderr}")
+            return {"program": prog.name, "rows": rows, "harness": harness, "final": final,
+                    "said": said}
+
+        with ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 2)) as pool:
+            return list(pool.map(one, range(len(progs))))
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _dataram_trace_sha(runs: list[dict[str, Any]]) -> str:
+    digest = hashlib.sha256()
+    for run in runs:
+        digest.update(f"{run['program']}\n".encode())
+        for r in run["rows"]:
+            digest.update((" ".join(str(r[k]) for k in (*RAM_TAKEN, *RAM_AFTER)) + "\n")
+                          .encode())
+        digest.update(f"{sorted(run['final'].items())}\n".encode())
+    return digest.hexdigest()
+
+
+def _lapis4(names: list[str]) -> dict[str, Any]:
+    """What the frozen Lapis 4 model says of the programs that touch the RAM,
+    and the board's LOAD and STORE rows -- read from it, not re-run."""
+    frozen = json.loads(parity_model.MODEL.read_text(encoding="utf-8"))
+    verdicts = {n: {"status": frozen["programs"][n]["status"],
+                    "first_divergence": (frozen["programs"][n]["first_divergence"] or {})
+                    .get("kind")} for n in names}
+    board = {op: {k: frozen["board_corpus"]["opcodes"][op][k]
+                  for k in ("board", "programs", "parity", "mismatch", "unknown")}
+             for op in ("LOAD", "STORE")}
+    return {"lapis4": verdicts, "board": board}
+
+
+def dataram_compare(m: dict[str, Any], runs: list[dict[str, Any]], root: Path | None = None,
+                    step: Callable[..., tuple[dict[str, Any], list[str]]] | None = None,
+                    outputs: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
+    """F1-F4 for the data RAM, over every run of the corpus.
+
+    One step starts from the RTL's own state as the edge found it: rdata_r,
+    and the word at the address -- the only word an edge can touch. Open loop
+    starts from reset and takes the inputs alone; at every edge its rdata and
+    its word at the address must be the RTL's, and at the end of each run its
+    whole memory must be the dump. Rules are counted on the open loop, the
+    only pass that knows which words were ever written."""
+    root = root or ROOT
+    params = _parameters(m, root)
+    step = step or dataram_step
+    outputs = outputs or dataram_outputs
+    one_step: list[str] = []
+    open_loop: list[str] = []
+    output_bad: list[str] = []
+    harness_bad: list[str] = []
+    fired_count = {r["id"]: 0 for r in rules(m)}
+    timing = {"line_changes": 0, "captured_new": 0, "captured_old": 0}
+    touching: list[str] = []
+    cycles = 0
+    for run in runs:
+        name, rows = run["program"], run["rows"]
+        cycles += len(rows)
+        s, writes, used = dataram_reset(), [], False
+        for t, r in enumerate(rows):
+            inp = {k: r[k] for k in RAM_INPUTS}
+            own = {"mem": {r["addr"]: r["word_before"]}, "rdata": r["rdata_before"]}
+            got, _ = step(own, inp, params)
+            if got["rdata"] != r["rdata"] or got["mem"][r["addr"]] != r["word_after"]:
+                one_step.append(f"{name}:{t}")
+            before = s["mem"].get(r["addr"], 0)
+            s, fired = step(s, inp, params)
+            for f in fired:
+                fired_count[f] = fired_count.get(f, 0) + 1
+            if (before != r["word_before"] or s["rdata"] != r["rdata"]
+                    or s["mem"].get(r["addr"], 0) != r["word_after"]):
+                open_loop.append(f"{name}:{t}")
+            if outputs(s, inp, params)["rdata"] != r["port"]:
+                output_bad.append(f"{name}:{t}")
+            if inp["we"] == 1:
+                writes.append([r["addr"], r["wdata"]])
+            used = used or inp["we"] == 1 or inp["re"] == 1
+            if t:
+                was = tuple(rows[t - 1][k] for k in RAM_INPUTS)
+                shown = tuple(rows[t - 1][f"{k}_after"] for k in RAM_INPUTS)
+                now = tuple(r[k] for k in RAM_INPUTS)
+                if now != was:
+                    timing["line_changes"] += 1
+                    timing["captured_old"] += now == shown
+                    timing["captured_new"] += now != shown and now == tuple(
+                        r[f"{k}_after"] for k in RAM_INPUTS)
+        if {a: v for a, v in s["mem"].items() if v != 0} != run["final"]:
+            open_loop.append(f"{name}:final")
+        if writes != run["harness"]:
+            harness_bad.append(name)
+        if used:
+            touching.append(name)
+    halted = [run["program"] for run in runs
+              if any(re.match(m["bench_verdict"]["pattern"], ln) for ln in run["said"])]
+    return {"parameters": params, "cycles": cycles, "runs": len(runs),
+            "ram_programs": touching, "input_timing": timing,
+            "one_step_mismatches": one_step, "open_loop_mismatches": open_loop,
+            "output_mismatches": output_bad, "harness_trace_mismatches": harness_bad,
+            "harness_ram_writes": sum(len(run["harness"]) for run in runs),
+            **_lapis4(touching),
+            "bench_said": f"{len(halted)} of {len(runs)} runs reached the harness's final "
+                          "block (HALTED=)",
+            "bench_pass": len(halted) == len(runs), "rules_fired": fired_count}
+
+
+DRIVERS["hcpu_dataram"] = {"runs": dataram_runs, "compare": dataram_compare,
+                           "trace_sha": _dataram_trace_sha}
 
 
 def compare(m: dict[str, Any], trace: dict[str, Any], root: Path | None = None,
@@ -603,16 +840,23 @@ def build(root: Path | None = None) -> dict[str, Any]:
             if max(r["lines"]) > length:
                 raise LookupError(f"{m['name']}: rule {r['id']} cites line {max(r['lines'])} "
                                   f"of {r['file']}'s {length}")
-        trace = rtl_trace(m, root)
-        result = compare(m, trace, root)
-        text = "\n".join(" ".join(str(r[k]) for k in r) for r in trace["rows"])
+        d = DRIVERS[m["name"]]
+        if "runs" in d:
+            # an oracle that is a corpus of runs, not one bench
+            runs = d["runs"](m, root)
+            result, trace_sha = d["compare"](m, runs, root), d["trace_sha"](runs)
+        else:
+            trace = rtl_trace(m, root)
+            result = compare(m, trace, root)
+            text = "\n".join(" ".join(str(r[k]) for k in r) for r in trace["rows"])
+            trace_sha = _sha(text.encode("utf-8"))
         entry = {"name": m["name"], "rtl": m["rtl"],
                  "rtl_sha256": _sha((root / m["rtl"]).read_bytes()),
                  "bench": m["bench"], "bench_sha256": _sha((root / m["bench"]).read_bytes())}
         if "modelled" in m:
             entry["modelled_sha256"] = {f: _sha((root / f).read_bytes()) for f in m["modelled"]}
         modules.append({
-            **entry, "trace_sha256": _sha(text.encode("utf-8")), **result,
+            **entry, "trace_sha256": trace_sha, **result,
             "rules": [{"id": r["id"], **({"file": r["file"]} if r["file"] != m["rtl"] else {}),
                        "lines": r["lines"], "fired": result["rules_fired"][r["id"]]}
                       for r in rules(m)],
@@ -627,6 +871,17 @@ def _expects(m: dict[str, Any], s: dict[str, Any]) -> str | None:
     """F3: what the bench checks, against what the function predicts. None
     when they agree."""
     want = s["bench_expects"]
+    if m["name"] == "hcpu_dataram":
+        # The harness observes the write side; the frozen Lapis 4 model is
+        # the verdict on what reached the port, quoted, not re-judged.
+        if m["harness_trace_mismatches"]:
+            return f"the harness's RAM trace is not the function's writes in " \
+                   f"{m['harness_trace_mismatches']}"
+        ram = sorted(n for n, v in m["lapis4"].items() if v["first_divergence"] == "RAM")
+        if ram != want["lapis4_ram_divergences"]:
+            return f"the frozen Lapis 4 model diverges first at RAM in {ram}, the spec names " \
+                   f"{want['lapis4_ram_divergences']}"
+        return None
     if m["name"] == "hcpu_uart_tx":
         # The bench reads nothing of the transmitter; an expectation here
         # would be a claim the bench does not make.
@@ -704,13 +959,16 @@ def page(model: dict[str, Any]) -> str:
     for m in model["modules"]:
         s, p = spec[m["name"]], m["parameters"]
         timing = m["input_timing"]
-        derived = ", ".join(f"{k} {v}" for k, v in p.items() if k not in ("CLK_HZ", "BAUD"))
+        first = [k for k in ("CLK_HZ", "BAUD") if k in p]
+        named = ", ".join(f"{k} {p[k]}" for k in [*first, *(k for k in p if k not in first)])
         out += [f"## `{m['name']}`", "",
                 f"`{m['rtl']}` `{m['rtl_sha256'][:12]}…`, bench `{m['bench']}` "
-                f"`{m['bench_sha256'][:12]}…`. CLK_HZ {p['CLK_HZ']}, BAUD {p['BAUD']}, "
-                f"{derived}.", ""]
+                f"`{m['bench_sha256'][:12]}…`. {named}.", ""]
         if "oracle" in s:
             out += [f"**Oracle.** {s['oracle']}.", ""]
+        if "levels" in s:
+            out += ["Tiga level bukti, dan batas masing-masing:", "",
+                    *[f"- **{k}** — {v}." for k, v in s["levels"].items()], ""]
         if "modelled_sha256" in m:
             out += ["Ikut dimodelkan: " + ", ".join(f"`{f}` `{h[:12]}…`" for f, h in
                                                    m["modelled_sha256"].items()) + ".", ""]
@@ -718,8 +976,11 @@ def page(model: dict[str, Any]) -> str:
             out += ["Di luar model — masuk sebagai input, tidak diprediksi:", ""]
             out += [f"- `{k}` — {v}." for k, v in s["outside"].items()]
             out.append("")
+        # A corpus row holds its edge's state before and after, so every row
+        # is a step; one bench's rows are states, and the steps fall between.
+        steps = m["cycles"] if "runs" in m else m["cycles"] - 1
         out += ["| pemeriksaan | hasil |", "|---|---|",
-                f"| F1 satu langkah, {m['cycles'] - 1} transisi | "
+                f"| F1 satu langkah, {steps} transisi | "
                 f"{len(m['one_step_mismatches'])} berbeda |"]
         if "output_mismatches" in m:
             out.append(f"| F1 keluaran kombinasional, {m['cycles']} siklus | "
@@ -740,6 +1001,11 @@ def page(model: dict[str, Any]) -> str:
                        + " |")
         if "bench_observes" in s:
             out.append(f"| F3 yang bench amati dari modul ini | {s['bench_observes']} |")
+        if "lapis4" in m:
+            out += [f"| lari korpus | {m['runs']}, {len(m['ram_programs'])} menyentuh RAM |",
+                    f"| F3 jejak tulis RAM harness = tulisan yang fungsi ambil, "
+                    f"{m['harness_ram_writes']} tulis | "
+                    f"{len(m['harness_trace_mismatches'])} program berbeda |"]
         signal = s["input_timing"].get("signal", "line")
         out += [f"| F3 bench | {m['bench_said']} |",
                 f"| waktu input: perubahan {signal}, ditangkap nilai baru, ditangkap nilai lama | "
@@ -749,6 +1015,18 @@ def page(model: dict[str, Any]) -> str:
             out += [f"Daftar pemilik, di jejak RTL — {s['seen_why']}.", "",
                     "| perilaku | tepi naik |", "|---|---|",
                     *[f"| {s['seen'][k]} | {v} |" for k, v in m["seen"].items()], ""]
+        if "lapis4" in m:
+            out += ["Program korpus yang menyentuh RAM, dan vonis model paritas Lapis 4 yang beku "
+                    f"atasnya — dikutip, tidak dinilai ulang. {s['bench_expects_why']}.", "",
+                    "| program | Lapis 4 | perpisahan pertama |", "|---|---|---|",
+                    *[f"| `{n}` | {v['status']} | {v['first_divergence'] or '—'} |"
+                      for n, v in m["lapis4"].items()], "",
+                    "Bukti papan untuk jalur yang sama, kolom P3 (tingkat program):", "",
+                    "| opcode | papan | program | cocok | berbeda | tak bisa diputuskan |",
+                    "|---|---|---|---|---|---|",
+                    *[f"| `{op}` | {b['board']} | {b['programs']} | {b['parity']} | "
+                      f"{b['mismatch']} | {b['unknown']} |" for op, b in m["board"].items()],
+                    ""]
         out += ["| aturan | baris RTL | arti | dijalankan bench |", "|---|---|---|---|"]
         means = {r["id"]: r["means"] for r in rules(s)}
         for r in m["rules"]:

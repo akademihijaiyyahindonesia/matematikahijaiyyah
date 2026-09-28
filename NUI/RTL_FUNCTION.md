@@ -198,6 +198,84 @@ Batas yang tercakup — yang dijalankan bench, dan apa yang pemakaiannya tidak t
 
 **Waktu input.** keadaan dan rst_n tepi t+1 dibaca dari baris yang dicetak $strobe di akhir timestep tepi t+1; tx_start dan tx_data diregister mesin keadaan cetak hcpu_top, jadi tepi t+1 mengambil yang baris t tunjukkan: aturan MMIO untuk keluaran modul luar yang diregister. Di bench ini ia tidak terukur: tx_start tidak pernah berubah, jadi pengukuran input_timing tiap build mencatat 0 perubahan -- aturannya dinyatakan dari RTL, tidak dibuktikan.
 
+## `hcpu_dataram`
+
+`rtl/hcpu_dataram.v` `8731b42a61bb…`, bench `rtl/tb/tb_parity.v` `94d820fddc2d…`. XLEN 32, DATA_ADDR_W 12, DATA_DEPTH 4096.
+
+**Oracle.** pemilik, 28 September 2026: oracle RAM data adalah tb_parity.v atas korpus Lapis 4 -- jalur hcpu_top.u_dataram yang sama dengan yang di papan jadi BSRAM. Harness, korpus, dan model paritas Lapis 4 hanya dibaca, tidak diubah; tidak ada bench RAM khusus, dan tidak ada yang dibuat.
+
+Tiga level bukti, dan batas masing-masing:
+
+- **software_model** — src/hijaiyyah/nui/sram_mock.py memodelkan protokol makro sky130_sram_1kbyte_1rw1r_32x256_8 -- perangkat lain, bukan rtl/hcpu_dataram.v -- dan oracle-nya sendiri, behavioural Verilog makro itu, ada di rtl/mpw/sky130_sram_macros/ yang tidak di-commit. Karena itu ia bukan oracle modul ini. Yang sama dengan hcpu_dataram: baca terdaftar, kata tersedia satu siklus sesudah alamat. Yang berbeda: dua port lawan satu; mask byte lawan tanpa mask; dout tak bermakna saat tulis lawan read-first yang RTL tulis (baris 40-42) dan oracle tidak pernah jalankan.
+- **rtl** — rtl/hcpu_dataram.v di hcpu_top.u_dataram, di bawah tb_parity.v atas korpus Lapis 4 -- oracle modul ini. Harness mengamati sisi tulis (T ... RAM, saat ram_we && !emits_busy, gerbang yang sama dengan we instance itu); sisi baca hanya teramati lewat GPR sesudah LOAD, jalur milik butir pipeline.
+- **hardware** — di papan hcpu_dataram jadi BSRAM Gowin. Buktinya tingkat program lewat kabel: baris LOAD dan STORE kolom P3, dibaca dari NUI/parity_model.json. Isi RAM tidak teramati dari luar papan (P5).
+
+Di luar model — masuk sebagai input, tidak diprediksi:
+
+- `rtl/hcpu_top.v` — apa yang sampai ke port RAM -- re, we, addr, wdata dari pipeline, dekode MMIO, dan mux EMITS (baris 828-835) -- masuk sebagai input, tidak diprediksi. Pipeline dan HCPU adalah butir sendiri di urutan pemilik.
+
+| pemeriksaan | hasil |
+|---|---|
+| F1 satu langkah, 826030 transisi | 0 berbeda |
+| F1 keluaran kombinasional, 826030 siklus | 0 berbeda |
+| F2 lingkar terbuka dari reset, 826030 siklus | 0 berbeda |
+| lari korpus | 107, 20 menyentuh RAM |
+| F3 jejak tulis RAM harness = tulisan yang fungsi ambil, 26578 tulis | 0 program berbeda |
+| F3 bench | 107 of 107 runs reached the harness's final block (HALTED=) |
+| waktu input: perubahan re/we/addr/wdata, ditangkap nilai baru, ditangkap nilai lama | 419521, 0, 419521 |
+| jejak RTL | `fd58a9384c89…` |
+
+Program korpus yang menyentuh RAM, dan vonis model paritas Lapis 4 yang beku atasnya — dikutip, tidak dinilai ulang. Di model paritas Lapis 4 yang beku, satu-satunya perpisahan pertama berjenis RAM di antara program yang menyentuh RAM: RTL menulis RAM[0x100]=5 sesudah HALT, interpreter tidak (NUI/PARITY.md, cosmictera-build/OFF.md). Tulisan itu sampai ke port dari pipeline -- butir sendiri -- dan RAM menyimpannya persis seperti yang fungsi ramalkan.
+
+| program | Lapis 4 | perpisahan pertama |
+|---|---|---|
+| `parity:mmio_does_not_disturb_ram` | PARITY | — |
+| `parity:store_then_load` | PARITY | — |
+| `rtl/programs/burn_in.hasm` | MISMATCH | GPR |
+| `rtl/programs/flags_board.hasm` | MISMATCH | GPR |
+| `rtl/programs/flags_ctx.hasm` | MISMATCH | GPR |
+| `rtl/programs/hfs_lifecycle.hasm` | MISMATCH | EXIT |
+| `rtl/programs/hijrah_sweep.hasm` | UNKNOWN | — |
+| `rtl/programs/hos_demo.hasm` | MISMATCH | EXIT |
+| `rtl/programs/kernel.hasm` | MISMATCH | GPR |
+| `rtl/programs/letters.hasm` | PARITY | — |
+| `rtl/programs/mem_protect.hasm` | MISMATCH | GPR |
+| `rtl/programs/nui_embedding.hasm` | PARITY | — |
+| `rtl/programs/shell.hasm` | MISMATCH | GPR |
+| `rtl/programs/subroutine.hasm` | MISMATCH | GPR |
+| `rtl/programs/test_hfs.hasm` | MISMATCH | GPR |
+| `rtl/programs/trap_hreg.hasm` | UNKNOWN | — |
+| `rtl/tb/hfs_persist_probe.hasm` | UNKNOWN | — |
+| `rtl/tb/hfs_syscall_probe.hasm` | UNKNOWN | — |
+| `rtl/tb/prog_load_probe.hasm` | UNKNOWN | — |
+| `stop-probe:halt-then-store` | MISMATCH | RAM |
+
+Bukti papan untuk jalur yang sama, kolom P3 (tingkat program):
+
+| opcode | papan | program | cocok | berbeda | tak bisa diputuskan |
+|---|---|---|---|---|---|
+| `LOAD` | PARITY | 16 | 12 | 0 | 4 |
+| `STORE` | PARITY | 17 | 14 | 0 | 3 |
+
+| aturan | baris RTL | arti | dijalankan bench |
+|---|---|---|---|
+| `write` | 43, 44, 45 | we: mem[addr] <- wdata di tepi naik | 26578 |
+| `read` | 43, 46, 47 | re tanpa we: rdata_r <- mem[addr], kata tersedia satu siklus sesudah alamat | 8620 |
+| `hold` | 46, 50 | re rendah: rdata_r tetap, dan rdata adalah rdata_r | 817410 |
+| `read_first` | 40, 41, 42, 44, 45, 46, 47 | re dan we di tepi yang sama, alamat sama: rdata_r mendapat kata lama (read-first) | 0 |
+| `initial_zero` | 53, 55, 56, 57, 59 | baca kata yang belum pernah ditulis: nol dari blok initial -- hanya simulasi (synthesis translate_off) | 6 |
+
+Tidak tercakup bench: read_first.
+
+- `read_first` — di ke-107 program korpus, re dan we tidak pernah tinggi di tepi yang sama: kata lama yang dikembalikan read-first tidak pernah diminta. Satu port, satu addr: baca dan tulis di tepi yang sama selalu alamat yang sama.
+
+Batas yang tercakup — yang dijalankan oracle, dan apa yang pemakaiannya tidak tunjukkan:
+
+- `initial_zero` — nol awal berasal dari blok initial yang synthesis translate_off buang: terbukti untuk simulasi, bukan klaim tentang BSRAM di papan.
+- `rdata` — rdata_r tidak punya reset: x sampai baca pertama tiap lari, dan fungsi memegangnya sebagai x, bukan nol.
+
+**Waktu input.** probe mencatat input yang diambil tiap tepi di region aktif tepi itu, cara yang sama dengan jejak tb_parity.v sendiri menyampel ram_we; nilai sesudah tepi dicetak $strobe: input RAM digerakkan register hcpu_top. Diukur tiap build: di tiap tepi tempat input berubah, yang diambil adalah nilai yang dicetak baris sebelumnya sesudah tepinya -- tidak ada input yang berubah di antara dua tepi.
+
 ## Mengulang
 
 ```bash

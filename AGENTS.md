@@ -1637,6 +1637,18 @@ jadi yang terbukti hanya reset dan diam; sembilan aturan lainnya dinamai tidak
 tercakup, angkanya di `NUI/LAYERS.md`, Lapis 6. Sesudah UART TX, SRAM — dan
 oracle-nya ditetapkan lebih dulu, karena tidak ada bench SRAM khusus.
 
+UART TX diterima GREEN (`604bbb8`) dengan cakupan yang secara eksplisit
+terbatas: 2 dari 11 aturan, yang `rtl/tb/tb_hcpu_top.v` jalankan. Pemilik
+menetapkan: bila model TX kelak diperluas ke start bit, bit data, stop bit,
+pencacah, dan busy, oracle yang tepat adalah `rtl/tb/tb_hcpu_emits.v`, yang
+mendekode `uart_tx` secara serial; `rtl/tb/tb_hcpu_top.v` tidak diubah hanya
+untuk membuat aturan TX tercakup. *Tidak tercakup oleh testbench ≠ salah; tetapi
+juga ≠ terbukti.* Untuk RAM data pemilik menuntut oracle ditetapkan atas tiga
+level — model perangkat lunak (`src/hijaiyyah/nui/sram_mock.py`), jalur RAM
+RTL, dan bukti papan — dan model itu tidak boleh langsung diklaim oracle
+hardware. Terukur, ia memodelkan makro sky130, bukan `rtl/hcpu_dataram.v`, dan
+pemilik memilih `rtl/tb/tb_parity.v` atas korpus Lapis 4 sebagai oracle-nya.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

@@ -880,6 +880,215 @@
     "stop_end",
     "default"
    ]
+  },
+  {
+   "name": "hcpu_dataram",
+   "rtl": "rtl/hcpu_dataram.v",
+   "rtl_sha256": "8731b42a61bbf304078027dd874ffdfabec25bf6d199d53c2a6291c0ce44edfc",
+   "bench": "rtl/tb/tb_parity.v",
+   "bench_sha256": "94d820fddc2d0bcc40244348a41d4ddf200fa42aa5702e87b7202eddf07800f6",
+   "trace_sha256": "fd58a9384c8940d58f9b64978995be7148d78852cbaef524c39f5f3b67495d16",
+   "parameters": {
+    "XLEN": 32,
+    "DATA_ADDR_W": 12,
+    "DATA_DEPTH": 4096
+   },
+   "cycles": 826030,
+   "runs": 107,
+   "ram_programs": [
+    "parity:mmio_does_not_disturb_ram",
+    "parity:store_then_load",
+    "rtl/programs/burn_in.hasm",
+    "rtl/programs/flags_board.hasm",
+    "rtl/programs/flags_ctx.hasm",
+    "rtl/programs/hfs_lifecycle.hasm",
+    "rtl/programs/hijrah_sweep.hasm",
+    "rtl/programs/hos_demo.hasm",
+    "rtl/programs/kernel.hasm",
+    "rtl/programs/letters.hasm",
+    "rtl/programs/mem_protect.hasm",
+    "rtl/programs/nui_embedding.hasm",
+    "rtl/programs/shell.hasm",
+    "rtl/programs/subroutine.hasm",
+    "rtl/programs/test_hfs.hasm",
+    "rtl/programs/trap_hreg.hasm",
+    "rtl/tb/hfs_persist_probe.hasm",
+    "rtl/tb/hfs_syscall_probe.hasm",
+    "rtl/tb/prog_load_probe.hasm",
+    "stop-probe:halt-then-store"
+   ],
+   "input_timing": {
+    "line_changes": 419521,
+    "captured_new": 0,
+    "captured_old": 419521
+   },
+   "one_step_mismatches": [],
+   "open_loop_mismatches": [],
+   "output_mismatches": [],
+   "harness_trace_mismatches": [],
+   "harness_ram_writes": 26578,
+   "lapis4": {
+    "parity:mmio_does_not_disturb_ram": {
+     "status": "PARITY",
+     "first_divergence": null
+    },
+    "parity:store_then_load": {
+     "status": "PARITY",
+     "first_divergence": null
+    },
+    "rtl/programs/burn_in.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/flags_board.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/flags_ctx.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/hfs_lifecycle.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "EXIT"
+    },
+    "rtl/programs/hijrah_sweep.hasm": {
+     "status": "UNKNOWN",
+     "first_divergence": null
+    },
+    "rtl/programs/hos_demo.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "EXIT"
+    },
+    "rtl/programs/kernel.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/letters.hasm": {
+     "status": "PARITY",
+     "first_divergence": null
+    },
+    "rtl/programs/mem_protect.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/nui_embedding.hasm": {
+     "status": "PARITY",
+     "first_divergence": null
+    },
+    "rtl/programs/shell.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/subroutine.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/test_hfs.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/trap_hreg.hasm": {
+     "status": "UNKNOWN",
+     "first_divergence": null
+    },
+    "rtl/tb/hfs_persist_probe.hasm": {
+     "status": "UNKNOWN",
+     "first_divergence": null
+    },
+    "rtl/tb/hfs_syscall_probe.hasm": {
+     "status": "UNKNOWN",
+     "first_divergence": null
+    },
+    "rtl/tb/prog_load_probe.hasm": {
+     "status": "UNKNOWN",
+     "first_divergence": null
+    },
+    "stop-probe:halt-then-store": {
+     "status": "MISMATCH",
+     "first_divergence": "RAM"
+    }
+   },
+   "board": {
+    "LOAD": {
+     "board": "PARITY",
+     "programs": 16,
+     "parity": 12,
+     "mismatch": 0,
+     "unknown": 4
+    },
+    "STORE": {
+     "board": "PARITY",
+     "programs": 17,
+     "parity": 14,
+     "mismatch": 0,
+     "unknown": 3
+    }
+   },
+   "bench_said": "107 of 107 runs reached the harness's final block (HALTED=)",
+   "bench_pass": true,
+   "rules_fired": {
+    "write": 26578,
+    "read": 8620,
+    "hold": 817410,
+    "read_first": 0,
+    "initial_zero": 6
+   },
+   "rules": [
+    {
+     "id": "write",
+     "lines": [
+      43,
+      44,
+      45
+     ],
+     "fired": 26578
+    },
+    {
+     "id": "read",
+     "lines": [
+      43,
+      46,
+      47
+     ],
+     "fired": 8620
+    },
+    {
+     "id": "hold",
+     "lines": [
+      46,
+      50
+     ],
+     "fired": 817410
+    },
+    {
+     "id": "read_first",
+     "lines": [
+      40,
+      41,
+      42,
+      44,
+      45,
+      46,
+      47
+     ],
+     "fired": 0
+    },
+    {
+     "id": "initial_zero",
+     "lines": [
+      53,
+      55,
+      56,
+      57,
+      59
+     ],
+     "fired": 6
+    }
+   ],
+   "not_covered": [
+    "read_first"
+   ]
   }
  ]
 }
