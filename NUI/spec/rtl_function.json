@@ -1575,7 +1575,7 @@
    },
    "state_also": {
     "halted": "register controller (hcpu_controller.v baris 72-77): aturan tercakup ctrl_halt_latch menulisnya; pembekuan yang ia sebabkan tidak tercakup",
-    "register file": "tujuan port tulis WB (hcpu_regfile.v baris 53-59, 63-68, 94, 111-118): 18 GPR, 16 H-Reg, FLAGS. Dimodelkan karena lingkar terbuka dari reset hanya dengan input yang pemilik sebut butuh nilai baca register decode, dan pemeriksaan terminal membacanya; register pc di dalamnya diikat pc_we = 0 (hcpu_top.v baris 645)",
+    "register file": "companion state dan keluaran fungsi, bukan input oracle (keputusan pemilik, 28 September 2026): diturunkan deterministik dari writeback fungsi sendiri -- keadaan pipeline, lalu writeback, lalu keadaan register file berikutnya (hcpu_regfile.v baris 53-59, 63-68, 94, 111-118): 18 GPR, 16 H-Reg, FLAGS. Pemeriksaan terminal GPR adalah pemeriksaan tambahan, bukan sumber keadaan; register pc di dalamnya diikat pc_we = 0 (hcpu_top.v baris 645)",
     "larik tumpukan": "stack[] hcpu_memory: tanpa reset, x sampai ditulis PUSH; di satu langkah dari keadaan RTL hanya kata di sp-1 yang teramati, lewat net probe"
    },
    "state_note": "ex_emits_addr ada di RTL (hcpu_execute.v) dan tidak ada di daftar keadaan audit; ia register EX/MEM yang di-latch tiap tepi, jadi ikut di bundle ini",
@@ -1662,7 +1662,8 @@
    "bench_expects": {
     "terminal": "program di pipeline_audit.programs[].reads"
    },
-   "not_covered_why": "ke-33 aturan dan ke-27 arm opcode yang audit namai: fungsi berhenti dengan NotCovered, bukan memprediksi"
+   "not_covered_why": "ke-33 aturan dan ke-27 arm opcode yang audit namai: fungsi berhenti dengan NotCovered, bukan memprediksi",
+   "terminal_snapshot": "keputusan pemilik, 28 September 2026: baris sesudah tepi terakhir, ketika halted sudah naik dan bench memanggil $finish tanpa reset, dicatat sebagai terminal snapshot -- halted = 1, sinyal pipeline tertahan -- bukan tepi transisi. Ada tidaknya baris itu bergantung pada urutan $strobe/$finish, jadi ia tidak dipakai sebagai oracle ctrl_halted_stall, yang tetap not covered"
   }
  ],
  "checks": [
@@ -2721,13 +2722,13 @@
   "not_covered": {
    "fetch_redirect_trap": "trap_redirect_w 0 di setiap tepi: tidak ada program yang menjalankan SYSCALL atau ERET, dan tidak ada trap yang menembak",
    "fetch_flush_only": "tidak terjangkau dari kabel hcpu_top: if_flush = branch_taken && !global_stall (hcpu_controller.v baris 98), dan masukan branch_taken controller itu adalah redirect_taken (hcpu_top.v baris 842) -- if_flush tanpa redirect tidak mungkin",
-   "decode_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1",
+   "decode_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi",
    "decode_letter": "tidak ada opcode huruf (0xE0-0xFB) di kesebelas program",
    "decode_halt_err": "tiap opcode di kesebelas program punya arm di case decode",
    "hazard_pop_use": "program 8 menaruh NOP sesudah tiap POP; tidak ada instruksi yang memakai tujuan POP tepat sesudahnya",
    "hazard_store_load": "hazard ini butuh LOAD tepat dua instruksi sesudah STORE ke alamat yang sama; di program 4 dan 6 keduanya berjarak tiga instruksi",
    "fwd_hreg_s2_mem": "tidak ada pembaca S2 (daftar decode baris 100-105) yang H[S2]-nya ditulis tepat dua instruksi sebelumnya",
-   "ex_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1",
+   "ex_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi",
    "ex_flush": "flush execute diikat 1'b0 di hcpu_top.v baris 489: tidak terjangkau",
    "flags_forward_self": "konsumen FLAGS (cabang dan FRD) bukan CMP, jadi alu_flags_we instruksinya sendiri tidak pernah tinggi saat ia memilih FLAGS",
    "flags_forward_rf": "ketiga cabang di bench -- JNE di program 3 dan 11, JNGD di program 5 -- semuanya tepat sesudah penulis FLAGS-nya (CMP, CEQ, HGRD): FLAGS selalu datang dari EX/MEM",
@@ -2747,11 +2748,11 @@
    "eret": "tidak ada ERET di kesebelas program",
    "syscall": "tidak ada SYSCALL di kesebelas program",
    "flags_fwr": "tidak ada FWR di kesebelas program",
-   "mem_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1",
+   "mem_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi",
    "stack_overflow": "program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3",
    "stack_underflow": "program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3",
    "ctrl_print_stall": "tidak ada PRINT atau EMITS: print_active 0 di setiap tepi",
-   "ctrl_halted_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1"
+   "ctrl_halted_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi"
   },
   "not_covered_why": "aturan RTL pipeline yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti"
  }

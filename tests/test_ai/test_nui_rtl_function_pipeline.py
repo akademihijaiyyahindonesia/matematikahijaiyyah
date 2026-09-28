@@ -11,8 +11,8 @@ here:
     the function is the RTL's;
     it fires exactly what the audit counted;
     the bench's reads are the constants the bench itself states;
-    wherever a transition is uncovered it stops with NotCovered, and the one
-    edge where the freeze on halt shows is not claimed;
+    wherever a transition is uncovered it stops with NotCovered, and the row
+    after the last HALT is a terminal snapshot, not a transition;
     no interpreter stands in for the oracle;
     and each covered rule, broken, is red.
 """
@@ -49,7 +49,7 @@ def _pipeline(bad: list[str]) -> list[str]:
 
 
 def test_every_edge_every_output_and_the_open_loop_are_the_rtls() -> None:
-    assert (M["cycles"], M["steps"]) == (233, 232)
+    assert (M["cycles"], M["steps"]) == (232, 231)
     assert M["one_step_mismatches"] == M["output_mismatches"] == []
     assert M["open_loop_mismatches"] == [] and M["open_loop_reached"] == 231
     assert _pipeline(rf.check(MODEL)) == []
@@ -90,17 +90,35 @@ def test_the_bench_reads_are_the_constants_the_bench_states() -> None:
     assert all(got[(n, r)] == v for n, r, v in wanted)
 
 
-def test_the_freeze_on_halt_is_not_claimed(runs: list[dict[str, Any]]) -> None:
-    """The last edge after program 11 takes halted = 1 and, in this probe,
-    its row is printed: every probed signal holds. The function does not
-    predict it -- the freeze is uncovered -- and the ten resets that follow a
-    halt leave stack_rd, gated by that same stall, unpredicted."""
+def test_the_last_row_is_a_terminal_snapshot_not_a_transition(
+        runs: list[dict[str, Any]]) -> None:
+    """The owner's decision of 28 September 2026. After program 11's HALT the
+    bench calls $finish without a reset; in this probe the row after that
+    edge prints, halted up and every probed signal held. It is recorded as a
+    terminal snapshot, never compared as a transition -- the function would
+    stop on it, ctrl_halted_stall being uncovered -- and the ten resets that
+    follow a halt leave stack_rd, gated by the same stall, unpredicted."""
     rows = runs[0]["rows"]
     assert rows[-1] == rows[-2] and rows[-1]["halted"] == 1
-    assert M["not_covered_steps"] == {"ctrl_halted_stall": [232],
-                                      "open loop: ctrl_halted_stall": [232]}
-    assert M["not_covered_outputs"] == {"ctrl_halted_stall": 12}
+    assert M["terminal_snapshot"] == {"row": 232, "halted": 1, "held": True}
+    assert M["not_covered_steps"] == {}
+    assert M["not_covered_outputs"] == {"ctrl_halted_stall": 11}
     assert M["unpredicted"] == {"stack_rd": 10}
+    with pytest.raises(rf.NotCovered) as why:
+        rf.pipeline_step(rf._pipe_state(rows[-2], C),
+                         rf._pipe_inputs(rows[-2], rows[-1], SPEC), C)
+    assert why.value.rule == "ctrl_halted_stall"
+
+
+def test_the_result_does_not_hang_on_whether_the_snapshot_prints(
+        runs: list[dict[str, Any]]) -> None:
+    """Whether that last row prints depends on $strobe against $finish, and
+    it did not in the audit's probe. Without it, nothing else moves."""
+    full = rf.pipeline_compare(SPEC, runs)
+    cut = rf.pipeline_compare(SPEC, [{**runs[0], "rows": runs[0]["rows"][:-1]}])
+    assert cut["terminal_snapshot"] is None
+    assert {k: v for k, v in full.items() if k != "terminal_snapshot"} == {
+        k: v for k, v in cut.items() if k != "terminal_snapshot"}
 
 
 def _row(runs: list[dict[str, Any]], t: int) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -238,7 +256,14 @@ def test_rule_counts_that_are_not_the_audits_are_red() -> None:
     assert any(b.startswith("F4 pipeline") for b in rf.check(bent))
 
 
-def test_a_stop_before_the_last_edge_is_red() -> None:
+def test_a_snapshot_that_did_not_hold_is_red() -> None:
+    bent = json.loads(json.dumps(MODEL))
+    next(m for m in bent["modules"] if m["name"] == "pipeline")["terminal_snapshot"][
+        "held"] = False
+    assert any(b.startswith("F1 pipeline") for b in rf.check(bent))
+
+
+def test_a_stop_on_a_transition_edge_is_red() -> None:
     bent = json.loads(json.dumps(MODEL))
     next(m for m in bent["modules"] if m["name"] == "pipeline")["not_covered_steps"] = {
         "ctrl_halted_stall": [100]}

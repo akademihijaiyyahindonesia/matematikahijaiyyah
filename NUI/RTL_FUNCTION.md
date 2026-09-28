@@ -359,7 +359,7 @@ Keadaan — empat bundle register tahap yang audit catat:
 - **EX/MEM** — ex_opcode, ex_dst, ex_gpr_result, ex_hreg_result, ex_gpr_we, ex_hreg_we, ex_flags_new, ex_flags_we, ex_is_halt, ex_is_print, ex_is_emits, ex_emits_addr, ex_print_data, ex_is_push, ex_is_pop, ex_push_data, ex_mem_read, ex_mem_write, ex_mem_addr, ex_mem_wdata, ra_sp.
 - **MEM/WB** — mem_dst, mem_gpr_result_r, mem_hreg_result, mem_gpr_we, mem_hreg_we, mem_flags_new, mem_flags_we, mem_is_halt, mem_is_load, mem_is_pop, sp, stack_rd, stack_rd_valid.
 - **halted** — register controller (hcpu_controller.v baris 72-77): aturan tercakup ctrl_halt_latch menulisnya; pembekuan yang ia sebabkan tidak tercakup.
-- **register file** — tujuan port tulis WB (hcpu_regfile.v baris 53-59, 63-68, 94, 111-118): 18 GPR, 16 H-Reg, FLAGS. Dimodelkan karena lingkar terbuka dari reset hanya dengan input yang pemilik sebut butuh nilai baca register decode, dan pemeriksaan terminal membacanya; register pc di dalamnya diikat pc_we = 0 (hcpu_top.v baris 645).
+- **register file** — companion state dan keluaran fungsi, bukan input oracle (keputusan pemilik, 28 September 2026): diturunkan deterministik dari writeback fungsi sendiri -- keadaan pipeline, lalu writeback, lalu keadaan register file berikutnya (hcpu_regfile.v baris 53-59, 63-68, 94, 111-118): 18 GPR, 16 H-Reg, FLAGS. Pemeriksaan terminal GPR adalah pemeriksaan tambahan, bukan sumber keadaan; register pc di dalamnya diikat pc_we = 0 (hcpu_top.v baris 645).
 - **larik tumpukan** — stack[] hcpu_memory: tanpa reset, x sampai ditulis PUSH; di satu langkah dari keadaan RTL hanya kata di sp-1 yang teramati, lewat net probe.
 
 ex_emits_addr ada di RTL (hcpu_execute.v) dan tidak ada di daftar keadaan audit; ia register EX/MEM yang di-latch tiap tepi, jadi ikut di bundle ini.
@@ -376,12 +376,15 @@ Input: `rst_n`, `imem_data`. Hasil luar, diambil dari jejak, tidak diprediksi ul
 
 Pengali hanya dipakai MUL, yang tidak tercakup, jadi keluarannya tidak dibaca. Semua input luar adalah fungsi kombinasional dari keadaan sesudah tepi t, dan tepi t+1 mengambilnya dari baris itu (A1 audit).
 
+**Terminal snapshot.** keputusan pemilik, 28 September 2026: baris sesudah tepi terakhir, ketika halted sudah naik dan bench memanggil $finish tanpa reset, dicatat sebagai terminal snapshot -- halted = 1, sinyal pipeline tertahan -- bukan tepi transisi. Ada tidaknya baris itu bergantung pada urutan $strobe/$finish, jadi ia tidak dipakai sebagai oracle ctrl_halted_stall, yang tetap not covered.
+
 | pemeriksaan | hasil |
 |---|---|
-| F1 satu langkah dari keadaan RTL, 232 tepi | 0 berbeda |
-| F1 keluaran, 233 baris | 0 berbeda; berhenti not covered: ctrl_halted_stall (12 baris) |
+| F1 satu langkah dari keadaan RTL, 231 tepi transisi | 0 berbeda |
+| F1 keluaran, 232 baris | 0 berbeda; berhenti not covered: ctrl_halted_stall (11 baris) |
 | F2 lingkar terbuka dari reset | 0 berbeda, sampai tepi 231 |
-| langkah yang berhenti not covered | ctrl_halted_stall di tepi 232; open loop: ctrl_halted_stall di tepi 232 |
+| langkah yang berhenti not covered | tidak ada |
+| terminal snapshot | baris 232: halted = 1, sinyal pipeline tertahan — dicatat, bukan tepi transisi |
 | register yang tidak diprediksi | stack_rd (10 tepi) |
 | F3 bacaan terminal bench, 32 | 0 berbeda |
 | F3 bench | Total: 15 PASS, 0 FAIL |
@@ -547,13 +550,13 @@ Tercakup 45 dari 78 aturan. Tidak tercakup — aturan RTL pipeline yang tidak di
 
 - `fetch_redirect_trap` — trap_redirect_w 0 di setiap tepi: tidak ada program yang menjalankan SYSCALL atau ERET, dan tidak ada trap yang menembak.
 - `fetch_flush_only` — tidak terjangkau dari kabel hcpu_top: if_flush = branch_taken && !global_stall (hcpu_controller.v baris 98), dan masukan branch_taken controller itu adalah redirect_taken (hcpu_top.v baris 842) -- if_flush tanpa redirect tidak mungkin.
-- `decode_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `decode_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi.
 - `decode_letter` — tidak ada opcode huruf (0xE0-0xFB) di kesebelas program.
 - `decode_halt_err` — tiap opcode di kesebelas program punya arm di case decode.
 - `hazard_pop_use` — program 8 menaruh NOP sesudah tiap POP; tidak ada instruksi yang memakai tujuan POP tepat sesudahnya.
 - `hazard_store_load` — hazard ini butuh LOAD tepat dua instruksi sesudah STORE ke alamat yang sama; di program 4 dan 6 keduanya berjarak tiga instruksi.
 - `fwd_hreg_s2_mem` — tidak ada pembaca S2 (daftar decode baris 100-105) yang H[S2]-nya ditulis tepat dua instruksi sebelumnya.
-- `ex_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `ex_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi.
 - `ex_flush` — flush execute diikat 1'b0 di hcpu_top.v baris 489: tidak terjangkau.
 - `flags_forward_self` — konsumen FLAGS (cabang dan FRD) bukan CMP, jadi alu_flags_we instruksinya sendiri tidak pernah tinggi saat ia memilih FLAGS.
 - `flags_forward_rf` — ketiga cabang di bench -- JNE di program 3 dan 11, JNGD di program 5 -- semuanya tepat sesudah penulis FLAGS-nya (CMP, CEQ, HGRD): FLAGS selalu datang dari EX/MEM.
@@ -573,11 +576,11 @@ Tercakup 45 dari 78 aturan. Tidak tercakup — aturan RTL pipeline yang tidak di
 - `eret` — tidak ada ERET di kesebelas program.
 - `syscall` — tidak ada SYSCALL di kesebelas program.
 - `flags_fwr` — tidak ada FWR di kesebelas program.
-- `mem_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `mem_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi.
 - `stack_overflow` — program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3.
 - `stack_underflow` — program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3.
 - `ctrl_print_stall` — tidak ada PRINT atau EMITS: print_active 0 di setiap tepi.
-- `ctrl_halted_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `ctrl_halted_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi.
 
 | opcode | baris decode | IF | ID/EX | EX/MEM | MEM/WB |
 |---|---|---|---|---|---|

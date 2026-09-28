@@ -1491,8 +1491,13 @@
    "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
    "trace_sha256": "411860312c3c24a4f9b49926fcf166b8088d482bb176ab961b90786cca5454bc",
    "parameters": {},
-   "cycles": 233,
-   "steps": 232,
+   "cycles": 232,
+   "steps": 231,
+   "terminal_snapshot": {
+    "row": 232,
+    "halted": 1,
+    "held": true
+   },
    "input_timing": {
     "line_changes": 21,
     "captured_new": 21,
@@ -1501,17 +1506,10 @@
    "one_step_mismatches": [],
    "open_loop_mismatches": [],
    "output_mismatches": [],
-   "not_covered_steps": {
-    "ctrl_halted_stall": [
-     232
-    ],
-    "open loop: ctrl_halted_stall": [
-     232
-    ]
-   },
+   "not_covered_steps": {},
    "open_loop_reached": 231,
    "not_covered_outputs": {
-    "ctrl_halted_stall": 12
+    "ctrl_halted_stall": 11
    },
    "unpredicted": {
     "stack_rd": 10

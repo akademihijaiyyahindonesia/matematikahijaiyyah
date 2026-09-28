@@ -1686,6 +1686,24 @@ sesudah `halted` naik **tidak diklaim**. Pembandingnya jejak keempat bundle di
 setiap tepi, lalu GPR, H2[7:0], dan `guard_led` sebagai pemeriksaan terminal.
 Interpreter bukan pengganti oracle RTL.
 
+Pipeline diterima GREEN (`bf13941`): 45 dari 78 tercakup, 33 not covered, dan
+33 itu **tidak dicoba ditutup** tanpa oracle. Dua keputusan pemilik menyertai:
+
+- **Register file adalah companion state**, bukan input oracle: diturunkan
+  deterministik dari writeback fungsi sendiri, supaya lingkar terbuka tetap
+  lingkar terbuka. Pemeriksaan terminal GPR adalah pemeriksaan tambahan, bukan
+  sumber keadaan.
+- **Baris sesudah HALT terakhir adalah terminal snapshot**, bukan tepi transisi:
+  ada tidaknya baris itu bergantung pada urutan `$strobe` terhadap `$finish`,
+  jadi ia tidak membuktikan `ctrl_halted_stall`, yang tetap not covered.
+  Kalimat audit untuk aturan stall dipersempit sebagai commit pemeliharaan
+  tersendiri, tidak mengubah `bf13941`.
+
+Berikutnya model HCPU tingkat sistem dengan `rtl/tb/tb_hcpu_top.v` sebagai oracle
+integrasi — tetapi **audit cakupan HCPU lebih dulu**, dengan prinsip yang sama
+seperti pipeline: model HCPU tidak ditulis sebelum peta oracle dan batas
+keadaannya terukur.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

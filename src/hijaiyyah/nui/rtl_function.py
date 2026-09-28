@@ -1915,14 +1915,24 @@ def pipeline_compare(m: dict[str, Any], runs: list[dict[str, Any]], root: Path |
                      step: Callable[..., tuple[dict[str, Any], list[str]]] | None = None,
                      outputs: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
     """F1-F4 for the pipeline over tb_hcpu_top.v's trace: one step from the
-    RTL's own state at every edge, the outputs at every row, the open loop
-    from reset, and the terminal reads -- each counting what it could not
-    predict, by the transition that stopped it."""
+    RTL's own state at every transition edge, the outputs at every row, the
+    open loop from reset, and the terminal reads -- each counting what it
+    could not predict, by the transition that stopped it.
+
+    A row after the last edge, with halted already up and no reset after it,
+    is a terminal snapshot (the owner's decision of 28 September 2026): it is
+    recorded, and it is not a transition. Whether it prints at all depends on
+    $strobe against the bench's $finish."""
     root = root or ROOT
     c = pipeline_context(root)
     step = step or pipeline_step
     outputs = outputs or pipeline_outputs
     rows = runs[0]["rows"]
+    snapshot = None
+    if len(rows) > 1 and rows[-2]["halted"] == 1 and rows[-1]["rst_n"] == 1:
+        snapshot = {"row": len(rows) - 1, "halted": rows[-1]["halted"],
+                    "held": rows[-1] == rows[-2]}
+        rows = rows[:-1]
     one_step: list[int] = []
     output_bad: list[int] = []
     open_loop: list[int] = []
@@ -1972,6 +1982,7 @@ def pipeline_compare(m: dict[str, Any], runs: list[dict[str, Any]], root: Path |
     verdict = next((ln for ln in runs[0]["said"] if re.match(m["bench_verdict"]["pattern"], ln)),
                    None)
     return {"parameters": {}, "cycles": len(rows), "steps": len(rows) - 1,
+            "terminal_snapshot": snapshot,
             "input_timing": {"line_changes": len(changes), "captured_new": followed,
                              "captured_old": len(changes) - followed},
             "one_step_mismatches": one_step, "open_loop_mismatches": open_loop,
@@ -2142,13 +2153,15 @@ def _check_pipeline(m: dict[str, Any], model: dict[str, Any], declared: list[str
         diff = {k: (m["rules_fired"].get(k), v) for k, v in counted.items()
                 if m["rules_fired"].get(k) != v}
         bad.append(f"F4 pipeline: the function's rule counts are not the audit's: {diff}")
-    last = m["steps"]
-    for rule, edges in m["not_covered_steps"].items():
-        if rule.removeprefix("open loop: ") not in declared or edges != [last]:
-            bad.append(f"F1 pipeline: a step stopped on {rule} at edges {edges}; only an "
-                       f"uncovered transition at the trace's last edge ({last}) may stop one")
-    if m["open_loop_reached"] < last - 1:
-        bad.append(f"F2 pipeline: the open loop stopped at edge {m['open_loop_reached']}")
+    if m["not_covered_steps"]:
+        bad.append(f"F1 pipeline: transition edges stopped outside coverage: "
+                   f"{m['not_covered_steps']}")
+    if m["open_loop_reached"] != m["steps"]:
+        bad.append(f"F2 pipeline: the open loop stopped at edge {m['open_loop_reached']} of "
+                   f"{m['steps']}")
+    snap = m["terminal_snapshot"]
+    if snap is not None and (snap["halted"] != 1 or not snap["held"]):
+        bad.append(f"F1 pipeline: the terminal snapshot is not a held, halted row: {snap}")
     stray = [k for k in m["not_covered_outputs"] if k not in declared]
     if stray:
         bad.append(f"F1 pipeline: outputs stopped on transitions the audit covers: {stray}")
@@ -2274,14 +2287,20 @@ def _pipeline_page(s: dict[str, Any], m: dict[str, Any]) -> list[str]:
            "jejak, tidak diprediksi ulang:", "",
            *[f"- **{k}** — {', '.join(v)}." for k, v in s["externals"].items()],
            "", f"{s['externals_why']}.", "",
+           f"**Terminal snapshot.** {s['terminal_snapshot']}.", "",
            "| pemeriksaan | hasil |", "|---|---|",
-           f"| F1 satu langkah dari keadaan RTL, {m['steps']} tepi | "
+           f"| F1 satu langkah dari keadaan RTL, {m['steps']} tepi transisi | "
            f"{len(m['one_step_mismatches'])} berbeda |",
            f"| F1 keluaran, {m['cycles']} baris | {len(m['output_mismatches'])} berbeda; "
            f"berhenti not covered: {out_stops or 'tidak ada'} |",
            f"| F2 lingkar terbuka dari reset | {len(m['open_loop_mismatches'])} berbeda, sampai "
            f"tepi {m['open_loop_reached']} |",
            f"| langkah yang berhenti not covered | {stops} |",
+           "| terminal snapshot | " + (
+               f"baris {m['terminal_snapshot']['row']}: halted = "
+               f"{m['terminal_snapshot']['halted']}, sinyal pipeline "
+               f"{'tertahan' if m['terminal_snapshot']['held'] else 'berubah'} — dicatat, bukan "
+               "tepi transisi" if m["terminal_snapshot"] else "tidak tercetak") + " |",
            f"| register yang tidak diprediksi | {skipped} |",
            f"| F3 bacaan terminal bench, {len(m['terminal'])} | "
            f"{len(m['terminal_mismatches'])} berbeda |",
