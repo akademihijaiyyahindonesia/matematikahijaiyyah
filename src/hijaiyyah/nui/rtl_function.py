@@ -51,6 +51,13 @@ owner named rtl/tb/tb_parity.v over the Lapis 4 corpus its oracle: every
 program, run the way parity_model runs it, with the probe beside the
 harness. sram_mock.py models another device -- the sky130 macro -- and is
 not its oracle.
+
+The fifth is a program, rtl/programs/loader.hasm, held to both of its
+benches, each measured on its own. The RTL carries no PC past decode, so the
+loader is stepped at its MMIO reads: where it is, its registers and the write
+pointer are all observable there, and everything between two reads -- its
+register writes, its stores, the instruction-memory writes, ERET -- is
+compared in program order.
 """
 from __future__ import annotations
 
@@ -389,6 +396,90 @@ def dataram_step(s: dict[str, Any], inp: dict[str, Any],
 def dataram_outputs(s: dict[str, Any], inp: dict[str, Any], p: dict[str, int]) -> dict[str, Any]:
     """Line 50: the port is the register."""
     return {"rdata": s["rdata"]}
+
+
+# -- rtl/programs/loader.hasm, as a function ---------------------------------------------
+
+RX_DATA, RX_STATUS, IMEM_ADDR, IMEM_DATA, TRAP_EPC, TRAP_MODE = (
+    0xFF0, 0xFF1, 0xFF3, 0xFF7, 0xFF9, 0xFFD)      # loader.hasm's own operands
+
+
+def loader_reset() -> dict[str, Any]:
+    """The machine out of reset: every GPR zero (hcpu_regfile.v), the write
+    pointer zero (hcpu_mmio.v line 239), and the loader at its first word."""
+    return {"at": "start", **{f"R{r}": 0 for r in range(1, 8)}, "waddr": 0}
+
+
+def loader_step(s: dict[str, Any], value: Any,
+                p: dict[str, int]) -> tuple[dict[str, Any], list[list[Any]], list[str]]:
+    """From one MMIO read boundary to the next, branch for branch from
+    rtl/programs/loader.hasm: the value the hardware returned for this
+    boundary's read, and what the loader does with it -- every GPR it writes,
+    every MMIO store, the instruction-memory writes hcpu_mmio makes of them,
+    and ERET -- until it asks for the next read. The write pointer is
+    hcpu_mmio's (lines 228-244); the loader only relies on it."""
+    n, events, fired = dict(s), [], []
+
+    def gpr(r: int, v: int) -> None:
+        n[f"R{r}"] = v & MASK32
+        events.append(["gpr", r, n[f"R{r}"]])
+
+    def store(addr: int, v: int) -> None:
+        events.append(["write", addr, v])
+        if addr == IMEM_ADDR:
+            n["waddr"] = v & 0xFFF
+            fired.append("imem_addr_write")
+        elif addr == IMEM_DATA:
+            events.append(["imem", n["waddr"], v])
+            n["waddr"] = (n["waddr"] + 1) & 0xFFF
+            fired.append("imem_data_advance")
+
+    def words(rule_more: str, rule_done: str) -> None:
+        if n["R6"] != 0:                                   # words: CMPI R6, 0; JEQ done
+            gpr(3, 0)
+            gpr(4, 4)
+            n["at"] = "w_status"
+            fired.append(rule_more)
+        else:                                              # done:
+            gpr(7, 64)
+            store(TRAP_EPC, n["R7"])
+            gpr(7, 2)
+            store(TRAP_MODE, n["R7"])
+            events.append(["eret"])
+            n["at"] = "done"
+            fired.append(rule_done)
+
+    at = s["at"]
+    phase = at.split("_")[0]
+    if at == "start":
+        gpr(5, 0)
+        gpr(3, 0)
+        gpr(4, 4)
+        n["at"] = "cnt_status"
+        fired.append("start")
+    elif at.endswith("_status"):
+        gpr(1, value)
+        ready = n["R1"] != 0                               # CMPI R1, 0; JEQ
+        n["at"] = f"{phase}_data" if ready else at
+        fired.append(("count" if phase == "cnt" else "word") + ("_ready" if ready else "_spin"))
+    elif at.endswith("_data"):
+        gpr(2, value)
+        gpr(3, s["R3"] << 8)
+        gpr(3, n["R3"] | n["R2"])
+        gpr(4, s["R4"] - 1)
+        if n["R4"] != 0:                                   # CMPI R4, 0; JNE
+            n["at"] = f"{phase}_status"
+            fired.append("count_byte" if phase == "cnt" else "word_byte")
+        elif phase == "cnt":
+            gpr(6, n["R3"])                                # MOV R6, R3 -- N
+            gpr(7, 64)
+            store(IMEM_ADDR, n["R7"])
+            words("count_last_byte", "count_empty")
+        else:
+            store(IMEM_DATA, n["R3"])
+            gpr(6, n["R6"] - 1)                            # then JMP words: the loop
+            words("word_stored", "last_word")
+    return n, events, fired
 
 
 # -- the drivers: how each module's trace is read into its function -------------------------
@@ -782,6 +873,211 @@ DRIVERS["hcpu_dataram"] = {"runs": dataram_runs, "compare": dataram_compare,
                            "trace_sha": _dataram_trace_sha}
 
 
+# -- loader.hasm's oracle: tb_gowin_loader.v and tb_gowin_loader_nui.v -----------------------
+
+LOADER_PROBE = (
+    ("rst_n", "rst_n"), ("re", "u_mmio.re"), ("we", "u_mmio.we"), ("addr", "u_mmio.addr"),
+    ("wdata", "u_mmio.wdata"), ("rdata", "u_mmio.rdata"), ("gpr_we", "u_regfile.gpr_we"),
+    ("gpr_waddr", "u_regfile.gpr_waddr"), ("gpr_wdata", "u_regfile.gpr_wdata"),
+    ("eret", "trap_is_eret_w"), ("waddr", "u_mmio.imem_waddr"), ("mode", "u_trap.mode"),
+    ("epc", "u_trap.epc"))
+LOADER_BOARD = (("imem_we", "imem_we"), ("imem_waddr", "imem_waddr"),
+                ("imem_wdata", "imem_wdata"), ("fetch", "imem_addr"))
+
+
+def _loader_probe(top: str) -> str:
+    """Beside the bench, reading only: at each rising edge, in its active
+    region, what the edge takes -- the MMIO bus, the register file's write
+    port, the instruction-memory write port, ERET, and the fetch address."""
+    core, board = f"{top}.u_board.u_hcpu", f"{top}.u_board"
+    names = [f"{core}.{p}" for _, p in LOADER_PROBE] + [f"{board}.{p}" for _, p in LOADER_BOARD]
+    fmt = " ".join(["%0d"] * len(names))
+    return (f"module rtl_function_probe;\n  always @(posedge {core}.clk)\n"
+            f"    $display(\"L {fmt}\", {', '.join(names)});\nendmodule\n")
+
+
+def loader_runs(m: dict[str, Any], root: Path | None = None) -> list[dict[str, Any]]:
+    """Each bench, built the way rtl/tb/Makefile builds it: loader.hex from
+    asm2hex.py, the payload from send_program.py one byte a line, the bench
+    with the board wrapper and every hcpu_*.v -- and the probe beside it."""
+    root = root or ROOT
+    if shutil.which("iverilog") is None or shutil.which("vvp") is None:
+        raise RuntimeError("Icarus Verilog is required to run the benches")
+    keys = [k for k, _ in (*LOADER_PROBE, *LOADER_BOARD)]
+    sources = [str(f) for pattern in m["compile"] for f in sorted(root.glob(pattern))]
+    runs = []
+    for b in m["benches"]:
+        work = Path(tempfile.mkdtemp())
+        try:
+            loader_hex = subprocess.run(
+                [sys.executable, str(root / "rtl/scripts/asm2hex.py"), str(root / m["rtl"])],
+                capture_output=True, text=True, check=True).stdout
+            (work / "loader.hex").write_text(loader_hex, encoding="utf-8")
+            wire = subprocess.run(
+                [sys.executable, str(root / "rtl/scripts/send_program.py"),
+                 str(root / b["payload"])], capture_output=True, check=True).stdout
+            (work / b["payload_file"]).write_text("".join(f"{x:02x}\n" for x in wire),
+                                                  encoding="utf-8")
+            (work / "probe.v").write_text(_loader_probe(b["top"]), encoding="utf-8")
+            compiled = subprocess.run(
+                ["iverilog", "-g2012", "-I", str(root / m["include"]), "-o", str(work / "sim"),
+                 str(root / b["bench"]), *sources, str(work / "probe.v")],
+                capture_output=True, text=True, timeout=600)
+            if compiled.returncode != 0:
+                raise RuntimeError(f"iverilog failed:\n{compiled.stderr}")
+            ran = subprocess.run(["vvp", "-n", str(work / "sim")], capture_output=True,
+                                 text=True, timeout=3600, cwd=work)
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        rows = [dict(zip(keys, map(_value, ln.split()[1:]), strict=True))
+                for ln in ran.stdout.splitlines() if ln.startswith("L ")]
+        if ran.returncode != 0 or not rows:
+            raise RuntimeError(f"{b['bench']}: no probe row, exit {ran.returncode}:\n"
+                               f"{ran.stdout[-1500:]}{ran.stderr}")
+        runs.append({"bench": b["bench"], "rows": rows,
+                     "said": [ln for ln in ran.stdout.splitlines() if not ln.startswith("L ")]})
+    return runs
+
+
+def loader_boundaries(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """The RTL's own trace cut at its MMIO reads, in program order: within a
+    cycle the register write belongs to the oldest instruction (writeback),
+    the bus to the next (memory), ERET to the youngest (execute). Each
+    boundary carries the loader's state as the RTL holds it -- where it is,
+    read off the address it reads and whether IMEM_ADDR has been written;
+    R1-R7 from the register writes so far; the write pointer -- and the value
+    the read returned, one cycle after it was asked. The trace ends at ERET."""
+    regs = dict.fromkeys(range(1, 8), 0)
+    live = [t for t, r in enumerate(rows) if r["rst_n"] == 1]
+    first = live[0]
+    bounds = [{"at": "start", "state": {"at": "start", **{f"R{i}": 0 for i in regs},
+                                        "waddr": rows[first]["waddr"]}, "cycle": first}]
+    segments: list[list[list[Any]]] = [[]]
+    words_phase, eret_at, timing = False, None, [0, 0, 0]
+    for t in live:
+        r = rows[t]
+        if r["gpr_we"] == 1:
+            regs[r["gpr_waddr"]] = r["gpr_wdata"]
+            segments[-1].append(["gpr", r["gpr_waddr"], r["gpr_wdata"]])
+        if r["re"] == 1:
+            at = ("w" if words_phase else "cnt") + {RX_STATUS: "_status",
+                                                    RX_DATA: "_data"}.get(r["addr"], "_other")
+            value = rows[t + 1]["rdata"]
+            bounds.append({"at": at, "cycle": t, "value": value,
+                           "state": {"at": at, **{f"R{i}": v for i, v in regs.items()},
+                                     "waddr": r["waddr"]}})
+            segments.append([])
+            # which rdata the LOAD's own register write carries
+            dst = 1 if r["addr"] == RX_STATUS else 2
+            wb = next(rows[u]["gpr_wdata"] for u in range(t + 1, len(rows))
+                      if rows[u]["gpr_we"] == 1 and rows[u]["gpr_waddr"] == dst)
+            timing[0] += 1
+            timing[1] += wb == value
+            timing[2] += wb == r["rdata"] and wb != value
+        if r["we"] == 1:
+            segments[-1].append(["write", r["addr"], r["wdata"]])
+            words_phase = words_phase or r["addr"] == IMEM_ADDR
+        if r["imem_we"] == 1:
+            segments[-1].append(["imem", r["imem_waddr"], r["imem_wdata"]])
+        if r["eret"] == 1:
+            segments[-1].append(["eret"])
+            eret_at = t
+            bounds.append({"at": "done", "cycle": t,
+                           "state": {"at": "done", **{f"R{i}": v for i, v in regs.items()},
+                                     "waddr": r["waddr"]}})
+            break
+    return {"bounds": bounds, "segments": segments, "eret": eret_at,
+            "timing": dict(zip(("line_changes", "captured_new", "captured_old"), timing,
+                               strict=True))}
+
+
+def _loader_trace_sha(runs: list[dict[str, Any]]) -> str:
+    digest = hashlib.sha256()
+    for run in runs:
+        cut = loader_boundaries(run["rows"])["eret"]
+        digest.update(f"{run['bench']}\n".encode())
+        for r in run["rows"][:cut + 1]:
+            digest.update((" ".join(str(v) for v in r.values()) + "\n").encode())
+    return digest.hexdigest()
+
+
+def loader_compare(m: dict[str, Any], runs: list[dict[str, Any]], root: Path | None = None,
+                   step: Callable[..., tuple[dict[str, Any], list[list[Any]], list[str]]]
+                   | None = None) -> dict[str, Any]:
+    """F1-F4 for the loader, bench by bench, at its MMIO read boundaries.
+
+    One step starts from the RTL's own state at a boundary and the value its
+    read returned; the state at the next boundary and the events between must
+    be the RTL's. Open loop starts from reset and takes only the values the
+    reads returned. Coverage is kept per bench, then as union and
+    intersection -- the two benches are not assumed to be one."""
+    step = step or loader_step
+    one_step: list[str] = []
+    open_loop: list[str] = []
+    outputs: list[str] = []
+    fired_total = {r["id"]: 0 for r in rules(m)}
+    per_bench: dict[str, Any] = {}
+    timing = {"line_changes": 0, "captured_new": 0, "captured_old": 0}
+    cycles, verdicts = 0, 0
+    for run, spec_b in zip(runs, m["benches"], strict=True):
+        name = run["bench"].rsplit("/", 1)[-1].removesuffix(".v")
+        cut = loader_boundaries(run["rows"])
+        bounds, segments = cut["bounds"], cut["segments"]
+        for k, v in cut["timing"].items():
+            timing[k] += v
+        cycles += cut["eret"] - bounds[0]["cycle"] + 1
+        fired = {r["id"]: 0 for r in rules(m)}
+        s, imem = loader_reset(), {}
+        for k in range(len(bounds) - 1):
+            value = bounds[k].get("value")
+            got, events, _ = step(bounds[k]["state"], value, {})
+            if got != bounds[k + 1]["state"]:
+                one_step.append(f"{name}:{k}")
+            if events != segments[k]:
+                outputs.append(f"{name}:{k}")
+            s, events, rules_now = step(s, value, {})
+            for f in rules_now:
+                fired[f] += 1
+                fired_total[f] += 1
+            for e in events:
+                if e[0] == "imem":
+                    imem[str(e[1])] = e[2]
+            if s != bounds[k + 1]["state"] or events != segments[k]:
+                open_loop.append(f"{name}:{k}")
+        rows = run["rows"]
+        entry = 64
+        fetched_early = any(rows[t]["fetch"] == entry
+                            for t in range(bounds[0]["cycle"], cut["eret"] + 1))
+        after = next((t for t in range(cut["eret"] + 1, len(rows))
+                      if rows[t]["fetch"] == entry), None)
+        verdict = next((ln for ln in run["said"] if re.match(spec_b["verdict"], ln)), None)
+        verdicts += verdict is not None
+        per_bench[name] = {
+            "boundaries": len(bounds), "reads": len(bounds) - 2,
+            "rules_fired": fired, "imem_written": imem, "waddr": s["waddr"],
+            "entry_fetched_before_eret": fetched_early,
+            "entry_fetched_cycles_after_eret": None if after is None else after - cut["eret"],
+            "after_eret": {"epc": rows[cut["eret"] + 1]["epc"],
+                           "mode": rows[cut["eret"] + 1]["mode"]},
+            "bench_said": verdict}
+    covered = {n: [r for r, c in b["rules_fired"].items() if c] for n, b in per_bench.items()}
+    sets = [set(c) for c in covered.values()]
+    order = [r["id"] for r in rules(m)]
+    return {"parameters": {}, "cycles": cycles, "runs": len(runs),
+            "steps": sum(b["boundaries"] - 1 for b in per_bench.values()), "input_timing": timing,
+            "one_step_mismatches": one_step, "open_loop_mismatches": open_loop,
+            "output_mismatches": outputs, "benches": per_bench,
+            "coverage": {**covered,
+                         "union": [r for r in order if r in set.union(*sets)],
+                         "intersection": [r for r in order if r in set.intersection(*sets)]},
+            "bench_said": f"{verdicts} of {len(runs)} benches print PASS",
+            "bench_pass": verdicts == len(runs), "rules_fired": fired_total}
+
+
+DRIVERS["loader"] = {"runs": loader_runs, "compare": loader_compare,
+                     "trace_sha": _loader_trace_sha}
+
+
 def compare(m: dict[str, Any], trace: dict[str, Any], root: Path | None = None,
             step: Callable[..., tuple[State, list[str]]] | None = None) -> dict[str, Any]:
     """F1-F4 for one module: the function against the RTL's trace."""
@@ -855,6 +1151,8 @@ def build(root: Path | None = None) -> dict[str, Any]:
                  "bench": m["bench"], "bench_sha256": _sha((root / m["bench"]).read_bytes())}
         if "modelled" in m:
             entry["modelled_sha256"] = {f: _sha((root / f).read_bytes()) for f in m["modelled"]}
+        if "pinned" in m:
+            entry["pinned_sha256"] = {f: _sha((root / f).read_bytes()) for f in m["pinned"]}
         modules.append({
             **entry, "trace_sha256": trace_sha, **result,
             "rules": [{"id": r["id"], **({"file": r["file"]} if r["file"] != m["rtl"] else {}),
@@ -871,6 +1169,18 @@ def _expects(m: dict[str, Any], s: dict[str, Any]) -> str | None:
     """F3: what the bench checks, against what the function predicts. None
     when they agree."""
     want = s["bench_expects"]
+    if m["name"] == "loader":
+        # Each bench checks its own things; both see where the entry was fetched.
+        for b in s["benches"]:
+            name = b["bench"].rsplit("/", 1)[-1].removesuffix(".v")
+            got, exp = m["benches"][name], b["expects"]
+            words = {a: got["imem_written"].get(a) for a in exp.get("imem", {})}
+            if words != exp.get("imem", {}) or got["waddr"] != exp["waddr"]:
+                return f"{name}: predicted words {words} and pointer {got['waddr']}, the bench " \
+                       f"wants {exp}"
+            if got["entry_fetched_before_eret"] != want["entry_fetched_before_eret"]:
+                return f"{name}: the entry was fetched before ERET"
+        return None
     if m["name"] == "hcpu_dataram":
         # The harness observes the write side; the frozen Lapis 4 model is
         # the verdict on what reached the port, quoted, not re-judged.
@@ -933,7 +1243,7 @@ def check(model: dict[str, Any]) -> list[str]:
             bad.append(f"F4 {m['name']}: rules the bench never runs are {m['not_covered']}, "
                        f"the spec names {list(s.get('not_covered', {}))}")
         held = {s["rtl"]: m["rtl_sha256"], s["bench"]: m["bench_sha256"],
-                **m.get("modelled_sha256", {})}
+                **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
         if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
             bad.append(f"F5 {m['name']}: an RTL or bench file is not the one the model holds")
     return bad
@@ -963,9 +1273,11 @@ def page(model: dict[str, Any]) -> str:
         named = ", ".join(f"{k} {p[k]}" for k in [*first, *(k for k in p if k not in first)])
         out += [f"## `{m['name']}`", "",
                 f"`{m['rtl']}` `{m['rtl_sha256'][:12]}…`, bench `{m['bench']}` "
-                f"`{m['bench_sha256'][:12]}…`. {named}.", ""]
+                f"`{m['bench_sha256'][:12]}…`." + (f" {named}." if named else ""), ""]
         if "oracle" in s:
             out += [f"**Oracle.** {s['oracle']}.", ""]
+        if "granularity" in s:
+            out += [f"**Satu langkah.** {s['granularity']}.", ""]
         if "levels" in s:
             out += ["Tiga level bukti, dan batas masing-masing:", "",
                     *[f"- **{k}** — {v}." for k, v in s["levels"].items()], ""]
@@ -979,14 +1291,23 @@ def page(model: dict[str, Any]) -> str:
         # A corpus row holds its edge's state before and after, so every row
         # is a step; one bench's rows are states, and the steps fall between.
         steps = m["cycles"] if "runs" in m else m["cycles"] - 1
-        out += ["| pemeriksaan | hasil |", "|---|---|",
-                f"| F1 satu langkah, {steps} transisi | "
-                f"{len(m['one_step_mismatches'])} berbeda |"]
-        if "output_mismatches" in m:
+        out += ["| pemeriksaan | hasil |", "|---|---|"]
+        if "steps" in m:
+            out += [f"| F1 satu langkah, dari keadaan RTL di tiap batas baca, {m['steps']} langkah "
+                    f"| {len(m['one_step_mismatches'])} berbeda |",
+                    f"| F1 kejadian di antara dua batas (GPR, MMIO, port IMEM, ERET), "
+                    f"{m['steps']} langkah | {len(m['output_mismatches'])} berbeda |",
+                    f"| F2 lingkar terbuka dari reset, {m['steps']} langkah, {m['cycles']} siklus "
+                    f"sampai ERET | {len(m['open_loop_mismatches'])} berbeda |"]
+        else:
+            out.append(f"| F1 satu langkah, {steps} transisi | "
+                       f"{len(m['one_step_mismatches'])} berbeda |")
+        if "output_mismatches" in m and "steps" not in m:
             out.append(f"| F1 keluaran kombinasional, {m['cycles']} siklus | "
                        f"{len(m['output_mismatches'])} berbeda |")
-        out.append(f"| F2 lingkar terbuka dari reset, {m['cycles']} siklus | "
-                   f"{len(m['open_loop_mismatches'])} berbeda |")
+        if "steps" not in m:
+            out.append(f"| F2 lingkar terbuka dari reset, {m['cycles']} siklus | "
+                       f"{len(m['open_loop_mismatches'])} berbeda |")
         if "frames" in m:
             out.append(f"| F3 frame yang diprediksi | "
                        f"{', '.join(f'0x{b:02X}' for b in m['frames'])}; framing error "
@@ -1027,6 +1348,21 @@ def page(model: dict[str, Any]) -> str:
                     *[f"| `{op}` | {b['board']} | {b['programs']} | {b['parity']} | "
                       f"{b['mismatch']} | {b['unknown']} |" for op, b in m["board"].items()],
                     ""]
+        if "coverage" in m:
+            out += ["Per bench — kedua bench tidak dianggap satu:", "",
+                    "| bench | batas baca | aturan dijalankan | penunjuk tulis akhir "
+                    "| alamat masuk diambil sebelum ERET | sesudah ERET: EPC, mode | vonis |",
+                    "|---|---|---|---|---|---|---|",
+                    *[f"| `{n}` | {b['boundaries']} | {len(m['coverage'][n])} | {b['waddr']} | "
+                      f"{'ya' if b['entry_fetched_before_eret'] else 'tidak'} — diambil "
+                      f"{b['entry_fetched_cycles_after_eret']} siklus sesudah ERET | "
+                      f"{b['after_eret']['epc']}, {b['after_eret']['mode']} | {b['bench_said']} |"
+                      for n, b in m["benches"].items()], "",
+                    f"Gabungan: {', '.join(m['coverage']['union'])}. Irisan: "
+                    f"{', '.join(m['coverage']['intersection'])}.", "",
+                    f"{s['bench_expects_why']}.", "",
+                    *[f"- `{b['bench']}` juga memeriksa {b['observes_beyond']}."
+                      for b in s["benches"]], ""]
         out += ["| aturan | baris RTL | arti | dijalankan bench |", "|---|---|---|---|"]
         means = {r["id"]: r["means"] for r in rules(s)}
         for r in m["rules"]:

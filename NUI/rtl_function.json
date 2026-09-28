@@ -1089,6 +1089,399 @@
    "not_covered": [
     "read_first"
    ]
+  },
+  {
+   "name": "loader",
+   "rtl": "rtl/programs/loader.hasm",
+   "rtl_sha256": "7d11249ab60668784cf30b184a21459c377261adb09be95dd2e8d9e4c440171c",
+   "bench": "rtl/tb/tb_gowin_loader.v",
+   "bench_sha256": "ac908f0b53d93afabccfa108fd7e9b157f7818ec0833041a7ec52a3268f64f22",
+   "modelled_sha256": {
+    "rtl/hcpu_mmio.v": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd"
+   },
+   "pinned_sha256": {
+    "rtl/tb/tb_gowin_loader_nui.v": "cb42a94d70460adc0b05624e481c278d16fbdd27b2b591abc1b8c61174dbbd76",
+    "rtl/programs/payload.hasm": "d8bfb6a9910fc53e0916129aef1788fc8a0302de4428af813b1f61193c8603f4",
+    "rtl/programs/nui_embedding.hasm": "349da87a9381ce05b9de7d7c315d7b6a5dc8c8b4d2e701b3069caf8fccb5647a"
+   },
+   "trace_sha256": "edb681646e35c6c48ad891bfa63f53f17b843e66cddf07bbad3ba2446dd7f63a",
+   "parameters": {},
+   "cycles": 497618,
+   "runs": 2,
+   "steps": 71065,
+   "input_timing": {
+    "line_changes": 71063,
+    "captured_new": 71063,
+    "captured_old": 0
+   },
+   "one_step_mismatches": [],
+   "open_loop_mismatches": [],
+   "output_mismatches": [],
+   "benches": {
+    "tb_gowin_loader": {
+     "boundaries": 5379,
+     "reads": 5377,
+     "rules_fired": {
+      "start": 1,
+      "count_spin": 1348,
+      "count_ready": 4,
+      "count_byte": 3,
+      "count_last_byte": 1,
+      "count_empty": 0,
+      "word_spin": 3997,
+      "word_ready": 12,
+      "word_byte": 9,
+      "word_stored": 2,
+      "last_word": 1,
+      "imem_addr_write": 1,
+      "imem_data_advance": 3
+     },
+     "imem_written": {
+      "64": 76546090,
+      "65": 77594631,
+      "66": 16777216
+     },
+     "waddr": 67,
+     "entry_fetched_before_eret": false,
+     "entry_fetched_cycles_after_eret": 1,
+     "after_eret": {
+      "epc": 64,
+      "mode": 1
+     },
+     "bench_said": "PASS: tb_gowin_loader — program dimuat lewat kabel dan berjalan"
+    },
+    "tb_gowin_loader_nui": {
+     "boundaries": 65688,
+     "reads": 65686,
+     "rules_fired": {
+      "start": 1,
+      "count_spin": 1348,
+      "count_ready": 4,
+      "count_byte": 3,
+      "count_last_byte": 1,
+      "count_empty": 0,
+      "word_spin": 63946,
+      "word_ready": 192,
+      "word_byte": 144,
+      "word_stored": 47,
+      "last_word": 1,
+      "imem_addr_write": 1,
+      "imem_data_advance": 48
+     },
+     "imem_written": {
+      "64": 3825205248,
+      "65": 3858759680,
+      "66": 1141899265,
+      "67": 1142947842,
+      "68": 269557760,
+      "69": 1142947843,
+      "70": 271654912,
+      "71": 1141899268,
+      "72": 1142947845,
+      "73": 269557760,
+      "74": 1142947846,
+      "75": 269557760,
+      "76": 1142947847,
+      "77": 269557760,
+      "78": 1142947848,
+      "79": 272703488,
+      "80": 1141899273,
+      "81": 1142947850,
+      "82": 269557760,
+      "83": 1142947851,
+      "84": 269557760,
+      "85": 1142947852,
+      "86": 269557760,
+      "87": 1142947853,
+      "88": 273752064,
+      "89": 1147142144,
+      "90": 1141899274,
+      "91": 1142947851,
+      "92": 269557760,
+      "93": 1142947852,
+      "94": 269557760,
+      "95": 1142947853,
+      "96": 270671872,
+      "97": 270671872,
+      "98": 275849216,
+      "99": 310800384,
+      "100": 77594624,
+      "101": 822321408,
+      "102": 822386945,
+      "103": 822452482,
+      "104": 822518019,
+      "105": 822649092,
+      "106": 2684551168,
+      "107": 2684616704,
+      "108": 2684682240,
+      "109": 2684747776,
+      "110": 2684878848,
+      "111": 16777216
+     },
+     "waddr": 112,
+     "entry_fetched_before_eret": false,
+     "entry_fetched_cycles_after_eret": 1,
+     "after_eret": {
+      "epc": 64,
+      "mode": 1
+     },
+     "bench_said": "PASS: tb_gowin_loader_nui — L_JIM/L_KHA dimuat lewat kabel, dijalankan, dan mencetak 2\\n2\\n2\\n6\\n6\\n lewat UART sungguhan"
+    }
+   },
+   "coverage": {
+    "tb_gowin_loader": [
+     "start",
+     "count_spin",
+     "count_ready",
+     "count_byte",
+     "count_last_byte",
+     "word_spin",
+     "word_ready",
+     "word_byte",
+     "word_stored",
+     "last_word",
+     "imem_addr_write",
+     "imem_data_advance"
+    ],
+    "tb_gowin_loader_nui": [
+     "start",
+     "count_spin",
+     "count_ready",
+     "count_byte",
+     "count_last_byte",
+     "word_spin",
+     "word_ready",
+     "word_byte",
+     "word_stored",
+     "last_word",
+     "imem_addr_write",
+     "imem_data_advance"
+    ],
+    "union": [
+     "start",
+     "count_spin",
+     "count_ready",
+     "count_byte",
+     "count_last_byte",
+     "word_spin",
+     "word_ready",
+     "word_byte",
+     "word_stored",
+     "last_word",
+     "imem_addr_write",
+     "imem_data_advance"
+    ],
+    "intersection": [
+     "start",
+     "count_spin",
+     "count_ready",
+     "count_byte",
+     "count_last_byte",
+     "word_spin",
+     "word_ready",
+     "word_byte",
+     "word_stored",
+     "last_word",
+     "imem_addr_write",
+     "imem_data_advance"
+    ]
+   },
+   "bench_said": "2 of 2 benches print PASS",
+   "bench_pass": true,
+   "rules_fired": {
+    "start": 2,
+    "count_spin": 2696,
+    "count_ready": 8,
+    "count_byte": 6,
+    "count_last_byte": 2,
+    "count_empty": 0,
+    "word_spin": 67943,
+    "word_ready": 204,
+    "word_byte": 153,
+    "word_stored": 49,
+    "last_word": 2,
+    "imem_addr_write": 2,
+    "imem_data_advance": 51
+   },
+   "rules": [
+    {
+     "id": "start",
+     "lines": [
+      31,
+      34,
+      35
+     ],
+     "fired": 2
+    },
+    {
+     "id": "count_spin",
+     "lines": [
+      36,
+      37,
+      38
+     ],
+     "fired": 2696
+    },
+    {
+     "id": "count_ready",
+     "lines": [
+      36,
+      37,
+      38,
+      39
+     ],
+     "fired": 8
+    },
+    {
+     "id": "count_byte",
+     "lines": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44
+     ],
+     "fired": 6
+    },
+    {
+     "id": "count_last_byte",
+     "lines": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      48,
+      49,
+      52,
+      53,
+      54,
+      55
+     ],
+     "fired": 2
+    },
+    {
+     "id": "count_empty",
+     "lines": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      48,
+      49,
+      52,
+      53,
+      70,
+      71,
+      72,
+      73,
+      74
+     ],
+     "fired": 0
+    },
+    {
+     "id": "word_spin",
+     "lines": [
+      56,
+      57,
+      58
+     ],
+     "fired": 67943
+    },
+    {
+     "id": "word_ready",
+     "lines": [
+      56,
+      57,
+      58,
+      59
+     ],
+     "fired": 204
+    },
+    {
+     "id": "word_byte",
+     "lines": [
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+     ],
+     "fired": 153
+    },
+    {
+     "id": "word_stored",
+     "lines": [
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      52,
+      53,
+      54,
+      55
+     ],
+     "fired": 49
+    },
+    {
+     "id": "last_word",
+     "lines": [
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      52,
+      53,
+      70,
+      71,
+      72,
+      73,
+      74
+     ],
+     "fired": 2
+    },
+    {
+     "id": "imem_addr_write",
+     "file": "rtl/hcpu_mmio.v",
+     "lines": [
+      228,
+      241,
+      242
+     ],
+     "fired": 2
+    },
+    {
+     "id": "imem_data_advance",
+     "file": "rtl/hcpu_mmio.v",
+     "lines": [
+      229,
+      235,
+      243,
+      244
+     ],
+     "fired": 51
+    }
+   ],
+   "not_covered": [
+    "count_empty"
+   ]
   }
  ]
 }

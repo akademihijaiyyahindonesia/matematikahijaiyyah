@@ -1210,6 +1210,286 @@
     "rdata": "rdata_r tidak punya reset: x sampai baca pertama tiap lari, dan fungsi memegangnya sebagai x, bukan nol"
    },
    "covered_limits_why": "yang dijalankan oracle, dan apa yang pemakaiannya tidak tunjukkan"
+  },
+  {
+   "name": "loader",
+   "rtl": "rtl/programs/loader.hasm",
+   "bench": "rtl/tb/tb_gowin_loader.v",
+   "oracle": "pemilik, 28 September 2026: oracle loader adalah tb_gowin_loader.v dan tb_gowin_loader_nui.v, keduanya dengan loader.hex di hcpu_gowin_core, dan cakupannya diukur per bench lalu ditetapkan sebagai gabungan dan irisan -- kedua bench tidak dianggap identik. loader.hasm, RTL, dan kedua bench tidak diubah",
+   "benches": [
+    {
+     "bench": "rtl/tb/tb_gowin_loader.v",
+     "top": "tb_gowin_loader",
+     "payload": "rtl/programs/payload.hasm",
+     "payload_file": "payload.txt",
+     "verdict": "^PASS: tb_gowin_loader — ",
+     "expects": {
+      "imem": {
+       "64": 76546090,
+       "65": 77594631,
+       "66": 16777216
+      },
+      "waddr": 67
+     },
+     "expects_lines": [
+      92,
+      93,
+      94,
+      95,
+      96
+     ],
+     "observes_beyond": "R9 = 42 dan R10 = 7 dari program yang dimuat (baris 83-86): bukti handover lewat ERET, milik program sesudahnya, bukan loader"
+    },
+    {
+     "bench": "rtl/tb/tb_gowin_loader_nui.v",
+     "top": "tb_gowin_loader_nui",
+     "payload": "rtl/programs/nui_embedding.hasm",
+     "payload_file": "nui_payload.txt",
+     "verdict": "^PASS: tb_gowin_loader_nui — ",
+     "expects": {
+      "waddr": 112
+     },
+     "expects_lines": [
+      147,
+      148
+     ],
+     "observes_beyond": "sepuluh byte PRINT program yang dimuat, didekode dari uart_txd (baris 131-140): bukti handover lewat ERET, milik program sesudahnya, bukan loader. Kata-kata di memori instruksi tidak diperiksa bench ini"
+    }
+   ],
+   "build": "seperti rtl/tb/Makefile: loader.hex dari rtl/scripts/asm2hex.py, payload dari rtl/scripts/send_program.py satu byte per baris, lalu bench + rtl/fpga/gowin/hcpu_gowin_top.v + rtl/hcpu_*.v",
+   "compile": [
+    "rtl/fpga/gowin/hcpu_gowin_top.v",
+    "rtl/hcpu_*.v"
+   ],
+   "include": "rtl",
+   "modelled": [
+    "rtl/hcpu_mmio.v"
+   ],
+   "pinned": [
+    "rtl/tb/tb_gowin_loader_nui.v",
+    "rtl/programs/payload.hasm",
+    "rtl/programs/nui_embedding.hasm"
+   ],
+   "outside": {
+    "rtl/hcpu_trap.v": "apa yang ERET pasang -- sasaran dan mode -- milik unit trap: diamati di tiap bench, tidak diprediksi fungsi loader",
+    "rtl/hcpu_top.v": "pipeline: kapan tiap instruksi sampai ke bus dan ke writeback. Model ini berdiri di batas baca MMIO, bukan per siklus; pipeline dan HCPU adalah butir sendiri",
+    "program yang dimuat": "sesudah ERET yang berjalan program lain; jejak dipotong di ERET"
+   },
+   "granularity": "PC hanya ada sampai tahap decode (id_pc), jadi keadaan per instruksi tidak teramati tanpa memodelkan pipeline. Fungsi ini berdiri di batas baca MMIO: tiap baca RX_STATUS atau RX_DATA, posisi loader ditentukan alamat yang dibaca dan fase (sebelum atau sesudah IMEM_ADDR ditulis), register dari urutan tulis GPR, dan penunjuk tulis dari hcpu_mmio. Satu langkah = dari satu batas ke batas berikutnya: input nilai yang perangkat keras kembalikan, keluaran tulis GPR, tulis MMIO, tulis port memori instruksi, dan ERET di antaranya, dalam urutan program (WB, lalu MEM, lalu EX dalam satu siklus). FLAGS tidak dibandingkan: tiap CMPI dipakai cabang di langkah yang sama, dan cabangnya teramati lewat kejadian sesudahnya",
+   "state": [
+    "at",
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "waddr"
+   ],
+   "outputs": [
+    "gpr",
+    "write",
+    "imem",
+    "eret"
+   ],
+   "rules": [
+    {
+     "id": "start",
+     "lines": [
+      31,
+      34,
+      35
+     ],
+     "means": "dari reset: R5 <- 0, R3 <- 0, R4 <- 4, lalu baca RX_STATUS pertama"
+    },
+    {
+     "id": "count_spin",
+     "lines": [
+      36,
+      37,
+      38
+     ],
+     "means": "RX_STATUS = 0 saat menerima jumlah kata: JEQ cnt_b, baca RX_STATUS lagi"
+    },
+    {
+     "id": "count_ready",
+     "lines": [
+      36,
+      37,
+      38,
+      39
+     ],
+     "means": "RX_STATUS bukan nol: baca RX_DATA"
+    },
+    {
+     "id": "count_byte",
+     "lines": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44
+     ],
+     "means": "RX_DATA: R3 <- (R3 << 8) OR byte, R4 turun; R4 bukan nol: JNE cnt_b"
+    },
+    {
+     "id": "count_last_byte",
+     "lines": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      48,
+      49,
+      52,
+      53,
+      54,
+      55
+     ],
+     "means": "byte keempat jumlah kata: R6 <- N, IMEM_ADDR <- 64, N bukan nol: R3 <- 0, R4 <- 4, baca RX_STATUS kata pertama"
+    },
+    {
+     "id": "count_empty",
+     "lines": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      48,
+      49,
+      52,
+      53,
+      70,
+      71,
+      72,
+      73,
+      74
+     ],
+     "means": "N = 0: langsung ke done -- TRAP_EPC <- 64, TRAP_MODE <- 2, ERET -- tanpa satu kata pun"
+    },
+    {
+     "id": "word_spin",
+     "lines": [
+      56,
+      57,
+      58
+     ],
+     "means": "RX_STATUS = 0 saat menerima kata: JEQ w_b"
+    },
+    {
+     "id": "word_ready",
+     "lines": [
+      56,
+      57,
+      58,
+      59
+     ],
+     "means": "RX_STATUS bukan nol: baca RX_DATA"
+    },
+    {
+     "id": "word_byte",
+     "lines": [
+      59,
+      60,
+      61,
+      62,
+      63,
+      64
+     ],
+     "means": "RX_DATA: R3 <- (R3 << 8) OR byte, R4 turun; R4 bukan nol: JNE w_b"
+    },
+    {
+     "id": "word_stored",
+     "lines": [
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      52,
+      53,
+      54,
+      55
+     ],
+     "means": "byte keempat sebuah kata: IMEM_DATA <- R3, R6 turun, JMP words -- gelung terima, bukan program yang dimuat -- kata tersisa: R3 <- 0, R4 <- 4"
+    },
+    {
+     "id": "last_word",
+     "lines": [
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      52,
+      53,
+      70,
+      71,
+      72,
+      73,
+      74
+     ],
+     "means": "kata terakhir tersimpan, R6 = 0: JEQ done, TRAP_EPC <- 64, TRAP_MODE <- 2, ERET -- satu-satunya jalan ke program yang dimuat"
+    },
+    {
+     "id": "imem_addr_write",
+     "file": "rtl/hcpu_mmio.v",
+     "lines": [
+      228,
+      241,
+      242
+     ],
+     "means": "tulis IMEM_ADDR: penunjuk tulis memori instruksi <- nilai itu (aturan hcpu_mmio yang sama namanya)"
+    },
+    {
+     "id": "imem_data_advance",
+     "file": "rtl/hcpu_mmio.v",
+     "lines": [
+      229,
+      235,
+      243,
+      244
+     ],
+     "means": "tulis IMEM_DATA: port menulis kata di penunjuk pada tepi yang sama, lalu penunjuk maju satu"
+    }
+   ],
+   "input_timing": {
+    "signal": "RX_STATUS/RX_DATA, tiap baca",
+    "takes": "new",
+    "rule": "nilai baca ke-k adalah rdata MMIO satu siklus sesudah permintaannya -- jalur baca terdaftar hcpu_mmio",
+    "why": "diukur tiap build: di tiap baca, tulis GPR tujuan LOAD-nya sama dengan rdata satu siklus sesudah permintaan (ditangkap nilai baru), bukan rdata pada siklus permintaan"
+   },
+   "bench_expects": {
+    "entry_fetched_before_eret": false
+   },
+   "bench_expects_why": "Alamat masuk program yang dimuat (64) tidak pernah diambil fetch sebelum ERET: satu-satunya JMP loader adalah gelung terima, dan handover hanya lewat ERET. Diukur dari alamat fetch hcpu_gowin_core, bukan dari teks loader.hasm",
+   "not_covered": {
+    "count_empty": "kedua bench mengirim N bukan nol (3 dan 48): jalan langsung ke done tanpa kata tidak pernah dijalankan"
+   },
+   "not_covered_why": "aturan loader yang tidak dijalankan kedua bench: ditulis di fungsi dan dinyatakan di sini, tidak dianggap terbukti",
+   "covered_limits": {
+    "count_ready": "status bukan nol hanya pernah bernilai 1 di kedua bench. CMPI R1, 0 membandingkan seluruh kata status, jadi bit framing error dan overrun (bit 1 dan 2) tanpa bit 0 juga akan membuat loader membaca RX_DATA -- tidak pernah terjadi, tidak diklaim",
+    "word_ready": "sama: status bukan nol hanya pernah 1",
+    "start": "dari reset saja: satu boot per bench",
+    "eret": "sasaran dan mode sesudah ERET diamati dari unit trap, bukan diprediksi"
+   },
+   "covered_limits_why": "yang dijalankan kedua bench, dan apa yang pemakaiannya tidak tunjukkan"
   }
  ],
  "checks": [

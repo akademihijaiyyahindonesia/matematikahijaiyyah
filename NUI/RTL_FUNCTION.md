@@ -276,6 +276,74 @@ Batas yang tercakup — yang dijalankan oracle, dan apa yang pemakaiannya tidak 
 
 **Waktu input.** probe mencatat input yang diambil tiap tepi di region aktif tepi itu, cara yang sama dengan jejak tb_parity.v sendiri menyampel ram_we; nilai sesudah tepi dicetak $strobe: input RAM digerakkan register hcpu_top. Diukur tiap build: di tiap tepi tempat input berubah, yang diambil adalah nilai yang dicetak baris sebelumnya sesudah tepinya -- tidak ada input yang berubah di antara dua tepi.
 
+## `loader`
+
+`rtl/programs/loader.hasm` `7d11249ab606…`, bench `rtl/tb/tb_gowin_loader.v` `ac908f0b53d9…`.
+
+**Oracle.** pemilik, 28 September 2026: oracle loader adalah tb_gowin_loader.v dan tb_gowin_loader_nui.v, keduanya dengan loader.hex di hcpu_gowin_core, dan cakupannya diukur per bench lalu ditetapkan sebagai gabungan dan irisan -- kedua bench tidak dianggap identik. loader.hasm, RTL, dan kedua bench tidak diubah.
+
+**Satu langkah.** PC hanya ada sampai tahap decode (id_pc), jadi keadaan per instruksi tidak teramati tanpa memodelkan pipeline. Fungsi ini berdiri di batas baca MMIO: tiap baca RX_STATUS atau RX_DATA, posisi loader ditentukan alamat yang dibaca dan fase (sebelum atau sesudah IMEM_ADDR ditulis), register dari urutan tulis GPR, dan penunjuk tulis dari hcpu_mmio. Satu langkah = dari satu batas ke batas berikutnya: input nilai yang perangkat keras kembalikan, keluaran tulis GPR, tulis MMIO, tulis port memori instruksi, dan ERET di antaranya, dalam urutan program (WB, lalu MEM, lalu EX dalam satu siklus). FLAGS tidak dibandingkan: tiap CMPI dipakai cabang di langkah yang sama, dan cabangnya teramati lewat kejadian sesudahnya.
+
+Ikut dimodelkan: `rtl/hcpu_mmio.v` `7fa8e3111150…`.
+
+Di luar model — masuk sebagai input, tidak diprediksi:
+
+- `rtl/hcpu_trap.v` — apa yang ERET pasang -- sasaran dan mode -- milik unit trap: diamati di tiap bench, tidak diprediksi fungsi loader.
+- `rtl/hcpu_top.v` — pipeline: kapan tiap instruksi sampai ke bus dan ke writeback. Model ini berdiri di batas baca MMIO, bukan per siklus; pipeline dan HCPU adalah butir sendiri.
+- `program yang dimuat` — sesudah ERET yang berjalan program lain; jejak dipotong di ERET.
+
+| pemeriksaan | hasil |
+|---|---|
+| F1 satu langkah, dari keadaan RTL di tiap batas baca, 71065 langkah | 0 berbeda |
+| F1 kejadian di antara dua batas (GPR, MMIO, port IMEM, ERET), 71065 langkah | 0 berbeda |
+| F2 lingkar terbuka dari reset, 71065 langkah, 497618 siklus sampai ERET | 0 berbeda |
+| F3 bench | 2 of 2 benches print PASS |
+| waktu input: perubahan RX_STATUS/RX_DATA, tiap baca, ditangkap nilai baru, ditangkap nilai lama | 71063, 71063, 0 |
+| jejak RTL | `edb681646e35…` |
+
+Per bench — kedua bench tidak dianggap satu:
+
+| bench | batas baca | aturan dijalankan | penunjuk tulis akhir | alamat masuk diambil sebelum ERET | sesudah ERET: EPC, mode | vonis |
+|---|---|---|---|---|---|---|
+| `tb_gowin_loader` | 5379 | 12 | 67 | tidak — diambil 1 siklus sesudah ERET | 64, 1 | PASS: tb_gowin_loader — program dimuat lewat kabel dan berjalan |
+| `tb_gowin_loader_nui` | 65688 | 12 | 112 | tidak — diambil 1 siklus sesudah ERET | 64, 1 | PASS: tb_gowin_loader_nui — L_JIM/L_KHA dimuat lewat kabel, dijalankan, dan mencetak 2\n2\n2\n6\n6\n lewat UART sungguhan |
+
+Gabungan: start, count_spin, count_ready, count_byte, count_last_byte, word_spin, word_ready, word_byte, word_stored, last_word, imem_addr_write, imem_data_advance. Irisan: start, count_spin, count_ready, count_byte, count_last_byte, word_spin, word_ready, word_byte, word_stored, last_word, imem_addr_write, imem_data_advance.
+
+Alamat masuk program yang dimuat (64) tidak pernah diambil fetch sebelum ERET: satu-satunya JMP loader adalah gelung terima, dan handover hanya lewat ERET. Diukur dari alamat fetch hcpu_gowin_core, bukan dari teks loader.hasm.
+
+- `rtl/tb/tb_gowin_loader.v` juga memeriksa R9 = 42 dan R10 = 7 dari program yang dimuat (baris 83-86): bukti handover lewat ERET, milik program sesudahnya, bukan loader.
+- `rtl/tb/tb_gowin_loader_nui.v` juga memeriksa sepuluh byte PRINT program yang dimuat, didekode dari uart_txd (baris 131-140): bukti handover lewat ERET, milik program sesudahnya, bukan loader. Kata-kata di memori instruksi tidak diperiksa bench ini.
+
+| aturan | baris RTL | arti | dijalankan bench |
+|---|---|---|---|
+| `start` | 31, 34, 35 | dari reset: R5 <- 0, R3 <- 0, R4 <- 4, lalu baca RX_STATUS pertama | 2 |
+| `count_spin` | 36, 37, 38 | RX_STATUS = 0 saat menerima jumlah kata: JEQ cnt_b, baca RX_STATUS lagi | 2696 |
+| `count_ready` | 36, 37, 38, 39 | RX_STATUS bukan nol: baca RX_DATA | 8 |
+| `count_byte` | 39, 40, 41, 42, 43, 44 | RX_DATA: R3 <- (R3 << 8) OR byte, R4 turun; R4 bukan nol: JNE cnt_b | 6 |
+| `count_last_byte` | 39, 40, 41, 42, 43, 44, 45, 48, 49, 52, 53, 54, 55 | byte keempat jumlah kata: R6 <- N, IMEM_ADDR <- 64, N bukan nol: R3 <- 0, R4 <- 4, baca RX_STATUS kata pertama | 2 |
+| `count_empty` | 39, 40, 41, 42, 43, 44, 45, 48, 49, 52, 53, 70, 71, 72, 73, 74 | N = 0: langsung ke done -- TRAP_EPC <- 64, TRAP_MODE <- 2, ERET -- tanpa satu kata pun | 0 |
+| `word_spin` | 56, 57, 58 | RX_STATUS = 0 saat menerima kata: JEQ w_b | 67943 |
+| `word_ready` | 56, 57, 58, 59 | RX_STATUS bukan nol: baca RX_DATA | 204 |
+| `word_byte` | 59, 60, 61, 62, 63, 64 | RX_DATA: R3 <- (R3 << 8) OR byte, R4 turun; R4 bukan nol: JNE w_b | 153 |
+| `word_stored` | 59, 60, 61, 62, 63, 64, 65, 66, 67, 52, 53, 54, 55 | byte keempat sebuah kata: IMEM_DATA <- R3, R6 turun, JMP words -- gelung terima, bukan program yang dimuat -- kata tersisa: R3 <- 0, R4 <- 4 | 49 |
+| `last_word` | 59, 60, 61, 62, 63, 64, 65, 66, 67, 52, 53, 70, 71, 72, 73, 74 | kata terakhir tersimpan, R6 = 0: JEQ done, TRAP_EPC <- 64, TRAP_MODE <- 2, ERET -- satu-satunya jalan ke program yang dimuat | 2 |
+| `imem_addr_write` | `hcpu_mmio.v` 228, 241, 242 | tulis IMEM_ADDR: penunjuk tulis memori instruksi <- nilai itu (aturan hcpu_mmio yang sama namanya) | 2 |
+| `imem_data_advance` | `hcpu_mmio.v` 229, 235, 243, 244 | tulis IMEM_DATA: port menulis kata di penunjuk pada tepi yang sama, lalu penunjuk maju satu | 51 |
+
+Tidak tercakup bench: count_empty.
+
+- `count_empty` — kedua bench mengirim N bukan nol (3 dan 48): jalan langsung ke done tanpa kata tidak pernah dijalankan.
+
+Batas yang tercakup — yang dijalankan kedua bench, dan apa yang pemakaiannya tidak tunjukkan:
+
+- `count_ready` — status bukan nol hanya pernah bernilai 1 di kedua bench. CMPI R1, 0 membandingkan seluruh kata status, jadi bit framing error dan overrun (bit 1 dan 2) tanpa bit 0 juga akan membuat loader membaca RX_DATA -- tidak pernah terjadi, tidak diklaim.
+- `word_ready` — sama: status bukan nol hanya pernah 1.
+- `start` — dari reset saja: satu boot per bench.
+- `eret` — sasaran dan mode sesudah ERET diamati dari unit trap, bukan diprediksi.
+
+**Waktu input.** nilai baca ke-k adalah rdata MMIO satu siklus sesudah permintaannya -- jalur baca terdaftar hcpu_mmio: diukur tiap build: di tiap baca, tulis GPR tujuan LOAD-nya sama dengan rdata satu siklus sesudah permintaan (ditangkap nilai baru), bukan rdata pada siklus permintaan.
+
 ## Mengulang
 
 ```bash

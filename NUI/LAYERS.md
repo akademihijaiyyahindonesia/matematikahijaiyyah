@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **37 modul**; `tests/test_ai/` berisi **734 tes**
+`src/hijaiyyah/nui/` berisi **37 modul**; `tests/test_ai/` berisi **753 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.431 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.438 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -215,7 +215,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `telemetry_sources.py` | registry sumber telemetri Lapis 6.2: 27 medan kontrak, jenis sumber, historis atau hidup, lari papan, dan hash; batas akses historical / live / simulated / unknown | `test_nui_telemetry_sources.py` (17) |
 | `hardware_provenance.py` | provenance hardware Lapis 6.3: tiap klaim 6.1 dan 6.2 jadi satu objek kanonik — jenis sumber, lari papan dan asal identitasnya, bukti, `observed_at`, `evidence_sha256`, status — diperiksa terhadap berkasnya sendiri; keadaan hardware sekarang UNKNOWN | `test_nui_hardware_provenance.py` (40) |
 | `hardware_correlation.py` | korelasi hardware Lapis 6.5: hardware ↔ lari papan ↔ program ↔ opcode ↔ keluaran papan, tiap tautan DIRECT, DERIVED, atau UNKNOWN, diperiksa terhadap berkas, kunci, dan hash buktinya; bukti tingkat opcode hanya kolom P3 | `test_nui_hardware_correlation.py` (25) |
-| `rtl_function.py` | model RTL sebagai fungsi, Lapis 6: `hcpu_uart_rx`, `hcpu_mmio`, `hcpu_uart_tx`, dan `hcpu_dataram` sebagai fungsi transisi keadaan, dicocokkan per siklus dengan jejak RTL di bawah oracle masing-masing — bench khusus untuk dua yang pertama, `tb_hcpu_top.v` untuk UART TX, `tb_parity.v` atas korpus Lapis 4 untuk RAM data — satu langkah, keluaran, dan lingkar terbuka | `test_nui_rtl_function.py` (16), `test_nui_rtl_function_mmio.py` (16), `test_nui_rtl_function_uart_tx.py` (24), `test_nui_rtl_function_dataram.py` (21) |
+| `rtl_function.py` | model RTL sebagai fungsi, Lapis 6: `hcpu_uart_rx`, `hcpu_mmio`, `hcpu_uart_tx`, dan `hcpu_dataram` sebagai fungsi transisi keadaan, dicocokkan per siklus dengan jejak RTL di bawah oracle masing-masing — bench khusus untuk dua yang pertama, `tb_hcpu_top.v` untuk UART TX, `tb_parity.v` atas korpus Lapis 4 untuk RAM data — dan `loader.hasm` di batas baca MMIO-nya di bawah kedua bench loader; satu langkah, keluaran, dan lingkar terbuka | `test_nui_rtl_function.py` (16), `test_nui_rtl_function_mmio.py` (16), `test_nui_rtl_function_uart_tx.py` (24), `test_nui_rtl_function_dataram.py` (21), `test_nui_rtl_function_loader.py` (19) |
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
@@ -276,7 +276,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.665 node, 4.288 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.673 node, 4.316 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -325,7 +325,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.431 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.438 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -1087,11 +1087,34 @@ satu-satunya perpisahan pertama berjenis RAM adalah `stop-probe:halt-then-store`
 menyimpannya persis seperti yang fungsi ramalkan. Bukti papan tetap tingkat
 program: `LOAD` dan `STORE` PARITY di kolom P3.
 
-**Yang belum ada.** Model RTL sebagai fungsi untuk modul lain yang disebut
-tujuan lapis ini — loader, pipeline, HCPU. UART RX, peta memori, dan RAM data
-sudah — RAM data tanpa read-first; UART TX sebatas reset dan diam yang
-`rtl/tb/tb_hcpu_top.v` jalankan. Yang ada selain itu mengurai antarmuka dan
-memodelkan dua protokol, bukan perilaku umum.
+**Butir kelima, 28 September 2026 — `rtl/programs/loader.hasm`, dengan
+oracle `rtl/tb/tb_gowin_loader.v` dan `rtl/tb/tb_gowin_loader_nui.v`.** Loader
+adalah program, bukan modul, dan RTL tidak membawa PC melewati tahap decode.
+Karena itu fungsinya berdiri di batas baca MMIO: di tiap baca RX_STATUS atau
+RX_DATA, posisi loader, R1–R7, dan penunjuk tulis memori instruksi semuanya
+teramati, dan semua yang terjadi di antara dua baca — tulis GPR, tulis MMIO,
+tulis port memori instruksi, `ERET` — dibandingkan dalam urutan program.
+Kedua bench diukur sendiri-sendiri, tidak dianggap satu: N = 3 dan N = 48,
+5.379 dan 65.688 batas. Hasilnya: 71.065 langkah, satu langkah, kejadian di
+antaranya, dan lingkar terbuka dari reset semuanya 0 berbeda, dan 71.063 baca
+semuanya membawa `rdata` satu siklus sesudah permintaannya. Cakupan gabungan
+sama dengan irisannya — dua belas aturan. Satu jalan **tidak tercakup**:
+N = 0, langsung ke `done` tanpa satu kata. Status bukan nol hanya pernah
+bernilai 1, jadi bit framing error dan overrun tidak diklaim. Daftar pemilik
+— RX_STATUS, RX_DATA, IMEM_ADDR, IMEM_DATA, TRAP_EPC, TRAP_MODE, ERET —
+muncul di jejak RTL sendiri dengan urutan itu, dan alamat masuk 64 **tidak
+pernah diambil fetch sebelum `ERET`** di kedua bench: satu-satunya `JMP`
+loader adalah gelung terimanya. Sasaran dan mode sesudah `ERET` milik unit
+trap, diamati, tidak diprediksi. Satu hal yang terlihat di sini dan tidak
+mengubah modul lain: `imem_addr_write` dan `imem_data_advance` milik
+`rtl/hcpu_mmio.v`, yang tidak tercakup bench MMIO sendiri, berjalan di bawah
+kedua bench loader. Status model MMIO tetap menurut oracle-nya.
+
+**Yang belum ada.** Model RTL sebagai fungsi untuk yang tersisa dari urutan
+pemilik — pipeline dan HCPU. UART RX, peta memori, RAM data, dan loader sudah
+— RAM data tanpa read-first, loader tanpa N = 0; UART TX sebatas reset dan
+diam yang `rtl/tb/tb_hcpu_top.v` jalankan. Yang ada selain itu mengurai
+antarmuka dan memodelkan dua protokol, bukan perilaku umum.
 
 **Cara verifikasi.** 39 testbench yang dijalankan `make -C rtl/tb all` adalah
 oracle-nya. Untuk

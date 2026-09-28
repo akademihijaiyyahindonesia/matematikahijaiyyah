@@ -1649,6 +1649,17 @@ RTL, dan bukti papan — dan model itu tidak boleh langsung diklaim oracle
 hardware. Terukur, ia memodelkan makro sky130, bukan `rtl/hcpu_dataram.v`, dan
 pemilik memilih `rtl/tb/tb_parity.v` atas korpus Lapis 4 sebagai oracle-nya.
 
+RAM data diterima GREEN (`0e8b699`), dengan read-first tetap tidak tercakup.
+Kalimat Lapis 8 di `NUI/LAYERS.md` yang menyatakan tidak ada catatan mismatch
+latensi SRAM — bertentangan dengan kepala `rtl/mpw/hcpu_dataram_sky130.v` —
+**tidak disentuh** dari butir Lapis 6: itu selisih dokumentasi tersendiri,
+ditangani ketika pekerjaan Lapis 8 membukanya. Untuk loader pemilik menetapkan
+oracle `rtl/tb/tb_gowin_loader.v` dan `rtl/tb/tb_gowin_loader_nui.v`, dengan
+syarat kedua bench tidak dianggap identik: apa yang masing-masing jalankan dan
+amati diukur dulu, lalu cakupan gabungan dan irisannya ditetapkan.
+`rtl/programs/loader.hasm`, RTL, dan kedua bench tidak diubah. Sesudah loader,
+pipeline — oracle-nya `rtl/tb/tb_hcpu_top.v`, bukan bench per tahap.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
