@@ -1626,6 +1626,17 @@ dipegang pada bench khususnya sendiri, dan yang ada di luar model — pengendali
 kartu, RAM data, unit trap untuk MMIO — masuk sebagai input, tidak diprediksi.
 Aturan RTL yang bench tidak jalankan dinamai di spec, tidak diklaim terbukti.
 
+MMIO diterima GREEN oleh pemilik (`ecb417b`). Akses tak terpetakan tetap
+*tidak tercakup*: bench tambahan yang dibuat hanya untuk mengubah status itu
+butuh keputusan tersendiri. Untuk UART TX pemilik menetapkan oracle
+`rtl/tb/tb_hcpu_top.v`, dengan batas yang mengikat: hanya perilaku TX yang bench
+itu jalankan dan amati yang boleh diklaim, dan bench top-level yang melewati
+modulnya tidak membuat seluruh aturannya terbukti — *specification says X ≠
+testbench proves X*. Terukur, bench itu tidak menjalankan `PRINT` atau `EMITS`,
+jadi yang terbukti hanya reset dan diam; sembilan aturan lainnya dinamai tidak
+tercakup, angkanya di `NUI/LAYERS.md`, Lapis 6. Sesudah UART TX, SRAM — dan
+oracle-nya ditetapkan lebih dulu, karena tidak ada bench SRAM khusus.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

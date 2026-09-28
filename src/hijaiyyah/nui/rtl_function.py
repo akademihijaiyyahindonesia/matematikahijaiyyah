@@ -38,9 +38,17 @@ the same active region as the clock edge at which the design samples it, and
 the simulator runs the bench's assignment first -- so the input to the step
 from t to t+1 is the line after edge t+1. On the board the line is
 asynchronous, and the two synchroniser flops carry that.
+
+The third module, hcpu_uart_tx, is the first held to a bench that is not its
+own. The owner named rtl/tb/tb_hcpu_top.v its oracle and limited what may be
+claimed to what that bench makes the transmitter do. Measured, that is its
+reset and its idle: the bench runs no PRINT and no EMITS. Every rule that
+sends a bit is written here, branch for branch, and named not covered in the
+spec -- not claimed because the top-level bench passes through the module.
 """
 from __future__ import annotations
 
+import itertools
 import json
 import math
 import re
@@ -277,6 +285,68 @@ def mmio_outputs(s: State, inp: dict[str, Any], p: dict[str, int]) -> dict[str, 
             "imem_wdata": wdata}
 
 
+# -- hcpu_uart_tx, as a function ---------------------------------------------------------
+
+
+def uart_tx_parameters(clk_hz: int, baud: int) -> dict[str, int]:
+    """rtl/hcpu_uart_tx.v lines 23-24."""
+    per_bit = clk_hz // baud
+    return {"CLKS_PER_BIT": per_bit, "CNT_W": math.ceil(math.log2(per_bit + 1))}
+
+
+def uart_tx_reset() -> State:
+    """Lines 40-45: idle, and the line high."""
+    return {"state": IDLE, "clk_cnt": 0, "bit_idx": 0, "tx_shift": 0, "tx_out": 1}
+
+
+def uart_tx_step(s: State, inp: dict[str, Any], p: dict[str, int]) -> tuple[State, list[str]]:
+    """One rising clock edge of hcpu_uart_tx, branch for branch (lines 39-95).
+    Under tb_hcpu_top.v only reset and idle_wait ever run; the other branches
+    are written here and named not covered in the spec, not claimed."""
+    if not inp["rst_n"]:
+        return uart_tx_reset(), ["reset"]
+    n, last, mask = dict(s), p["CLKS_PER_BIT"] - 1, (1 << p["CNT_W"]) - 1
+    count, state = s["clk_cnt"], s["state"]
+    if state == IDLE:
+        n["tx_out"] = 1
+        if not inp["tx_start"]:
+            return n, ["idle_wait"]
+        n["tx_shift"], n["state"], n["clk_cnt"] = inp["tx_data"], START, 0
+        return n, ["idle_start"]
+    if state == START:
+        n["tx_out"] = 0
+        if count != last:
+            n["clk_cnt"] = (count + 1) & mask
+            return n, ["start_count"]
+        n["clk_cnt"], n["bit_idx"], n["state"] = 0, 0, DATA
+        return n, ["start_end"]
+    if state == DATA:
+        n["tx_out"] = s["tx_shift"] >> s["bit_idx"] & 1
+        if count != last:
+            n["clk_cnt"] = (count + 1) & mask
+            return n, ["data_count"]
+        n["clk_cnt"] = 0
+        if s["bit_idx"] != 7:
+            n["bit_idx"] = s["bit_idx"] + 1
+            return n, ["data_next"]
+        n["state"] = STOP
+        return n, ["data_last"]
+    if state == STOP:
+        n["tx_out"] = 1
+        if count != last:
+            n["clk_cnt"] = (count + 1) & mask
+            return n, ["stop_count"]
+        n["clk_cnt"], n["state"] = 0, IDLE
+        return n, ["stop_end"]
+    n["state"] = IDLE
+    return n, ["default"]
+
+
+def uart_tx_outputs(s: State, inp: dict[str, Any], p: dict[str, int]) -> dict[str, Any]:
+    """Line 37, and the pin: hcpu_top.v wires tx_out straight to uart_tx (line 713)."""
+    return {"tx_busy": int(s["state"] != IDLE), "uart_tx": s["tx_out"]}
+
+
 # -- the drivers: how each module's trace is read into its function -------------------------
 
 
@@ -324,6 +394,55 @@ def _mmio_observe(states: list[State], rows: list[dict[str, Any]], p: dict[str, 
     return {"reads": reads, "ram_writes_in_window": window}
 
 
+def _tx_inputs(rows: list[dict[str, Any]], t: int) -> tuple[Any, ...]:
+    """rst_n as edge t+1 took it, from row t+1. tx_start and tx_data are
+    registered in hcpu_top's print state machine, so edge t+1 takes what row t
+    shows -- the MMIO rule for what a module outside hands in."""
+    return ({"rst_n": rows[t + 1]["rst_n"], "tx_start": rows[t]["tx_start"],
+             "tx_data": rows[t]["tx_data"]},)
+
+
+def _start_timing(rows: list[dict[str, Any]]) -> dict[str, int]:
+    """At each edge where tx_start changed while the transmitter sat idle,
+    whether it took the new value or the one the row before showed."""
+    changed = [t for t in range(len(rows) - 1)
+               if rows[t + 1]["rst_n"] and rows[t]["state"] == IDLE
+               and rows[t + 1]["tx_start"] != rows[t]["tx_start"]]
+
+    def took(t: int, row: dict[str, Any]) -> bool:
+        return bool(rows[t + 1]["state"] == START) == bool(row["tx_start"])
+
+    return {"line_changes": len(changed),
+            "captured_new": sum(1 for t in changed if took(t, rows[t + 1])),
+            "captured_old": sum(1 for t in changed if took(t, rows[t]))}
+
+
+# The owner's list for the transmitter -- idle, start bit, data bits, stop
+# bit, bit timing, busy and ready -- as predicates on one row of the RTL's trace.
+TX_SEEN: dict[str, Callable[[dict[str, Any]], bool]] = {
+    "reset": lambda r: not r["rst_n"],
+    "idle": lambda r: bool(r["rst_n"]) and r["state"] == IDLE,
+    "start_bit": lambda r: r["state"] == START,
+    "data_bits": lambda r: r["state"] == DATA,
+    "stop_bit": lambda r: r["state"] == STOP,
+    "counter_moving": lambda r: r["clk_cnt"] != 0,
+    "busy": lambda r: r["tx_busy"] == 1,
+    "ready": lambda r: r["tx_busy"] == 0,
+    "tx_start": lambda r: r["tx_start"] == 1,
+    "line_low": lambda r: r["uart_tx"] == 0,
+}
+
+
+def _tx_observe(states: list[State], rows: list[dict[str, Any]], p: dict[str, int],
+                m: dict[str, Any]) -> dict[str, Any]:
+    """The bytes the function starts to send, from its own trajectory, and how
+    many edges of the RTL's trace show each behaviour the owner named."""
+    started = [b["tx_shift"] for a, b in itertools.pairwise(states)
+               if a["state"] == IDLE and b["state"] == START]
+    return {"tx_started": started,
+            "seen": {k: sum(1 for r in rows if f(r)) for k, f in TX_SEEN.items()}}
+
+
 DRIVERS: dict[str, dict[str, Any]] = {
     "hcpu_uart_rx": {"parameters": uart_rx_parameters, "reset": uart_rx_reset,
                      "step": uart_rx_step, "inputs": _uart_inputs,
@@ -333,6 +452,9 @@ DRIVERS: dict[str, dict[str, Any]] = {
                   "inputs": _mmio_inputs, "outputs": mmio_outputs,
                   "timing": lambda rows: _line_timing(rows, "line", "u_rx.rx_meta"),
                   "observe": _mmio_observe},
+    "hcpu_uart_tx": {"parameters": uart_tx_parameters, "reset": uart_tx_reset,
+                     "step": uart_tx_step, "inputs": _tx_inputs, "outputs": uart_tx_outputs,
+                     "timing": _start_timing, "observe": _tx_observe},
 }
 
 
@@ -374,7 +496,10 @@ def rtl_trace(m: dict[str, Any], root: Path | None = None) -> dict[str, Any]:
     root = root or ROOT
     if shutil.which("iverilog") is None or shutil.which("vvp") is None:
         raise RuntimeError("Icarus Verilog is required to run the bench")
-    sources = [str(root / f) for f in m.get("compile", [m["rtl"]])]
+    # A pattern is expanded the way rtl/tb/Makefile expands RTL_SRC, not
+    # copied into a hand-kept list.
+    sources = [str(f) for pattern in m.get("compile", [m["rtl"]])
+               for f in (sorted(root.glob(pattern)) if "*" in pattern else [root / pattern])]
     include = ["-I", str(root / m["include"])] if "include" in m else []
     work = Path(tempfile.mkdtemp())
     try:
@@ -385,8 +510,9 @@ def rtl_trace(m: dict[str, Any], root: Path | None = None) -> dict[str, Any]:
             capture_output=True, text=True, timeout=300)
         if compiled.returncode != 0:
             raise RuntimeError(f"iverilog failed:\n{compiled.stderr}")
+        # Run where the bench's own $dumpfile lands with the rest of the work.
         ran = subprocess.run(["vvp", "-n", str(work / "sim")], capture_output=True, text=True,
-                             timeout=300)
+                             timeout=300, cwd=work)
     finally:
         shutil.rmtree(work, ignore_errors=True)
     keys = [k for k, _ in _signals(m)]
@@ -459,7 +585,8 @@ def compare(m: dict[str, Any], trace: dict[str, Any], root: Path | None = None,
             if d["outputs"](held(rows[t]), rows[t], params) != {k: rows[t][k]
                                                                for k in m["outputs"]}]
     return {**result, **d["observe"](states, rows, params, m),
-            "bench_said": trace["said"][0], "bench_pass": verdict is not None,
+            "bench_said": verdict if verdict is not None else trace["said"][0],
+            "bench_pass": verdict is not None,
             "rules_fired": fired_count}
 
 
@@ -500,6 +627,10 @@ def _expects(m: dict[str, Any], s: dict[str, Any]) -> str | None:
     """F3: what the bench checks, against what the function predicts. None
     when they agree."""
     want = s["bench_expects"]
+    if m["name"] == "hcpu_uart_tx":
+        # The bench reads nothing of the transmitter; an expectation here
+        # would be a claim the bench does not make.
+        return None if want == {} else f"the bench observes nothing of the transmitter: {want}"
     if m["name"] == "hcpu_uart_rx":
         got = (m["frames"], m["frame_errors"])
         return None if got == (want["frames"], want["frame_errors"]) else f"predicted {got}"
@@ -532,7 +663,9 @@ def check(model: dict[str, Any]) -> list[str]:
             bad.append(f"F1 {m['name']}: {len(m['one_step_mismatches'])} transitions and "
                        f"{len(m.get('output_mismatches', []))} outputs differ")
         timing = m["input_timing"]
-        if timing["captured_new"] != timing["line_changes"] or timing["captured_old"]:
+        takes = s["input_timing"].get("takes", "new")
+        other = "old" if takes == "new" else "new"
+        if timing[f"captured_{takes}"] != timing["line_changes"] or timing[f"captured_{other}"]:
             bad.append(f"F1 {m['name']}: the input timing the function assumes does not hold: "
                        f"{timing}")
         if m["open_loop_mismatches"]:
@@ -571,10 +704,13 @@ def page(model: dict[str, Any]) -> str:
     for m in model["modules"]:
         s, p = spec[m["name"]], m["parameters"]
         timing = m["input_timing"]
+        derived = ", ".join(f"{k} {v}" for k, v in p.items() if k not in ("CLK_HZ", "BAUD"))
         out += [f"## `{m['name']}`", "",
                 f"`{m['rtl']}` `{m['rtl_sha256'][:12]}…`, bench `{m['bench']}` "
-                f"`{m['bench_sha256'][:12]}…`. CLK_HZ {p['CLK_HZ']}, BAUD {p['BAUD']}, DIVISOR "
-                f"{p['DIVISOR']}, HALF {p['HALF']}, CNT_W {p['CNT_W']}.", ""]
+                f"`{m['bench_sha256'][:12]}…`. CLK_HZ {p['CLK_HZ']}, BAUD {p['BAUD']}, "
+                f"{derived}.", ""]
+        if "oracle" in s:
+            out += [f"**Oracle.** {s['oracle']}.", ""]
         if "modelled_sha256" in m:
             out += ["Ikut dimodelkan: " + ", ".join(f"`{f}` `{h[:12]}…`" for f, h in
                                                    m["modelled_sha256"].items()) + ".", ""]
@@ -598,11 +734,22 @@ def page(model: dict[str, Any]) -> str:
             out.append("| F3 baca yang diprediksi | "
                        + ", ".join(f"0x{a:03X} → {v}" for a, v in m["reads"])
                        + f"; tulis RAM di jendela periferal: {m['ram_writes_in_window']} |")
+        if "tx_started" in m:
+            out.append("| byte yang mulai dikirim, diprediksi fungsi | "
+                       + (", ".join(f"0x{b:02X}" for b in m["tx_started"]) or "tidak ada")
+                       + " |")
+        if "bench_observes" in s:
+            out.append(f"| F3 yang bench amati dari modul ini | {s['bench_observes']} |")
+        signal = s["input_timing"].get("signal", "line")
         out += [f"| F3 bench | {m['bench_said']} |",
-                f"| waktu input: perubahan line, ditangkap nilai baru, ditangkap nilai lama | "
+                f"| waktu input: perubahan {signal}, ditangkap nilai baru, ditangkap nilai lama | "
                 f"{timing['line_changes']}, {timing['captured_new']}, {timing['captured_old']} |",
-                f"| jejak RTL | `{m['trace_sha256'][:12]}…` |", "",
-                "| aturan | baris RTL | arti | dijalankan bench |", "|---|---|---|---|"]
+                f"| jejak RTL | `{m['trace_sha256'][:12]}…` |", ""]
+        if "seen" in m:
+            out += [f"Daftar pemilik, di jejak RTL — {s['seen_why']}.", "",
+                    "| perilaku | tepi naik |", "|---|---|",
+                    *[f"| {s['seen'][k]} | {v} |" for k, v in m["seen"].items()], ""]
+        out += ["| aturan | baris RTL | arti | dijalankan bench |", "|---|---|---|---|"]
         means = {r["id"]: r["means"] for r in rules(s)}
         for r in m["rules"]:
             where = ", ".join(map(str, r["lines"]))
@@ -613,6 +760,9 @@ def page(model: dict[str, Any]) -> str:
         out += ["", f"Tidak tercakup bench: {', '.join(m['not_covered']) or 'tidak ada'}."]
         if uncovered:
             out += ["", *[f"- `{k}` — {v}." for k, v in uncovered.items()]]
+        if "covered_limits" in s:
+            out += ["", f"Batas yang tercakup — {s['covered_limits_why']}:", "",
+                    *[f"- `{k}` — {v}." for k, v in s["covered_limits"].items()]]
         out += ["", f"**Waktu input.** {s['input_timing']['rule']}: {s['input_timing']['why']}.",
                 ""]
     out += ["## Mengulang", "", "```bash",

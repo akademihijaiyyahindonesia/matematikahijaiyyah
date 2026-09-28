@@ -708,6 +708,178 @@
     "read_sd_other",
     "u_rx.start_glitch"
    ]
+  },
+  {
+   "name": "hcpu_uart_tx",
+   "rtl": "rtl/hcpu_uart_tx.v",
+   "rtl_sha256": "89dae1c3dbf1ea2a41fec5206a6654d3411d7757520af07d58ad1e6fca39b519",
+   "bench": "rtl/tb/tb_hcpu_top.v",
+   "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
+   "trace_sha256": "1f0ef7b073b705c23781bea6c97cce5421616f0a589c66650d1e70e8eb0e1dc7",
+   "parameters": {
+    "CLKS_PER_BIT": 10,
+    "CNT_W": 4,
+    "CLK_HZ": 50000000,
+    "BAUD": 5000000
+   },
+   "cycles": 233,
+   "input_timing": {
+    "line_changes": 0,
+    "captured_new": 0,
+    "captured_old": 0
+   },
+   "one_step_mismatches": [],
+   "open_loop_mismatches": [],
+   "output_mismatches": [],
+   "tx_started": [],
+   "seen": {
+    "reset": 54,
+    "idle": 179,
+    "start_bit": 0,
+    "data_bits": 0,
+    "stop_bit": 0,
+    "counter_moving": 0,
+    "busy": 0,
+    "ready": 233,
+    "tx_start": 0,
+    "line_low": 0
+   },
+   "bench_said": "Total: 15 PASS, 0 FAIL",
+   "bench_pass": true,
+   "rules_fired": {
+    "reset": 53,
+    "idle_wait": 179,
+    "idle_start": 0,
+    "start_count": 0,
+    "start_end": 0,
+    "data_count": 0,
+    "data_next": 0,
+    "data_last": 0,
+    "stop_count": 0,
+    "stop_end": 0,
+    "default": 0
+   },
+   "rules": [
+    {
+     "id": "reset",
+     "lines": [
+      40,
+      41,
+      42,
+      43,
+      44,
+      45
+     ],
+     "fired": 53
+    },
+    {
+     "id": "idle_wait",
+     "lines": [
+      48,
+      49,
+      50
+     ],
+     "fired": 179
+    },
+    {
+     "id": "idle_start",
+     "lines": [
+      49,
+      50,
+      51,
+      52,
+      53
+     ],
+     "fired": 0
+    },
+    {
+     "id": "start_count",
+     "lines": [
+      58,
+      59,
+      64
+     ],
+     "fired": 0
+    },
+    {
+     "id": "start_end",
+     "lines": [
+      58,
+      59,
+      60,
+      61,
+      62
+     ],
+     "fired": 0
+    },
+    {
+     "id": "data_count",
+     "lines": [
+      69,
+      70,
+      78
+     ],
+     "fired": 0
+    },
+    {
+     "id": "data_next",
+     "lines": [
+      69,
+      70,
+      71,
+      75
+     ],
+     "fired": 0
+    },
+    {
+     "id": "data_last",
+     "lines": [
+      69,
+      70,
+      71,
+      72,
+      73
+     ],
+     "fired": 0
+    },
+    {
+     "id": "stop_count",
+     "lines": [
+      83,
+      84,
+      88
+     ],
+     "fired": 0
+    },
+    {
+     "id": "stop_end",
+     "lines": [
+      83,
+      84,
+      85,
+      86
+     ],
+     "fired": 0
+    },
+    {
+     "id": "default",
+     "lines": [
+      92
+     ],
+     "fired": 0
+    }
+   ],
+   "not_covered": [
+    "idle_start",
+    "start_count",
+    "start_end",
+    "data_count",
+    "data_next",
+    "data_last",
+    "stop_count",
+    "stop_end",
+    "default"
+   ]
   }
  ]
 }
