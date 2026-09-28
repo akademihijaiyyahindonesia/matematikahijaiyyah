@@ -1616,7 +1616,15 @@ diubah. Fungsinya dicocokkan per siklus dengan jejak RTL di bawah benchnya
 sendiri, lewat probe yang hanya membaca register — angkanya di
 `NUI/LAYERS.md`, Lapis 6. Pemilik juga menetapkan: angka "26 testbench" di
 `NUI/LAYERS.md` **tidak diganti** dengan jumlah berkas .v sebelum definisi
-"testbench" di kalimat itu terukur.
+"testbench" di kalimat itu terukur. Terukur lalu dibetulkan jadi 39 dengan
+definisi pemilik — testbench yang dijalankan `make -C rtl/tb all` — sebagai
+commit tersendiri (`b643b88`), dan kini dijaga penjaga hitungan.
+
+Urutan modul sisa butir itu, dari pemilik: UART RX, peta memori
+(`rtl/hcpu_mmio.v`), UART TX, RAM data/SRAM, loader, pipeline, HCPU. Tiap modul
+dipegang pada bench khususnya sendiri, dan yang ada di luar model — pengendali
+kartu, RAM data, unit trap untuk MMIO — masuk sebagai input, tidak diprediksi.
+Aturan RTL yang bench tidak jalankan dinamai di spec, tidak diklaim terbukti.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

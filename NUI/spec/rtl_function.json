@@ -4,44 +4,892 @@
  "source": "pemilik, 28 September 2026 -- butir Lapis 6 yang roadmap tetapkan: prediksi keadaan berikutnya untuk modul yang disebut cocok dengan benchnya. Modul pertama hcpu_uart_rx.v, karena punya bench khusus tb_hcpu_uart_rx.v; bukan hcpu_top.v. Model dibangun sebagai fungsi transisi keadaan: state_t + input_t -> state_t+1 + output_t, dicocokkan dengan bench, dan sabotase atas aturan transisinya harus merah. RTL UART RX tidak diubah",
  "rule": "Spec ini menyebut modul, bench, sinyal keadaan, dan cabang aturan transisi beserta baris RTL-nya. Fungsinya ditulis di src/hijaiyyah/nui/rtl_function.py dari RTL itu, dan dicocokkan dengan jejak per siklus yang RTL sendiri hasilkan ketika bench khususnya dijalankan -- tanpa mengubah RTL atau bench",
  "modules": [
-  {"name": "hcpu_uart_rx",
+  {
+   "name": "hcpu_uart_rx",
    "rtl": "rtl/hcpu_uart_rx.v",
    "bench": "rtl/tb/tb_hcpu_uart_rx.v",
    "top": "tb_hcpu_uart_rx",
    "instance": "dut",
    "clock": "clk",
-   "stimulus": {"rst_n": "rst_n", "rx_in": "line"},
-   "parameters": {"from": "rtl/tb/tb_hcpu_uart_rx.v", "pattern": "^\\s*localparam integer (CLK_HZ|BAUD)\\s*=\\s*([\\d_]+);"},
-   "state": ["rx_meta", "rx_sync", "state", "count", "index", "shifter"],
-   "outputs": ["rx_data", "rx_valid", "rx_frame_err"],
+   "stimulus": {
+    "rst_n": "rst_n",
+    "rx_in": "line"
+   },
+   "parameters": {
+    "from": "rtl/tb/tb_hcpu_uart_rx.v",
+    "pattern": "^\\s*localparam integer (CLK_HZ|BAUD)\\s*=\\s*([\\d_]+);"
+   },
+   "state": [
+    "rx_meta",
+    "rx_sync",
+    "state",
+    "count",
+    "index",
+    "shifter"
+   ],
+   "outputs": [
+    "rx_data",
+    "rx_valid",
+    "rx_frame_err"
+   ],
    "rules": [
-    {"id": "reset", "lines": [52, 57, 64], "means": "rst_n rendah: sinkroniser 11, IDLE, semua nol"},
-    {"id": "sync", "lines": [53], "means": "dua flop sinkroniser: rx_meta <- rx_in, rx_sync <- rx_meta"},
-    {"id": "outputs_drop", "lines": [66, 67], "means": "rx_valid dan rx_frame_err hanya satu siklus"},
-    {"id": "idle_wait", "lines": [70, 75], "means": "IDLE, rx_sync tinggi: tetap"},
-    {"id": "idle_falling_edge", "lines": [71, 72, 73], "means": "IDLE, rx_sync rendah: START, count 0"},
-    {"id": "start_count", "lines": [86, 87], "means": "START sebelum tengah bit: count + 1"},
-    {"id": "start_confirmed", "lines": [78, 79, 80, 81, 82], "means": "START di tengah bit dan masih rendah: DATA, count 0, index 0"},
-    {"id": "start_glitch", "lines": [78, 83, 84], "means": "START di tengah bit dan sudah tinggi: kembali IDLE"},
-    {"id": "data_count", "lines": [97, 98], "means": "DATA sebelum tengah bit: count + 1"},
-    {"id": "data_sample", "lines": [92, 93, 94, 96], "means": "DATA di tengah bit: geser rx_sync masuk dari atas (LSB dulu), index + 1"},
-    {"id": "data_last", "lines": [92, 93, 94, 95], "means": "DATA di tengah bit ke-8: geser, lalu STOP"},
-    {"id": "stop_count", "lines": [109, 110], "means": "STOP sebelum tengah bit: count + 1"},
-    {"id": "stop_deliver", "lines": [103, 104, 105, 106, 107, 108], "means": "STOP di tengah bit: IDLE, rx_data <- shifter, rx_valid 1, rx_frame_err <- bukan rx_sync"}
+    {
+     "id": "reset",
+     "lines": [
+      52,
+      57,
+      64
+     ],
+     "means": "rst_n rendah: sinkroniser 11, IDLE, semua nol"
+    },
+    {
+     "id": "sync",
+     "lines": [
+      53
+     ],
+     "means": "dua flop sinkroniser: rx_meta <- rx_in, rx_sync <- rx_meta"
+    },
+    {
+     "id": "outputs_drop",
+     "lines": [
+      66,
+      67
+     ],
+     "means": "rx_valid dan rx_frame_err hanya satu siklus"
+    },
+    {
+     "id": "idle_wait",
+     "lines": [
+      70,
+      75
+     ],
+     "means": "IDLE, rx_sync tinggi: tetap"
+    },
+    {
+     "id": "idle_falling_edge",
+     "lines": [
+      71,
+      72,
+      73
+     ],
+     "means": "IDLE, rx_sync rendah: START, count 0"
+    },
+    {
+     "id": "start_count",
+     "lines": [
+      86,
+      87
+     ],
+     "means": "START sebelum tengah bit: count + 1"
+    },
+    {
+     "id": "start_confirmed",
+     "lines": [
+      78,
+      79,
+      80,
+      81,
+      82
+     ],
+     "means": "START di tengah bit dan masih rendah: DATA, count 0, index 0"
+    },
+    {
+     "id": "start_glitch",
+     "lines": [
+      78,
+      83,
+      84
+     ],
+     "means": "START di tengah bit dan sudah tinggi: kembali IDLE"
+    },
+    {
+     "id": "data_count",
+     "lines": [
+      97,
+      98
+     ],
+     "means": "DATA sebelum tengah bit: count + 1"
+    },
+    {
+     "id": "data_sample",
+     "lines": [
+      92,
+      93,
+      94,
+      96
+     ],
+     "means": "DATA di tengah bit: geser rx_sync masuk dari atas (LSB dulu), index + 1"
+    },
+    {
+     "id": "data_last",
+     "lines": [
+      92,
+      93,
+      94,
+      95
+     ],
+     "means": "DATA di tengah bit ke-8: geser, lalu STOP"
+    },
+    {
+     "id": "stop_count",
+     "lines": [
+      109,
+      110
+     ],
+     "means": "STOP sebelum tengah bit: count + 1"
+    },
+    {
+     "id": "stop_deliver",
+     "lines": [
+      103,
+      104,
+      105,
+      106,
+      107,
+      108
+     ],
+     "means": "STOP di tengah bit: IDLE, rx_data <- shifter, rx_valid 1, rx_frame_err <- bukan rx_sync"
+    }
    ],
    "input_timing": {
     "rule": "input transisi t -> t+1 adalah line sesudah posedge t+1",
     "why": "bench mengubah line di region aktif yang sama dengan posedge tempat DUT menyampel rx_in; iverilog menjalankan penugasan bench lebih dulu. Diukur ulang tiap build dan disimpan di model (input_timing): di tiap perubahan line, rx_meta menangkap nilai baru, tidak pernah nilai lama. Ini sifat penjadwalan bench di simulator, bukan sifat kabel -- di papan line asinkron dan dua flop sinkroniser menanggungnya"
    },
-   "bench_verdict": {"pattern": "^PASS: (\\d+) frames, glitch rejected, framing error caught$"},
-   "bench_expects": {"frames": [65, 0, 255, 90, 60], "frame_errors": [false, false, false, false, true]}
+   "bench_verdict": {
+    "pattern": "^PASS: (\\d+) frames, glitch rejected, framing error caught$"
+   },
+   "bench_expects": {
+    "frames": [
+     65,
+     0,
+     255,
+     90,
+     60
+    ],
+    "frame_errors": [
+     false,
+     false,
+     false,
+     false,
+     true
+    ]
+   }
+  },
+  {
+   "name": "hcpu_mmio",
+   "rtl": "rtl/hcpu_mmio.v",
+   "bench": "rtl/tb/tb_hcpu_mmio.v",
+   "top": "tb_hcpu_mmio",
+   "instance": "dut",
+   "clock": "clk",
+   "compile": [
+    "rtl/hcpu_mmio.v",
+    "rtl/hcpu_uart_rx.v",
+    "rtl/hcpu_timer.v",
+    "rtl/hcpu_sdio.v",
+    "rtl/hcpu_dataram.v"
+   ],
+   "include": "rtl",
+   "modelled": [
+    "rtl/hcpu_uart_rx.v",
+    "rtl/hcpu_timer.v"
+   ],
+   "submodules": [
+    {
+     "instance": "u_rx",
+     "module": "hcpu_uart_rx"
+    }
+   ],
+   "outside": {
+    "rtl/hcpu_sdio.v": "pengendali kartu: keluarannya (busy, ok, err, card_ready, err_code, isi penyangga) masuk sebagai input, tidak diprediksi",
+    "rtl/hcpu_dataram.v": "RAM data -- butir SRAM sendiri di urutan pemilik: kata yang dibacanya masuk sebagai input; model memprediksi kapan dan apakah bus mengembalikannya",
+    "unit trap": "tidak ada di bench; trap_reg_rdata tak tersambung (z) dan hanya dibaca bila addr[3:0] = 8..D"
+   },
+   "probe": {
+    "edge": "posedge",
+    "signals": [
+     {
+      "key": "rst_n",
+      "path": "rst_n"
+     },
+     {
+      "key": "re",
+      "path": "re"
+     },
+     {
+      "key": "we",
+      "path": "we"
+     },
+     {
+      "key": "addr",
+      "path": "addr"
+     },
+     {
+      "key": "wdata",
+      "path": "wdata"
+     },
+     {
+      "key": "line",
+      "path": "line"
+     },
+     {
+      "key": "uart_tx_busy",
+      "path": "dut.uart_tx_busy"
+     },
+     {
+      "key": "sd_busy",
+      "path": "dut.sd_busy"
+     },
+     {
+      "key": "sd_ok",
+      "path": "dut.sd_ok"
+     },
+     {
+      "key": "sd_err",
+      "path": "dut.sd_err"
+     },
+     {
+      "key": "sd_card_ready",
+      "path": "dut.sd_card_ready"
+     },
+     {
+      "key": "sd_err_code",
+      "path": "dut.sd_err_code"
+     },
+     {
+      "key": "sd_buf_rdata",
+      "path": "dut.sd_buf_rdata"
+     },
+     {
+      "key": "ram_rdata",
+      "path": "ram_rdata"
+     },
+     {
+      "key": "trap_reg_rdata",
+      "path": "dut.trap_reg_rdata"
+     },
+     {
+      "key": "rx_held",
+      "path": "dut.rx_held"
+     },
+     {
+      "key": "rx_ready",
+      "path": "dut.rx_ready"
+     },
+     {
+      "key": "rx_held_err",
+      "path": "dut.rx_held_err"
+     },
+     {
+      "key": "rx_overrun",
+      "path": "dut.rx_overrun"
+     },
+     {
+      "key": "mem_base",
+      "path": "dut.mem_base"
+     },
+     {
+      "key": "mem_limit",
+      "path": "dut.mem_limit"
+     },
+     {
+      "key": "imem_waddr",
+      "path": "dut.imem_waddr"
+     },
+     {
+      "key": "sd_sector",
+      "path": "dut.sd_sector"
+     },
+     {
+      "key": "sd_index",
+      "path": "dut.sd_index"
+     },
+     {
+      "key": "sd_div",
+      "path": "dut.sd_div"
+     },
+     {
+      "key": "sd_start",
+      "path": "dut.sd_start"
+     },
+     {
+      "key": "sd_op",
+      "path": "dut.sd_op"
+     },
+     {
+      "key": "sd_soft_rst",
+      "path": "dut.sd_soft_rst"
+     },
+     {
+      "key": "periph_rdata",
+      "path": "dut.periph_rdata"
+     },
+     {
+      "key": "periph_sel",
+      "path": "dut.periph_sel"
+     },
+     {
+      "key": "sd_data_sel",
+      "path": "dut.sd_data_sel"
+     },
+     {
+      "key": "u_rx.rx_meta",
+      "path": "dut.u_rx.rx_meta"
+     },
+     {
+      "key": "u_rx.rx_sync",
+      "path": "dut.u_rx.rx_sync"
+     },
+     {
+      "key": "u_rx.state",
+      "path": "dut.u_rx.state"
+     },
+     {
+      "key": "u_rx.count",
+      "path": "dut.u_rx.count"
+     },
+     {
+      "key": "u_rx.index",
+      "path": "dut.u_rx.index"
+     },
+     {
+      "key": "u_rx.shifter",
+      "path": "dut.u_rx.shifter"
+     },
+     {
+      "key": "u_rx.rx_data",
+      "path": "dut.u_rx.rx_data"
+     },
+     {
+      "key": "u_rx.rx_valid",
+      "path": "dut.u_rx.rx_valid"
+     },
+     {
+      "key": "u_rx.rx_frame_err",
+      "path": "dut.u_rx.rx_frame_err"
+     },
+     {
+      "key": "u_timer.counter",
+      "path": "dut.u_timer.counter"
+     },
+     {
+      "key": "u_timer.compare",
+      "path": "dut.u_timer.compare"
+     },
+     {
+      "key": "u_timer.expired",
+      "path": "dut.u_timer.expired"
+     },
+     {
+      "key": "rdata",
+      "path": "rdata"
+     },
+     {
+      "key": "ram_re",
+      "path": "ram_re"
+     },
+     {
+      "key": "ram_we",
+      "path": "ram_we"
+     },
+     {
+      "key": "ram_addr",
+      "path": "ram_addr"
+     },
+     {
+      "key": "ram_wdata",
+      "path": "ram_wdata"
+     },
+     {
+      "key": "trap_reg_we",
+      "path": "dut.trap_reg_we"
+     },
+     {
+      "key": "trap_reg_sel",
+      "path": "dut.trap_reg_sel"
+     },
+     {
+      "key": "trap_reg_wdata",
+      "path": "dut.trap_reg_wdata"
+     },
+     {
+      "key": "src_timer",
+      "path": "dut.src_timer"
+     },
+     {
+      "key": "src_uart_rx",
+      "path": "dut.src_uart_rx"
+     },
+     {
+      "key": "imem_we",
+      "path": "dut.imem_we"
+     },
+     {
+      "key": "imem_wdata",
+      "path": "dut.imem_wdata"
+     }
+    ]
+   },
+   "parameters": {
+    "from": "rtl/tb/tb_hcpu_mmio.v",
+    "pattern": "^\\s*localparam integer (CLK_HZ|BAUD)\\s*=\\s*([\\d_]+);"
+   },
+   "state": [
+    "rx_held",
+    "rx_ready",
+    "rx_held_err",
+    "rx_overrun",
+    "mem_base",
+    "mem_limit",
+    "imem_waddr",
+    "sd_sector",
+    "sd_index",
+    "sd_div",
+    "sd_start",
+    "sd_op",
+    "sd_soft_rst",
+    "periph_rdata",
+    "periph_sel",
+    "sd_data_sel",
+    "u_rx.rx_meta",
+    "u_rx.rx_sync",
+    "u_rx.state",
+    "u_rx.count",
+    "u_rx.index",
+    "u_rx.shifter",
+    "u_rx.rx_data",
+    "u_rx.rx_valid",
+    "u_rx.rx_frame_err",
+    "u_timer.counter",
+    "u_timer.compare",
+    "u_timer.expired"
+   ],
+   "outputs": [
+    "rdata",
+    "ram_re",
+    "ram_we",
+    "ram_addr",
+    "ram_wdata",
+    "trap_reg_we",
+    "trap_reg_sel",
+    "trap_reg_wdata",
+    "src_timer",
+    "src_uart_rx",
+    "imem_we",
+    "imem_wdata"
+   ],
+   "rules": [
+    {
+     "id": "reset",
+     "lines": [
+      150,
+      188,
+      238,
+      270,
+      330
+     ],
+     "means": "rst_n rendah: register MMIO, penerima, dan timer ke nilai reset-nya"
+    },
+    {
+     "id": "decode",
+     "lines": [
+      123,
+      124,
+      125,
+      126
+     ],
+     "means": "satu pembanding: >= 0xFE0 periferal; addr[4] memilih blok inti atau kartu; addr[3:0] register"
+    },
+    {
+     "id": "rx_hold",
+     "lines": [
+      156,
+      157,
+      158,
+      159
+     ],
+     "means": "rx_valid penerima: byte, galat, dan ready ditahan"
+    },
+    {
+     "id": "rx_overrun_set",
+     "lines": [
+      160
+     ],
+     "means": "byte datang sementara ready masih tinggi: overrun"
+    },
+    {
+     "id": "rx_read_clear",
+     "lines": [
+      147,
+      161,
+      162,
+      163
+     ],
+     "means": "baca 0xFF0: ready dan overrun turun"
+    },
+    {
+     "id": "timer_count",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      36
+     ],
+     "means": "pencacah bebas + 1 tiap siklus"
+    },
+    {
+     "id": "timer_compare_write",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      38,
+      39,
+      40
+     ],
+     "means": "tulis 0xFF5: compare baru, expired turun"
+    },
+    {
+     "id": "timer_clear",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      41,
+      42
+     ],
+     "means": "tulis 0xFF6: expired turun"
+    },
+    {
+     "id": "timer_expire",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      43,
+      44
+     ],
+     "means": "pencacah sama dengan compare: expired naik dan lengket"
+    },
+    {
+     "id": "mem_base_write",
+     "lines": [
+      184,
+      192
+     ],
+     "means": "tulis 0xFFE: batas bawah mode pengguna"
+    },
+    {
+     "id": "mem_limit_write",
+     "lines": [
+      185,
+      193
+     ],
+     "means": "tulis 0xFFF: batas atas mode pengguna"
+    },
+    {
+     "id": "imem_addr_write",
+     "lines": [
+      228,
+      241,
+      242
+     ],
+     "means": "tulis 0xFF3: alamat tulis memori instruksi"
+    },
+    {
+     "id": "imem_data_advance",
+     "lines": [
+      229,
+      243,
+      244
+     ],
+     "means": "tulis 0xFF7: alamat tulis memori instruksi maju satu"
+    },
+    {
+     "id": "sd_cmd_write",
+     "lines": [
+      259,
+      284,
+      285,
+      286
+     ],
+     "means": "tulis 0xFE0: denyut start dan op kartu"
+    },
+    {
+     "id": "sd_sector_write",
+     "lines": [
+      260,
+      288
+     ],
+     "means": "tulis 0xFE2: nomor sektor"
+    },
+    {
+     "id": "sd_control_write",
+     "lines": [
+      263,
+      290,
+      291,
+      292,
+      293
+     ],
+     "means": "tulis 0xFE4: pembagi clock, reset indeks, reset pengendali"
+    },
+    {
+     "id": "sd_data_advance",
+     "lines": [
+      261,
+      262,
+      294,
+      295
+     ],
+     "means": "baca atau tulis 0xFE3: indeks penyangga maju"
+    },
+    {
+     "id": "read_rx_data",
+     "lines": [
+      352
+     ],
+     "means": "jalur baca terdaftar, addr[3:0]=0 di blok inti: byte yang ditahan"
+    },
+    {
+     "id": "read_rx_status",
+     "lines": [
+      353,
+      354
+     ],
+     "means": "addr[3:0]=1: overrun, galat, ready"
+    },
+    {
+     "id": "read_tx_status",
+     "lines": [
+      355
+     ],
+     "means": "addr[3:0]=2: pengirim sibuk"
+    },
+    {
+     "id": "read_imem_addr",
+     "lines": [
+      365,
+      366
+     ],
+     "means": "addr[3:0]=3: alamat tulis memori instruksi"
+    },
+    {
+     "id": "read_counter",
+     "lines": [
+      356
+     ],
+     "means": "addr[3:0]=4: pencacah"
+    },
+    {
+     "id": "read_compare",
+     "lines": [
+      357
+     ],
+     "means": "addr[3:0]=5: compare"
+    },
+    {
+     "id": "read_timer_status",
+     "lines": [
+      358
+     ],
+     "means": "addr[3:0]=6: expired"
+    },
+    {
+     "id": "read_trap",
+     "lines": [
+      359,
+      360,
+      361,
+      362,
+      363,
+      364
+     ],
+     "means": "addr[3:0]=8..D: register trap, dari unit trap"
+    },
+    {
+     "id": "read_mem_base",
+     "lines": [
+      367,
+      368
+     ],
+     "means": "addr[3:0]=E: batas bawah"
+    },
+    {
+     "id": "read_mem_limit",
+     "lines": [
+      369,
+      370
+     ],
+     "means": "addr[3:0]=F: batas atas"
+    },
+    {
+     "id": "read_other",
+     "lines": [
+      371
+     ],
+     "means": "addr[3:0]=7 di blok inti: nol"
+    },
+    {
+     "id": "read_sd_status",
+     "lines": [
+      337,
+      343,
+      344,
+      345
+     ],
+     "means": "blok kartu, addr[3:0]=1: status pengendali"
+    },
+    {
+     "id": "read_sd_sector",
+     "lines": [
+      346
+     ],
+     "means": "blok kartu, addr[3:0]=2: sektor"
+    },
+    {
+     "id": "read_sd_control",
+     "lines": [
+      347
+     ],
+     "means": "blok kartu, addr[3:0]=4: pembagi"
+    },
+    {
+     "id": "read_sd_other",
+     "lines": [
+      348
+     ],
+     "means": "blok kartu, register lain: nol"
+    }
+   ],
+   "input_timing": {
+    "rule": "keadaan dan input tepi t+1 dibaca dari baris yang dicetak $strobe di akhir timestep tepi t+1; keluaran modul luar (kartu, RAM, trap) yang diregister di sana dibaca dari baris t",
+    "why": "bench menggerakkan bus di tepi turun, dan line kadang tepat di tepi naik, kadang sesudah tepi turun (send() yang menyusul bus_read mulai di #1 sesudahnya). Sampel 7 ns sesudah tepi naik terbukti salah pada dua perubahan line itu: ia melihat nilai yang baru flop ambil satu tepi kemudian. Dicetak dengan $strobe di akhir timestep tepi naik, baris memegang persis yang tepi itu ambil, dan pengukuran input_timing tiap build memastikannya"
+   },
+   "bench_verdict": {
+    "pattern": "^PASS: RAM, peripherals, latency, hold, and overrun$"
+   },
+   "bench_expects": {
+    "reads": [
+     {
+      "addr": 16,
+      "equals": 3735928559,
+      "bench_lines": [
+       84,
+       85
+      ]
+     },
+     {
+      "addr": 16,
+      "equals": 3735928559,
+      "bench_lines": [
+       97,
+       98
+      ]
+     },
+     {
+      "addr": 4085,
+      "equals": 4660,
+      "bench_lines": [
+       103,
+       104
+      ]
+     },
+     {
+      "addr": 4084,
+      "bench_lines": [
+       109
+      ]
+     },
+     {
+      "addr": 4084,
+      "greater_than_previous": true,
+      "bench_lines": [
+       111,
+       112
+      ]
+     },
+     {
+      "addr": 4081,
+      "bit": 0,
+      "is": 1,
+      "bench_lines": [
+       118,
+       119
+      ]
+     },
+     {
+      "addr": 4080,
+      "equals": 65,
+      "bench_lines": [
+       122,
+       123
+      ]
+     },
+     {
+      "addr": 4081,
+      "bit": 0,
+      "is": 0,
+      "bench_lines": [
+       126,
+       127
+      ]
+     },
+     {
+      "addr": 4081,
+      "bit": 2,
+      "is": 1,
+      "bench_lines": [
+       134,
+       135
+      ]
+     }
+    ],
+    "ram_writes_in_window": 0,
+    "ram_writes_in_window_bench_lines": [
+     36,
+     37,
+     38,
+     39,
+     92
+    ]
+   },
+   "not_covered": {
+    "mem_base_write": "bench tidak pernah menulis 0xFFE (jendela proteksi)",
+    "mem_limit_write": "bench tidak pernah menulis 0xFFF (jendela proteksi)",
+    "imem_addr_write": "bench tidak pernah menulis 0xFF3 (port tulis memori instruksi)",
+    "imem_data_advance": "bench tidak pernah menulis 0xFF7 (port tulis memori instruksi)",
+    "sd_cmd_write": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "sd_sector_write": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "sd_control_write": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "sd_data_advance": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "read_tx_status": "bench tidak pernah menaruh 0xFF2 di bus; uart_tx_busy diikat 0",
+    "read_imem_addr": "bench tidak pernah menaruh addr[3:0]=3 di blok inti",
+    "read_trap": "bench tidak pernah menaruh 0xFF8-0xFFD di bus; unit trap tidak ada di bench",
+    "read_mem_base": "bench tidak pernah menaruh 0xFFE di bus",
+    "read_mem_limit": "bench tidak pernah menaruh 0xFFF di bus",
+    "read_other": "akses tak terpetakan di blok inti (addr[3:0]=7): bench tidak pernah menaruhnya di bus",
+    "read_sd_status": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "read_sd_sector": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "read_sd_control": "bench tidak pernah menyentuh blok kartu 0xFE0-0xFEF",
+    "read_sd_other": "akses tak terpetakan di blok kartu: bench tidak pernah menyentuh blok kartu",
+    "u_rx.start_glitch": "bench MMIO tidak mengirim glitch; aturan ini dicakup bench UART RX sendiri"
+   },
+   "not_covered_why": "aturan RTL yang tidak dijalankan bench khusus modul ini: ditulis di fungsi dan dinyatakan di sini, tidak dianggap terbukti"
   }
  ],
  "checks": [
-  {"id": "F1", "label": "satu langkah: fungsi atas keadaan RTL siklus t dan input t+1 memberi keadaan dan keluaran RTL siklus t+1, di setiap siklus bench"},
-  {"id": "F2", "label": "lingkar terbuka: dari reset, hanya dengan input bench, fungsi menghasilkan seluruh lintasan RTL"},
-  {"id": "F3", "label": "vonis bench: frame, data, glitch, dan framing error yang diprediksi sama dengan yang bench periksa, dan bench sendiri PASS"},
-  {"id": "F4", "label": "cakupan: tiap aturan transisi dijalankan bench sekurangnya sekali, atau disebut tidak tercakup"},
-  {"id": "F5", "label": "RTL dan bench yang dicocokkan adalah berkas yang hash-nya dicatat model"}
+  {
+   "id": "F1",
+   "label": "satu langkah: fungsi atas keadaan RTL siklus t dan input t+1 memberi keadaan dan keluaran RTL siklus t+1, di setiap siklus bench"
+  },
+  {
+   "id": "F2",
+   "label": "lingkar terbuka: dari reset, hanya dengan input bench, fungsi menghasilkan seluruh lintasan RTL"
+  },
+  {
+   "id": "F3",
+   "label": "vonis bench: frame, data, glitch, dan framing error yang diprediksi sama dengan yang bench periksa, dan bench sendiri PASS"
+  },
+  {
+   "id": "F4",
+   "label": "cakupan: tiap aturan transisi dijalankan bench sekurangnya sekali, atau disebut tidak tercakup"
+  },
+  {
+   "id": "F5",
+   "label": "RTL dan bench yang dicocokkan adalah berkas yang hash-nya dicatat model"
+  }
  ]
 }

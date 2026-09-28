@@ -28,7 +28,11 @@ sys.path.insert(0, str(ROOT / "src"))
 from hijaiyyah.nui import rtl_function as rf  # noqa: E402
 
 MODEL = json.loads(rf.MODEL.read_text(encoding="utf-8"))
-SPEC = rf.load()["modules"][0]
+SPEC = next(m for m in rf.load()["modules"] if m["name"] == "hcpu_uart_rx")
+
+
+def _module(name: str) -> dict[str, Any]:
+    return next(m for m in MODEL["modules"] if m["name"] == name)
 
 
 @pytest.fixture(scope="module")
@@ -45,21 +49,21 @@ def test_the_page_is_drawn_from_the_model() -> None:
 
 
 def test_the_function_is_the_rtl_at_every_cycle_of_its_bench() -> None:
-    m, = MODEL["modules"]
+    m = _module("hcpu_uart_rx")
     assert m["cycles"] == 15916
     assert m["one_step_mismatches"] == [] and m["open_loop_mismatches"] == []
     assert rf.check(MODEL) == []
 
 
 def test_it_predicts_what_the_bench_checks_and_the_bench_passes() -> None:
-    m, = MODEL["modules"]
+    m = _module("hcpu_uart_rx")
     assert m["frames"] == [0x41, 0x00, 0xFF, 0x5A, 0x3C]
     assert m["frame_errors"] == [False, False, False, False, True]
     assert m["bench_pass"] and m["bench_said"].startswith("PASS: 5 frames")
 
 
 def test_every_transition_rule_is_exercised() -> None:
-    m, = MODEL["modules"]
+    m = _module("hcpu_uart_rx")
     assert [r["id"] for r in m["rules"]] == [r["id"] for r in SPEC["rules"]]
     assert m["not_covered"] == [] and all(r["fired"] > 0 for r in m["rules"])
     glitches = next(r["fired"] for r in m["rules"] if r["id"] == "start_glitch")
@@ -67,7 +71,7 @@ def test_every_transition_rule_is_exercised() -> None:
 
 
 def test_the_parameters_are_the_benchs() -> None:
-    m, = MODEL["modules"]
+    m = _module("hcpu_uart_rx")
     assert m["parameters"] == {"CLK_HZ": 27_000_000, "BAUD": 115_200, "DIVISOR": 234,
                                "HALF": 117, "CNT_W": 8}
 
@@ -80,7 +84,7 @@ def test_the_input_timing_is_what_the_simulator_resolves(trace: dict[str, Any]) 
                if rows[t + 1]["rst_n"] and rows[t + 1]["rx_in"] != rows[t]["rx_in"]]
     assert len(changed) == 24
     assert all(rows[t + 1]["rx_meta"] == rows[t + 1]["rx_in"] for t in changed)
-    m, = MODEL["modules"]
+    m = _module("hcpu_uart_rx")
     assert m["input_timing"] == {"line_changes": 24, "captured_new": 24, "captured_old": 0}
 
 
@@ -131,13 +135,13 @@ def test_each_broken_rule_is_red(name: str, trace: dict[str, Any]) -> None:
 
 def test_a_prediction_the_bench_does_not_make_is_red() -> None:
     bent = json.loads(json.dumps(MODEL))
-    bent["modules"][0]["frames"][0] = 0x42
+    next(m for m in bent["modules"] if m["name"] == "hcpu_uart_rx")["frames"][0] = 0x42
     assert any(b.startswith("F3") for b in rf.check(bent))
 
 
 def test_another_rtl_than_the_one_held_is_red() -> None:
     bent = json.loads(json.dumps(MODEL))
-    bent["modules"][0]["rtl_sha256"] = "0" * 64
+    next(m for m in bent["modules"] if m["name"] == "hcpu_uart_rx")["rtl_sha256"] = "0" * 64
     assert any(b.startswith("F5") for b in rf.check(bent))
 
 

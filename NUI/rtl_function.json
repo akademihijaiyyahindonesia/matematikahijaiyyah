@@ -176,6 +176,538 @@
     }
    ],
    "not_covered": []
+  },
+  {
+   "name": "hcpu_mmio",
+   "rtl": "rtl/hcpu_mmio.v",
+   "rtl_sha256": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd",
+   "bench": "rtl/tb/tb_hcpu_mmio.v",
+   "bench_sha256": "4a82b30baf8024b115c5af6d8a563e5921b4e0cadbd30f5165bb5849b7157604",
+   "modelled_sha256": {
+    "rtl/hcpu_uart_rx.v": "3dbb9f127825ef6afe83f016b84b81360d02f85dcb8d7c16c7ca6ce596a728ad",
+    "rtl/hcpu_timer.v": "4847d722d2ca14670b0be614d2f22da46ae2b05ea12edcbbfb0f01395a80283b"
+   },
+   "trace_sha256": "068ae10e534a19600e3014cdf09b7ec5c80254917309522f42b986ffbb823ad1",
+   "parameters": {
+    "DIVISOR": 234,
+    "HALF": 117,
+    "CNT_W": 8,
+    "CLK_HZ": 27000000,
+    "BAUD": 115200
+   },
+   "cycles": 7758,
+   "input_timing": {
+    "line_changes": 18,
+    "captured_new": 18,
+    "captured_old": 0
+   },
+   "one_step_mismatches": [],
+   "open_loop_mismatches": [],
+   "output_mismatches": [],
+   "reads": [
+    [
+     16,
+     3735928559
+    ],
+    [
+     16,
+     3735928559
+    ],
+    [
+     4085,
+     4660
+    ],
+    [
+     4084,
+     13
+    ],
+    [
+     4084,
+     26
+    ],
+    [
+     4081,
+     1
+    ],
+    [
+     4080,
+     65
+    ],
+    [
+     4081,
+     0
+    ],
+    [
+     4081,
+     5
+    ]
+   ],
+   "ram_writes_in_window": 0,
+   "bench_said": "PASS: RAM, peripherals, latency, hold, and overrun",
+   "bench_pass": true,
+   "rules_fired": {
+    "reset": 2,
+    "decode": 7755,
+    "rx_hold": 3,
+    "rx_overrun_set": 1,
+    "rx_read_clear": 1,
+    "timer_count": 7755,
+    "timer_compare_write": 1,
+    "timer_clear": 1,
+    "timer_expire": 1,
+    "mem_base_write": 0,
+    "mem_limit_write": 0,
+    "imem_addr_write": 0,
+    "imem_data_advance": 0,
+    "sd_cmd_write": 0,
+    "sd_sector_write": 0,
+    "sd_control_write": 0,
+    "sd_data_advance": 0,
+    "read_rx_data": 9,
+    "read_rx_status": 5152,
+    "read_tx_status": 0,
+    "read_imem_addr": 0,
+    "read_counter": 2588,
+    "read_compare": 4,
+    "read_timer_status": 2,
+    "read_trap": 0,
+    "read_mem_base": 0,
+    "read_mem_limit": 0,
+    "read_other": 0,
+    "read_sd_status": 0,
+    "read_sd_sector": 0,
+    "read_sd_control": 0,
+    "read_sd_other": 0,
+    "u_rx.sync": 7755,
+    "u_rx.outputs_drop": 7755,
+    "u_rx.idle_wait": 1083,
+    "u_rx.idle_falling_edge": 3,
+    "u_rx.start_count": 348,
+    "u_rx.start_confirmed": 3,
+    "u_rx.start_glitch": 0,
+    "u_rx.data_count": 5592,
+    "u_rx.data_sample": 21,
+    "u_rx.data_last": 3,
+    "u_rx.stop_count": 699,
+    "u_rx.stop_deliver": 3
+   },
+   "rules": [
+    {
+     "id": "reset",
+     "lines": [
+      150,
+      188,
+      238,
+      270,
+      330
+     ],
+     "fired": 2
+    },
+    {
+     "id": "decode",
+     "lines": [
+      123,
+      124,
+      125,
+      126
+     ],
+     "fired": 7755
+    },
+    {
+     "id": "rx_hold",
+     "lines": [
+      156,
+      157,
+      158,
+      159
+     ],
+     "fired": 3
+    },
+    {
+     "id": "rx_overrun_set",
+     "lines": [
+      160
+     ],
+     "fired": 1
+    },
+    {
+     "id": "rx_read_clear",
+     "lines": [
+      147,
+      161,
+      162,
+      163
+     ],
+     "fired": 1
+    },
+    {
+     "id": "timer_count",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      36
+     ],
+     "fired": 7755
+    },
+    {
+     "id": "timer_compare_write",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      38,
+      39,
+      40
+     ],
+     "fired": 1
+    },
+    {
+     "id": "timer_clear",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      41,
+      42
+     ],
+     "fired": 1
+    },
+    {
+     "id": "timer_expire",
+     "file": "rtl/hcpu_timer.v",
+     "lines": [
+      43,
+      44
+     ],
+     "fired": 1
+    },
+    {
+     "id": "mem_base_write",
+     "lines": [
+      184,
+      192
+     ],
+     "fired": 0
+    },
+    {
+     "id": "mem_limit_write",
+     "lines": [
+      185,
+      193
+     ],
+     "fired": 0
+    },
+    {
+     "id": "imem_addr_write",
+     "lines": [
+      228,
+      241,
+      242
+     ],
+     "fired": 0
+    },
+    {
+     "id": "imem_data_advance",
+     "lines": [
+      229,
+      243,
+      244
+     ],
+     "fired": 0
+    },
+    {
+     "id": "sd_cmd_write",
+     "lines": [
+      259,
+      284,
+      285,
+      286
+     ],
+     "fired": 0
+    },
+    {
+     "id": "sd_sector_write",
+     "lines": [
+      260,
+      288
+     ],
+     "fired": 0
+    },
+    {
+     "id": "sd_control_write",
+     "lines": [
+      263,
+      290,
+      291,
+      292,
+      293
+     ],
+     "fired": 0
+    },
+    {
+     "id": "sd_data_advance",
+     "lines": [
+      261,
+      262,
+      294,
+      295
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_rx_data",
+     "lines": [
+      352
+     ],
+     "fired": 9
+    },
+    {
+     "id": "read_rx_status",
+     "lines": [
+      353,
+      354
+     ],
+     "fired": 5152
+    },
+    {
+     "id": "read_tx_status",
+     "lines": [
+      355
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_imem_addr",
+     "lines": [
+      365,
+      366
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_counter",
+     "lines": [
+      356
+     ],
+     "fired": 2588
+    },
+    {
+     "id": "read_compare",
+     "lines": [
+      357
+     ],
+     "fired": 4
+    },
+    {
+     "id": "read_timer_status",
+     "lines": [
+      358
+     ],
+     "fired": 2
+    },
+    {
+     "id": "read_trap",
+     "lines": [
+      359,
+      360,
+      361,
+      362,
+      363,
+      364
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_mem_base",
+     "lines": [
+      367,
+      368
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_mem_limit",
+     "lines": [
+      369,
+      370
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_other",
+     "lines": [
+      371
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_sd_status",
+     "lines": [
+      337,
+      343,
+      344,
+      345
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_sd_sector",
+     "lines": [
+      346
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_sd_control",
+     "lines": [
+      347
+     ],
+     "fired": 0
+    },
+    {
+     "id": "read_sd_other",
+     "lines": [
+      348
+     ],
+     "fired": 0
+    },
+    {
+     "id": "u_rx.sync",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      53
+     ],
+     "fired": 7755
+    },
+    {
+     "id": "u_rx.outputs_drop",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      66,
+      67
+     ],
+     "fired": 7755
+    },
+    {
+     "id": "u_rx.idle_wait",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      70,
+      75
+     ],
+     "fired": 1083
+    },
+    {
+     "id": "u_rx.idle_falling_edge",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      71,
+      72,
+      73
+     ],
+     "fired": 3
+    },
+    {
+     "id": "u_rx.start_count",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      86,
+      87
+     ],
+     "fired": 348
+    },
+    {
+     "id": "u_rx.start_confirmed",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      78,
+      79,
+      80,
+      81,
+      82
+     ],
+     "fired": 3
+    },
+    {
+     "id": "u_rx.start_glitch",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      78,
+      83,
+      84
+     ],
+     "fired": 0
+    },
+    {
+     "id": "u_rx.data_count",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      97,
+      98
+     ],
+     "fired": 5592
+    },
+    {
+     "id": "u_rx.data_sample",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      92,
+      93,
+      94,
+      96
+     ],
+     "fired": 21
+    },
+    {
+     "id": "u_rx.data_last",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      92,
+      93,
+      94,
+      95
+     ],
+     "fired": 3
+    },
+    {
+     "id": "u_rx.stop_count",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      109,
+      110
+     ],
+     "fired": 699
+    },
+    {
+     "id": "u_rx.stop_deliver",
+     "file": "rtl/hcpu_uart_rx.v",
+     "lines": [
+      103,
+      104,
+      105,
+      106,
+      107,
+      108
+     ],
+     "fired": 3
+    }
+   ],
+   "not_covered": [
+    "mem_base_write",
+    "mem_limit_write",
+    "imem_addr_write",
+    "imem_data_advance",
+    "sd_cmd_write",
+    "sd_sector_write",
+    "sd_control_write",
+    "sd_data_advance",
+    "read_tx_status",
+    "read_imem_addr",
+    "read_trap",
+    "read_mem_base",
+    "read_mem_limit",
+    "read_other",
+    "read_sd_status",
+    "read_sd_sector",
+    "read_sd_control",
+    "read_sd_other",
+    "u_rx.start_glitch"
+   ]
   }
  ]
 }
