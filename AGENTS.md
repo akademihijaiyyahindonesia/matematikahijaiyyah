@@ -1660,6 +1660,19 @@ amati diukur dulu, lalu cakupan gabungan dan irisannya ditetapkan.
 `rtl/programs/loader.hasm`, RTL, dan kedua bench tidak diubah. Sesudah loader,
 pipeline — oracle-nya `rtl/tb/tb_hcpu_top.v`, bukan bench per tahap.
 
+Loader diterima GREEN (`6d8839a`). Fakta bahwa `ERET` mendahului pengambilan
+fetch alamat 64 cukup sebagai provenance loader tanpa mengarang pipeline, dan
+aturan penunjuk tulis `rtl/hcpu_mmio.v` dicatat sebagai terbukti **lewat
+loader** tanpa mengubah cakupan model MMIO. Untuk pipeline pemilik memerintahkan
+**audit oracle dan peta cakupan lebih dulu, model sesudahnya**: tentukan
+keadaan yang teramati, input yang berubah, titik sampel, instruksi yang lewat
+tiap tahap, transisi yang dapat diprediksi, dan aturan yang tidak pernah
+dijalankan. Keadaan yang dimodelkan harus teramati di bawah bench itu atau
+dapat diturunkan tanpa mengarang keadaan internal. Yang dilarang: bench baru,
+mengubah RTL pipeline, menganggap kelima tahap tercakup, memakai interpreter
+sebagai pengganti oracle, dan mengklaim keadaan tahap yang tidak teramati.
+Bentuk fungsi state-transition pipeline diputuskan pemilik sesudah peta itu.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

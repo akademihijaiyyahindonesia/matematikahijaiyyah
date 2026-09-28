@@ -1483,5 +1483,1594 @@
     "count_empty"
    ]
   }
- ]
+ ],
+ "pipeline_audit": {
+  "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
+  "files_sha256": {
+   "rtl/hcpu_top.v": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "rtl/hcpu_fetch.v": "c4cc8c473e9a77f6be543545c8c4ec83b711214f7a7c40567e74e77a513e1deb",
+   "rtl/hcpu_decode.v": "50858a8db6eac9b4aa77097e53e9f11640c790e11c6f7a13aaa4cf8569da878c",
+   "rtl/hcpu_forward.v": "1e02e95e8e8d6b5103c3cfc6fa6e4c95837bbb2a9fe897f3cff626bec551ddbc",
+   "rtl/hcpu_execute.v": "161761534a710a304320c4818bd8207b2c1f84a95ed67d8d1f275aa17a56d4c2",
+   "rtl/hcpu_memory.v": "6738069540e1716ce78fa6eed97e222a35ff9de56aa22e684e12ca3744302b36",
+   "rtl/hcpu_writeback.v": "5cb92f5d8722f1da2b4082dfc336e93d79004bcfd392beb2dc6f83246b082225",
+   "rtl/hcpu_controller.v": "ff42dba6347ec50cdccc23659b818f6e19d4f8ce4e32713e43c20e2d10e72ffd",
+   "rtl/hcpu_regfile.v": "64acfdf2f002860ad0e8903f65c298bfb46d4a72b5ac81bcd53dfbf5e88a7ad6",
+   "rtl/hcpu_pkg.vh": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342"
+  },
+  "trace_sha256": "3800ca141985f2a75f16a9c09e00866f56d0c22098ac4c4eaed43b37903bf3bd",
+  "edges": 232,
+  "live_edges": 178,
+  "sampling": {
+   "compared": 178,
+   "mismatched": {},
+   "release_edges": {
+    "stepped": 11,
+    "held_in_reset": 0
+   }
+  },
+  "identity": {
+   "id_checked": 178,
+   "id_mismatches": 0,
+   "ex_checked": 178,
+   "ex_mismatches": 0
+  },
+  "programs": [
+   {
+    "n": 1,
+    "fetched": 8,
+    "decoded": 7,
+    "executed": 6,
+    "retired": 5,
+    "edges": 9
+   },
+   {
+    "n": 2,
+    "fetched": 12,
+    "decoded": 11,
+    "executed": 10,
+    "retired": 9,
+    "edges": 13
+   },
+   {
+    "n": 3,
+    "fetched": 18,
+    "decoded": 15,
+    "executed": 14,
+    "retired": 13,
+    "edges": 23
+   },
+   {
+    "n": 4,
+    "fetched": 13,
+    "decoded": 12,
+    "executed": 11,
+    "retired": 10,
+    "edges": 14
+   },
+   {
+    "n": 5,
+    "fetched": 10,
+    "decoded": 8,
+    "executed": 7,
+    "retired": 6,
+    "edges": 13
+   },
+   {
+    "n": 6,
+    "fetched": 12,
+    "decoded": 11,
+    "executed": 10,
+    "retired": 9,
+    "edges": 14
+   },
+   {
+    "n": 7,
+    "fetched": 11,
+    "decoded": 10,
+    "executed": 9,
+    "retired": 8,
+    "edges": 12
+   },
+   {
+    "n": 8,
+    "fetched": 19,
+    "decoded": 18,
+    "executed": 17,
+    "retired": 16,
+    "edges": 20
+   },
+   {
+    "n": 9,
+    "fetched": 11,
+    "decoded": 10,
+    "executed": 9,
+    "retired": 8,
+    "edges": 12
+   },
+   {
+    "n": 10,
+    "fetched": 19,
+    "decoded": 18,
+    "executed": 17,
+    "retired": 16,
+    "edges": 20
+   },
+   {
+    "n": 11,
+    "fetched": 25,
+    "decoded": 23,
+    "executed": 22,
+    "retired": 21,
+    "edges": 28
+   }
+  ],
+  "transitions": [
+   {
+    "id": "fetch_reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "fetch_redirect_branch",
+    "fired": 4,
+    "programs": [
+     3,
+     5,
+     11
+    ]
+   },
+   {
+    "id": "fetch_redirect_trap",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "fetch_flush_only",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "fetch_stall",
+    "fired": 1,
+    "programs": [
+     6
+    ]
+   },
+   {
+    "id": "fetch_latch",
+    "fired": 158,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "fetch_warmup",
+    "fired": 15,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "decode_reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "decode_flush_redirect",
+    "fired": 4,
+    "programs": [
+     3,
+     5,
+     11
+    ]
+   },
+   {
+    "id": "decode_flush_hazard",
+    "fired": 1,
+    "programs": [
+     6
+    ]
+   },
+   {
+    "id": "decode_stall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "decode_latch_instruction",
+    "fired": 143,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "decode_latch_bubble",
+    "fired": 30,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "decode_letter",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "decode_halt_err",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "hazard_load_use",
+    "fired": 1,
+    "programs": [
+     6
+    ]
+   },
+   {
+    "id": "hazard_pop_use",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "hazard_store_load",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "fwd_gpr_s1_ex",
+    "fired": 5,
+    "programs": [
+     3,
+     7,
+     10
+    ]
+   },
+   {
+    "id": "fwd_gpr_s1_mem",
+    "fired": 6,
+    "programs": [
+     3,
+     6,
+     7,
+     10
+    ]
+   },
+   {
+    "id": "fwd_gpr_s1_rf",
+    "fired": 35,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "fwd_gpr_s2_ex",
+    "fired": 1,
+    "programs": [
+     6
+    ]
+   },
+   {
+    "id": "fwd_gpr_s2_mem",
+    "fired": 3,
+    "programs": [
+     3,
+     4,
+     11
+    ]
+   },
+   {
+    "id": "fwd_gpr_s2_rf",
+    "fired": 8,
+    "programs": [
+     2,
+     3,
+     6,
+     11
+    ]
+   },
+   {
+    "id": "fwd_hreg_s1_ex",
+    "fired": 9,
+    "programs": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     10
+    ]
+   },
+   {
+    "id": "fwd_hreg_s1_mem",
+    "fired": 8,
+    "programs": [
+     2,
+     7,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "fwd_hreg_s1_rf",
+    "fired": 29,
+    "programs": [
+     3,
+     4,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "fwd_hreg_s2_ex",
+    "fired": 3,
+    "programs": [
+     2,
+     11
+    ]
+   },
+   {
+    "id": "fwd_hreg_s2_mem",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "fwd_hreg_s2_rf",
+    "fired": 9,
+    "programs": [
+     3,
+     4,
+     6,
+     11
+    ]
+   },
+   {
+    "id": "ex_latch",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "ex_stall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "ex_flush",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "flags_forward_self",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "flags_forward_ex",
+    "fired": 7,
+    "programs": [
+     3,
+     5,
+     11
+    ]
+   },
+   {
+    "id": "flags_forward_rf",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "branch_jmp",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "branch_call",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "branch_ret",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "jeq_taken",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "jeq_not_taken",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "jne_taken",
+    "fired": 3,
+    "programs": [
+     3,
+     11
+    ]
+   },
+   {
+    "id": "jne_not_taken",
+    "fired": 3,
+    "programs": [
+     3,
+     11
+    ]
+   },
+   {
+    "id": "jgd_taken",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "jgd_not_taken",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "jngd_taken",
+    "fired": 1,
+    "programs": [
+     5
+    ]
+   },
+   {
+    "id": "jngd_not_taken",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "ra_overflow",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "ra_underflow",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "hc01_invalid_rom",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "priv_fault",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mem_fault",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "eret",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "syscall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "flags_hgrd",
+    "fired": 3,
+    "programs": [
+     1,
+     2,
+     5
+    ]
+   },
+   {
+    "id": "flags_ceq",
+    "fired": 3,
+    "programs": [
+     11
+    ]
+   },
+   {
+    "id": "flags_fwr",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "flags_cmp",
+    "fired": 3,
+    "programs": [
+     3
+    ]
+   },
+   {
+    "id": "mem_latch",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mem_stall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "dram_read",
+    "fired": 2,
+    "programs": [
+     4,
+     6
+    ]
+   },
+   {
+    "id": "dram_write",
+    "fired": 2,
+    "programs": [
+     4,
+     6
+    ]
+   },
+   {
+    "id": "stack_push",
+    "fired": 3,
+    "programs": [
+     8
+    ]
+   },
+   {
+    "id": "stack_pop",
+    "fired": 3,
+    "programs": [
+     8
+    ]
+   },
+   {
+    "id": "stack_overflow",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "stack_underflow",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "result_load",
+    "fired": 2,
+    "programs": [
+     4,
+     6
+    ]
+   },
+   {
+    "id": "result_pop",
+    "fired": 3,
+    "programs": [
+     8
+    ]
+   },
+   {
+    "id": "wb_gpr",
+    "fired": 49,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "wb_hreg",
+    "fired": 20,
+    "programs": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "wb_flags",
+    "fired": 9,
+    "programs": [
+     1,
+     2,
+     3,
+     5,
+     11
+    ]
+   },
+   {
+    "id": "wb_halt",
+    "fired": 11,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "ctrl_print_stall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "ctrl_halt_latch",
+    "fired": 11,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "ctrl_halted_stall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "ctrl_data_hazard",
+    "fired": 1,
+    "programs": [
+     6
+    ]
+   },
+   {
+    "id": "ctrl_if_flush",
+    "fired": 4,
+    "programs": [
+     3,
+     5,
+     11
+    ]
+   },
+   {
+    "id": "ctrl_id_flush",
+    "fired": 5,
+    "programs": [
+     3,
+     5,
+     6,
+     11
+    ]
+   }
+  ],
+  "not_covered": [
+   "fetch_redirect_trap",
+   "fetch_flush_only",
+   "decode_stall",
+   "decode_letter",
+   "decode_halt_err",
+   "hazard_pop_use",
+   "hazard_store_load",
+   "fwd_hreg_s2_mem",
+   "ex_stall",
+   "ex_flush",
+   "flags_forward_self",
+   "flags_forward_rf",
+   "branch_jmp",
+   "branch_call",
+   "branch_ret",
+   "jeq_taken",
+   "jeq_not_taken",
+   "jgd_taken",
+   "jgd_not_taken",
+   "jngd_not_taken",
+   "ra_overflow",
+   "ra_underflow",
+   "hc01_invalid_rom",
+   "priv_fault",
+   "mem_fault",
+   "eret",
+   "syscall",
+   "flags_fwr",
+   "mem_stall",
+   "stack_overflow",
+   "stack_underflow",
+   "ctrl_print_stall",
+   "ctrl_halted_stall"
+  ],
+  "opcodes": {
+   "NOP": {
+    "line": 243,
+    "IF": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "ID/EX": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "EX/MEM": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "MEM/WB": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   "HALT": {
+    "line": 245,
+    "IF": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "ID/EX": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "EX/MEM": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ],
+    "MEM/WB": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   "FRD": {
+    "line": 250,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "MOV": {
+    "line": 251,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "MOVI": {
+    "line": 252,
+    "IF": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     8,
+     10,
+     11
+    ],
+    "ID/EX": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     8,
+     10,
+     11
+    ],
+    "EX/MEM": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     8,
+     10,
+     11
+    ],
+    "MEM/WB": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     8,
+     10,
+     11
+    ]
+   },
+   "ADD": {
+    "line": 254,
+    "IF": [
+     6
+    ],
+    "ID/EX": [
+     6
+    ],
+    "EX/MEM": [
+     6
+    ],
+    "MEM/WB": [
+     6
+    ]
+   },
+   "ADDI": {
+    "line": 255,
+    "IF": [
+     3
+    ],
+    "ID/EX": [
+     3
+    ],
+    "EX/MEM": [
+     3
+    ],
+    "MEM/WB": [
+     3
+    ]
+   },
+   "SUB": {
+    "line": 256,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "MUL": {
+    "line": 257,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "AND": {
+    "line": 259,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "OR": {
+    "line": 260,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "XOR": {
+    "line": 261,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "NOT": {
+    "line": 262,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHL": {
+    "line": 263,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHR": {
+    "line": 264,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "ANDI": {
+    "line": 265,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "ORI": {
+    "line": 266,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "XORI": {
+    "line": 267,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHLI": {
+    "line": 268,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHRI": {
+    "line": 269,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "CMP": {
+    "line": 271,
+    "IF": [
+     3
+    ],
+    "ID/EX": [
+     3
+    ],
+    "EX/MEM": [
+     3
+    ],
+    "MEM/WB": [
+     3
+    ]
+   },
+   "CMPI": {
+    "line": 272,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "FWR": {
+    "line": 278,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "EMITS": {
+    "line": 282,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "CALL": {
+    "line": 284,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "RET": {
+    "line": 285,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "JMP": {
+    "line": 286,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "JEQ": {
+    "line": 287,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "JNE": {
+    "line": 288,
+    "IF": [
+     3,
+     11
+    ],
+    "ID/EX": [
+     3,
+     11
+    ],
+    "EX/MEM": [
+     3,
+     11
+    ],
+    "MEM/WB": [
+     3,
+     11
+    ]
+   },
+   "JGD": {
+    "line": 289,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "JNGD": {
+    "line": 290,
+    "IF": [
+     5
+    ],
+    "ID/EX": [
+     5
+    ],
+    "EX/MEM": [
+     5
+    ],
+    "MEM/WB": [
+     5
+    ]
+   },
+   "PUSH": {
+    "line": 292,
+    "IF": [
+     8
+    ],
+    "ID/EX": [
+     8
+    ],
+    "EX/MEM": [
+     8
+    ],
+    "MEM/WB": [
+     8
+    ]
+   },
+   "POP": {
+    "line": 293,
+    "IF": [
+     8
+    ],
+    "ID/EX": [
+     8
+    ],
+    "EX/MEM": [
+     8
+    ],
+    "MEM/WB": [
+     8
+    ]
+   },
+   "LOAD": {
+    "line": 294,
+    "IF": [
+     4,
+     6
+    ],
+    "ID/EX": [
+     4,
+     6
+    ],
+    "EX/MEM": [
+     4,
+     6
+    ],
+    "MEM/WB": [
+     4,
+     6
+    ]
+   },
+   "STORE": {
+    "line": 295,
+    "IF": [
+     4,
+     6
+    ],
+    "ID/EX": [
+     4,
+     6
+    ],
+    "EX/MEM": [
+     4,
+     6
+    ],
+    "MEM/WB": [
+     4,
+     6
+    ]
+   },
+   "HLOAD": {
+    "line": 297,
+    "IF": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     10,
+     11
+    ],
+    "ID/EX": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     10,
+     11
+    ],
+    "EX/MEM": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     10,
+     11
+    ],
+    "MEM/WB": [
+     1,
+     2,
+     5,
+     7,
+     9,
+     10,
+     11
+    ]
+   },
+   "HCADD": {
+    "line": 298,
+    "IF": [
+     2,
+     11
+    ],
+    "ID/EX": [
+     2,
+     11
+    ],
+    "EX/MEM": [
+     2,
+     11
+    ],
+    "MEM/WB": [
+     2,
+     11
+    ]
+   },
+   "HGRD": {
+    "line": 299,
+    "IF": [
+     1,
+     2,
+     5
+    ],
+    "ID/EX": [
+     1,
+     2,
+     5
+    ],
+    "EX/MEM": [
+     1,
+     2,
+     5
+    ],
+    "MEM/WB": [
+     1,
+     2,
+     5
+    ]
+   },
+   "HNRM2": {
+    "line": 300,
+    "IF": [
+     2
+    ],
+    "ID/EX": [
+     2
+    ],
+    "EX/MEM": [
+     2
+    ],
+    "MEM/WB": [
+     2
+    ]
+   },
+   "CGET": {
+    "line": 301,
+    "IF": [
+     9,
+     10
+    ],
+    "ID/EX": [
+     9,
+     10
+    ],
+    "EX/MEM": [
+     9,
+     10
+    ],
+    "MEM/WB": [
+     9,
+     10
+    ]
+   },
+   "CSET": {
+    "line": 309,
+    "IF": [
+     10
+    ],
+    "ID/EX": [
+     10
+    ],
+    "EX/MEM": [
+     10
+    ],
+    "MEM/WB": [
+     10
+    ]
+   },
+   "CMOV": {
+    "line": 320,
+    "IF": [
+     11
+    ],
+    "ID/EX": [
+     11
+    ],
+    "EX/MEM": [
+     11
+    ],
+    "MEM/WB": [
+     11
+    ]
+   },
+   "CZERO": {
+    "line": 321,
+    "IF": [
+     11
+    ],
+    "ID/EX": [
+     11
+    ],
+    "EX/MEM": [
+     11
+    ],
+    "MEM/WB": [
+     11
+    ]
+   },
+   "CEQ": {
+    "line": 323,
+    "IF": [
+     11
+    ],
+    "ID/EX": [
+     11
+    ],
+    "EX/MEM": [
+     11
+    ],
+    "MEM/WB": [
+     11
+    ]
+   },
+   "CRHO": {
+    "line": 324,
+    "IF": [
+     11
+    ],
+    "ID/EX": [
+     11
+    ],
+    "EX/MEM": [
+     11
+    ],
+    "MEM/WB": [
+     11
+    ]
+   },
+   "CU": {
+    "line": 325,
+    "IF": [
+     11
+    ],
+    "ID/EX": [
+     11
+    ],
+    "EX/MEM": [
+     11
+    ],
+    "MEM/WB": [
+     11
+    ]
+   },
+   "CMOD4": {
+    "line": 326,
+    "IF": [
+     11
+    ],
+    "ID/EX": [
+     11
+    ],
+    "EX/MEM": [
+     11
+    ],
+    "MEM/WB": [
+     11
+    ]
+   },
+   "HDIST": {
+    "line": 327,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "HPACK": {
+    "line": 329,
+    "IF": [
+     7
+    ],
+    "ID/EX": [
+     7
+    ],
+    "EX/MEM": [
+     7
+    ],
+    "MEM/WB": [
+     7
+    ]
+   },
+   "HCRC": {
+    "line": 330,
+    "IF": [
+     7
+    ],
+    "ID/EX": [
+     7
+    ],
+    "EX/MEM": [
+     7
+    ],
+    "MEM/WB": [
+     7
+    ]
+   },
+   "PRINT": {
+    "line": 332,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "ERET": {
+    "line": 342,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SYSCALL": {
+    "line": 347,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   }
+  },
+  "opcodes_not_covered": [
+   "FRD",
+   "MOV",
+   "SUB",
+   "MUL",
+   "AND",
+   "OR",
+   "XOR",
+   "NOT",
+   "SHL",
+   "SHR",
+   "ANDI",
+   "ORI",
+   "XORI",
+   "SHLI",
+   "SHRI",
+   "CMPI",
+   "FWR",
+   "EMITS",
+   "CALL",
+   "RET",
+   "JMP",
+   "JEQ",
+   "JGD",
+   "HDIST",
+   "PRINT",
+   "ERET",
+   "SYSCALL"
+  ],
+  "bench_said": "Total: 15 PASS, 0 FAIL",
+  "bench_pass": true
+ }
 }

@@ -1513,5 +1513,1073 @@
    "id": "F5",
    "label": "RTL dan bench yang dicocokkan adalah berkas yang hash-nya dicatat model"
   }
- ]
+ ],
+ "pipeline_audit": {
+  "oracle": "pemilik, 28 September 2026: pipeline memakai tb_hcpu_top.v sebagai oracle sistem. Tidak ada bench per tahap, jadi kelima tahap tidak dimodelkan terpisah, dan langkah pertama adalah audit cakupan oracle -- keadaan yang teramati, input yang berubah, titik sampel, instruksi yang lewat tiap tahap, transisi yang dapat diprediksi, dan aturan yang tidak pernah dijalankan. Model fungsinya ditulis sesudah peta ini. Tidak ada bench baru, RTL pipeline tidak diubah, hasil interpreter bukan pengganti oracle, dan keadaan internal yang tidak teramati tidak diklaim",
+  "bench": "rtl/tb/tb_hcpu_top.v",
+  "top": "tb_hcpu_top",
+  "instance": "u_dut",
+  "clock": "clk",
+  "compile": [
+   "rtl/hcpu_*.v"
+  ],
+  "include": "rtl",
+  "files": [
+   "rtl/hcpu_top.v",
+   "rtl/hcpu_fetch.v",
+   "rtl/hcpu_decode.v",
+   "rtl/hcpu_forward.v",
+   "rtl/hcpu_execute.v",
+   "rtl/hcpu_memory.v",
+   "rtl/hcpu_writeback.v",
+   "rtl/hcpu_controller.v",
+   "rtl/hcpu_regfile.v",
+   "rtl/hcpu_pkg.vh"
+  ],
+  "sampling": {
+   "rule": "tiap tepi naik dicatat dua kali: di region aktif, sebelum pembaruan non-blocking mana pun mendarat (yang tepi itu ambil), dan dengan $strobe di akhir timestep (yang tepi itu tinggalkan). Aturan yang tepi t+1 jalankan dibaca dari baris $strobe tepi t. Tepi reset: rst_n rendah di akhir timestep-nya. Tepi pelepasan reset dinilai dari bukti desain sendiri: kalau pc fetch sesudahnya masih 0 dan fetch_valid 0, desain masih di reset",
+   "why": "bench mengubah rst_n di region aktif yang sama dengan tepi, jadi urutannya terhadap probe di region aktif tidak pasti -- lari eksploratif pertama melihat empat dari sebelas program tanpa baris halted karena itu. Untuk sinyal desain, diukur tiap build: yang diambil tepi t+1 sama dengan yang dicetak $strobe tepi t"
+  },
+  "programs": [
+   {
+    "n": 1,
+    "line": 79,
+    "checks": [
+     102,
+     110
+    ],
+    "reads": "guard_led, R0"
+   },
+   {
+    "n": 2,
+    "line": 119,
+    "checks": [
+     149,
+     157
+    ],
+    "reads": "H2[7:0], R0"
+   },
+   {
+    "n": 3,
+    "line": 166,
+    "checks": [
+     192
+    ],
+    "reads": "R0"
+   },
+   {
+    "n": 4,
+    "line": 201,
+    "checks": [
+     229
+    ],
+    "reads": "R3"
+   },
+   {
+    "n": 5,
+    "line": 238,
+    "checks": [
+     262
+    ],
+    "reads": "R1"
+   },
+   {
+    "n": 6,
+    "line": 271,
+    "checks": [
+     297
+    ],
+    "reads": "R4"
+   },
+   {
+    "n": 7,
+    "line": 306,
+    "checks": [
+     339,
+     351,
+     361
+    ],
+    "reads": "R0, R1, R2, R3, R4"
+   },
+   {
+    "n": 8,
+    "line": 370,
+    "checks": [
+     409
+    ],
+    "reads": "R4, R5, R6"
+   },
+   {
+    "n": 9,
+    "line": 420,
+    "checks": [
+     458
+    ],
+    "reads": "R1, R2, R3, R4"
+   },
+   {
+    "n": 10,
+    "line": 470,
+    "checks": [
+     523
+    ],
+    "reads": "R3, R4, R5, R6, R8, R9"
+   },
+   {
+    "n": 11,
+    "line": 537,
+    "checks": [
+     595
+    ],
+    "reads": "R1, R2, R3, R4, R6, R7"
+   }
+  ],
+  "bench_observes": "sesudah tiap program berhenti: register GPR, H2[7:0] (program 2), dan pin guard_led (program 1), dibaca lewat hierarki; jumlah siklus sampai halted dicetak, tidak diperiksa. Tak satu pun register tahap pipeline dibaca bench",
+  "bench_verdict": {
+   "pattern": "^Total: 15 PASS, 0 FAIL$"
+  },
+  "stages": [
+   {
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "state": [
+     "pc",
+     "pc_prev",
+     "fetch_valid",
+     "if_instruction",
+     "if_pc",
+     "pc_valid"
+    ],
+    "identity": "teramati: if_pc dan pc_valid menamai tiap instruksi di IF dan membedakan gelembung",
+    "next_from": "keadaan IF, imem_data, pc_stall, if_flush, redirect_taken dan sasarannya",
+    "outside": "imem_data dari BRAM bench (terdaftar); sasaran redirect dari execute atau unit trap"
+   },
+   {
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "state": [
+     "id_opcode",
+     "id_dst",
+     "id_s1",
+     "id_s2",
+     "id_imm",
+     "id_pc",
+     "id_gpr_s1",
+     "id_gpr_s2",
+     "id_hreg_s1",
+     "id_hreg_s2",
+     "id_gpr_we",
+     "id_hreg_we",
+     "id_mem_read",
+     "id_mem_write",
+     "id_is_branch",
+     "id_is_jump",
+     "id_is_call",
+     "id_is_ret",
+     "id_is_codex",
+     "id_is_halt",
+     "id_is_print",
+     "id_is_emits",
+     "id_is_push",
+     "id_is_pop"
+    ],
+    "identity": "teramati sebagian: id_pc dan id_opcode; gelembung dan NOP nyata di PC 0 tidak terbedakan -- tidak ada program yang punya NOP di PC 0",
+    "next_from": "if_instruction, if_pc, bacaan register file, id_stall, id_flush",
+    "outside": "register file (hcpu_regfile.v): bacaannya kombinasional, dengan tulis-tembus WB"
+   },
+   {
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "state": [
+     "ex_opcode",
+     "ex_dst",
+     "ex_gpr_result",
+     "ex_hreg_result",
+     "ex_gpr_we",
+     "ex_hreg_we",
+     "ex_flags_new",
+     "ex_flags_we",
+     "ex_is_halt",
+     "ex_is_print",
+     "ex_is_emits",
+     "ex_print_data",
+     "ex_is_push",
+     "ex_is_pop",
+     "ex_push_data",
+     "ex_mem_read",
+     "ex_mem_write",
+     "ex_mem_addr",
+     "ex_mem_wdata",
+     "ra_sp"
+    ],
+    "identity": "diturunkan: EX/MEM tidak membawa PC; identitasnya diturunkan dari ID/EX lewat ex_stall yang teramati, dan dicek terhadap ex_opcode",
+    "next_from": "keadaan ID/EX sesudah forwarding, FLAGS, ex_stall",
+    "outside": "ROM, guard, ALU codex, HISAB, pengali, dan unit trap: keluarannya masuk sebagai input"
+   },
+   {
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "state": [
+     "mem_dst",
+     "mem_gpr_result_r",
+     "mem_hreg_result",
+     "mem_gpr_we",
+     "mem_hreg_we",
+     "mem_flags_new",
+     "mem_flags_we",
+     "mem_is_halt",
+     "mem_is_load",
+     "mem_is_pop",
+     "sp",
+     "stack_rd",
+     "stack_rd_valid"
+    ],
+    "identity": "diturunkan: MEM/WB tidak membawa PC maupun opcode; identitasnya diturunkan dari EX/MEM lewat ex_stall",
+    "next_from": "keadaan EX/MEM, ex_stall",
+    "outside": "RAM data dan peta memori (sudah dimodelkan sendiri): rdata masuk sebagai input"
+   },
+   {
+    "stage": "WB",
+    "file": "rtl/hcpu_writeback.v",
+    "state": [],
+    "identity": "kombinasional dari MEM/WB: tidak ada register sendiri",
+    "next_from": "MEM/WB",
+    "outside": "-"
+   },
+   {
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "state": [
+     "halted"
+    ],
+    "identity": "-",
+    "next_from": "wb_halt, print_active, hazard load-use dan store-load, redirect_taken",
+    "outside": "print_active dari mesin keadaan cetak hcpu_top"
+   }
+  ],
+  "transitions": [
+   {
+    "id": "fetch_reset",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     72,
+     73,
+     74,
+     75,
+     76,
+     77,
+     78
+    ],
+    "means": "rst_n rendah: pc, pc_prev, fetch_valid nol, IF memegang NOP"
+   },
+   {
+    "id": "fetch_redirect_branch",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     79,
+     81,
+     82,
+     83,
+     84,
+     85,
+     86
+    ],
+    "means": "redirect dari cabang: IF jadi gelembung, pc <- sasaran"
+   },
+   {
+    "id": "fetch_redirect_trap",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     79,
+     81,
+     82,
+     83,
+     84,
+     85,
+     86
+    ],
+    "means": "redirect dari unit trap: sama, sasaran dari trap"
+   },
+   {
+    "id": "fetch_flush_only",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     79,
+     81,
+     82,
+     83,
+     84,
+     85
+    ],
+    "means": "flush tanpa redirect: IF jadi gelembung, pc tetap"
+   },
+   {
+    "id": "fetch_stall",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     88
+    ],
+    "means": "pc_stall: semua ditahan"
+   },
+   {
+    "id": "fetch_latch",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     92,
+     94,
+     95,
+     96,
+     97,
+     98
+    ],
+    "means": "fetch_valid: instruksi BRAM di-latch, pc maju"
+   },
+   {
+    "id": "fetch_warmup",
+    "stage": "IF",
+    "file": "rtl/hcpu_fetch.v",
+    "lines": [
+     100,
+     103,
+     104,
+     105,
+     106,
+     107,
+     108
+    ],
+    "means": "fetch_valid rendah: gelembung, pc maju, fetch_valid naik"
+   },
+   {
+    "id": "decode_reset",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     162
+    ],
+    "means": "rst_n rendah: ID/EX nol, NOP"
+   },
+   {
+    "id": "decode_flush_redirect",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     187
+    ],
+    "means": "id_flush karena redirect: gelembung ke ID/EX"
+   },
+   {
+    "id": "decode_flush_hazard",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     187
+    ],
+    "means": "id_flush karena hazard data: gelembung ke ID/EX"
+   },
+   {
+    "id": "decode_stall",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     369
+    ],
+    "means": "id_stall: ID/EX ditahan"
+   },
+   {
+    "id": "decode_latch_instruction",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     212,
+     242
+    ],
+    "means": "instruksi nyata dari IF di-latch dan didekode"
+   },
+   {
+    "id": "decode_latch_bubble",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     212,
+     242,
+     243
+    ],
+    "means": "gelembung IF di-latch sebagai NOP"
+   },
+   {
+    "id": "decode_letter",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     350
+    ],
+    "means": "opcode huruf: codex, H0"
+   },
+   {
+    "id": "decode_halt_err",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     357,
+     360
+    ],
+    "means": "opcode tak dikenal: HALT_ERR"
+   },
+   {
+    "id": "hazard_load_use",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     129
+    ],
+    "means": "LOAD di ID/EX, instruksi IF memakai tujuannya"
+   },
+   {
+    "id": "hazard_pop_use",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     129
+    ],
+    "means": "POP di ID/EX, instruksi IF memakai tujuannya"
+   },
+   {
+    "id": "hazard_store_load",
+    "stage": "ID/EX",
+    "file": "rtl/hcpu_decode.v",
+    "lines": [
+     142
+    ],
+    "means": "STORE di EX/MEM, LOAD di IF ke alamat yang sama"
+   },
+   {
+    "id": "fwd_gpr_s1_ex",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     53
+    ],
+    "means": "GPR[S1] dari EX/MEM"
+   },
+   {
+    "id": "fwd_gpr_s1_mem",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     55
+    ],
+    "means": "GPR[S1] dari MEM/WB"
+   },
+   {
+    "id": "fwd_gpr_s1_rf",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     58
+    ],
+    "means": "GPR[S1] dari register file"
+   },
+   {
+    "id": "fwd_gpr_s2_ex",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     63
+    ],
+    "means": "GPR[S2] dari EX/MEM"
+   },
+   {
+    "id": "fwd_gpr_s2_mem",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     65
+    ],
+    "means": "GPR[S2] dari MEM/WB"
+   },
+   {
+    "id": "fwd_gpr_s2_rf",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     68
+    ],
+    "means": "GPR[S2] dari register file"
+   },
+   {
+    "id": "fwd_hreg_s1_ex",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     73
+    ],
+    "means": "H[S1] dari EX/MEM"
+   },
+   {
+    "id": "fwd_hreg_s1_mem",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     75
+    ],
+    "means": "H[S1] dari MEM/WB"
+   },
+   {
+    "id": "fwd_hreg_s1_rf",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     78
+    ],
+    "means": "H[S1] dari register file"
+   },
+   {
+    "id": "fwd_hreg_s2_ex",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     83
+    ],
+    "means": "H[S2] dari EX/MEM"
+   },
+   {
+    "id": "fwd_hreg_s2_mem",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     85
+    ],
+    "means": "H[S2] dari MEM/WB"
+   },
+   {
+    "id": "fwd_hreg_s2_rf",
+    "stage": "forward",
+    "file": "rtl/hcpu_forward.v",
+    "lines": [
+     88
+    ],
+    "means": "H[S2] dari register file"
+   },
+   {
+    "id": "ex_latch",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     434
+    ],
+    "means": "ex_stall rendah: EX/MEM di-latch"
+   },
+   {
+    "id": "ex_stall",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     434
+    ],
+    "means": "ex_stall: EX/MEM ditahan"
+   },
+   {
+    "id": "ex_flush",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     413
+    ],
+    "means": "flush execute: gelembung ke EX/MEM"
+   },
+   {
+    "id": "flags_forward_self",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     280
+    ],
+    "means": "konsumen FLAGS (cabang, FRD) mengambil alu_flags instruksinya sendiri"
+   },
+   {
+    "id": "flags_forward_ex",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     281
+    ],
+    "means": "konsumen FLAGS mengambil ex_flags_new"
+   },
+   {
+    "id": "flags_forward_rf",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     282
+    ],
+    "means": "konsumen FLAGS mengambil register FLAGS"
+   },
+   {
+    "id": "branch_jmp",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     364
+    ],
+    "means": "JMP: redirect mutlak"
+   },
+   {
+    "id": "branch_call",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     367
+    ],
+    "means": "CALL: redirect, alamat kembali ke ra_stack"
+   },
+   {
+    "id": "branch_ret",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     370
+    ],
+    "means": "RET: redirect ke puncak ra_stack"
+   },
+   {
+    "id": "jeq_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     375
+    ],
+    "means": "JEQ diambil"
+   },
+   {
+    "id": "jeq_not_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     375
+    ],
+    "means": "JEQ tidak diambil"
+   },
+   {
+    "id": "jne_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     376
+    ],
+    "means": "JNE diambil"
+   },
+   {
+    "id": "jne_not_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     376
+    ],
+    "means": "JNE tidak diambil"
+   },
+   {
+    "id": "jgd_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     377
+    ],
+    "means": "JGD diambil"
+   },
+   {
+    "id": "jgd_not_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     377
+    ],
+    "means": "JGD tidak diambil"
+   },
+   {
+    "id": "jngd_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     378
+    ],
+    "means": "JNGD diambil"
+   },
+   {
+    "id": "jngd_not_taken",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     378
+    ],
+    "means": "JNGD tidak diambil"
+   },
+   {
+    "id": "ra_overflow",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     340
+    ],
+    "means": "HC-04: CALL dengan ra_stack penuh"
+   },
+   {
+    "id": "ra_underflow",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     341
+    ],
+    "means": "HC-05: RET dengan ra_stack kosong"
+   },
+   {
+    "id": "hc01_invalid_rom",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     451
+    ],
+    "means": "HC-01: HLOAD indeks ROM tidak sah"
+   },
+   {
+    "id": "priv_fault",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     310
+    ],
+    "means": "tindakan istimewa di mode user"
+   },
+   {
+    "id": "mem_fault",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     317
+    ],
+    "means": "akses di luar jendela proteksi di mode user"
+   },
+   {
+    "id": "eret",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     325
+    ],
+    "means": "ERET di mode supervisor"
+   },
+   {
+    "id": "syscall",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     285
+    ],
+    "means": "SYSCALL"
+   },
+   {
+    "id": "flags_hgrd",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     490
+    ],
+    "means": "HGRD menulis bit GUARD"
+   },
+   {
+    "id": "flags_ceq",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     494
+    ],
+    "means": "CEQ menulis Z"
+   },
+   {
+    "id": "flags_fwr",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     505
+    ],
+    "means": "FWR menulis FLAGS"
+   },
+   {
+    "id": "flags_cmp",
+    "stage": "EX/MEM",
+    "file": "rtl/hcpu_execute.v",
+    "lines": [
+     512
+    ],
+    "means": "CMP/CMPI menulis Z dan LT"
+   },
+   {
+    "id": "mem_latch",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     143
+    ],
+    "means": "ex_stall rendah: MEM/WB di-latch"
+   },
+   {
+    "id": "mem_stall",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     143
+    ],
+    "means": "ex_stall: MEM/WB ditahan"
+   },
+   {
+    "id": "dram_read",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     61
+    ],
+    "means": "LOAD ke bus"
+   },
+   {
+    "id": "dram_write",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     62
+    ],
+    "means": "STORE ke bus"
+   },
+   {
+    "id": "stack_push",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     78,
+     101
+    ],
+    "means": "PUSH: stack[sp] <- data, sp naik"
+   },
+   {
+    "id": "stack_pop",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     80
+    ],
+    "means": "POP: sp turun"
+   },
+   {
+    "id": "stack_overflow",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     69
+    ],
+    "means": "HC-02: PUSH dengan tumpukan penuh"
+   },
+   {
+    "id": "stack_underflow",
+    "stage": "MEM/WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     70
+    ],
+    "means": "HC-03: POP dengan tumpukan kosong"
+   },
+   {
+    "id": "result_load",
+    "stage": "WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     126
+    ],
+    "means": "WB mengambil rdata RAM/MMIO"
+   },
+   {
+    "id": "result_pop",
+    "stage": "WB",
+    "file": "rtl/hcpu_memory.v",
+    "lines": [
+     126
+    ],
+    "means": "WB mengambil puncak tumpukan"
+   },
+   {
+    "id": "wb_gpr",
+    "stage": "WB",
+    "file": "rtl/hcpu_writeback.v",
+    "lines": [
+     33
+    ],
+    "means": "tulis GPR"
+   },
+   {
+    "id": "wb_hreg",
+    "stage": "WB",
+    "file": "rtl/hcpu_writeback.v",
+    "lines": [
+     37
+    ],
+    "means": "tulis H-Reg"
+   },
+   {
+    "id": "wb_flags",
+    "stage": "WB",
+    "file": "rtl/hcpu_writeback.v",
+    "lines": [
+     41
+    ],
+    "means": "tulis FLAGS"
+   },
+   {
+    "id": "wb_halt",
+    "stage": "WB",
+    "file": "rtl/hcpu_writeback.v",
+    "lines": [
+     44
+    ],
+    "means": "HALT sampai writeback"
+   },
+   {
+    "id": "ctrl_print_stall",
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "lines": [
+     69,
+     80
+    ],
+    "means": "PRINT/EMITS sedang berjalan: stall global"
+   },
+   {
+    "id": "ctrl_halt_latch",
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "lines": [
+     75,
+     76
+    ],
+    "means": "wb_halt: halted naik"
+   },
+   {
+    "id": "ctrl_halted_stall",
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "lines": [
+     80,
+     91,
+     92,
+     93
+    ],
+    "means": "halted: stall global"
+   },
+   {
+    "id": "ctrl_data_hazard",
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "lines": [
+     88,
+     91,
+     99
+    ],
+    "means": "hazard data: stall front-end dan gelembung"
+   },
+   {
+    "id": "ctrl_if_flush",
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "lines": [
+     98
+    ],
+    "means": "redirect tanpa stall global: flush IF"
+   },
+   {
+    "id": "ctrl_id_flush",
+    "stage": "controller",
+    "file": "rtl/hcpu_controller.v",
+    "lines": [
+     99
+    ],
+    "means": "redirect atau hazard tanpa stall global: flush ID"
+   }
+  ],
+  "opcodes": {
+   "pkg": "rtl/hcpu_pkg.vh",
+   "decode": "rtl/hcpu_decode.v",
+   "case_lines": [
+    242,
+    366
+   ],
+   "not_covered": [
+    "FRD",
+    "MOV",
+    "SUB",
+    "MUL",
+    "AND",
+    "OR",
+    "XOR",
+    "NOT",
+    "SHL",
+    "SHR",
+    "ANDI",
+    "ORI",
+    "XORI",
+    "SHLI",
+    "SHRI",
+    "CMPI",
+    "FWR",
+    "EMITS",
+    "CALL",
+    "RET",
+    "JMP",
+    "JEQ",
+    "JGD",
+    "HDIST",
+    "PRINT",
+    "ERET",
+    "SYSCALL"
+   ],
+   "not_covered_why": "arm case decode yang opcode-nya tidak ada di kesebelas program tb_hcpu_top.v: tidak pernah masuk ID/EX, jadi tidak ada tahap sesudahnya yang menjalankannya"
+  },
+  "not_covered": {
+   "fetch_redirect_trap": "trap_redirect_w 0 di setiap tepi: tidak ada program yang menjalankan SYSCALL atau ERET, dan tidak ada trap yang menembak",
+   "fetch_flush_only": "tidak terjangkau dari kabel hcpu_top: if_flush = branch_taken && !global_stall (hcpu_controller.v baris 98), dan masukan branch_taken controller itu adalah redirect_taken (hcpu_top.v baris 842) -- if_flush tanpa redirect tidak mungkin",
+   "decode_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1",
+   "decode_letter": "tidak ada opcode huruf (0xE0-0xFB) di kesebelas program",
+   "decode_halt_err": "tiap opcode di kesebelas program punya arm di case decode",
+   "hazard_pop_use": "program 8 menaruh NOP sesudah tiap POP; tidak ada instruksi yang memakai tujuan POP tepat sesudahnya",
+   "hazard_store_load": "hazard ini butuh LOAD tepat dua instruksi sesudah STORE ke alamat yang sama; di program 4 dan 6 keduanya berjarak tiga instruksi",
+   "fwd_hreg_s2_mem": "tidak ada pembaca S2 (daftar decode baris 100-105) yang H[S2]-nya ditulis tepat dua instruksi sebelumnya",
+   "ex_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1",
+   "ex_flush": "flush execute diikat 1'b0 di hcpu_top.v baris 489: tidak terjangkau",
+   "flags_forward_self": "konsumen FLAGS (cabang dan FRD) bukan CMP, jadi alu_flags_we instruksinya sendiri tidak pernah tinggi saat ia memilih FLAGS",
+   "flags_forward_rf": "ketiga cabang di bench -- JNE di program 3 dan 11, JNGD di program 5 -- semuanya tepat sesudah penulis FLAGS-nya (CMP, CEQ, HGRD): FLAGS selalu datang dari EX/MEM",
+   "branch_jmp": "tidak ada JMP di kesebelas program",
+   "branch_call": "tidak ada CALL di kesebelas program",
+   "branch_ret": "tidak ada RET di kesebelas program",
+   "jeq_taken": "tidak ada JEQ di kesebelas program",
+   "jeq_not_taken": "tidak ada JEQ di kesebelas program",
+   "jgd_taken": "tidak ada JGD di kesebelas program",
+   "jgd_not_taken": "tidak ada JGD di kesebelas program",
+   "jngd_not_taken": "satu-satunya JNGD (program 5) diambil: vektor indeks 31 gagal guard",
+   "ra_overflow": "tidak ada CALL atau RET: ra_sp 0 sepanjang lari",
+   "ra_underflow": "tidak ada CALL atau RET: ra_sp 0 sepanjang lari",
+   "hc01_invalid_rom": "satu-satunya HLOAD di luar huruf 1-28 (program 5, indeks 31) adalah vektor negatif yang ROM simpan (hcpu_pkg.vh baris 176): rom_valid 1",
+   "priv_fault": "mode supervisor sepanjang lari: in_user 0 di setiap tepi",
+   "mem_fault": "mode supervisor sepanjang lari: in_user 0 di setiap tepi",
+   "eret": "tidak ada ERET di kesebelas program",
+   "syscall": "tidak ada SYSCALL di kesebelas program",
+   "flags_fwr": "tidak ada FWR di kesebelas program",
+   "mem_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1",
+   "stack_overflow": "program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3",
+   "stack_underflow": "program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3",
+   "ctrl_print_stall": "tidak ada PRINT atau EMITS: print_active 0 di setiap tepi",
+   "ctrl_halted_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1"
+  },
+  "not_covered_why": "aturan RTL pipeline yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti"
+ }
 }

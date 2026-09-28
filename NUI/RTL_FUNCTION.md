@@ -344,6 +344,189 @@ Batas yang tercakup — yang dijalankan kedua bench, dan apa yang pemakaiannya t
 
 **Waktu input.** nilai baca ke-k adalah rdata MMIO satu siklus sesudah permintaannya -- jalur baca terdaftar hcpu_mmio: diukur tiap build: di tiap baca, tulis GPR tujuan LOAD-nya sama dengan rdata satu siklus sesudah permintaan (ditangkap nilai baru), bukan rdata pada siklus permintaan.
 
+## Pipeline — audit oracle `tb_hcpu_top.v`, sebelum model
+
+**Oracle.** pemilik, 28 September 2026: pipeline memakai tb_hcpu_top.v sebagai oracle sistem. Tidak ada bench per tahap, jadi kelima tahap tidak dimodelkan terpisah, dan langkah pertama adalah audit cakupan oracle -- keadaan yang teramati, input yang berubah, titik sampel, instruksi yang lewat tiap tahap, transisi yang dapat diprediksi, dan aturan yang tidak pernah dijalankan. Model fungsinya ditulis sesudah peta ini. Tidak ada bench baru, RTL pipeline tidak diubah, hasil interpreter bukan pengganti oracle, dan keadaan internal yang tidak teramati tidak diklaim.
+
+Bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`; dipegang: `rtl/hcpu_top.v`, `rtl/hcpu_fetch.v`, `rtl/hcpu_decode.v`, `rtl/hcpu_forward.v`, `rtl/hcpu_execute.v`, `rtl/hcpu_memory.v`, `rtl/hcpu_writeback.v`, `rtl/hcpu_controller.v`, `rtl/hcpu_regfile.v`, `rtl/hcpu_pkg.vh`.
+
+**Titik sampel.** tiap tepi naik dicatat dua kali: di region aktif, sebelum pembaruan non-blocking mana pun mendarat (yang tepi itu ambil), dan dengan $strobe di akhir timestep (yang tepi itu tinggalkan). Aturan yang tepi t+1 jalankan dibaca dari baris $strobe tepi t. Tepi reset: rst_n rendah di akhir timestep-nya. Tepi pelepasan reset dinilai dari bukti desain sendiri: kalau pc fetch sesudahnya masih 0 dan fetch_valid 0, desain masih di reset: bench mengubah rst_n di region aktif yang sama dengan tepi, jadi urutannya terhadap probe di region aktif tidak pasti -- lari eksploratif pertama melihat empat dari sebelas program tanpa baris halted karena itu. Untuk sinyal desain, diukur tiap build: yang diambil tepi t+1 sama dengan yang dicetak $strobe tepi t. Terukur: 178 tepi hidup, dan yang diambil tiap tepi berbeda dari yang ditinggalkan tepi sebelumnya di tidak satu pun sinyal desain. Tepi pelepasan reset: 11 melangkah, 0 tertahan. Tepi terakhir tidak punya baris sesudah: `$finish` bench jatuh di timestep-nya.
+
+**Yang bench sendiri amati.** sesudah tiap program berhenti: register GPR, H2[7:0] (program 2), dan pin guard_led (program 1), dibaca lewat hierarki; jumlah siklus sampai halted dicetak, tidak diperiksa. Tak satu pun register tahap pipeline dibaca bench. Vonis: Total: 15 PASS, 0 FAIL.
+
+| program | baris bench | bench membaca | tepi hidup | diambil fetch | didekode | dieksekusi | sampai WB |
+|---|---|---|---|---|---|---|---|
+| 1 | 79 | guard_led, R0 | 9 | 8 | 7 | 6 | 5 |
+| 2 | 119 | H2[7:0], R0 | 13 | 12 | 11 | 10 | 9 |
+| 3 | 166 | R0 | 23 | 18 | 15 | 14 | 13 |
+| 4 | 201 | R3 | 14 | 13 | 12 | 11 | 10 |
+| 5 | 238 | R1 | 13 | 10 | 8 | 7 | 6 |
+| 6 | 271 | R4 | 14 | 12 | 11 | 10 | 9 |
+| 7 | 306 | R0, R1, R2, R3, R4 | 12 | 11 | 10 | 9 | 8 |
+| 8 | 370 | R4, R5, R6 | 20 | 19 | 18 | 17 | 16 |
+| 9 | 420 | R1, R2, R3, R4 | 12 | 11 | 10 | 9 | 8 |
+| 10 | 470 | R3, R4, R5, R6, R8, R9 | 20 | 19 | 18 | 17 | 16 |
+| 11 | 537 | R1, R2, R3, R4, R6, R7 | 28 | 25 | 23 | 22 | 21 |
+
+| tahap | berkas | keadaan (register RTL) | identitas instruksi | keadaan berikut dari | di luar |
+|---|---|---|---|---|---|
+| IF | `hcpu_fetch.v` | pc, pc_prev, fetch_valid, if_instruction, if_pc, pc_valid | teramati: if_pc dan pc_valid menamai tiap instruksi di IF dan membedakan gelembung | keadaan IF, imem_data, pc_stall, if_flush, redirect_taken dan sasarannya | imem_data dari BRAM bench (terdaftar); sasaran redirect dari execute atau unit trap |
+| ID/EX | `hcpu_decode.v` | id_opcode, id_dst, id_s1, id_s2, id_imm, id_pc, id_gpr_s1, id_gpr_s2, id_hreg_s1, id_hreg_s2, id_gpr_we, id_hreg_we, id_mem_read, id_mem_write, id_is_branch, id_is_jump, id_is_call, id_is_ret, id_is_codex, id_is_halt, id_is_print, id_is_emits, id_is_push, id_is_pop | teramati sebagian: id_pc dan id_opcode; gelembung dan NOP nyata di PC 0 tidak terbedakan -- tidak ada program yang punya NOP di PC 0 | if_instruction, if_pc, bacaan register file, id_stall, id_flush | register file (hcpu_regfile.v): bacaannya kombinasional, dengan tulis-tembus WB |
+| EX/MEM | `hcpu_execute.v` | ex_opcode, ex_dst, ex_gpr_result, ex_hreg_result, ex_gpr_we, ex_hreg_we, ex_flags_new, ex_flags_we, ex_is_halt, ex_is_print, ex_is_emits, ex_print_data, ex_is_push, ex_is_pop, ex_push_data, ex_mem_read, ex_mem_write, ex_mem_addr, ex_mem_wdata, ra_sp | diturunkan: EX/MEM tidak membawa PC; identitasnya diturunkan dari ID/EX lewat ex_stall yang teramati, dan dicek terhadap ex_opcode | keadaan ID/EX sesudah forwarding, FLAGS, ex_stall | ROM, guard, ALU codex, HISAB, pengali, dan unit trap: keluarannya masuk sebagai input |
+| MEM/WB | `hcpu_memory.v` | mem_dst, mem_gpr_result_r, mem_hreg_result, mem_gpr_we, mem_hreg_we, mem_flags_new, mem_flags_we, mem_is_halt, mem_is_load, mem_is_pop, sp, stack_rd, stack_rd_valid | diturunkan: MEM/WB tidak membawa PC maupun opcode; identitasnya diturunkan dari EX/MEM lewat ex_stall | keadaan EX/MEM, ex_stall | RAM data dan peta memori (sudah dimodelkan sendiri): rdata masuk sebagai input |
+| WB | `hcpu_writeback.v` | — | kombinasional dari MEM/WB: tidak ada register sendiri | MEM/WB | - |
+| controller | `hcpu_controller.v` | halted | - | wb_halt, print_active, hazard load-use dan store-load, redirect_taken | print_active dari mesin keadaan cetak hcpu_top |
+
+Identitas turunan dicek di 178 tepi terhadap id_pc dan id_opcode (0 berbeda) dan terhadap ex_opcode (0 berbeda).
+
+| aturan | tahap | baris RTL | arti | tepi | program |
+|---|---|---|---|---|---|
+| `fetch_reset` | IF | `hcpu_fetch.v` 72, 73, 74, 75, 76, 77, 78 | rst_n rendah: pc, pc_prev, fetch_valid nol, IF memegang NOP | 53 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `fetch_redirect_branch` | IF | `hcpu_fetch.v` 79, 81, 82, 83, 84, 85, 86 | redirect dari cabang: IF jadi gelembung, pc <- sasaran | 4 | 3, 5, 11 |
+| `fetch_redirect_trap` | IF | `hcpu_fetch.v` 79, 81, 82, 83, 84, 85, 86 | redirect dari unit trap: sama, sasaran dari trap | 0 | — |
+| `fetch_flush_only` | IF | `hcpu_fetch.v` 79, 81, 82, 83, 84, 85 | flush tanpa redirect: IF jadi gelembung, pc tetap | 0 | — |
+| `fetch_stall` | IF | `hcpu_fetch.v` 88 | pc_stall: semua ditahan | 1 | 6 |
+| `fetch_latch` | IF | `hcpu_fetch.v` 92, 94, 95, 96, 97, 98 | fetch_valid: instruksi BRAM di-latch, pc maju | 158 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `fetch_warmup` | IF | `hcpu_fetch.v` 100, 103, 104, 105, 106, 107, 108 | fetch_valid rendah: gelembung, pc maju, fetch_valid naik | 15 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `decode_reset` | ID/EX | `hcpu_decode.v` 162 | rst_n rendah: ID/EX nol, NOP | 53 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `decode_flush_redirect` | ID/EX | `hcpu_decode.v` 187 | id_flush karena redirect: gelembung ke ID/EX | 4 | 3, 5, 11 |
+| `decode_flush_hazard` | ID/EX | `hcpu_decode.v` 187 | id_flush karena hazard data: gelembung ke ID/EX | 1 | 6 |
+| `decode_stall` | ID/EX | `hcpu_decode.v` 369 | id_stall: ID/EX ditahan | 0 | — |
+| `decode_latch_instruction` | ID/EX | `hcpu_decode.v` 212, 242 | instruksi nyata dari IF di-latch dan didekode | 143 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `decode_latch_bubble` | ID/EX | `hcpu_decode.v` 212, 242, 243 | gelembung IF di-latch sebagai NOP | 30 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `decode_letter` | ID/EX | `hcpu_decode.v` 350 | opcode huruf: codex, H0 | 0 | — |
+| `decode_halt_err` | ID/EX | `hcpu_decode.v` 357, 360 | opcode tak dikenal: HALT_ERR | 0 | — |
+| `hazard_load_use` | ID/EX | `hcpu_decode.v` 129 | LOAD di ID/EX, instruksi IF memakai tujuannya | 1 | 6 |
+| `hazard_pop_use` | ID/EX | `hcpu_decode.v` 129 | POP di ID/EX, instruksi IF memakai tujuannya | 0 | — |
+| `hazard_store_load` | ID/EX | `hcpu_decode.v` 142 | STORE di EX/MEM, LOAD di IF ke alamat yang sama | 0 | — |
+| `fwd_gpr_s1_ex` | forward | `hcpu_forward.v` 53 | GPR[S1] dari EX/MEM | 5 | 3, 7, 10 |
+| `fwd_gpr_s1_mem` | forward | `hcpu_forward.v` 55 | GPR[S1] dari MEM/WB | 6 | 3, 6, 7, 10 |
+| `fwd_gpr_s1_rf` | forward | `hcpu_forward.v` 58 | GPR[S1] dari register file | 35 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `fwd_gpr_s2_ex` | forward | `hcpu_forward.v` 63 | GPR[S2] dari EX/MEM | 1 | 6 |
+| `fwd_gpr_s2_mem` | forward | `hcpu_forward.v` 65 | GPR[S2] dari MEM/WB | 3 | 3, 4, 11 |
+| `fwd_gpr_s2_rf` | forward | `hcpu_forward.v` 68 | GPR[S2] dari register file | 8 | 2, 3, 6, 11 |
+| `fwd_hreg_s1_ex` | forward | `hcpu_forward.v` 73 | H[S1] dari EX/MEM | 9 | 1, 2, 5, 7, 9, 10 |
+| `fwd_hreg_s1_mem` | forward | `hcpu_forward.v` 75 | H[S1] dari MEM/WB | 8 | 2, 7, 9, 10, 11 |
+| `fwd_hreg_s1_rf` | forward | `hcpu_forward.v` 78 | H[S1] dari register file | 29 | 3, 4, 6, 7, 8, 9, 10, 11 |
+| `fwd_hreg_s2_ex` | forward | `hcpu_forward.v` 83 | H[S2] dari EX/MEM | 3 | 2, 11 |
+| `fwd_hreg_s2_mem` | forward | `hcpu_forward.v` 85 | H[S2] dari MEM/WB | 0 | — |
+| `fwd_hreg_s2_rf` | forward | `hcpu_forward.v` 88 | H[S2] dari register file | 9 | 3, 4, 6, 11 |
+| `ex_latch` | EX/MEM | `hcpu_execute.v` 434 | ex_stall rendah: EX/MEM di-latch | 178 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `ex_stall` | EX/MEM | `hcpu_execute.v` 434 | ex_stall: EX/MEM ditahan | 0 | — |
+| `ex_flush` | EX/MEM | `hcpu_execute.v` 413 | flush execute: gelembung ke EX/MEM | 0 | — |
+| `flags_forward_self` | EX/MEM | `hcpu_execute.v` 280 | konsumen FLAGS (cabang, FRD) mengambil alu_flags instruksinya sendiri | 0 | — |
+| `flags_forward_ex` | EX/MEM | `hcpu_execute.v` 281 | konsumen FLAGS mengambil ex_flags_new | 7 | 3, 5, 11 |
+| `flags_forward_rf` | EX/MEM | `hcpu_execute.v` 282 | konsumen FLAGS mengambil register FLAGS | 0 | — |
+| `branch_jmp` | EX/MEM | `hcpu_execute.v` 364 | JMP: redirect mutlak | 0 | — |
+| `branch_call` | EX/MEM | `hcpu_execute.v` 367 | CALL: redirect, alamat kembali ke ra_stack | 0 | — |
+| `branch_ret` | EX/MEM | `hcpu_execute.v` 370 | RET: redirect ke puncak ra_stack | 0 | — |
+| `jeq_taken` | EX/MEM | `hcpu_execute.v` 375 | JEQ diambil | 0 | — |
+| `jeq_not_taken` | EX/MEM | `hcpu_execute.v` 375 | JEQ tidak diambil | 0 | — |
+| `jne_taken` | EX/MEM | `hcpu_execute.v` 376 | JNE diambil | 3 | 3, 11 |
+| `jne_not_taken` | EX/MEM | `hcpu_execute.v` 376 | JNE tidak diambil | 3 | 3, 11 |
+| `jgd_taken` | EX/MEM | `hcpu_execute.v` 377 | JGD diambil | 0 | — |
+| `jgd_not_taken` | EX/MEM | `hcpu_execute.v` 377 | JGD tidak diambil | 0 | — |
+| `jngd_taken` | EX/MEM | `hcpu_execute.v` 378 | JNGD diambil | 1 | 5 |
+| `jngd_not_taken` | EX/MEM | `hcpu_execute.v` 378 | JNGD tidak diambil | 0 | — |
+| `ra_overflow` | EX/MEM | `hcpu_execute.v` 340 | HC-04: CALL dengan ra_stack penuh | 0 | — |
+| `ra_underflow` | EX/MEM | `hcpu_execute.v` 341 | HC-05: RET dengan ra_stack kosong | 0 | — |
+| `hc01_invalid_rom` | EX/MEM | `hcpu_execute.v` 451 | HC-01: HLOAD indeks ROM tidak sah | 0 | — |
+| `priv_fault` | EX/MEM | `hcpu_execute.v` 310 | tindakan istimewa di mode user | 0 | — |
+| `mem_fault` | EX/MEM | `hcpu_execute.v` 317 | akses di luar jendela proteksi di mode user | 0 | — |
+| `eret` | EX/MEM | `hcpu_execute.v` 325 | ERET di mode supervisor | 0 | — |
+| `syscall` | EX/MEM | `hcpu_execute.v` 285 | SYSCALL | 0 | — |
+| `flags_hgrd` | EX/MEM | `hcpu_execute.v` 490 | HGRD menulis bit GUARD | 3 | 1, 2, 5 |
+| `flags_ceq` | EX/MEM | `hcpu_execute.v` 494 | CEQ menulis Z | 3 | 11 |
+| `flags_fwr` | EX/MEM | `hcpu_execute.v` 505 | FWR menulis FLAGS | 0 | — |
+| `flags_cmp` | EX/MEM | `hcpu_execute.v` 512 | CMP/CMPI menulis Z dan LT | 3 | 3 |
+| `mem_latch` | MEM/WB | `hcpu_memory.v` 143 | ex_stall rendah: MEM/WB di-latch | 178 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `mem_stall` | MEM/WB | `hcpu_memory.v` 143 | ex_stall: MEM/WB ditahan | 0 | — |
+| `dram_read` | MEM/WB | `hcpu_memory.v` 61 | LOAD ke bus | 2 | 4, 6 |
+| `dram_write` | MEM/WB | `hcpu_memory.v` 62 | STORE ke bus | 2 | 4, 6 |
+| `stack_push` | MEM/WB | `hcpu_memory.v` 78, 101 | PUSH: stack[sp] <- data, sp naik | 3 | 8 |
+| `stack_pop` | MEM/WB | `hcpu_memory.v` 80 | POP: sp turun | 3 | 8 |
+| `stack_overflow` | MEM/WB | `hcpu_memory.v` 69 | HC-02: PUSH dengan tumpukan penuh | 0 | — |
+| `stack_underflow` | MEM/WB | `hcpu_memory.v` 70 | HC-03: POP dengan tumpukan kosong | 0 | — |
+| `result_load` | WB | `hcpu_memory.v` 126 | WB mengambil rdata RAM/MMIO | 2 | 4, 6 |
+| `result_pop` | WB | `hcpu_memory.v` 126 | WB mengambil puncak tumpukan | 3 | 8 |
+| `wb_gpr` | WB | `hcpu_writeback.v` 33 | tulis GPR | 49 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `wb_hreg` | WB | `hcpu_writeback.v` 37 | tulis H-Reg | 20 | 1, 2, 5, 7, 9, 10, 11 |
+| `wb_flags` | WB | `hcpu_writeback.v` 41 | tulis FLAGS | 9 | 1, 2, 3, 5, 11 |
+| `wb_halt` | WB | `hcpu_writeback.v` 44 | HALT sampai writeback | 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `ctrl_print_stall` | controller | `hcpu_controller.v` 69, 80 | PRINT/EMITS sedang berjalan: stall global | 0 | — |
+| `ctrl_halt_latch` | controller | `hcpu_controller.v` 75, 76 | wb_halt: halted naik | 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `ctrl_halted_stall` | controller | `hcpu_controller.v` 80, 91, 92, 93 | halted: stall global | 0 | — |
+| `ctrl_data_hazard` | controller | `hcpu_controller.v` 88, 91, 99 | hazard data: stall front-end dan gelembung | 1 | 6 |
+| `ctrl_if_flush` | controller | `hcpu_controller.v` 98 | redirect tanpa stall global: flush IF | 4 | 3, 5, 11 |
+| `ctrl_id_flush` | controller | `hcpu_controller.v` 99 | redirect atau hazard tanpa stall global: flush ID | 5 | 3, 5, 6, 11 |
+
+Tercakup 45 dari 78 aturan. Tidak tercakup — aturan RTL pipeline yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti:
+
+- `fetch_redirect_trap` — trap_redirect_w 0 di setiap tepi: tidak ada program yang menjalankan SYSCALL atau ERET, dan tidak ada trap yang menembak.
+- `fetch_flush_only` — tidak terjangkau dari kabel hcpu_top: if_flush = branch_taken && !global_stall (hcpu_controller.v baris 98), dan masukan branch_taken controller itu adalah redirect_taken (hcpu_top.v baris 842) -- if_flush tanpa redirect tidak mungkin.
+- `decode_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `decode_letter` — tidak ada opcode huruf (0xE0-0xFB) di kesebelas program.
+- `decode_halt_err` — tiap opcode di kesebelas program punya arm di case decode.
+- `hazard_pop_use` — program 8 menaruh NOP sesudah tiap POP; tidak ada instruksi yang memakai tujuan POP tepat sesudahnya.
+- `hazard_store_load` — hazard ini butuh LOAD tepat dua instruksi sesudah STORE ke alamat yang sama; di program 4 dan 6 keduanya berjarak tiga instruksi.
+- `fwd_hreg_s2_mem` — tidak ada pembaca S2 (daftar decode baris 100-105) yang H[S2]-nya ditulis tepat dua instruksi sebelumnya.
+- `ex_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `ex_flush` — flush execute diikat 1'b0 di hcpu_top.v baris 489: tidak terjangkau.
+- `flags_forward_self` — konsumen FLAGS (cabang dan FRD) bukan CMP, jadi alu_flags_we instruksinya sendiri tidak pernah tinggi saat ia memilih FLAGS.
+- `flags_forward_rf` — ketiga cabang di bench -- JNE di program 3 dan 11, JNGD di program 5 -- semuanya tepat sesudah penulis FLAGS-nya (CMP, CEQ, HGRD): FLAGS selalu datang dari EX/MEM.
+- `branch_jmp` — tidak ada JMP di kesebelas program.
+- `branch_call` — tidak ada CALL di kesebelas program.
+- `branch_ret` — tidak ada RET di kesebelas program.
+- `jeq_taken` — tidak ada JEQ di kesebelas program.
+- `jeq_not_taken` — tidak ada JEQ di kesebelas program.
+- `jgd_taken` — tidak ada JGD di kesebelas program.
+- `jgd_not_taken` — tidak ada JGD di kesebelas program.
+- `jngd_not_taken` — satu-satunya JNGD (program 5) diambil: vektor indeks 31 gagal guard.
+- `ra_overflow` — tidak ada CALL atau RET: ra_sp 0 sepanjang lari.
+- `ra_underflow` — tidak ada CALL atau RET: ra_sp 0 sepanjang lari.
+- `hc01_invalid_rom` — satu-satunya HLOAD di luar huruf 1-28 (program 5, indeks 31) adalah vektor negatif yang ROM simpan (hcpu_pkg.vh baris 176): rom_valid 1.
+- `priv_fault` — mode supervisor sepanjang lari: in_user 0 di setiap tepi.
+- `mem_fault` — mode supervisor sepanjang lari: in_user 0 di setiap tepi.
+- `eret` — tidak ada ERET di kesebelas program.
+- `syscall` — tidak ada SYSCALL di kesebelas program.
+- `flags_fwr` — tidak ada FWR di kesebelas program.
+- `mem_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+- `stack_overflow` — program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3.
+- `stack_underflow` — program 8 mendorong tiga dan mengambil tiga: sp 0 sampai 3.
+- `ctrl_print_stall` — tidak ada PRINT atau EMITS: print_active 0 di setiap tepi.
+- `ctrl_halted_stall` — stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS, dan bench mereset pada tepi sesudah halted naik -- gelung while (!halted) lalu rst_n = 0 -- jadi tidak ada tepi hidup yang mengambil halted = 1.
+
+| opcode | baris decode | IF | ID/EX | EX/MEM | MEM/WB |
+|---|---|---|---|---|---|
+| `NOP` | 243 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `HALT` | 245 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `MOVI` | 252 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 |
+| `ADD` | 254 | 6 | 6 | 6 | 6 |
+| `ADDI` | 255 | 3 | 3 | 3 | 3 |
+| `CMP` | 271 | 3 | 3 | 3 | 3 |
+| `JNE` | 288 | 3, 11 | 3, 11 | 3, 11 | 3, 11 |
+| `JNGD` | 290 | 5 | 5 | 5 | 5 |
+| `PUSH` | 292 | 8 | 8 | 8 | 8 |
+| `POP` | 293 | 8 | 8 | 8 | 8 |
+| `LOAD` | 294 | 4, 6 | 4, 6 | 4, 6 | 4, 6 |
+| `STORE` | 295 | 4, 6 | 4, 6 | 4, 6 | 4, 6 |
+| `HLOAD` | 297 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 |
+| `HCADD` | 298 | 2, 11 | 2, 11 | 2, 11 | 2, 11 |
+| `HGRD` | 299 | 1, 2, 5 | 1, 2, 5 | 1, 2, 5 | 1, 2, 5 |
+| `HNRM2` | 300 | 2 | 2 | 2 | 2 |
+| `CGET` | 301 | 9, 10 | 9, 10 | 9, 10 | 9, 10 |
+| `CSET` | 309 | 10 | 10 | 10 | 10 |
+| `CMOV` | 320 | 11 | 11 | 11 | 11 |
+| `CZERO` | 321 | 11 | 11 | 11 | 11 |
+| `CEQ` | 323 | 11 | 11 | 11 | 11 |
+| `CRHO` | 324 | 11 | 11 | 11 | 11 |
+| `CU` | 325 | 11 | 11 | 11 | 11 |
+| `CMOD4` | 326 | 11 | 11 | 11 | 11 |
+| `HPACK` | 329 | 7 | 7 | 7 | 7 |
+| `HCRC` | 330 | 7 | 7 | 7 | 7 |
+
+Arm opcode yang tercakup: 26 dari 53; NOP di ID/EX dan sesudahnya termasuk NOP nyata yang diambil sesudah HALT. Tidak tercakup — arm case decode yang opcode-nya tidak ada di kesebelas program tb_hcpu_top.v: tidak pernah masuk ID/EX, jadi tidak ada tahap sesudahnya yang menjalankannya: `FRD`, `MOV`, `SUB`, `MUL`, `AND`, `OR`, `XOR`, `NOT`, `SHL`, `SHR`, `ANDI`, `ORI`, `XORI`, `SHLI`, `SHRI`, `CMPI`, `FWR`, `EMITS`, `CALL`, `RET`, `JMP`, `JEQ`, `JGD`, `HDIST`, `PRINT`, `ERET`, `SYSCALL`.
+
 ## Mengulang
 
 ```bash

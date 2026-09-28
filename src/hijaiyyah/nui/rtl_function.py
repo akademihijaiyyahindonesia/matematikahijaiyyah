@@ -58,6 +58,12 @@ loader is stepped at its MMIO reads: where it is, its registers and the write
 pointer are all observable there, and everything between two reads -- its
 register writes, its stores, the instruction-memory writes, ERET -- is
 compared in program order.
+
+The pipeline gets no function yet. Its oracle, rtl/tb/tb_hcpu_top.v, has no
+bench per stage, so the owner ordered an audit first: which state the trace
+shows, where to sample it, which instructions pass through each stage, and
+which transitions the bench never runs. pipeline_audit is that map; the
+function's form is decided after it.
 """
 from __future__ import annotations
 
@@ -1123,6 +1129,320 @@ def compare(m: dict[str, Any], trace: dict[str, Any], root: Path | None = None,
             "rules_fired": fired_count}
 
 
+# -- the pipeline: an audit of tb_hcpu_top.v, before any model ------------------------------
+#
+# The owner's order of 28 September 2026: no function for the pipeline until
+# what its oracle shows is mapped. Everything below reads the RTL's own
+# signals under the bench; nothing predicts them.
+
+PIPE_SIGNALS = (
+    "rst_n", "halted", "pc_stall", "id_stall", "ex_stall", "if_flush", "id_flush",
+    "load_use_hazard", "store_load_hazard", "redirect_taken", "branch_taken_w",
+    "trap_redirect_w", "trap_is_eret_w", "trap_in_user_w", "trap_priv_fault_w",
+    "trap_mem_fault_w", "trap_syscall_w", "print_active", "wb_halt",
+    "u_fetch.pc", "u_fetch.pc_prev", "u_fetch.fetch_valid", "if_instruction", "if_pc",
+    "if_pc_valid", "id_opcode", "id_dst", "id_s1", "id_s2", "id_pc", "id_is_branch",
+    "id_is_jump", "id_is_call", "id_is_ret", "id_is_codex", "id_is_push", "id_is_pop",
+    "id_mem_read", "id_mem_write", "rom_valid", "ex_opcode", "ex_dst", "ex_gpr_we",
+    "ex_hreg_we", "ex_flags_we", "ex_is_push", "ex_is_pop", "u_execute.alu_flags_we",
+    "u_execute.ra_sp", "u_execute.flush", "mem_dst", "mem_gpr_we", "mem_hreg_we",
+    "u_memory.mem_is_load", "u_memory.mem_is_pop", "u_memory.sp", "dram_re", "dram_we",
+    "wb_gpr_we", "wb_hreg_we", "wb_flags_we")
+
+
+def _pkg(root: Path) -> dict[str, int]:
+    """Every `define NAME <number> in hcpu_pkg.vh, read from it."""
+    out: dict[str, int] = {}
+    for ln in (root / "rtl" / "hcpu_pkg.vh").read_text(encoding="utf-8").splitlines():
+        hit = re.match(r"\s*`define\s+(\w+)\s+(?:(\d+)'h([0-9A-Fa-f_]+)|(\d+))\b", ln)
+        if hit:
+            out[hit.group(1)] = (int(hit.group(3).replace("_", ""), 16) if hit.group(3)
+                                 else int(hit.group(4)))
+    return out
+
+
+def _decode_arms(a: dict[str, Any], root: Path) -> dict[str, int]:
+    """The opcode arms of hcpu_decode.v's case, name -> line, read from it."""
+    first, last = a["opcodes"]["case_lines"]
+    lines = (root / a["opcodes"]["decode"]).read_text(encoding="utf-8").splitlines()
+    arms: dict[str, int] = {}
+    for n in range(first, last + 1):
+        for name in re.findall(r"`OP_(\w+)\s*:", lines[n - 1]):
+            arms.setdefault(name, n)
+    return arms
+
+
+def _usage(root: Path) -> tuple[set[str], set[str]]:
+    """hcpu_decode.v's own operand-usage lists (lines 86-105): the opcodes it
+    marks as reading S1, and as reading S2."""
+    lines = (root / "rtl" / "hcpu_decode.v").read_text(encoding="utf-8").splitlines()
+    block = "\n".join(lines[85:105])
+    s1, s2 = block.split("id_uses_s1 = 1'b1;")[0], block.split("id_uses_s1 = 1'b1;")[1]
+    return set(re.findall(r"`OP_(\w+)", s1)), set(re.findall(r"`OP_(\w+)", s2))
+
+
+def pipeline_trace(a: dict[str, Any], root: Path | None = None) -> dict[str, Any]:
+    """tb_hcpu_top.v and the RTL, compiled unchanged, with a probe that prints
+    each rising edge twice: in its active region, what the edge takes, and at
+    the end of its timestep, what it left."""
+    root = root or ROOT
+    if shutil.which("iverilog") is None or shutil.which("vvp") is None:
+        raise RuntimeError("Icarus Verilog is required to run the bench")
+    base = f"{a['top']}.{a['instance']}"
+    names = ", ".join(f"{base}.{s}" for s in PIPE_SIGNALS)
+    fmt = " ".join(["%0d"] * len(PIPE_SIGNALS))
+    probe = (f"module rtl_function_probe;\n  always @(posedge {a['top']}.{a['clock']}) begin\n"
+             f"    $display(\"A {fmt}\", {names});\n    $strobe(\"S {fmt}\", {names});\n"
+             "  end\nendmodule\n")
+    sources = [str(f) for pattern in a["compile"] for f in sorted(root.glob(pattern))]
+    work = Path(tempfile.mkdtemp())
+    try:
+        (work / "probe.v").write_text(probe, encoding="utf-8")
+        compiled = subprocess.run(
+            ["iverilog", "-g2012", "-I", str(root / a["include"]), "-o", str(work / "sim"),
+             str(root / a["bench"]), *sources, str(work / "probe.v")],
+            capture_output=True, text=True, timeout=600)
+        if compiled.returncode != 0:
+            raise RuntimeError(f"iverilog failed:\n{compiled.stderr}")
+        ran = subprocess.run(["vvp", "-n", str(work / "sim")], capture_output=True, text=True,
+                             timeout=600, cwd=work)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    keys = [s.rsplit(".", 1)[-1] for s in PIPE_SIGNALS]
+    active: list[dict[str, Any]] = []
+    after: list[dict[str, Any]] = []
+    for ln in ran.stdout.splitlines():
+        f = ln.split()
+        if f[:1] in (["A"], ["S"]):
+            (active if f[0] == "A" else after).append(
+                dict(zip(keys, map(_value, f[1:]), strict=True)))
+    # The bench's $finish lands in the last edge's timestep, before that
+    # edge's $strobe can print: that one edge has no after-row, and no other
+    # difference is accepted.
+    if not after or len(active) != len(after) + 1:
+        raise RuntimeError(f"the probe printed {len(active)} and {len(after)} rows")
+    active = active[:len(after)]
+    return {"active": active, "after": after,
+            "said": [ln for ln in ran.stdout.splitlines() if ln[:2] not in ("A ", "S ")]}
+
+
+def _pipe_rules(p: dict[str, int], uses: tuple[set[str], set[str]], ops: dict[int, str],
+                arms: dict[str, int]) -> dict[str, Callable[[dict[str, Any]], bool]]:
+    """Each transition's condition, over what the edge takes -- the RTL's own
+    expressions, in the lines the spec cites."""
+    s1, s2 = uses
+
+    def op(r: dict[str, Any]) -> str:
+        return ops.get(r["id_opcode"], "") if isinstance(r["id_opcode"], int) else ""
+
+    def redirect(r: dict[str, Any]) -> bool:
+        return bool(r["if_flush"] == 1 or r["redirect_taken"] == 1)
+
+    def fetch_free(r: dict[str, Any]) -> bool:
+        return not redirect(r) and r["pc_stall"] != 1
+
+    def latch_id(r: dict[str, Any]) -> bool:
+        return bool(r["id_flush"] != 1 and r["id_stall"] != 1)
+
+    def if_op(r: dict[str, Any]) -> int:
+        return r["if_instruction"] >> 24 if isinstance(r["if_instruction"], int) else -1
+
+    def fwd(kind: str, idx: str, src: str) -> Callable[[dict[str, Any]], bool]:
+        use = s1 if idx == "s1" else s2
+
+        def rule(r: dict[str, Any]) -> bool:
+            if op(r) not in use:
+                return False
+            ex = bool(r[f"ex_{kind}_we"] == 1 and r["ex_dst"] == r[f"id_{idx}"])
+            mem = bool(r[f"mem_{kind}_we"] == 1 and r["mem_dst"] == r[f"id_{idx}"])
+            return {"ex": ex, "mem": not ex and mem, "rf": not ex and not mem}[src]
+        return rule
+
+    def cond(name: str, taken: bool) -> Callable[[dict[str, Any]], bool]:
+        return lambda r: (r["id_is_branch"] == 1 and op(r) == name
+                          and (r["branch_taken_w"] == 1) == taken)
+
+    def consumer(r: dict[str, Any]) -> bool:
+        return bool(r["id_is_branch"] == 1 or op(r) == "FRD")
+
+    letters = range(p["LETTER_OP_FIRST"], p["LETTER_OP_LAST"] + 1)
+    rules: dict[str, Callable[[dict[str, Any]], bool]] = {
+        "fetch_redirect_branch": lambda r: r["branch_taken_w"] == 1,
+        "fetch_redirect_trap": lambda r: r["trap_redirect_w"] == 1,
+        "fetch_flush_only": lambda r: r["if_flush"] == 1 and r["redirect_taken"] != 1,
+        "fetch_stall": lambda r: not redirect(r) and r["pc_stall"] == 1,
+        "fetch_latch": lambda r: fetch_free(r) and r["fetch_valid"] == 1,
+        "fetch_warmup": lambda r: fetch_free(r) and r["fetch_valid"] != 1,
+        "decode_flush_redirect": lambda r: r["id_flush"] == 1 and r["redirect_taken"] == 1,
+        "decode_flush_hazard": lambda r: r["id_flush"] == 1 and r["redirect_taken"] != 1,
+        "decode_stall": lambda r: r["id_flush"] != 1 and r["id_stall"] == 1,
+        "decode_latch_instruction": lambda r: latch_id(r) and r["if_pc_valid"] == 1,
+        "decode_latch_bubble": lambda r: latch_id(r) and r["if_pc_valid"] != 1,
+        "decode_letter": lambda r: latch_id(r) and if_op(r) in letters,
+        "decode_halt_err": lambda r: (latch_id(r) and r["if_pc_valid"] == 1
+                                      and if_op(r) not in letters
+                                      and ops.get(if_op(r)) not in arms),
+        "hazard_load_use": lambda r: r["load_use_hazard"] == 1 and r["id_mem_read"] == 1,
+        "hazard_pop_use": lambda r: r["load_use_hazard"] == 1 and r["id_is_pop"] == 1,
+        "hazard_store_load": lambda r: r["store_load_hazard"] == 1,
+        **{f"fwd_{k}_{i}_{s}": fwd(k, i, s) for k in ("gpr", "hreg") for i in ("s1", "s2")
+           for s in ("ex", "mem", "rf")},
+        "ex_latch": lambda r: r["ex_stall"] != 1,
+        "ex_stall": lambda r: r["ex_stall"] == 1,
+        "ex_flush": lambda r: r["flush"] == 1,
+        "flags_forward_self": lambda r: consumer(r) and r["alu_flags_we"] == 1,
+        "flags_forward_ex": lambda r: (consumer(r) and r["alu_flags_we"] != 1
+                                       and r["ex_flags_we"] == 1),
+        "flags_forward_rf": lambda r: (consumer(r) and r["alu_flags_we"] != 1
+                                       and r["ex_flags_we"] != 1),
+        "branch_jmp": lambda r: r["id_is_jump"] == 1,
+        "branch_call": lambda r: r["id_is_call"] == 1 and r["ra_sp"] < p["RA_DEPTH"],
+        "branch_ret": lambda r: r["id_is_ret"] == 1 and r["ra_sp"] != 0,
+        **{f"{n.lower()}_{'taken' if t else 'not_taken'}": cond(n, t)
+           for n in ("JEQ", "JNE", "JGD", "JNGD") for t in (True, False)},
+        "ra_overflow": lambda r: r["id_is_call"] == 1 and r["ra_sp"] >= p["RA_DEPTH"],
+        "ra_underflow": lambda r: r["id_is_ret"] == 1 and r["ra_sp"] == 0,
+        "hc01_invalid_rom": lambda r: (r["ex_stall"] != 1 and r["id_is_codex"] == 1
+                                       and op(r) == "HLOAD" and r["rom_valid"] != 1),
+        "priv_fault": lambda r: r["trap_priv_fault_w"] == 1,
+        "mem_fault": lambda r: r["trap_mem_fault_w"] == 1,
+        "eret": lambda r: r["trap_is_eret_w"] == 1,
+        "syscall": lambda r: r["trap_syscall_w"] == 1,
+        "flags_hgrd": lambda r: r["ex_stall"] != 1 and op(r) == "HGRD",
+        "flags_ceq": lambda r: r["ex_stall"] != 1 and op(r) == "CEQ",
+        "flags_fwr": lambda r: r["ex_stall"] != 1 and op(r) == "FWR",
+        "flags_cmp": lambda r: (r["ex_stall"] != 1 and r["alu_flags_we"] == 1
+                                and op(r) not in ("HGRD", "CEQ", "FWR")),
+        "mem_latch": lambda r: r["ex_stall"] != 1,
+        "mem_stall": lambda r: r["ex_stall"] == 1,
+        "dram_read": lambda r: r["dram_re"] == 1,
+        "dram_write": lambda r: r["dram_we"] == 1,
+        "stack_push": lambda r: (r["ex_stall"] != 1 and r["ex_is_push"] == 1
+                                 and r["sp"] < p["STACK_DEPTH"]),
+        "stack_pop": lambda r: r["ex_stall"] != 1 and r["ex_is_pop"] == 1 and r["sp"] > 0,
+        "stack_overflow": lambda r: r["ex_is_push"] == 1 and r["sp"] >= p["STACK_DEPTH"],
+        "stack_underflow": lambda r: r["ex_is_pop"] == 1 and r["sp"] == 0,
+        "result_load": lambda r: r["mem_is_load"] == 1,
+        "result_pop": lambda r: r["mem_is_pop"] == 1,
+        "wb_gpr": lambda r: r["wb_gpr_we"] == 1,
+        "wb_hreg": lambda r: r["wb_hreg_we"] == 1,
+        "wb_flags": lambda r: r["wb_flags_we"] == 1,
+        "wb_halt": lambda r: r["wb_halt"] == 1,
+        "ctrl_print_stall": lambda r: r["print_active"] == 1,
+        "ctrl_halt_latch": lambda r: r["wb_halt"] == 1 and r["halted"] != 1,
+        "ctrl_halted_stall": lambda r: r["halted"] == 1,
+        "ctrl_data_hazard": lambda r: ((r["load_use_hazard"] == 1 or r["store_load_hazard"] == 1)
+                                       and r["halted"] != 1 and r["print_active"] != 1),
+        "ctrl_if_flush": lambda r: r["if_flush"] == 1,
+        "ctrl_id_flush": lambda r: r["id_flush"] == 1,
+    }
+    return rules
+
+
+def pipeline_audit(a: dict[str, Any], trace: dict[str, Any], root: Path | None = None,
+                   rules_: dict[str, Callable[[dict[str, Any]], bool]] | None = None
+                   ) -> dict[str, Any]:
+    """The coverage map: at each edge, which of the spec's transitions the RTL
+    ran, per program; which opcodes entered each stage; and two checks on the
+    measurement itself -- what each edge took is what the edge before left,
+    and the identity carried past decode agrees with every stage register that
+    names an instruction."""
+    root = root or ROOT
+    p = _pkg(root)
+    ops = {v: k[3:] for k, v in p.items() if k.startswith("OP_")}
+    uses = _usage(root)
+    arms = _decode_arms(a, root)
+    rules_ = rules_ or _pipe_rules(p, uses, ops, arms)
+    active, after = trace["active"], trace["after"]
+    fired = {t["id"]: [0] * len(a["programs"]) for t in a["transitions"]}
+    keys = [k for k in after[0] if k != "rst_n"]
+    timing: dict[str, int] = {}
+    compared, program = 0, -1
+    release = {"stepped": 0, "held_in_reset": 0}
+    stages: dict[str, dict[str, Any]] = {s: {} for s in ("IF", "ID/EX", "EX/MEM", "MEM/WB")}
+    counts = [dict.fromkeys(("fetched", "decoded", "executed", "retired", "edges"), 0)
+              for _ in a["programs"]]
+    identity = {"id_checked": 0, "id_mismatches": 0, "ex_checked": 0, "ex_mismatches": 0}
+    idex: Any = None
+    exmem: Any = None
+    was_reset = True
+    for t in range(1, len(after)):
+        taken, left = after[t - 1], after[t]
+        resetting = left["rst_n"] != 1 or (was_reset and left["pc"] == 0
+                                           and left["fetch_valid"] != 1)
+        if was_reset and left["rst_n"] == 1:
+            release["held_in_reset" if resetting else "stepped"] += 1
+        if resetting:
+            # a reset belongs to the program it comes before
+            for rid in ("fetch_reset", "decode_reset"):
+                fired[rid][min(program + 1, len(a["programs"]) - 1)] += 1
+            idex = exmem = None
+            was_reset = True
+            continue
+        if was_reset:
+            program += 1
+        was_reset = False
+        counts[program]["edges"] += 1
+        compared += 1
+        for k in keys:
+            if active[t][k] != taken[k]:
+                timing[k] = timing.get(k, 0) + 1
+        for rid, rule in rules_.items():
+            if rule(taken):
+                fired[rid][program] += 1
+        # the identity carried down the pipe, by the latch rules the RTL states
+        if_tag = ((taken["if_pc"], taken["if_instruction"] >> 24)
+                  if taken["if_pc_valid"] == 1 else None)
+        new_exmem = idex if taken["ex_stall"] != 1 else exmem
+        if taken["ex_stall"] != 1 and exmem is not None:
+            counts[program]["retired"] += 1
+            stages["MEM/WB"].setdefault(ops.get(exmem[1], hex(exmem[1])), set()).add(program + 1)
+        if taken["ex_stall"] != 1 and idex is not None:
+            counts[program]["executed"] += 1
+            stages["EX/MEM"].setdefault(ops.get(idex[1], hex(idex[1])), set()).add(program + 1)
+        if taken["id_flush"] == 1:
+            new_idex = None
+        elif taken["id_stall"] == 1:
+            new_idex = idex
+        else:
+            new_idex = if_tag
+            if if_tag is not None:
+                counts[program]["decoded"] += 1
+                stages["ID/EX"].setdefault(ops.get(if_tag[1], hex(if_tag[1])),
+                                           set()).add(program + 1)
+        if rules_["fetch_latch"](taken):
+            counts[program]["fetched"] += 1
+        if left["if_pc_valid"] == 1:
+            stages["IF"].setdefault(ops.get(left["if_instruction"] >> 24,
+                                            hex(left["if_instruction"] >> 24)),
+                                    set()).add(program + 1)
+        idex, exmem = new_idex, new_exmem
+        want = idex if idex is not None else (0, p["OP_NOP"])
+        identity["id_checked"] += 1
+        identity["id_mismatches"] += (left["id_pc"], left["id_opcode"]) != want
+        identity["ex_checked"] += 1
+        identity["ex_mismatches"] += left["ex_opcode"] != (exmem[1] if exmem else p["OP_NOP"])
+    seen = {name: {s: sorted(stages[s].get(name, set())) for s in stages} for name in arms}
+    verdict = next((ln for ln in trace["said"] if re.match(a["bench_verdict"]["pattern"], ln)),
+                   None)
+    text = "\n".join(" ".join(str(v) for v in r.values()) for r in after)
+    return {
+        "bench_sha256": _sha((root / a["bench"]).read_bytes()),
+        "files_sha256": {f: _sha((root / f).read_bytes()) for f in a["files"]},
+        "trace_sha256": _sha(text.encode("utf-8")), "edges": len(after),
+        "live_edges": compared,
+        "sampling": {"compared": compared, "mismatched": timing, "release_edges": release},
+        "identity": identity,
+        "programs": [{"n": prog["n"], **counts[i]} for i, prog in enumerate(a["programs"])],
+        "transitions": [{"id": t["id"], "fired": sum(fired[t["id"]]),
+                         "programs": [i + 1 for i, c in enumerate(fired[t["id"]]) if c]}
+                        for t in a["transitions"]],
+        "not_covered": [t["id"] for t in a["transitions"] if not sum(fired[t["id"]])],
+        "opcodes": {name: {"line": line, **seen[name]} for name, line in arms.items()},
+        "opcodes_not_covered": [n for n in arms if not seen[n]["ID/EX"]],
+        "bench_said": verdict, "bench_pass": verdict is not None}
+
+
 # -- the model -------------------------------------------------------------------------------
 
 
@@ -1160,9 +1480,14 @@ def build(root: Path | None = None) -> dict[str, Any]:
                       for r in rules(m)],
             "not_covered": [r["id"] for r in rules(m) if not result["rules_fired"][r["id"]]]})
     tool = subprocess.run(["iverilog", "-V"], capture_output=True, text=True).stdout
-    return {"generated_by": "src/hijaiyyah/nui/rtl_function.py",
-            "spec": "NUI/spec/rtl_function.json",
-            "simulator": tool.splitlines()[0] if tool else None, "modules": modules}
+    out: dict[str, Any] = {"generated_by": "src/hijaiyyah/nui/rtl_function.py",
+                           "spec": "NUI/spec/rtl_function.json",
+                           "simulator": tool.splitlines()[0] if tool else None,
+                           "modules": modules}
+    if "pipeline_audit" in spec:
+        a = spec["pipeline_audit"]
+        out["pipeline_audit"] = pipeline_audit(a, pipeline_trace(a, root), root)
+    return out
 
 
 def _expects(m: dict[str, Any], s: dict[str, Any]) -> str | None:
@@ -1246,6 +1571,35 @@ def check(model: dict[str, Any]) -> list[str]:
                 **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
         if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
             bad.append(f"F5 {m['name']}: an RTL or bench file is not the one the model holds")
+    return bad + check_audit(model, spec)
+
+
+def check_audit(model: dict[str, Any], spec: dict[str, Any]) -> list[str]:
+    """A1-A5 on the pipeline audit: the measurement is sound, and the map
+    claims no more than the bench ran."""
+    if "pipeline_audit" not in spec:
+        return []
+    a, r = spec["pipeline_audit"], model.get("pipeline_audit")
+    if r is None:
+        return ["A5 pipeline: the model holds no audit"]
+    bad = []
+    if r["sampling"]["mismatched"]:
+        bad.append(f"A1 pipeline: an edge took what the edge before did not leave: "
+                   f"{r['sampling']['mismatched']}")
+    if r["identity"]["id_mismatches"] or r["identity"]["ex_mismatches"]:
+        bad.append(f"A2 pipeline: the derived identity disagrees with a stage register: "
+                   f"{r['identity']}")
+    if r["not_covered"] != list(a["not_covered"]):
+        bad.append(f"A3 pipeline: transitions the bench never runs are {r['not_covered']}, "
+                   f"the spec names {list(a['not_covered'])}")
+    if r["opcodes_not_covered"] != a["opcodes"]["not_covered"]:
+        bad.append(f"A3 pipeline: opcode arms never decoded are {r['opcodes_not_covered']}, "
+                   f"the spec names {a['opcodes']['not_covered']}")
+    if not r["bench_pass"]:
+        bad.append(f"A4 pipeline: {r['bench_said']}")
+    held = {a["bench"]: r["bench_sha256"], **r["files_sha256"]}
+    if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
+        bad.append("A5 pipeline: an RTL or bench file is not the one the audit holds")
     return bad
 
 
@@ -1257,6 +1611,64 @@ def verify(committed: dict[str, Any] | None = None) -> list[str]:
     except (LookupError, OSError, KeyError, ValueError, RuntimeError) as why:
         return [f"the RTL function model no longer reads back: {why}"]
     return hardware._diff(committed, fresh) + check(committed)
+
+
+def _audit_page(a: dict[str, Any], r: dict[str, Any]) -> list[str]:
+    """The pipeline's coverage map, drawn from the audit."""
+    s, idn = r["sampling"], r["identity"]
+
+    def progs(ns: list[int]) -> str:
+        return ", ".join(map(str, ns)) or "—"
+
+    out = ["## Pipeline — audit oracle `tb_hcpu_top.v`, sebelum model", "",
+           f"**Oracle.** {a['oracle']}.", "",
+           f"Bench `{a['bench']}` `{r['bench_sha256'][:12]}…`; dipegang: "
+           + ", ".join(f"`{f}`" for f in r["files_sha256"]) + ".", "",
+           f"**Titik sampel.** {a['sampling']['rule']}: {a['sampling']['why']}. Terukur: "
+           f"{s['compared']} tepi hidup, dan yang diambil tiap tepi berbeda dari yang "
+           f"ditinggalkan tepi sebelumnya di "
+           + (", ".join(f"{k} ({v})" for k, v in s["mismatched"].items()) or "tidak satu pun")
+           + f" sinyal desain. Tepi pelepasan reset: {s['release_edges']['stepped']} melangkah, "
+           f"{s['release_edges']['held_in_reset']} tertahan. Tepi terakhir tidak punya baris "
+           "sesudah: `$finish` bench jatuh di timestep-nya.", "",
+           f"**Yang bench sendiri amati.** {a['bench_observes']}. Vonis: {r['bench_said']}.", "",
+           "| program | baris bench | bench membaca | tepi hidup | diambil fetch | didekode "
+           "| dieksekusi | sampai WB |", "|---|---|---|---|---|---|---|---|"]
+    for spec_p, got in zip(a["programs"], r["programs"], strict=True):
+        out.append(f"| {got['n']} | {spec_p['line']} | {spec_p['reads']} | {got['edges']} | "
+                   f"{got['fetched']} | {got['decoded']} | {got['executed']} | "
+                   f"{got['retired']} |")
+    out += ["", "| tahap | berkas | keadaan (register RTL) | identitas instruksi "
+            "| keadaan berikut dari | di luar |", "|---|---|---|---|---|---|"]
+    for st in a["stages"]:
+        out.append(f"| {st['stage']} | `{st['file'].rsplit('/', 1)[-1]}` | "
+                   f"{', '.join(st['state']) or '—'} | {st['identity']} | {st['next_from']} | "
+                   f"{st['outside']} |")
+    out += ["", f"Identitas turunan dicek di {idn['id_checked']} tepi terhadap id_pc dan "
+            f"id_opcode ({idn['id_mismatches']} berbeda) dan terhadap ex_opcode "
+            f"({idn['ex_mismatches']} berbeda).", "",
+            "| aturan | tahap | baris RTL | arti | tepi | program |", "|---|---|---|---|---|---|"]
+    fired = {t["id"]: t for t in r["transitions"]}
+    for t in a["transitions"]:
+        got = fired[t["id"]]
+        where = f"`{t['file'].rsplit('/', 1)[-1]}` {', '.join(map(str, t['lines']))}"
+        out.append(f"| `{t['id']}` | {t['stage']} | {where} | {t['means']} | {got['fired']} | "
+                   f"{progs(got['programs'])} |")
+    covered = len(a["transitions"]) - len(r["not_covered"])
+    out += ["", f"Tercakup {covered} dari {len(a['transitions'])} aturan. Tidak tercakup — "
+            f"{a['not_covered_why']}:", "",
+            *[f"- `{k}` — {v}." for k, v in a["not_covered"].items()], "",
+            "| opcode | baris decode | IF | ID/EX | EX/MEM | MEM/WB |", "|---|---|---|---|---|---|"]
+    for name, o in r["opcodes"].items():
+        if o["ID/EX"]:
+            out.append(f"| `{name}` | {o['line']} | {progs(o['IF'])} | {progs(o['ID/EX'])} | "
+                       f"{progs(o['EX/MEM'])} | {progs(o['MEM/WB'])} |")
+    out += ["", f"Arm opcode yang tercakup: {len(r['opcodes']) - len(r['opcodes_not_covered'])} "
+            f"dari {len(r['opcodes'])}; NOP di ID/EX dan sesudahnya termasuk NOP nyata yang "
+            "diambil sesudah HALT. Tidak tercakup — "
+            f"{a['opcodes']['not_covered_why']}: "
+            + ", ".join(f"`{n}`" for n in r["opcodes_not_covered"]) + ".", ""]
+    return out
 
 
 def page(model: dict[str, Any]) -> str:
@@ -1379,6 +1791,8 @@ def page(model: dict[str, Any]) -> str:
                     *[f"- `{k}` — {v}." for k, v in s["covered_limits"].items()]]
         out += ["", f"**Waktu input.** {s['input_timing']['rule']}: {s['input_timing']['why']}.",
                 ""]
+    if "pipeline_audit" in model:
+        out += _audit_page(load()["pipeline_audit"], model["pipeline_audit"])
     out += ["## Mengulang", "", "```bash",
             "PYTHONPATH=src python3 -m hijaiyyah.nui.rtl_function --verify", "```"]
     return "\n".join(out) + "\n"
