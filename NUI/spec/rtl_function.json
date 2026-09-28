@@ -1490,6 +1490,179 @@
     "eret": "sasaran dan mode sesudah ERET diamati dari unit trap, bukan diprediksi"
    },
    "covered_limits_why": "yang dijalankan kedua bench, dan apa yang pemakaiannya tidak tunjukkan"
+  },
+  {
+   "name": "pipeline",
+   "rtl": "rtl/hcpu_top.v",
+   "bench": "rtl/tb/tb_hcpu_top.v",
+   "oracle": "pemilik, 28 September 2026, sesudah audit bd8158c GREEN: satu fungsi transisi sinkron atas empat bundle register tahap yang audit catat -- bukan lima fungsi tahap -- dengan input rst_n dan imem_data, dan hasil subsistem luar sebagai input oracle, tidak diprediksi ulang. Dibandingkan per tepi terhadap jejak tb_hcpu_top.v, lalu GPR, H2[7:0], dan guard_led sebagai pemeriksaan terminal. Hanya 45 aturan yang tercakup diberi perilaku; ke-33 lainnya tetap not covered, dan pembekuan sesudah halted tidak diklaim. Interpreter bukan pengganti oracle",
+   "form": "PIPELINE_STATE_t + INPUT_t + EXTERNAL_RESULTS_t -> PIPELINE_STATE_t+1",
+   "rules": "pipeline_audit",
+   "not_covered": "pipeline_audit",
+   "state": {
+    "IF": [
+     "pc",
+     "pc_prev",
+     "fetch_valid",
+     "if_instruction",
+     "if_pc",
+     "pc_valid"
+    ],
+    "ID/EX": [
+     "id_opcode",
+     "id_dst",
+     "id_s1",
+     "id_s2",
+     "id_imm",
+     "id_pc",
+     "id_gpr_s1",
+     "id_gpr_s2",
+     "id_hreg_s1",
+     "id_hreg_s2",
+     "id_gpr_we",
+     "id_hreg_we",
+     "id_mem_read",
+     "id_mem_write",
+     "id_is_branch",
+     "id_is_jump",
+     "id_is_call",
+     "id_is_ret",
+     "id_is_codex",
+     "id_is_halt",
+     "id_is_print",
+     "id_is_emits",
+     "id_is_push",
+     "id_is_pop"
+    ],
+    "EX/MEM": [
+     "ex_opcode",
+     "ex_dst",
+     "ex_gpr_result",
+     "ex_hreg_result",
+     "ex_gpr_we",
+     "ex_hreg_we",
+     "ex_flags_new",
+     "ex_flags_we",
+     "ex_is_halt",
+     "ex_is_print",
+     "ex_is_emits",
+     "ex_emits_addr",
+     "ex_print_data",
+     "ex_is_push",
+     "ex_is_pop",
+     "ex_push_data",
+     "ex_mem_read",
+     "ex_mem_write",
+     "ex_mem_addr",
+     "ex_mem_wdata",
+     "ra_sp"
+    ],
+    "MEM/WB": [
+     "mem_dst",
+     "mem_gpr_result_r",
+     "mem_hreg_result",
+     "mem_gpr_we",
+     "mem_hreg_we",
+     "mem_flags_new",
+     "mem_flags_we",
+     "mem_is_halt",
+     "mem_is_load",
+     "mem_is_pop",
+     "sp",
+     "stack_rd",
+     "stack_rd_valid"
+    ]
+   },
+   "state_also": {
+    "halted": "register controller (hcpu_controller.v baris 72-77): aturan tercakup ctrl_halt_latch menulisnya; pembekuan yang ia sebabkan tidak tercakup",
+    "register file": "tujuan port tulis WB (hcpu_regfile.v baris 53-59, 63-68, 94, 111-118): 18 GPR, 16 H-Reg, FLAGS. Dimodelkan karena lingkar terbuka dari reset hanya dengan input yang pemilik sebut butuh nilai baca register decode, dan pemeriksaan terminal membacanya; register pc di dalamnya diikat pc_we = 0 (hcpu_top.v baris 645)",
+    "larik tumpukan": "stack[] hcpu_memory: tanpa reset, x sampai ditulis PUSH; di satu langkah dari keadaan RTL hanya kata di sp-1 yang teramati, lewat net probe"
+   },
+   "state_note": "ex_emits_addr ada di RTL (hcpu_execute.v) dan tidak ada di daftar keadaan audit; ia register EX/MEM yang di-latch tiap tepi, jadi ikut di bundle ini",
+   "inputs": [
+    "rst_n",
+    "imem_data"
+   ],
+   "externals": {
+    "ROM": [
+     "rom_data",
+     "rom_valid"
+    ],
+    "guard": [
+     "guard_pass",
+     "guard_u",
+     "guard_rho"
+    ],
+    "ALU codex": [
+     "calu_result_vec",
+     "calu_result_scl"
+    ],
+    "HISAB": [
+     "hisab_pack0",
+     "hisab_pack1",
+     "hisab_pack2",
+     "hisab_crc"
+    ],
+    "unit trap": [
+     "trap_redirect_w",
+     "trap_in_user_w"
+    ],
+    "RAM dan MMIO": [
+     "dram_rdata"
+    ],
+    "mesin keadaan cetak hcpu_top": [
+     "print_active"
+    ]
+   },
+   "externals_why": "Pengali hanya dipakai MUL, yang tidak tercakup, jadi keluarannya tidak dibaca. Semua input luar adalah fungsi kombinasional dari keadaan sesudah tepi t, dan tepi t+1 mengambilnya dari baris itu (A1 audit)",
+   "outputs": [
+    "imem_addr",
+    "imem_ce",
+    "rom_addr",
+    "calu_op",
+    "calu_index",
+    "dram_re",
+    "dram_we",
+    "dram_addr",
+    "dram_wdata",
+    "wb_gpr_we",
+    "wb_gpr_waddr",
+    "wb_gpr_wdata",
+    "wb_hreg_we",
+    "wb_hreg_waddr",
+    "wb_hreg_wdata",
+    "wb_flags_we",
+    "wb_flags",
+    "wb_halt",
+    "branch_taken_w",
+    "branch_target_w",
+    "pc_stall",
+    "id_stall",
+    "ex_stall",
+    "if_flush",
+    "id_flush",
+    "load_use_hazard",
+    "store_load_hazard",
+    "flags_out",
+    "guard_led",
+    "fwd_gpr_s1",
+    "fwd_gpr_s2",
+    "fwd_hreg_s1",
+    "fwd_hreg_s2"
+   ],
+   "input_timing": {
+    "signal": "rst_n",
+    "takes": "new",
+    "rule": "keadaan t = yang ditinggalkan tepi t; input dan hasil luar tepi t+1 = baris sesudah tepi t (A1 audit, 178 tepi); rst_n tepi t+1 = baris sesudah tepi t+1, karena bench mengubahnya di timestep tepi itu sendiri",
+    "why": "diukur tiap build atas rst_n: di tiap tepi tempat rst_n berubah, desain mengikuti nilai baru -- turun: keadaan sesudahnya keadaan reset; naik: fetch melangkah"
+   },
+   "bench_verdict": {
+    "pattern": "^Total: 15 PASS, 0 FAIL$"
+   },
+   "bench_expects": {
+    "terminal": "program di pipeline_audit.programs[].reads"
+   },
+   "not_covered_why": "ke-33 aturan dan ke-27 arm opcode yang audit namai: fungsi berhenti dengan NotCovered, bukan memprediksi"
   }
  ],
  "checks": [

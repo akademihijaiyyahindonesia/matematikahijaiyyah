@@ -1673,6 +1673,19 @@ mengubah RTL pipeline, menganggap kelima tahap tercakup, memakai interpreter
 sebagai pengganti oracle, dan mengklaim keadaan tahap yang tidak teramati.
 Bentuk fungsi state-transition pipeline diputuskan pemilik sesudah peta itu.
 
+Audit pipeline diterima GREEN (`bd8158c`), dengan koreksi 45 dari 78. Bentuk
+fungsi yang pemilik tetapkan: **satu fungsi transisi sinkron atas keempat
+bundle register tahap** yang audit catat, bukan lima fungsi tahap; input
+`rst_n` dan `imem_data`; hasil ROM, guard, ALU codex, HISAB, pengali, unit
+trap, RAM, dan MMIO diambil sebagai input oracle, tidak diprediksi ulang.
+Pengambilan sampel mengikuti A1: keadaan t adalah yang ditinggalkan tepi t,
+dan input tepi t+1 adalah baris sesudah tepi t. A2 hanya untuk identitas
+tahap yang tidak membawa PC. Model hanya memberi perilaku pada 45 aturan yang
+tercakup; ke-33 lainnya tetap not covered dengan alasannya, dan pembekuan
+sesudah `halted` naik **tidak diklaim**. Pembandingnya jejak keempat bundle di
+setiap tepi, lalu GPR, H2[7:0], dan `guard_led` sebagai pemeriksaan terminal.
+Interpreter bukan pengganti oracle RTL.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

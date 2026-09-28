@@ -1482,6 +1482,1024 @@
    "not_covered": [
     "count_empty"
    ]
+  },
+  {
+   "name": "pipeline",
+   "rtl": "rtl/hcpu_top.v",
+   "rtl_sha256": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "bench": "rtl/tb/tb_hcpu_top.v",
+   "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
+   "trace_sha256": "411860312c3c24a4f9b49926fcf166b8088d482bb176ab961b90786cca5454bc",
+   "parameters": {},
+   "cycles": 233,
+   "steps": 232,
+   "input_timing": {
+    "line_changes": 21,
+    "captured_new": 21,
+    "captured_old": 0
+   },
+   "one_step_mismatches": [],
+   "open_loop_mismatches": [],
+   "output_mismatches": [],
+   "not_covered_steps": {
+    "ctrl_halted_stall": [
+     232
+    ],
+    "open loop: ctrl_halted_stall": [
+     232
+    ]
+   },
+   "open_loop_reached": 231,
+   "not_covered_outputs": {
+    "ctrl_halted_stall": 12
+   },
+   "unpredicted": {
+    "stack_rd": 10
+   },
+   "terminal": [
+    {
+     "program": 1,
+     "read": "guard_led",
+     "function": 1,
+     "rtl": 1
+    },
+    {
+     "program": 1,
+     "read": "R0",
+     "function": 42,
+     "rtl": 42
+    },
+    {
+     "program": 2,
+     "read": "H2[7:0]",
+     "function": 10,
+     "rtl": 10
+    },
+    {
+     "program": 2,
+     "read": "R0",
+     "function": 112,
+     "rtl": 112
+    },
+    {
+     "program": 3,
+     "read": "R0",
+     "function": 3,
+     "rtl": 3
+    },
+    {
+     "program": 4,
+     "read": "R3",
+     "function": 99,
+     "rtl": 99
+    },
+    {
+     "program": 5,
+     "read": "R1",
+     "function": 200,
+     "rtl": 200
+    },
+    {
+     "program": 6,
+     "read": "R4",
+     "function": 10,
+     "rtl": 10
+    },
+    {
+     "program": 7,
+     "read": "R0",
+     "function": 65824,
+     "rtl": 65824
+    },
+    {
+     "program": 7,
+     "read": "R1",
+     "function": 2586908108,
+     "rtl": 2586908108
+    },
+    {
+     "program": 7,
+     "read": "R2",
+     "function": 285212673,
+     "rtl": 285212673
+    },
+    {
+     "program": 7,
+     "read": "R3",
+     "function": 16144,
+     "rtl": 16144
+    },
+    {
+     "program": 7,
+     "read": "R4",
+     "function": 0,
+     "rtl": 0
+    },
+    {
+     "program": 8,
+     "read": "R4",
+     "function": 33,
+     "rtl": 33
+    },
+    {
+     "program": 8,
+     "read": "R5",
+     "function": 22,
+     "rtl": 22
+    },
+    {
+     "program": 8,
+     "read": "R6",
+     "function": 11,
+     "rtl": 11
+    },
+    {
+     "program": 9,
+     "read": "R1",
+     "function": 8,
+     "rtl": 8
+    },
+    {
+     "program": 9,
+     "read": "R2",
+     "function": 2,
+     "rtl": 2
+    },
+    {
+     "program": 9,
+     "read": "R3",
+     "function": 2,
+     "rtl": 2
+    },
+    {
+     "program": 9,
+     "read": "R4",
+     "function": 0,
+     "rtl": 0
+    },
+    {
+     "program": 10,
+     "read": "R3",
+     "function": 5,
+     "rtl": 5
+    },
+    {
+     "program": 10,
+     "read": "R4",
+     "function": 6,
+     "rtl": 6
+    },
+    {
+     "program": 10,
+     "read": "R5",
+     "function": 2,
+     "rtl": 2
+    },
+    {
+     "program": 10,
+     "read": "R6",
+     "function": 1,
+     "rtl": 1
+    },
+    {
+     "program": 10,
+     "read": "R8",
+     "function": 0,
+     "rtl": 0
+    },
+    {
+     "program": 10,
+     "read": "R9",
+     "function": 4,
+     "rtl": 4
+    },
+    {
+     "program": 11,
+     "read": "R1",
+     "function": 8,
+     "rtl": 8
+    },
+    {
+     "program": 11,
+     "read": "R2",
+     "function": 0,
+     "rtl": 0
+    },
+    {
+     "program": 11,
+     "read": "R3",
+     "function": 0,
+     "rtl": 0
+    },
+    {
+     "program": 11,
+     "read": "R4",
+     "function": 1,
+     "rtl": 1
+    },
+    {
+     "program": 11,
+     "read": "R6",
+     "function": 1,
+     "rtl": 1
+    },
+    {
+     "program": 11,
+     "read": "R7",
+     "function": 0,
+     "rtl": 0
+    }
+   ],
+   "terminal_mismatches": [],
+   "bench_said": "Total: 15 PASS, 0 FAIL",
+   "bench_pass": true,
+   "rules_fired": {
+    "fetch_reset": 53,
+    "fetch_redirect_branch": 4,
+    "fetch_redirect_trap": 0,
+    "fetch_flush_only": 0,
+    "fetch_stall": 1,
+    "fetch_latch": 158,
+    "fetch_warmup": 15,
+    "decode_reset": 53,
+    "decode_flush_redirect": 4,
+    "decode_flush_hazard": 1,
+    "decode_stall": 0,
+    "decode_latch_instruction": 143,
+    "decode_latch_bubble": 30,
+    "decode_letter": 0,
+    "decode_halt_err": 0,
+    "hazard_load_use": 1,
+    "hazard_pop_use": 0,
+    "hazard_store_load": 0,
+    "fwd_gpr_s1_ex": 5,
+    "fwd_gpr_s1_mem": 6,
+    "fwd_gpr_s1_rf": 35,
+    "fwd_gpr_s2_ex": 1,
+    "fwd_gpr_s2_mem": 3,
+    "fwd_gpr_s2_rf": 8,
+    "fwd_hreg_s1_ex": 9,
+    "fwd_hreg_s1_mem": 8,
+    "fwd_hreg_s1_rf": 29,
+    "fwd_hreg_s2_ex": 3,
+    "fwd_hreg_s2_mem": 0,
+    "fwd_hreg_s2_rf": 9,
+    "ex_latch": 178,
+    "ex_stall": 0,
+    "ex_flush": 0,
+    "flags_forward_self": 0,
+    "flags_forward_ex": 7,
+    "flags_forward_rf": 0,
+    "branch_jmp": 0,
+    "branch_call": 0,
+    "branch_ret": 0,
+    "jeq_taken": 0,
+    "jeq_not_taken": 0,
+    "jne_taken": 3,
+    "jne_not_taken": 3,
+    "jgd_taken": 0,
+    "jgd_not_taken": 0,
+    "jngd_taken": 1,
+    "jngd_not_taken": 0,
+    "ra_overflow": 0,
+    "ra_underflow": 0,
+    "hc01_invalid_rom": 0,
+    "priv_fault": 0,
+    "mem_fault": 0,
+    "eret": 0,
+    "syscall": 0,
+    "flags_hgrd": 3,
+    "flags_ceq": 3,
+    "flags_fwr": 0,
+    "flags_cmp": 3,
+    "mem_latch": 178,
+    "mem_stall": 0,
+    "dram_read": 2,
+    "dram_write": 2,
+    "stack_push": 3,
+    "stack_pop": 3,
+    "stack_overflow": 0,
+    "stack_underflow": 0,
+    "result_load": 2,
+    "result_pop": 3,
+    "wb_gpr": 49,
+    "wb_hreg": 20,
+    "wb_flags": 9,
+    "wb_halt": 11,
+    "ctrl_print_stall": 0,
+    "ctrl_halt_latch": 11,
+    "ctrl_halted_stall": 0,
+    "ctrl_data_hazard": 1,
+    "ctrl_if_flush": 4,
+    "ctrl_id_flush": 5
+   },
+   "rules": [
+    {
+     "id": "fetch_reset",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78
+     ],
+     "fired": 53
+    },
+    {
+     "id": "fetch_redirect_branch",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      79,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86
+     ],
+     "fired": 4
+    },
+    {
+     "id": "fetch_redirect_trap",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      79,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86
+     ],
+     "fired": 0
+    },
+    {
+     "id": "fetch_flush_only",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      79,
+      81,
+      82,
+      83,
+      84,
+      85
+     ],
+     "fired": 0
+    },
+    {
+     "id": "fetch_stall",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      88
+     ],
+     "fired": 1
+    },
+    {
+     "id": "fetch_latch",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      92,
+      94,
+      95,
+      96,
+      97,
+      98
+     ],
+     "fired": 158
+    },
+    {
+     "id": "fetch_warmup",
+     "file": "rtl/hcpu_fetch.v",
+     "lines": [
+      100,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108
+     ],
+     "fired": 15
+    },
+    {
+     "id": "decode_reset",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      162
+     ],
+     "fired": 53
+    },
+    {
+     "id": "decode_flush_redirect",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      187
+     ],
+     "fired": 4
+    },
+    {
+     "id": "decode_flush_hazard",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      187
+     ],
+     "fired": 1
+    },
+    {
+     "id": "decode_stall",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      369
+     ],
+     "fired": 0
+    },
+    {
+     "id": "decode_latch_instruction",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      212,
+      242
+     ],
+     "fired": 143
+    },
+    {
+     "id": "decode_latch_bubble",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      212,
+      242,
+      243
+     ],
+     "fired": 30
+    },
+    {
+     "id": "decode_letter",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      350
+     ],
+     "fired": 0
+    },
+    {
+     "id": "decode_halt_err",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      357,
+      360
+     ],
+     "fired": 0
+    },
+    {
+     "id": "hazard_load_use",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      129
+     ],
+     "fired": 1
+    },
+    {
+     "id": "hazard_pop_use",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      129
+     ],
+     "fired": 0
+    },
+    {
+     "id": "hazard_store_load",
+     "file": "rtl/hcpu_decode.v",
+     "lines": [
+      142
+     ],
+     "fired": 0
+    },
+    {
+     "id": "fwd_gpr_s1_ex",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      53
+     ],
+     "fired": 5
+    },
+    {
+     "id": "fwd_gpr_s1_mem",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      55
+     ],
+     "fired": 6
+    },
+    {
+     "id": "fwd_gpr_s1_rf",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      58
+     ],
+     "fired": 35
+    },
+    {
+     "id": "fwd_gpr_s2_ex",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      63
+     ],
+     "fired": 1
+    },
+    {
+     "id": "fwd_gpr_s2_mem",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      65
+     ],
+     "fired": 3
+    },
+    {
+     "id": "fwd_gpr_s2_rf",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      68
+     ],
+     "fired": 8
+    },
+    {
+     "id": "fwd_hreg_s1_ex",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      73
+     ],
+     "fired": 9
+    },
+    {
+     "id": "fwd_hreg_s1_mem",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      75
+     ],
+     "fired": 8
+    },
+    {
+     "id": "fwd_hreg_s1_rf",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      78
+     ],
+     "fired": 29
+    },
+    {
+     "id": "fwd_hreg_s2_ex",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      83
+     ],
+     "fired": 3
+    },
+    {
+     "id": "fwd_hreg_s2_mem",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      85
+     ],
+     "fired": 0
+    },
+    {
+     "id": "fwd_hreg_s2_rf",
+     "file": "rtl/hcpu_forward.v",
+     "lines": [
+      88
+     ],
+     "fired": 9
+    },
+    {
+     "id": "ex_latch",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      434
+     ],
+     "fired": 178
+    },
+    {
+     "id": "ex_stall",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      434
+     ],
+     "fired": 0
+    },
+    {
+     "id": "ex_flush",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      413
+     ],
+     "fired": 0
+    },
+    {
+     "id": "flags_forward_self",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      280
+     ],
+     "fired": 0
+    },
+    {
+     "id": "flags_forward_ex",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      281
+     ],
+     "fired": 7
+    },
+    {
+     "id": "flags_forward_rf",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      282
+     ],
+     "fired": 0
+    },
+    {
+     "id": "branch_jmp",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      364
+     ],
+     "fired": 0
+    },
+    {
+     "id": "branch_call",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      367
+     ],
+     "fired": 0
+    },
+    {
+     "id": "branch_ret",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      370
+     ],
+     "fired": 0
+    },
+    {
+     "id": "jeq_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      375
+     ],
+     "fired": 0
+    },
+    {
+     "id": "jeq_not_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      375
+     ],
+     "fired": 0
+    },
+    {
+     "id": "jne_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      376
+     ],
+     "fired": 3
+    },
+    {
+     "id": "jne_not_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      376
+     ],
+     "fired": 3
+    },
+    {
+     "id": "jgd_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      377
+     ],
+     "fired": 0
+    },
+    {
+     "id": "jgd_not_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      377
+     ],
+     "fired": 0
+    },
+    {
+     "id": "jngd_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      378
+     ],
+     "fired": 1
+    },
+    {
+     "id": "jngd_not_taken",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      378
+     ],
+     "fired": 0
+    },
+    {
+     "id": "ra_overflow",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      340
+     ],
+     "fired": 0
+    },
+    {
+     "id": "ra_underflow",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      341
+     ],
+     "fired": 0
+    },
+    {
+     "id": "hc01_invalid_rom",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      451
+     ],
+     "fired": 0
+    },
+    {
+     "id": "priv_fault",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      310
+     ],
+     "fired": 0
+    },
+    {
+     "id": "mem_fault",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      317
+     ],
+     "fired": 0
+    },
+    {
+     "id": "eret",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      325
+     ],
+     "fired": 0
+    },
+    {
+     "id": "syscall",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      285
+     ],
+     "fired": 0
+    },
+    {
+     "id": "flags_hgrd",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      490
+     ],
+     "fired": 3
+    },
+    {
+     "id": "flags_ceq",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      494
+     ],
+     "fired": 3
+    },
+    {
+     "id": "flags_fwr",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      505
+     ],
+     "fired": 0
+    },
+    {
+     "id": "flags_cmp",
+     "file": "rtl/hcpu_execute.v",
+     "lines": [
+      512
+     ],
+     "fired": 3
+    },
+    {
+     "id": "mem_latch",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      143
+     ],
+     "fired": 178
+    },
+    {
+     "id": "mem_stall",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      143
+     ],
+     "fired": 0
+    },
+    {
+     "id": "dram_read",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      61
+     ],
+     "fired": 2
+    },
+    {
+     "id": "dram_write",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      62
+     ],
+     "fired": 2
+    },
+    {
+     "id": "stack_push",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      78,
+      101
+     ],
+     "fired": 3
+    },
+    {
+     "id": "stack_pop",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      80
+     ],
+     "fired": 3
+    },
+    {
+     "id": "stack_overflow",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      69
+     ],
+     "fired": 0
+    },
+    {
+     "id": "stack_underflow",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      70
+     ],
+     "fired": 0
+    },
+    {
+     "id": "result_load",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      126
+     ],
+     "fired": 2
+    },
+    {
+     "id": "result_pop",
+     "file": "rtl/hcpu_memory.v",
+     "lines": [
+      126
+     ],
+     "fired": 3
+    },
+    {
+     "id": "wb_gpr",
+     "file": "rtl/hcpu_writeback.v",
+     "lines": [
+      33
+     ],
+     "fired": 49
+    },
+    {
+     "id": "wb_hreg",
+     "file": "rtl/hcpu_writeback.v",
+     "lines": [
+      37
+     ],
+     "fired": 20
+    },
+    {
+     "id": "wb_flags",
+     "file": "rtl/hcpu_writeback.v",
+     "lines": [
+      41
+     ],
+     "fired": 9
+    },
+    {
+     "id": "wb_halt",
+     "file": "rtl/hcpu_writeback.v",
+     "lines": [
+      44
+     ],
+     "fired": 11
+    },
+    {
+     "id": "ctrl_print_stall",
+     "file": "rtl/hcpu_controller.v",
+     "lines": [
+      69,
+      80
+     ],
+     "fired": 0
+    },
+    {
+     "id": "ctrl_halt_latch",
+     "file": "rtl/hcpu_controller.v",
+     "lines": [
+      75,
+      76
+     ],
+     "fired": 11
+    },
+    {
+     "id": "ctrl_halted_stall",
+     "file": "rtl/hcpu_controller.v",
+     "lines": [
+      80,
+      91,
+      92,
+      93
+     ],
+     "fired": 0
+    },
+    {
+     "id": "ctrl_data_hazard",
+     "file": "rtl/hcpu_controller.v",
+     "lines": [
+      88,
+      91,
+      99
+     ],
+     "fired": 1
+    },
+    {
+     "id": "ctrl_if_flush",
+     "file": "rtl/hcpu_controller.v",
+     "lines": [
+      98
+     ],
+     "fired": 4
+    },
+    {
+     "id": "ctrl_id_flush",
+     "file": "rtl/hcpu_controller.v",
+     "lines": [
+      99
+     ],
+     "fired": 5
+    }
+   ],
+   "not_covered": [
+    "fetch_redirect_trap",
+    "fetch_flush_only",
+    "decode_stall",
+    "decode_letter",
+    "decode_halt_err",
+    "hazard_pop_use",
+    "hazard_store_load",
+    "fwd_hreg_s2_mem",
+    "ex_stall",
+    "ex_flush",
+    "flags_forward_self",
+    "flags_forward_rf",
+    "branch_jmp",
+    "branch_call",
+    "branch_ret",
+    "jeq_taken",
+    "jeq_not_taken",
+    "jgd_taken",
+    "jgd_not_taken",
+    "jngd_not_taken",
+    "ra_overflow",
+    "ra_underflow",
+    "hc01_invalid_rom",
+    "priv_fault",
+    "mem_fault",
+    "eret",
+    "syscall",
+    "flags_fwr",
+    "mem_stall",
+    "stack_overflow",
+    "stack_underflow",
+    "ctrl_print_stall",
+    "ctrl_halted_stall"
+   ]
   }
  ],
  "pipeline_audit": {

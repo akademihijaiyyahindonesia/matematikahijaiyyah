@@ -62,8 +62,11 @@ compared in program order.
 The pipeline gets no function yet. Its oracle, rtl/tb/tb_hcpu_top.v, has no
 bench per stage, so the owner ordered an audit first: which state the trace
 shows, where to sample it, which instructions pass through each stage, and
-which transitions the bench never runs. pipeline_audit is that map; the
-function's form is decided after it.
+which transitions the bench never runs. pipeline_audit is that map. On it the
+owner chose the form: one synchronous transition, pipeline_step, over the
+four stage bundles, with rst_n and imem_data as inputs and every other
+subsystem's result taken from the trace. Only the audit's covered
+transitions have behaviour; anything else stops with NotCovered.
 """
 from __future__ import annotations
 
@@ -679,7 +682,10 @@ def _parameters(m: dict[str, Any], root: Path) -> dict[str, int]:
 
 def rules(m: dict[str, Any]) -> list[dict[str, Any]]:
     """A module's rules, and those of each submodule it runs through a
-    function already held to its own bench -- named there, not copied."""
+    function already held to its own bench -- named there, not copied. The
+    pipeline's rules are the audit's transitions, not a second list."""
+    if m["rules"] == "pipeline_audit":
+        return [dict(r) for r in load()["pipeline_audit"]["transitions"]]
     own = [{**r, "file": r.get("file", m["rtl"])} for r in m["rules"]]
     for sub in m.get("submodules", []):
         other = next(x for x in load()["modules"] if x["name"] == sub["module"])
@@ -1443,6 +1449,551 @@ def pipeline_audit(a: dict[str, Any], trace: dict[str, Any], root: Path | None =
         "bench_said": verdict, "bench_pass": verdict is not None}
 
 
+# -- the pipeline, as one function over its four bundles --------------------------------------
+#
+# The owner's form of 28 September 2026: one synchronous transition over the
+# four stage bundles the audit mapped, with rst_n and imem_data as inputs and
+# every other subsystem's result taken as an input, never predicted again.
+# Only the audit's 45 covered transitions and 26 covered opcode arms have
+# behaviour here; anything else stops the step with NotCovered.
+
+
+class NotCovered(Exception):
+    """A step that would need a transition tb_hcpu_top.v never runs."""
+
+    def __init__(self, rule: str) -> None:
+        super().__init__(rule)
+        self.rule = rule
+
+
+# A register whose next value would come from an uncovered transition: it is
+# not predicted, and a comparison skips it and counts it.
+UNPREDICTED = "not covered"
+
+# hcpu_decode.v's control arms for the covered opcodes (lines 243-330).
+PIPE_DECODE: dict[str, tuple[str, ...]] = {
+    "NOP": (), "HALT": ("id_is_halt",), "MOVI": ("id_gpr_we",), "ADD": ("id_gpr_we",),
+    "ADDI": ("id_gpr_we",), "CMP": (), "JNE": ("id_is_branch",), "JNGD": ("id_is_branch",),
+    "PUSH": ("id_is_push",), "POP": ("id_is_pop", "id_gpr_we"),
+    "LOAD": ("id_mem_read", "id_gpr_we"), "STORE": ("id_mem_write",),
+    "HLOAD": ("id_is_codex", "id_hreg_we"), "HCADD": ("id_is_codex", "id_hreg_we"),
+    "HGRD": ("id_is_codex",), "HNRM2": ("id_is_codex", "id_gpr_we"),
+    "CGET": ("id_is_codex", "id_gpr_we"), "CSET": ("id_is_codex", "id_hreg_we"),
+    "CMOV": ("id_is_codex", "id_hreg_we"), "CZERO": ("id_is_codex", "id_hreg_we"),
+    "CEQ": ("id_is_codex",), "CRHO": ("id_is_codex", "id_gpr_we"),
+    "CU": ("id_is_codex", "id_gpr_we"), "CMOD4": ("id_is_codex", "id_gpr_we"),
+    "HPACK": ("id_is_codex", "id_gpr_we"), "HCRC": ("id_is_codex", "id_gpr_we")}
+# hcpu_execute.v lines 443-450: the codex opcodes whose result is a GPR.
+PIPE_CODEX_GPR = ("HNRM2", "HDIST", "CGET", "CMOD4", "CU", "CRHO", "HPACK", "HCRC")
+PIPE_CONTROLS = ("id_gpr_we", "id_hreg_we", "id_mem_read", "id_mem_write", "id_is_branch",
+                 "id_is_jump", "id_is_call", "id_is_ret", "id_is_codex", "id_is_halt",
+                 "id_is_print", "id_is_emits", "id_is_push", "id_is_pop")
+
+
+def pipeline_context(root: Path | None = None) -> dict[str, Any]:
+    """What the function reads from the RTL rather than copying: the package's
+    constants, the opcode names, the decoder's operand-usage lists, and the
+    audit's covered opcode arms."""
+    root = root or ROOT
+    p = _pkg(root)
+    audit = load()["pipeline_audit"]
+    arms = _decode_arms(audit, root)
+    covered = [n for n in arms if n not in audit["opcodes"]["not_covered"]]
+    return {"p": p, "ops": {v: k[3:] for k, v in p.items() if k.startswith("OP_")},
+            "uses": _usage(root), "covered_ops": covered,
+            "state": [k for keys in next(m for m in load()["modules"]
+                                         if m["name"] == "pipeline")["state"].values()
+                      for k in keys]}
+
+
+def _sext12(v: int) -> int:
+    return v - 0x1000 if v & 0x800 else v
+
+
+def pipeline_reset(c: dict[str, Any]) -> dict[str, Any]:
+    """Every register the four bundles, the controller and the register file
+    reset asynchronously, at its reset value; the stack array and stack_rd,
+    which have no reset, as the simulator starts them: x."""
+    s: dict[str, Any] = dict.fromkeys(c["state"], 0)
+    s.update({"stack_rd": "x", "halted": 0, "flags": 0, "stack": {}})
+    s.update({f"gpr{i}": 0 for i in range(c["p"]["GPR_COUNT"])})
+    s.update({f"hreg{i}": 0 for i in range(c["p"]["HREG_COUNT"])})
+    return s
+
+
+def _pipe_comb(s: dict[str, Any], inp: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
+    """Everything the stages compute between two edges, from the state the
+    last edge left and the inputs, and the transitions it is about to take --
+    or NotCovered."""
+    p, ops = c["p"], c["ops"]
+    uses_s1, uses_s2 = c["uses"]
+    z, g, lt = 1 << p["FLAG_Z"], 1 << p["FLAG_G"], 1 << p["FLAG_LT"]
+    rules: list[str] = []
+    if inp["print_active"] == 1:
+        raise NotCovered("ctrl_print_stall")
+    if s["halted"] == 1:
+        raise NotCovered("ctrl_halted_stall")
+    if inp["trap_redirect_w"] == 1:
+        raise NotCovered("fetch_redirect_trap")
+    if inp["trap_in_user_w"] == 1:
+        raise NotCovered("priv_fault")
+    # writeback and the register file's read-through (hcpu_regfile.v 63-68, 94)
+    mem_gpr_result = (inp["dram_rdata"] if s["mem_is_load"] == 1 else
+                      (s["stack_rd"] if s["stack_rd_valid"] == 1 else 0)
+                      if s["mem_is_pop"] == 1 else s["mem_gpr_result_r"])
+
+    def gpr_read(a: int) -> Any:
+        return mem_gpr_result if s["mem_gpr_we"] == 1 and s["mem_dst"] == a else s[f"gpr{a}"]
+
+    def hreg_read(a: int) -> Any:
+        return (s["mem_hreg_result"] if s["mem_hreg_we"] == 1 and s["mem_dst"] == a
+                else s[f"hreg{a}"])
+
+    flags_out = s["mem_flags_new"] if s["mem_flags_we"] == 1 else s["flags"]
+    op = ops.get(s["id_opcode"], hex(s["id_opcode"]))
+    if op not in c["covered_ops"]:
+        raise NotCovered(f"opcode:{op}")
+    # forwarding into EX (hcpu_forward.v)
+    fwd: dict[str, Any] = {}
+    for kind, res_ex, res_mem in (("gpr", s["ex_gpr_result"], mem_gpr_result),
+                                  ("hreg", s["ex_hreg_result"], s["mem_hreg_result"])):
+        for idx, use in (("s1", uses_s1), ("s2", uses_s2)):
+            if s[f"ex_{kind}_we"] == 1 and s["ex_dst"] == s[f"id_{idx}"]:
+                arm, val = "ex", res_ex
+            elif s[f"mem_{kind}_we"] == 1 and s["mem_dst"] == s[f"id_{idx}"]:
+                arm, val = "mem", res_mem
+            else:
+                arm, val = "rf", s[f"id_{kind}_{idx}"]
+            fwd[f"fwd_{kind}_{idx}"] = val
+            if op in use:
+                rule = f"fwd_{kind}_{idx}_{arm}"
+                if rule == "fwd_hreg_s2_mem":
+                    raise NotCovered(rule)
+                rules.append(rule)
+    a, b, imm = fwd["fwd_gpr_s1"], fwd["fwd_gpr_s2"], s["id_imm"]
+    # the scalar ALU and the flags it may set (hcpu_execute.v 157-190)
+    alu = {"MOVI": imm, "ADD": (a + b) & MASK32 if op == "ADD" else 0,
+           "ADDI": (a + _sext12(imm)) & MASK32 if op == "ADDI" else 0,
+           "CMP": (a - b) & MASK32 if op == "CMP" else 0}.get(op, 0)
+    alu_flags_we = op == "CMP"
+    alu_flags = ((flags_out & ~(z | lt)) | (z if alu == 0 else 0)
+                 | (lt if alu >> 31 & 1 else 0)) if alu_flags_we else flags_out
+    # the codex results, taken from the units outside (hcpu_execute.v 219-265)
+    h1 = fwd["fwd_hreg_s1"]
+    pack = (inp["hisab_pack0"], inp["hisab_pack1"], inp["hisab_pack2"])
+    codex_gpr = {"HNRM2": inp["calu_result_scl"], "CGET": inp["calu_result_scl"],
+                 "CMOD4": inp["calu_result_scl"], "CU": inp["guard_u"],
+                 "CRHO": inp["guard_rho"], "HCRC": inp["hisab_crc"],
+                 "HPACK": pack[s["id_s2"]] if s["id_s2"] < 3 else 0}.get(op, 0)
+    codex_hvec = {"HLOAD": inp["rom_data"], "HCADD": inp["calu_result_vec"],
+                  "CSET": inp["calu_result_vec"], "CMOV": h1, "CZERO": 0}.get(op, 0)
+    if op == "HLOAD" and s["id_is_codex"] == 1 and inp["rom_valid"] != 1:
+        raise NotCovered("hc01_invalid_rom")
+    # branches: FLAGS forwarded, then resolved (hcpu_execute.v 280-282, 364-379)
+    for flag, rule in (("id_is_jump", "branch_jmp"), ("id_is_call", "branch_call"),
+                       ("id_is_ret", "branch_ret")):
+        if s[flag] == 1:
+            raise NotCovered(rule)
+    taken, target = 0, 0
+    if s["id_is_branch"] == 1:
+        if alu_flags_we:
+            raise NotCovered("flags_forward_self")
+        if s["ex_flags_we"] != 1:
+            raise NotCovered("flags_forward_rf")
+        rules.append("flags_forward_ex")
+        forwarded = s["ex_flags_new"]
+        taken = int(not forwarded & z) if op == "JNE" else int(not forwarded & g)
+        if op == "JNGD" and not taken:
+            raise NotCovered("jngd_not_taken")
+        rules.append(f"{op.lower()}_{'taken' if taken else 'not_taken'}")
+        target = (s["id_pc"] + _sext12(imm)) & MASK32
+    # the decoder's hazards on the instruction in IF (hcpu_decode.v 129-143)
+    word = s["if_instruction"]
+    if_op = ops.get(word >> 24, hex(word >> 24))
+    if_dst, if_s1, if_s2 = word >> 20 & 0xF, word >> 16 & 0xF, word >> 12 & 0xF
+    if_imm = word & 0xFFF
+    load_use = int((s["id_mem_read"] == 1 or s["id_is_pop"] == 1) and (
+        (if_op in uses_s1 and if_s1 == s["id_dst"]) or (if_op in uses_s2 and if_s2 == s["id_dst"])))
+    if load_use and s["id_is_pop"] == 1:
+        raise NotCovered("hazard_pop_use")
+    if load_use:
+        rules += ["hazard_load_use", "ctrl_data_hazard"]
+    load_addr = (gpr_read(if_s1) + _sext12(if_imm)) & 0xFFF if isinstance(
+        gpr_read(if_s1), int) else None
+    if s["ex_mem_write"] == 1 and if_op == "LOAD" and s["ex_mem_addr"] == load_addr:
+        raise NotCovered("hazard_store_load")
+    # the controller, with the global stall out of reach (hcpu_controller.v 88-99)
+    if_flush = id_flush_redirect = taken
+    id_flush = int(taken or load_use)
+    rules += ["ctrl_if_flush"] * if_flush + ["ctrl_id_flush"] * id_flush
+    ex_mem_addr = ((b if s["id_mem_write"] == 1 else a) + _sext12(imm)) & 0xFFF
+    return {
+        "op": op, "alu": alu, "alu_flags_we": alu_flags_we, "alu_flags": alu_flags,
+        "codex_gpr": codex_gpr, "codex_hvec": codex_hvec, "flags_out": flags_out,
+        "mem_gpr_result": mem_gpr_result, "gpr_read": gpr_read, "hreg_read": hreg_read,
+        "fwd": fwd, "branch_taken": taken, "branch_target": target, "load_use": load_use,
+        "if_flush": if_flush, "id_flush": id_flush, "id_flush_redirect": id_flush_redirect,
+        "if_fields": (if_op, if_dst, if_s1, if_s2, if_imm), "ex_mem_addr": ex_mem_addr,
+        "rules": rules,
+        "outputs": {
+            "imem_addr": s["pc"] & ((1 << p["CODE_ADDR_W"]) - 1), "imem_ce": int(not load_use),
+            "rom_addr": imm & ((1 << p["ROM_ADDR_W"]) - 1),
+            "calu_op": {"HCADD": 0, "HNRM2": 1, "HDIST": 2, "CGET": 3, "CSET": 4,
+                        "CMOD4": 5}.get(op, 0), "calu_index": imm,
+            "dram_re": s["ex_mem_read"], "dram_we": s["ex_mem_write"],
+            "dram_addr": s["ex_mem_addr"], "dram_wdata": s["ex_mem_wdata"],
+            "wb_gpr_we": s["mem_gpr_we"], "wb_gpr_waddr": s["mem_dst"],
+            "wb_gpr_wdata": mem_gpr_result, "wb_hreg_we": s["mem_hreg_we"],
+            "wb_hreg_waddr": s["mem_dst"], "wb_hreg_wdata": s["mem_hreg_result"],
+            "wb_flags_we": s["mem_flags_we"], "wb_flags": s["mem_flags_new"],
+            "wb_halt": s["mem_is_halt"], "branch_taken_w": taken, "branch_target_w": target,
+            "pc_stall": load_use, "id_stall": 0, "ex_stall": 0, "if_flush": if_flush,
+            "id_flush": id_flush, "load_use_hazard": load_use, "store_load_hazard": 0,
+            "flags_out": flags_out, "guard_led": flags_out & g, **fwd}}
+
+
+def pipeline_outputs(s: dict[str, Any], inp: dict[str, Any],
+                     c: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = _pipe_comb(s, inp, c)["outputs"]
+    return out
+
+
+def pipeline_step(s: dict[str, Any], inp: dict[str, Any],
+                  c: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """One rising edge of the pipeline: the four bundles, halted and the
+    register file, from the state the last edge left, rst_n, imem_data, and
+    the results of the units outside."""
+    p = c["p"]
+    depth, top = p["STACK_DEPTH"], (s["sp"] - 1) & 0xFF
+    n = dict(s)
+    n["stack"] = dict(s["stack"])
+    if inp["rst_n"] != 1:
+        # asynchronous reset for everything that has one ...
+        n.update({k: v for k, v in pipeline_reset(c).items() if k not in ("stack", "stack_rd")})
+        # ... and the clock-only stack_rd, which the global stall gates. With
+        # halted high that is the freeze no live edge ever shows: unpredicted.
+        if s["halted"] == 1 or inp["print_active"] == 1:
+            n["stack_rd"] = UNPREDICTED
+            if s["ex_is_push"] == 1:
+                raise NotCovered("ctrl_halted_stall")
+        else:
+            n["stack_rd"] = s["stack"].get(top, "x")
+        return n, ["fetch_reset", "decode_reset"]
+    k = _pipe_comb(s, inp, c)
+    fired = list(k["rules"])
+    op = k["op"]
+    # fetch (hcpu_fetch.v 79-108)
+    if k["if_flush"] or k["branch_taken"]:
+        n.update(if_instruction=p["OP_NOP"] << 24, if_pc=0, pc_valid=0, fetch_valid=0,
+                 pc=k["branch_target"])
+        fired.append("fetch_redirect_branch")
+    elif k["load_use"]:
+        fired.append("fetch_stall")
+    elif s["fetch_valid"] == 1:
+        n.update(if_instruction=inp["imem_data"], if_pc=s["pc_prev"], pc_valid=1,
+                 pc=(s["pc"] + 1) & MASK32, pc_prev=s["pc"])
+        fired.append("fetch_latch")
+    else:
+        n.update(if_instruction=p["OP_NOP"] << 24, if_pc=0, pc_valid=0, pc_prev=s["pc"],
+                 pc=(s["pc"] + 1) & MASK32, fetch_valid=1)
+        fired.append("fetch_warmup")
+    # decode (hcpu_decode.v 187-366)
+    if k["id_flush"]:
+        n.update(dict.fromkeys(("id_dst", "id_s1", "id_s2", "id_imm", "id_gpr_s1", "id_gpr_s2",
+                                "id_hreg_s1", "id_hreg_s2", "id_pc", *PIPE_CONTROLS), 0),
+                 id_opcode=p["OP_NOP"])
+        fired.append("decode_flush_redirect" if k["id_flush_redirect"] else
+                     "decode_flush_hazard")
+    else:
+        if_op, dst, s1, s2, imm = k["if_fields"]
+        if if_op not in c["covered_ops"]:
+            letters = range(p["LETTER_OP_FIRST"], p["LETTER_OP_LAST"] + 1)
+            code = s["if_instruction"] >> 24
+            raise NotCovered("decode_letter" if code in letters else
+                             f"opcode:{if_op}" if if_op in c["ops"].values() else
+                             "decode_halt_err")
+        n.update(id_opcode=s["if_instruction"] >> 24, id_dst=dst, id_s1=s1, id_s2=s2,
+                 id_imm=imm, id_gpr_s1=k["gpr_read"](s1), id_gpr_s2=k["gpr_read"](s2),
+                 id_hreg_s1=k["hreg_read"](s1),
+                 id_hreg_s2=k["hreg_read"](dst if if_op == "CSET" else s2), id_pc=s["if_pc"],
+                 **dict.fromkeys(PIPE_CONTROLS, 0))
+        n.update(dict.fromkeys(PIPE_DECODE[if_op], 1))
+        if if_op == "CSET":
+            n["id_s2"] = dst
+        fired.append("decode_latch_instruction" if s["pc_valid"] == 1 else
+                     "decode_latch_bubble")
+    # execute: EX/MEM, with ex_stall out of reach (hcpu_execute.v 434-532)
+    f = k["fwd"]
+    if op == "HGRD":
+        flags_new, flags_we = (k["flags_out"] & ~1) | inp["guard_pass"], 1
+        fired.append("flags_hgrd")
+    elif op == "CEQ":
+        zbit = 1 << p["FLAG_Z"]
+        flags_new = (k["flags_out"] & ~zbit) | (zbit if f["fwd_hreg_s1"] == f["fwd_hreg_s2"]
+                                                else 0)
+        flags_we = 1
+        fired.append("flags_ceq")
+    elif k["alu_flags_we"]:
+        flags_new, flags_we = k["alu_flags"], 1
+        fired.append("flags_cmp")
+    else:
+        flags_new, flags_we = k["flags_out"], 0
+    gpr_result = (k["codex_gpr"] if s["id_is_codex"] == 1 and op in PIPE_CODEX_GPR else
+                  0 if s["id_is_pop"] == 1 else k["alu"])
+    n.update(ex_opcode=s["id_opcode"], ex_dst=s["id_dst"], ex_is_print=s["id_is_print"],
+             ex_is_emits=s["id_is_emits"], ex_emits_addr=s["id_imm"] & 0xFFF,
+             ex_is_push=s["id_is_push"], ex_is_pop=s["id_is_pop"], ex_is_halt=s["id_is_halt"],
+             ex_gpr_result=gpr_result, ex_hreg_result=k["codex_hvec"],
+             ex_gpr_we=s["id_gpr_we"], ex_hreg_we=s["id_hreg_we"], ex_flags_new=flags_new,
+             ex_flags_we=flags_we, ex_print_data=f["fwd_gpr_s1"], ex_push_data=f["fwd_gpr_s1"],
+             ex_mem_read=s["id_mem_read"], ex_mem_write=s["id_mem_write"],
+             ex_mem_addr=k["ex_mem_addr"], ex_mem_wdata=f["fwd_gpr_s1"])
+    fired.append("ex_latch")
+    # memory: MEM/WB and the stack (hcpu_memory.v 61-160)
+    if s["ex_is_push"] == 1 and s["sp"] >= depth:
+        raise NotCovered("stack_overflow")
+    if s["ex_is_pop"] == 1 and s["sp"] == 0:
+        raise NotCovered("stack_underflow")
+    if s["ex_is_push"] == 1:
+        n["stack"][s["sp"]] = s["ex_push_data"]
+        n["sp"] = s["sp"] + 1
+        fired.append("stack_push")
+    if s["ex_is_pop"] == 1:
+        n["sp"] = s["sp"] - 1
+        fired.append("stack_pop")
+    n.update(stack_rd=s["stack"].get(top, "x"), stack_rd_valid=int(s["sp"] > 0),
+             mem_dst=s["ex_dst"], mem_hreg_result=s["ex_hreg_result"],
+             mem_gpr_we=s["ex_gpr_we"], mem_hreg_we=s["ex_hreg_we"],
+             mem_flags_new=s["ex_flags_new"], mem_flags_we=s["ex_flags_we"],
+             mem_is_halt=s["ex_is_halt"], mem_is_load=s["ex_mem_read"],
+             mem_is_pop=s["ex_is_pop"], mem_gpr_result_r=s["ex_gpr_result"])
+    fired.append("mem_latch")
+    fired += ["dram_read"] * (s["ex_mem_read"] == 1) + ["dram_write"] * (s["ex_mem_write"] == 1)
+    fired += ["result_load"] * (s["mem_is_load"] == 1) + ["result_pop"] * (s["mem_is_pop"] == 1)
+    # writeback into the register file, and the halt latch
+    if s["mem_gpr_we"] == 1:
+        n[f"gpr{s['mem_dst']}"] = k["mem_gpr_result"]
+        fired.append("wb_gpr")
+    if s["mem_hreg_we"] == 1:
+        n[f"hreg{s['mem_dst']}"] = s["mem_hreg_result"]
+        fired.append("wb_hreg")
+    if s["mem_flags_we"] == 1:
+        n["flags"] = s["mem_flags_new"]
+        fired.append("wb_flags")
+    if s["mem_is_halt"] == 1:
+        n["halted"] = 1
+        fired += ["wb_halt", "ctrl_halt_latch"]
+    return n, fired
+
+
+# -- the pipeline's oracle: tb_hcpu_top.v, at every edge ----------------------------------------
+
+PIPE_PATHS = {"pc": "u_fetch.pc", "pc_prev": "u_fetch.pc_prev",
+              "fetch_valid": "u_fetch.fetch_valid", "pc_valid": "if_pc_valid",
+              "ra_sp": "u_execute.ra_sp", "mem_gpr_result_r": "u_memory.mem_gpr_result_r",
+              "mem_is_load": "u_memory.mem_is_load", "mem_is_pop": "u_memory.mem_is_pop",
+              "sp": "u_memory.sp", "stack_rd": "u_memory.stack_rd",
+              "stack_rd_valid": "u_memory.stack_rd_valid", "flags": "u_regfile.flags"}
+
+
+def _pipe_keys(m: dict[str, Any], c: dict[str, Any]) -> list[str]:
+    ext = [k for keys in m["externals"].values() for k in keys]
+    return ["rst_n", *c["state"], "halted", "flags", *[f"gpr{i}" for i in range(
+        c["p"]["GPR_COUNT"])], *[f"hreg{i}" for i in range(c["p"]["HREG_COUNT"])],
+        "stack_top", "imem_data", *ext, *m["outputs"]]
+
+
+def pipeline_runs(m: dict[str, Any], root: Path | None = None) -> list[dict[str, Any]]:
+    """tb_hcpu_top.v and the RTL, unchanged, with a probe printing at the end
+    of every rising edge's timestep -- the canonical row A1 proved -- every
+    register of the four bundles, halted, the register file, the stack word
+    the next edge reads, the inputs, the outside results, and the outputs."""
+    root = root or ROOT
+    if shutil.which("iverilog") is None or shutil.which("vvp") is None:
+        raise RuntimeError("Icarus Verilog is required to run the bench")
+    c = pipeline_context(root)
+    top, u = "tb_hcpu_top", "tb_hcpu_top.u_dut"
+    keys = _pipe_keys(m, c)
+    wires = [f"  wire [31:0] gpr{i} = {u}.u_regfile.gpr[{i}];"
+             for i in range(c["p"]["GPR_COUNT"])]
+    wires += [f"  wire [{c['p']['HREG_W'] - 1}:0] hreg{i} = {u}.u_regfile.hreg[{i}];"
+              for i in range(c["p"]["HREG_COUNT"])]
+    wires.append(f"  wire [31:0] stack_top = {u}.u_memory.stack[{u}.u_memory.sp - 8'd1];")
+    local = {f"gpr{i}" for i in range(c["p"]["GPR_COUNT"])} | {
+        f"hreg{i}" for i in range(c["p"]["HREG_COUNT"])} | {"stack_top"}
+    names = [k if k in local else f"{u}.{PIPE_PATHS.get(k, k)}" for k in keys]
+    probe = ("module rtl_function_probe;\n" + "\n".join(wires) + "\n"
+             f"  always @(posedge {top}.clk)\n"
+             f"    $strobe(\"S {' '.join(['%0d'] * len(names))}\", {', '.join(names)});\n"
+             "endmodule\n")
+    sources = [str(f) for f in sorted(root.glob("rtl/hcpu_*.v"))]
+    work = Path(tempfile.mkdtemp())
+    try:
+        (work / "probe.v").write_text(probe, encoding="utf-8")
+        compiled = subprocess.run(
+            ["iverilog", "-g2012", "-I", str(root / "rtl"), "-o", str(work / "sim"),
+             str(root / m["bench"]), *sources, str(work / "probe.v")],
+            capture_output=True, text=True, timeout=600)
+        if compiled.returncode != 0:
+            raise RuntimeError(f"iverilog failed:\n{compiled.stderr}")
+        ran = subprocess.run(["vvp", "-n", str(work / "sim")], capture_output=True, text=True,
+                             timeout=600, cwd=work)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    rows = [dict(zip(keys, map(_value, ln.split()[1:]), strict=True))
+            for ln in ran.stdout.splitlines() if ln.startswith("S ")]
+    if ran.returncode != 0 or not rows:
+        raise RuntimeError(f"no probe row, exit {ran.returncode}:\n{ran.stdout[-1500:]}")
+    return [{"rows": rows, "said": [ln for ln in ran.stdout.splitlines()
+                                    if not ln.startswith("S ")]}]
+
+
+def _pipe_state(row: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
+    s = {k: row[k] for k in (*c["state"], "halted", "flags")}
+    s.update({k: row[k] for k in row if k[:3] == "gpr" and k[3:].isdigit()})
+    s.update({k: row[k] for k in row if k[:4] == "hreg" and k[4:].isdigit()})
+    s["stack"] = {(row["sp"] - 1) & 0xFF: row["stack_top"]} if isinstance(row["sp"], int) else {}
+    return s
+
+
+def _pipe_inputs(taken: dict[str, Any], edge: dict[str, Any],
+                 m: dict[str, Any]) -> dict[str, Any]:
+    ext = [k for keys in m["externals"].values() for k in keys]
+    return {"rst_n": edge["rst_n"], "imem_data": taken["imem_data"],
+            **{k: taken[k] for k in ext}}
+
+
+def _pipe_differs(got: dict[str, Any], want: dict[str, Any],
+                  skipped: dict[str, int]) -> bool:
+    bad = False
+    for key, v in got.items():
+        if key == "stack":
+            continue
+        if v == UNPREDICTED:
+            skipped[key] = skipped.get(key, 0) + 1
+        elif v != want[key]:
+            bad = True
+    return bad
+
+
+def _pipe_terminal(a: dict[str, Any], rows: list[dict[str, Any]],
+                   states: list[dict[str, Any]], c: dict[str, Any]) -> list[dict[str, Any]]:
+    """Where the bench reads: the first row of each program with halted up --
+    its gelung while (!halted) sees it on the next edge and checks before it
+    lowers rst_n -- the registers it checks, from the function's open loop
+    and from the RTL."""
+    lasts, program, seen = [], 0, False
+    for t in range(1, len(rows)):
+        if rows[t]["rst_n"] == 1 and rows[t - 1]["rst_n"] != 1:
+            program, seen = program + 1, False
+        if rows[t]["rst_n"] == 1 and rows[t]["halted"] == 1 and not seen:
+            lasts.append(t)
+            seen = True
+    out = []
+    for prog, t in zip(a["programs"], lasts, strict=True):
+        # a program the function's open loop never reached reads as None
+        s = states[t] if t < len(states) else None
+        for name in (x.strip() for x in prog["reads"].split(",")):
+            got: Any = None
+            if name == "guard_led":
+                want = rows[t]["guard_led"]
+                if s is not None:
+                    flags_out = s["mem_flags_new"] if s["mem_flags_we"] == 1 else s["flags"]
+                    got = flags_out >> c["p"]["FLAG_G"] & 1
+            elif name.startswith("H"):
+                reg = int(name[1:].split("[")[0])
+                want = rows[t][f"hreg{reg}"] & 0xFF
+                got = s[f"hreg{reg}"] & 0xFF if s is not None else None
+            else:
+                want = rows[t][f"gpr{int(name[1:])}"]
+                got = s[f"gpr{int(name[1:])}"] if s is not None else None
+            out.append({"program": prog["n"], "read": name, "function": got, "rtl": want})
+    return out
+
+
+def pipeline_compare(m: dict[str, Any], runs: list[dict[str, Any]], root: Path | None = None,
+                     step: Callable[..., tuple[dict[str, Any], list[str]]] | None = None,
+                     outputs: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
+    """F1-F4 for the pipeline over tb_hcpu_top.v's trace: one step from the
+    RTL's own state at every edge, the outputs at every row, the open loop
+    from reset, and the terminal reads -- each counting what it could not
+    predict, by the transition that stopped it."""
+    root = root or ROOT
+    c = pipeline_context(root)
+    step = step or pipeline_step
+    outputs = outputs or pipeline_outputs
+    rows = runs[0]["rows"]
+    one_step: list[int] = []
+    output_bad: list[int] = []
+    open_loop: list[int] = []
+    stopped: dict[str, list[int]] = {}
+    out_stopped: dict[str, list[int]] = {}
+    skipped: dict[str, int] = {}
+    for t in range(len(rows) - 1):
+        try:
+            got, _ = step(_pipe_state(rows[t], c), _pipe_inputs(rows[t], rows[t + 1], m), c)
+        except NotCovered as why:
+            stopped.setdefault(why.rule, []).append(t + 1)
+            continue
+        if _pipe_differs(got, _pipe_state(rows[t + 1], c), skipped):
+            one_step.append(t + 1)
+    for t, row in enumerate(rows):
+        try:
+            got = outputs(_pipe_state(row, c), _pipe_inputs(row, row, m), c)
+        except NotCovered as why:
+            out_stopped.setdefault(why.rule, []).append(t)
+            continue
+        if any(got[k] != row[k] for k in m["outputs"]):
+            output_bad.append(t)
+    s = pipeline_reset(c)
+    states = [s]
+    fired_count = {r["id"]: 0 for r in rules(m)}
+    if _pipe_differs(s, _pipe_state(rows[0], c), {}):
+        open_loop.append(0)
+    for t in range(len(rows) - 1):
+        try:
+            s, fired = step(s, _pipe_inputs(rows[t], rows[t + 1], m), c)
+        except NotCovered as why:
+            # the open loop can only stop where a transition is uncovered;
+            # past that point there is nothing it may predict
+            stopped.setdefault(f"open loop: {why.rule}", []).append(t + 1)
+            break
+        for f in fired:
+            fired_count[f] = fired_count.get(f, 0) + 1
+        states.append(s)
+        if _pipe_differs(s, _pipe_state(rows[t + 1], c), {}):
+            open_loop.append(t + 1)
+    changes = [t for t in range(1, len(rows)) if rows[t]["rst_n"] != rows[t - 1]["rst_n"]]
+    followed = sum(1 for t in changes if (
+        rows[t]["pc"] == 0 and rows[t]["fetch_valid"] == 0 if rows[t]["rst_n"] != 1
+        else rows[t]["fetch_valid"] == 1))
+    audit = load()["pipeline_audit"]
+    terminal = _pipe_terminal(audit, rows, states, c)
+    verdict = next((ln for ln in runs[0]["said"] if re.match(m["bench_verdict"]["pattern"], ln)),
+                   None)
+    return {"parameters": {}, "cycles": len(rows), "steps": len(rows) - 1,
+            "input_timing": {"line_changes": len(changes), "captured_new": followed,
+                             "captured_old": len(changes) - followed},
+            "one_step_mismatches": one_step, "open_loop_mismatches": open_loop,
+            "output_mismatches": output_bad,
+            "not_covered_steps": {k: v for k, v in stopped.items()},
+            "open_loop_reached": len(states) - 1,
+            "not_covered_outputs": {k: len(v) for k, v in out_stopped.items()},
+            "unpredicted": skipped, "terminal": terminal,
+            "terminal_mismatches": [x for x in terminal if x["function"] != x["rtl"]],
+            "bench_said": verdict, "bench_pass": verdict is not None,
+            "rules_fired": fired_count}
+
+
+def _pipe_trace_sha(runs: list[dict[str, Any]]) -> str:
+    text = "\n".join(" ".join(str(v) for v in r.values()) for r in runs[0]["rows"])
+    return _sha(text.encode("utf-8"))
+
+
+DRIVERS["pipeline"] = {"runs": pipeline_runs, "compare": pipeline_compare,
+                       "trace_sha": _pipe_trace_sha}
+
+
 # -- the model -------------------------------------------------------------------------------
 
 
@@ -1494,6 +2045,8 @@ def _expects(m: dict[str, Any], s: dict[str, Any]) -> str | None:
     """F3: what the bench checks, against what the function predicts. None
     when they agree."""
     want = s["bench_expects"]
+    if m["name"] == "pipeline":
+        return None     # its terminal reads are held by _check_pipeline
     if m["name"] == "loader":
         # Each bench checks its own things; both see where the entry was fetched.
         for b in s["benches"]:
@@ -1564,14 +2117,46 @@ def check(model: dict[str, Any]) -> list[str]:
         why = _expects(m, s)
         if why or not m["bench_pass"]:
             bad.append(f"F3 {m['name']}: {why or m['bench_said']}")
-        if m["not_covered"] != list(s.get("not_covered", {})):
+        declared = (list(spec["pipeline_audit"]["not_covered"])
+                    if s.get("not_covered") == "pipeline_audit"
+                    else list(s.get("not_covered", {})))
+        if m["not_covered"] != declared:
             bad.append(f"F4 {m['name']}: rules the bench never runs are {m['not_covered']}, "
-                       f"the spec names {list(s.get('not_covered', {}))}")
+                       f"the spec names {declared}")
+        if m["name"] == "pipeline":
+            bad += _check_pipeline(m, model, declared)
         held = {s["rtl"]: m["rtl_sha256"], s["bench"]: m["bench_sha256"],
                 **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
         if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
             bad.append(f"F5 {m['name']}: an RTL or bench file is not the one the model holds")
     return bad + check_audit(model, spec)
+
+
+def _check_pipeline(m: dict[str, Any], model: dict[str, Any], declared: list[str]) -> list[str]:
+    """The pipeline's own terms: the function fires exactly what the audit
+    counted; nothing it had to predict stopped it; what it declined is only
+    what the audit named; and the terminal reads agree."""
+    bad = []
+    counted = {t["id"]: t["fired"] for t in model.get("pipeline_audit", {}).get("transitions", [])}
+    if counted and m["rules_fired"] != counted:
+        diff = {k: (m["rules_fired"].get(k), v) for k, v in counted.items()
+                if m["rules_fired"].get(k) != v}
+        bad.append(f"F4 pipeline: the function's rule counts are not the audit's: {diff}")
+    last = m["steps"]
+    for rule, edges in m["not_covered_steps"].items():
+        if rule.removeprefix("open loop: ") not in declared or edges != [last]:
+            bad.append(f"F1 pipeline: a step stopped on {rule} at edges {edges}; only an "
+                       f"uncovered transition at the trace's last edge ({last}) may stop one")
+    if m["open_loop_reached"] < last - 1:
+        bad.append(f"F2 pipeline: the open loop stopped at edge {m['open_loop_reached']}")
+    stray = [k for k in m["not_covered_outputs"] if k not in declared]
+    if stray:
+        bad.append(f"F1 pipeline: outputs stopped on transitions the audit covers: {stray}")
+    if set(m["unpredicted"]) - {"stack_rd"}:
+        bad.append(f"F1 pipeline: registers left unpredicted: {m['unpredicted']}")
+    if m["terminal_mismatches"] or not m["terminal"]:
+        bad.append(f"F3 pipeline: terminal reads differ: {m['terminal_mismatches']}")
+    return bad
 
 
 def check_audit(model: dict[str, Any], spec: dict[str, Any]) -> list[str]:
@@ -1671,6 +2256,50 @@ def _audit_page(a: dict[str, Any], r: dict[str, Any]) -> list[str]:
     return out
 
 
+def _pipeline_page(s: dict[str, Any], m: dict[str, Any]) -> list[str]:
+    """The pipeline's section: its form, what it holds and takes, and how it
+    fared against the trace, edge by edge and at the bench's reads."""
+    timing = m["input_timing"]
+    stops = "; ".join(f"{k} di tepi {', '.join(map(str, v))}"
+                      for k, v in m["not_covered_steps"].items()) or "tidak ada"
+    out_stops = ", ".join(f"{k} ({v} baris)" for k, v in m["not_covered_outputs"].items())
+    skipped = ", ".join(f"{k} ({v} tepi)" for k, v in m["unpredicted"].items()) or "tidak ada"
+    fired = sum(1 for v in m["rules_fired"].values() if v)
+    out = [f"**Bentuk.** `{s['form']}`.", "",
+           "Keadaan — empat bundle register tahap yang audit catat:", "",
+           *[f"- **{k}** — {', '.join(v)}." for k, v in s["state"].items()],
+           *[f"- **{k}** — {v}." for k, v in s["state_also"].items()],
+           "", f"{s['state_note']}.", "",
+           "Input: " + ", ".join(f"`{k}`" for k in s["inputs"]) + ". Hasil luar, diambil dari "
+           "jejak, tidak diprediksi ulang:", "",
+           *[f"- **{k}** — {', '.join(v)}." for k, v in s["externals"].items()],
+           "", f"{s['externals_why']}.", "",
+           "| pemeriksaan | hasil |", "|---|---|",
+           f"| F1 satu langkah dari keadaan RTL, {m['steps']} tepi | "
+           f"{len(m['one_step_mismatches'])} berbeda |",
+           f"| F1 keluaran, {m['cycles']} baris | {len(m['output_mismatches'])} berbeda; "
+           f"berhenti not covered: {out_stops or 'tidak ada'} |",
+           f"| F2 lingkar terbuka dari reset | {len(m['open_loop_mismatches'])} berbeda, sampai "
+           f"tepi {m['open_loop_reached']} |",
+           f"| langkah yang berhenti not covered | {stops} |",
+           f"| register yang tidak diprediksi | {skipped} |",
+           f"| F3 bacaan terminal bench, {len(m['terminal'])} | "
+           f"{len(m['terminal_mismatches'])} berbeda |",
+           f"| F3 bench | {m['bench_said']} |",
+           f"| waktu input: perubahan {s['input_timing']['signal']}, ditangkap nilai baru, "
+           f"ditangkap nilai lama | {timing['line_changes']}, {timing['captured_new']}, "
+           f"{timing['captured_old']} |",
+           f"| jejak RTL | `{m['trace_sha256'][:12]}…` |", "",
+           f"Aturan: fungsi menjalankan {fired} dari {len(m['rules'])}, dengan hitungan per "
+           "aturan sama persis dengan hitungan audit; tidak tercakup "
+           f"{len(m['not_covered'])} — {s['not_covered_why']} (bagian Pipeline di bawah).", "",
+           "| program | dibaca bench | fungsi | RTL |", "|---|---|---|---|",
+           *[f"| {x['program']} | {x['read']} | {x['function']} | {x['rtl']} |"
+             for x in m["terminal"]], "",
+           f"**Waktu input.** {s['input_timing']['rule']}: {s['input_timing']['why']}.", ""]
+    return out
+
+
 def page(model: dict[str, Any]) -> str:
     spec = {m["name"]: m for m in load()["modules"]}
     out = ["# Model RTL sebagai fungsi — Lapis 6", "",
@@ -1688,6 +2317,9 @@ def page(model: dict[str, Any]) -> str:
                 f"`{m['bench_sha256'][:12]}…`." + (f" {named}." if named else ""), ""]
         if "oracle" in s:
             out += [f"**Oracle.** {s['oracle']}.", ""]
+        if m["name"] == "pipeline":
+            out += _pipeline_page(s, m)
+            continue
         if "granularity" in s:
             out += [f"**Satu langkah.** {s['granularity']}.", ""]
         if "levels" in s:

@@ -344,6 +344,89 @@ Batas yang tercakup — yang dijalankan kedua bench, dan apa yang pemakaiannya t
 
 **Waktu input.** nilai baca ke-k adalah rdata MMIO satu siklus sesudah permintaannya -- jalur baca terdaftar hcpu_mmio: diukur tiap build: di tiap baca, tulis GPR tujuan LOAD-nya sama dengan rdata satu siklus sesudah permintaan (ditangkap nilai baru), bukan rdata pada siklus permintaan.
 
+## `pipeline`
+
+`rtl/hcpu_top.v` `98f70974c232…`, bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`.
+
+**Oracle.** pemilik, 28 September 2026, sesudah audit bd8158c GREEN: satu fungsi transisi sinkron atas empat bundle register tahap yang audit catat -- bukan lima fungsi tahap -- dengan input rst_n dan imem_data, dan hasil subsistem luar sebagai input oracle, tidak diprediksi ulang. Dibandingkan per tepi terhadap jejak tb_hcpu_top.v, lalu GPR, H2[7:0], dan guard_led sebagai pemeriksaan terminal. Hanya 45 aturan yang tercakup diberi perilaku; ke-33 lainnya tetap not covered, dan pembekuan sesudah halted tidak diklaim. Interpreter bukan pengganti oracle.
+
+**Bentuk.** `PIPELINE_STATE_t + INPUT_t + EXTERNAL_RESULTS_t -> PIPELINE_STATE_t+1`.
+
+Keadaan — empat bundle register tahap yang audit catat:
+
+- **IF** — pc, pc_prev, fetch_valid, if_instruction, if_pc, pc_valid.
+- **ID/EX** — id_opcode, id_dst, id_s1, id_s2, id_imm, id_pc, id_gpr_s1, id_gpr_s2, id_hreg_s1, id_hreg_s2, id_gpr_we, id_hreg_we, id_mem_read, id_mem_write, id_is_branch, id_is_jump, id_is_call, id_is_ret, id_is_codex, id_is_halt, id_is_print, id_is_emits, id_is_push, id_is_pop.
+- **EX/MEM** — ex_opcode, ex_dst, ex_gpr_result, ex_hreg_result, ex_gpr_we, ex_hreg_we, ex_flags_new, ex_flags_we, ex_is_halt, ex_is_print, ex_is_emits, ex_emits_addr, ex_print_data, ex_is_push, ex_is_pop, ex_push_data, ex_mem_read, ex_mem_write, ex_mem_addr, ex_mem_wdata, ra_sp.
+- **MEM/WB** — mem_dst, mem_gpr_result_r, mem_hreg_result, mem_gpr_we, mem_hreg_we, mem_flags_new, mem_flags_we, mem_is_halt, mem_is_load, mem_is_pop, sp, stack_rd, stack_rd_valid.
+- **halted** — register controller (hcpu_controller.v baris 72-77): aturan tercakup ctrl_halt_latch menulisnya; pembekuan yang ia sebabkan tidak tercakup.
+- **register file** — tujuan port tulis WB (hcpu_regfile.v baris 53-59, 63-68, 94, 111-118): 18 GPR, 16 H-Reg, FLAGS. Dimodelkan karena lingkar terbuka dari reset hanya dengan input yang pemilik sebut butuh nilai baca register decode, dan pemeriksaan terminal membacanya; register pc di dalamnya diikat pc_we = 0 (hcpu_top.v baris 645).
+- **larik tumpukan** — stack[] hcpu_memory: tanpa reset, x sampai ditulis PUSH; di satu langkah dari keadaan RTL hanya kata di sp-1 yang teramati, lewat net probe.
+
+ex_emits_addr ada di RTL (hcpu_execute.v) dan tidak ada di daftar keadaan audit; ia register EX/MEM yang di-latch tiap tepi, jadi ikut di bundle ini.
+
+Input: `rst_n`, `imem_data`. Hasil luar, diambil dari jejak, tidak diprediksi ulang:
+
+- **ROM** — rom_data, rom_valid.
+- **guard** — guard_pass, guard_u, guard_rho.
+- **ALU codex** — calu_result_vec, calu_result_scl.
+- **HISAB** — hisab_pack0, hisab_pack1, hisab_pack2, hisab_crc.
+- **unit trap** — trap_redirect_w, trap_in_user_w.
+- **RAM dan MMIO** — dram_rdata.
+- **mesin keadaan cetak hcpu_top** — print_active.
+
+Pengali hanya dipakai MUL, yang tidak tercakup, jadi keluarannya tidak dibaca. Semua input luar adalah fungsi kombinasional dari keadaan sesudah tepi t, dan tepi t+1 mengambilnya dari baris itu (A1 audit).
+
+| pemeriksaan | hasil |
+|---|---|
+| F1 satu langkah dari keadaan RTL, 232 tepi | 0 berbeda |
+| F1 keluaran, 233 baris | 0 berbeda; berhenti not covered: ctrl_halted_stall (12 baris) |
+| F2 lingkar terbuka dari reset | 0 berbeda, sampai tepi 231 |
+| langkah yang berhenti not covered | ctrl_halted_stall di tepi 232; open loop: ctrl_halted_stall di tepi 232 |
+| register yang tidak diprediksi | stack_rd (10 tepi) |
+| F3 bacaan terminal bench, 32 | 0 berbeda |
+| F3 bench | Total: 15 PASS, 0 FAIL |
+| waktu input: perubahan rst_n, ditangkap nilai baru, ditangkap nilai lama | 21, 21, 0 |
+| jejak RTL | `411860312c3c…` |
+
+Aturan: fungsi menjalankan 45 dari 78, dengan hitungan per aturan sama persis dengan hitungan audit; tidak tercakup 33 — ke-33 aturan dan ke-27 arm opcode yang audit namai: fungsi berhenti dengan NotCovered, bukan memprediksi (bagian Pipeline di bawah).
+
+| program | dibaca bench | fungsi | RTL |
+|---|---|---|---|
+| 1 | guard_led | 1 | 1 |
+| 1 | R0 | 42 | 42 |
+| 2 | H2[7:0] | 10 | 10 |
+| 2 | R0 | 112 | 112 |
+| 3 | R0 | 3 | 3 |
+| 4 | R3 | 99 | 99 |
+| 5 | R1 | 200 | 200 |
+| 6 | R4 | 10 | 10 |
+| 7 | R0 | 65824 | 65824 |
+| 7 | R1 | 2586908108 | 2586908108 |
+| 7 | R2 | 285212673 | 285212673 |
+| 7 | R3 | 16144 | 16144 |
+| 7 | R4 | 0 | 0 |
+| 8 | R4 | 33 | 33 |
+| 8 | R5 | 22 | 22 |
+| 8 | R6 | 11 | 11 |
+| 9 | R1 | 8 | 8 |
+| 9 | R2 | 2 | 2 |
+| 9 | R3 | 2 | 2 |
+| 9 | R4 | 0 | 0 |
+| 10 | R3 | 5 | 5 |
+| 10 | R4 | 6 | 6 |
+| 10 | R5 | 2 | 2 |
+| 10 | R6 | 1 | 1 |
+| 10 | R8 | 0 | 0 |
+| 10 | R9 | 4 | 4 |
+| 11 | R1 | 8 | 8 |
+| 11 | R2 | 0 | 0 |
+| 11 | R3 | 0 | 0 |
+| 11 | R4 | 1 | 1 |
+| 11 | R6 | 1 | 1 |
+| 11 | R7 | 0 | 0 |
+
+**Waktu input.** keadaan t = yang ditinggalkan tepi t; input dan hasil luar tepi t+1 = baris sesudah tepi t (A1 audit, 178 tepi); rst_n tepi t+1 = baris sesudah tepi t+1, karena bench mengubahnya di timestep tepi itu sendiri: diukur tiap build atas rst_n: di tiap tepi tempat rst_n berubah, desain mengikuti nilai baru -- turun: keadaan sesudahnya keadaan reset; naik: fetch melangkah.
+
 ## Pipeline — audit oracle `tb_hcpu_top.v`, sebelum model
 
 **Oracle.** pemilik, 28 September 2026: pipeline memakai tb_hcpu_top.v sebagai oracle sistem. Tidak ada bench per tahap, jadi kelima tahap tidak dimodelkan terpisah, dan langkah pertama adalah audit cakupan oracle -- keadaan yang teramati, input yang berubah, titik sampel, instruksi yang lewat tiap tahap, transisi yang dapat diprediksi, dan aturan yang tidak pernah dijalankan. Model fungsinya ditulis sesudah peta ini. Tidak ada bench baru, RTL pipeline tidak diubah, hasil interpreter bukan pengganti oracle, dan keadaan internal yang tidak teramati tidak diklaim.
