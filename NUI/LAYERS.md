@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **37 modul**; `tests/test_ai/` berisi **843 tes**
+`src/hijaiyyah/nui/` berisi **38 modul**; `tests/test_ai/` berisi **859 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.501 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.515 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -218,6 +218,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `rtl_function.py` | model RTL sebagai fungsi, Lapis 6: `hcpu_uart_rx`, `hcpu_mmio`, `hcpu_uart_tx`, dan `hcpu_dataram` sebagai fungsi transisi keadaan, dicocokkan per siklus dengan jejak RTL di bawah oracle masing-masing — bench khusus untuk dua yang pertama, `tb_hcpu_top.v` untuk UART TX, `tb_parity.v` atas korpus Lapis 4 untuk RAM data — dan `loader.hasm` di batas baca MMIO-nya di bawah kedua bench loader; satu langkah, keluaran, dan lingkar terbuka — ditambah audit oracle pipeline di bawah `tb_hcpu_top.v`, lalu pipeline sebagai satu fungsi atas keempat bundle registernya, audit oracle integrasi HCPU di bawah bench yang sama, lalu HCPU sebagai satu fungsi atas bagian yang punya oracle, dengan hasil luar dan state opaque dinamai | `test_nui_rtl_function.py` (16), `test_nui_rtl_function_mmio.py` (16), `test_nui_rtl_function_uart_tx.py` (24), `test_nui_rtl_function_dataram.py` (21), `test_nui_rtl_function_loader.py` (19), `test_nui_rtl_function_pipeline_audit.py` (13), `test_nui_rtl_function_pipeline.py` (31), `test_nui_rtl_function_hcpu_audit.py` (25), `test_nui_rtl_function_hcpu.py` (21) |
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
+| `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host, hardware beserta jenis keadaannya dan korelasinya — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -276,7 +277,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.740 node, 4.452 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.757 node, 4.495 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -325,7 +326,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.501 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.515 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -1207,11 +1208,26 @@ kabel RTL berhenti dengan `NotCovered`, dan di bench ini tidak pernah terjadi.
 aturan not covered dan ketidaksesuaian HISAB. Keputusan arsitekturnya tidak
 dibuka kembali.
 
-**Yang belum ada.** HCPU di luar yang `rtl/tb/tb_hcpu_top.v` jalankan: 78
-aturan yang kedua audit namai tetap not covered, dan unit trap, mesin keadaan
-cetak, serta pengendali kartu tidak punya fungsi. RAM data tanpa read-first,
-loader tanpa N = 0, dan UART TX sebatas reset dan diam. Yang ada selain itu
-mengurai antarmuka dan memodelkan dua protokol, bukan perilaku umum.
+**Lapis 6 dibekukan, 29 September 2026.** Keputusan pemilik: definisi selesai
+lapis ini — prediksi keadaan berikutnya untuk modul yang dimodelkan cocok dengan
+oracle-nya — terpenuhi. Membuka bench trap, kartu, EMITS, ALU, guard, HISAB,
+atau ROM sekarang akan memperluas cakupan Lapis 6, bukan menyelesaikan
+kewajibannya. Laporannya `NUI/LAYER6.md`, dibangun
+`src/hijaiyyah/nui/layer6_freeze.py` dari objek git di `d003cac`, bukan dari
+pohon kerja: artefak Lapis 6 semuanya turunan, jadi yang dibekukan adalah
+keadaannya di commit itu. Tagnya annotated, `layer6-freeze-2026-09-29-final`.
+Kedelapan belas commit Lapis 6 masing-masing ada di tepat satu dari tujuh bagian
+cakupan pemilik. `git diff 80ea5f8 d003cac -- rtl/` kosong: RTL, bench, dan
+sidik jari wrapper tidak berubah sepanjang Lapis 6. HISAB tidak diubah supaya
+freeze tampak bersih — urutan bitnya butir tersendiri.
+
+**Yang belum ada.** Tidak ada yang tertunda untuk menutup Lapis 6. Yang tidak
+diklaim — bukan utang, melainkan batas yang tercatat di `NUI/LAYER6.md`:
+- 78 aturan yang kedua audit namai tetap not covered;
+- unit trap, mesin keadaan cetak, dan pengendali kartu tidak punya fungsi;
+- RAM data tanpa read-first, loader tanpa N = 0, dan UART TX sebatas reset dan
+  diam.
+Bench khusus yang belum dimodelkan tetap bukti yang tersedia.
 
 **Cara verifikasi.** 39 testbench yang dijalankan `make -C rtl/tb all` adalah
 oracle-nya. Untuk
@@ -1225,7 +1241,8 @@ korelasi dan memeriksanya terhadap rekamannya sendiri, dan
 `python3 -m hijaiyyah.nui.rtl_function --verify` menjalankan ulang oracle tiap
 fungsi RTL — bench khusus, korpus Lapis 4, kedua bench loader, dan
 `rtl/tb/tb_hcpu_top.v` untuk pemancar, pipeline, dan HCPU — beserta kedua
-audit, lalu membandingkan tiap fungsi per siklus.
+audit, lalu membandingkan tiap fungsi per siklus. Freeze-nya dibaca ulang oleh
+`python3 -m hijaiyyah.nui.layer6_freeze --verify` dari objek git yang sama.
 
 **Syarat selesai.** Prediksi keadaan berikutnya untuk modul yang disebut cocok
 dengan benchnya.

@@ -1,0 +1,432 @@
+{
+ "generated_by": "src/hijaiyyah/nui/layer6_freeze.py",
+ "tag": "layer6-freeze-2026-09-29-final",
+ "layer": {
+  "title": "Pemahaman perangkat keras",
+  "alias": "Hardware Intelligence",
+  "status": "FROZEN"
+ },
+ "commits": {
+  "opened_from": "80ea5f8515c4ca7e53df7fa02c8c2091149ed44c",
+  "hcpu_model": "1c33e30866f5d2b2507639824f7e9b0ba49d53c6",
+  "frozen_at": "d003cac3778919d1c8dd65e32f32230df0d85230",
+  "in_order": true,
+  "layer6": 18
+ },
+ "scope": [
+  {
+   "part": "Inventaris hardware",
+   "step": "6.1",
+   "commits": [
+    {
+     "commit": "cde7d77efd2c728425ce7e21721c281045a38ae2",
+     "subject": "feat(nui): Layer 6.1 -- the hardware inventory, from evidence that already exists",
+     "in_layer6": true,
+     "green": false
+    }
+   ],
+   "verify": "hardware",
+   "artefacts": {
+    "NUI/HARDWARE.md": "8c11b109149ce24905ac419a7e07eeff6d0ee9bc9c1f40e593716ba9dd242d44",
+    "NUI/hardware_inventory.json": "3ea92840dfd4f838ce8c70f55c545266e699e282078d0adb062c7d45257c81ae",
+    "NUI/spec/hardware_inventory.json": "ab5bc06fcb380521ec97df808d18ecc4a27474a9a87c7e5c18f98cd317a5da6a"
+   }
+  },
+  {
+   "part": "Sumber telemetri",
+   "step": "6.2",
+   "commits": [
+    {
+     "commit": "091e6117d14346d23962f5f2d05e00b00693b7d4",
+     "subject": "feat(nui): Layer 6.2 -- where telemetry comes from, and that none of it is flowing now",
+     "in_layer6": true,
+     "green": false
+    }
+   ],
+   "verify": "telemetry_sources",
+   "artefacts": {
+    "NUI/TELEMETRY_SOURCES.md": "8d8169986a14244dc0957bb362075d370d90b565664493244ebf3a2876b9c4ef",
+    "NUI/telemetry_sources.json": "6cbe69ec57ab8cceb9b0cfc15946b6c44e8961010a023441467b7a6ad593c62b",
+    "NUI/spec/telemetry_sources.json": "52a17ffa0bd520a7cd0b76fb233d286931b531e89c76c7702a4d6c2b690bb336"
+   }
+  },
+  {
+   "part": "Provenance hardware",
+   "step": "6.3",
+   "commits": [
+    {
+     "commit": "08ffbedfe7b7c58ad27bf385d5468787e5b171fc",
+     "subject": "feat(nui): Layer 6.3 -- every hardware claim walked back to its evidence, and nothing said about now",
+     "in_layer6": true,
+     "green": true
+    }
+   ],
+   "verify": "hardware_provenance",
+   "artefacts": {
+    "NUI/HARDWARE_PROVENANCE.md": "893ee7919e9c348582e50a5ac280cd523921bf49c38235a22d6cb78e801e94b7",
+    "NUI/hardware_provenance.json": "155d576027f1b80a6d735d9ee573e196cd4b1756e315f69a5c39d03e8404b60a",
+    "NUI/spec/hardware_provenance.json": "bcdb4ab64ca72e3375d1909c2c6c9a0a1be58918c674bf5b874f6611c9a229ba"
+   }
+  },
+  {
+   "part": "Model keadaan hardware",
+   "step": "6.4",
+   "commits": [
+    {
+     "commit": "d6cfd6c0b16a3f63692542e1e3be15a4131fc777",
+     "subject": "feat(nui): Layer 6.4 -- what a hardware answer means, and history never standing in for now",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "5e4aa039f227da14899b43ff9ab896cbe2a61685",
+     "subject": "fix(nui): Layer 6.4 taxonomy -- the 27 MHz clock and UART 115200 are capabilities",
+     "in_layer6": true,
+     "green": false
+    }
+   ],
+   "verify": "hardware_state",
+   "artefacts": {
+    "NUI/HARDWARE_STATE.md": "dfd886125e94c626b231ab47e23cd2cce5f745d7a5a1756c73919048a5b2eded",
+    "NUI/hardware_state.json": "5601c527f304117c3504b90231e114717b69b109bb2d5c1f8b8ca987aa3bfaed",
+    "NUI/spec/hardware_state.json": "a5d914b06bcf2c22860fdd6d69ade5a066d5f5dd4b480f4bbb51bd2b11f366a8"
+   }
+  },
+  {
+   "part": "Korelasi hardware",
+   "step": "6.5",
+   "commits": [
+    {
+     "commit": "3617a31f3595adda6b090b55e1ea265c0cf8e5a0",
+     "subject": "feat(nui): Layer 6.5 -- hardware, runs, programs and opcodes linked, none by a name",
+     "in_layer6": true,
+     "green": true
+    }
+   ],
+   "verify": "hardware_correlation",
+   "artefacts": {
+    "NUI/HARDWARE_CORRELATION.md": "d5fa6c09f039f6c8fe2853888fadd5ebf040a8fe3249adaec551c6ec24d3e70f",
+    "NUI/hardware_correlation.json": "f5642723f182de458dcba695b997dcee614aedaf6bcfe262ae0a61d810929c3c",
+    "NUI/spec/hardware_correlation.json": "f816e4dea222e73a1cbe066de04ab93bca97f8669a3a3a00241b76a505afc9c5"
+   }
+  },
+  {
+   "part": "RTL sebagai fungsi",
+   "step": "model RTL sebagai fungsi",
+   "commits": [
+    {
+     "commit": "6a9a54126ec8dee7d606ca9c064147bae27b262c",
+     "subject": "feat(nui): Layer 6 -- hcpu_uart_rx as a function, held to its own bench cycle by cycle",
+     "in_layer6": true,
+     "green": false
+    },
+    {
+     "commit": "b643b88cdbc7c216c82afdaab2012d7f42e5c1d7",
+     "subject": "docs(nui): layer 6's \"26 testbench\" -- 39, by the definition it was written with",
+     "in_layer6": true,
+     "green": false
+    },
+    {
+     "commit": "ecb417ba0083e645f983e30c0be7401c7fd90da4",
+     "subject": "feat(nui): Layer 6 -- hcpu_mmio as a function, and what its bench never touches named",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "604bbb84fd8f4f3b19f6de2dd0c82bb52b9f519b",
+     "subject": "feat(nui): Layer 6 -- hcpu_uart_tx as a function, held to tb_hcpu_top.v, which only idles it",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "0e8b699d359eb3ea585dac511a3923157e003ede",
+     "subject": "feat(nui): Layer 6 -- hcpu_dataram as a function, held to tb_parity.v over the Lapis 4 corpus",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "6d8839a73f218e45111db3c654e0160698786eb8",
+     "subject": "feat(nui): Layer 6 -- loader.hasm as a function, at its MMIO reads, under both loader benches",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "bd8158cac1ef5727c773caf82238f3a3662addef",
+     "subject": "feat(nui): Layer 6 -- the pipeline's oracle audited, a coverage map before any model",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "bf13941748ff0b58f1e88b5ea26cab2539f20132",
+     "subject": "feat(nui): Layer 6 -- the pipeline as one function over its four bundles, held to tb_hcpu_top.v",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "e897ed0de8566c51bca4b065ee83bd965e6d875a",
+     "subject": "fix(nui): Layer 6 -- the row after the last HALT is a terminal snapshot, and the stall reasons say so",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "f590bac12f6e30d077c596819c11324f0c4a05a7",
+     "subject": "feat(nui): Layer 6 -- the HCPU's integration oracle audited, a coverage map before any HCPU model",
+     "in_layer6": true,
+     "green": true
+    }
+   ],
+   "verify": "rtl_function",
+   "artefacts": {
+    "NUI/RTL_FUNCTION.md": "7b2f869c89f7b9e530f4313b2ea62bd44326c1703099469227d17edab64896a0",
+    "NUI/rtl_function.json": "9b92b7293fa60b14afcfde6a37797bee3a401f4dbd946be0f0159762788a9228",
+    "NUI/spec/rtl_function.json": "2d817ff067d9ca0ccc826a612dcf0958ee445dbe9e3e01d466021dd968fd32b7"
+   }
+  },
+  {
+   "part": "Model HCPU prediktif tingkat sistem",
+   "step": "model RTL sebagai fungsi",
+   "commits": [
+    {
+     "commit": "1c33e30866f5d2b2507639824f7e9b0ba49d53c6",
+     "subject": "feat(nui): Layer 6 -- the HCPU as one function over the parts that have an oracle, held to tb_hcpu_top.v",
+     "in_layer6": true,
+     "green": true
+    },
+    {
+     "commit": "d003cac3778919d1c8dd65e32f32230df0d85230",
+     "subject": "docs(nui): Layer 6 -- the HCPU function accepted GREEN (1c33e30), and how rtl_function verifies",
+     "in_layer6": true,
+     "green": false
+    }
+   ],
+   "verify": "rtl_function",
+   "artefacts": {
+    "NUI/RTL_FUNCTION.md": "7b2f869c89f7b9e530f4313b2ea62bd44326c1703099469227d17edab64896a0",
+    "NUI/rtl_function.json": "9b92b7293fa60b14afcfde6a37797bee3a401f4dbd946be0f0159762788a9228",
+    "NUI/spec/rtl_function.json": "2d817ff067d9ca0ccc826a612dcf0958ee445dbe9e3e01d466021dd968fd32b7"
+   }
+  }
+ ],
+ "hcpu": {
+  "edges": 231,
+  "rows": 232,
+  "sampling_mismatched": 0,
+  "one_step_mismatches": 0,
+  "outputs_per_row": 57,
+  "output_mismatches": 0,
+  "open_loop_mismatches": 0,
+  "open_loop_reached": 231,
+  "terminal_reads": 32,
+  "terminal_mismatches": 0,
+  "ram_words_checked": 115,
+  "ram_mismatches": 0,
+  "ram_final": {
+   "function": 2,
+   "rtl": 2,
+   "differ": []
+  },
+  "operands_moved": 0,
+  "not_covered_outputs": {
+   "ctrl_halted_stall": 11
+  },
+  "unpredicted": {
+   "stack_rd": 10
+  },
+  "rules": 149,
+  "rules_fired": 71,
+  "bench_said": "Total: 15 PASS, 0 FAIL",
+  "trace_sha256": "7ae2e579209836bbd192f5373aa59184b21f80dd9412517e590585c87b2d185e"
+ },
+ "non_claims": {
+  "not_covered": [
+   "fetch_redirect_trap",
+   "fetch_flush_only",
+   "decode_stall",
+   "decode_letter",
+   "decode_halt_err",
+   "hazard_pop_use",
+   "hazard_store_load",
+   "fwd_hreg_s2_mem",
+   "ex_stall",
+   "ex_flush",
+   "flags_forward_self",
+   "flags_forward_rf",
+   "branch_jmp",
+   "branch_call",
+   "branch_ret",
+   "jeq_taken",
+   "jeq_not_taken",
+   "jgd_taken",
+   "jgd_not_taken",
+   "jngd_not_taken",
+   "ra_overflow",
+   "ra_underflow",
+   "hc01_invalid_rom",
+   "priv_fault",
+   "mem_fault",
+   "eret",
+   "syscall",
+   "flags_fwr",
+   "mem_stall",
+   "stack_overflow",
+   "stack_underflow",
+   "ctrl_print_stall",
+   "ctrl_halted_stall",
+   "mmio.rx_hold",
+   "mmio.rx_overrun_set",
+   "mmio.rx_read_clear",
+   "mmio.timer_compare_write",
+   "mmio.timer_clear",
+   "mmio.timer_expire",
+   "mmio.mem_base_write",
+   "mmio.mem_limit_write",
+   "mmio.imem_addr_write",
+   "mmio.imem_data_advance",
+   "mmio.sd_cmd_write",
+   "mmio.sd_sector_write",
+   "mmio.sd_control_write",
+   "mmio.sd_data_advance",
+   "mmio.read_counter",
+   "mmio.read_mem_base",
+   "mmio.read_other",
+   "mmio.read_sd_status",
+   "mmio.read_sd_sector",
+   "mmio.read_sd_control",
+   "mmio.read_sd_other",
+   "mmio.u_rx.idle_falling_edge",
+   "mmio.u_rx.start_count",
+   "mmio.u_rx.start_confirmed",
+   "mmio.u_rx.start_glitch",
+   "mmio.u_rx.data_count",
+   "mmio.u_rx.data_sample",
+   "mmio.u_rx.data_last",
+   "mmio.u_rx.stop_count",
+   "mmio.u_rx.stop_deliver",
+   "uart_tx.idle_start",
+   "uart_tx.start_count",
+   "uart_tx.start_end",
+   "uart_tx.data_count",
+   "uart_tx.data_next",
+   "uart_tx.data_last",
+   "uart_tx.stop_count",
+   "uart_tx.stop_end",
+   "uart_tx.default",
+   "dataram.read_first",
+   "dataram.initial_zero",
+   "calu.letter",
+   "calu.hdist",
+   "calu.default",
+   "mul.mul"
+  ],
+  "hisab_discrepancy": {
+   "measured": {
+    "edges": 13,
+    "consumed": 0,
+    "programs": [
+     5,
+     10
+    ]
+   },
+   "recorded": {
+    "edges": 13,
+    "consumed": 0,
+    "programs": [
+     5,
+     10
+    ]
+   }
+  },
+  "opaque_state": [
+   "unit trap",
+   "mesin keadaan cetak",
+   "pengendali kartu",
+   "ra_stack[]",
+   "register pc di register file",
+   "guard berregister",
+   "is_kaf di hcpu_hisab.v",
+   "kata RAM yang belum ditulis"
+  ],
+  "outside_results": {
+   "ROM Master Table": [
+    "rom_data",
+    "rom_valid"
+   ],
+   "guard": [
+    "guard_pass",
+    "guard_u",
+    "guard_rho"
+   ],
+   "HISAB": [
+    "hisab_pack0",
+    "hisab_pack1",
+    "hisab_pack2",
+    "hisab_crc"
+   ],
+   "unit trap": [
+    "trap_redirect_w",
+    "trap_in_user_w",
+    "trap_reg_rdata"
+   ],
+   "mesin keadaan cetak": [
+    "print_active",
+    "tx_start",
+    "tx_data",
+    "emits_busy",
+    "str_addr"
+   ],
+   "pengendali kartu": [
+    "sd_busy",
+    "sd_ok",
+    "sd_err",
+    "sd_card_ready",
+    "sd_err_code",
+    "sd_buf_rdata"
+   ]
+  },
+  "subsystems_without_function": {
+   "print": {
+    "transitions": 22,
+    "ran": 3
+   },
+   "trap": {
+    "transitions": 19,
+    "ran": 2
+   },
+   "sdio": {
+    "transitions": 33,
+    "ran": 5
+   },
+   "rom": {
+    "transitions": 3,
+    "ran": 2
+   },
+   "guard": {
+    "transitions": 9,
+    "ran": 4
+   },
+   "hisab": {
+    "transitions": 5,
+    "ran": 5
+   }
+  }
+ },
+ "integrity": {
+  "rtl_changed_in_layer6": [],
+  "bitstreams_tracked": [],
+  "accepted_red": {
+   "test": "tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint",
+   "present": true
+  },
+  "verify": [
+   "rtl_function",
+   "hardware_correlation",
+   "hardware_state",
+   "hardware_provenance",
+   "layer4_freeze",
+   "parity_model",
+   "layer5_freeze",
+   "hardware",
+   "telemetry_sources"
+  ]
+ }
+}

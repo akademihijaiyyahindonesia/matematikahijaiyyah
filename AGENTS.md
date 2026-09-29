@@ -1735,6 +1735,17 @@ butir "model RTL sebagai fungsi" berakhir di sini. Roadmap Lapis 6 tidak
 menamai tahap sesudahnya, jadi tahap berikutnya diambil dari pemilik, tidak
 dikarang.
 
+**Lapis 6 dibekukan, keputusan pemilik 29 September 2026.** Definisi selesai
+lapis ini terpenuhi: prediksi keadaan berikutnya untuk modul yang dimodelkan
+cocok dengan oracle-nya. Membuka `rtl/tb/tb_hcpu_trap.v`, bench kartu, EMITS,
+ALU, guard, HISAB, atau ROM sekarang akan **memperluas** cakupan Lapis 6, bukan
+menyelesaikan kewajibannya. Bench khusus yang belum dimodelkan tetap bukti yang
+tersedia, **bukan utang** Lapis 6. Laporannya `NUI/LAYER6.md`, dibangun
+`src/hijaiyyah/nui/layer6_freeze.py` dari objek git di `d003cac`, dan tagnya
+annotated: `layer6-freeze-2026-09-29-final`. HISAB **tidak diubah** supaya
+freeze tampak bersih; ketidaksesuaian urutan bitnya butir tersendiri, bukan
+penghalang Lapis 6.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
