@@ -92,6 +92,11 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+from ..core.master_table import MASTER_TABLE
+from ..hisa.machine import HISAMachine
+from ..hisa.opcodes import InstructionWord, OpCode
+from ..hisa.registers import RegisterFile
+from ..hisab.serialize import _compute_guard_status, _nibble_pack, serialize_letter
 from . import hardware, parity_model
 from .hardware import _sha
 from .repository_index import ROOT
@@ -693,6 +698,12 @@ def rules(m: dict[str, Any]) -> list[dict[str, Any]]:
     pipeline's rules are the audit's transitions, not a second list."""
     if m["rules"] == "pipeline_audit":
         return [dict(r) for r in load()["pipeline_audit"]["transitions"]]
+    if m["rules"] == "hcpu":
+        # the pipeline's own, then each composed subsystem's, as the audit names them
+        spec = load()
+        out = [dict(r) for r in spec["pipeline_audit"]["transitions"]]
+        return out + [_hcpu_rule(t) for t in hcpu_transitions(spec["hcpu_audit"])
+                      if t["subsystem"] in m["composed"]]
     own = [{**r, "file": r.get("file", m["rtl"])} for r in m["rules"]]
     for sub in m.get("submodules", []):
         other = next(x for x in load()["modules"] if x["name"] == sub["module"])
@@ -1202,16 +1213,19 @@ def pipeline_trace(a: dict[str, Any], root: Path | None = None) -> dict[str, Any
                         root or ROOT)
 
 
-def _bench_trace(a: dict[str, Any], paths: list[str], keys: list[str],
-                 root: Path) -> dict[str, Any]:
-    """The run behind both audits: the bench and the RTL unchanged, and a probe
-    printing the given signals, below the DUT, at each rising edge."""
+def _bench_trace(a: dict[str, Any], paths: list[str], keys: list[str], root: Path,
+                 extra: str = "", local: frozenset[str] = frozenset()) -> dict[str, Any]:
+    """The run behind both audits and the HCPU function: the bench and the RTL
+    unchanged, and a probe printing the given signals, below the DUT, at each
+    rising edge. A name in `local` is a net the probe declares itself, in
+    `extra`, which may also hold a final block; its lines land in "said"."""
     if shutil.which("iverilog") is None or shutil.which("vvp") is None:
         raise RuntimeError("Icarus Verilog is required to run the bench")
     base = f"{a['top']}.{a['instance']}"
-    names = ", ".join(f"{base}.{s}" for s in paths)
+    names = ", ".join(s if s in local else f"{base}.{s}" for s in paths)
     fmt = " ".join(["%0d"] * len(paths))
-    probe = (f"module rtl_function_probe;\n  always @(posedge {a['top']}.{a['clock']}) begin\n"
+    probe = (f"module rtl_function_probe;\n{extra}"
+             f"  always @(posedge {a['top']}.{a['clock']}) begin\n"
              f"    $display(\"A {fmt}\", {names});\n    $strobe(\"S {fmt}\", {names});\n"
              "  end\nendmodule\n")
     sources = [str(f) for pattern in a["compile"] for f in sorted(root.glob(pattern))]
@@ -1552,6 +1566,13 @@ def pipeline_reset(c: dict[str, Any]) -> dict[str, Any]:
     return s
 
 
+def _pipe_bus(s: dict[str, Any]) -> dict[str, Any]:
+    """The data bus the memory stage drives: the EX/MEM registers themselves,
+    so it is there at a reset edge too, when nothing else of the stages is."""
+    return {"dram_re": s["ex_mem_read"], "dram_we": s["ex_mem_write"],
+            "dram_addr": s["ex_mem_addr"], "dram_wdata": s["ex_mem_wdata"]}
+
+
 def _pipe_comb(s: dict[str, Any], inp: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
     """Everything the stages compute between two edges, from the state the
     last edge left and the inputs, and the transitions it is about to take --
@@ -1671,8 +1692,7 @@ def _pipe_comb(s: dict[str, Any], inp: dict[str, Any], c: dict[str, Any]) -> dic
             "rom_addr": imm & ((1 << p["ROM_ADDR_W"]) - 1),
             "calu_op": {"HCADD": 0, "HNRM2": 1, "HDIST": 2, "CGET": 3, "CSET": 4,
                         "CMOD4": 5}.get(op, 0), "calu_index": imm,
-            "dram_re": s["ex_mem_read"], "dram_we": s["ex_mem_write"],
-            "dram_addr": s["ex_mem_addr"], "dram_wdata": s["ex_mem_wdata"],
+            **_pipe_bus(s),
             "wb_gpr_we": s["mem_gpr_we"], "wb_gpr_waddr": s["mem_dst"],
             "wb_gpr_wdata": mem_gpr_result, "wb_hreg_we": s["mem_hreg_we"],
             "wb_hreg_waddr": s["mem_dst"], "wb_hreg_wdata": s["mem_hreg_result"],
@@ -1834,6 +1854,19 @@ def _pipe_keys(m: dict[str, Any], c: dict[str, Any]) -> list[str]:
         "stack_top", "imem_data", *ext, *m["outputs"]]
 
 
+def _pipe_wires(c: dict[str, Any], u: str) -> tuple[list[str], set[str]]:
+    """The register file's words and the stack word the next edge reads, as
+    nets the probe declares: Icarus takes only plain signals in $strobe."""
+    wires = [f"  wire [31:0] gpr{i} = {u}.u_regfile.gpr[{i}];"
+             for i in range(c["p"]["GPR_COUNT"])]
+    wires += [f"  wire [{c['p']['HREG_W'] - 1}:0] hreg{i} = {u}.u_regfile.hreg[{i}];"
+              for i in range(c["p"]["HREG_COUNT"])]
+    wires.append(f"  wire [31:0] stack_top = {u}.u_memory.stack[{u}.u_memory.sp - 8'd1];")
+    local = {f"gpr{i}" for i in range(c["p"]["GPR_COUNT"])} | {
+        f"hreg{i}" for i in range(c["p"]["HREG_COUNT"])} | {"stack_top"}
+    return wires, local
+
+
 def pipeline_runs(m: dict[str, Any], root: Path | None = None) -> list[dict[str, Any]]:
     """tb_hcpu_top.v and the RTL, unchanged, with a probe printing at the end
     of every rising edge's timestep -- the canonical row A1 proved -- every
@@ -1845,13 +1878,7 @@ def pipeline_runs(m: dict[str, Any], root: Path | None = None) -> list[dict[str,
     c = pipeline_context(root)
     top, u = "tb_hcpu_top", "tb_hcpu_top.u_dut"
     keys = _pipe_keys(m, c)
-    wires = [f"  wire [31:0] gpr{i} = {u}.u_regfile.gpr[{i}];"
-             for i in range(c["p"]["GPR_COUNT"])]
-    wires += [f"  wire [{c['p']['HREG_W'] - 1}:0] hreg{i} = {u}.u_regfile.hreg[{i}];"
-              for i in range(c["p"]["HREG_COUNT"])]
-    wires.append(f"  wire [31:0] stack_top = {u}.u_memory.stack[{u}.u_memory.sp - 8'd1];")
-    local = {f"gpr{i}" for i in range(c["p"]["GPR_COUNT"])} | {
-        f"hreg{i}" for i in range(c["p"]["HREG_COUNT"])} | {"stack_top"}
+    wires, local = _pipe_wires(c, u)
     names = [k if k in local else f"{u}.{PIPE_PATHS.get(k, k)}" for k in keys]
     probe = ("module rtl_function_probe;\n" + "\n".join(wires) + "\n"
              f"  always @(posedge {top}.clk)\n"
@@ -2428,6 +2455,17 @@ def hcpu_transitions(h: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def _hcpu_rule(t: dict[str, Any]) -> dict[str, Any]:
+    """One audit transition with its RTL lines and meaning: the audit's own,
+    or, for a subsystem with a function, that function's rule's."""
+    if "rule" not in t:
+        return dict(t)
+    mod = next(x for x in load()["modules"] if x["name"] == t["function"])
+    rule = next(r for r in rules(mod) if r["id"] == t["rule"])
+    return {"id": t["id"], "file": rule["file"], "lines": rule["lines"],
+            "means": rule["means"]}
+
+
 def hcpu_declared(h: dict[str, Any]) -> dict[str, str]:
     """Every transition the spec names not covered, with its reason: a
     subsystem whose function answers to this same bench takes its function's
@@ -2539,6 +2577,390 @@ def hcpu_audit(h: dict[str, Any], a: dict[str, Any], trace: dict[str, Any],
         "bench_said": verdict, "bench_pass": verdict is not None}
 
 
+# -- the HCPU, as one function over the parts that have an oracle ------------------------------
+#
+# The owner's form of 29 September 2026, on the audit f590bac: one system-level
+# transition over a partial predictive state -- only the state whose
+# transitions the audit covers and an oracle verifies. The functions already
+# held to their own oracles are composed as they are; the codex ALU and the
+# multiplier are the interpreter's own handlers, run on scratch registers;
+# the ROM, the guard, HISAB, the trap unit, the print state machine and the
+# card controller hand in what the trace shows. Everything else is opaque and
+# not predicted.
+
+def _calu_ops(root: Path) -> dict[str, Any]:
+    """hcpu_codex_alu.v's own op codes and names (its localparams), and which
+    of its two outputs each op drives (its case arms)."""
+    text = (root / "rtl" / "hcpu_codex_alu.v").read_text(encoding="utf-8")
+    return {"ops": {int(v): n for n, v in re.findall(r"localparam ALU_(\w+)\s*=\s*3'd(\d+)",
+                                                      text)},
+            "drives": dict(re.findall(r"ALU_(\w+):\s*result_(vec|scl)", text))}
+
+
+_SCRATCH = HISAMachine(MASTER_TABLE)
+
+
+def _handler(name: str, hreg: dict[int, list[int]], gpr: dict[int, int],
+             imm: int = 0) -> RegisterFile:
+    """One instruction through the interpreter's own handler, on scratch
+    registers: H1/R1 and H2/R2 in, H3/R3 out. Nothing of its arithmetic is
+    copied here."""
+    regs = RegisterFile()
+    for i, v in hreg.items():
+        regs.hreg[i] = list(v)
+    for i, g in gpr.items():
+        regs.gpr[i] = g
+    regs.pc = 1
+    _SCRATCH.regs = regs
+    word = (int(OpCode[name]) << 24) | (3 << 20) | (1 << 16) | (2 << 12) | (imm & 0xFFF)
+    _SCRATCH._execute(InstructionWord(word))
+    return regs
+
+
+def _components(v: int) -> list[int]:
+    return [(v >> (8 * i)) & 0xFF for i in range(18)]
+
+
+def codex_alu(op: Any, index: Any, src1: Any, src2: Any, scl: Any,
+              u: dict[str, Any]) -> tuple[Any, Any]:
+    """hcpu_codex_alu.v as a function: the op picked by its own case, the
+    arithmetic by the interpreter's handler of the same name. An op the case
+    does not name, and a result wider than the RTL's own wire, stop with
+    NotCovered: the interpreter does not truncate, and what the RTL keeps
+    there has no oracle."""
+    name = u["ops"].get(op)
+    if name is None:
+        raise NotCovered("calu.default")
+    if not all(isinstance(v, int) for v in (index, src1, src2, scl)):
+        return UNPREDICTED, UNPREDICTED
+    dst = _components(src2) if name in u["dst_is_source"] else [0] * 18
+    regs = _handler(name, {1: _components(src1), 2: _components(src2), 3: dst}, {1: scl}, index)
+    width = u["width"].get(name)
+    if u["drives"][name] == "vec":
+        out = regs.hreg[3]
+        if width and any(not 0 <= x < 1 << width for x in out):
+            raise NotCovered("calu.width")
+        return sum(x << (8 * i) for i, x in enumerate(out)), 0
+    value = regs.gpr[3]
+    if width and not 0 <= value < 1 << width:
+        raise NotCovered("calu.width")
+    return 0, value
+
+
+def multiplier(a: Any, b: Any) -> Any:
+    """hcpu_mul.v as the interpreter's MUL handler: the low 32 bits of a x b."""
+    if not isinstance(a, int) or not isinstance(b, int):
+        return UNPREDICTED
+    return _handler("MUL", {}, {1: a, 2: b}).gpr[3]
+
+
+def hcpu_context(root: Path | None = None) -> dict[str, Any]:
+    root = root or ROOT
+    spec = load()
+    mods = {x["name"]: x for x in spec["modules"]}
+    m, h = mods["hcpu"], spec["hcpu_audit"]
+    tx = _parameters(mods["hcpu_uart_tx"], root)
+    declared = hcpu_declared(h)
+    composed = set(m["composed_results"])
+    return {"c": pipeline_context(root), "pipe": mods["pipeline"], "m": m,
+            # the pipeline's outside results the composition does not compute
+            "pipe_ext": [k for g in mods["pipeline"]["externals"].values() for k in g
+                         if k not in composed],
+            "rx": uart_rx_parameters(tx["CLK_HZ"], tx["BAUD"]), "tx": tx,
+            "calu": {**m["units"]["calu"], **_calu_ops(root)},
+            "mmio_state": mods["hcpu_mmio"]["state"], "tx_state": mods["hcpu_uart_tx"]["state"],
+            "externals": {k: v for group in m["externals"].values() for k, v in group.items()},
+            "covered": {t["id"] for t in hcpu_transitions(h) if t["id"] not in declared}}
+
+
+def hcpu_reset(x: dict[str, Any]) -> dict[str, Any]:
+    """The predictive state at reset: the pipeline's with its register file,
+    the memory map's with its receiver and timer, the RAM's, the transmitter's."""
+    return {"pipe": pipeline_reset(x["c"]), "mmio": mmio_reset(), "ram": dataram_reset(),
+            "tx": uart_tx_reset()}
+
+
+def _hcpu_comb(s: dict[str, Any], inp: dict[str, Any], x: dict[str, Any],
+               full: bool = True) -> dict[str, Any]:
+    """What the HCPU computes between two edges, in the order its wiring
+    allows: the registered units from their state alone; the data bus from
+    EX/MEM; the read data through the memory map; the RAM port through the
+    EMITS mux; then the pipeline's forwarding -- which does not read the codex
+    ALU -- the ALU and the multiplier on it, and the pipeline with their
+    results. With `full` false (a reset edge) the pipeline is not asked."""
+    ram_rdata = dataram_outputs(s["ram"], {}, {})["rdata"]
+    tx_out = uart_tx_outputs(s["tx"], {}, x["tx"])
+    bus = _pipe_bus(s["pipe"])
+    mmio_in = {"rst_n": inp["rst_n"], "re": bus["dram_re"], "we": bus["dram_we"],
+               "addr": bus["dram_addr"], "wdata": bus["dram_wdata"],
+               # hcpu_top.v line 723: an undriven line reads idle high
+               "uart_rx_in": 0 if inp["uart_rx"] == 0 else 1,
+               "uart_tx_busy": tx_out["tx_busy"], "ram_rdata": ram_rdata,
+               **{k: inp[k] for k in ("sd_busy", "sd_ok", "sd_err", "sd_card_ready",
+                                      "sd_err_code", "sd_buf_rdata", "trap_reg_rdata")}}
+    mo = mmio_outputs(s["mmio"], mmio_in, x["rx"])
+    # hcpu_top.v lines 828-835: while EMITS runs the port is the string's
+    emits = inp["emits_busy"] == 1
+    port = {"re": 1 if emits else mo["ram_re"], "we": 0 if emits else mo["ram_we"],
+            "addr": inp["str_addr"] if emits else mo["ram_addr"], "wdata": mo["ram_wdata"]}
+    pipe_in = {"rst_n": inp["rst_n"], "imem_data": inp["imem_data"], "dram_rdata": mo["rdata"],
+               **{k: inp[k] for k in x["pipe_ext"]}}
+    out = {"mmio_in": mmio_in, "mmio_out": mo, "port": port, "tx_out": tx_out,
+           "pipe_in": pipe_in}
+    if not full:
+        return out
+    c = x["c"]
+    first = _pipe_comb(s["pipe"], {**pipe_in, "calu_result_vec": 0, "calu_result_scl": 0}, c)
+    # the same pass with other placeholders: what the ALU reads must not move
+    other = _pipe_comb(s["pipe"], {**pipe_in, "calu_result_vec": (1 << 144) - 1,
+                                   "calu_result_scl": MASK32}, c)
+    reads = ("calu_op", "calu_index", "fwd_hreg_s1", "fwd_hreg_s2", "fwd_gpr_s1", "fwd_gpr_s2")
+    o = first["outputs"]
+    vec, scl = codex_alu(o["calu_op"], o["calu_index"], o["fwd_hreg_s1"], o["fwd_hreg_s2"],
+                         o["fwd_gpr_s1"], x["calu"])
+    pipe_in = {**pipe_in, "calu_result_vec": vec, "calu_result_scl": scl}
+    final = _pipe_comb(s["pipe"], pipe_in, c)
+    return {**out, "pipe_in": pipe_in, "op": final["op"], "pipe_out": final["outputs"],
+            "calu": (vec, scl), "calu_index": o["calu_index"],
+            "mul": multiplier(o["fwd_gpr_s1"], o["fwd_gpr_s2"]),
+            "operands_moved": any(o[k] != other["outputs"][k] for k in reads)}
+
+
+def hcpu_outputs(s: dict[str, Any], inp: dict[str, Any], x: dict[str, Any]) -> dict[str, Any]:
+    """The HCPU's outputs at a moment: the pipeline's, the memory map's, the
+    RAM port's, the transmitter's, the two units', and the register file's
+    debug read (hcpu_regfile.v lines 98-99)."""
+    k = _hcpu_comb(s, inp, x)
+    mo, port, tx = k["mmio_out"], k["port"], k["tx_out"]
+    return {**k["pipe_out"], "dram_rdata": mo["rdata"], "calu_result_vec": k["calu"][0],
+            "calu_result_scl": k["calu"][1], "mul_result": k["mul"],
+            **{n: mo[n] for n in ("ram_re", "ram_we", "ram_addr", "ram_wdata", "trap_reg_we",
+                                  "trap_reg_sel", "trap_reg_wdata", "src_timer", "src_uart_rx",
+                                  "imem_we", "imem_wdata")},
+            "uart_rx_in": k["mmio_in"]["uart_rx_in"],
+            **{f"ram_port_{n}": v for n, v in port.items()},
+            "tx_busy": tx["tx_busy"], "uart_tx": tx["uart_tx"],
+            "dbg_gpr_rdata": s["pipe"][f"gpr{inp['dbg_gpr_raddr']}"],
+            "dbg_flags": s["pipe"]["flags"], "operands_moved": k["operands_moved"]}
+
+
+def hcpu_step(s: dict[str, Any], inp: dict[str, Any],
+              x: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """One rising edge of the HCPU's predictive state. Every rule a composed
+    function fires must be one the audit covers, or the step stops with
+    NotCovered -- the transmitter's start, data and stop included."""
+    live = inp["rst_n"] == 1
+    k = _hcpu_comb(s, inp, x, full=live)
+    pipe, fired = pipeline_step(s["pipe"], k["pipe_in"], x["c"])
+    mine: list[str] = []
+    if live and k["op"] in x["calu"]["ops"].values():
+        indexed = k["op"] in x["calu"]["indexed"] and k["calu_index"] > 17
+        mine.append(f"calu.{k['op'].lower()}{'_outside' if indexed else ''}")
+    mmio, mf = mmio_step(s["mmio"], k["mmio_in"], x["rx"])
+    ram, rf_ = dataram_step(s["ram"], k["port"], {})
+    tx, tf = uart_tx_step(s["tx"], {"rst_n": inp["rst_n"], "tx_start": inp["tx_start"],
+                                    "tx_data": inp["tx_data"]}, x["tx"])
+    mine += [f"mmio.{f}" for f in mf] + [f"dataram.{f}" for f in rf_] + [f"uart_tx.{f}"
+                                                                        for f in tf]
+    for rule in mine:
+        if rule not in x["covered"]:
+            raise NotCovered(rule)
+    return {"pipe": pipe, "mmio": mmio, "ram": ram, "tx": tx}, fired + mine
+
+
+# -- the HCPU's oracle: tb_hcpu_top.v, at every edge --------------------------------------------
+
+def _hcpu_keys(x: dict[str, Any]) -> tuple[list[str], list[str], str, frozenset[str]]:
+    """The probe: the pipeline function's own keys and nets, then the other
+    predictive state, the inputs, the outside results and the outputs the
+    spec names -- name and path -- the word at the RAM port, and at $finish
+    every non-zero word of the RAM."""
+    c, m, u = x["c"], x["m"], "tb_hcpu_top.u_dut"
+    wires, local = _pipe_wires(c, u)
+    wires.append(f"  wire [31:0] ram_word = {u}.u_dataram.mem[{u}.u_dataram.addr];")
+    local |= {"ram_word"}
+    names = _pipe_keys(x["pipe"], c)
+    paths = [PIPE_PATHS.get(n, n) for n in names]
+    extra = {**m["inputs"], **x["externals"], **m["outputs"],
+             **{f"mmio.{k}": f"u_mmio.{k}" for k in x["mmio_state"]},
+             **{f"tx.{k}": f"u_uart.{k}" for k in x["tx_state"]},
+             "ram.rdata": "u_dataram.rdata_r", "ram_word": "ram_word"}
+    for n, path in extra.items():
+        if n not in names:
+            names.append(n)
+            paths.append(path)
+    depth = c["p"]["DATA_DEPTH"]
+    block = ("\n".join(wires) + "\n  integer k;\n"
+             f"  final for (k = 0; k < {depth}; k = k + 1)\n"
+             f"    if ({u}.u_dataram.mem[k] !== 0) $display(\"M %0d %0d\", k, "
+             f"{u}.u_dataram.mem[k]);\n")
+    return names, paths, block, frozenset(local)
+
+
+def hcpu_runs(m: dict[str, Any], root: Path | None = None) -> list[dict[str, Any]]:
+    """tb_hcpu_top.v and the RTL, unchanged: the audits' run, with a probe over
+    everything the function holds, takes and gives."""
+    root = root or ROOT
+    x = hcpu_context(root)
+    names, paths, block, local = _hcpu_keys(x)
+    run = _bench_trace(load()["pipeline_audit"], paths, names, root, block, local)
+    dump = {int(f[1]): int(f[2]) for f in (ln.split() for ln in run["said"]) if f[:1] == ["M"]}
+    return [{"active": run["active"], "rows": run["after"], "dump": dump,
+             "said": [ln for ln in run["said"] if not ln.startswith("M ")]}]
+
+
+def _hcpu_row_state(row: dict[str, Any], x: dict[str, Any]) -> dict[str, Any]:
+    """The predictive state the RTL shows in a row. Of the RAM only the word at
+    the port -- the one the next edge takes -- is in a row."""
+    addr = row["ram_port_addr"]
+    return {"pipe": _pipe_state(row, x["c"]),
+            "mmio": {k: row[f"mmio.{k}"] for k in x["mmio_state"]},
+            "ram": {"mem": {addr: row["ram_word"]} if isinstance(addr, int) else {},
+                    "rdata": row["ram.rdata"]},
+            "tx": {k: row[f"tx.{k}"] for k in x["tx_state"]}}
+
+
+def _hcpu_inputs(taken: dict[str, Any], edge: dict[str, Any],
+                 x: dict[str, Any]) -> dict[str, Any]:
+    """Edge t+1 takes row t (the audits' A1), and rst_n from its own row."""
+    return {**{k: taken[k] for k in (*x["m"]["inputs"], *x["externals"])},
+            "rst_n": edge["rst_n"]}
+
+
+def _hcpu_differs(got: dict[str, Any], want: dict[str, Any], skipped: dict[str, int]) -> bool:
+    bad = _pipe_differs(got["pipe"], want["pipe"], skipped)
+    return bool(bad or got["mmio"] != want["mmio"] or got["tx"] != want["tx"]
+                or got["ram"]["rdata"] != want["ram"]["rdata"])
+
+
+def _hisab_discrepancy(rows: list[dict[str, Any]], x: dict[str, Any]) -> dict[str, Any]:
+    """The known discrepancy, measured again each build rather than quoted:
+    word 2 and the CRC from hisab/serialize.py against hcpu_hisab.v's, on the
+    vector the unit sees at each live edge. The HCPU function does not use
+    them; HISAB is an outside result."""
+    edges, consumed, programs = 0, 0, set()
+    for t, prog, resetting, _ in _edges(rows, "pc", "fetch_valid", len(
+            load()["pipeline_audit"]["programs"])):
+        r = rows[t - 1]
+        if resetting or not isinstance(r["fwd_hreg_s1"], int):
+            continue
+        v = _components(r["fwd_hreg_s1"])
+        word2 = (_compute_guard_status(v) << 8) | _nibble_pack(v)[8]
+        if word2 != r["hisab_pack2"] or serialize_letter(v).digest != r["hisab_crc"]:
+            edges += 1
+            programs.add(prog + 1)
+            op = x["c"]["ops"].get(r["id_opcode"])
+            consumed += op in ("HPACK", "HCRC") and r["ex_stall"] != 1
+    return {"edges": edges, "consumed": consumed, "programs": sorted(programs)}
+
+
+def hcpu_compare(m: dict[str, Any], runs: list[dict[str, Any]], root: Path | None = None,
+                 step: Callable[..., tuple[dict[str, Any], list[str]]] | None = None,
+                 outputs: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
+    """The HCPU function over tb_hcpu_top.v's trace: the sampling it assumes,
+    one step from the RTL's own state at every edge, the outputs at every row,
+    the open loop from reset with the RAM checked at every port word and at
+    $finish, and the bench's terminal reads."""
+    root = root or ROOT
+    x = hcpu_context(root)
+    step = step or hcpu_step
+    outputs = outputs or hcpu_outputs
+    run = runs[0]
+    rows, active = run["rows"], run["active"]
+    names = [k for k in rows[0] if k != "rst_n"]
+    timing = {k: sum(1 for t in range(1, len(rows)) if active[t][k] != rows[t - 1][k])
+              for k in names}
+    compared = [*x["pipe"]["outputs"], *m["outputs"]]
+    one_step: list[int] = []
+    output_bad: list[int] = []
+    open_loop: list[int] = []
+    stopped: dict[str, list[int]] = {}
+    out_stopped: dict[str, list[int]] = {}
+    skipped: dict[str, int] = {}
+    moved = 0
+    for t in range(len(rows) - 1):
+        try:
+            got, _ = step(_hcpu_row_state(rows[t], x), _hcpu_inputs(rows[t], rows[t + 1], x), x)
+        except NotCovered as why:
+            stopped.setdefault(why.rule, []).append(t + 1)
+            continue
+        if _hcpu_differs(got, _hcpu_row_state(rows[t + 1], x), skipped):
+            one_step.append(t + 1)
+    for t, row in enumerate(rows):
+        try:
+            got = outputs(_hcpu_row_state(row, x), _hcpu_inputs(row, row, x), x)
+        except NotCovered as why:
+            out_stopped.setdefault(why.rule, []).append(t)
+            continue
+        moved += got["operands_moved"]
+        if any(got[k] != row[k] for k in compared):
+            output_bad.append(t)
+    s = hcpu_reset(x)
+    states = [s]
+    fired_count = {r["id"]: 0 for r in rules(m)}
+    ram: dict[str, Any] = {"checked": 0, "unwritten": 0, "mismatches": []}
+    if _hcpu_differs(s, _hcpu_row_state(rows[0], x), {}):
+        open_loop.append(0)
+    for t in range(len(rows) - 1):
+        try:
+            s, fired = step(s, _hcpu_inputs(rows[t], rows[t + 1], x), x)
+        except NotCovered as why:
+            stopped.setdefault(f"open loop: {why.rule}", []).append(t + 1)
+            break
+        for f in fired:
+            fired_count[f] = fired_count.get(f, 0) + 1
+        states.append(s)
+        row = rows[t + 1]
+        if _hcpu_differs(s, _hcpu_row_state(row, x), {}):
+            open_loop.append(t + 1)
+        addr = row["ram_port_addr"]
+        if addr in s["ram"]["mem"]:
+            ram["checked"] += 1
+            if s["ram"]["mem"][addr] != row["ram_word"]:
+                ram["mismatches"].append(t + 1)
+        else:
+            ram["unwritten"] += 1
+    final = s["ram"]["mem"]
+    dump = run["dump"]
+    ram["final"] = {"function": len(final), "rtl": len(dump),
+                    "differ": sorted(a for a in set(final) | set(dump)
+                                     if final.get(a, 0) != dump.get(a, 0))}
+    changes = [t for t in range(1, len(rows)) if rows[t]["rst_n"] != rows[t - 1]["rst_n"]]
+    followed = sum(1 for t in changes if (
+        rows[t]["pc"] == 0 and rows[t]["fetch_valid"] == 0 if rows[t]["rst_n"] != 1
+        else rows[t]["fetch_valid"] == 1))
+    terminal = _pipe_terminal(load()["pipeline_audit"], rows, [q["pipe"] for q in states],
+                              x["c"])
+    verdict = next((ln for ln in run["said"] if re.match(m["bench_verdict"]["pattern"], ln)),
+                   None)
+    return {"parameters": {k: x["tx"][k] for k in ("CLK_HZ", "BAUD")}, "cycles": len(rows),
+            "steps": len(rows) - 1,
+            "sampling": {"compared": len(rows) - 1,
+                         "mismatched": {k: v for k, v in timing.items() if v}},
+            "input_timing": {"line_changes": len(changes), "captured_new": followed,
+                             "captured_old": len(changes) - followed},
+            "one_step_mismatches": one_step, "open_loop_mismatches": open_loop,
+            "output_mismatches": output_bad, "outputs_compared": len(compared),
+            "not_covered_steps": {k: v for k, v in stopped.items()},
+            "open_loop_reached": len(states) - 1,
+            "not_covered_outputs": {k: len(v) for k, v in out_stopped.items()},
+            "unpredicted": skipped, "operands_moved": moved, "ram": ram,
+            "terminal": terminal,
+            "terminal_mismatches": [q for q in terminal if q["function"] != q["rtl"]],
+            "hisab_discrepancy": _hisab_discrepancy(rows, x),
+            "bench_said": verdict, "bench_pass": verdict is not None,
+            "rules_fired": fired_count}
+
+
+def _hcpu_trace_sha(runs: list[dict[str, Any]]) -> str:
+    text = "\n".join(" ".join(str(v) for v in r.values()) for r in runs[0]["rows"])
+    dump = "\n".join(f"{a} {v}" for a, v in sorted(runs[0]["dump"].items()))
+    return _sha(f"{text}\n{dump}".encode())
+
+
+DRIVERS["hcpu"] = {"runs": hcpu_runs, "compare": hcpu_compare, "trace_sha": _hcpu_trace_sha}
+
+
 # -- the model -------------------------------------------------------------------------------
 
 
@@ -2599,8 +3021,8 @@ def _expects(m: dict[str, Any], s: dict[str, Any]) -> str | None:
     """F3: what the bench checks, against what the function predicts. None
     when they agree."""
     want = s["bench_expects"]
-    if m["name"] == "pipeline":
-        return None     # its terminal reads are held by _check_pipeline
+    if m["name"] in ("pipeline", "hcpu"):
+        return None     # their terminal reads are held by their own checks
     if m["name"] == "loader":
         # Each bench checks its own things; both see where the entry was fetched.
         for b in s["benches"]:
@@ -2673,12 +3095,15 @@ def check(model: dict[str, Any]) -> list[str]:
             bad.append(f"F3 {m['name']}: {why or m['bench_said']}")
         declared = (list(spec["pipeline_audit"]["not_covered"])
                     if s.get("not_covered") == "pipeline_audit"
+                    else _hcpu_model_declared(s, spec) if s.get("not_covered") == "hcpu"
                     else list(s.get("not_covered", {})))
         if m["not_covered"] != declared:
             bad.append(f"F4 {m['name']}: rules the bench never runs are {m['not_covered']}, "
                        f"the spec names {declared}")
         if m["name"] == "pipeline":
             bad += _check_pipeline(m, model, declared)
+        if m["name"] == "hcpu":
+            bad += _check_hcpu_model(m, s, model, declared)
         held = {s["rtl"]: m["rtl_sha256"], s["bench"]: m["bench_sha256"],
                 **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
         if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
@@ -2762,6 +3187,54 @@ def _check_pipeline(m: dict[str, Any], model: dict[str, Any], declared: list[str
         bad.append(f"F1 pipeline: registers left unpredicted: {m['unpredicted']}")
     if m["terminal_mismatches"] or not m["terminal"]:
         bad.append(f"F3 pipeline: terminal reads differ: {m['terminal_mismatches']}")
+    return bad
+
+
+def _hcpu_model_declared(s: dict[str, Any], spec: dict[str, Any]) -> list[str]:
+    """The HCPU function's not-covered rules: the two audits' own, in the
+    function's rule order."""
+    named = set(spec["pipeline_audit"]["not_covered"]) | set(hcpu_declared(spec["hcpu_audit"]))
+    return [r["id"] for r in rules(s) if r["id"] in named]
+
+
+def _check_hcpu_model(m: dict[str, Any], s: dict[str, Any], model: dict[str, Any],
+                      declared: list[str]) -> list[str]:
+    """The HCPU function's own terms: it fires exactly what the two audits
+    counted; the sampling it assumes holds for every signal it reads; nothing
+    it had to predict stopped it; what it declined is only what the audits
+    named or the spec names as a boundary; what the ALU reads does not hang on
+    the ALU; the RAM agrees word for word; the terminal reads agree; and the
+    known HISAB discrepancy is the one the spec records."""
+    bad = []
+    counted = {t["id"]: t["fired"] for key in ("pipeline_audit", "hcpu_audit")
+               for t in model.get(key, {}).get("transitions", [])}
+    diff = {k: (v, counted.get(k)) for k, v in m["rules_fired"].items() if counted.get(k) != v}
+    if diff:
+        bad.append(f"F4 hcpu: the function's rule counts are not the audits': {diff}")
+    if m["sampling"]["mismatched"]:
+        bad.append(f"F1 hcpu: an edge took what the edge before did not leave: "
+                   f"{m['sampling']['mismatched']}")
+    if m["not_covered_steps"]:
+        bad.append(f"F1 hcpu: transition edges stopped outside coverage: {m['not_covered_steps']}")
+    if m["open_loop_reached"] != m["steps"]:
+        bad.append(f"F2 hcpu: the open loop stopped at edge {m['open_loop_reached']} of "
+                   f"{m['steps']}")
+    stray = [k for k in m["not_covered_outputs"] if k not in declared and k not in s["boundaries"]]
+    if stray:
+        bad.append(f"F1 hcpu: outputs stopped on transitions the audits cover: {stray}")
+    if set(m["unpredicted"]) - {"stack_rd"}:
+        bad.append(f"F1 hcpu: registers left unpredicted: {m['unpredicted']}")
+    if m["operands_moved"]:
+        bad.append(f"F1 hcpu: the ALU's operands moved with its result in "
+                   f"{m['operands_moved']} rows")
+    ram = m["ram"]
+    if ram["mismatches"] or ram["final"]["differ"] or not ram["checked"]:
+        bad.append(f"F2 hcpu: the RAM differs: {ram}")
+    if m["terminal_mismatches"] or not m["terminal"]:
+        bad.append(f"F3 hcpu: terminal reads differ: {m['terminal_mismatches']}")
+    if m["hisab_discrepancy"] != s["known_discrepancy"]["hisab"]["measured"]:
+        bad.append(f"F3 hcpu: the HISAB discrepancy is {m['hisab_discrepancy']}, the spec "
+                   f"records {s['known_discrepancy']['hisab']['measured']}")
     return bad
 
 
@@ -2935,11 +3408,8 @@ def _hcpu_page(h: dict[str, Any], r: dict[str, Any], pipe: dict[str, Any]) -> li
             "|---|---|---|---|---|---|"]
     fired = {t["id"]: t for t in r["transitions"]}
     for t in hcpu_transitions(h):
-        if "rule" in t:
-            rule = next(x for x in rules(mods[t["function"]]) if x["id"] == t["rule"])
-            f, lines, means = rule["file"], rule["lines"], rule["means"]
-        else:
-            f, lines, means = t["file"], t["lines"], t["means"]
+        row = _hcpu_rule(t)
+        f, lines, means = row["file"], row["lines"], row["means"]
         got = fired[t["id"]]
         out.append(f"| `{t['id']}` | {t['subsystem']} | {short(f)} "
                    f"{', '.join(map(str, lines))} | {means} | {got['fired']} | "
@@ -3006,6 +3476,66 @@ def _pipeline_page(s: dict[str, Any], m: dict[str, Any]) -> list[str]:
     return out
 
 
+def _hcpu_model_page(s: dict[str, Any], m: dict[str, Any]) -> list[str]:
+    """The HCPU function's section: its form, what it composes, what it takes
+    from the trace, what it leaves opaque, and how it fared, edge by edge."""
+    timing, ram, hd = m["input_timing"], m["ram"], m["hisab_discrepancy"]
+    stops = "; ".join(f"{k} di tepi {', '.join(map(str, v))}"
+                      for k, v in m["not_covered_steps"].items()) or "tidak ada"
+    out_stops = ", ".join(f"{k} ({v} baris)" for k, v in m["not_covered_outputs"].items())
+    skipped = ", ".join(f"{k} ({v} tepi)" for k, v in m["unpredicted"].items()) or "tidak ada"
+    fired = sum(1 for v in m["rules_fired"].values() if v)
+    known = s["known_discrepancy"]["hisab"]
+    return [f"**Bentuk.** `{s['form']}`.", "",
+            "Dikomposisikan — fungsi yang sudah punya oracle sendiri, dipakai apa adanya:", "",
+            *[f"- **{k}** — {v}." for k, v in s["composition"].items()], "",
+            "Input: " + ", ".join(f"`{k}`" for k in s["inputs"]) + ". Hasil luar, diambil dari "
+            "jejak, tidak diprediksi:", "",
+            *[f"- **{k}** — {', '.join(f'`{n}`' for n in v)}."
+              for k, v in s["externals"].items()],
+            "", f"{s['externals_why']}.", "",
+            "Opaque — keadaan RTL yang tidak diprediksi dan tidak diklaim paritasnya:", "",
+            *[f"- **{k}** — {v}." for k, v in s["opaque"].items()], "",
+            f"**Ketidaksesuaian yang diketahui, HISAB.** {known['what']}. Diukur ulang tiap "
+            f"build: {hd['edges']} tepi, program {', '.join(map(str, hd['programs']))}; di tepi "
+            f"yang memakai HPACK atau HCRC: {hd['consumed']}. {known['status']}.", "",
+            "| pemeriksaan | hasil |", "|---|---|",
+            f"| titik sampel: yang diambil tepi t+1 = yang ditinggalkan tepi t, "
+            f"{m['sampling']['compared']} tepi, setiap sinyal probe kecuali rst_n | "
+            + (", ".join(f"{k} ({v})" for k, v in m["sampling"]["mismatched"].items())
+               or "0 berbeda") + " |",
+            f"| F1 satu langkah dari keadaan RTL, {m['steps']} tepi | "
+            f"{len(m['one_step_mismatches'])} berbeda |",
+            f"| F1 keluaran, {m['outputs_compared']} per baris, {m['cycles']} baris | "
+            f"{len(m['output_mismatches'])} berbeda; berhenti not covered: "
+            f"{out_stops or 'tidak ada'} |",
+            f"| operand ALU tidak bergantung pada hasil ALU | {m['operands_moved']} baris "
+            "bergerak |",
+            f"| F2 lingkar terbuka dari reset | {len(m['open_loop_mismatches'])} berbeda, sampai "
+            f"tepi {m['open_loop_reached']} |",
+            f"| F2 RAM: kata di port tiap baris | {ram['checked']} dicek, "
+            f"{len(ram['mismatches'])} berbeda; {ram['unwritten']} baris port di kata yang "
+            "belum ditulis fungsi — tidak diklaim |",
+            f"| F2 RAM saat $finish, kata bukan nol | fungsi {ram['final']['function']}, RTL "
+            f"{ram['final']['rtl']}, {len(ram['final']['differ'])} berbeda |",
+            f"| langkah yang berhenti not covered | {stops} |",
+            f"| register yang tidak diprediksi | {skipped} |",
+            f"| F3 bacaan terminal bench, {len(m['terminal'])} | "
+            f"{len(m['terminal_mismatches'])} berbeda |",
+            f"| F3 bench | {m['bench_said']} |",
+            f"| waktu input: perubahan {s['input_timing']['signal']}, ditangkap nilai baru, "
+            f"ditangkap nilai lama | {timing['line_changes']}, {timing['captured_new']}, "
+            f"{timing['captured_old']} |",
+            f"| jejak RTL | `{m['trace_sha256'][:12]}…` |", "",
+            f"Aturan: fungsi menjalankan {fired} dari {len(m['rules'])}, dengan hitungan per "
+            "aturan sama persis dengan hitungan kedua audit; tidak tercakup "
+            f"{len(m['not_covered'])} — {s['not_covered_why']}.", "",
+            "Batas yang dinamai spec, di luar aturan RTL:", "",
+            *[f"- `{k}` — {v}." for k, v in s["boundaries"].items()], "",
+            f"**Terminal snapshot.** {s['terminal_snapshot']}.", "",
+            f"**Waktu input.** {s['input_timing']['rule']}: {s['input_timing']['why']}.", ""]
+
+
 def page(model: dict[str, Any]) -> str:
     spec = {m["name"]: m for m in load()["modules"]}
     out = ["# Model RTL sebagai fungsi — Lapis 6", "",
@@ -3025,6 +3555,9 @@ def page(model: dict[str, Any]) -> str:
             out += [f"**Oracle.** {s['oracle']}.", ""]
         if m["name"] == "pipeline":
             out += _pipeline_page(s, m)
+            continue
+        if m["name"] == "hcpu":
+            out += _hcpu_model_page(s, m)
             continue
         if "granularity" in s:
             out += [f"**Satu langkah.** {s['granularity']}.", ""]

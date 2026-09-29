@@ -430,6 +430,74 @@ Aturan: fungsi menjalankan 45 dari 78, dengan hitungan per aturan sama persis de
 
 **Waktu input.** keadaan t = yang ditinggalkan tepi t; input dan hasil luar tepi t+1 = baris sesudah tepi t (A1 audit, 178 tepi); rst_n tepi t+1 = baris sesudah tepi t+1, karena bench mengubahnya di timestep tepi itu sendiri: diukur tiap build atas rst_n: di tiap tepi tempat rst_n berubah, desain mengikuti nilai baru -- turun: keadaan sesudahnya keadaan reset; naik: fetch melangkah.
 
+## `hcpu`
+
+`rtl/hcpu_top.v` `98f70974c232…`, bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`. CLK_HZ 50000000, BAUD 5000000.
+
+**Oracle.** pemilik, 29 September 2026, sesudah audit f590bac GREEN: satu fungsi transisi tingkat sistem dengan state prediktif parsial -- hanya state yang punya aturan transisi tercakup dan dapat diverifikasi. Fungsi yang sudah punya oracle sendiri dikomposisikan apa adanya; yang belum punya oracle tetap hasil luar atau opaque, dan dinyatakan NOT COVERED. Dibandingkan per siklus terhadap tb_hcpu_top.v. RTL, bench, dan bitstream tidak disentuh.
+
+**Bentuk.** `HCPU_STATE_t + rst_n + imem_data + hasil subsistem terverifikasi + hasil oracle luar -> HCPU_STATE_t+1 + OUTPUT_t+1`.
+
+Dikomposisikan — fungsi yang sudah punya oracle sendiri, dipakai apa adanya:
+
+- **pipeline** — fungsi pipeline (bf13941), dengan register file sebagai companion state-nya; aturannya aturan pipeline_audit.
+- **peta memori** — fungsi hcpu_mmio (ecb417b), dengan penerima UART (6a9a541) di dalamnya sebagai u_rx, dan timer; bus datanya register EX/MEM pipeline.
+- **RAM data** — fungsi hcpu_dataram (0e8b699); portnya lewat mux EMITS hcpu_top.v baris 828-835.
+- **pemancar UART** — fungsi hcpu_uart_tx (604bbb8); hanya reset dan diam yang tercakup, jadi start, data, dan stop berhenti dengan NotCovered.
+- **ALU codex** — handler interpreter src/hijaiyyah/hisa/machine.py untuk HCADD, HNRM2, HDIST, CGET, CSET, CMOD4, dijalankan pada register sementara; kode op dan keluaran mana yang diisi dibaca dari hcpu_codex_alu.v sendiri (localparam dan arm case-nya), dan keluaran lainnya nol (baris 125-126). Operandnya forwarding pipeline, yang tidak membaca hasil ALU -- diukur di setiap baris.
+- **pengali** — handler MUL interpreter yang sama, atas forwarding pipeline; hasilnya tidak dipakai pipeline karena arm MUL tidak tercakup, dan hanya dibandingkan sebagai keluaran.
+- **sambungan hcpu_top** — uart_rx yang tidak disambung dibaca 1 (hcpu_top.v baris 723), dan port debug register file (hcpu_regfile.v baris 98-99).
+
+Input: `rst_n`, `imem_data`, `uart_rx`, `dbg_gpr_raddr`. Hasil luar, diambil dari jejak, tidak diprediksi:
+
+- **ROM Master Table** — `rom_data`, `rom_valid`.
+- **guard** — `guard_pass`, `guard_u`, `guard_rho`.
+- **HISAB** — `hisab_pack0`, `hisab_pack1`, `hisab_pack2`, `hisab_crc`.
+- **unit trap** — `trap_redirect_w`, `trap_in_user_w`, `trap_reg_rdata`.
+- **mesin keadaan cetak** — `print_active`, `tx_start`, `tx_data`, `emits_busy`, `str_addr`.
+- **pengendali kartu** — `sd_busy`, `sd_ok`, `sd_err`, `sd_card_ready`, `sd_err_code`, `sd_buf_rdata`.
+
+keputusan pemilik, 29 September 2026: ROM Master Table tidak dijadikan fungsi (imem_data tetap input, rom_data dan rom_valid hasil jejak); guard kombinasional aktif dan dipakai HGRD, CU, CRHO, tetapi bukan subsistem prediktif; HISAB tetap hasil luar karena model Python-nya berbeda dari hcpu_hisab.v; unit trap, mesin keadaan cetak, dan pengendali kartu tidak punya oracle yang cukup. Semua hasil luar diambil dari baris sesudah tepi t untuk tepi t+1, titik sampel yang probe fungsi ini ukur sendiri.
+
+Opaque — keadaan RTL yang tidak diprediksi dan tidak diklaim paritasnya:
+
+- **unit trap** — tujuh register hcpu_trap.v; tidak pernah meninggalkan keadaan reset di bench ini (hcpu_audit), dan keluarannya masuk sebagai hasil luar.
+- **mesin keadaan cetak** — sembilan register hcpu_top.v baris 286-390 dan larik digits[]; tetap P_IDLE.
+- **pengendali kartu** — 41 register hcpu_sdio.v termasuk sbuf[]; tetap S_IDLE. Tujuh belas di antaranya tanpa reset dan x di setiap tepi: tidak diberi nilai, tidak masuk klaim paritas.
+- **ra_stack[]** — tumpukan alamat kembali hcpu_execute.v; CALL dan RET tidak tercakup. Dipromosikan menjadi keadaan prediktif bila bench menjalankannya.
+- **register pc di register file** — pc_we diikat 0 (hcpu_top.v baris 645).
+- **guard berregister** — tujuh register yang tidak dielaborasi karena PIPELINE_GUARD(0); guard kombinasionalnya aktif, dan hasilnya diambil dari jejak.
+- **is_kaf di hcpu_hisab.v** — override T2 yang tersisa di hcpu_hisab.v baris 72-74, sudah dicabut dari hcpu_guard.v; tidak pernah naik di jejak ini. Tidak dipakai sebagai dasar klaim, tidak diubah.
+- **kata RAM yang belum ditulis** — nol awal simulasi adalah aturan initial_zero yang tidak tercakup di bench ini; fungsi tidak mengklaim kata yang belum ia tulis.
+
+**Ketidaksesuaian yang diketahui, HISAB.** hisab/serialize.py (dan HPACK/HCRC interpreter yang memakainya) menaruh status guard dengan urutan bit lain dari hcpu_hisab.v: RTL dan core/guards.py bit 0 = G1 (A_N), bit 1 = G2 (A_K), bit 2 = G3 (A_Q), bit 3 = G4 (rho >= 0); hisab/protocol.py bit 0 = rho >= 0. Word 2 dan CRC berbeda bila sebuah guard gagal. Diukur ulang tiap build: 13 tepi, program 5, 10; di tepi yang memakai HPACK atau HCRC: 0. keputusan pemilik, 29 September 2026: urutan kanonik adalah RTL + core/guards.py; hisab/protocol.py tidak diubah di sini, dan perbaikannya butir HISAB tersendiri. HISAB di fungsi ini hasil luar, jadi selisihnya tidak dipoles menjadi paritas.
+
+| pemeriksaan | hasil |
+|---|---|
+| titik sampel: yang diambil tepi t+1 = yang ditinggalkan tepi t, 231 tepi, setiap sinyal probe kecuali rst_n | 0 berbeda |
+| F1 satu langkah dari keadaan RTL, 231 tepi | 0 berbeda |
+| F1 keluaran, 57 per baris, 232 baris | 0 berbeda; berhenti not covered: ctrl_halted_stall (11 baris) |
+| operand ALU tidak bergantung pada hasil ALU | 0 baris bergerak |
+| F2 lingkar terbuka dari reset | 0 berbeda, sampai tepi 231 |
+| F2 RAM: kata di port tiap baris | 115 dicek, 0 berbeda; 116 baris port di kata yang belum ditulis fungsi — tidak diklaim |
+| F2 RAM saat $finish, kata bukan nol | fungsi 2, RTL 2, 0 berbeda |
+| langkah yang berhenti not covered | tidak ada |
+| register yang tidak diprediksi | stack_rd (10 tepi) |
+| F3 bacaan terminal bench, 32 | 0 berbeda |
+| F3 bench | Total: 15 PASS, 0 FAIL |
+| waktu input: perubahan rst_n, ditangkap nilai baru, ditangkap nilai lama | 21, 21, 0 |
+| jejak RTL | `7ae2e5792098…` |
+
+Aturan: fungsi menjalankan 71 dari 149, dengan hitungan per aturan sama persis dengan hitungan kedua audit; tidak tercakup 78 — aturan kedua audit yang tidak dijalankan tb_hcpu_top.v: fungsi berhenti dengan NotCovered, tidak memprediksi.
+
+Batas yang dinamai spec, di luar aturan RTL:
+
+- `calu.width` — hasil handler interpreter lebih lebar dari kabel RTL -- komponen HCADD di atas 8 bit (hcpu_codex_alu.v baris 65), HNRM2 atau HDIST di atas 16 bit (baris 91, 107). Interpreter tidak memotong, dan handler-nya tidak diberi mask; apa yang RTL simpan di sana tidak punya oracle.
+
+**Terminal snapshot.** probe fungsi ini mencetak tiap tepi di region aktif dan dengan $strobe; baris $strobe tepi terakhir tidak tercetak karena $finish bench jatuh di timestep-nya, jadi jejak ini tidak membawa terminal snapshot. Keputusan pemilik (e897ed0) tetap berlaku: snapshot sesudah halted = 1 hanya observasi terminal, bukan oracle transisi.
+
+**Waktu input.** keadaan t = yang ditinggalkan tepi t; input dan hasil luar tepi t+1 = baris sesudah tepi t; rst_n tepi t+1 = baris sesudah tepi t+1: sama dengan fungsi pipeline, dan diukur ulang atas probe fungsi ini sendiri: untuk setiap sinyal kecuali rst_n, yang diambil tepi t+1 di region aktif sama dengan yang dicetak $strobe tepi t; rst_n diikuti desain di setiap perubahannya.
+
 ## Pipeline — audit oracle `tb_hcpu_top.v`, sebelum model
 
 **Oracle.** pemilik, 28 September 2026: pipeline memakai tb_hcpu_top.v sebagai oracle sistem. Tidak ada bench per tahap, jadi kelima tahap tidak dimodelkan terpisah, dan langkah pertama adalah audit cakupan oracle -- keadaan yang teramati, input yang berubah, titik sampel, instruksi yang lewat tiap tahap, transisi yang dapat diprediksi, dan aturan yang tidak pernah dijalankan. Model fungsinya ditulis sesudah peta ini. Tidak ada bench baru, RTL pipeline tidak diubah, hasil interpreter bukan pengganti oracle, dan keadaan internal yang tidak teramati tidak diklaim.

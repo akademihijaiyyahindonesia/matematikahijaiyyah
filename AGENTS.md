@@ -1704,6 +1704,29 @@ integrasi — tetapi **audit cakupan HCPU lebih dulu**, dengan prinsip yang sama
 seperti pipeline: model HCPU tidak ditulis sebelum peta oracle dan batas
 keadaannya terukur.
 
+Audit HCPU diterima GREEN (`f590bac`), dan terminal snapshot (`e897ed0`) juga:
+snapshot sesudah `halted` naik hanya observasi terminal, bukan oracle transisi.
+Bentuk model HCPU dari pemilik, 29 September 2026: **satu fungsi transisi
+tingkat sistem dengan state prediktif parsial** — hanya state yang punya aturan
+tercakup dan dapat diverifikasi, bukan 171 register RTL. Yang dikomposisikan
+adalah fungsi yang sudah punya oracle sendiri: pipeline, peta memori (dengan
+penerima UART), RAM data, dan pemancar, yang terakhir sebatas reset dan diam.
+Yang jadi hasil luar dari jejak: ROM Master Table, guard (kombinasional dan
+aktif, bukan "disabled"), HISAB, unit trap, mesin keadaan cetak, dan pengendali
+kartu. `ra_stack[]`, ke-17 register x, dan register yang tidak dielaborasi tetap
+opaque, dan **tidak diberi nilai default**. Dua keputusan menyertainya:
+
+- **ALU codex dan pengali memakai handler interpreter yang sudah ada**, pada
+  register sementara; rumusnya tidak disalin. Handler itu tidak memotong lebar
+  seperti RTL (HCADD 8 bit per komponen, HNRM2 dan HDIST 16 bit), dan **tidak
+  diberi mask** — hasil yang lebih lebar dari kabel RTL adalah NOT COVERED.
+- **HISAB tetap hasil luar.** `src/hijaiyyah/hisab/serialize.py` berbeda dari
+  `rtl/hcpu_hisab.v` di 13 tepi, karena urutan bit status guard. Urutan
+  kanonik adalah urutan RTL dan `src/hijaiyyah/core/guards.py` (bit 0 = G1/A_N …
+  bit 3 = G4/ρ ≥ 0). `src/hijaiyyah/hisab/protocol.py` **tidak diubah** di butir
+  model; perbaikannya butir HISAB tersendiri. Sisa override `is_kaf` di
+  `rtl/hcpu_hisab.v` dibiarkan: tidak dihapus, tidak dipakai untuk klaim.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
