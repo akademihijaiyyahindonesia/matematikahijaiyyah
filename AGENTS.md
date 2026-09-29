@@ -1727,6 +1727,14 @@ opaque, dan **tidak diberi nilai default**. Dua keputusan menyertainya:
   model; perbaikannya butir HISAB tersendiri. Sisa override `is_kaf` di
   `rtl/hcpu_hisab.v` dibiarkan: tidak dihapus, tidak dipakai untuk klaim.
 
+Model HCPU diterima GREEN (`1c33e30`), dengan basis transisi state prediktif
+parsial dan komposisi subsistem yang terverifikasi. Tidak ada klaim paritas
+untuk 78 aturan not covered, dan tidak untuk ketidaksesuaian HISAB. Keputusan
+arsitektur yang sudah GREEN tidak dibuka kembali. Urutan modul pemilik untuk
+butir "model RTL sebagai fungsi" berakhir di sini. Roadmap Lapis 6 tidak
+menamai tahap sesudahnya, jadi tahap berikutnya diambil dari pemilik, tidak
+dikarang.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

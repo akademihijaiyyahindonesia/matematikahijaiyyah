@@ -1203,6 +1203,9 @@ berbeda. RAM cocok di 115 kata port dan saat `$finish`, dan ke-32 bacaan
 terminal bench sama. Fungsi menjalankan 71 dari 149 aturan, dengan hitungan
 per aturan sama persis dengan kedua audit. Hasil ALU yang lebih lebar dari
 kabel RTL berhenti dengan `NotCovered`, dan di bench ini tidak pernah terjadi.
+**Dinyatakan GREEN oleh pemilik (`1c33e30`)**, tanpa klaim paritas untuk 78
+aturan not covered dan ketidaksesuaian HISAB. Keputusan arsitekturnya tidak
+dibuka kembali.
 
 **Yang belum ada.** HCPU di luar yang `rtl/tb/tb_hcpu_top.v` jalankan: 78
 aturan yang kedua audit namai tetap not covered, dan unit trap, mesin keadaan
@@ -1219,8 +1222,10 @@ membaca ulang tiap rantai provenance dari berkasnya, dan
 klasifikasi dan jawaban kontrak, dan
 `python3 -m hijaiyyah.nui.hardware_correlation --verify` membangun ulang tiap
 korelasi dan memeriksanya terhadap rekamannya sendiri, dan
-`python3 -m hijaiyyah.nui.rtl_function --verify` menjalankan ulang bench UART RX
-dan MMIO dan membandingkan fungsinya per siklus.
+`python3 -m hijaiyyah.nui.rtl_function --verify` menjalankan ulang oracle tiap
+fungsi RTL — bench khusus, korpus Lapis 4, kedua bench loader, dan
+`rtl/tb/tb_hcpu_top.v` untuk pemancar, pipeline, dan HCPU — beserta kedua
+audit, lalu membandingkan tiap fungsi per siklus.
 
 **Syarat selesai.** Prediksi keadaan berikutnya untuk modul yang disebut cocok
 dengan benchnya.
