@@ -1215,7 +1215,8 @@ atau ROM sekarang akan memperluas cakupan Lapis 6, bukan menyelesaikan
 kewajibannya. Laporannya `NUI/LAYER6.md`, dibangun
 `src/hijaiyyah/nui/layer6_freeze.py` dari objek git di `d003cac`, bukan dari
 pohon kerja: artefak Lapis 6 semuanya turunan, jadi yang dibekukan adalah
-keadaannya di commit itu. Tagnya annotated, `layer6-freeze-2026-09-29-final`.
+keadaannya di commit itu. Tagnya annotated, `layer6-freeze-2026-09-29-final`, di commit freeze-nya sendiri
+(`0a3b446`).
 Kedelapan belas commit Lapis 6 masing-masing ada di tepat satu dari tujuh bagian
 cakupan pemilik. `git diff 80ea5f8 d003cac -- rtl/` kosong: RTL, bench, dan
 sidik jari wrapper tidak berubah sepanjang Lapis 6. HISAB tidak diubah supaya
@@ -1264,10 +1265,23 @@ butuh dua peluncuran, probe sebelumnya tiga). Ia **menjaga pengamatnya**:
 `rtl/scripts/burn_in_report.py` **mengisolasi kesalahan**: tiap diam
 digolongkan milik papan atau milik host dengan membandingkan kedua jam.
 
-**Yang belum ada.** Semua itu terbatas pada satu harness dan satu jenis
-kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan kegagalan di
-luar burn-in, dan tidak ada yang bisa memulihkan host yang berhibernasi —
-itu yang membunuh percobaan pertama 72 jam.
+**Dibuka pemilik 29 September 2026**, sesudah Lapis 6 dibekukan (`0a3b446`,
+tag `layer6-freeze-2026-09-29-final`). Langkah pertamanya **bukan** membuat
+sistem bertindak otonom, melainkan menetapkan **kontrak operasi otonom yang
+dapat diukur**, dengan enam unsur:
+- apa yang boleh dibaca;
+- tindakan apa yang boleh dilakukan;
+- batas otorisasi;
+- keadaan sebelum dan sesudah tindakan;
+- bukti keberhasilan;
+- kondisi `UNKNOWN` dan `NOT_COVERED`.
+Tujuannya supaya Lapis 7 tidak mengubah NUI menjadi sekadar lingkar otomatis
+tanpa guard.
+
+**Yang belum ada.** Kontrak itu sendiri. Aset di atas terbatas pada satu harness
+dan satu jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
+kegagalan di luar burn-in, dan tidak ada yang bisa memulihkan host yang
+berhibernasi — itu yang membunuh percobaan pertama 72 jam.
 
 **Cara verifikasi.** Pemulihan dihitung dari catatan lari: berapa peluncuran,
 berapa diam, milik siapa.

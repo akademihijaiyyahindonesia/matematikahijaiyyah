@@ -1746,6 +1746,31 @@ annotated: `layer6-freeze-2026-09-29-final`. HISAB **tidak diubah** supaya
 freeze tampak bersih; ketidaksesuaian urutan bitnya butir tersendiri, bukan
 penghalang Lapis 6.
 
+### Keputusan pemilik, 29 September 2026 — Lapis 7 dibuka: operasi otonom
+
+Freeze Lapis 6 di-commit sebagai `0a3b446`, dan tag
+`layer6-freeze-2026-09-29-final` ada di commit itu. Sesudah tag, Lapis 7
+dibuka.
+
+**Langkah pertamanya bukan membuat sistem bertindak otonom**, melainkan
+menetapkan **kontrak operasi otonom yang dapat diukur**, dengan enam unsur:
+- apa yang boleh dibaca;
+- tindakan apa yang boleh dilakukan;
+- batas otorisasi;
+- keadaan sebelum dan sesudah tindakan;
+- bukti keberhasilan;
+- kondisi `UNKNOWN` dan `NOT_COVERED`.
+
+Alasan pemilik: supaya Lapis 7 tidak mengubah NUI menjadi sekadar lingkar
+otomatis tanpa guard.
+
+Belum ada keputusan yang mencabut pagar mana pun dari tiga pagar berikut, jadi
+ketiganya masih berlaku:
+- pagar hanya-baca Lapis 5;
+- allowlist argv utuh (K-4);
+- larangan memperluas izin demi PASS (K-12).
+Batas otorisasi di dalam kontrak adalah keputusan pemilik, bukan hasil karangan.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
