@@ -4088,5 +4088,1615 @@
   ],
   "bench_said": "Total: 15 PASS, 0 FAIL",
   "bench_pass": true
+ },
+ "hcpu_audit": {
+  "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
+  "files_sha256": {
+   "rtl/hcpu_top.v": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "rtl/hcpu_codex_alu.v": "ad5eda0591752622200461fd7c10551ba8f87ada3cc1f966eaae10d0dd24c63d",
+   "rtl/hcpu_controller.v": "ff42dba6347ec50cdccc23659b818f6e19d4f8ce4e32713e43c20e2d10e72ffd",
+   "rtl/hcpu_dataram.v": "8731b42a61bbf304078027dd874ffdfabec25bf6d199d53c2a6291c0ce44edfc",
+   "rtl/hcpu_decode.v": "50858a8db6eac9b4aa77097e53e9f11640c790e11c6f7a13aaa4cf8569da878c",
+   "rtl/hcpu_execute.v": "161761534a710a304320c4818bd8207b2c1f84a95ed67d8d1f275aa17a56d4c2",
+   "rtl/hcpu_fetch.v": "c4cc8c473e9a77f6be543545c8c4ec83b711214f7a7c40567e74e77a513e1deb",
+   "rtl/hcpu_forward.v": "1e02e95e8e8d6b5103c3cfc6fa6e4c95837bbb2a9fe897f3cff626bec551ddbc",
+   "rtl/hcpu_guard.v": "b7ccb07eeae68e51a32a9b703d5c10dee7801ed50e91b324d8e9db383050c3ec",
+   "rtl/hcpu_hisab.v": "2bd82ee9a81a9e481725905396336bf4d856f1a9947bbaad08bf862a1ec44f9e",
+   "rtl/hcpu_memory.v": "6738069540e1716ce78fa6eed97e222a35ff9de56aa22e684e12ca3744302b36",
+   "rtl/hcpu_mmio.v": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd",
+   "rtl/hcpu_mul.v": "de86e5c730e966ea702e60ec4aed2295781e3d3b04872ba6c457359887e010c2",
+   "rtl/hcpu_pkg.vh": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342",
+   "rtl/hcpu_regfile.v": "64acfdf2f002860ad0e8903f65c298bfb46d4a72b5ac81bcd53dfbf5e88a7ad6",
+   "rtl/hcpu_rom.v": "91e2fb697eb6a711fd243785e6eff3466b57de16184d6c3f0efe614a28d9fcc6",
+   "rtl/hcpu_sdio.v": "619d5211f995b2ecae567d241a9a5ab97c6fbf74644b4ee67a5c087d95bcc7df",
+   "rtl/hcpu_timer.v": "4847d722d2ca14670b0be614d2f22da46ae2b05ea12edcbbfb0f01395a80283b",
+   "rtl/hcpu_trap.v": "c8087007c83feaec1b417156fbbd6d16378e83216582891c43561c21cf2ef7bc",
+   "rtl/hcpu_uart_rx.v": "3dbb9f127825ef6afe83f016b84b81360d02f85dcb8d7c16c7ca6ce596a728ad",
+   "rtl/hcpu_uart_tx.v": "89dae1c3dbf1ea2a41fec5206a6654d3411d7757520af07d58ad1e6fca39b519",
+   "rtl/hcpu_writeback.v": "5cb92f5d8722f1da2b4082dfc336e93d79004bcfd392beb2dc6f83246b082225"
+  },
+  "trace_sha256": "5ebe9560216793e641b0e35d3ef66263d78afafdb1975774f5abbcf277d1dff6",
+  "edges": 232,
+  "live_edges": 178,
+  "sampling": {
+   "compared": 178,
+   "mismatched": {},
+   "release_edges": {
+    "stepped": 11,
+    "held_in_reset": 0
+   }
+  },
+  "inputs": {
+   "rst_n": {
+    "changes": 21,
+    "distinct": 2,
+    "values": [
+     "0",
+     "1"
+    ]
+   },
+   "imem_data": {
+    "changes": 130,
+    "distinct": 78
+   },
+   "uart_rx": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "z"
+    ]
+   },
+   "sd_cmd_in": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "z"
+    ]
+   },
+   "sd_dat_in": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "z"
+    ]
+   },
+   "dbg_gpr_raddr": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "0"
+    ]
+   }
+  },
+  "outputs": {
+   "imem_addr": {
+    "changes": 187,
+    "distinct": 27
+   },
+   "imem_ce": {
+    "changes": 23,
+    "distinct": 2,
+    "values": [
+     "0",
+     "1"
+    ]
+   },
+   "imem_we": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "0"
+    ]
+   },
+   "imem_waddr": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "0"
+    ]
+   },
+   "imem_wdata": {
+    "changes": 34,
+    "distinct": 16
+   },
+   "uart_tx": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "1"
+    ]
+   },
+   "halted": {
+    "changes": 21,
+    "distinct": 2,
+    "values": [
+     "0",
+     "1"
+    ]
+   },
+   "guard_led": {
+    "changes": 4,
+    "distinct": 2,
+    "values": [
+     "0",
+     "1"
+    ]
+   },
+   "sd_clk": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "0"
+    ]
+   },
+   "sd_cmd_out": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "1"
+    ]
+   },
+   "sd_cmd_oe": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "1"
+    ]
+   },
+   "sd_dat_out": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "1"
+    ]
+   },
+   "sd_dat_oe": {
+    "changes": 0,
+    "distinct": 1,
+    "values": [
+     "0"
+    ]
+   },
+   "dbg_gpr_rdata": {
+    "changes": 10,
+    "distinct": 7
+   },
+   "dbg_flags": {
+    "changes": 10,
+    "distinct": 4,
+    "values": [
+     "0",
+     "1",
+     "2",
+     "8"
+    ]
+   }
+  },
+  "boundary": {
+   "files": 21,
+   "registers": 171,
+   "undeclared": [],
+   "missing": []
+  },
+  "state": {
+   "register file": {
+    "moved": {
+     "u_regfile.flags": 7
+    },
+    "held": {
+     "u_regfile.pc": "0"
+    },
+    "x": []
+   },
+   "print": {
+    "moved": {},
+    "held": {
+     "print_state": "0",
+     "print_val": "0",
+     "digit_cnt": "0",
+     "digit_idx": "0",
+     "print_active": "0",
+     "str_addr": "0",
+     "emits_busy": "0",
+     "uart_start": "0",
+     "uart_data": "0"
+    },
+    "x": []
+   },
+   "trap": {
+    "moved": {},
+    "held": {
+     "u_trap.mode": "1",
+     "u_trap.prev": "1",
+     "u_trap.vector": "0",
+     "u_trap.epc": "0",
+     "u_trap.cause": "0",
+     "u_trap.enable": "0",
+     "u_trap.trap_active": "0"
+    },
+    "x": []
+   },
+   "mmio": {
+    "moved": {
+     "u_mmio.periph_rdata": 14,
+     "u_mmio.u_timer.counter": 178
+    },
+    "held": {
+     "u_mmio.rx_held": "0",
+     "u_mmio.rx_ready": "0",
+     "u_mmio.rx_held_err": "0",
+     "u_mmio.rx_overrun": "0",
+     "u_mmio.mem_base": "0",
+     "u_mmio.mem_limit": "4095",
+     "u_mmio.imem_waddr": "0",
+     "u_mmio.sd_sector": "0",
+     "u_mmio.sd_index": "0",
+     "u_mmio.sd_div": "0",
+     "u_mmio.sd_start": "0",
+     "u_mmio.sd_op": "0",
+     "u_mmio.sd_soft_rst": "0",
+     "u_mmio.periph_sel": "0",
+     "u_mmio.sd_data_sel": "0",
+     "u_mmio.u_rx.rx_meta": "1",
+     "u_mmio.u_rx.rx_sync": "1",
+     "u_mmio.u_rx.state": "0",
+     "u_mmio.u_rx.count": "0",
+     "u_mmio.u_rx.index": "0",
+     "u_mmio.u_rx.shifter": "0",
+     "u_mmio.u_rx.rx_data": "0",
+     "u_mmio.u_rx.rx_valid": "0",
+     "u_mmio.u_rx.rx_frame_err": "0",
+     "u_mmio.u_timer.compare": "4294967295",
+     "u_mmio.u_timer.expired": "0"
+    },
+    "x": []
+   },
+   "sdio": {
+    "moved": {
+     "u_mmio.u_sdio.div_cnt": 11,
+     "u_mmio.u_sdio.wr_data": 30
+    },
+    "held": {
+     "u_mmio.u_sdio.acmd41_tries": "0",
+     "u_mmio.u_sdio.busy": "0",
+     "u_mmio.u_sdio.card_ready": "0",
+     "u_mmio.u_sdio.ccs": "0",
+     "u_mmio.u_sdio.clk_en": "0",
+     "u_mmio.u_sdio.cmd_oe": "1",
+     "u_mmio.u_sdio.cmd_out": "1",
+     "u_mmio.u_sdio.dat_oe": "0",
+     "u_mmio.u_sdio.dat_out": "1",
+     "u_mmio.u_sdio.divider": "62",
+     "u_mmio.u_sdio.err": "0",
+     "u_mmio.u_sdio.err_code": "0",
+     "u_mmio.u_sdio.fsm_we": "0",
+     "u_mmio.u_sdio.gap_cnt": "0",
+     "u_mmio.u_sdio.ok": "0",
+     "u_mmio.u_sdio.rca": "0",
+     "u_mmio.u_sdio.sd_clk": "0",
+     "u_mmio.u_sdio.state": "0",
+     "u_mmio.u_sdio.step": "0",
+     "u_mmio.u_sdio.wr_addr": "0",
+     "u_mmio.u_sdio.wr_en": "0"
+    },
+    "x": [
+     "u_mmio.u_sdio.ack_sh",
+     "u_mmio.u_sdio.bit_cnt",
+     "u_mmio.u_sdio.buf_rdata",
+     "u_mmio.u_sdio.cmd_index",
+     "u_mmio.u_sdio.cmd_sh",
+     "u_mmio.u_sdio.crc16",
+     "u_mmio.u_sdio.crc16_rx",
+     "u_mmio.u_sdio.crc7",
+     "u_mmio.u_sdio.dat_cnt",
+     "u_mmio.u_sdio.fsm_addr",
+     "u_mmio.u_sdio.fsm_wdata",
+     "u_mmio.u_sdio.op_r",
+     "u_mmio.u_sdio.resp_len",
+     "u_mmio.u_sdio.resp_sh",
+     "u_mmio.u_sdio.sector_r",
+     "u_mmio.u_sdio.timeout",
+     "u_mmio.u_sdio.word_sh"
+    ]
+   },
+   "uart_tx": {
+    "moved": {},
+    "held": {
+     "u_uart.state": "0",
+     "u_uart.clk_cnt": "0",
+     "u_uart.bit_idx": "0",
+     "u_uart.tx_shift": "0",
+     "u_uart.tx_out": "1"
+    },
+    "x": []
+   },
+   "dataram": {
+    "moved": {
+     "u_dataram.rdata_r": 2
+    },
+    "held": {},
+    "x": []
+   },
+   "rom": {
+    "moved": {},
+    "held": {},
+    "x": []
+   },
+   "guard": {
+    "moved": {},
+    "held": {},
+    "x": []
+   },
+   "calu": {
+    "moved": {},
+    "held": {},
+    "x": []
+   },
+   "hisab": {
+    "moved": {},
+    "held": {},
+    "x": []
+   },
+   "mul": {
+    "moved": {},
+    "held": {},
+    "x": []
+   }
+  },
+  "transitions": [
+   {
+    "id": "print.reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "print.pulse_clear",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "print.idle",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "print.print_accept",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.emits_accept",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.conv_zero",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.conv_digit",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.conv_done",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.send",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.send_hold",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.wait_newline",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.wait_next",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.wait_hold",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.newline",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.newline_hold",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.s_addr",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.s_char_end",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.s_char_send",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.s_char_hold",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.s_wait_next",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.s_wait_hold",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "print.default",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "trap.idle",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "trap.eret",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.eret_mode_bypass",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.eret_epc_bypass",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.fire_timer",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.fire_uart_rx",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.fire_illegal",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.fire_priv",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.fire_mem",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.fire_syscall",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.pending_masked",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.held_active",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.held_pc_invalid",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.write_vector",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.write_epc",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.write_enable",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.write_mode",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "trap.write_readonly",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.decode",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.rx_hold",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.rx_overrun_set",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.rx_read_clear",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.timer_count",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.timer_compare_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.timer_clear",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.timer_expire",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.mem_base_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.mem_limit_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.imem_addr_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.imem_data_advance",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.sd_cmd_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.sd_sector_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.sd_control_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.sd_data_advance",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_rx_data",
+    "fired": 115,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.read_rx_status",
+    "fired": 9,
+    "programs": [
+     3,
+     8,
+     11
+    ]
+   },
+   {
+    "id": "mmio.read_tx_status",
+    "fired": 14,
+    "programs": [
+     1,
+     2,
+     3,
+     5,
+     7,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.read_imem_addr",
+    "fired": 6,
+    "programs": [
+     3,
+     4
+    ]
+   },
+   {
+    "id": "mmio.read_counter",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_compare",
+    "fired": 4,
+    "programs": [
+     6,
+     10
+    ]
+   },
+   {
+    "id": "mmio.read_timer_status",
+    "fired": 4,
+    "programs": [
+     8,
+     10
+    ]
+   },
+   {
+    "id": "mmio.read_trap",
+    "fired": 24,
+    "programs": [
+     1,
+     2,
+     5,
+     6,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.read_mem_base",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_mem_limit",
+    "fired": 2,
+    "programs": [
+     3,
+     5
+    ]
+   },
+   {
+    "id": "mmio.read_other",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_sd_status",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_sd_sector",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_sd_control",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.read_sd_other",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.sync",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.u_rx.outputs_drop",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.u_rx.idle_wait",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "mmio.u_rx.idle_falling_edge",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.start_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.start_confirmed",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.start_glitch",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.data_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.data_sample",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.data_last",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.stop_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "mmio.u_rx.stop_deliver",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "sdio.soft_reset",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.clk_off",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "sdio.clk_toggle",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.clk_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.port_host",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "sdio.port_fsm",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.buf_write",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.buf_read",
+    "fired": 231,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "sdio.idle_wait",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "sdio.idle_init",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.idle_not_init",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.idle_transfer",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_powerup",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_cmd_setup",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_cmd_send",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_cmd_gap",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_resp_wait",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_resp_recv",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_resp_done",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_dat_wait",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_dat_recv",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_dat_crc",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_gap",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_start",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_data",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_crc",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_end",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_ack",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_wr_busy",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_finish",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.s_fail",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "sdio.default",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.reset",
+    "fired": 53,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "uart_tx.idle_wait",
+    "fired": 178,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "uart_tx.idle_start",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.start_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.start_end",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.data_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.data_next",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.data_last",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.stop_count",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.stop_end",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "uart_tx.default",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "dataram.write",
+    "fired": 2,
+    "programs": [
+     4,
+     6
+    ]
+   },
+   {
+    "id": "dataram.read",
+    "fired": 2,
+    "programs": [
+     4,
+     6
+    ]
+   },
+   {
+    "id": "dataram.hold",
+    "fired": 229,
+    "programs": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "dataram.read_first",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "dataram.initial_zero",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "rom.letter_entry",
+    "fired": 11,
+    "programs": [
+     1,
+     2,
+     7,
+     9,
+     10,
+     11
+    ]
+   },
+   {
+    "id": "rom.negative_entry",
+    "fired": 1,
+    "programs": [
+     5
+    ]
+   },
+   {
+    "id": "rom.invalid",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "guard.pass",
+    "fired": 2,
+    "programs": [
+     1,
+     2
+    ]
+   },
+   {
+    "id": "guard.g1_fail",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "guard.g2_fail",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "guard.g3_fail",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "guard.g4_fail",
+    "fired": 1,
+    "programs": [
+     5
+    ]
+   },
+   {
+    "id": "guard.t1_fail",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "guard.t2_fail",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "guard.u",
+    "fired": 1,
+    "programs": [
+     11
+    ]
+   },
+   {
+    "id": "guard.rho",
+    "fired": 1,
+    "programs": [
+     11
+    ]
+   },
+   {
+    "id": "calu.hcadd",
+    "fired": 3,
+    "programs": [
+     2,
+     11
+    ]
+   },
+   {
+    "id": "calu.letter",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "calu.hnrm2",
+    "fired": 1,
+    "programs": [
+     2
+    ]
+   },
+   {
+    "id": "calu.hdist",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "calu.cget",
+    "fired": 9,
+    "programs": [
+     9,
+     10
+    ]
+   },
+   {
+    "id": "calu.cget_outside",
+    "fired": 1,
+    "programs": [
+     9
+    ]
+   },
+   {
+    "id": "calu.cset",
+    "fired": 2,
+    "programs": [
+     10
+    ]
+   },
+   {
+    "id": "calu.cset_outside",
+    "fired": 1,
+    "programs": [
+     10
+    ]
+   },
+   {
+    "id": "calu.cmod4",
+    "fired": 1,
+    "programs": [
+     11
+    ]
+   },
+   {
+    "id": "calu.default",
+    "fired": 0,
+    "programs": []
+   },
+   {
+    "id": "hisab.word0",
+    "fired": 1,
+    "programs": [
+     7
+    ]
+   },
+   {
+    "id": "hisab.word1",
+    "fired": 1,
+    "programs": [
+     7
+    ]
+   },
+   {
+    "id": "hisab.word2",
+    "fired": 1,
+    "programs": [
+     7
+    ]
+   },
+   {
+    "id": "hisab.word_none",
+    "fired": 1,
+    "programs": [
+     7
+    ]
+   },
+   {
+    "id": "hisab.crc",
+    "fired": 1,
+    "programs": [
+     7
+    ]
+   },
+   {
+    "id": "mul.mul",
+    "fired": 0,
+    "programs": []
+   }
+  ],
+  "not_covered": [
+   "print.print_accept",
+   "print.emits_accept",
+   "print.conv_zero",
+   "print.conv_digit",
+   "print.conv_done",
+   "print.send",
+   "print.send_hold",
+   "print.wait_newline",
+   "print.wait_next",
+   "print.wait_hold",
+   "print.newline",
+   "print.newline_hold",
+   "print.s_addr",
+   "print.s_char_end",
+   "print.s_char_send",
+   "print.s_char_hold",
+   "print.s_wait_next",
+   "print.s_wait_hold",
+   "print.default",
+   "trap.eret",
+   "trap.eret_mode_bypass",
+   "trap.eret_epc_bypass",
+   "trap.fire_timer",
+   "trap.fire_uart_rx",
+   "trap.fire_illegal",
+   "trap.fire_priv",
+   "trap.fire_mem",
+   "trap.fire_syscall",
+   "trap.pending_masked",
+   "trap.held_active",
+   "trap.held_pc_invalid",
+   "trap.write_vector",
+   "trap.write_epc",
+   "trap.write_enable",
+   "trap.write_mode",
+   "trap.write_readonly",
+   "mmio.rx_hold",
+   "mmio.rx_overrun_set",
+   "mmio.rx_read_clear",
+   "mmio.timer_compare_write",
+   "mmio.timer_clear",
+   "mmio.timer_expire",
+   "mmio.mem_base_write",
+   "mmio.mem_limit_write",
+   "mmio.imem_addr_write",
+   "mmio.imem_data_advance",
+   "mmio.sd_cmd_write",
+   "mmio.sd_sector_write",
+   "mmio.sd_control_write",
+   "mmio.sd_data_advance",
+   "mmio.read_counter",
+   "mmio.read_mem_base",
+   "mmio.read_other",
+   "mmio.read_sd_status",
+   "mmio.read_sd_sector",
+   "mmio.read_sd_control",
+   "mmio.read_sd_other",
+   "mmio.u_rx.idle_falling_edge",
+   "mmio.u_rx.start_count",
+   "mmio.u_rx.start_confirmed",
+   "mmio.u_rx.start_glitch",
+   "mmio.u_rx.data_count",
+   "mmio.u_rx.data_sample",
+   "mmio.u_rx.data_last",
+   "mmio.u_rx.stop_count",
+   "mmio.u_rx.stop_deliver",
+   "sdio.soft_reset",
+   "sdio.clk_toggle",
+   "sdio.clk_count",
+   "sdio.port_fsm",
+   "sdio.buf_write",
+   "sdio.idle_init",
+   "sdio.idle_not_init",
+   "sdio.idle_transfer",
+   "sdio.s_powerup",
+   "sdio.s_cmd_setup",
+   "sdio.s_cmd_send",
+   "sdio.s_cmd_gap",
+   "sdio.s_resp_wait",
+   "sdio.s_resp_recv",
+   "sdio.s_resp_done",
+   "sdio.s_dat_wait",
+   "sdio.s_dat_recv",
+   "sdio.s_dat_crc",
+   "sdio.s_wr_gap",
+   "sdio.s_wr_start",
+   "sdio.s_wr_data",
+   "sdio.s_wr_crc",
+   "sdio.s_wr_end",
+   "sdio.s_wr_ack",
+   "sdio.s_wr_busy",
+   "sdio.s_finish",
+   "sdio.s_fail",
+   "sdio.default",
+   "uart_tx.idle_start",
+   "uart_tx.start_count",
+   "uart_tx.start_end",
+   "uart_tx.data_count",
+   "uart_tx.data_next",
+   "uart_tx.data_last",
+   "uart_tx.stop_count",
+   "uart_tx.stop_end",
+   "uart_tx.default",
+   "dataram.read_first",
+   "dataram.initial_zero",
+   "rom.invalid",
+   "guard.g1_fail",
+   "guard.g2_fail",
+   "guard.g3_fail",
+   "guard.t1_fail",
+   "guard.t2_fail",
+   "calu.letter",
+   "calu.hdist",
+   "calu.default",
+   "mul.mul"
+  ],
+  "bench_said": "Total: 15 PASS, 0 FAIL",
+  "bench_pass": true
  }
 }

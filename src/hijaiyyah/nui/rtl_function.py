@@ -67,6 +67,13 @@ owner chose the form: one synchronous transition, pipeline_step, over the
 four stage bundles, with rst_n and imem_data as inputs and every other
 subsystem's result taken from the trace. Only the audit's covered
 transitions have behaviour; anything else stops with NotCovered.
+
+The HCPU as a system gets no function yet either. The owner named
+tb_hcpu_top.v its integration oracle and ordered the same audit first:
+hcpu_audit runs the pipeline audit's bench with a probe over every other
+subsystem, reads the state boundary from the RTL's own non-blocking
+assignments, and maps which of each subsystem's transitions the bench runs --
+a subsystem that already has a function by that function's own rule names.
 """
 from __future__ import annotations
 
@@ -1191,12 +1198,19 @@ def pipeline_trace(a: dict[str, Any], root: Path | None = None) -> dict[str, Any
     """tb_hcpu_top.v and the RTL, compiled unchanged, with a probe that prints
     each rising edge twice: in its active region, what the edge takes, and at
     the end of its timestep, what it left."""
-    root = root or ROOT
+    return _bench_trace(a, list(PIPE_SIGNALS), [s.rsplit(".", 1)[-1] for s in PIPE_SIGNALS],
+                        root or ROOT)
+
+
+def _bench_trace(a: dict[str, Any], paths: list[str], keys: list[str],
+                 root: Path) -> dict[str, Any]:
+    """The run behind both audits: the bench and the RTL unchanged, and a probe
+    printing the given signals, below the DUT, at each rising edge."""
     if shutil.which("iverilog") is None or shutil.which("vvp") is None:
         raise RuntimeError("Icarus Verilog is required to run the bench")
     base = f"{a['top']}.{a['instance']}"
-    names = ", ".join(f"{base}.{s}" for s in PIPE_SIGNALS)
-    fmt = " ".join(["%0d"] * len(PIPE_SIGNALS))
+    names = ", ".join(f"{base}.{s}" for s in paths)
+    fmt = " ".join(["%0d"] * len(paths))
     probe = (f"module rtl_function_probe;\n  always @(posedge {a['top']}.{a['clock']}) begin\n"
              f"    $display(\"A {fmt}\", {names});\n    $strobe(\"S {fmt}\", {names});\n"
              "  end\nendmodule\n")
@@ -1214,7 +1228,6 @@ def pipeline_trace(a: dict[str, Any], root: Path | None = None) -> dict[str, Any
                              timeout=600, cwd=work)
     finally:
         shutil.rmtree(work, ignore_errors=True)
-    keys = [s.rsplit(".", 1)[-1] for s in PIPE_SIGNALS]
     active: list[dict[str, Any]] = []
     after: list[dict[str, Any]] = []
     for ln in ran.stdout.splitlines():
@@ -1230,6 +1243,31 @@ def pipeline_trace(a: dict[str, Any], root: Path | None = None) -> dict[str, Any
     active = active[:len(after)]
     return {"active": active, "after": after,
             "said": [ln for ln in ran.stdout.splitlines() if ln[:2] not in ("A ", "S ")]}
+
+
+def _edges(after: list[dict[str, Any]], pc: str, valid: str,
+           programs: int) -> list[tuple[int, int, bool, str | None]]:
+    """Each edge t >= 1 of a tb_hcpu_top.v trace: the program it belongs to,
+    whether it resets, and, at a release of reset, whether the design stepped
+    or was still held -- judged, as the sampling rule says, by the fetch PC
+    still 0 with fetch_valid low. A reset belongs to the program it comes
+    before."""
+    out: list[tuple[int, int, bool, str | None]] = []
+    program, was_reset = -1, True
+    for t in range(1, len(after)):
+        left = after[t]
+        resetting = left["rst_n"] != 1 or (was_reset and left[pc] == 0 and left[valid] != 1)
+        released = (("held_in_reset" if resetting else "stepped")
+                    if was_reset and left["rst_n"] == 1 else None)
+        if resetting:
+            out.append((t, min(program + 1, programs - 1), True, released))
+            was_reset = True
+            continue
+        if was_reset:
+            program += 1
+        was_reset = False
+        out.append((t, program, False, released))
+    return out
 
 
 def _pipe_rules(p: dict[str, int], uses: tuple[set[str], set[str]], ops: dict[int, str],
@@ -1363,7 +1401,7 @@ def pipeline_audit(a: dict[str, Any], trace: dict[str, Any], root: Path | None =
     fired = {t["id"]: [0] * len(a["programs"]) for t in a["transitions"]}
     keys = [k for k in after[0] if k != "rst_n"]
     timing: dict[str, int] = {}
-    compared, program = 0, -1
+    compared = 0
     release = {"stepped": 0, "held_in_reset": 0}
     stages: dict[str, dict[str, Any]] = {s: {} for s in ("IF", "ID/EX", "EX/MEM", "MEM/WB")}
     counts = [dict.fromkeys(("fetched", "decoded", "executed", "retired", "edges"), 0)
@@ -1371,23 +1409,16 @@ def pipeline_audit(a: dict[str, Any], trace: dict[str, Any], root: Path | None =
     identity = {"id_checked": 0, "id_mismatches": 0, "ex_checked": 0, "ex_mismatches": 0}
     idex: Any = None
     exmem: Any = None
-    was_reset = True
-    for t in range(1, len(after)):
+    for t, program, resetting, released in _edges(after, "pc", "fetch_valid",
+                                                  len(a["programs"])):
         taken, left = after[t - 1], after[t]
-        resetting = left["rst_n"] != 1 or (was_reset and left["pc"] == 0
-                                           and left["fetch_valid"] != 1)
-        if was_reset and left["rst_n"] == 1:
-            release["held_in_reset" if resetting else "stepped"] += 1
+        if released:
+            release[released] += 1
         if resetting:
-            # a reset belongs to the program it comes before
             for rid in ("fetch_reset", "decode_reset"):
-                fired[rid][min(program + 1, len(a["programs"]) - 1)] += 1
+                fired[rid][program] += 1
             idex = exmem = None
-            was_reset = True
             continue
-        if was_reset:
-            program += 1
-        was_reset = False
         counts[program]["edges"] += 1
         compared += 1
         for k in keys:
@@ -2005,6 +2036,509 @@ DRIVERS["pipeline"] = {"runs": pipeline_runs, "compare": pipeline_compare,
                        "trace_sha": _pipe_trace_sha}
 
 
+# -- HCPU, audited before any model of it -----------------------------------------------------
+#
+# The owner's order of 28 September 2026, when the pipeline was accepted: the
+# next model is the HCPU as a system, with tb_hcpu_top.v as its integration
+# oracle -- but its coverage is audited first, on the pipeline audit's
+# principles, and no HCPU model is written before its oracle map and state
+# boundary are measured. Everything below reads the RTL's own signals under
+# that bench; nothing predicts them. The pipeline's own transitions are the
+# pipeline audit's, not measured a second time.
+
+HCPU_SIGNALS = (
+    "u_fetch.pc", "u_fetch.fetch_valid", "ex_is_print", "ex_is_emits", "ex_stall",
+    "uart_busy", "ram_rdata", "trap_is_eret_w", "trap_reg_we_w", "trap_reg_sel_w",
+    "u_trap.fire", "u_trap.armed", "u_trap.pending", "u_trap.which", "u_trap.pc_valid",
+    "dram_re", "dram_we", "dram_addr", "u_mmio.u_sdio.start", "u_mmio.u_sdio.op",
+    "u_uart.tx_start", "u_dataram.re", "u_dataram.we", "u_dataram.addr", "id_opcode", "id_s2",
+    "id_imm", "rom_addr", "rom_valid", "calu_op", "guard_pass", "g1", "g2", "g3", "g4", "t1",
+    "t2")
+
+
+def _nb_targets(path: Path) -> dict[str, int]:
+    """Every register a file assigns with a non-blocking <= -- its clocked
+    state -- name -> first line; an array written by element reads name[].
+    Comments are dropped first, so a <= in prose or a comparison is not one."""
+    text = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"),
+                  path.read_text(encoding="utf-8"), flags=re.S)
+    head = r"(?:^|[;)]|\bbegin\b|\belse\b)\s*"
+    one = re.compile(head + r"(\w+)((?:\s*\[[^\]]*\])*)\s*<=(?!=)")
+    many = re.compile(head + r"\{([^}]*)\}\s*<=(?!=)")
+    out: dict[str, int] = {}
+    for n, ln in enumerate(text.splitlines(), 1):
+        ln = ln.split("//", 1)[0]
+        for m in one.finditer(ln):
+            out.setdefault(m.group(1) + ("[]" if m.group(2).strip() else ""), n)
+        for m in many.finditer(ln):
+            for name in re.findall(r"\w+", m.group(1)):
+                out.setdefault(name, n)
+    return out
+
+
+def _hcpu_state(h: dict[str, Any]) -> dict[str, list[str]]:
+    """Each probed subsystem's scalar registers, as probe paths below the DUT.
+    The pipeline's are the pipeline audit's, and arrays are seen through the
+    rules that write them."""
+    out: dict[str, list[str]] = {}
+    for s in h["subsystems"]:
+        if s.get("measured_by"):
+            continue
+        out[s["id"]] = [(f"{h['instances'][f]}.{n}" if h["instances"][f] else n)
+                        for f, names in s["files"].items() for n in names
+                        if not n.endswith("[]")]
+    return out
+
+
+def _hcpu_paths(h: dict[str, Any]) -> list[str]:
+    paths = ["rst_n", *h["inputs"], *h["outputs"],
+             *(p for ps in _hcpu_state(h).values() for p in ps), *HCPU_SIGNALS]
+    return list(dict.fromkeys(paths))
+
+
+def hcpu_trace(h: dict[str, Any], a: dict[str, Any], root: Path | None = None) -> dict[str, Any]:
+    """The pipeline audit's run -- the same bench, top, compile list and
+    programs -- with a probe over every subsystem's registers, the top's
+    ports, and the signals the transitions read."""
+    paths = _hcpu_paths(h)
+    return _bench_trace(a, paths, paths, root or ROOT)
+
+
+def _sdio_states(root: Path) -> dict[str, int]:
+    """hcpu_sdio.v's own state names and codes (lines 230-249)."""
+    text = (root / "rtl" / "hcpu_sdio.v").read_text(encoding="utf-8")
+    return {n: int(v) for n, v in re.findall(r"\b(S_\w+)\s*=\s*5'd(\d+)", text)}
+
+
+def _hcpu_rules(p: dict[str, int], ops: dict[int, str], tx: dict[str, int], rx: dict[str, int],
+                sdio: dict[str, int]) -> dict[str, Callable[[dict[str, Any]], bool]]:
+    """Each transition's condition over what the edge takes -- the RTL's own
+    expressions, in the lines the spec and each function's spec cite. A rule
+    of a block with a reset runs only on a live edge; the RAM and the card
+    buffer have none, and run on every edge."""
+    Rule = Callable[[dict[str, Any]], bool]
+
+    def live(f: Rule) -> Rule:
+        return lambda r: not r["_reset"] and bool(f(r))
+
+    def at_reset(r: dict[str, Any]) -> bool:
+        return bool(r["_reset"])
+
+    def op(r: dict[str, Any]) -> str:
+        return ops.get(r["id_opcode"], "") if isinstance(r["id_opcode"], int) else ""
+
+    def runs(name: str) -> Rule:
+        return lambda r: r["ex_stall"] != 1 and op(r) == name
+
+    def letter(r: dict[str, Any]) -> bool:
+        v = r["id_opcode"]
+        return (r["ex_stall"] != 1 and isinstance(v, int)
+                and p["LETTER_OP_FIRST"] <= v <= p["LETTER_OP_LAST"])
+
+    def rom(r: dict[str, Any]) -> bool:
+        return letter(r) or runs("HLOAD")(r)
+
+    # -- the print state machine, hcpu_top.v lines 286-390 (P_IDLE .. P_S_WAIT = 0 .. 7)
+    def ps(r: dict[str, Any]) -> Any:
+        return r["print_state"]
+
+    def take_print(r: dict[str, Any]) -> bool:
+        return bool(r["ex_is_print"] == 1 and r["ex_stall"] != 1)
+
+    def take_emits(r: dict[str, Any]) -> bool:
+        return not take_print(r) and r["ex_is_emits"] == 1 and r["ex_stall"] != 1
+
+    def free(r: dict[str, Any]) -> bool:
+        return bool(r["uart_busy"] != 1 and r["uart_start"] != 1)
+
+    def zero(r: dict[str, Any]) -> bool:
+        return bool(r["print_val"] == 0 and r["digit_cnt"] == 0)
+
+    rules: dict[str, Rule] = {
+        "print.reset": at_reset,
+        "print.pulse_clear": live(lambda r: True),
+        "print.idle": live(lambda r: ps(r) == 0 and not take_print(r) and not take_emits(r)),
+        "print.print_accept": live(lambda r: ps(r) == 0 and take_print(r)),
+        "print.emits_accept": live(lambda r: ps(r) == 0 and take_emits(r)),
+        "print.conv_zero": live(lambda r: ps(r) == 1 and zero(r)),
+        "print.conv_digit": live(lambda r: ps(r) == 1 and not zero(r) and r["print_val"] != 0),
+        "print.conv_done": live(lambda r: ps(r) == 1 and not zero(r) and r["print_val"] == 0),
+        "print.send": live(lambda r: ps(r) == 2 and r["uart_busy"] != 1),
+        "print.send_hold": live(lambda r: ps(r) == 2 and r["uart_busy"] == 1),
+        "print.wait_newline": live(lambda r: ps(r) == 3 and free(r) and r["digit_idx"] == 0),
+        "print.wait_next": live(lambda r: ps(r) == 3 and free(r) and r["digit_idx"] != 0),
+        "print.wait_hold": live(lambda r: ps(r) == 3 and not free(r)),
+        "print.newline": live(lambda r: ps(r) == 4 and r["uart_busy"] != 1),
+        "print.newline_hold": live(lambda r: ps(r) == 4 and r["uart_busy"] == 1),
+        "print.s_addr": live(lambda r: ps(r) == 5),
+        "print.s_char_end": live(lambda r: ps(r) == 6 and r["ram_rdata"] == 0),
+        "print.s_char_send": live(lambda r: ps(r) == 6 and r["ram_rdata"] != 0
+                                  and r["uart_busy"] != 1),
+        "print.s_char_hold": live(lambda r: ps(r) == 6 and r["ram_rdata"] != 0
+                                  and r["uart_busy"] == 1),
+        "print.s_wait_next": live(lambda r: ps(r) == 7 and free(r)),
+        "print.s_wait_hold": live(lambda r: ps(r) == 7 and not free(r)),
+        "print.default": live(lambda r: ps(r) not in range(8)),
+    }
+
+    # -- the trap unit, hcpu_trap.v
+    def eret(r: dict[str, Any]) -> bool:
+        return bool(r["trap_is_eret_w"] == 1)
+
+    def fire(cause: int) -> Rule:
+        return lambda r: not eret(r) and r["u_trap.fire"] == 1 and r["u_trap.which"] == cause
+
+    def writes(*sels: int) -> Rule:
+        return lambda r: r["trap_reg_we_w"] == 1 and r["trap_reg_sel_w"] in sels
+
+    rules |= {
+        "trap.reset": at_reset,
+        "trap.idle": live(lambda r: not eret(r) and r["u_trap.fire"] != 1),
+        "trap.eret": live(eret),
+        "trap.eret_mode_bypass": live(lambda r: eret(r) and writes(p["REG_TRAP_MODE"])(r)),
+        "trap.eret_epc_bypass": live(lambda r: eret(r) and writes(p["REG_TRAP_EPC"])(r)),
+        **{f"trap.fire_{c}": live(fire(p[f"TRAP_{c.upper()}"]))
+           for c in ("timer", "uart_rx", "illegal", "priv", "mem", "syscall")},
+        "trap.pending_masked": live(lambda r: r["u_trap.pending"] != 0
+                                    and r["u_trap.armed"] == 0),
+        "trap.held_active": live(lambda r: r["u_trap.armed"] != 0
+                                 and r["u_trap.trap_active"] == 1),
+        "trap.held_pc_invalid": live(lambda r: r["u_trap.armed"] != 0
+                                     and r["u_trap.trap_active"] != 1
+                                     and r["u_trap.pc_valid"] != 1),
+        "trap.write_vector": live(writes(p["REG_TRAP_VECTOR"])),
+        "trap.write_epc": live(writes(p["REG_TRAP_EPC"])),
+        "trap.write_enable": live(writes(p["REG_TRAP_ENABLE"])),
+        "trap.write_mode": live(writes(p["REG_TRAP_MODE"])),
+        "trap.write_readonly": live(writes(p["REG_TRAP_CAUSE"], p["REG_TRAP_PENDING"])),
+    }
+
+    # -- the card controller, hcpu_sdio.v: its reset is rst_n & ~sd_soft_rst
+    def sd(k: str) -> str:
+        return f"u_mmio.u_sdio.{k}"
+
+    def card(f: Rule) -> Rule:
+        return live(lambda r: r["u_mmio.sd_soft_rst"] != 1 and f(r))
+
+    def arm(v: int) -> Rule:
+        return lambda r: bool(r[sd("state")] == v)
+
+    def idle(r: dict[str, Any]) -> bool:
+        return bool(r[sd("state")] == sdio["S_IDLE"] and r[sd("start")] == 1)
+
+    rules |= {
+        "sdio.reset": at_reset,
+        "sdio.soft_reset": live(lambda r: r["u_mmio.sd_soft_rst"] == 1),
+        "sdio.clk_off": card(lambda r: r[sd("clk_en")] != 1),
+        "sdio.clk_toggle": card(lambda r: r[sd("clk_en")] == 1 and r[sd("div_cnt")] == 0),
+        "sdio.clk_count": card(lambda r: r[sd("clk_en")] == 1 and r[sd("div_cnt")] != 0),
+        "sdio.port_host": card(lambda r: r[sd("busy")] != 1),
+        "sdio.port_fsm": card(lambda r: r[sd("busy")] == 1),
+        "sdio.buf_write": lambda r: r[sd("wr_en")] == 1,
+        "sdio.buf_read": lambda r: True,
+        "sdio.idle_wait": card(lambda r: r[sd("state")] == sdio["S_IDLE"]
+                               and r[sd("start")] != 1),
+        "sdio.idle_init": card(lambda r: idle(r) and r[sd("op")] == 1),
+        "sdio.idle_not_init": card(lambda r: idle(r) and r[sd("op")] != 1
+                                   and r[sd("card_ready")] != 1),
+        "sdio.idle_transfer": card(lambda r: idle(r) and r[sd("op")] != 1
+                                   and r[sd("card_ready")] == 1),
+        **{f"sdio.{n.lower()}": card(arm(v)) for n, v in sdio.items() if n != "S_IDLE"},
+        "sdio.default": card(lambda r: r[sd("state")] not in sdio.values()),
+    }
+
+    # -- the memory map, its receiver and its timer: hcpu_mmio's own rule names
+    def bus(r: dict[str, Any]) -> tuple[bool, bool, bool, bool, int]:
+        addr = r["dram_addr"]
+        if not isinstance(addr, int):
+            # the read path's case would take no arm of an x select; that is
+            # not decided here -- it has not happened, and is refused if it does
+            raise ValueError(f"the bus address is {addr} on a live edge")
+        periph = addr >= p["PERIPH_WINDOW"]
+        return (r["dram_re"] == 1, r["dram_we"] == 1, periph and bool(addr >> 4 & 1),
+                periph and not addr >> 4 & 1, addr & 0xF)
+
+    def write(block: int, sel: int) -> Rule:
+        return live(lambda r: bool(bus(r)[1] and bus(r)[2 + block] and bus(r)[4] == sel))
+
+    def read_rule(r: dict[str, Any]) -> str:
+        _, _, _, card_block, sel = bus(r)
+        if card_block:
+            return {p["SD_STATUS"]: "read_sd_status", p["SD_SECTOR"]: "read_sd_sector",
+                    p["SD_CONTROL"]: "read_sd_control"}.get(sel, "read_sd_other")
+        trap = [p[f"REG_TRAP_{n}"] for n in ("VECTOR", "EPC", "CAUSE", "ENABLE", "PENDING",
+                                            "MODE")]
+        if sel in trap:
+            return "read_trap"
+        return {p["REG_RX_DATA"]: "read_rx_data", p["REG_RX_STATUS"]: "read_rx_status",
+                p["REG_TX_STATUS"]: "read_tx_status", p["REG_IMEM_ADDR"]: "read_imem_addr",
+                p["REG_COUNTER"]: "read_counter", p["REG_COMPARE"]: "read_compare",
+                p["REG_TIMER_ST"]: "read_timer_status", p["REG_MEM_BASE"]: "read_mem_base",
+                p["REG_MEM_LIMIT"]: "read_mem_limit"}.get(sel, "read_other")
+
+    def reads(name: str) -> Rule:
+        return live(lambda r: read_rule(r) == name)
+
+    def rx_valid(r: dict[str, Any]) -> bool:
+        return bool(r["u_mmio.u_rx.rx_valid"] == 1)
+
+    def timer_written(r: dict[str, Any]) -> bool:
+        _, we_, core, _, sel = bus(r)
+        return we_ and core and sel in (p["REG_COMPARE"], p["REG_TIMER_ST"])
+
+    reads_ = ("read_rx_data", "read_rx_status", "read_tx_status", "read_imem_addr",
+              "read_counter", "read_compare", "read_timer_status", "read_trap", "read_mem_base",
+              "read_mem_limit", "read_other", "read_sd_status", "read_sd_sector",
+              "read_sd_control", "read_sd_other")
+    rules |= {
+        "mmio.reset": at_reset,
+        "mmio.decode": live(lambda r: True),
+        "mmio.rx_hold": live(rx_valid),
+        "mmio.rx_overrun_set": live(lambda r: rx_valid(r) and r["u_mmio.rx_ready"] == 1),
+        "mmio.rx_read_clear": live(lambda r: not rx_valid(r) and bus(r)[0] and bus(r)[2]
+                                   and bus(r)[4] == p["REG_RX_DATA"]),
+        "mmio.timer_count": live(lambda r: True),
+        "mmio.timer_compare_write": write(0, p["REG_COMPARE"]),
+        "mmio.timer_clear": write(0, p["REG_TIMER_ST"]),
+        "mmio.timer_expire": live(lambda r: not timer_written(r)
+                                  and r["u_mmio.u_timer.counter"]
+                                  == r["u_mmio.u_timer.compare"]),
+        "mmio.mem_base_write": write(0, p["REG_MEM_BASE"]),
+        "mmio.mem_limit_write": write(0, p["REG_MEM_LIMIT"]),
+        "mmio.imem_addr_write": write(0, p["REG_IMEM_ADDR"]),
+        "mmio.imem_data_advance": write(0, p["REG_IMEM_DATA"]),
+        "mmio.sd_cmd_write": write(1, p["SD_CMD"]),
+        "mmio.sd_sector_write": write(1, p["SD_SECTOR"]),
+        "mmio.sd_control_write": write(1, p["SD_CONTROL"]),
+        "mmio.sd_data_advance": live(lambda r: bus(r)[3] and bus(r)[4] == p["SD_DATA"]
+                                     and (bus(r)[0] or bus(r)[1])),
+        **{f"mmio.{n}": reads(n) for n in reads_},
+    }
+
+    # -- its receiver (hcpu_uart_rx.v), run by hcpu_mmio's function as u_rx
+    def recv(k: str) -> Callable[[dict[str, Any]], Any]:
+        return lambda r: r[f"u_mmio.u_rx.{k}"]
+
+    half, div = rx["HALF"] - 1, rx["DIVISOR"] - 1
+
+    def in_state(s: int, f: Rule) -> Rule:
+        return live(lambda r: recv("state")(r) == s and f(r))
+
+    rules |= {
+        "mmio.u_rx.sync": live(lambda r: True),
+        "mmio.u_rx.outputs_drop": live(lambda r: True),
+        "mmio.u_rx.idle_wait": in_state(IDLE, lambda r: recv("rx_sync")(r) == 1),
+        "mmio.u_rx.idle_falling_edge": in_state(IDLE, lambda r: recv("rx_sync")(r) == 0),
+        "mmio.u_rx.start_count": in_state(START, lambda r: recv("count")(r) != half),
+        "mmio.u_rx.start_confirmed": in_state(START, lambda r: recv("count")(r) == half
+                                              and recv("rx_sync")(r) == 0),
+        "mmio.u_rx.start_glitch": in_state(START, lambda r: recv("count")(r) == half
+                                           and recv("rx_sync")(r) == 1),
+        "mmio.u_rx.data_count": in_state(DATA, lambda r: recv("count")(r) != div),
+        "mmio.u_rx.data_sample": in_state(DATA, lambda r: recv("count")(r) == div
+                                          and recv("index")(r) != 7),
+        "mmio.u_rx.data_last": in_state(DATA, lambda r: recv("count")(r) == div
+                                        and recv("index")(r) == 7),
+        "mmio.u_rx.stop_count": in_state(STOP, lambda r: recv("count")(r) != div),
+        "mmio.u_rx.stop_deliver": in_state(STOP, lambda r: recv("count")(r) == div),
+    }
+
+    # -- the transmitter, hcpu_uart_tx.v
+    last = tx["CLKS_PER_BIT"] - 1
+
+    def tx_in(s: int, f: Rule) -> Rule:
+        return live(lambda r: r["u_uart.state"] == s and f(r))
+
+    def counted(r: dict[str, Any]) -> bool:
+        return bool(r["u_uart.clk_cnt"] == last)
+
+    rules |= {
+        "uart_tx.reset": at_reset,
+        "uart_tx.idle_wait": tx_in(IDLE, lambda r: r["u_uart.tx_start"] != 1),
+        "uart_tx.idle_start": tx_in(IDLE, lambda r: r["u_uart.tx_start"] == 1),
+        "uart_tx.start_count": tx_in(START, lambda r: not counted(r)),
+        "uart_tx.start_end": tx_in(START, counted),
+        "uart_tx.data_count": tx_in(DATA, lambda r: not counted(r)),
+        "uart_tx.data_next": tx_in(DATA, lambda r: counted(r) and r["u_uart.bit_idx"] != 7),
+        "uart_tx.data_last": tx_in(DATA, lambda r: counted(r) and r["u_uart.bit_idx"] == 7),
+        "uart_tx.stop_count": tx_in(STOP, lambda r: not counted(r)),
+        "uart_tx.stop_end": tx_in(STOP, counted),
+        "uart_tx.default": live(lambda r: r["u_uart.state"] not in range(4)),
+    }
+
+    # -- the data RAM, at its port: no reset, so every edge
+    def ram(k: str) -> Rule:
+        return lambda r: r[f"u_dataram.{k}"] == 1
+
+    rules |= {
+        "dataram.write": ram("we"),
+        "dataram.read": lambda r: ram("re")(r) and not ram("we")(r),
+        "dataram.hold": lambda r: not ram("re")(r),
+        "dataram.read_first": lambda r: ram("re")(r) and ram("we")(r),
+        "dataram.initial_zero": lambda r: ram("re")(r) and bool(r["_unwritten"]),
+    }
+
+    def fails(g: str) -> Rule:
+        return lambda r: bool(runs("HGRD")(r) and r[g] == 0)
+
+    # -- the combinational units, at the edge that takes their result: the
+    # consuming instruction in ID/EX with EX not stalled
+    rules |= {
+        "rom.letter_entry": live(lambda r: rom(r) and r["rom_addr"] in range(1, 29)),
+        "rom.negative_entry": live(lambda r: rom(r) and r["rom_addr"] in range(31, 37)),
+        "rom.invalid": live(lambda r: rom(r) and r["rom_valid"] != 1),
+        "guard.pass": live(lambda r: runs("HGRD")(r) and r["guard_pass"] == 1),
+        **{f"guard.{g}_fail": live(fails(g)) for g in ("g1", "g2", "g3", "g4", "t1", "t2")},
+        "guard.u": live(runs("CU")),
+        "guard.rho": live(runs("CRHO")),
+        "calu.hcadd": live(runs("HCADD")),
+        "calu.letter": live(letter),
+        "calu.hnrm2": live(runs("HNRM2")),
+        "calu.hdist": live(runs("HDIST")),
+        "calu.cget": live(lambda r: runs("CGET")(r) and r["id_imm"] <= 17),
+        "calu.cget_outside": live(lambda r: runs("CGET")(r) and r["id_imm"] > 17),
+        "calu.cset": live(lambda r: runs("CSET")(r) and r["id_imm"] <= 17),
+        "calu.cset_outside": live(lambda r: runs("CSET")(r) and r["id_imm"] > 17),
+        "calu.cmod4": live(runs("CMOD4")),
+        "calu.default": live(lambda r: r["calu_op"] in (6, 7)),
+        "hisab.word0": live(lambda r: runs("HPACK")(r) and r["id_s2"] == 0),
+        "hisab.word1": live(lambda r: runs("HPACK")(r) and r["id_s2"] == 1),
+        "hisab.word2": live(lambda r: runs("HPACK")(r) and r["id_s2"] == 2),
+        "hisab.word_none": live(lambda r: runs("HPACK")(r) and r["id_s2"] > 2),
+        "hisab.crc": live(runs("HCRC")),
+        "mul.mul": live(runs("MUL")),
+    }
+    return rules
+
+
+def hcpu_transitions(h: dict[str, Any]) -> list[dict[str, Any]]:
+    """The audit's transitions in subsystem order: a subsystem with a function
+    already held to its own oracle is measured by that function's own rule
+    names -- read from its spec, not copied; the others by the spec's list."""
+    mods = {m["name"]: m for m in load()["modules"]}
+    out: list[dict[str, Any]] = []
+    for s in h["subsystems"]:
+        if s.get("measured_by") or s.get("companion"):
+            continue
+        if s.get("function") in mods:
+            out += [{"id": f"{s['id']}.{r['id']}", "subsystem": s["id"], "rule": r["id"],
+                     "function": s["function"]} for r in rules(mods[s["function"]])]
+        else:
+            out += [dict(t) for t in h["transitions"] if t["subsystem"] == s["id"]]
+    return out
+
+
+def hcpu_declared(h: dict[str, Any]) -> dict[str, str]:
+    """Every transition the spec names not covered, with its reason: a
+    subsystem whose function answers to this same bench takes its function's
+    own reasons -- one place -- and the rest are the audit's."""
+    mods = {m["name"]: m for m in load()["modules"]}
+    out: dict[str, str] = {}
+    for t in hcpu_transitions(h):
+        sub = next(s for s in h["subsystems"] if s["id"] == t["subsystem"])
+        if sub.get("same_oracle"):
+            why = mods[sub["function"]].get("not_covered", {}).get(t["rule"])
+        else:
+            why = h["not_covered"].get(t["id"])
+        if why is not None:
+            out[t["id"]] = why
+    return out
+
+
+def hcpu_audit(h: dict[str, Any], a: dict[str, Any], trace: dict[str, Any],
+               root: Path | None = None,
+               rules_: dict[str, Callable[[dict[str, Any]], bool]] | None = None
+               ) -> dict[str, Any]:
+    """The HCPU's coverage map under tb_hcpu_top.v: which of the top's input
+    ports move; what each edge took against what the edge before left; the
+    state each subsystem holds -- read from the RTL's own non-blocking
+    assignments, against the spec's boundary -- and which of it moved; and,
+    per program, which of every subsystem's transitions the RTL ran."""
+    root = root or ROOT
+    p = _pkg(root)
+    ops = {v: k[3:] for k, v in p.items() if k.startswith("OP_")}
+    mods = {m["name"]: m for m in load()["modules"]}
+    tx = _parameters(mods["hcpu_uart_tx"], root)
+    rx = uart_rx_parameters(tx["CLK_HZ"], tx["BAUD"])
+    rules_ = rules_ or _hcpu_rules(p, ops, tx, rx, _sdio_states(root))
+    transitions = hcpu_transitions(h)
+    active, after = trace["active"], trace["after"]
+    fired = {t["id"]: [0] * len(a["programs"]) for t in transitions}
+    keys = [k for k in after[0] if k != "rst_n"]
+    timing: dict[str, int] = {}
+    compared = 0
+    release = {"stepped": 0, "held_in_reset": 0}
+    moved: dict[str, int] = {}
+    seen: dict[str, set[str]] = {k: set() for k in after[0]}
+    written: set[int] = set()
+    for t, program, resetting, released in _edges(after, "u_fetch.pc", "u_fetch.fetch_valid",
+                                                  len(a["programs"])):
+        taken, left = after[t - 1], after[t]
+        if released:
+            release[released] += 1
+        addr = taken["u_dataram.addr"]
+        r = {**taken, "_reset": resetting, "_unwritten": addr not in written}
+        for rid in fired:
+            if rules_[rid](r):
+                fired[rid][program] += 1
+        if taken["u_dataram.we"] == 1:
+            written.add(addr)
+        if resetting:
+            continue
+        compared += 1
+        for k in keys:
+            if active[t][k] != taken[k]:
+                timing[k] = timing.get(k, 0) + 1
+            if left[k] != taken[k]:
+                moved[k] = moved.get(k, 0) + 1
+        for k in after[0]:
+            seen[k].add(str(taken[k]))
+            seen[k].add(str(left[k]))
+
+    def port(k: str) -> dict[str, Any]:
+        # a port is read over every row, resets included: rst_n moves only there
+        values = {str(r[k]) for r in after}
+        return {"changes": sum(1 for x, y in itertools.pairwise(after) if x[k] != y[k]),
+                "distinct": len(values), **({"values": sorted(values)} if len(values) <= 4
+                                            else {})}
+
+    state: dict[str, dict[str, Any]] = {}
+    for sid, paths in _hcpu_state(h).items():
+        x = [k for k in paths if seen[k] == {"x"}]
+        state[sid] = {"moved": {k: moved[k] for k in paths if moved.get(k)},
+                      "held": {k: next(iter(seen[k])) for k in paths
+                               if not moved.get(k) and k not in x},
+                      "x": x}
+    declared = {f: set(names) for s in h["subsystems"] for f, names in s["files"].items()}
+    parsed = {f: set(_nb_targets(root / f)) for f in declared}
+    elaborated_not = {f: set(n) for s in h["subsystems"]
+                      for f, n in s.get("not_elaborated", {}).get("names", {}).items()}
+    boundary = {"files": len(declared),
+                "registers": sum(len(n) for n in parsed.values()),
+                "undeclared": sorted(f"{f}:{n}" for f in parsed
+                                     for n in parsed[f] - declared[f]
+                                     - elaborated_not.get(f, set())),
+                "missing": sorted(f"{f}:{n}" for f in declared
+                                  for n in declared[f] - parsed[f])}
+    verdict = next((ln for ln in trace["said"] if re.match(a["bench_verdict"]["pattern"], ln)),
+                   None)
+    text = "\n".join(" ".join(str(v) for v in r.values()) for r in after)
+    return {
+        "bench_sha256": _sha((root / a["bench"]).read_bytes()),
+        "files_sha256": {f: _sha((root / f).read_bytes()) for f in h["files"]},
+        "trace_sha256": _sha(text.encode("utf-8")), "edges": len(after),
+        "live_edges": compared,
+        "sampling": {"compared": compared, "mismatched": timing, "release_edges": release},
+        "inputs": {k: port(k) for k in h["inputs"]},
+        "outputs": {k: port(k) for k in h["outputs"]},
+        "boundary": boundary, "state": state,
+        "transitions": [{"id": t["id"], "fired": sum(fired[t["id"]]),
+                         "programs": [i + 1 for i, c in enumerate(fired[t["id"]]) if c]}
+                        for t in transitions],
+        "not_covered": [t["id"] for t in transitions if not sum(fired[t["id"]])],
+        "bench_said": verdict, "bench_pass": verdict is not None}
+
+
 # -- the model -------------------------------------------------------------------------------
 
 
@@ -2049,6 +2583,15 @@ def build(root: Path | None = None) -> dict[str, Any]:
     if "pipeline_audit" in spec:
         a = spec["pipeline_audit"]
         out["pipeline_audit"] = pipeline_audit(a, pipeline_trace(a, root), root)
+    if "hcpu_audit" in spec:
+        h = spec["hcpu_audit"]
+        for t in h["transitions"]:
+            length = len((root / t["file"]).read_text(encoding="utf-8").splitlines())
+            if max(t["lines"]) > length:
+                raise LookupError(f"hcpu_audit: {t['id']} cites line {max(t['lines'])} of "
+                                  f"{t['file']}'s {length}")
+        out["hcpu_audit"] = hcpu_audit(h, spec[h["run"]], hcpu_trace(h, spec[h["run"]], root),
+                                       root)
     return out
 
 
@@ -2140,7 +2683,57 @@ def check(model: dict[str, Any]) -> list[str]:
                 **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
         if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
             bad.append(f"F5 {m['name']}: an RTL or bench file is not the one the model holds")
-    return bad + check_audit(model, spec)
+    return bad + check_audit(model, spec) + check_hcpu(model, spec)
+
+
+def _ports(root: Path) -> dict[str, list[str]]:
+    """hcpu_top.v's own port list, clk aside: input and output names."""
+    head = (root / "rtl" / "hcpu_top.v").read_text(encoding="utf-8").split(");", 1)[0]
+    out: dict[str, list[str]] = {"input": [], "output": []}
+    for kind, name in re.findall(r"^\s*(input|output)\s+(?:wire|reg)?\s*(?:\[[^\]]*\])?\s*(\w+)",
+                                 head, flags=re.M):
+        if name != "clk":
+            out[kind].append(name)
+    return out
+
+
+def check_hcpu(model: dict[str, Any], spec: dict[str, Any]) -> list[str]:
+    """A1-A6 on the HCPU audit: the measurement is sound, the state boundary is
+    the RTL's own, the map claims no more than the bench ran, and the ports
+    the spec says move are the ones that do."""
+    if "hcpu_audit" not in spec:
+        return []
+    h, r = spec["hcpu_audit"], model.get("hcpu_audit")
+    if r is None:
+        return ["A5 hcpu: the model holds no audit"]
+    bad = []
+    if r["sampling"]["mismatched"]:
+        bad.append(f"A1 hcpu: an edge took what the edge before did not leave: "
+                   f"{r['sampling']['mismatched']}")
+    b = r["boundary"]
+    if b["undeclared"] or b["missing"]:
+        bad.append(f"A2 hcpu: the RTL's registers are not the spec's boundary: undeclared "
+                   f"{b['undeclared']}, missing {b['missing']}")
+    ids = [t["id"] for t in hcpu_transitions(h)]
+    if [t["id"] for t in r["transitions"]] != ids:
+        bad.append("A3 hcpu: the audit's transitions are not the spec's and the functions'")
+    declared = list(hcpu_declared(h))
+    if r["not_covered"] != declared:
+        bad.append(f"A3 hcpu: transitions the bench never runs are {r['not_covered']}, "
+                   f"the spec names {declared}")
+    if not r["bench_pass"]:
+        bad.append(f"A4 hcpu: {r['bench_said']}")
+    a = spec[h["run"]]
+    held = {a["bench"]: r["bench_sha256"], **r["files_sha256"]}
+    if any(_sha((ROOT / f).read_bytes()) != v for f, v in held.items()):
+        bad.append("A5 hcpu: an RTL or bench file is not the one the audit holds")
+    ports = _ports(ROOT)
+    moving = [k for k, v in r["inputs"].items() if v["changes"]]
+    if (moving != h["inputs_change"] or list(h["inputs"]) != ports["input"]
+            or list(h["outputs"]) != ports["output"]):
+        bad.append(f"A6 hcpu: the inputs that move are {moving}, the spec says "
+                   f"{h['inputs_change']}; or the ports are not hcpu_top.v's")
+    return bad
 
 
 def _check_pipeline(m: dict[str, Any], model: dict[str, Any], declared: list[str]) -> list[str]:
@@ -2266,6 +2859,100 @@ def _audit_page(a: dict[str, Any], r: dict[str, Any]) -> list[str]:
             "diambil sesudah HALT. Tidak tercakup — "
             f"{a['opcodes']['not_covered_why']}: "
             + ", ".join(f"`{n}`" for n in r["opcodes_not_covered"]) + ".", ""]
+    return out
+
+
+def _hcpu_page(h: dict[str, Any], r: dict[str, Any], pipe: dict[str, Any]) -> list[str]:
+    """The HCPU's coverage map, drawn from its audit; the pipeline's own count
+    is the pipeline audit's."""
+    spec = load()
+    mods = {m["name"]: m for m in spec["modules"]}
+    a, s = spec[h["run"]], r["sampling"]
+
+    def progs(ns: list[int]) -> str:
+        return ", ".join(map(str, ns)) or "—"
+
+    def seen(v: dict[str, Any]) -> str:
+        return ", ".join(v["values"]) if "values" in v else f"{v['distinct']} nilai"
+
+    def short(f: str) -> str:
+        return f"`{f.rsplit('/', 1)[-1]}`"
+
+    out = ["## HCPU — audit oracle integrasi `tb_hcpu_top.v`, sebelum model", "",
+           f"**Oracle.** {h['oracle']}.", "",
+           f"**Lari.** {h['run_why']}. Bench `{a['bench']}` `{r['bench_sha256'][:12]}…`; "
+           f"dipegang {len(r['files_sha256'])} berkas RTL. Vonis: {r['bench_said']}.", "",
+           f"**Titik sampel.** {h['sampling']['rule']}; {h['sampling']['why']}. Terukur: "
+           f"{s['compared']} tepi hidup dari {r['edges']}, dan yang diambil tiap tepi berbeda "
+           "dari yang ditinggalkan tepi sebelumnya di "
+           + (", ".join(f"{k} ({v})" for k, v in s["mismatched"].items()) or "tidak satu pun")
+           + f" sinyal probe. Tepi pelepasan reset: {s['release_edges']['stepped']} melangkah, "
+           f"{s['release_edges']['held_in_reset']} tertahan.", "",
+           "**Input HCPU.** Port masukan `hcpu_top.v`, di setiap baris jejak termasuk tepi "
+           "reset:", "", "| port | disambung ke | perubahan | nilai |", "|---|---|---|---|"]
+    out += [f"| `{k}` | {h['inputs'][k]} | {v['changes']} | {seen(v)} |"
+            for k, v in r["inputs"].items()]
+    out += ["", "Yang berubah hanya " + ", ".join(f"`{k}`" for k in h["inputs_change"])
+            + ": itulah input HCPU di bawah oracle ini.", "",
+            "| keluaran | dibaca | perubahan | nilai |", "|---|---|---|---|"]
+    out += [f"| `{k}` | {h['outputs'][k]} | {v['changes']} | {seen(v)} |"
+            for k, v in r["outputs"].items()]
+    b = r["boundary"]
+    out += ["", f"**Batas keadaan.** {b['registers']} register di {b['files']} berkas, dibaca dari "
+            "penugasan non-blocking RTL sendiri, lalu dibandingkan dengan batas di spec: "
+            f"tidak dideklarasikan {len(b['undeclared'])}, hilang {len(b['missing'])}. Larik "
+            "ditulis `nama[]` dan teramati lewat aturan yang menulisnya.", "",
+            "| subsistem | jenis | berkas | register | fungsi (oracle-nya) | bergerak | tetap "
+            "| x di tiap tepi |", "|---|---|---|---|---|---|---|---|"]
+    for sub in h["subsystems"]:
+        regs = sum(len(n) for n in sub["files"].values())
+        fn = sub.get("function")
+        if fn and sub.get("measured_by"):
+            owner = f"`{fn}` (`{a['bench'].rsplit('/', 1)[-1]}`; diukur {sub['measured_by']})"
+        elif fn and sub.get("companion"):
+            owner = f"companion state `{fn}`"
+        elif fn:
+            owner = f"`{fn}` (`{mods[fn]['bench'].rsplit('/', 1)[-1]}`)"
+        else:
+            owner = "—"
+        st = r["state"].get(sub["id"])
+        cells = (["di pipeline_audit"] * 3 if st is None else
+                 [", ".join(f"`{k.rsplit('.', 1)[-1]}` ({v})" for k, v in st["moved"].items())
+                  or "—", str(len(st["held"])), str(len(st["x"]))])
+        out.append(f"| {sub['id']} | {sub['kind']} | "
+                   f"{', '.join(short(f) for f in sub['files'])} | {regs} | {owner} | "
+                   + " | ".join(cells) + " |")
+    notes = [(k, v) for sub in h["subsystems"] for k, v in sub.get("outside_function", {}).items()]
+    notes += [(", ".join(f"{f}:{n}" for f, ns in sub["not_elaborated"]["names"].items()
+                         for n in ns), sub["not_elaborated"]["why"])
+              for sub in h["subsystems"] if "not_elaborated" in sub]
+    x = [k for st in r["state"].values() for k in st["x"]]
+    out += ["", "Di luar fungsi, atau tidak dielaborasi:", "",
+            *[f"- `{k}` — {v}." for k, v in notes], "",
+            "Tanpa reset dan tidak pernah ditulis, jadi x di setiap tepi hidup: "
+            + (", ".join(f"`{k}`" for k in x) or "tidak ada") + ".", "",
+            "| aturan | subsistem | baris RTL | arti | tepi | program |",
+            "|---|---|---|---|---|---|"]
+    fired = {t["id"]: t for t in r["transitions"]}
+    for t in hcpu_transitions(h):
+        if "rule" in t:
+            rule = next(x for x in rules(mods[t["function"]]) if x["id"] == t["rule"])
+            f, lines, means = rule["file"], rule["lines"], rule["means"]
+        else:
+            f, lines, means = t["file"], t["lines"], t["means"]
+        got = fired[t["id"]]
+        out.append(f"| `{t['id']}` | {t['subsystem']} | {short(f)} "
+                   f"{', '.join(map(str, lines))} | {means} | {got['fired']} | "
+                   f"{progs(got['programs'])} |")
+    declared = hcpu_declared(h)
+    out += ["", f"Tercakup {len(r['transitions']) - len(r['not_covered'])} dari "
+            f"{len(r['transitions'])} transisi di luar pipeline; pipeline sendiri "
+            f"{len(pipe['transitions']) - len(pipe['not_covered'])} dari "
+            f"{len(pipe['transitions'])} (pipeline_audit). Tidak tercakup — "
+            f"{h['not_covered_why']}:", "",
+            *[f"- `{k}` — {v}." for k, v in declared.items()], "",
+            f"Batas yang tercakup — {h['covered_limits_why']}:", "",
+            *[f"- `{k}` — {v}." for k, v in h["covered_limits"].items()], ""]
     return out
 
 
@@ -2444,6 +3131,8 @@ def page(model: dict[str, Any]) -> str:
                 ""]
     if "pipeline_audit" in model:
         out += _audit_page(load()["pipeline_audit"], model["pipeline_audit"])
+    if "hcpu_audit" in model:
+        out += _hcpu_page(load()["hcpu_audit"], model["hcpu_audit"], model["pipeline_audit"])
     out += ["## Mengulang", "", "```bash",
             "PYTHONPATH=src python3 -m hijaiyyah.nui.rtl_function --verify", "```"]
     return "\n".join(out) + "\n"

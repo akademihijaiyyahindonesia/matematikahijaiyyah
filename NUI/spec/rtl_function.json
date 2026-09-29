@@ -2755,5 +2755,1634 @@
    "ctrl_halted_stall": "stall global = PRINT/EMITS berjalan atau halted (hcpu_controller.v baris 80). Tidak ada PRINT atau EMITS. Tidak ada tepi transisi yang sah dalam jendela sampling pipeline yang membuktikan aturan ini: bench mereset pada tepi sesudah halted naik, kecuali sesudah program 11, tempat ia memanggil $finish. Sebuah terminal snapshot sesudah halted naik dapat muncul bergantung pada urutan $strobe/$finish, dan tidak digunakan sebagai oracle transisi"
   },
   "not_covered_why": "aturan RTL pipeline yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti"
+ },
+ "hcpu_audit": {
+  "oracle": "pemilik, 28 September 2026, ketika pipeline bf13941 diterima: langkah berikutnya model HCPU tingkat sistem dengan tb_hcpu_top.v sebagai oracle integrasi, tetapi audit cakupan HCPU lebih dulu, dengan prinsip yang sama seperti pipeline -- model HCPU tidak ditulis sebelum peta oracle dan batas keadaannya terukur. Tidak ada bench baru, RTL tidak diubah, hasil interpreter bukan pengganti oracle, dan keadaan yang tidak teramati tidak diklaim",
+  "run": "pipeline_audit",
+  "run_why": "bench, top, instance, clock, daftar kompilasi, vonis, dan kesebelas program milik pipeline_audit -- satu tempat. Audit ini menjalankan bench yang sama dengan probe lain; transisi pipeline sendiri milik pipeline_audit dan tidak diukur dua kali",
+  "files": [
+   "rtl/hcpu_top.v",
+   "rtl/hcpu_codex_alu.v",
+   "rtl/hcpu_controller.v",
+   "rtl/hcpu_dataram.v",
+   "rtl/hcpu_decode.v",
+   "rtl/hcpu_execute.v",
+   "rtl/hcpu_fetch.v",
+   "rtl/hcpu_forward.v",
+   "rtl/hcpu_guard.v",
+   "rtl/hcpu_hisab.v",
+   "rtl/hcpu_memory.v",
+   "rtl/hcpu_mmio.v",
+   "rtl/hcpu_mul.v",
+   "rtl/hcpu_pkg.vh",
+   "rtl/hcpu_regfile.v",
+   "rtl/hcpu_rom.v",
+   "rtl/hcpu_sdio.v",
+   "rtl/hcpu_timer.v",
+   "rtl/hcpu_trap.v",
+   "rtl/hcpu_uart_rx.v",
+   "rtl/hcpu_uart_tx.v",
+   "rtl/hcpu_writeback.v"
+  ],
+  "sampling": {
+   "rule": "aturan pipeline_audit: tiap tepi naik dicatat di region aktif dan dengan $strobe, aturan tepi t+1 dibaca dari baris $strobe tepi t, dan tepi reset serta pelepasannya dinilai dengan bukti desain yang sama (pc fetch 0 dan fetch_valid 0)",
+   "why": "diukur ulang tiap build atas setiap sinyal probe audit ini, bukan diwarisi dari sinyal pipeline"
+  },
+  "inputs": {
+   "rst_n": "register bench rst_n",
+   "imem_data": "BRAM bench dengan baca terdaftar dan imem_ce (tb_hcpu_top.v baris 20-27): memori instruksi di luar HCPU",
+   "uart_rx": "tidak disambung bench, jadi z; hcpu_top.v baris 723 menariknya ke 1",
+   "sd_cmd_in": "tidak disambung bench, jadi z",
+   "sd_dat_in": "tidak disambung bench, jadi z",
+   "dbg_gpr_raddr": "5'd0 (tb_hcpu_top.v baris 44)"
+  },
+  "inputs_change": [
+   "rst_n",
+   "imem_data"
+  ],
+  "outputs": {
+   "imem_addr": "alamat BRAM bench (baris 27, 37)",
+   "imem_ce": "clock-enable BRAM bench (baris 26, 38)",
+   "imem_we": "tidak disambung",
+   "imem_waddr": "tidak disambung",
+   "imem_wdata": "tidak disambung",
+   "uart_tx": "disambung ke wire bench (baris 12, 40) dan tidak pernah dibaca",
+   "halted": "bench menunggunya tiap program (mis. baris 95)",
+   "guard_led": "dibaca vonis program 1 (baris 102), dicetak program 2 (baris 146)",
+   "sd_clk": "tidak disambung",
+   "sd_cmd_out": "tidak disambung",
+   "sd_cmd_oe": "tidak disambung",
+   "sd_dat_out": "tidak disambung",
+   "sd_dat_oe": "tidak disambung",
+   "dbg_gpr_rdata": "tidak disambung (baris 45)",
+   "dbg_flags": "tidak disambung (baris 46)"
+  },
+  "instances": {
+   "rtl/hcpu_top.v": "",
+   "rtl/hcpu_fetch.v": "u_fetch",
+   "rtl/hcpu_decode.v": "u_decode",
+   "rtl/hcpu_forward.v": "u_forward",
+   "rtl/hcpu_execute.v": "u_execute",
+   "rtl/hcpu_memory.v": "u_memory",
+   "rtl/hcpu_writeback.v": "u_writeback",
+   "rtl/hcpu_controller.v": "u_controller",
+   "rtl/hcpu_regfile.v": "u_regfile",
+   "rtl/hcpu_trap.v": "u_trap",
+   "rtl/hcpu_mmio.v": "u_mmio",
+   "rtl/hcpu_uart_rx.v": "u_mmio.u_rx",
+   "rtl/hcpu_timer.v": "u_mmio.u_timer",
+   "rtl/hcpu_sdio.v": "u_mmio.u_sdio",
+   "rtl/hcpu_uart_tx.v": "u_uart",
+   "rtl/hcpu_dataram.v": "u_dataram",
+   "rtl/hcpu_rom.v": "u_rom",
+   "rtl/hcpu_guard.v": "u_guard",
+   "rtl/hcpu_codex_alu.v": "u_codex_alu",
+   "rtl/hcpu_hisab.v": "u_hisab",
+   "rtl/hcpu_mul.v": "u_execute.u_mul"
+  },
+  "subsystems": [
+   {
+    "id": "pipeline",
+    "kind": "sinkron",
+    "function": "pipeline",
+    "measured_by": "pipeline_audit",
+    "files": {
+     "rtl/hcpu_fetch.v": [
+      "pc",
+      "pc_prev",
+      "fetch_valid",
+      "if_instruction",
+      "if_pc",
+      "pc_valid"
+     ],
+     "rtl/hcpu_decode.v": [
+      "id_opcode",
+      "id_dst",
+      "id_s1",
+      "id_s2",
+      "id_imm",
+      "id_pc",
+      "id_gpr_s1",
+      "id_gpr_s2",
+      "id_hreg_s1",
+      "id_hreg_s2",
+      "id_gpr_we",
+      "id_hreg_we",
+      "id_mem_read",
+      "id_mem_write",
+      "id_is_branch",
+      "id_is_jump",
+      "id_is_call",
+      "id_is_ret",
+      "id_is_codex",
+      "id_is_halt",
+      "id_is_print",
+      "id_is_emits",
+      "id_is_push",
+      "id_is_pop"
+     ],
+     "rtl/hcpu_forward.v": [],
+     "rtl/hcpu_execute.v": [
+      "ex_opcode",
+      "ex_dst",
+      "ex_gpr_result",
+      "ex_hreg_result",
+      "ex_gpr_we",
+      "ex_hreg_we",
+      "ex_flags_new",
+      "ex_flags_we",
+      "ex_is_halt",
+      "ex_is_print",
+      "ex_is_emits",
+      "ex_emits_addr",
+      "ex_print_data",
+      "ex_is_push",
+      "ex_is_pop",
+      "ex_push_data",
+      "ex_mem_read",
+      "ex_mem_write",
+      "ex_mem_addr",
+      "ex_mem_wdata",
+      "ra_sp",
+      "ra_stack[]"
+     ],
+     "rtl/hcpu_memory.v": [
+      "mem_dst",
+      "mem_gpr_result_r",
+      "mem_hreg_result",
+      "mem_gpr_we",
+      "mem_hreg_we",
+      "mem_flags_new",
+      "mem_flags_we",
+      "mem_is_halt",
+      "mem_is_load",
+      "mem_is_pop",
+      "sp",
+      "stack_rd",
+      "stack_rd_valid",
+      "stack[]"
+     ],
+     "rtl/hcpu_writeback.v": [],
+     "rtl/hcpu_controller.v": [
+      "halted"
+     ]
+    },
+    "outside_function": {
+     "rtl/hcpu_execute.v:ra_stack[]": "tumpukan alamat kembali (baris 331): CALL menulisnya dan RET membacanya, keduanya tidak tercakup pipeline_audit, dan larik ini tidak ada di keadaan fungsi pipeline"
+    }
+   },
+   {
+    "id": "register file",
+    "kind": "sinkron",
+    "function": "pipeline",
+    "companion": true,
+    "files": {
+     "rtl/hcpu_regfile.v": [
+      "gpr[]",
+      "hreg[]",
+      "flags",
+      "pc"
+     ]
+    },
+    "outside_function": {
+     "rtl/hcpu_regfile.v:pc": "pc_we diikat 1'b0 (hcpu_top.v baris 645): register ini tidak pernah ditulis dan bukan bagian register file fungsi pipeline"
+    }
+   },
+   {
+    "id": "print",
+    "kind": "sinkron",
+    "function": null,
+    "files": {
+     "rtl/hcpu_top.v": [
+      "print_state",
+      "print_val",
+      "digit_cnt",
+      "digits[]",
+      "digit_idx",
+      "print_active",
+      "str_addr",
+      "emits_busy",
+      "uart_start",
+      "uart_data"
+     ]
+    }
+   },
+   {
+    "id": "trap",
+    "kind": "sinkron",
+    "function": null,
+    "files": {
+     "rtl/hcpu_trap.v": [
+      "mode",
+      "prev",
+      "vector",
+      "epc",
+      "cause",
+      "enable",
+      "trap_active"
+     ]
+    }
+   },
+   {
+    "id": "mmio",
+    "kind": "sinkron",
+    "function": "hcpu_mmio",
+    "files": {
+     "rtl/hcpu_mmio.v": [
+      "rx_held",
+      "rx_ready",
+      "rx_held_err",
+      "rx_overrun",
+      "mem_base",
+      "mem_limit",
+      "imem_waddr",
+      "sd_sector",
+      "sd_index",
+      "sd_div",
+      "sd_start",
+      "sd_op",
+      "sd_soft_rst",
+      "periph_rdata",
+      "periph_sel",
+      "sd_data_sel"
+     ],
+     "rtl/hcpu_uart_rx.v": [
+      "rx_meta",
+      "rx_sync",
+      "state",
+      "count",
+      "index",
+      "shifter",
+      "rx_data",
+      "rx_valid",
+      "rx_frame_err"
+     ],
+     "rtl/hcpu_timer.v": [
+      "counter",
+      "compare",
+      "expired"
+     ]
+    }
+   },
+   {
+    "id": "sdio",
+    "kind": "sinkron",
+    "function": null,
+    "files": {
+     "rtl/hcpu_sdio.v": [
+      "ack_sh",
+      "acmd41_tries",
+      "bit_cnt",
+      "buf_rdata",
+      "busy",
+      "card_ready",
+      "ccs",
+      "clk_en",
+      "cmd_index",
+      "cmd_oe",
+      "cmd_out",
+      "cmd_sh",
+      "crc16",
+      "crc16_rx",
+      "crc7",
+      "dat_cnt",
+      "dat_oe",
+      "dat_out",
+      "div_cnt",
+      "divider",
+      "err",
+      "err_code",
+      "fsm_addr",
+      "fsm_wdata",
+      "fsm_we",
+      "gap_cnt",
+      "ok",
+      "op_r",
+      "rca",
+      "resp_len",
+      "resp_sh",
+      "sbuf[]",
+      "sd_clk",
+      "sector_r",
+      "state",
+      "step",
+      "timeout",
+      "word_sh",
+      "wr_addr",
+      "wr_data",
+      "wr_en"
+     ]
+    }
+   },
+   {
+    "id": "uart_tx",
+    "kind": "sinkron",
+    "function": "hcpu_uart_tx",
+    "same_oracle": true,
+    "files": {
+     "rtl/hcpu_uart_tx.v": [
+      "state",
+      "clk_cnt",
+      "bit_idx",
+      "tx_shift",
+      "tx_out"
+     ]
+    }
+   },
+   {
+    "id": "dataram",
+    "kind": "sinkron",
+    "function": "hcpu_dataram",
+    "files": {
+     "rtl/hcpu_dataram.v": [
+      "mem[]",
+      "rdata_r"
+     ]
+    }
+   },
+   {
+    "id": "rom",
+    "kind": "kombinasional",
+    "function": null,
+    "files": {
+     "rtl/hcpu_rom.v": []
+    }
+   },
+   {
+    "id": "guard",
+    "kind": "kombinasional",
+    "function": null,
+    "files": {
+     "rtl/hcpu_guard.v": []
+    },
+    "not_elaborated": {
+     "names": {
+      "rtl/hcpu_guard.v": [
+       "g1_r",
+       "g2_r",
+       "g3_r",
+       "g4_r",
+       "t1_r",
+       "t2_r",
+       "guard_r"
+      ]
+     },
+     "why": "cabang generate berregister hanya ada bila PIPELINE_GUARD 1; hcpu_top.v baris 662 memasangnya dengan PIPELINE_GUARD(0), jadi register itu tidak dielaborasi"
+    }
+   },
+   {
+    "id": "calu",
+    "kind": "kombinasional",
+    "function": null,
+    "files": {
+     "rtl/hcpu_codex_alu.v": []
+    }
+   },
+   {
+    "id": "hisab",
+    "kind": "kombinasional",
+    "function": null,
+    "files": {
+     "rtl/hcpu_hisab.v": []
+    }
+   },
+   {
+    "id": "mul",
+    "kind": "kombinasional",
+    "function": null,
+    "files": {
+     "rtl/hcpu_mul.v": []
+    }
+   }
+  ],
+  "transitions": [
+   {
+    "id": "print.reset",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     287,
+     288,
+     289,
+     290,
+     291,
+     292,
+     293,
+     294,
+     295,
+     296
+    ],
+    "means": "rst_n rendah: P_IDLE, uart_start dan print_active 0, semua pencacah dan str_addr nol"
+   },
+   {
+    "id": "print.pulse_clear",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     298
+    ],
+    "means": "tiap tepi hidup: uart_start turun lagi -- denyut satu siklus ke pemancar"
+   },
+   {
+    "id": "print.idle",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     301,
+     302,
+     303,
+     304,
+     309
+    ],
+    "means": "P_IDLE tanpa PRINT atau EMITS yang diterima: print_active dan emits_busy 0"
+   },
+   {
+    "id": "print.print_accept",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     304,
+     305,
+     306,
+     307,
+     308
+    ],
+    "means": "P_IDLE, ex_is_print dan EX tidak tertahan: nilai diambil, pipeline ditahan, P_CONV"
+   },
+   {
+    "id": "print.emits_accept",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     309,
+     310,
+     311,
+     312,
+     313
+    ],
+    "means": "P_IDLE, ex_is_emits dan EX tidak tertahan: alamat string diambil, port RAM diambil alih, P_S_ADDR"
+   },
+   {
+    "id": "print.conv_zero",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     318,
+     319,
+     320,
+     321,
+     322
+    ],
+    "means": "P_CONV, nilai 0 dan belum ada digit: satu digit '0', P_SEND"
+   },
+   {
+    "id": "print.conv_digit",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     323,
+     324,
+     325,
+     326
+    ],
+    "means": "P_CONV, nilai bukan nol: satu digit desimal dari % 10, nilai / 10"
+   },
+   {
+    "id": "print.conv_done",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     327,
+     328,
+     329
+    ],
+    "means": "P_CONV, nilai habis: digit_idx ke digit terakhir, P_SEND"
+   },
+   {
+    "id": "print.send",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     334,
+     335,
+     336,
+     337
+    ],
+    "means": "P_SEND, pemancar bebas: satu digit ke uart_data, uart_start naik, P_WAIT"
+   },
+   {
+    "id": "print.send_hold",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     333,
+     334
+    ],
+    "means": "P_SEND, pemancar sibuk: tetap"
+   },
+   {
+    "id": "print.wait_newline",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     342,
+     343,
+     344
+    ],
+    "means": "P_WAIT, pemancar bebas, digit terakhir terkirim: P_NEWLN"
+   },
+   {
+    "id": "print.wait_next",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     342,
+     345,
+     346,
+     347
+    ],
+    "means": "P_WAIT, pemancar bebas, masih ada digit: digit_idx turun, P_SEND"
+   },
+   {
+    "id": "print.wait_hold",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     341,
+     342
+    ],
+    "means": "P_WAIT, pemancar sibuk atau denyut belum turun: tetap"
+   },
+   {
+    "id": "print.newline",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     353,
+     354,
+     355,
+     356
+    ],
+    "means": "P_NEWLN, pemancar bebas: '\\n' ke uart_data, uart_start naik, P_IDLE"
+   },
+   {
+    "id": "print.newline_hold",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     352,
+     353
+    ],
+    "means": "P_NEWLN, pemancar sibuk: tetap"
+   },
+   {
+    "id": "print.s_addr",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     361,
+     363
+    ],
+    "means": "P_S_ADDR: alamat word keluar siklus ini, P_S_CHAR"
+   },
+   {
+    "id": "print.s_char_end",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     367,
+     372
+    ],
+    "means": "P_S_CHAR, word nol: penutup string, P_IDLE tanpa newline"
+   },
+   {
+    "id": "print.s_char_send",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     373,
+     374,
+     375,
+     376
+    ],
+    "means": "P_S_CHAR, word bukan nol, pemancar bebas: byte rendahnya ke uart_data, P_S_WAIT"
+   },
+   {
+    "id": "print.s_char_hold",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     366,
+     373
+    ],
+    "means": "P_S_CHAR, word bukan nol, pemancar sibuk: tetap"
+   },
+   {
+    "id": "print.s_wait_next",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     381,
+     382,
+     383
+    ],
+    "means": "P_S_WAIT, pemancar bebas: str_addr ke word berikutnya, P_S_ADDR"
+   },
+   {
+    "id": "print.s_wait_hold",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     380,
+     381
+    ],
+    "means": "P_S_WAIT, pemancar sibuk atau denyut belum turun: tetap"
+   },
+   {
+    "id": "print.default",
+    "subsystem": "print",
+    "file": "rtl/hcpu_top.v",
+    "lines": [
+     387
+    ],
+    "means": "print_state di luar kedelapan nama: P_IDLE"
+   },
+   {
+    "id": "trap.reset",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     166,
+     167,
+     168,
+     169,
+     170,
+     171,
+     177,
+     178
+    ],
+    "means": "rst_n rendah: vector, epc, cause, enable nol, tidak dalam trap, mode dan prev supervisor"
+   },
+   {
+    "id": "trap.idle",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     180,
+     183
+    ],
+    "means": "tanpa ERET dan tanpa fire: mode, prev, epc, cause, trap_active tetap"
+   },
+   {
+    "id": "trap.eret",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     180,
+     181,
+     182,
+     162,
+     163
+    ],
+    "means": "ERET: keluar trap, mode <- prev; redirect ke epc"
+   },
+   {
+    "id": "trap.eret_mode_bypass",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     135,
+     136,
+     182
+    ],
+    "means": "ERET di tepi yang sama dengan tulis TRAP_MODE: mode mengambil bit tulis itu, bukan prev lama"
+   },
+   {
+    "id": "trap.eret_epc_bypass",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     156,
+     157,
+     163
+    ],
+    "means": "ERET di tepi yang sama dengan tulis TRAP_EPC: sasaran kembali adalah nilai tulis itu"
+   },
+   {
+    "id": "trap.fire_timer",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     110,
+     114,
+     117,
+     122,
+     183,
+     189,
+     190,
+     191,
+     192,
+     193
+    ],
+    "means": "sumber timer armed, tidak dalam trap, PC sah: epc <- pc_now, cause timer, mode supervisor"
+   },
+   {
+    "id": "trap.fire_uart_rx",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     110,
+     114,
+     117,
+     122,
+     183,
+     189,
+     190,
+     191,
+     192,
+     193
+    ],
+    "means": "sumber penerima UART armed: sama, cause uart_rx"
+   },
+   {
+    "id": "trap.fire_illegal",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     110,
+     114,
+     117,
+     122,
+     183,
+     189,
+     190,
+     191,
+     192,
+     193
+    ],
+    "means": "sumber instruksi ilegal armed: sama, cause illegal"
+   },
+   {
+    "id": "trap.fire_priv",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     107,
+     108,
+     110,
+     114,
+     183,
+     189,
+     190,
+     191,
+     192,
+     193
+    ],
+    "means": "fault hak istimewa, tak bisa dimask: epc <- pc_fault, cause priv"
+   },
+   {
+    "id": "trap.fire_mem",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     107,
+     108,
+     110,
+     114,
+     183,
+     189,
+     190,
+     191,
+     192,
+     193
+    ],
+    "means": "fault memori, tak bisa dimask: epc <- pc_fault, cause mem"
+   },
+   {
+    "id": "trap.fire_syscall",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     107,
+     108,
+     110,
+     114,
+     183,
+     189,
+     190,
+     191,
+     192,
+     193
+    ],
+    "means": "SYSCALL, tak bisa dimask: epc <- pc_fault, cause syscall"
+   },
+   {
+    "id": "trap.pending_masked",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     95,
+     96,
+     97,
+     110
+    ],
+    "means": "sumber yang bisa dimask naik tanpa bit enable-nya: tidak armed"
+   },
+   {
+    "id": "trap.held_active",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     114
+    ],
+    "means": "armed tetapi sudah dalam trap: tidak menembak"
+   },
+   {
+    "id": "trap.held_pc_invalid",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     114
+    ],
+    "means": "armed, tidak dalam trap, tetapi front end tanpa PC sah: tidak menembak"
+   },
+   {
+    "id": "trap.write_vector",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     199,
+     200,
+     201
+    ],
+    "means": "tulis TRAP_VECTOR: alamat handler"
+   },
+   {
+    "id": "trap.write_epc",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     199,
+     200,
+     202
+    ],
+    "means": "tulis TRAP_EPC: alamat kembali"
+   },
+   {
+    "id": "trap.write_enable",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     199,
+     200,
+     203
+    ],
+    "means": "tulis TRAP_ENABLE: mask per sebab"
+   },
+   {
+    "id": "trap.write_mode",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     199,
+     200,
+     207
+    ],
+    "means": "tulis TRAP_MODE: bit 1 ke prev; bit 0 hanya baca"
+   },
+   {
+    "id": "trap.write_readonly",
+    "subsystem": "trap",
+    "file": "rtl/hcpu_trap.v",
+    "lines": [
+     199,
+     200,
+     208
+    ],
+    "means": "tulis TRAP_CAUSE atau TRAP_PENDING: diabaikan"
+   },
+   {
+    "id": "sdio.reset",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     139,
+     140,
+     141,
+     213,
+     214,
+     215,
+     216,
+     295
+    ],
+    "means": "rst_n pengendali rendah: pembagi, port tulis penyangga, dan mesin keadaan ke nilai reset-nya"
+   },
+   {
+    "id": "sdio.soft_reset",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     304
+    ],
+    "means": "sd_soft_rst MMIO naik: rst_n pengendali rendah satu siklus (hcpu_mmio.v baris 293, 304)"
+   },
+   {
+    "id": "sdio.clk_off",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     142,
+     143,
+     144
+    ],
+    "means": "clk_en rendah: div_cnt <- divider, sd_clk 0"
+   },
+   {
+    "id": "sdio.clk_toggle",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     145,
+     146,
+     147
+    ],
+    "means": "clk_en, pencacah habis: sd_clk berbalik"
+   },
+   {
+    "id": "sdio.clk_count",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     148,
+     149
+    ],
+    "means": "clk_en, pencacah belum habis: turun satu"
+   },
+   {
+    "id": "sdio.port_host",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     218,
+     219,
+     220
+    ],
+    "means": "tidak sibuk: port tulis penyangga mengikuti bus host"
+   },
+   {
+    "id": "sdio.port_fsm",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     218,
+     219,
+     220
+    ],
+    "means": "sibuk: port tulis penyangga mengikuti mesin keadaan"
+   },
+   {
+    "id": "sdio.buf_write",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     225
+    ],
+    "means": "wr_en: satu word ke sbuf -- blok tanpa reset"
+   },
+   {
+    "id": "sdio.buf_read",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     226
+    ],
+    "means": "tiap tepi: buf_rdata <- sbuf[rd_addr] -- blok tanpa reset"
+   },
+   {
+    "id": "sdio.idle_wait",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     320,
+     321,
+     322,
+     323,
+     324,
+     325
+    ],
+    "means": "S_IDLE tanpa start: jalur diam"
+   },
+   {
+    "id": "sdio.idle_init",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     325,
+     333,
+     334,
+     335,
+     336,
+     337,
+     338,
+     339
+    ],
+    "means": "S_IDLE, start dengan op 1: init, S_POWERUP"
+   },
+   {
+    "id": "sdio.idle_not_init",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     325,
+     340,
+     344,
+     345
+    ],
+    "means": "S_IDLE, start baca/tulis sebelum init: E_NOT_INIT, S_FAIL"
+   },
+   {
+    "id": "sdio.idle_transfer",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     325,
+     346,
+     347,
+     348,
+     349
+    ],
+    "means": "S_IDLE, start baca/tulis sesudah init: S_CMD_SETUP"
+   },
+   {
+    "id": "sdio.s_powerup",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     355
+    ],
+    "means": "arm S_POWERUP: dimasuki bila state bernilai S_POWERUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_cmd_setup",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     372
+    ],
+    "means": "arm S_CMD_SETUP: dimasuki bila state bernilai S_CMD_SETUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_cmd_send",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     399
+    ],
+    "means": "arm S_CMD_SEND: dimasuki bila state bernilai S_CMD_SEND di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_cmd_gap",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     444
+    ],
+    "means": "arm S_CMD_GAP: dimasuki bila state bernilai S_CMD_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_resp_wait",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     459
+    ],
+    "means": "arm S_RESP_WAIT: dimasuki bila state bernilai S_RESP_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_resp_recv",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     487
+    ],
+    "means": "arm S_RESP_RECV: dimasuki bila state bernilai S_RESP_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_resp_done",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     500
+    ],
+    "means": "arm S_RESP_DONE: dimasuki bila state bernilai S_RESP_DONE di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_dat_wait",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     564
+    ],
+    "means": "arm S_DAT_WAIT: dimasuki bila state bernilai S_DAT_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_dat_recv",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     579
+    ],
+    "means": "arm S_DAT_RECV: dimasuki bila state bernilai S_DAT_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_dat_crc",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     597
+    ],
+    "means": "arm S_DAT_CRC: dimasuki bila state bernilai S_DAT_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_gap",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     619
+    ],
+    "means": "arm S_WR_GAP: dimasuki bila state bernilai S_WR_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_start",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     634
+    ],
+    "means": "arm S_WR_START: dimasuki bila state bernilai S_WR_START di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_data",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     642
+    ],
+    "means": "arm S_WR_DATA: dimasuki bila state bernilai S_WR_DATA di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_crc",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     664
+    ],
+    "means": "arm S_WR_CRC: dimasuki bila state bernilai S_WR_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_end",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     677
+    ],
+    "means": "arm S_WR_END: dimasuki bila state bernilai S_WR_END di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_ack",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     691
+    ],
+    "means": "arm S_WR_ACK: dimasuki bila state bernilai S_WR_ACK di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_wr_busy",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     719
+    ],
+    "means": "arm S_WR_BUSY: dimasuki bila state bernilai S_WR_BUSY di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_finish",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     731
+    ],
+    "means": "arm S_FINISH: dimasuki bila state bernilai S_FINISH di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.s_fail",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     740
+    ],
+    "means": "arm S_FAIL: dimasuki bila state bernilai S_FAIL di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
+   },
+   {
+    "id": "sdio.default",
+    "subsystem": "sdio",
+    "file": "rtl/hcpu_sdio.v",
+    "lines": [
+     749
+    ],
+    "means": "state di luar kedua puluh nama: S_IDLE"
+   },
+   {
+    "id": "rom.letter_entry",
+    "subsystem": "rom",
+    "file": "rtl/hcpu_rom.v",
+    "lines": [
+     29,
+     30,
+     31
+    ],
+    "means": "alamat 1-28 diambil HLOAD atau opcode huruf: vektor huruf, valid 1"
+   },
+   {
+    "id": "rom.negative_entry",
+    "subsystem": "rom",
+    "file": "rtl/hcpu_rom.v",
+    "lines": [
+     29,
+     30,
+     31
+    ],
+    "means": "alamat 31-36 diambil: vektor negatif uji guard, valid 1"
+   },
+   {
+    "id": "rom.invalid",
+    "subsystem": "rom",
+    "file": "rtl/hcpu_rom.v",
+    "lines": [
+     264,
+     265,
+     266
+    ],
+    "means": "alamat lain diambil: nol, valid 0 (HC-01 bila lewat HLOAD)"
+   },
+   {
+    "id": "guard.pass",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     104,
+     105
+    ],
+    "means": "HGRD dieksekusi, keenam guard lulus: FLAGS.G 1 (hcpu_execute.v baris 492)"
+   },
+   {
+    "id": "guard.g1_fail",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     66,
+     68
+    ],
+    "means": "HGRD dieksekusi, G1 gagal: A_N bukan jumlah zona titik"
+   },
+   {
+    "id": "guard.g2_fail",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     71,
+     72
+    ],
+    "means": "HGRD dieksekusi, G2 gagal: A_K bukan jumlah zona garis"
+   },
+   {
+    "id": "guard.g3_fail",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     75,
+     76
+    ],
+    "means": "HGRD dieksekusi, G3 gagal: A_Q bukan jumlah zona lengkung"
+   },
+   {
+    "id": "guard.g4_fail",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     80,
+     82
+    ],
+    "means": "HGRD dieksekusi, G4 gagal: Theta kurang dari U"
+   },
+   {
+    "id": "guard.t1_fail",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     95
+    ],
+    "means": "HGRD dieksekusi, T1 gagal: Ks tanpa Qc"
+   },
+   {
+    "id": "guard.t2_fail",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     101
+    ],
+    "means": "HGRD dieksekusi, T2 gagal: Kc tanpa Qc"
+   },
+   {
+    "id": "guard.u",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     80,
+     91
+    ],
+    "means": "CU dieksekusi: U dari guard (hcpu_execute.v baris 248)"
+   },
+   {
+    "id": "guard.rho",
+    "subsystem": "guard",
+    "file": "rtl/hcpu_guard.v",
+    "lines": [
+     90,
+     92
+    ],
+    "means": "CRHO dieksekusi: rho dari guard (hcpu_execute.v baris 249)"
+   },
+   {
+    "id": "calu.hcadd",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     128
+    ],
+    "means": "HCADD dieksekusi: jumlah per komponen"
+   },
+   {
+    "id": "calu.letter",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     128
+    ],
+    "means": "opcode huruf dieksekusi: jumlah dengan vektor ROM (hcpu_execute.v baris 202, 219, 271)"
+   },
+   {
+    "id": "calu.hnrm2",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     129
+    ],
+    "means": "HNRM2 dieksekusi: norma kuadrat"
+   },
+   {
+    "id": "calu.hdist",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     130
+    ],
+    "means": "HDIST dieksekusi: jarak kuadrat"
+   },
+   {
+    "id": "calu.cget",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     148,
+     149
+    ],
+    "means": "CGET dengan indeks 0-17: satu komponen"
+   },
+   {
+    "id": "calu.cget_outside",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     148,
+     149
+    ],
+    "means": "CGET dengan indeks di atas 17: nol"
+   },
+   {
+    "id": "calu.cset",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     135
+    ],
+    "means": "CSET dengan indeks 0-17: satu komponen ditulis"
+   },
+   {
+    "id": "calu.cset_outside",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     135
+    ],
+    "means": "CSET dengan indeks di atas 17: register tetap"
+   },
+   {
+    "id": "calu.cmod4",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     139
+    ],
+    "means": "CMOD4 dieksekusi: dua bit rendah Theta"
+   },
+   {
+    "id": "calu.default",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     150,
+     151,
+     152,
+     153
+    ],
+    "means": "op 6 atau 7: nol"
+   },
+   {
+    "id": "hisab.word0",
+    "subsystem": "hisab",
+    "file": "rtl/hcpu_hisab.v",
+    "lines": [
+     94
+    ],
+    "means": "HPACK dengan S2 0: word nibble 0 (hcpu_execute.v baris 256)"
+   },
+   {
+    "id": "hisab.word1",
+    "subsystem": "hisab",
+    "file": "rtl/hcpu_hisab.v",
+    "lines": [
+     95
+    ],
+    "means": "HPACK dengan S2 1: word nibble 1 (hcpu_execute.v baris 257)"
+   },
+   {
+    "id": "hisab.word2",
+    "subsystem": "hisab",
+    "file": "rtl/hcpu_hisab.v",
+    "lines": [
+     96
+    ],
+    "means": "HPACK dengan S2 2: byte 8 dan status guard (hcpu_execute.v baris 258)"
+   },
+   {
+    "id": "hisab.word_none",
+    "subsystem": "hisab",
+    "file": "rtl/hcpu_hisab.v",
+    "lines": [
+     96
+    ],
+    "means": "HPACK dengan S2 di atas 2: nol (hcpu_execute.v baris 259)"
+   },
+   {
+    "id": "hisab.crc",
+    "subsystem": "hisab",
+    "file": "rtl/hcpu_hisab.v",
+    "lines": [
+     128,
+     141,
+     143
+    ],
+    "means": "HCRC dieksekusi: CRC32 frame huruf (hcpu_execute.v baris 260)"
+   },
+   {
+    "id": "mul.mul",
+    "subsystem": "mul",
+    "file": "rtl/hcpu_mul.v",
+    "lines": [
+     27,
+     63
+    ],
+    "means": "MUL dieksekusi: 32 bit rendah perkalian (hcpu_execute.v baris 157)"
+   }
+  ],
+  "not_covered": {
+   "print.print_accept": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.emits_accept": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.conv_zero": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.conv_digit": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.conv_done": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.send": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.send_hold": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.wait_newline": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.wait_next": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.wait_hold": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.newline": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.newline_hold": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.s_addr": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.s_char_end": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.s_char_send": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.s_char_hold": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.s_wait_next": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.s_wait_hold": "arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE",
+   "print.default": "tidak terjangkau: print_state tiga bit (hcpu_top.v baris 247) dan kedelapan nilainya bernama (baris 262-266, 279-281)",
+   "trap.eret": "arm ERET tidak pernah didekode (pipeline_audit): trap_is_eret_w 0 di setiap tepi",
+   "trap.eret_mode_bypass": "tidak ada ERET, dan trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "trap.eret_epc_bypass": "tidak ada ERET, dan trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "trap.fire_timer": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik: expired timer tidak pernah naik, compare tetap 0xFFFFFFFF sejak reset, dan enable 0",
+   "trap.fire_uart_rx": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik: rx_ready 0, karena uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "trap.fire_illegal": "tidak terjangkau: src_illegal diikat 1'b0 (hcpu_top.v baris 798)",
+   "trap.fire_priv": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik: fault hak istimewa hanya ada di mode pengguna (hcpu_execute.v baris 310), dan mode tetap supervisor sejak reset",
+   "trap.fire_mem": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik: fault memori hanya ada di mode pengguna (hcpu_execute.v baris 317), dan mode tetap supervisor sejak reset",
+   "trap.fire_syscall": "arm SYSCALL tidak pernah didekode (pipeline_audit): pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik",
+   "trap.pending_masked": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik",
+   "trap.held_active": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik",
+   "trap.held_pc_invalid": "pending unit trap 0 di setiap tepi: tak satu pun sumbernya naik",
+   "trap.write_vector": "trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "trap.write_epc": "trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "trap.write_enable": "trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "trap.write_mode": "trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "trap.write_readonly": "trap_reg_we 0 di setiap tepi: tidak ada tulis ke register trap 0xFF8-0xFFD",
+   "mmio.rx_hold": "rx_valid penerima 0 di setiap tepi: uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.rx_overrun_set": "rx_valid penerima 0 di setiap tepi: uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.rx_read_clear": "tidak ada baca 0xFF0: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.timer_compare_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.timer_clear": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.timer_expire": "counter tidak pernah sama dengan compare: compare tetap 0xFFFFFFFF sejak reset, dan tiap program mulai dari reset",
+   "mmio.mem_base_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.mem_limit_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.imem_addr_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.imem_data_advance": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.sd_cmd_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.sd_sector_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.sd_control_write": "tidak ada tulis ke jendela periferal: bus data membawa empat akses di seluruh bench, tulis dan baca ke alamat 0 dan 10",
+   "mmio.sd_data_advance": "tidak ada alamat blok kartu 0xFE0-0xFEF di bus di tepi mana pun",
+   "mmio.read_counter": "addr[3:0] 4 di luar blok kartu tidak pernah muncul di bus di tepi hidup mana pun",
+   "mmio.read_mem_base": "addr[3:0] 0xE tidak pernah muncul di bus di tepi hidup mana pun",
+   "mmio.read_other": "addr[3:0] 7 tidak pernah muncul di bus di tepi hidup mana pun",
+   "mmio.read_sd_status": "tidak ada alamat blok kartu 0xFE0-0xFEF di bus di tepi mana pun",
+   "mmio.read_sd_sector": "tidak ada alamat blok kartu 0xFE0-0xFEF di bus di tepi mana pun",
+   "mmio.read_sd_control": "tidak ada alamat blok kartu 0xFE0-0xFEF di bus di tepi mana pun",
+   "mmio.read_sd_other": "tidak ada alamat blok kartu 0xFE0-0xFEF di bus di tepi mana pun",
+   "mmio.u_rx.idle_falling_edge": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.start_count": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.start_confirmed": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.start_glitch": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.data_count": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.data_sample": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.data_last": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.stop_count": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "mmio.u_rx.stop_deliver": "uart_rx tidak disambung bench dan ditarik ke 1 (hcpu_top.v baris 723): rx_sync 1 di setiap tepi, penerima tidak pernah meninggalkan IDLE",
+   "sdio.soft_reset": "sd_soft_rst 0 di setiap tepi: tidak ada tulis SD_CONTROL (0xFE4)",
+   "sdio.clk_toggle": "clk_en 0 di setiap tepi: pengendali tidak pernah mulai",
+   "sdio.clk_count": "clk_en 0 di setiap tepi: pengendali tidak pernah mulai",
+   "sdio.port_fsm": "busy 0 di setiap tepi: pengendali tidak pernah mulai",
+   "sdio.buf_write": "wr_en 0 di setiap tepi: tidak ada tulis SD_DATA (0xFE3) dan pengendali tidak pernah sibuk",
+   "sdio.idle_init": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.idle_not_init": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.idle_transfer": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_powerup": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_cmd_setup": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_cmd_send": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_cmd_gap": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_resp_wait": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_resp_recv": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_resp_done": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_dat_wait": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_dat_recv": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_dat_crc": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_gap": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_start": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_data": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_crc": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_end": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_ack": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_wr_busy": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_finish": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.s_fail": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "sdio.default": "state pengendali tetap S_IDLE di setiap tepi: tidak ada tulis SD_CMD (0xFE0), jadi start tidak pernah naik",
+   "dataram.read_first": "re dan we tidak pernah tinggi di tepi yang sama: empat akses di seluruh bench, dua tulis lalu dua baca",
+   "dataram.initial_zero": "kedua baca membaca kata yang sudah ditulis program yang sama: alamat 0 di program 4, alamat 10 di program 6",
+   "rom.invalid": "tidak ada HLOAD dengan indeks di luar 1-28 dan 31-36: HC-01 tidak tercakup pipeline_audit",
+   "guard.g1_fail": "satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat",
+   "guard.g2_fail": "satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat",
+   "guard.g3_fail": "satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat",
+   "guard.t1_fail": "satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat",
+   "guard.t2_fail": "satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat",
+   "calu.letter": "tidak ada opcode huruf 0xE0-0xFB di kesebelas program: decode_letter tidak tercakup pipeline_audit",
+   "calu.hdist": "arm HDIST tidak pernah didekode (pipeline_audit)",
+   "calu.default": "tidak terjangkau: hcpu_execute.v baris 202-207 hanya memberi op 0-5",
+   "mul.mul": "arm MUL tidak pernah didekode (pipeline_audit)"
+  },
+  "not_covered_why": "transisi RTL HCPU yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti. Pemancar menjawab bench yang sama dengan fungsinya, jadi alasannya milik spec fungsi itu",
+  "covered_limits": {
+   "mmio.read_*": "delapan aturan baca yang dijalankan adalah register periph_rdata, yang hcpu_mmio.v baris 329-373 perbarui dari alamat bus di setiap siklus, dengan atau tanpa re. periph_sel 0 di setiap tepi: tak satu pun nilai itu sampai ke rdata, jadi tidak ada baca MMIO yang terbukti",
+   "rom.letter_entry": "hanya lewat HLOAD: tidak ada opcode huruf di kesebelas program",
+   "rom.negative_entry": "hanya indeks 31, program 5",
+   "sdio.buf_read": "sbuf tidak pernah ditulis: tiap tepi membaca word yang x, dan buf_rdata x di setiap tepi",
+   "dataram.read": "dua baca, masing-masing kata yang program itu sendiri tulis sebelumnya"
+  },
+  "covered_limits_why": "yang dijalankan bench, dan apa yang pemakaiannya tidak tunjukkan"
  }
 }
