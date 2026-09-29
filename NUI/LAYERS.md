@@ -277,7 +277,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.757 node, 4.495 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.758 node, 4.510 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -1278,8 +1278,17 @@ dapat diukur**, dengan enam unsur:
 Tujuannya supaya Lapis 7 tidak mengubah NUI menjadi sekadar lingkar otomatis
 tanpa guard.
 
-**Yang belum ada.** Kontrak itu sendiri. Aset di atas terbatas pada satu harness
-dan satu jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
+**Kerangka kontraknya, 30 September 2026**, ada di `NUI/LAYER7.md`: sebelas
+bagian dari pemilik, dengan keenam unsur sebagai struktur resmi. Yang dikunci
+pemilik hanya dua: pagar di 7.2, dan 7.5 *Authorization Boundary* yang berstatus
+UNDECIDED. Sisanya kerangka yang menunjuk ke sumber terukur. Tidak ada tindakan
+yang diizinkan, dan `rtl/scripts/burn_in.py` hanya bukti bahwa mekanisme
+tindakan otomatis pernah dieksekusi, bukan preseden. Lapis 7 tetap belum
+otonom.
+
+**Yang belum ada.** Isi kontrak yang menjadi keputusan pemilik: batas otorisasi
+dan tindakan yang diizinkan. Aset di atas terbatas pada satu harness dan satu
+jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
 kegagalan di luar burn-in, dan tidak ada yang bisa memulihkan host yang
 berhibernasi — itu yang membunuh percobaan pertama 72 jam.
 

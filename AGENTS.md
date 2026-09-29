@@ -1771,6 +1771,25 @@ ketiganya masih berlaku:
 - larangan memperluas izin demi PASS (K-12).
 Batas otorisasi di dalam kontrak adalah keputusan pemilik, bukan hasil karangan.
 
+**Kerangka kontrak, perintah pemilik 30 September 2026**, di `NUI/LAYER7.md`.
+Isinya dokumen saja, tanpa kode, dengan struktur sebelas bagian (7.1–7.11) dari
+pemilik dan keenam unsur sebagai struktur resmi. Yang dikunci pemilik ada dua:
+
+- **7.5 *Authorization Boundary*** berstatus `UNDECIDED`, *owner decision
+  required*. Jangan diisi, dan jangan diturunkan dari implementasi lama.
+- **Pagar yang langsung dikunci.** Lapis 7 tidak boleh:
+  - mencabut read-only guard Lapis 5;
+  - melewati K-4;
+  - melewati K-12;
+  - mengubah state hanya karena tidak ada evidence;
+  - menganggap `UNKNOWN` sebagai izin bertindak;
+  - menganggap `NOT_COVERED` sebagai keberhasilan;
+  - mengubah batas otorisasi secara otomatis.
+
+`rtl/scripts/burn_in.py` **bukan preseden**: ia hanya bukti bahwa mekanisme
+tindakan otomatis pernah dieksekusi. Kerangka itu sendiri tidak memberi izin
+tindakan, dan Lapis 7 tetap **belum otonom**.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
