@@ -1788,7 +1788,41 @@ pemilik dan keenam unsur sebagai struktur resmi. Yang dikunci pemilik ada dua:
 
 `rtl/scripts/burn_in.py` **bukan preseden**: ia hanya bukti bahwa mekanisme
 tindakan otomatis pernah dieksekusi. Kerangka itu sendiri tidak memberi izin
-tindakan, dan Lapis 7 tetap **belum otonom**.
+tindakan.
+
+**Keputusan pemilik, 30 September 2026 — 7.2, 7.5, dan 7.11 dikunci.** Semuanya
+dokumen dan spec, di `NUI/LAYER7.md`; tidak ada izin implementasi tindakan
+otonom di luar batas yang ditetapkan. Kalimat pemilik dikutip persis di sana.
+
+- **7.2 — definisi dikunci.** Konsekuensinya: *otonomi tidak menciptakan
+  kewenangan baru*. Autonomous ≠ unrestricted.
+- **7.5 — least privilege + fail-closed.**
+  - Yang diizinkan secara otonom hanya enam: membaca observasi lewat mekanisme
+    Lapis 5; membaca dan mengevaluasi state hardware Lapis 6; menghitung delta;
+    memvalidasi provenance, freshness, hash manifest, dan `outcomes`; menjalankan
+    fungsi verifikasi yang tidak mengubah apa pun; dan menghasilkan evidence baru.
+  - Setiap tindakan mutatif DENIED: papan, program, HFS/SD, restart atau
+    recovery, isolasi kesalahan, menjaga host terjaga, kesepuluh perintah host
+    Lapis 5, jaringan eksternal, repository, konfigurasi sistem, dan apa pun
+    yang menuntut pencabutan pagar Lapis 5, K-4, atau K-12.
+  - **Lapis 7 tidak boleh memberikan dirinya sendiri otorisasi**, memperluas
+    allowlist, atau mengubah boundary.
+  - Eskalasi berakhir di STOP / REPORT, tidak pernah di "NUI mengotorisasi
+    dirinya sendiri".
+- **Prasyarat** tindakan yang sudah di allowlist: target identity known,
+  provenance valid, freshness current, required state known, rule coverage
+  covered, authorization allowed. `UNKNOWN`, `STALE`, `NOT_COVERED`, provenance
+  tidak sah, target ambigu, dan tindakan tak berizin memaksa tidak bertindak —
+  lewat mekanisme yang sudah ada, bukan klasifikasi baru.
+- **Keberhasilan** hanya bila ada observasi pascatindakan yang sesuai outcome
+  yang ditentukan. Exit code bagian dari evidence, bukan satu-satunya bukti.
+- **7.11 — dikunci.** Perubahan kontrak, boundary, allowlist, denylist, atau
+  kondisi eskalasi adalah perubahan spec yang menuntut keputusan pemilik, dan
+  tidak boleh dilakukan operasi otonom itu sendiri.
+
+Tahap berikutnya dari pemilik: **uji kontrak read/verify/evidence terhadap
+observasi nyata Lapis 5 dan state model Lapis 6**, sebelum satu pun tindakan
+mutatif dibuka.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

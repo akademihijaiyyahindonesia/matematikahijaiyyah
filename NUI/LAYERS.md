@@ -1278,17 +1278,21 @@ dapat diukur**, dengan enam unsur:
 Tujuannya supaya Lapis 7 tidak mengubah NUI menjadi sekadar lingkar otomatis
 tanpa guard.
 
-**Kerangka kontraknya, 30 September 2026**, ada di `NUI/LAYER7.md`: sebelas
-bagian dari pemilik, dengan keenam unsur sebagai struktur resmi. Yang dikunci
-pemilik hanya dua: pagar di 7.2, dan 7.5 *Authorization Boundary* yang berstatus
-UNDECIDED. Sisanya kerangka yang menunjuk ke sumber terukur. Tidak ada tindakan
-yang diizinkan, dan `rtl/scripts/burn_in.py` hanya bukti bahwa mekanisme
-tindakan otomatis pernah dieksekusi, bukan preseden. Lapis 7 tetap belum
-otonom.
+**Kontraknya, 30 September 2026**, ada di `NUI/LAYER7.md`: sebelas bagian dari
+pemilik, dengan keenam unsur sebagai struktur resmi. Pada hari yang sama pemilik
+mengunci tiga hal:
+- definisi operasi otonom (7.2);
+- batas otorisasi (7.5), model *least privilege + fail-closed*;
+- aturan perubahan (7.11).
+Yang diizinkan secara otonom hanya baca, evaluasi, verifikasi, dan evidence;
+setiap tindakan mutatif **DENIED**. Bila keadaan menuntut tindakan di luar
+batas, alurnya berhenti dan melapor — NUI tidak mengotorisasi dirinya sendiri.
+`rtl/scripts/burn_in.py` tetap bukti historis, bukan dasar izin.
 
-**Yang belum ada.** Isi kontrak yang menjadi keputusan pemilik: batas otorisasi
-dan tindakan yang diizinkan. Aset di atas terbatas pada satu harness dan satu
-jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
+**Yang belum ada.** Implementasi Lapis 7: kontrak read/verify/evidence belum
+diuji terhadap observasi nyata Lapis 5 dan state model Lapis 6. Itu tahap
+berikutnya dari pemilik, sebelum satu pun tindakan mutatif dibuka. Aset di atas
+terbatas pada satu harness dan satu jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
 kegagalan di luar burn-in, dan tidak ada yang bisa memulihkan host yang
 berhibernasi — itu yang membunuh percobaan pertama 72 jam.
 
