@@ -253,6 +253,48 @@ Semuanya memakai mekanisme yang sudah ada, bukan sistem klasifikasi baru:
 Untuk hardware, keadaan CURRENT hanya datang dari sumber live. Hari ini tidak ada
 sumber live, jadi keadaan hardware sebelum tindakan tidak dapat diketahui.
 
+**Keputusan operasional — DECIDE, dry-run.** Perintah pemilik, 30 September
+2026: NUI bergerak dari
+
+```text
+READ
+  ↓
+EVALUATE
+  ↓
+GATE
+  ↓
+DECIDE
+  ↓
+EVIDENCE / REPORT
+```
+
+dengan DECIDE menghasilkan keputusan operasional yang eksplisit **tanpa
+memperoleh kewenangan eksekusi**. Setiap kandidat tindakan dari 7.4
+menghasilkan salah satu dari `ALLOW`, `DENY`, atau `STOP / REPORT`. Untuk
+keadaan sekarang:
+
+```text
+read/evidence actions     → ALLOW
+mutative actions          → DENY
+UNKNOWN / STALE           → STOP / REPORT
+NOT_COVERED               → STOP / REPORT
+KNOWN_DISCREPANCY         → STOP / REPORT
+UNAUTHORIZED ACTION       → STOP / REPORT
+AMBIGUOUS TARGET          → STOP / REPORT
+```
+
+**ALLOW berarti "lolos kontrak untuk tindakan", bukan berarti tindakannya
+dieksekusi.** Eksekusi tetap berada di caller dan dibatasi authorization
+boundary 7.5. Modulnya `src/hijaiyyah/nui/layer7_decision.py`, terpisah dari
+`src/hijaiyyah/nui/layer7.py`. Ia hanya menerima hasil kontrak dan menghasilkan
+decision record deterministik. Tidak ada subprocess, mutasi berkas, perintah
+papan, restart, pengiriman program, atau self-authorization. Hasil ujinya di
+`NUI/LAYERS.md`, Lapis 7.
+
+Tetap tidak dibuka: board reconfiguration, send program, restart/recovery,
+fault isolation, keep host awake, dan repository/config mutation.
+`rtl/scripts/burn_in.py` tidak dijadikan allowlist.
+
 **Sesudah tindakan** tersedia:
 - observasi baru dari sumber yang sama, dengan cap waktu sesudah tindakan
   selesai;
@@ -519,6 +561,9 @@ Mekanisme itu terbatas pada satu harness dan satu jenis kegagalan
   `layer5.record`** (pemilik, 30 September 2026). Tindakan mutatif tetap
   DENIED, jadi tidak ada observasi pascatindakan atas tindakan mutatif mana
   pun, dan tidak ada klaim 7.7 untuknya.
+- **ALLOW dari DECIDE bukan eksekusi.** `src/hijaiyyah/nui/layer7_decision.py`
+  tidak menjalankan kandidat yang ia putuskan ALLOW, dan tidak memperoleh
+  kewenangan apa pun darinya.
 - Evaluator hanya menjawab keadaan hardware CURRENT, bukan klaim historis
   Lapis 6. Hardware CURRENT tetap UNKNOWN, dan tidak ada provenance hardware
   live yang dibuat untuk memicu `INVALID PROVENANCE` di jalur itu.

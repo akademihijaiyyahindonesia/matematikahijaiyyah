@@ -1924,6 +1924,28 @@ Kalimatnya di 7.7 `NUI/LAYER7.md`. Yang paling mudah dilanggar:
 mutatif DENIED. Status resminya di kepala `NUI/LAYER7.md`. Langkah Lapis 7
 sesudahnya diambil dari pemilik, tidak dikarang.
 
+**Perintah pemilik, 30 September 2026 — DECIDE, dry-run.** Tindakan mutatif
+**belum dibuka**. NUI bergerak READ → EVALUATE → GATE → DECIDE → EVIDENCE /
+REPORT, dan DECIDE memberi keputusan eksplisit tanpa kewenangan eksekusi.
+Pemetaannya di 7.6 `NUI/LAYER7.md`, hasil terukurnya di `NUI/LAYERS.md`, Lapis 7
+(R1). Nama modulnya dari pemilik: `src/hijaiyyah/nui/layer7_decision.py`, di
+samping — bukan pengganti — `src/hijaiyyah/nui/layer7.py`. Yang paling mudah
+dilanggar:
+
+- **ALLOW bukan eksekusi.** ALLOW berarti lolos kontrak untuk tindakan.
+  Modul keputusan tidak menjalankan, merekam, atau mengevaluasi apa pun: ia
+  hanya menerima hasil kontrak.
+- **Tidak ada self-authorization.** Status 7.4 dibaca ulang dari kontrak, dan
+  hasil yang mengaku lebih dari 7.4 berhenti.
+- **Masukan yang sama → decision record yang sama**, dijaga `record_sha256`.
+  Record yang diubah tidak lolos `verify()` diam-diam.
+- **Tetap tidak dibuka:** board reconfiguration, send program,
+  restart/recovery, fault isolation, keep host awake, dan repository/config
+  mutation. `rtl/scripts/burn_in.py` bukan allowlist.
+- Urutannya dari pemilik: dry-run ini GREEN dulu, **baru** dievaluasi apakah
+  ada alasan meminta perluasan otorisasi.
+- Tiga penerapan pelaksana menunggu pemilik; daftarnya di `NUI/LAYERS.md`.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

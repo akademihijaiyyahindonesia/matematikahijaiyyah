@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **39 modul**; `tests/test_ai/` berisi **898 tes**
+`src/hijaiyyah/nui/` berisi **40 modul**; `tests/test_ai/` berisi **935 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.533 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.541 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -220,6 +220,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
 | `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (39) |
+| `layer7_decision.py` | DECIDE Lapis 7: satu hasil kontrak `layer7.evaluate` atau `layer7.expect` jadi satu decision record deterministik — ALLOW, DENY, atau STOP / REPORT, dengan `record_sha256` dan `verify()`; ALLOW bukan eksekusi, dan tidak ada yang dijalankan | `test_nui_layer7_decision.py` (37) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host, hardware beserta jenis keadaannya dan korelasinya — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -278,7 +279,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.778 node, 4.542 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.788 node, 4.560 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -327,7 +328,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.533 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.541 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -1513,6 +1514,78 @@ VALIDATED pada `layer5.record`, dengan evidence yang mengacu pada kode final.
 Baseline current dikunci, dan presisi `run_id` tidak diubah. Rinciannya di 7.7
 `NUI/LAYER7.md`. **`b7fa5e8` GREEN**, hari yang sama; status resminya di kepala
 `NUI/LAYER7.md`.
+
+**DECIDE, dry-run — perintah pemilik 30 September 2026.**
+`src/hijaiyyah/nui/layer7_decision.py` menerima satu hasil kontrak — dari
+`layer7.evaluate` atau `layer7.expect` — dan memberi satu decision record: target,
+run_identity, required_action, authorization, preconditions, reason, decision,
+expected_outcome, dan `record_sha256` atas medan-medan itu. `verify(record,
+result)` menghitung ulang record dari hasil kontraknya dan menyebut tiap medan
+yang berubah. Keputusannya diturunkan dari keenam prasyarat hasil itu sendiri:
+- kategori DENIED di 7.4 → `DENY`;
+- prasyarat mana pun yang berhenti → `STOP / REPORT`, dengan tiap kondisi di
+  `reason`;
+- kategori AUTHORIZED tanpa satu pun kondisi → `ALLOW`.
+Status 7.4 dibaca ulang dari `NUI/LAYER7.md`. Hasil yang mengaku `allowed`
+untuk kategori DENIED berhenti sebagai `UNAUTHORIZED ACTION`: tidak ada hasil
+yang mengotorisasi dirinya sendiri.
+
+**Penerapan pelaksana, belum keputusan pemilik:**
+- **DENY didahulukan atas kondisi lain.** Kategori DENIED tetap `DENY` meski
+  evidence-nya juga STALE. Kondisi lainnya tetap tertulis di `reason`.
+- **`reason` sebuah `DENY` membawa `UNAUTHORIZED ACTION`**, karena itulah stop
+  yang prasyarat otorisasi berikan untuk kategori DENIED. Keputusannya tetap
+  `DENY`; `STOP / REPORT` karena `UNAUTHORIZED ACTION` hanya untuk tindakan
+  yang tidak tercantum di 7.4, atau hasil yang mengaku lebih dari 7.4.
+- **Yang bukan hasil kontrak kandidat → `STOP / REPORT` dengan `UNKNOWN`.**
+  Ini termasuk hasil `confirm()`, yang menilai tindakan yang sudah berjalan,
+  dan hasil yang putusannya berselisih dengan prasyaratnya sendiri.
+
+Terukur pada evidence VM `cosmictera-layer5`, 30 September 2026. Tiap kali ada
+14 hasil kontrak: kesembilan kategori 7.4 atas observasi `processes` terbaru,
+hardware `board clock`, `rtl hcpu fetch_redirect_trap`, `rtl hcpu HISAB`, VM
+tak dikenal, dan `expect()`.
+- **Evidence basi**, `20260930T140724Z-collectors`:
+  - kedua kategori AUTHORIZED → STOP STALE;
+  - ketujuh kategori mutatif → DENY;
+  - hardware → STOP UNKNOWN;
+  - RTL → STOP NOT_COVERED dan STOP KNOWN_DISCREPANCY;
+  - VM tak dikenal → STOP AMBIGUOUS TARGET;
+  - `expect` → STOP STALE.
+- **Sesudah satu baseline `layer5.record`**, `20260930T154243Z-collectors`:
+  - kedua kategori AUTHORIZED dan `expect` → ALLOW. Record `expect` membawa
+    outcome yang ditetapkan dan run_identity baseline-nya;
+  - ketujuh kategori mutatif → DENY;
+  - keempat target lain STOP seperti di atas.
+- Di kedua keadaan, daftar run di evidence store sama sebelum dan sesudah
+  DECIDE. ALLOW tidak menjalankan apa pun.
+- Hasil kontrak yang sama memberi rekaman keputusan yang identik byte demi
+  byte.
+
+`tests/test_ai/test_nui_layer7_decision.py`, 37 tes:
+- tiap baris tabel pemilik;
+- kesembilan kandidat 7.4, segar dan basi;
+- determinisme dan `record_sha256`;
+- keputusan tidak mengubah masukannya;
+- tujuh medan record yang diubah tertangkap `verify` — termasuk sesudah
+  disegel ulang;
+- hasil yang mengotorisasi dirinya sendiri, putusan yang berselisih dengan
+  prasyaratnya, dan masukan yang bukan hasil kontrak;
+- pemindai panggilan AST dan uji tanpa efek samping, dengan evaluator, `expect`,
+  dan `confirm` ikut dibuat gagal;
+- jalur baris perintah.
+Sebelas sabotase membuatnya merah (R3):
+- DENY hilang;
+- kondisi diabaikan;
+- self-authorization diterima;
+- putusan tak diperiksa;
+- digest buta satu medan;
+- `verify` buta satu medan;
+- masukan longgar;
+- outcome dibuang;
+- identitas run salah;
+- mutatif diizinkan;
+- `decide` menulis berkas.
 
 **Yang belum ada.** Tindakan mutatif — seluruhnya DENIED, dan evaluator ini
 tidak membukanya. 7.7 VALIDATED hanya pada satu tindakan AUTHORIZED yang tidak

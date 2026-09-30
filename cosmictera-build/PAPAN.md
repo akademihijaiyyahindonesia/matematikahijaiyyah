@@ -561,7 +561,7 @@ pernah dijalankan perangkat keras.
 
 Dua kali dashboard ditaruh di penempatan yang sama dengan CPU, dan dua kali
 nextpnr menolaknya: 16.882 LUT4 untuk RAM + painter, 16.849 untuk ROM +
-compositor, melawan kontrol 15.952 yang terrout bersih. Sintesis diferensial
+compositor, melawan kontrol 15.989 yang terrout bersih. Sintesis diferensial
 sudah mengukur seluruh tumpukan display di 571 LUT terhadap celah 916 pasca
 perutean — yang harus dibuang lebih besar daripada seluruh yang ada untuk
 dibuang. Jadi display berhenti berbagi die dengan CPU.
@@ -1315,7 +1315,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.952 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.989 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1358,7 +1358,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.952 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.989 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,
