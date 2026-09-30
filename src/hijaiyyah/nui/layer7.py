@@ -2,7 +2,7 @@
 
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 host <vm_name> <collector> [<run_id>]
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 hardware <subject>
-    PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 rtl <module> <rule>
+    PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 rtl <module> <name>
 
 The owner's order of 30 September 2026, on the contract NUI/LAYER7.md: test
 the read/verify/evidence contract against real Layer 5 observations and the
@@ -24,10 +24,11 @@ observation hold -- never that anything was done.
 
 Each of the six preconditions of 7.6 is answered by a mechanism that already
 exists, and a failure keeps its own name as a reason to stop -- UNKNOWN,
-STALE and NOT_COVERED are never folded into a plain false:
+STALE, NOT_COVERED and KNOWN_DISCREPANCY are never folded into a plain false:
 
-    target identity         known      (vm_name, run_id) K-16; hardware_state.select;
-                                       the RTL model's own rule names
+    target identity         known      (vm_name, run_id) K-16, the only identity
+                                       AMBIGUOUS TARGET names; hardware_state.select;
+                                       the names NUI/spec/rtl_function.json gives
     observation provenance  valid      the manifest check in layer5 (size, SHA-256);
                                        6.3's incomplete provenance; the RTL model's hashes
     evidence freshness      current    layer5.freshness and the spec's limit; LIVE only
@@ -35,7 +36,9 @@ STALE and NOT_COVERED are never folded into a plain false:
     required state          known      the collector's outcome class; hardware_state's
                                        answer; the function agreeing with its RTL
     required rule coverage  covered    the collector's contract locked in the spec; the
-                                       RTL rule not among those the model does not cover
+                                       RTL rule not among those the model does not cover;
+                                       opaque state and external results NOT_COVERED, a
+                                       measured known discrepancy KNOWN_DISCREPANCY
     authorization           allowed    the 7.4 status table in NUI/LAYER7.md, read, not
                                        copied; anything unlisted is denied (fail-closed)
 """
@@ -54,10 +57,12 @@ from .repository_index import ROOT
 
 CONTRACT = ROOT / "NUI" / "LAYER7.md"
 RTL_MODEL = ROOT / "NUI" / "rtl_function.json"
+RTL_SPEC = ROOT / "NUI" / "spec" / "rtl_function.json"
 PRECONDITIONS = ("target identity", "observation provenance", "evidence freshness",
                  "required state", "required rule coverage", "authorization")
-#: The owner's names for the conditions that force no action (7.6).
+#: The owner's names for the conditions that force no action (7.6, 7.8).
 UNKNOWN, STALE, NOT_COVERED = "UNKNOWN", "STALE", "NOT_COVERED"
+KNOWN_DISCREPANCY = "KNOWN_DISCREPANCY"
 INVALID, AMBIGUOUS, UNAUTHORIZED = "INVALID PROVENANCE", "AMBIGUOUS TARGET", "UNAUTHORIZED ACTION"
 PASS, STOP = "PASS", "STOP / REPORT"
 #: The one read the tests of this stage ask for: the 7.4 category, by its name.
@@ -150,7 +155,7 @@ def _hardware(subject: str) -> dict[str, Any]:
     model = json.loads(hardware_state.MODEL.read_text(encoding="utf-8"))
     mechanism = "hardware_state.answer, CURRENT"
     if hardware_state.select(subject, ctx) is None:
-        return {"target identity": _cond("unknown", "hardware_state.select", AMBIGUOUS,
+        return {"target identity": _cond("unknown", "hardware_state.select", UNKNOWN,
                                          why=f"`{subject}` names no hardware claim")}
     a = hardware_state.answer("current", subject, model, ctx)
     out = {"target identity": _cond("known", "hardware_state.select", subject=subject)}
@@ -175,17 +180,42 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _unmodelled(name: str, entry: dict[str, Any],
+                spec: dict[str, Any]) -> tuple[str, str, dict[str, Any]] | None:
+    """What NUI/spec/rtl_function.json says of a name its function does not
+    model: a measured known discrepancy of any function, or opaque state or an
+    external result of this one. None when it names none of them."""
+    low = name.casefold()
+    for mod in spec["modules"]:
+        for key, what in mod.get("known_discrepancy", {}).items():
+            if low == key.casefold():
+                return (KNOWN_DISCREPANCY, f"known_discrepancy.{key} of {mod['name']}",
+                        {"why": what["status"], "measured": what["measured"]})
+    for key, why in entry.get("opaque", {}).items():
+        if low == key.casefold():
+            return NOT_COVERED, f"opaque of {entry['name']}", {"why": why}
+    for key in entry.get("externals", {}):
+        if low == key.casefold():
+            return NOT_COVERED, f"externals of {entry['name']}", {"why": entry["externals_why"]}
+    return None
+
+
 def _rtl(module: str, rule: str) -> dict[str, Any]:
-    """The five evidence preconditions for one rule of one Layer 6 RTL
-    function, from the committed model: the rule's coverage, and whether the
-    files it was measured on are still the files."""
+    """The five evidence preconditions for one name of one Layer 6 RTL
+    function, from the committed model and its spec: a rule and its coverage,
+    or the opaque state, external result or known discrepancy the spec names;
+    and whether the files it was measured on are still the files."""
     model = json.loads(RTL_MODEL.read_text(encoding="utf-8"))
+    spec = json.loads(RTL_SPEC.read_text(encoding="utf-8"))
     m = next((x for x in model["modules"] if x["name"] == module), None)
+    entry: dict[str, Any] = next((x for x in spec["modules"] if x["name"] == module), {})
     rules = {r["id"]: r for r in m["rules"]} if m else {}
-    if m is None or rule not in rules:
+    unmodelled = None if m is None or rule in rules else _unmodelled(rule, entry, spec)
+    if m is None or (rule not in rules and unmodelled is None):
         why = f"`{module}` is not a function of NUI/rtl_function.json" if m is None else \
-              f"`{rule}` is not a rule of {module}"
-        return {"target identity": _cond("unknown", "NUI/rtl_function.json", AMBIGUOUS, why=why)}
+              (f"`{rule}` names no rule, opaque state, external result or known "
+               f"discrepancy of {module}")
+        return {"target identity": _cond("unknown", "NUI/rtl_function.json", UNKNOWN, why=why)}
     out = {"target identity": _cond("known", "NUI/rtl_function.json", module=module, rule=rule)}
     held = {m["rtl"]: m["rtl_sha256"], m["bench"]: m["bench_sha256"],
             **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
@@ -196,6 +226,14 @@ def _rtl(module: str, rule: str) -> dict[str, Any]:
         _cond("current", "the hashes the model holds (F5)") if not moved else
         _cond("stale", "the hashes the model holds (F5)", STALE,
               why=f"measured on files that have since changed: {moved}"))
+    if unmodelled is not None:
+        label, where, detail = unmodelled
+        mechanism = f"NUI/spec/rtl_function.json, {where}"
+        out["required state"] = _cond("not predicted", mechanism, label, **detail)
+        out["required rule coverage"] = _cond(
+            "known discrepancy" if label == KNOWN_DISCREPANCY else "not covered",
+            mechanism, label, **detail)
+        return out
     agrees = not m["one_step_mismatches"] and not m["open_loop_mismatches"]
     out["required state"] = _cond(
         "known" if agrees else "unknown", "the function against its RTL (F1, F2)",
@@ -223,7 +261,7 @@ def evaluate(target: dict[str, Any], action: str = READ, now: datetime | None = 
         found = _rtl(str(target.get("module", "")), str(target.get("rule", "")))
     else:
         found = {"target identity": _cond("unknown", "the kinds this evaluator reads",
-                                          AMBIGUOUS, why=f"no target kind `{kind}`")}
+                                          UNKNOWN, why=f"no target kind `{kind}`")}
     for p in PRECONDITIONS[1:-1]:
         found.setdefault(p, _cond("unknown", "not evaluated: the target is not identified",
                                   UNKNOWN))
@@ -248,8 +286,8 @@ def main(argv: list[str] | None = None) -> int:
                                   "run_id": args[3] if len(args) == 4 else None}
     elif args[:1] == ["hardware"] and len(args) >= 2:
         target = {"kind": "hardware", "subject": " ".join(args[1:])}
-    elif args[:1] == ["rtl"] and len(args) == 3:
-        target = {"kind": "rtl", "module": args[1], "rule": args[2]}
+    elif args[:1] == ["rtl"] and len(args) >= 3:
+        target = {"kind": "rtl", "module": args[1], "rule": " ".join(args[2:])}
     else:
         print(__doc__.split("\n\n")[1])
         return 2

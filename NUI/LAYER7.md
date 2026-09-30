@@ -21,6 +21,27 @@ adalah padanan yang pemilik pakai untuk dokumen ini.
 7.11 LOCKED
 ```
 
+**Status sesudah evaluator baca-saja** (pemilik, 30 September 2026):
+
+```text
+638d827
+Lapis 7 evaluator read-only: GREEN
+
+7.6:
+AMBIGUOUS TARGET = identity ambiguity only
+
+7.8:
+UNKNOWN              → STOP / REPORT
+NOT_COVERED          → STOP / REPORT
+KNOWN_DISCREPANCY    → STOP / REPORT
+STALE                → STOP / REPORT
+INVALID PROVENANCE   → STOP / REPORT
+UNAUTHORIZED ACTION  → STOP / REPORT
+
+7.7:
+NOT YET VALIDATED — no authorized mutative action exists
+```
+
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
 otonom di luar batas yang ditetapkan. Otonomi NUI saat ini hanya di wilayah
 **read → evaluate → verify → evidence**. Tidak ada mutasi sistem tanpa
@@ -194,16 +215,19 @@ sistem.
 UNKNOWN
 STALE
 NOT_COVERED
+KNOWN_DISCREPANCY
 INVALID PROVENANCE
 AMBIGUOUS TARGET
 UNAUTHORIZED ACTION
 ```
 
 Semuanya memakai mekanisme yang sudah ada, bukan sistem klasifikasi baru:
-- `UNKNOWN`, `STALE`, dan `NOT_COVERED` dirinci di 7.8;
+- `UNKNOWN`, `STALE`, `NOT_COVERED`, dan `KNOWN_DISCREPANCY` dirinci di 7.8;
 - `INVALID PROVENANCE` adalah observasi yang ditolak verifikasi manifest;
-- `AMBIGUOUS TARGET` adalah target tanpa identitas `(vm_name, run_id)` yang
-  tunggal;
+- `AMBIGUOUS TARGET` **hanya untuk ambiguitas identitas** (pemilik,
+  30 September 2026): `(vm_name, run_id)` tidak menunjuk tepat satu
+  target/evidence. Label ini tidak dipakai untuk state hardware opaque,
+  subsistem tanpa fungsi, atau ketidaksesuaian HISAB;
 - `UNAUTHORIZED ACTION` adalah apa pun di luar 7.5.
 
 Untuk hardware, keadaan CURRENT hanya datang dari sumber live. Hari ini tidak ada
@@ -252,16 +276,46 @@ Keadaan ketika sistem **wajib berhenti**, dari klaim maupun dari tindakan (7.6).
 - keadaan hardware CURRENT: tidak ada sumber telemetri live;
 - tautan atau klaim yang Lapis 6 tandai UNKNOWN di provenance atau korelasinya.
 
-**NOT_COVERED** — perilaku tanpa oracle:
+**NOT_COVERED** — perilaku tanpa oracle. Targetnya diketahui, tetapi coverage
+perilakunya belum tersedia (pemilik, 30 September 2026):
 - aturan yang fungsi RTL Lapis 6 hentikan dengan `NotCovered`, termasuk 78
   aturan model HCPU (`NUI/LAYER6.md`);
-- state opaque Lapis 6 dan subsistem tanpa fungsi;
-- ketidaksesuaian HISAB yang terukur, yang tetap ketidaksesuaian dan bukan
-  paritas.
+- state opaque Lapis 6, yang tidak punya coverage prediktif di model beku —
+  misalnya `ra_stack[]`, tujuh belas register x pengendali kartu, tujuh
+  register guard yang tidak dielaborasi, dan register pc di register file;
+- subsistem tanpa fungsi prediktif yang tervalidasi.
 
-Untuk keduanya, dari pagar 7.2: `UNKNOWN` bukan izin bertindak,
-`NOT_COVERED` bukan keberhasilan, dan ketiadaan evidence bukan alasan mengubah
-state.
+**KNOWN_DISCREPANCY** — selisih yang sudah terukur, ditambahkan pemilik
+30 September 2026. Ketidaksesuaian HISAB punya evidence dan hasil pengukuran,
+jadi ia bukan `UNKNOWN` dan bukan sekadar tidak tercakup. Ia tidak boleh
+ditransformasikan menjadi PASS, dan tidak boleh dipakai sebagai alasan untuk
+melakukan tindakan. Angkanya tinggal di `NUI/spec/rtl_function.json`
+(`known_discrepancy`), tidak disalin ke sini (R1).
+
+**Pemisahan label**, keputusan pemilik 30 September 2026:
+
+| kondisi | label |
+|---|---|
+| Identitas host `(vm_name, run_id)` tidak tunggal | `AMBIGUOUS TARGET` |
+| Target dapat diidentifikasi, tetapi tidak punya predictive coverage | `NOT_COVERED` |
+| Ada evidence terukur, tetapi menyimpang dari baseline/model | `KNOWN_DISCREPANCY` |
+| Nama/subjek/modul tidak dapat dipetakan ke objek yang dikenal | `UNKNOWN` |
+
+```text
+UNKNOWN           = kita tidak dapat menentukan objek/semantiknya
+NOT_COVERED       = objek diketahui, tetapi coverage prediktif tidak tersedia
+KNOWN_DISCREPANCY = objek diketahui dan terukur, tetapi hasil menyimpang
+```
+
+Jadi `rtl hcpu_sdio …` → `UNKNOWN`: `NUI/spec/rtl_function.json` tidak
+menyediakan pemetaan nama itu. Hubungan `hcpu_sdio` → subsistem tertentu
+**tidak dikarang** hanya dari nama RTL. Semua label selain PASS berujung
+STOP / REPORT, termasuk `UNKNOWN`: nama yang tidak dikenal tidak pernah menjadi
+alasan Lapis 7 bertindak.
+
+Untuk ketiganya, dari pagar 7.2: `UNKNOWN` bukan izin bertindak,
+`NOT_COVERED` bukan keberhasilan, `KNOWN_DISCREPANCY` bukan paritas, dan
+ketiadaan evidence bukan alasan mengubah state.
 
 ## 7.9 Existing Evidence
 
@@ -301,13 +355,13 @@ Mekanisme itu terbatas pada satu harness dan satu jenis kegagalan
   Ia tidak menjalankan perintah, tidak menulis berkas, dan tidak bertindak.
   **PASS berarti prasyarat untuk memakai sebuah observasi terpenuhi**, bukan
   bahwa sesuatu dikerjakan. Hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
-- 7.7 belum pernah dijalankan: tidak ada tindakan, jadi tidak ada observasi
-  pascatindakan.
+- **7.7 NOT YET VALIDATED**: belum ada tindakan mutatif yang diizinkan, jadi
+  belum ada observasi pascatindakan. Evaluator baru membuktikan
+  read → evaluate → gate → evidence/report, bukan
+  action → postcondition → success.
 - Evaluator hanya menjawab keadaan hardware CURRENT, bukan klaim historis
-  Lapis 6. State opaque, subsistem tanpa fungsi, dan ketidaksesuaian HISAB
-  bukan aturan model fungsi RTL. Karena itu evaluator menghentikannya sebagai
-  `AMBIGUOUS TARGET`, bukan `NOT_COVERED` seperti rincian 7.8 — tetap berhenti,
-  tetapi dengan nama yang berbeda.
+  Lapis 6. Hardware CURRENT tetap UNKNOWN, dan tidak ada provenance hardware
+  live yang dibuat untuk memicu `INVALID PROVENANCE` di jalur itu.
 - `burn_in.py` bukan dasar pemberian izin. Ia hanya bukti bahwa mekanisme
   tindakan otomatis pernah dieksekusi di dalam satu harness.
 - Kontrak ini tidak memperluas daftar izin Lapis 5, tidak menyentuh `sudo` atau

@@ -9,9 +9,12 @@ What is held:
 
     old evidence -> STALE -> rejected; fresh evidence -> current -> the
     preconditions pass, at the spec's own limit, inclusive;
-    UNKNOWN, NOT_COVERED, invalid provenance, an ambiguous or unknown target,
-    and an unauthorized action each stop it, each under its own name, never
-    folded into a plain false;
+    UNKNOWN, NOT_COVERED, KNOWN_DISCREPANCY, invalid provenance, an
+    ambiguous target, and an unauthorized action each stop it, each under its
+    own name, never folded into a plain false -- with the owner's mapping of
+    30 September 2026: AMBIGUOUS TARGET for (vm_name, run_id) alone, opaque
+    state and subsystems without a function NOT_COVERED, and the measured HISAB
+    discrepancy KNOWN_DISCREPANCY;
     the 7.4 statuses are read from the contract, and anything unlisted is
     denied;
     and the evaluator acts on nothing: it runs no command and writes no file,
@@ -40,6 +43,9 @@ from hijaiyyah.nui import layer7 as l7  # noqa: E402
 
 VM = "cosmictera-layer5"
 LIMIT = layer5.load()["freshness"]["stale_after_seconds"]
+SPEC = json.loads(l7.RTL_SPEC.read_text(encoding="utf-8"))
+LABELS = {l7.UNKNOWN, l7.STALE, l7.NOT_COVERED, l7.KNOWN_DISCREPANCY, l7.INVALID,
+          l7.AMBIGUOUS, l7.UNAUTHORIZED}
 
 
 class _Ran:
@@ -79,6 +85,20 @@ def _host(run: Path, collector: str = "processes", seconds: float = 10.0,
 
 def _stop(report: dict[str, Any], condition: str) -> bool:
     return report["decision"] == l7.STOP and condition in report["conditions"]
+
+
+def _section(number: str) -> str:
+    text = l7.CONTRACT.read_text(encoding="utf-8")
+    return text.split(f"\n## {number} ", 1)[1].split("\n## ", 1)[0]
+
+
+def test_the_labels_are_the_contracts_own() -> None:
+    """The conditions 7.6 lists are the labels the evaluator stops with, and
+    7.8 carries the owner's KNOWN_DISCREPANCY beside UNKNOWN and NOT_COVERED."""
+    listed = _section("7.6").split("```text\n", 1)[1].split("```", 1)[0]
+    assert set(listed.split("\n")) - {""} == LABELS
+    assert all(f"**{name}**" in _section("7.8") for name in
+               (l7.UNKNOWN, l7.NOT_COVERED, l7.KNOWN_DISCREPANCY))
 
 
 def test_the_7_4_statuses_are_read_from_the_contract() -> None:
@@ -123,6 +143,7 @@ def test_unknown_stops_under_its_own_name(run: Path, monkeypatch: pytest.MonkeyP
     hardware = l7.evaluate({"kind": "hardware", "subject": "board clock"})
     assert hardware["conditions"] == [l7.UNKNOWN]
     assert hardware["preconditions"]["required state"]["why"] == "no live hardware telemetry source"
+    assert hardware["preconditions"]["observation provenance"]["value"] == "unknown"
     monkeypatch.setattr(layer5, "observations", lambda c, v: [])
     none = l7.evaluate({"kind": "host", "vm_name": VM, "collector": "processes"})
     assert none["conditions"] == [l7.UNKNOWN]
@@ -152,14 +173,79 @@ def test_invalid_provenance_stops(run: Path) -> None:
     {"kind": "host", "vm_name": None, "collector": "processes"},
     {"kind": "host", "vm_name": VM, "collector": "no_such_collector"},
     {"kind": "host", "vm_name": VM, "collector": "processes", "run_id": "19700101T000000Z-x"},
+])
+def test_an_ambiguous_identity_stops(run: Path, target: dict[str, Any]) -> None:
+    """(vm_name, run_id) that points at no single piece of evidence. What
+    rests on the identity is not evaluated, and says so."""
+    r = l7.evaluate(target)
+    assert r["decision"] == l7.STOP
+    assert r["preconditions"]["target identity"]["stop"] == l7.AMBIGUOUS
+    rest = [x for x in r["stops"] if x["precondition"] != "target identity"]
+    assert rest and all(x["condition"] == l7.UNKNOWN for x in rest)
+    assert all(r["preconditions"][x["precondition"]]["mechanism"].startswith("not evaluated")
+               for x in rest)
+
+
+@pytest.mark.parametrize("target", [
     {"kind": "hardware", "subject": "no such subject"},
     {"kind": "rtl", "module": "hcpu", "rule": "no_such_rule"},
     {"kind": "rtl", "module": "no_such_module", "rule": "reset"},
+    {"kind": "rtl", "module": "hcpu_sdio", "rule": "sd_busy"},
     {"kind": "nothing we read"},
 ])
-def test_an_ambiguous_or_unknown_target_stops(run: Path, target: dict[str, Any]) -> None:
+def test_a_name_that_names_nothing_stops_unknown_never_ambiguous(target: dict[str, Any]) -> None:
+    """The owner's fourth row of 7.8: a name that maps to no known object.
+    hcpu_sdio is an RTL file the spec does not map to a subsystem, and the
+    evaluator does not invent the link from the name."""
     r = l7.evaluate(target)
-    assert l7.AMBIGUOUS in r["conditions"] and r["decision"] == l7.STOP
+    assert r["conditions"] == [l7.UNKNOWN] and r["decision"] == l7.STOP
+    assert r["preconditions"]["target identity"]["value"] == "unknown"
+
+
+def _unmodelled_names() -> list[tuple[str, str]]:
+    return [(m["name"], name) for m in SPEC["modules"]
+            for part in ("opaque", "externals") for name in m.get(part, {})]
+
+
+def test_opaque_state_and_subsystems_without_a_function_are_not_covered() -> None:
+    """Every opaque and external name the spec gives: the target is known,
+    its behaviour has no coverage. The HISAB discrepancy is the one exception."""
+    discrepant = {k.casefold() for m in SPEC["modules"] for k in m.get("known_discrepancy", {})}
+    names = _unmodelled_names()
+    assert {n for _, n in names} >= {"ra_stack[]", "register pc di register file",
+                                     "guard berregister", "pengendali kartu", "unit trap"}
+    for module, name in names:
+        r = l7.evaluate({"kind": "rtl", "module": module, "rule": name})
+        want = l7.KNOWN_DISCREPANCY if name.casefold() in discrepant else l7.NOT_COVERED
+        assert r["conditions"] == [want], (module, name)
+        assert all(x["condition"] == want for x in r["stops"]) and len(r["stops"]) == 2
+        assert r["preconditions"]["target identity"]["value"] == "known"
+        assert r["preconditions"]["required state"]["value"] == "not predicted"
+
+
+def test_the_hisab_discrepancy_is_known_not_merely_not_covered() -> None:
+    hcpu = next(m for m in SPEC["modules"] if m["name"] == "hcpu")
+    measured = hcpu["known_discrepancy"]["hisab"]["measured"]
+    for module in ("hcpu", "pipeline"):
+        r = l7.evaluate({"kind": "rtl", "module": module, "rule": "HISAB"})
+        assert r["conditions"] == [l7.KNOWN_DISCREPANCY], module
+        coverage = r["preconditions"]["required rule coverage"]
+        assert coverage["value"] == "known discrepancy" and coverage["measured"] == measured
+        assert {x["precondition"] for x in r["stops"]} == {"required state",
+                                                           "required rule coverage"}
+    assert measured["edges"] == 13
+    authorized = [k for k, v in l7.authorizations().items() if v == "AUTHORIZED"]
+    for action in authorized:
+        assert l7.evaluate({"kind": "rtl", "module": "hcpu", "rule": "hisab"}, action)[
+            "decision"] == l7.STOP
+
+
+def test_ambiguous_target_comes_from_host_identity_alone() -> None:
+    targets = [{"kind": "rtl", "module": m, "rule": n} for m, n in _unmodelled_names()]
+    targets += [{"kind": "rtl", "module": "hcpu", "rule": "fetch_redirect_trap"},
+                {"kind": "hardware", "subject": "board clock"},
+                {"kind": "hardware", "subject": "no such subject"}, {"kind": None}]
+    assert all(l7.AMBIGUOUS not in l7.evaluate(t)["conditions"] for t in targets)
 
 
 def test_an_unauthorized_action_stops_even_on_fresh_evidence(run: Path) -> None:
@@ -216,7 +302,9 @@ def test_evaluating_has_no_side_effect(run: Path, monkeypatch: pytest.MonkeyPatc
         monkeypatch.setattr(obj, name, refuse)
     reports = [_host(run, collector=c["name"]) for c in layer5.load()["collectors"]]
     reports += [l7.evaluate({"kind": "hardware", "subject": "board clock"}),
-                l7.evaluate({"kind": "rtl", "module": "hcpu", "rule": "fetch_latch"})]
+                l7.evaluate({"kind": "rtl", "module": "hcpu", "rule": "fetch_latch"}),
+                l7.evaluate({"kind": "rtl", "module": "hcpu", "rule": "ra_stack[]"}),
+                l7.evaluate({"kind": "rtl", "module": "hcpu", "rule": "HISAB"})]
     monkeypatch.undo()
     assert _tree(store) == before
     assert hashlib.sha256(l7.CONTRACT.read_bytes()).hexdigest() == contract
@@ -227,5 +315,7 @@ def test_the_command_line_reports_and_acts_on_nothing(capsys: pytest.CaptureFixt
     assert l7.main(["rtl", "hcpu", "fetch_latch"]) == 0
     assert json.loads(capsys.readouterr().out)["decision"] == l7.PASS
     assert l7.main(["rtl", "hcpu", "fetch_redirect_trap"]) == 1
+    assert json.loads(capsys.readouterr().out)["conditions"] == [l7.NOT_COVERED]
+    assert l7.main(["rtl", "hcpu", "register", "pc", "di", "register", "file"]) == 1
     assert json.loads(capsys.readouterr().out)["conditions"] == [l7.NOT_COVERED]
     assert l7.main(["nothing"]) == 2

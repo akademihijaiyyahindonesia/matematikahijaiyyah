@@ -1843,6 +1843,37 @@ Lapis 7, tidak disalin ke sini (R1). Yang paling mudah dilanggar:
   (fail-closed). Mengubah status di sana adalah perubahan spec untuk pemilik
   (7.11).
 
+**Keputusan pemilik, 30 September 2026 — `638d827` GREEN, dan terminologinya
+diselaraskan.** Semua kriteria operasional terpenuhi; yang tersisa hanya
+pemetaan label, bukan perilaku. Kalimatnya di `NUI/LAYER7.md` (status sesudah
+evaluator, 7.6, 7.8, 7.10):
+
+- **`AMBIGUOUS TARGET` hanya untuk ambiguitas identitas** — `(vm_name,
+  run_id)` tidak menunjuk tepat satu target/evidence. Jangan dipakai untuk
+  state opaque, subsistem tanpa fungsi, atau HISAB.
+- **State opaque dan subsistem tanpa fungsi → `NOT_COVERED`**: targetnya
+  diketahui, coverage perilakunya belum tersedia.
+- **Ketidaksesuaian HISAB → `KNOWN_DISCREPANCY`**, label baru di 7.8. Ia
+  terukur, jadi jangan disamakan dengan `NOT_COVERED`. Ia tidak pernah jadi
+  PASS dan tidak pernah jadi alasan bertindak.
+- **Hardware CURRENT tetap UNKNOWN.** Jangan membuat provenance hardware live
+  hanya untuk memicu `INVALID PROVENANCE` di jalur itu.
+- **7.7 NOT YET VALIDATED.** Yang terbukti read → evaluate → gate →
+  evidence/report, bukan action → postcondition → success.
+
+Label dipancarkan `src/hijaiyyah/nui/layer7.py`, jadi pemetaannya **wajib**
+diubah di sana (kata pemilik), dibaca dari nama yang
+`NUI/spec/rtl_function.json` sudah berikan. Keputusan fail-closed tidak
+berubah.
+
+**Hari yang sama: nama yang tidak dapat dipetakan tetap `UNKNOWN`.** Tabel
+keempat label pemilik ada di 7.8. `UNKNOWN` berarti objek atau semantiknya
+tidak dapat ditentukan; `NOT_COVERED` berarti objeknya diketahui tanpa coverage
+prediktif; `KNOWN_DISCREPANCY` berarti objeknya diketahui, terukur, dan
+menyimpang. **Jangan mengarang hubungan nama berkas RTL → subsistem**: `rtl
+hcpu_sdio …` tetap `UNKNOWN`, karena spec tidak memetakannya. Semua label selain
+PASS berujung STOP / REPORT, termasuk `UNKNOWN`.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
