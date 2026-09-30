@@ -442,11 +442,14 @@ Kesimpulan ini dijaga `tests/test_ai/test_nui_layer7.py`: loader tanpa
 instruksi keluaran, dan wrapper yang berbicara hanya sesudah halt. Bila salah
 satunya berubah, penemuan ini harus diukur ulang.
 
-**Satu temuan alat, dilaporkan dan tidak diperbaiki.** `device_identity()` di
-`rtl/scripts/burn_in_capture.py` mencocokkan jalur `/dev/tty.*` yang diberikan
-dengan daftar pyserial, dan di Mac ini daftar itu hanya memuat `/dev/cu.*`.
-Karena itu capture P1 mencatat *the port is not in this host's listing*
-walaupun adaptornya terpasang.
+**Satu temuan alat, sudah diperbaiki.** `device_identity()` di
+`rtl/scripts/burn_in_capture.py` dulu mencocokkan jalur `/dev/tty.*` yang
+diberikan dengan daftar pyserial, dan di Mac ini daftar itu hanya memuat
+`/dev/cu.*`. Karena itu capture P1 mencatat *the port is not in this host's
+listing* walaupun adaptornya terpasang. Atas keputusan pemilik, 1 Oktober 2026,
+`/dev/tty.X` dan `/dev/cu.X` kini dianggap satu perangkat. Hanya alat capture
+yang berubah: rekaman P1 tetap seperti ditulis, dan kesimpulan penemuan ini
+tidak bergeser, karena identitas adaptor bukan identitas FPGA.
 
 ## 7.5 Authorization Boundary
 

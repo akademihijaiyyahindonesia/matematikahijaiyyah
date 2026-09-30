@@ -72,12 +72,30 @@ def fingerprint(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _same_device(a: str, b: str) -> bool:
+    """/dev/tty.X and /dev/cu.X are one device on macOS (dial-in / call-out)."""
+    def stem(p: str) -> str:
+        name = p.rsplit("/", 1)[-1]
+        for prefix in ("tty.", "cu."):
+            if name.startswith(prefix):
+                return name[len(prefix):]
+        return name
+    return a == b or (a.startswith("/dev/") and b.startswith("/dev/")
+                      and stem(a) == stem(b))
+
+
 def device_identity(port: str) -> dict[str, str]:
     """What the host knows about the device the bytes came from.
 
     pyserial's port listing carries the adapter's own serial number and VID:PID
     where the driver exposes them; where it does not, the fields say so rather
     than being filled in.
+
+    On macOS the listing holds only the call-out node, /dev/cu.X, while a
+    capture may be given the dial-in node, /dev/tty.X, of the same device.
+    Matched by path alone, the P1 capture of 24 September 2026 wrote "not in
+    this host's listing" with the adapter attached (measured in 08f1e36), so
+    the two nodes are taken as one device.
     """
     found: dict[str, str] = {"port": port}
     try:
@@ -85,7 +103,7 @@ def device_identity(port: str) -> dict[str, str]:
     except ImportError:
         return {**found, "note": "pyserial's port listing is not available here"}
     for info in list_ports.comports():
-        if info.device == port:
+        if _same_device(info.device, port):
             found.update({k: str(v) for k, v in (
                 ("serial_number", info.serial_number), ("vid_pid", info.hwid),
                 ("manufacturer", info.manufacturer), ("product", info.product))

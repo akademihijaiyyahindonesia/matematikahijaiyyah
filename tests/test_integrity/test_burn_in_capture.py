@@ -229,6 +229,42 @@ def test_the_manifest_records_what_p1_asks_for(tmp_path: Path,
     assert record["ended"] == "duration reached"
 
 
+class _Port:
+    """One row of pyserial's port listing, as a Mac lists the board's adapter."""
+
+    def __init__(self, device: str) -> None:
+        self.device = device
+        self.serial_number = "2025030317"
+        self.hwid = "USB VID:PID=0403:6010 SER=2025030317 LOCATION=0-1"
+        self.manufacturer = "SIPEED"
+        self.product = "USB Debugger"
+
+
+def test_the_dial_in_node_finds_its_adapter_in_a_call_out_listing(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    """A Mac lists only /dev/cu.X; a capture given /dev/tty.X of the same
+    device must still record the adapter. Matched by path alone it wrote "not
+    in this host's listing" with the adapter attached (08f1e36)."""
+    list_ports = pytest.importorskip("serial.tools.list_ports")
+    monkeypatch.setattr(list_ports, "comports", lambda: [_Port("/dev/cu.usbserial-X")])
+    found = burn_in_capture.device_identity("/dev/tty.usbserial-X")
+    assert found["serial_number"] == "2025030317"
+    assert found["vid_pid"].startswith("USB VID:PID=0403:6010")
+    assert "note" not in found
+
+
+def test_a_linux_tty_is_not_taken_for_a_mac_call_out_node(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    """Linux has no `tty.` prefix: /dev/ttyUSB0 is not /dev/cu.USB0, and the
+    listing must not lend it an identity."""
+    list_ports = pytest.importorskip("serial.tools.list_ports")
+    monkeypatch.setattr(list_ports, "comports", lambda: [_Port("/dev/cu.USB0")])
+    assert not burn_in_capture._same_device("/dev/ttyUSB0", "/dev/cu.USB0")
+    found = burn_in_capture.device_identity("/dev/ttyUSB0")
+    assert found["note"] == "the port is not in this host's listing"
+    assert "serial_number" not in found
+
+
 def test_a_capture_whose_bytes_changed_is_refused(tmp_path: Path) -> None:
     """R3 on the evidence itself: the manifest's SHA256 is checked before the
     bytes are read as anything, so a raw file edited afterwards cannot be

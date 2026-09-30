@@ -2005,8 +2005,10 @@ paling mudah dilanggar:
   sumber hidup. Rinciannya di 7.4 `NUI/LAYER7.md`, dan tes Lapis 7 menjaga
   dasar kesimpulan itu.
 - **`device_identity()` di `rtl/scripts/burn_in_capture.py` mencari jalur
-  `/dev/tty.*` di daftar yang hanya memuat `/dev/cu.*`.** Dilaporkan, tidak
-  diperbaiki.
+  `/dev/tty.*` di daftar yang hanya memuat `/dev/cu.*`.** Mula-mula
+  dilaporkan; diperbaiki atas keputusan pemilik 1 Oktober 2026 (di bawah):
+  `/dev/tty.X` dan `/dev/cu.X` kini satu perangkat, sedangkan `/dev/ttyUSB0`
+  Linux tidak.
 
 **Keputusan pemilik, 1 Oktober 2026.**
 
