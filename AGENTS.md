@@ -2008,6 +2008,27 @@ paling mudah dilanggar:
   `/dev/tty.*` di daftar yang hanya memuat `/dev/cu.*`.** Dilaporkan, tidak
   diperbaiki.
 
+**Keputusan pemilik, 1 Oktober 2026.**
+
+- **`08f1e36`** (penemuan kesiapan) dan **`06d2b11`** (perbaikan PAPAN):
+  **GREEN**.
+- **`SEND_PROGRAM` tetap HARD STOP, dan Lapis 7 berhenti di sini.**
+  Berikutnya **Lapis 8, diagnostik BACA-SAJA**. Kontraknya lebih dulu, dalam
+  bentuk `NUI/LAYER7.md`, dan **tidak ada implementasi sebelum pemilik
+  mengunci kontraknya**.
+- **`device_identity()`** di `rtl/scripts/burn_in_capture.py` **diperbaiki**,
+  sebagai commit tersendiri.
+- **HMAC-SHA256 perangkat keras, Ka'bah lapis 3: nama berkas disetujui,
+  opsi (a).** Berkas baru di `rtl/` mengubah sidik jari HCPU, karena penjaga
+  sidik jari memuat `rtl/*.v`. Opsi (a) berarti:
+  - PnR HCPU diulang dan sidik jarinya dicap ulang;
+  - LUT4, DFF, BSRAM, dan IOB harus identik dengan sebelumnya — bukti K6,
+    karena sintesis HCPU hanya membaca `hcpu_*.v`;
+  - kalau tidak identik, **berhenti dan lapor**.
+  HMAC masuk sebagai satu commit (K4). Uji papannya uji laboratorium yang
+  dijalankan manusia atas perintah pemilik, **bukan tindakan otonom NUI**, dan
+  tabel 7.4 tidak berubah.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
