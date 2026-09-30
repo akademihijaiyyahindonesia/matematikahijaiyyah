@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **40 modul**; `tests/test_ai/` berisi **935 tes**
+`src/hijaiyyah/nui/` berisi **40 modul**; `tests/test_ai/` berisi **936 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -219,7 +219,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
-| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (39) |
+| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (40) |
 | `layer7_decision.py` | DECIDE Lapis 7: satu hasil kontrak `layer7.evaluate` atau `layer7.expect` jadi satu decision record deterministik — ALLOW, DENY, atau STOP / REPORT, dengan `record_sha256` dan `verify()`; ALLOW bukan eksekusi, dan tidak ada yang dijalankan | `test_nui_layer7_decision.py` (37) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
@@ -279,7 +279,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.788 node, 4.566 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.788 node, 4.575 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -1589,6 +1589,24 @@ Keputusan pemilik atas proposal itu, 1 Oktober 2026:
 Proposal itu hard-stop secara benar. Membukanya tanpa rekonfigurasi menuntut
 sumber evidence baru untuk kesiapan loader dan identitas target, sebagai
 pekerjaan spesifikasi tersendiri.
+
+**`590baa6` GREEN, pemilik 1 Oktober 2026** — status resminya di kepala
+`NUI/LAYER7.md`. Lalu **readiness evidence discovery**, perintah pemilik hari
+yang sama: apakah kesiapan `SEND_PROGRAM` teramati dari arsitektur yang ada,
+tanpa byte probe, tulisan UART, rekonfigurasi, atau `send_program`. Terukur
+04:08 WIB, hanya pembacaan:
+- adaptor USB papan teramati: `SIPEED` "USB Debugger", `0403:6010`, lewat
+  `list_ports.comports()` tanpa membuka port;
+- FPGA, bitstream yang termuat, dan kesiapan loader tidak teramati:
+  - loader tanpa instruksi keluaran;
+  - peta MMIO tanpa register data TX;
+  - wrapper hanya berbicara sesudah halt;
+  - LED tidak terbaca host;
+  - sumber hidup Lapis 6 kosong.
+`openFPGALoader --detect` tidak dijalankan: alat baris DENIED, dan kodenya
+hanya menjawab ada tidaknya `GW2A`. **Hard stop dipertahankan.** Rinciannya
+dan satu temuan alat di `rtl/scripts/burn_in_capture.py` ada di 7.4
+`NUI/LAYER7.md`.
 
 `tests/test_ai/test_nui_layer7_decision.py`, 37 tes:
 - tiap baris tabel pemilik;

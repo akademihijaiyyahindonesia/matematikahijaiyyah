@@ -33,6 +33,7 @@ import ast
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -122,6 +123,22 @@ def test_the_7_4_statuses_are_read_from_the_contract() -> None:
     head = "STATUS: HARD STOP — STOP / REPORT (pemilik, 1 Oktober 2026)\nAuthorization: DENIED"
     assert head in _section("7.4")
     assert "STATUS: PROPOSED" not in _section("7.4")
+
+
+def test_the_readiness_discovery_rests_on_a_silent_loader() -> None:
+    """The readiness discovery (owner, 1 October 2026) found loader readiness
+    not observable: the loader has no output instruction, the MMIO map has no
+    TX data register, and the wrapper speaks only after halted. If any of that
+    changes, the discovery has to be measured again."""
+    loader = (ROOT / "rtl/programs/loader.hasm").read_text(encoding="utf-8")
+    code = [line.split(";", 1)[0] for line in loader.splitlines()]
+    assert not any(re.search(r"\b(PRINT|EMITS)\b", line) for line in code)
+    mmio = (ROOT / "rtl/hcpu_mmio.v").read_text(encoding="utf-8")
+    assert "0xFF2  R   UART TX status" in mmio and "TX data" not in mmio
+    wrapper = (ROOT / "rtl/fpga/gowin/hcpu_gowin_top.v").read_text(encoding="utf-8")
+    assert "assign uart_txd = report_armed ? report_txd : core_txd;" in wrapper
+    assert "end else if (halted_out && !report_armed) begin" in wrapper
+    assert "STATUS: HARD STOP" in _section("7.4")
 
 
 def test_old_evidence_is_stale_and_rejected(run: Path) -> None:

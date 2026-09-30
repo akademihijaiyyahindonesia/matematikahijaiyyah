@@ -73,6 +73,18 @@ Mutative actions               DENIED
 Commit                         46f4b14
 ```
 
+**Status resmi sesudah proposal `SEND_PROGRAM`** (pemilik, 1 Oktober 2026):
+
+```text
+Layer 7 evaluator              GREEN
+7.7 post-action success        VALIDATED
+Decision / Dry-Run             GREEN
+SEND_PROGRAM proposal          HARD STOP
+SEND_PROGRAM authorization     DENIED
+Mutative authorization         DENIED
+Commit                         590baa6
+```
+
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
 otonom di luar batas yang ditetapkan. Otonomi NUI saat ini hanya di wilayah
 **read → evaluate → verify → evidence**. Tidak ada mutasi sistem tanpa
@@ -356,6 +368,85 @@ Tidak ada alasan membuka `RECONFIGURE_BOARD` hanya supaya proposal
 `SEND_PROGRAM` lolos. Kalau rekonfigurasi kelak hendak dibuka, ia harus menjadi
 **proposal tindakan terpisah** dengan boundary, precondition, postcondition,
 dan evidence-nya sendiri.
+
+#### Readiness evidence discovery
+
+Perintah pemilik, 1 Oktober 2026: petakan dan penuhi evidence kesiapan
+`SEND_PROGRAM` — tanpa menjalankan `SEND_PROGRAM` dan tanpa membuka
+rekonfigurasi — untuk menghilangkan dua `UNKNOWN` yang menyebabkan hard stop,
+hanya lewat sumber observasi yang tidak mengubah papan.
+
+```text
+READINESS DISCOVERY
+        ↓
+read-only evidence
+        ↓
+target identity
+loader readiness
+communication readiness
+        ↓
+KNOWN / UNKNOWN
+```
+
+Aturan keras:
+
+```text
+UNKNOWN ≠ READY
+Tidak ada byte probe
+Tidak ada UART write
+Tidak ada reconfiguration
+Tidak ada send_program
+```
+
+Bila tidak ada sumber read-only yang membuktikan keduanya, hasilnya tetap
+`UNKNOWN → HARD STOP → SEND_PROGRAM DENIED`. Tidak ada mekanisme baru yang
+dibuat hanya supaya proposal menjadi `ALLOW`: yang dibuktikan adalah apakah
+kesiapan memang teramati dari arsitektur yang ada.
+
+**Terukur 1 Oktober 2026, 04:08 WIB, hanya pembacaan.** Tidak ada port yang
+dibuka dan tidak ada byte yang dikirim.
+
+| sumber yang sudah ada | yang ia buktikan |
+|---|---|
+| `list_ports.comports()`, yang sudah dipakai `rtl/scripts/burn_in_capture.py`; mengenumerasi tanpa membuka port | adaptor terpasang: `SIPEED` "USB Debugger", VID:PID `0403:6010`, nomor seri `2025030317`, dua antarmuka `/dev/cu.usbserial-20250303170` dan `/dev/cu.usbserial-20250303171` |
+| capture P1, `cosmictera-build/burn-in/20260924T073655Z-burn-in-capture.json` | hanya nama port, `/dev/tty.usbserial-20250303171`. Nomor seri dan VID:PID adaptornya tidak pernah terekam |
+| `rtl/programs/loader.hasm` | tidak satu pun instruksi keluaran: loader diam sampai byte pertama datang |
+| `rtl/hcpu_mmio.v` | tidak ada register data TX; `0xFF2` hanya status TX, dan hanya dibaca. Program berbicara di UART hanya lewat `PRINT` atau `EMITS` |
+| `rtl/fpga/gowin/hcpu_gowin_top.v` | wrapper hanya memancarkan laporan `CYCLES=` sesudah `halted` naik. LED papan — halted, laporan terkirim, detak — tidak terbaca host, dan "belum halt, belum ada laporan" sama untuk loader yang menunggu maupun program yang sedang berjalan |
+| model keadaan Lapis 6, `NUI/hardware_state.json` | `live_sources` kosong; CURRENT UNKNOWN |
+| `rtl/scripts/rack.py --detect`, yaitu `openFPGALoader --detect` | **tidak dijalankan** — lewat JTAG, alat baris DENIED. Menurut kodenya ia hanya menjawab ada tidaknya `GW2A`, bukan bitstream yang termuat dan bukan keadaan loader |
+
+Kesimpulannya:
+- **target identity**: adaptor USB papan teramati hari ini. Tetapi FPGA-nya,
+  bitstream yang termuat, dan apakah FPGA itu terkonfigurasi sama sekali tetap
+  **UNKNOWN**: tidak ada sumber read-only yang menautkan adaptor ke konfigurasi
+  FPGA. Tautan ke papan historis juga hanya nama port.
+- **loader readiness**: **UNKNOWN, dan tidak teramati di arsitektur yang ada.**
+  Satu-satunya jalur dari papan ke host adalah UART, dan loader tidak
+  berbicara di sana sebelum menerima.
+- **communication readiness**: kanalnya ada — node perangkatnya terpasang —
+  tetapi kesiapan penerimanya **UNKNOWN**. Mendengarkan kabel secara pasif
+  hanya bisa membuktikan yang sedang berjalan *bukan* loader, lewat lalu lintas
+  program lain; ia tidak pernah membuktikan loader siap. Karena itu ia tidak
+  dijalankan.
+
+```text
+target identity          board/bitstream UNKNOWN   ← STOP
+loader readiness         UNKNOWN, tidak teramati   ← STOP
+communication readiness  UNKNOWN                   ← STOP
+        ↓
+HARD STOP dipertahankan — SEND_PROGRAM DENIED
+```
+
+Kesimpulan ini dijaga `tests/test_ai/test_nui_layer7.py`: loader tanpa
+instruksi keluaran, dan wrapper yang berbicara hanya sesudah halt. Bila salah
+satunya berubah, penemuan ini harus diukur ulang.
+
+**Satu temuan alat, dilaporkan dan tidak diperbaiki.** `device_identity()` di
+`rtl/scripts/burn_in_capture.py` mencocokkan jalur `/dev/tty.*` yang diberikan
+dengan daftar pyserial, dan di Mac ini daftar itu hanya memuat `/dev/cu.*`.
+Karena itu capture P1 mencatat *the port is not in this host's listing*
+walaupun adaptornya terpasang.
 
 ## 7.5 Authorization Boundary
 

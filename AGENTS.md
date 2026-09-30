@@ -1991,6 +1991,23 @@ mudah dilanggar:
   - `RECONFIGURE_BOARD` tidak dibuka supaya `SEND_PROGRAM` lolos. Kalau
     hendak dibuka, ia jadi proposal tindakan terpisah.
 
+**`590baa6` GREEN, pemilik 1 Oktober 2026 — lalu readiness evidence
+discovery.** Tujuannya menghilangkan UNKNOWN pada identitas target dan
+kesiapan loader/komunikasi, hanya lewat sumber yang tidak mengubah papan. Yang
+paling mudah dilanggar:
+
+- **UNKNOWN ≠ READY.** Tidak ada byte probe, tulisan UART, rekonfigurasi,
+  atau `send_program`.
+- **Tidak ada mekanisme baru hanya supaya proposal menjadi ALLOW.** Yang
+  dibuktikan adalah apakah kesiapan teramati dari arsitektur yang ada.
+- **Hasilnya: tidak teramati, jadi hard stop dipertahankan.** Adaptor USB
+  papan terlihat, tetapi loader tidak berbicara sebelum menerima dan tidak ada
+  sumber hidup. Rinciannya di 7.4 `NUI/LAYER7.md`, dan tes Lapis 7 menjaga
+  dasar kesimpulan itu.
+- **`device_identity()` di `rtl/scripts/burn_in_capture.py` mencari jalur
+  `/dev/tty.*` di daftar yang hanya memuat `/dev/cu.*`.** Dilaporkan, tidak
+  diperbaiki.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
