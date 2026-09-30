@@ -42,6 +42,20 @@ UNAUTHORIZED ACTION  → STOP / REPORT
 NOT YET VALIDATED — no authorized mutative action exists
 ```
 
+**Status resmi sesudah label diselaraskan** (pemilik, 30 September 2026):
+
+```text
+Layer 7 read-only evaluator
+Commit: 865959e
+Status: GREEN
+Scope: READ → EVALUATE → GATE → EVIDENCE / REPORT
+Mutative authorization: DENIED
+```
+
+Kontrak 7.7 *post-action success* belum GREEN karena memang belum dijalankan.
+Itu bukan cacat pada `865959e`: kontraknya tidak dapat divalidasi selama tidak
+ada tindakan mutatif yang diizinkan.
+
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
 otonom di luar batas yang ditetapkan. Otonomi NUI saat ini hanya di wilayah
 **read → evaluate → verify → evidence**. Tidak ada mutasi sistem tanpa

@@ -1369,6 +1369,10 @@ Subsistem tanpa fungsi dikenali lewat nama yang spec berikan, misalnya
 `UNKNOWN`, karena spec tidak menyediakan pemetaan nama itu, dan hubungan nama
 berkas → subsistem tidak dikarang.
 
+**`865959e` GREEN, 30 September 2026** — evaluator baca-saja dengan label yang
+diselaraskan. Cakupannya READ → EVALUATE → GATE → EVIDENCE / REPORT, dan
+otorisasi mutatif tetap DENIED. Status resminya di `NUI/LAYER7.md`.
+
 `tests/test_ai/test_nui_layer7.py`, 25 tes, di store sementara yang dibangun
 `layer5.record` sendiri:
 - tiap prasyarat dan tiap kondisi stop diuji satu per satu, dengan batas 300

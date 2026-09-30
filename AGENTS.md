@@ -1874,6 +1874,13 @@ menyimpang. **Jangan mengarang hubungan nama berkas RTL → subsistem**: `rtl
 hcpu_sdio …` tetap `UNKNOWN`, karena spec tidak memetakannya. Semua label selain
 PASS berujung STOP / REPORT, termasuk `UNKNOWN`.
 
+**`865959e` GREEN, pemilik 30 September 2026.** Evaluator baca-saja Lapis 7,
+cakupan READ → EVALUATE → GATE → EVIDENCE / REPORT, otorisasi mutatif DENIED.
+Kontrak 7.7 *post-action success* **belum GREEN karena belum dijalankan** —
+bukan cacat evaluator. Ia tidak dapat divalidasi selama tidak ada tindakan
+mutatif yang diizinkan. Langkah Lapis 7 sesudahnya diambil dari pemilik, tidak
+dikarang.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
