@@ -1820,9 +1820,28 @@ otonom di luar batas yang ditetapkan. Kalimat pemilik dikutip persis di sana.
   kondisi eskalasi adalah perubahan spec yang menuntut keputusan pemilik, dan
   tidak boleh dilakukan operasi otonom itu sendiri.
 
-Tahap berikutnya dari pemilik: **uji kontrak read/verify/evidence terhadap
-observasi nyata Lapis 5 dan state model Lapis 6**, sebelum satu pun tindakan
-mutatif dibuka.
+**Perintah pemilik, 30 September 2026 — kontrak diuji, tanpa bertindak.**
+Implementasi pertama Lapis 7 adalah evaluator baca-saja,
+`src/hijaiyyah/nui/layer7.py`: bukti Lapis 5 dan state Lapis 6 → prasyarat 7.6
+→ guard 7.8 → PASS atau STOP / REPORT → laporan. Angkanya di `NUI/LAYERS.md`,
+Lapis 7, tidak disalin ke sini (R1). Yang paling mudah dilanggar:
+
+- **PASS bukan tindakan.** PASS berarti prasyarat untuk memakai sebuah
+  observasi terpenuhi. Evaluator tidak menjalankan perintah, tidak menulis
+  berkas, dan tidak menyentuh host, papan, program, repository, atau
+  konfigurasi. Tindakan host, papan, restart, recovery, atau mutasi repository
+  tidak boleh dimasukkan ke dalamnya.
+- **Evidence baru dibuat `layer5.record`, bukan evaluator.** Konfigurasi VM,
+  ambang 300 detik, daftar kolektor, dan mekanisme Lapis 5 tidak diubah.
+  Observasi lama tidak dijadikan current dengan mengubah cap waktunya, dan
+  ambangnya tidak dilonggarkan supaya tes lolos.
+- **`UNKNOWN`, `STALE`, dan `NOT_COVERED` bukan false biasa.** Tiap prasyarat
+  yang gagal tetap terlihat dengan namanya sebagai alasan berhenti. VM yang
+  Running tidak membuat run segar otomatis current: tiap kolektor dinilai dari
+  kesegaran dan outcome-nya sendiri.
+- **Tabel 7.4 dibaca dari `NUI/LAYER7.md`**, dan yang tidak tercantum ditolak
+  (fail-closed). Mengubah status di sana adalah perubahan spec untuk pemilik
+  (7.11).
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

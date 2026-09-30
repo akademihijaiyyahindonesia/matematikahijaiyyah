@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **38 modul**; `tests/test_ai/` berisi **859 tes**
+`src/hijaiyyah/nui/` berisi **39 modul**; `tests/test_ai/` berisi **879 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.515 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.524 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -219,6 +219,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
+| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu aturan fungsi RTL, tiap yang gagal dengan namanya sendiri, lalu PASS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (20) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host, hardware beserta jenis keadaannya dan korelasinya — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -277,7 +278,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.758 node, 4.510 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.769 node, 4.532 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -326,7 +327,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.515 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.524 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -1289,10 +1290,72 @@ setiap tindakan mutatif **DENIED**. Bila keadaan menuntut tindakan di luar
 batas, alurnya berhenti dan melapor — NUI tidak mengotorisasi dirinya sendiri.
 `rtl/scripts/burn_in.py` tetap bukti historis, bukan dasar izin.
 
-**Yang belum ada.** Implementasi Lapis 7: kontrak read/verify/evidence belum
-diuji terhadap observasi nyata Lapis 5 dan state model Lapis 6. Itu tahap
-berikutnya dari pemilik, sebelum satu pun tindakan mutatif dibuka. Aset di atas
-terbatas pada satu harness dan satu jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
+**Implementasi pertama, 30 September 2026 — evaluator baca-saja.** Perintah
+pemilik: uji kontrak read/verify/evidence terhadap observasi nyata Lapis 5 dan
+state model Lapis 6 sebelum satu pun tindakan mutatif dibuka.
+`src/hijaiyyah/nui/layer7.py` menjawab keenam prasyarat 7.6 untuk tiga jenis
+target — satu observasi host, keadaan hardware CURRENT, atau satu aturan fungsi
+RTL — lewat mekanisme yang sudah ada:
+- `layer5.observations` dan verifikasi manifestnya;
+- `layer5.freshness` dengan batas dari spec;
+- kelas `outcomes`;
+- `hardware_state.answer`;
+- hash dan aturan `not_covered` di `NUI/rtl_function.json`;
+- tabel 7.4 `NUI/LAYER7.md`, dibaca dari halamannya, dan apa pun yang tidak
+  tercantum ditolak.
+Tiap prasyarat yang gagal membawa namanya sendiri — `UNKNOWN`, `STALE`,
+`NOT_COVERED`, `INVALID PROVENANCE`, `AMBIGUOUS TARGET`, `UNAUTHORIZED
+ACTION` — dan keputusannya PASS atau STOP / REPORT. Rekaman `acted` selalu
+`false`. Evidence baru dibuat oleh `layer5.record`, di luar evaluator, tanpa
+mengubah konfigurasi VM, batas 300 detik, daftar kolektor, atau mekanisme
+Lapis 5.
+
+Terukur pada bukti nyata, 30 September 2026:
+- **Run lama** `20260927T095339Z-collectors`: kesebelas kolektor STALE, umur
+  ±239.103 detik, STOP / REPORT. `journal` dan `containers` juga UNKNOWN.
+- **Run segar** `20260930T041907Z-collectors` dari `layer5.record`:
+  - dievaluasi di bawah satu detik, 9 kolektor PASS;
+  - `journal` STOP UNKNOWN (`unavailable_due_to_permissions`), `containers`
+    STOP UNKNOWN (`unavailable_command_absent`);
+  - dengan jam nyata masih PASS pada 191 dan 238 detik, dan STALE pada 817
+    detik untuk kesebelasnya.
+- Sebelum dan sesudah run:
+  - hash `NUI/spec/layer5_lima.yaml` dan `lima.yaml` instance-nya sama;
+  - hash `NUI/spec/layer5_collectors.json` dan `src/hijaiyyah/nui/layer5.py`
+    sama;
+  - status, CPU, memori, disk, jenis VM, dan arsitektur yang `limactl`
+    laporkan sama;
+  - HEAD git dan status pohon kerjanya sama.
+- **RTL**: `hcpu fetch_redirect_trap` STOP NOT_COVERED, dan `hcpu fetch_latch`
+  PASS.
+- **Hardware**: `board clock` STOP UNKNOWN, *no live hardware telemetry
+  source*.
+- **Tindakan DENIED**, `Restart / recovery` atas `hcpu fetch_latch` yang PASS
+  untuk baca: STOP UNAUTHORIZED ACTION.
+
+`tests/test_ai/test_nui_layer7.py`, 20 tes, di store sementara yang dibangun
+`layer5.record` sendiri:
+- tiap prasyarat dan tiap kondisi stop diuji satu per satu, dengan batas 300
+  detik inklusif dibaca dari spec;
+- sumbernya diperiksa tidak memuat mekanisme tindakan;
+- evaluasi dijalankan sementara semua jalan menjalankan perintah atau menulis
+  berkas dibuat gagal, dan store tetap identik.
+Tujuh sabotase pada `src/hijaiyyah/nui/layer7.py` membuatnya merah (R3):
+- kesegaran diabaikan;
+- otorisasi fail-open;
+- UNKNOWN dianggap known;
+- NOT_COVERED dianggap covered;
+- provenance tidak sah diloloskan;
+- target ambigu diloloskan;
+- satu tulisan berkas.
+
+**Yang belum ada.** Tindakan mutatif — seluruhnya DENIED, dan evaluator ini
+tidak membukanya. Karena tidak ada tindakan, kontrak keberhasilan 7.7 belum
+pernah dijalankan. `INVALID PROVENANCE` diuji hanya pada observasi host: hari
+ini jawaban hardware CURRENT tidak punya basis. State opaque, subsistem tanpa
+fungsi, dan ketidaksesuaian HISAB berhenti sebagai `AMBIGUOUS TARGET`, bukan
+`NOT_COVERED` seperti rincian 7.8 — dilaporkan, tidak dirapikan. Aset
+`rtl/scripts/burn_in.py` terbatas pada satu harness dan satu jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
 kegagalan di luar burn-in, dan tidak ada yang bisa memulihkan host yang
 berhibernasi — itu yang membunuh percobaan pertama 72 jam.
 

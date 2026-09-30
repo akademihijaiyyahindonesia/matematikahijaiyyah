@@ -294,9 +294,20 @@ Mekanisme itu terbatas pada satu harness dan satu jenis kegagalan
 
 - Tidak ada tindakan mutatif yang diizinkan. Otonomi hanya di wilayah
   read/verify/evidence (7.5).
-- **Belum ada implementasi Lapis 7.** Yang ada adalah otorisasinya. Kontrak
-  read/verify/evidence **belum diuji** terhadap observasi nyata Lapis 5 dan state
-  model Lapis 6 — itu tahap berikutnya dari pemilik.
+- **Implementasi Lapis 7 hanya evaluator baca-saja**,
+  `src/hijaiyyah/nui/layer7.py`, atas perintah pemilik 30 September 2026. Ia
+  membaca observasi Lapis 5, state model Lapis 6, model fungsi RTL, dan tabel
+  7.4 halaman ini, lalu menjawab PASS atau STOP / REPORT beserta alasannya.
+  Ia tidak menjalankan perintah, tidak menulis berkas, dan tidak bertindak.
+  **PASS berarti prasyarat untuk memakai sebuah observasi terpenuhi**, bukan
+  bahwa sesuatu dikerjakan. Hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
+- 7.7 belum pernah dijalankan: tidak ada tindakan, jadi tidak ada observasi
+  pascatindakan.
+- Evaluator hanya menjawab keadaan hardware CURRENT, bukan klaim historis
+  Lapis 6. State opaque, subsistem tanpa fungsi, dan ketidaksesuaian HISAB
+  bukan aturan model fungsi RTL. Karena itu evaluator menghentikannya sebagai
+  `AMBIGUOUS TARGET`, bukan `NOT_COVERED` seperti rincian 7.8 — tetap berhenti,
+  tetapi dengan nama yang berbeda.
 - `burn_in.py` bukan dasar pemberian izin. Ia hanya bukti bahwa mekanisme
   tindakan otomatis pernah dieksekusi di dalam satu harness.
 - Kontrak ini tidak memperluas daftar izin Lapis 5, tidak menyentuh `sudo` atau
