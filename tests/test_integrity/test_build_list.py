@@ -536,6 +536,17 @@ def test_no_document_quotes_a_suite_figure_that_is_not_the_current_one() -> None
     )
 
 
+def test_the_m5_control_figure_is_the_one_measured() -> None:
+    """e4c251e (17 September 2026) measured the CPU-slot control at 15.933
+    LUT4, the figure the two rejected dashboard layouts are set against.
+    Test-count sweeps that replaced the suite total as a bare substring
+    rewrote it four times -- 865959e, b7fa5e8, 46f4b14, 08f1e36 -- because
+    "5.933" sits inside "15.933". A measured figure is not a count to sweep:
+    count updates match the total only between digit boundaries (owner,
+    1 October 2026)."""
+    assert "melawan kontrol 15.933 yang terrout bersih" in PAPAN
+
+
 def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
     """Not pytest inside pytest -- collection, which runs no test at all.
 

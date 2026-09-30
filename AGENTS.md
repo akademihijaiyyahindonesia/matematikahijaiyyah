@@ -2258,6 +2258,13 @@ Urutannya bagian dari perintah: jalur simpan fisik lebih dulu, sendirian.
    - Pesan untuk pemilik dalam bahasa Indonesia.
    - Artefak mengikuti bahasa berkasnya: pesan commit dan komentar kode
      berbahasa Inggris, folder resep berbahasa Indonesia.
+10. **Pembaruan jumlah tes memakai batas angka, tidak pernah substring**
+    (pemilik, 1 Oktober 2026). Misalnya `(?<![\d.])5\.990(?!\d)`. Terukur:
+    penyapuan jumlah tes yang mengganti "5.933" sebagai substring menimpa
+    "kontrol 15.933" di `cosmictera-build/PAPAN.md` — hasil ukur `e4c251e`,
+    17 September — empat kali (`865959e`, `b7fa5e8`, `46f4b14`, `08f1e36`)
+    sebelum dikembalikan. Angka terukur bukan hitungan untuk disapu, dan
+    `tests/test_integrity/test_build_list.py` kini menguncinya.
 
 ### Cara masuk kerja — enam perintah pertama, sebelum menyentuh apa pun
 
