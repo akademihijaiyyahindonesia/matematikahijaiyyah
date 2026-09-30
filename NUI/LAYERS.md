@@ -1511,6 +1511,7 @@ Kelima belas sabotase lama diulang pada kode ini, dan semuanya tetap merah.
 **Status dari pemilik, 30 September 2026:** 7.7 *post-action success*
 VALIDATED pada `layer5.record`, dengan evidence yang mengacu pada kode final.
 Baseline current dikunci, dan presisi `run_id` tidak diubah. Rinciannya di 7.7
+`NUI/LAYER7.md`. **`b7fa5e8` GREEN**, hari yang sama; status resminya di kepala
 `NUI/LAYER7.md`.
 
 **Yang belum ada.** Tindakan mutatif — seluruhnya DENIED, dan evaluator ini

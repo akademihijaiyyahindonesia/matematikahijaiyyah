@@ -1919,6 +1919,11 @@ Kalimatnya di 7.7 `NUI/LAYER7.md`. Yang paling mudah dilanggar:
   fail-closed. Lapis 5 tidak dibuka untuknya.
 - 7.2, 7.5, dan batas otorisasi tidak berubah; tindakan DENIED tetap DENIED.
 
+**`b7fa5e8` GREEN, pemilik 30 September 2026.** Evaluator Lapis 7 GREEN, 7.7
+*post-action success* VALIDATED, batas otorisasi UNCHANGED, dan tindakan
+mutatif DENIED. Status resminya di kepala `NUI/LAYER7.md`. Langkah Lapis 7
+sesudahnya diambil dari pemilik, tidak dikarang.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

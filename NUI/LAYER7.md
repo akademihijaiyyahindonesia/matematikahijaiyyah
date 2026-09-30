@@ -52,9 +52,15 @@ Scope: READ → EVALUATE → GATE → EVIDENCE / REPORT
 Mutative authorization: DENIED
 ```
 
-Kontrak 7.7 *post-action success* belum GREEN karena memang belum dijalankan.
-Itu bukan cacat pada `865959e`: kontraknya tidak dapat divalidasi selama tidak
-ada tindakan mutatif yang diizinkan.
+**Status resmi sesudah 7.7 divalidasi** (pemilik, 30 September 2026):
+
+```text
+Layer 7 evaluator                 GREEN
+7.7 post-action success           VALIDATED
+Commit                            b7fa5e8
+Authorization boundary            UNCHANGED
+Mutative DENIED actions            DENIED
+```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
 otonom di luar batas yang ditetapkan. Otonomi NUI saat ini hanya di wilayah
