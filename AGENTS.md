@@ -1944,7 +1944,22 @@ dilanggar:
   mutation. `rtl/scripts/burn_in.py` bukan allowlist.
 - Urutannya dari pemilik: dry-run ini GREEN dulu, **baru** dievaluasi apakah
   ada alasan meminta perluasan otorisasi.
-- Tiga penerapan pelaksana menunggu pemilik; daftarnya di `NUI/LAYERS.md`.
+- Ketiga penerapan pelaksana **disetujui pemilik** hari yang sama:
+  - DENY didahulukan: otorisasi diperiksa lebih dulu, dan evidence apa pun
+    tidak mengubah tindakan yang tidak diotorisasi menjadi STOP biasa atau
+    ALLOW;
+  - `reason` sebuah DENY membawa `UNAUTHORIZED ACTION`, jadi kegagalan
+    otorisasi dibedakan dari kegagalan evidence;
+  - yang bukan hasil kontrak kandidat, termasuk hasil `confirm()`, jadi STOP /
+    UNKNOWN.
+
+**`46f4b14` GREEN, pemilik 30 September 2026.** Decision / Dry-Run GREEN, dan
+status resminya di kepala `NUI/LAYER7.md`. **Belum ada alasan meminta
+perluasan otorisasi**: rantainya bekerja tanpa kewenangan mutatif, jadi tidak
+ada tindakan DENIED yang dibuka. Bila Lapis 7 maju, langkahnya adalah
+**proposal untuk satu tindakan kandidat tertentu** — target, precondition,
+authorization scope, expected postcondition, evidence, dan stop condition.
+Proposal itu tidak memberi izin sampai pemilik memutuskan.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

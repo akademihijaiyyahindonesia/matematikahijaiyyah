@@ -1530,7 +1530,8 @@ Status 7.4 dibaca ulang dari `NUI/LAYER7.md`. Hasil yang mengaku `allowed`
 untuk kategori DENIED berhenti sebagai `UNAUTHORIZED ACTION`: tidak ada hasil
 yang mengotorisasi dirinya sendiri.
 
-**Penerapan pelaksana, belum keputusan pemilik:**
+**Disetujui pemilik, 30 September 2026** — semula penerapan pelaksana; alasan
+pemilik di 7.6 `NUI/LAYER7.md`:
 - **DENY didahulukan atas kondisi lain.** Kategori DENIED tetap `DENY` meski
   evidence-nya juga STALE. Kondisi lainnya tetap tertulis di `reason`.
 - **`reason` sebuah `DENY` membawa `UNAUTHORIZED ACTION`**, karena itulah stop
@@ -1561,6 +1562,10 @@ tak dikenal, dan `expect()`.
   DECIDE. ALLOW tidak menjalankan apa pun.
 - Hasil kontrak yang sama memberi rekaman keputusan yang identik byte demi
   byte.
+
+**`46f4b14` GREEN, pemilik 30 September 2026**: Decision / Dry-Run GREEN.
+Perluasan otorisasi belum diminta, karena rantainya bekerja tanpa kewenangan
+mutatif. Status resminya di kepala `NUI/LAYER7.md`.
 
 `tests/test_ai/test_nui_layer7_decision.py`, 37 tes:
 - tiap baris tabel pemilik;

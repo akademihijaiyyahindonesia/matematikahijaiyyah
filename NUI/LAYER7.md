@@ -62,6 +62,17 @@ Authorization boundary            UNCHANGED
 Mutative DENIED actions            DENIED
 ```
 
+**Status resmi sesudah DECIDE** (pemilik, 30 September 2026):
+
+```text
+Layer 7 evaluator              GREEN
+7.7 post-action success        VALIDATED
+Decision / Dry-Run             GREEN
+Authorization boundary         UNCHANGED
+Mutative actions               DENIED
+Commit                         46f4b14
+```
+
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
 otonom di luar batas yang ditetapkan. Otonomi NUI saat ini hanya di wilayah
 **read → evaluate → verify → evidence**. Tidak ada mutasi sistem tanpa
@@ -294,6 +305,34 @@ papan, restart, pengiriman program, atau self-authorization. Hasil ujinya di
 Tetap tidak dibuka: board reconfiguration, send program, restart/recovery,
 fault isolation, keep host awake, dan repository/config mutation.
 `rtl/scripts/burn_in.py` tidak dijadikan allowlist.
+
+*Tiga penerapan DECIDE disetujui pemilik, 30 September 2026:*
+- **DENY didahulukan.**
+
+  ```text
+  candidate action
+        ↓
+  authorization check
+        ├── DENIED → DENY / UNAUTHORIZED ACTION
+        └── ALLOWED → evaluasi kontrak berikutnya
+  ```
+
+  Evidence `UNKNOWN`, `STALE`, atau lainnya tidak mengubah tindakan yang sejak
+  awal tidak diotorisasi menjadi `STOP` biasa atau `ALLOW`.
+- **`reason` sebuah DENY membawa `UNAUTHORIZED ACTION`**: kegagalan otorisasi
+  dibedakan dari kegagalan evidence.
+- **Masukan yang bukan hasil kontrak kandidat → STOP / UNKNOWN**, termasuk hasil
+  `confirm()`. Lapis keputusan tidak memperlakukan keluaran evaluator sebagai
+  kandidat tindakan secara implisit.
+
+*Perluasan otorisasi: belum ada alasan untuk memintanya* (pemilik, hari yang
+sama). Rantai READ → EVALUATE → GATE → DECIDE → EVIDENCE / REPORT sudah
+bekerja tanpa kewenangan mutatif, jadi restart, recovery, send-program,
+reconfiguration, fault isolation, dan tindakan lain yang `DENIED` tidak dibuka.
+Bila Lapis 7 maju, tahap berikutnya adalah **proposal untuk satu tindakan
+kandidat tertentu**: target, precondition, authorization scope, expected
+postcondition, evidence, dan stop condition. Proposal itu sendiri tidak memberi
+izin sampai ada keputusan pemilik.
 
 **Sesudah tindakan** tersedia:
 - observasi baru dari sumber yang sama, dengan cap waktu sesudah tindakan
