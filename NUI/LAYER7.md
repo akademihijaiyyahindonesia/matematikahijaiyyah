@@ -163,6 +163,200 @@ dipertahankan, dengan statusnya.
 `rtl/scripts/burn_in.py` tetap **historical evidence**, bukan dasar pemberian
 izin.
 
+### Proposal otorisasi: `SEND_PROGRAM`
+
+```text
+STATUS: HARD STOP — STOP / REPORT (pemilik, 1 Oktober 2026)
+Authorization: DENIED
+Tabel 7.4 di atas tidak berubah: "Mengirim program ke papan" tetap DENIED.
+Proposal ini tidak memberi izin apa pun.
+```
+
+Dipilih pemilik, 1 Oktober 2026, sebagai kandidat proposal pertama.
+Alasannya: dari seluruh tindakan mutatif yang tercatat, rantai evidence-nya
+paling lengkap — loader punya model fungsi dan verifikasi fisik, relokasi
+program pernah diuji di papan, dan ada keluaran deterministik yang bisa dipakai
+sebagai postcondition. Jadi proposal tidak perlu mekanisme pengukuran baru.
+
+**Tindakan dan mekanismenya yang sudah ada.** `rtl/scripts/send_program.py`
+(`encode()`) mengirim 4 byte jumlah kata N lalu 4N byte program, byte paling
+signifikan lebih dulu. Penerimanya `rtl/programs/loader.hasm` di bitstream
+`rtl/fpga/gowin/hcpu_gowin_top_loader.fs`. Loader menulis memori instruksi mulai
+alamat 64, lalu masuk ke program lewat `ERET` dalam mode supervisor. Program
+dirakit host di basis 64 (`LOAD_BASE`). Jawabannya dibaca sebagai byte mentah
+sampai laporan `CYCLES=` wrapper (`run_one()` di `rtl/scripts/parity_board.py`),
+dan laporan membaca byte mentah itu (aturan Lapis 4).
+
+**Target**: Tang Nano 20K / HCPU yang identitasnya telah diverifikasi,
+menjalankan bitstream loader, di port serial 115200.
+
+**Ruang lingkup** (pemilik):
+- 1 transfer;
+- 1 program yang sudah memiliki evidence fisik;
+- tanpa perubahan repository;
+- tanpa perubahan konfigurasi VM;
+- tanpa perubahan HFS/persistent state, kecuali secara eksplisit menjadi bagian
+  dari protokol transfer yang sudah ada.
+
+**Program kandidat: `rtl/programs/test_from_card.hasm`** — dipilih pemilik,
+1 Oktober 2026, atas kriteria evidence loader fisik dan keluaran
+deterministik `1 2 3`:
+- 7 kata di basis 64, payload `a9f0351e…`. Dirakit ulang pada 1 Oktober 2026,
+  hasilnya tetap `a9f0351e…`.
+- Keluarannya dibekukan sebelum papan ditanya, di `NUI/board_expected.json`:
+  `1\n2\n3\n` untuk RTL dan interpreter di basis 64.
+- Di papan, lewat jalur yang sama: P2 `20260924T105400Z-parity` mencetak
+  `1 2 3`, PARITY, `board_equals_rtl`. Korelasi Lapis 6 mencatatnya sebagai
+  tautan DIRECT `ran`.
+- Program yang sama mencetak `1 2 3` dari kartu di 2B, lewat relokasi loader
+  kartu.
+- `JMP` absolutnya membuat `1 2 3` membuktikan program mendarat di basis yang
+  dipakai untuk merakitnya. Di jalur UART basis itu dipasang assembler host,
+  bukan relokasi loader. Relokasi loader hanya ada di jalur kartu, yang menulis
+  kartu SD dan karena itu di luar ruang lingkup ini.
+- `rtl/programs/test_distance.hasm` — 11 kata, `1 2 3`, PARITY di P2 yang
+  sama, tanpa `JMP` — tetap kandidat alternatif, **bukan kandidat utama**
+  proposal pertama (pemilik).
+- `rtl/programs/loader.hasm` dan `rtl/programs/test_from_card.hasm` sama-sama
+  tidak menyentuh blok kartu `0xFE0`: loader hanya memakai `0xFF0`–`0xFFD`, dan
+  program itu tanpa MMIO.
+
+**Prasyarat** (pemilik), dengan mekanisme yang ada dan keadaannya hari ini:
+
+| prasyarat | mekanisme yang ada | hari ini |
+|---|---|---|
+| target identity = KNOWN | IDENTITY Lapis 6: papan dan FPGA MEASURED, historis; CURRENT hanya dari sumber live | UNKNOWN — tidak ada sumber live, dan CURRENT tidak dipalsukan jadi KNOWN |
+| authorization candidate = explicitly proposed | proposal ini, dan tabel 7.4 | diusulkan; 7.4 tetap DENIED |
+| required communication = available and verified | port serial. `loader.hasm` tidak memancarkan apa pun sebelum byte pertama datang — ia berputar di `RX_STATUS` — jadi "loader menunggu" tidak bisa diamati tanpa mengirim | UNKNOWN — kesiapan loader dan kesiapan komunikasi |
+| source program = known-good / evidence-backed | hash payload terhadap ekspektasi beku; `stale()` di `rtl/scripts/parity_board.py` menolak payload yang bergeser | KNOWN |
+| expected outcome = predetermined | `NUI/board_expected.json`, dibekukan sebelum papan ditanya | KNOWN |
+
+**Postcondition yang ditetapkan sebelumnya**, lewat mekanisme yang ada:
+- *program transfer completed*: 4 + 4·7 = 32 byte tertulis. Ini satu medan,
+  bukan vonis; exit code transfer tidak pernah menjadi satu-satunya bukti.
+- *expected loader/program evidence present*: laporan `CYCLES=` wrapper tiba
+  sebelum tenggat `deadline_s()`, dan `timed_out` false — tanda programnya
+  berhenti.
+- *expected deterministic output*: teks program dari byte mentah sama dengan
+  `1\n2\n3\n`. Pergeseran satu byte laporan `CYCLES=` ditangani seperti di
+  `src/hijaiyyah/nui/board_parity.py`.
+- *no unexpected protected-state mutation*: di sisi host, berkas terlindung dan
+  evidence store tetap, lewat mekanisme `confirm()` 7.7. Di sisi papan, kartu SD
+  tidak teramati dari kabel; yang ada hanya fakta statis bahwa kedua program
+  tidak menyentuh blok `0xFE0`.
+- *evidence provenance valid*: byte mentah, hash payload, hash bitstream di
+  host, dan commit, dalam bentuk rekaman P2. Tempat rekamannya diputuskan
+  pemilik: evidence store eksternal (di bawah).
+
+**Hard stop** (pemilik). Proposal berhenti tanpa tindakan bila:
+
+```text
+target identity      UNKNOWN / AMBIGUOUS
+source program       not evidence-backed
+required evidence    STALE
+authorization        DENIED / absent
+precondition         UNKNOWN
+expected outcome     cannot be established
+post-action evidence invalid
+```
+
+Dan tetap: `self-authorization = forbidden`.
+
+**Sengaja tidak masuk kandidat** (pemilik): board reconfiguration,
+restart/recovery, fault isolation, keep-host-awake, repository mutation,
+configuration mutation, dan HFS/persistent-state mutation.
+
+**Fakta terukur yang menentukan proposal ini hari ini.** Dalam seluruh evidence
+yang ada, keadaan "loader menunggu program" hanya pernah dibuat oleh
+rekonfigurasi papan:
+- `rtl/scripts/parity_board.py` memanggil `configure()` —
+  `openFPGALoader -b tangnano20k` dengan bitstream loader — sebelum **setiap**
+  program;
+- `rtl/scripts/burn_in.py` melakukannya di tiap peluncuran;
+- loader menerima tepat satu program per konfigurasi.
+Rekonfigurasi papan DENIED dan dikecualikan dari kandidat ini. Tanpanya,
+*target identity* dan *required communication* tetap UNKNOWN. Jadi **menurut
+hard stop proposal ini sendiri, `SEND_PROGRAM` berhenti hari ini**, sebelum satu
+byte pun dikirim.
+
+Satu risiko ikut terlihat. Byte yang dikirim ke papan yang tidak sedang
+menjalankan loader diterima program yang sedang berjalan — shell, misalnya,
+membaca tiap karakter sebagai perintah (`p`, `A`). Karena itu prasyarat
+komunikasi bukan formalitas.
+
+**Keputusan pemilik atas proposal, 1 Oktober 2026.** Tidak satu pun
+membuka otorisasi mutatif.
+
+1. **Rekonfigurasi papan tetap di luar proposal `SEND_PROGRAM`.** Tidak ada
+   sinyal read-only yang membuktikan loader sedang menunggu program; keadaan
+   itu selama ini baru tercipta sesudah `openFPGALoader`.
+
+   ```text
+   loader_ready = UNKNOWN
+           ↓
+   SEND_PROGRAM = STOP / REPORT
+   ```
+
+   Kesiapan **tidak diuji dengan mengirim byte pertama**: evidence-nya justru
+   menunjukkan byte itu bisa diterima shell atau program yang sedang berjalan.
+   Supaya `SEND_PROGRAM` suatu hari bisa dibuka tanpa rekonfigurasi, dibutuhkan
+   **sumber evidence baru yang membuktikan kesiapan loader dan identitas
+   target**. Itu pekerjaan spesifikasi tersendiri, dan tidak disimpulkan dari
+   tidak adanya respons. Proposal ini karena itu **hard-stop secara benar**,
+   bukan belum lengkap.
+2. **Evidence pascatindakan tetap di evidence store eksternal**, lewat
+   mekanisme evidence store yang sudah dipakai NUI — tidak ada berkas evidence
+   di repositori, dan hasil papan tidak masuk `git`. Secara konseptual:
+
+   ```text
+   Layer 7 action evidence
+           ↓
+   external evidence store
+           ↓
+   action identity
+   target identity
+   program/payload hash
+   pre-action evidence
+   raw board response
+   post-action observations
+   outcome
+   manifest/evidence hash
+   ```
+
+   Path atau schema baru tidak ditetapkan sekarang. Namespace atau record
+   khusus untuk tindakan Lapis 7 baru dibuat sebagai pekerjaan implementasi
+   ketika otorisasi tindakan memang dibuka.
+3. **Program kandidat: `test_from_card`.**
+
+   ```text
+   SEND_PROGRAM
+   program = test_from_card
+   payload_hash = a9f0351e…
+   expected_output = 1 2 3
+   ```
+
+**Status proposal sesudah keputusan:**
+
+```text
+SEND_PROGRAM
+│
+├─ program known                 PASS
+├─ expected outcome known       PASS
+├─ target identity               UNKNOWN  ← STOP
+├─ loader readiness              UNKNOWN  ← STOP
+└─ communication readiness      UNKNOWN  ← STOP
+```
+
+```text
+SEND_PROGRAM = STOP / REPORT
+Authorization = DENIED
+```
+
+Tidak ada alasan membuka `RECONFIGURE_BOARD` hanya supaya proposal
+`SEND_PROGRAM` lolos. Kalau rekonfigurasi kelak hendak dibuka, ia harus menjadi
+**proposal tindakan terpisah** dengan boundary, precondition, postcondition,
+dan evidence-nya sendiri.
+
 ## 7.5 Authorization Boundary
 
 ```text

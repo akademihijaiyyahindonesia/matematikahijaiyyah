@@ -279,7 +279,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.788 node, 4.560 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.788 node, 4.566 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -1566,6 +1566,29 @@ tak dikenal, dan `expect()`.
 **`46f4b14` GREEN, pemilik 30 September 2026**: Decision / Dry-Run GREEN.
 Perluasan otorisasi belum diminta, karena rantainya bekerja tanpa kewenangan
 mutatif. Status resminya di kepala `NUI/LAYER7.md`.
+
+**Proposal pertama: `SEND_PROGRAM`, dipilih pemilik 1 Oktober 2026 — HARD STOP, STOP / REPORT, otorisasi DENIED.**
+Proposalnya di akhir 7.4 `NUI/LAYER7.md`: target, ruang lingkup, program
+kandidat, prasyarat, postcondition, hard stop, dan yang dikecualikan.
+Tabel 7.4 tidak berubah, dan sebuah tes menjaga agar mengirim program tetap
+DENIED. Diukur terhadap evidence yang ada:
+- dua prasyarat KNOWN: program ber-evidence dan outcome yang dibekukan;
+- dua prasyarat UNKNOWN: *target identity*, karena tidak ada sumber live, dan
+  *required communication*, karena loader tidak memancarkan tanda siap.
+Keadaan "loader menunggu" hanya pernah dibuat oleh rekonfigurasi papan, yang
+dikecualikan. Jadi proposal itu, menurut hard stop-nya sendiri, berhenti hari
+ini.
+
+Keputusan pemilik atas proposal itu, 1 Oktober 2026:
+- rekonfigurasi tetap di luar, jadi `loader_ready = UNKNOWN` →
+  `SEND_PROGRAM = STOP / REPORT`;
+- kesiapan tidak diuji dengan mengirim byte pertama;
+- evidence pascatindakan tinggal di evidence store eksternal, tanpa path atau
+  schema baru sampai otorisasi dibuka;
+- program kandidatnya `test_from_card`.
+Proposal itu hard-stop secara benar. Membukanya tanpa rekonfigurasi menuntut
+sumber evidence baru untuk kesiapan loader dan identitas target, sebagai
+pekerjaan spesifikasi tersendiri.
 
 `tests/test_ai/test_nui_layer7_decision.py`, 37 tes:
 - tiap baris tabel pemilik;

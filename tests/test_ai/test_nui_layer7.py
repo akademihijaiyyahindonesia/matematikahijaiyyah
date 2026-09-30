@@ -116,6 +116,12 @@ def test_the_7_4_statuses_are_read_from_the_contract() -> None:
     assert sum(1 for v in table.values() if v == "DENIED") == 7
     text = l7.CONTRACT.read_text(encoding="utf-8")
     assert all(f"| {k} |" in text for k in table)
+    # The SEND_PROGRAM proposal (owner, 1 October 2026) sits in 7.4 and grants
+    # nothing: it is a hard stop, and sending a program stays DENIED.
+    assert table["Mengirim program ke papan"] == "DENIED"
+    head = "STATUS: HARD STOP — STOP / REPORT (pemilik, 1 Oktober 2026)\nAuthorization: DENIED"
+    assert head in _section("7.4")
+    assert "STATUS: PROPOSED" not in _section("7.4")
 
 
 def test_old_evidence_is_stale_and_rejected(run: Path) -> None:

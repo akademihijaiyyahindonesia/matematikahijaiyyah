@@ -1961,6 +1961,36 @@ ada tindakan DENIED yang dibuka. Bila Lapis 7 maju, langkahnya adalah
 authorization scope, expected postcondition, evidence, dan stop condition.
 Proposal itu tidak memberi izin sampai pemilik memutuskan.
 
+**Keputusan pemilik, 1 Oktober 2026 — kandidat pertama `SEND_PROGRAM`, hanya
+sebagai proposal.** Proposalnya di akhir 7.4 `NUI/LAYER7.md`. Yang paling
+mudah dilanggar:
+
+- **Tidak ada izin eksekusi.** Baris 7.4 "Mengirim program ke papan" tetap
+  DENIED, dan tabel yang dibaca evaluator tidak disentuh.
+- **Jalurnya UART → `rtl/programs/loader.hasm`** lewat
+  `rtl/scripts/send_program.py`, bukan jalur kartu. Jalur kartu menulis kartu
+  SD, dan HFS/persistent state dikecualikan.
+- **CURRENT hardware tidak dipalsukan jadi KNOWN.** Tidak ada sumber live, dan
+  loader tidak memancarkan tanda siap. Keadaan "loader menunggu" hanya pernah
+  dibuat oleh rekonfigurasi papan, yang dikecualikan. Jadi proposal ini
+  berhenti hari ini, menurut hard stop-nya sendiri.
+- **Keputusan pemilik atas proposal itu, hari yang sama.** Tidak satu pun
+  membuka otorisasi mutatif:
+  - **rekonfigurasi tetap di luar**, jadi `loader_ready = UNKNOWN` →
+    `SEND_PROGRAM = STOP / REPORT`. Kesiapan **jangan diuji dengan mengirim
+    byte pertama**: byte itu bisa diterima shell atau program yang sedang
+    berjalan;
+  - membukanya tanpa rekonfigurasi menuntut **sumber evidence baru** untuk
+    kesiapan loader dan identitas target, sebagai pekerjaan spesifikasi
+    tersendiri — tidak disimpulkan dari tidak adanya respons;
+  - evidence pascatindakan tinggal di **evidence store eksternal** lewat
+    mekanisme yang sudah ada, tidak di repositori dan tidak di `git`. Path,
+    schema, atau namespace baru tidak dibuat sebelum otorisasi dibuka;
+  - program kandidatnya **`test_from_card`**; `test_distance` alternatif,
+    bukan kandidat utama;
+  - `RECONFIGURE_BOARD` tidak dibuka supaya `SEND_PROGRAM` lolos. Kalau
+    hendak dibuka, ia jadi proposal tindakan terpisah.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
