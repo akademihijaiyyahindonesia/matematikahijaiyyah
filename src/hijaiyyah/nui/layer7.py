@@ -3,6 +3,8 @@
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 host <vm_name> <collector> [<run_id>]
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 hardware <subject>
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 rtl <module> <name>
+    PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 expect <vm_name>
+    PYTHONPATH=src python3 -m hijaiyyah.nui.layer7 confirm <expected.json>
 
 The owner's order of 30 September 2026, on the contract NUI/LAYER7.md: test
 the read/verify/evidence contract against real Layer 5 observations and the
@@ -21,6 +23,17 @@ the evidence store, the committed models and the contract, and returns a
 report. Recording new evidence is layer5.record's, run outside this module
 under 7.5's sixth permission. PASS means the preconditions for using an
 observation hold -- never that anything was done.
+
+7.7, by the owner's order of 30 September 2026, is validated on that one
+AUTHORIZED action and on no other. expect() evaluates its preconditions and
+fixes the outcome it must produce before it runs; the caller runs it only on
+PASS; confirm() holds the post-action evidence against that outcome:
+
+    PRECONDITION -> expected outcome -> AUTHORIZATION = ALLOWED -> layer5.record
+          -> POST-ACTION OBSERVATION -> compare -> SUCCESS or STOP / REPORT
+
+Neither runs the action, and an exit code is one field of the evidence, never
+the verdict.
 
 Each of the six preconditions of 7.6 is answered by a mechanism that already
 exists, and a failure keeps its own name as a reason to stop -- UNKNOWN,
@@ -48,7 +61,7 @@ import hashlib
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -64,9 +77,19 @@ PRECONDITIONS = ("target identity", "observation provenance", "evidence freshnes
 UNKNOWN, STALE, NOT_COVERED = "UNKNOWN", "STALE", "NOT_COVERED"
 KNOWN_DISCREPANCY = "KNOWN_DISCREPANCY"
 INVALID, AMBIGUOUS, UNAUTHORIZED = "INVALID PROVENANCE", "AMBIGUOUS TARGET", "UNAUTHORIZED ACTION"
-PASS, STOP = "PASS", "STOP / REPORT"
+PASS, STOP, SUCCESS = "PASS", "STOP / REPORT", "SUCCESS"
 #: The one read the tests of this stage ask for: the 7.4 category, by its name.
 READ = "Observasi / read-only"
+#: The 7.4 category that 7.5's sixth permission, new evidence written by
+#: layer5.record to the store outside the repository (K-11), falls under.
+RECORD = "Evidence, provenance, freshness, delta"
+#: What no recording of evidence may change: the contract, and the Layer 5
+#: spec, VM configuration and code that the action runs on (7.5); the VM's own
+#: lima.yaml is added by name. This module is held with them.
+PROTECTED = (ROOT / "NUI" / "LAYER7.md", ROOT / "NUI" / "spec" / "layer5_collectors.json",
+             ROOT / "NUI" / "spec" / "layer5_lima.yaml",
+             ROOT / "src" / "hijaiyyah" / "nui" / "layer5.py",
+             ROOT / "src" / "hijaiyyah" / "nui" / "layer7.py")
 
 
 def authorizations(contract: Path | None = None) -> dict[str, str]:
@@ -266,18 +289,239 @@ def evaluate(target: dict[str, Any], action: str = READ, now: datetime | None = 
         found.setdefault(p, _cond("unknown", "not evaluated: the target is not identified",
                                   UNKNOWN))
     found["authorization"] = _authorization(action, authorizations(contract))
-    stops = [{"condition": c["stop"], "precondition": p, "why": c.get("why", c["value"])}
-             for p in PRECONDITIONS for c in [found[p]] if "stop" in c]
-    return {"action": action, "target": target,
-            "preconditions": {p: found[p] for p in PRECONDITIONS},
+    found = {p: found[p] for p in PRECONDITIONS}
+    stops = _stops(found, "precondition")
+    return {"action": action, "target": target, "preconditions": found,
             "stops": stops, "conditions": sorted({s["condition"] for s in stops}),
             "decision": STOP if stops else PASS,
             "acted": False}
 
 
+def _stops(found: dict[str, dict[str, Any]], key: str) -> list[dict[str, Any]]:
+    return [{"condition": c["stop"], key: p, "why": c.get("why", c["value"])}
+            for p, c in found.items() if "stop" in c]
+
+
+def _store_files() -> dict[str, str]:
+    """Every file of the K-11 evidence store, by SHA-256."""
+    base = layer5.store()
+    return {str(f.relative_to(base)): _sha(f) for f in sorted(base.rglob("*"))
+            if f.is_file()} if base.is_dir() else {}
+
+
+def _store_runs() -> list[str]:
+    """Every collector run in the store: <vm_name>/<run_id> (K-16), or
+    <run_id> for the runs frozen before K-16."""
+    base = layer5.store()
+    runs: list[str] = []
+    for d in sorted(base.iterdir()) if base.is_dir() else []:
+        if d.is_dir() and layer5.RUN.fullmatch(d.name):
+            runs.append(d.name)
+        elif d.is_dir():
+            runs += [f"{d.name}/{r.name}" for r in sorted(d.iterdir())
+                     if r.is_dir() and layer5.RUN.fullmatch(r.name)]
+    return runs
+
+
+def _protected(vm_name: str) -> dict[str, str | None]:
+    paths = [*PROTECTED, Path(layer5.host()["lima_home"]) / vm_name / "lima.yaml"]
+    return {str(f): _sha(f) if f.is_file() else None for f in paths}
+
+
+def expect(vm_name: str, action: str = RECORD, now: datetime | None = None,
+           contract: Path | None = None) -> dict[str, Any]:
+    """7.6 and 7.7 before an action that records evidence of one VM: its six
+    preconditions, and the outcome it must produce, fixed before it runs. The
+    baseline is the newest observation of each collector on this VM (K-16);
+    the expected outcome is that observation's outcome class, so the
+    collectors that succeeded must stay PASS and the others keep theirs. Reads
+    only: the action is the caller's, and only on PASS."""
+    decided_at = now or datetime.now(timezone.utc)
+    spec = layer5.load()
+    k16 = "(vm_name, run_id), K-16"
+    found: dict[str, dict[str, Any]] = {}
+    outcomes: dict[str, str] = {}
+    if vm_name not in {spec["host"]["instance"], spec["host"]["test_instance"]}:
+        found["target identity"] = _cond("unknown", k16, AMBIGUOUS,
+                                         why=f"`{vm_name}` is not a VM the Layer 5 spec names")
+    else:
+        found["target identity"] = _cond("known", k16, vm_name=vm_name)
+        base = {c["name"]: layer5.latest(c["name"], vm_name) for c in spec["collectors"]}
+        missing = sorted(c for c, o in base.items() if o is None)
+        rejected = {c: o["rejected"] for c, o in base.items() if o and "rejected" in o}
+        manifest = "the manifest check of layer5: VM, run, size and SHA-256"
+        if missing or rejected:
+            found["observation provenance"] = (
+                _cond("unknown", "layer5.latest", UNKNOWN,
+                      why=f"no baseline observation of {missing} on {vm_name} (K-14)")
+                if missing else
+                _cond("invalid", manifest, INVALID, why=f"baseline rejected: {rejected}"))
+        else:
+            seen = {c: o for c, o in base.items() if o is not None}
+            found["observation provenance"] = _cond(
+                "valid", manifest, baseline_runs=sorted({o["run_id"] for o in seen.values()}))
+            ages = {c: layer5.freshness(o["observed_at"], decided_at) for c, o in seen.items()}
+            stale = sorted(c for c, f in ages.items() if f["freshness"] != "current")
+            found["evidence freshness"] = _cond(
+                "stale" if stale else "current",
+                "layer5.freshness and stale_after_seconds in NUI/spec/layer5_collectors.json",
+                STALE if stale else None,
+                age_seconds=max(f["age_seconds"] for f in ages.values()),
+                **({"why": f"baseline not current: {stale}"} if stale else {}))
+            classes = {r["status"] for r in spec["outcomes"]["classes"]}
+            loose = {c: o["status"] for c, o in seen.items() if o["status"] not in classes}
+            outcomes = {c: o["status"] for c, o in seen.items()}
+            found["required state"] = _cond(
+                "unknown" if loose else "known",
+                "the outcome classes of NUI/spec/layer5_collectors.json (K-13)",
+                UNKNOWN if loose else None,
+                **({"why": f"no outcome class to expect: {loose}"} if loose else {}))
+        unlocked = sorted(c["name"] for c in spec["collectors"] if c["status"] != "ditetapkan")
+        found["required rule coverage"] = _cond(
+            "not covered" if unlocked else "covered",
+            "the collectors' contract status in NUI/spec/layer5_collectors.json",
+            NOT_COVERED if unlocked else None,
+            **({"why": f"contract not locked: {unlocked}"} if unlocked else {}))
+    for p in PRECONDITIONS[1:-1]:
+        found.setdefault(p, _cond("unknown", "not evaluated: the target is not identified",
+                                  UNKNOWN))
+    found["authorization"] = _authorization(action, authorizations(contract))
+    found = {p: found[p] for p in PRECONDITIONS}
+    stops = _stops(found, "precondition")
+    known = found["target identity"]["value"] == "known"
+    return {"action": action, "target": {"kind": "host", "vm_name": vm_name},
+            "decided_at": decided_at.isoformat(), "preconditions": found,
+            "stops": stops, "conditions": sorted({s["condition"] for s in stops}),
+            "decision": STOP if stops else PASS,
+            "expected": {"new_runs": 1, "outcomes": outcomes,
+                         "runs_before": _store_runs(),
+                         "store_before": _store_files(),
+                         "protected_before": _protected(vm_name) if known else {}},
+            "acted": False}
+
+
+CHECKS = ("new run_id", "manifest hash", "evidence read back", "provenance", "outcome",
+          "freshness", "no change outside the evidence store")
+
+
+def confirm(expected: dict[str, Any], now: datetime | None = None,
+            contract: Path | None = None) -> dict[str, Any]:
+    """7.7 after the action: the post-action evidence held against the outcome
+    expect() fixed before it. SUCCESS only when every item is found: one new
+    run_id of this VM, its manifest and hashes, every collector read back with
+    valid provenance and its expected outcome, evidence timed after the
+    decision and still current, and no change outside the evidence store but
+    the new run. Anything else is STOP / REPORT, each under its own name."""
+    now = now or datetime.now(timezone.utc)
+    vm, want = expected["target"]["vm_name"], expected["expected"]
+    new = sorted(set(_store_runs()) - set(want["runs_before"]))
+    base = {"action": expected["action"], "target": dict(expected["target"]),
+            "decided_at": expected["decided_at"], "confirmed_at": now.isoformat()}
+    found: dict[str, dict[str, Any]] = {}
+    if expected["decision"] != PASS:
+        found["new run_id"] = _cond(
+            "no action expected", "the preconditions expect() evaluated",
+            UNAUTHORIZED if new else UNKNOWN,
+            why=f"the preconditions stopped the action {expected['conditions']}"
+                + (f", yet {new} appeared" if new else ": there is nothing to confirm"))
+    authorized = _authorization(expected["action"], authorizations(contract))
+    if "stop" in authorized:
+        found["authorization"] = authorized
+    mine, others = [r for r in new if r.startswith(f"{vm}/")], [r for r in new
+                                                                if not r.startswith(f"{vm}/")]
+    if not found:
+        found["new run_id"] = (
+            _cond("another target", "the store's runs before and after", AMBIGUOUS,
+                  why=f"new runs outside {vm}: {others}") if others else
+            _cond("not found", "the store's runs before and after", UNKNOWN,
+                  why=f"no new run of {vm}: the expected result is not there") if not mine else
+            _cond("ambiguous", "the store's runs before and after", AMBIGUOUS,
+                  why=f"{len(mine)} new runs of {vm}: {mine}") if len(mine) > 1 else
+            _cond("new", "the store's runs before and after", run=mine[0]))
+    if "stop" not in found["new run_id"] and "authorization" not in found:
+        run_id = mine[0].split("/", 1)[1]
+        base["target"]["run_id"] = run_id
+        found.update(_post_action(vm, run_id, want, expected["decided_at"], now))
+    found["no change outside the evidence store"] = _outside(vm, new, want)
+    for c in CHECKS:
+        found.setdefault(c, _cond("unknown", "not evaluated: no single new run to read", UNKNOWN))
+    stops = _stops(found, "check")
+    return {**base, "checks": found, "stops": stops,
+            "conditions": sorted({s["condition"] for s in stops}),
+            "decision": STOP if stops else SUCCESS, "acted": False}
+
+
+def _post_action(vm: str, run_id: str, want: dict[str, Any], decided_at: str,
+                 now: datetime) -> dict[str, dict[str, Any]]:
+    """The one new run, item by item, through layer5's own verification."""
+    out: dict[str, dict[str, Any]] = {}
+    path = layer5.store() / vm / run_id / "manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        hashed = all(e.get("failure") or all(e.get("evidence", {}).get(s, {}).get("sha256")
+                                             for s in ("stdout", "stderr"))
+                     for e in manifest.get("collectors", []))
+        out["manifest hash"] = (
+            _cond("present", "manifest.json of the new run", sha256=_sha(path)) if hashed else
+            _cond("missing", "manifest.json of the new run", INVALID,
+                  why="an entry carries no SHA-256 for its evidence"))
+    except (OSError, ValueError) as why:
+        out["manifest hash"] = _cond("unreadable", "manifest.json of the new run", INVALID,
+                                     why=f"{type(why).__name__}: {why}")
+    seen = {c: [o for o in layer5.observations(c, vm) if o["run_id"] == run_id]
+            for c in want["outcomes"]}
+    missing = sorted(c for c, o in seen.items() if len(o) != 1)
+    got = {c: o[0] for c, o in seen.items() if len(o) == 1}
+    rejected = {c: o["rejected"] for c, o in got.items() if "rejected" in o}
+    valid = {c: o for c, o in got.items() if "rejected" not in o}
+    differs = {c: {"expected": want["outcomes"][c], "observed": o["status"]}
+               for c, o in valid.items() if o["status"] != want["outcomes"][c]}
+    early = sorted(c for c, o in valid.items()
+                   if datetime.fromisoformat(o["observed_at"]) < datetime.fromisoformat(decided_at))
+    stale = sorted(c for c, o in valid.items()
+                   if layer5.freshness(o["observed_at"], now)["freshness"] != "current")
+    mech = "layer5.observations, (vm_name, run_id)"
+    out["evidence read back"] = (
+        _cond("missing", mech, UNKNOWN, why=f"not read back from {run_id}: {missing}")
+        if missing else _cond("read", mech, collectors=len(got)))
+    out["provenance"] = (
+        _cond("invalid", "the manifest check of layer5: VM, run, size and SHA-256", INVALID,
+              why=f"rejected: {rejected}") if rejected else
+        _cond("valid", "the manifest check of layer5: VM, run, size and SHA-256"))
+    out["outcome"] = (
+        _cond("differs", "the outcome fixed before the action", KNOWN_DISCREPANCY,
+              why=f"post-action outcome differs from the one fixed before: {differs}")
+        if differs else _cond("as expected", "the outcome fixed before the action",
+                              outcomes={c: o["status"] for c, o in valid.items()}))
+    out["freshness"] = (
+        _cond("inconsistent", "decided_at, and layer5.freshness at confirmation", STALE,
+              why=(f"observed before the decision: {early}. " if early else "")
+                  + (f"not current: {stale}" if stale else ""))
+        if early or stale else
+        _cond("consistent", "decided_at, and layer5.freshness at confirmation"))
+    return out
+
+
+def _outside(vm: str, new: list[str], want: dict[str, Any]) -> dict[str, Any]:
+    """Only new runs may have come into the store -- whether they are the one
+    expected is the new run_id check's -- and nothing the action runs on may
+    have changed."""
+    after, before = _store_files(), want["store_before"]
+    runs = tuple(f"{r}/" for r in new)
+    changed = sorted(f for f in before if after.get(f) != before[f])
+    added = sorted(f for f in after if f not in before and not (runs and f.startswith(runs)))
+    moved = sorted(f for f, h in want["protected_before"].items()
+                   if _protected(vm).get(f) != h)
+    if changed or added or moved:
+        return _cond("changed", "the store and the protected files, before and after",
+                     UNAUTHORIZED, why=f"changed or removed {changed}; added outside the "
+                                       f"new run {added}; protected files changed {moved}")
+    return _cond("unchanged", "the store and the protected files, before and after")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
-    action = READ
+    action: str | None = None
     if "--action" in args:
         i = args.index("--action")
         action, args = args[i + 1], args[:i] + args[i + 2:]
@@ -288,10 +532,18 @@ def main(argv: list[str] | None = None) -> int:
         target = {"kind": "hardware", "subject": " ".join(args[1:])}
     elif args[:1] == ["rtl"] and len(args) >= 3:
         target = {"kind": "rtl", "module": args[1], "rule": " ".join(args[2:])}
+    elif args[:1] == ["expect"] and len(args) == 2:
+        report = expect(args[1], action or RECORD)
+        print(json.dumps(report, indent=1, ensure_ascii=False, default=str))
+        return 0 if report["decision"] == PASS else 1
+    elif args[:1] == ["confirm"] and len(args) == 2:
+        report = confirm(json.loads(Path(args[1]).read_text(encoding="utf-8")))
+        print(json.dumps(report, indent=1, ensure_ascii=False, default=str))
+        return 0 if report["decision"] == SUCCESS else 1
     else:
         print(__doc__.split("\n\n")[1])
         return 2
-    report = evaluate(target, action)
+    report = evaluate(target, action or READ)
     print(json.dumps(report, indent=1, ensure_ascii=False, default=str))
     return 0 if report["decision"] == PASS else 1
 

@@ -1881,6 +1881,44 @@ bukan cacat evaluator. Ia tidak dapat divalidasi selama tidak ada tindakan
 mutatif yang diizinkan. Langkah Lapis 7 sesudahnya diambil dari pemilik, tidak
 dikarang.
 
+**Perintah pemilik, 30 September 2026 — 7.7 divalidasi pada `layer5.record`.**
+7.7 tidak mensyaratkan tindakan yang mengubah FPGA, host, atau sistem. Jadi ia
+divalidasi pada satu-satunya tindakan AUTHORIZED yang menghasilkan evidence, dan
+**tidak satu pun tindakan DENIED dibuka**. Pola, contoh outcome, uji negatif,
+daftar yang tetap DENIED, dan kriteria GREEN-nya dikutip di 7.7
+`NUI/LAYER7.md`; hasil terukurnya di `NUI/LAYERS.md`, Lapis 7 (R1). Yang
+paling mudah dilanggar:
+
+- **Outcome ditetapkan sebelum tindakan**, oleh `expect()`, dan tindakan hanya
+  berjalan bila ia PASS. `confirm()` membandingkan evidence pascatindakan
+  dengan outcome itu. `src/hijaiyyah/nui/layer7.py` sendiri tetap tidak
+  menjalankan tindakan.
+- **`exit code = 0` bukan satu-satunya bukti.** Kolektor yang semuanya exit 0
+  tetap STOP bila outcome-nya berbeda dari yang ditetapkan.
+- **Baseline harus current**, dengan batas 300 detik yang tidak dilonggarkan.
+  Baseline yang basi menahan tindakan, dan baseline segar dibuat lebih dulu
+  lewat `layer5.record`.
+- **Temuan lari nyata, dilaporkan dan tidak diubah:** run_id `layer5.record`
+  berpresisi detik. Dua rekaman dalam detik yang sama bertabrakan, dan yang
+  kedua ditolak `FileExistsError`. `src/hijaiyyah/nui/layer5.py` beku.
+- **Label ketujuh pemeriksaan 7.7** tabelnya di `NUI/LAYERS.md`.
+
+**Keputusan pemilik, hari yang sama — 7.7 VALIDATED pada `layer5.record`.**
+Kalimatnya di 7.7 `NUI/LAYER7.md`. Yang paling mudah dilanggar:
+
+- **Outcome berbeda dari yang ditetapkan → `KNOWN_DISCREPANCY`**, jangan
+  diturunkan menjadi `NOT_COVERED` atau `UNKNOWN`.
+- **Perubahan protected file atau evidence store di luar hasil tindakan yang
+  diotorisasi → `UNAUTHORIZED ACTION`.** Ini pelanggaran boundary, **bukan**
+  bukti bahwa tindakannya gagal secara fungsional.
+- **Baseline harus current, dikunci.** Baseline STALE tidak dipakai ulang
+  untuk tindakan, 300 detik tidak dilonggarkan, dan validasi baru dimulai dari
+  baseline baru.
+- **Presisi `run_id` tidak diubah.** `FileExistsError` pada tabrakan adalah
+  kegagalan yang aman, dan `confirm` → `UNKNOWN` → STOP / REPORT sudah
+  fail-closed. Lapis 5 tidak dibuka untuknya.
+- 7.2, 7.5, dan batas otorisasi tidak berubah; tindakan DENIED tetap DENIED.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

@@ -19,6 +19,13 @@ What is held:
     denied;
     and the evaluator acts on nothing: it runs no command and writes no file,
     checked in its source and by making every such path raise while it runs.
+
+7.7, by the owner's order of 30 September 2026, on the one AUTHORIZED action
+layer5.record: expect() fixes the outcome before it, the test runs it, and
+confirm() gives SUCCESS only when the post-action evidence matches -- and
+STOP / REPORT for a wrong manifest hash, broken provenance, a different
+outcome, stale evidence, a changed or ambiguous target, and a result not
+found.
 """
 from __future__ import annotations
 
@@ -29,9 +36,10 @@ import os
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, Callable
 
 import pytest
 
@@ -319,3 +327,231 @@ def test_the_command_line_reports_and_acts_on_nothing(capsys: pytest.CaptureFixt
     assert l7.main(["rtl", "hcpu", "register", "pc", "di", "register", "file"]) == 1
     assert json.loads(capsys.readouterr().out)["conditions"] == [l7.NOT_COVERED]
     assert l7.main(["nothing"]) == 2
+
+
+# -- 7.7: the post-action success of layer5.record ----------------------------------------------
+
+T0 = datetime(2026, 9, 30, 6, 0, tzinfo=timezone.utc)
+SEC = timedelta(seconds=1)
+OUTCOMES = {"journal": "unavailable_due_to_permissions",
+            "containers": "unavailable_command_absent"}
+
+
+@pytest.fixture()
+def act(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
+    """A store of its own, a stand-in VM, and a clock the test moves. The
+    baseline run is recorded at T0; the action is whatever the test records
+    after expect() has fixed its outcome."""
+    store = tmp_path / "observations"
+    store.mkdir()
+    clock = [T0]
+
+    class Fixed(datetime):
+        @classmethod
+        def now(cls, tz: Any = None) -> datetime:  # type: ignore[override]
+            return clock[0]
+
+    monkeypatch.setattr(layer5, "store", lambda: store)
+    monkeypatch.setattr(layer5.shutil, "which", lambda _: "/opt/homebrew/bin/limactl")
+    monkeypatch.setattr(layer5, "datetime", Fixed)
+
+    def record(at: datetime, vm: str = VM,
+               runner: Callable[[list[str]], Any] = _Ran) -> Path:
+        clock[0] = at
+        return layer5.record(vm, run=lambda cmd, **_: runner(cmd), into=store)
+
+    record(T0)
+    return SimpleNamespace(store=store, record=record, clock=clock, Fixed=Fixed)
+
+
+def _check(report: dict[str, Any], condition: str) -> bool:
+    return report["decision"] == l7.STOP and condition in report["conditions"]
+
+
+def _run_stop(report: dict[str, Any], condition: str) -> bool:
+    """The new run_id check stops under `condition`, and every other stop is a
+    check that rests on that run and says it was not evaluated."""
+    rest = [x for x in report["stops"] if x["check"] != "new run_id"]
+    return (report["checks"]["new run_id"].get("stop") == condition
+            and all(x["condition"] == l7.UNKNOWN and report["checks"][x["check"]][
+                "mechanism"].startswith("not evaluated") for x in rest))
+
+
+def test_7_7_success_is_the_outcome_fixed_before_the_action(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    assert e["decision"] == l7.PASS and e["action"] == l7.RECORD and e["acted"] is False
+    assert e["preconditions"]["authorization"]["value"] == "allowed"
+    want = {c["name"]: OUTCOMES.get(c["name"], "PASS") for c in layer5.load()["collectors"]}
+    assert e["expected"]["outcomes"] == want and e["expected"]["new_runs"] == 1
+    run = act.record(T0 + 10 * SEC)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert r["decision"] == l7.SUCCESS and r["stops"] == [] and r["acted"] is False
+    assert r["target"]["run_id"] == run.name
+    assert list(r["checks"]) == list(l7.CHECKS)
+    assert r["checks"]["manifest hash"]["sha256"] == hashlib.sha256(
+        (run / "manifest.json").read_bytes()).hexdigest()
+    assert r["checks"]["outcome"]["outcomes"] == want
+
+
+def test_an_exit_code_of_zero_is_not_the_verdict(act: SimpleNamespace) -> None:
+    """Every collector exits 0, and the journal, fixed as refused, comes back
+    PASS: the outcome differs from the one fixed, so STOP."""
+    class AllZero(_Ran):
+        def __init__(self, cmd: list[str]) -> None:
+            super().__init__(cmd)
+            self.returncode, self.stderr = 0, ""
+
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    act.record(T0 + 10 * SEC, runner=AllZero)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert r["conditions"] == [l7.KNOWN_DISCREPANCY]
+    assert "journal" in r["checks"]["outcome"]["why"]
+
+
+def test_a_wrong_manifest_hash_stops(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    run = act.record(T0 + 10 * SEC)
+    manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8"))
+    manifest["collectors"][1]["evidence"]["stdout"]["sha256"] = "0" * 64
+    (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert _check(r, l7.INVALID) and r["checks"]["provenance"]["value"] == "invalid"
+
+
+def test_broken_provenance_stops(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    run = act.record(T0 + 10 * SEC)
+    (run / "raw" / "routes.stdout").write_text("tampered\n", encoding="utf-8")
+    assert _check(l7.confirm(e, now=T0 + 20 * SEC), l7.INVALID)
+    (run / "raw" / "routes.stdout").unlink()
+    assert _check(l7.confirm(e, now=T0 + 20 * SEC), l7.INVALID)
+
+
+def test_an_outcome_that_does_not_match_stops(act: SimpleNamespace) -> None:
+    class Broken(_Ran):
+        def __init__(self, cmd: list[str]) -> None:
+            super().__init__(cmd)
+            if cmd[4] == "ps":
+                self.returncode, self.stdout, self.stderr = 1, "", "ps: broken\n"
+
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    act.record(T0 + 10 * SEC, runner=Broken)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert r["conditions"] == [l7.KNOWN_DISCREPANCY]
+    assert "processes" in r["checks"]["outcome"]["why"]
+
+
+def test_stale_post_action_evidence_stops(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    act.record(T0 + 10 * SEC)
+    assert l7.confirm(e, now=T0 + 10 * SEC + LIMIT * SEC)["decision"] == l7.SUCCESS
+    assert l7.confirm(e, now=T0 + 11 * SEC + LIMIT * SEC)["conditions"] == [l7.STALE]
+
+
+def test_evidence_timed_before_the_decision_is_not_post_action(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 15 * SEC)
+    act.record(T0 + 10 * SEC)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert r["conditions"] == [l7.STALE]
+    assert "before the decision" in r["checks"]["freshness"]["why"]
+
+
+def test_a_changed_or_ambiguous_target_stops(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    other = layer5.load()["host"]["test_instance"]
+    act.record(T0 + 10 * SEC, vm=other)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert _run_stop(r, l7.AMBIGUOUS) and other in r["checks"]["new run_id"]["why"]
+    e = l7.expect(VM, now=T0 + 25 * SEC)
+    act.record(T0 + 30 * SEC)
+    act.record(T0 + 31 * SEC)
+    r = l7.confirm(e, now=T0 + 40 * SEC)
+    assert _run_stop(r, l7.AMBIGUOUS) and "2 new runs" in r["checks"]["new run_id"]["why"]
+
+
+def test_an_expected_result_not_found_stops(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert _run_stop(r, l7.UNKNOWN) and "not there" in r["checks"]["new run_id"]["why"]
+
+
+def test_a_change_outside_the_evidence_store_stops(act: SimpleNamespace, tmp_path: Path,
+                                                   monkeypatch: pytest.MonkeyPatch) -> None:
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    act.record(T0 + 10 * SEC)
+    old = next((act.store / VM).iterdir()) / "raw" / "mounts.stdout"
+    assert old.parent.parent.name != l7.confirm(e, now=T0 + 20 * SEC)["target"]["run_id"]
+    old.write_text("an older run, rewritten\n", encoding="utf-8")
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert r["conditions"] == [l7.UNAUTHORIZED]
+    # A boundary violation, not a functional failure of the action (owner, 30 September 2026):
+    # the action's own checks still read as met beside it.
+    assert all(r["checks"][c].get("stop") is None for c in l7.CHECKS[:-1])
+    assert r["checks"]["outcome"]["value"] == "as expected"
+    guarded = tmp_path / "guarded.txt"
+    guarded.write_text("before\n", encoding="utf-8")
+    monkeypatch.setattr(l7, "PROTECTED", (*l7.PROTECTED, guarded))
+    e = l7.expect(VM, now=T0 + 25 * SEC)
+    act.record(T0 + 30 * SEC)
+    guarded.write_text("after\n", encoding="utf-8")
+    r = l7.confirm(e, now=T0 + 40 * SEC)
+    assert r["conditions"] == [l7.UNAUTHORIZED] and "guarded.txt" in r["checks"][
+        "no change outside the evidence store"]["why"]
+
+
+def test_the_preconditions_hold_the_action_back(act: SimpleNamespace) -> None:
+    """Before layer5.record may run: a DENIED category, an unknown VM, a
+    baseline gone stale, and no baseline at all each stop it."""
+    for action in [k for k, v in l7.authorizations().items() if v == "DENIED"]:
+        assert l7.expect(VM, action, now=T0 + 5 * SEC)["conditions"] == [l7.UNAUTHORIZED]
+    assert l7.AMBIGUOUS in l7.expect("another-vm", now=T0 + 5 * SEC)["conditions"]
+    assert l7.expect(VM, now=T0 + (LIMIT + 1) * SEC)["conditions"] == [l7.STALE]
+    assert l7.UNKNOWN in l7.expect(layer5.load()["host"]["test_instance"],
+                                   now=T0 + 5 * SEC)["conditions"]
+
+
+def test_a_stopped_expectation_confirms_nothing(act: SimpleNamespace) -> None:
+    e = l7.expect(VM, "Restart / recovery", now=T0 + 5 * SEC)
+    assert l7.confirm(e, now=T0 + 20 * SEC)["conditions"] == [l7.UNAUTHORIZED, l7.UNKNOWN]
+    act.record(T0 + 10 * SEC)
+    r = l7.confirm(e, now=T0 + 20 * SEC)
+    assert r["decision"] == l7.STOP and "yet" in r["checks"]["new run_id"]["why"]
+
+
+def test_expect_and_confirm_act_on_nothing(act: SimpleNamespace,
+                                           monkeypatch: pytest.MonkeyPatch) -> None:
+    def refuse(*_: Any, **__: Any) -> Any:
+        raise AssertionError("a side effect was attempted")
+
+    e = l7.expect(VM, now=T0 + 5 * SEC)
+    act.record(T0 + 10 * SEC)
+    before = _tree(act.store)
+    with monkeypatch.context() as m:
+        for obj, name in ((subprocess, "run"), (subprocess, "Popen"), (os, "system"),
+                          (shutil, "rmtree"), (layer5, "record"), (layer5, "observe"),
+                          (Path, "write_text"), (Path, "write_bytes"), (Path, "mkdir"),
+                          (Path, "unlink"), (Path, "rename")):
+            m.setattr(obj, name, refuse)
+        assert l7.expect(VM, now=T0 + 15 * SEC)["decision"] == l7.PASS
+        assert l7.confirm(e, now=T0 + 20 * SEC)["decision"] == l7.SUCCESS
+    assert _tree(act.store) == before
+
+
+def test_the_command_line_expects_and_confirms(act: SimpleNamespace, tmp_path: Path,
+                                               monkeypatch: pytest.MonkeyPatch,
+                                               capsys: pytest.CaptureFixture[str]) -> None:
+    """The real run's path: expect prints the outcome, the caller keeps it
+    and runs layer5.record, and confirm reads it back."""
+    monkeypatch.setattr(l7, "datetime", act.Fixed)
+    assert l7.main(["expect", "another-vm"]) == 1
+    capsys.readouterr()
+    act.clock[0] = T0 + 5 * SEC
+    assert l7.main(["expect", VM]) == 0
+    kept = tmp_path / "expected.json"
+    kept.write_text(capsys.readouterr().out, encoding="utf-8")
+    act.record(T0 + 10 * SEC)
+    act.clock[0] = T0 + 20 * SEC
+    assert l7.main(["confirm", str(kept)]) == 0
+    assert json.loads(capsys.readouterr().out)["decision"] == l7.SUCCESS
+    act.clock[0] = T0 + 11 * SEC + LIMIT * SEC
+    assert l7.main(["confirm", str(kept)]) == 1

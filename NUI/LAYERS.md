@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **39 modul**; `tests/test_ai/` berisi **884 tes**
+`src/hijaiyyah/nui/` berisi **39 modul**; `tests/test_ai/` berisi **898 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -200,7 +200,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `facts.py` | inventaris fakta Lapis 0 | `test_facts.py` (10) |
 | `repository_index.py` | node repositori, terklasifikasi | `test_nui_repository_graph.py` (13) |
 | `repository_graph.py` | edge repositori, tiap satunya dengan barisnya | `test_nui_repository_graph.py` |
-| `program_index.py` | 62 program HASM, 1.525 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
+| `program_index.py` | 62 program HASM, 1.533 fungsi Python, 121 modul Verilog, terurai | `test_nui_program_index.py` (10) |
 | `program_graph.py` | `CALL` HASM ke label, instansiasi Verilog ke modul | `test_nui_program_index.py` |
 | `program_summary.py` | apa yang dilakukan tiap unit, efek diturunkan dari badannya | `test_nui_program_index.py` |
 | `execution_trace.py` | satu lari di interpreter, direkam saat berjalan: sebelum → sesudah tiap langkah | `test_nui_execution.py` (26) |
@@ -219,7 +219,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
-| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (25) |
+| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (39) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host, hardware beserta jenis keadaannya dan korelasinya — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -278,7 +278,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.770 node, 4.533 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.778 node, 4.542 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -327,7 +327,7 @@ register, efek memori.
 dan **59 program HASM** di `rtl/programs/` dan `rtl/programs/bench/`.
 
 **Sejak 21 September 2026 lapis ini berdiri**:
-`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.525 fungsi Python,
+`src/hijaiyyah/nui/program_index.py` (62 program HASM, 1.533 fungsi Python,
 121 modul Verilog), `src/hijaiyyah/nui/program_graph.py` (277 `CALL` dan 126
 instansiasi, semuanya terselesaikan), `src/hijaiyyah/nui/program_summary.py`
 (apa yang dilakukan tiap unit, diturunkan dari badannya, tiap efek dengan
@@ -1373,7 +1373,7 @@ berkas → subsistem tidak dikarang.
 diselaraskan. Cakupannya READ → EVALUATE → GATE → EVIDENCE / REPORT, dan
 otorisasi mutatif tetap DENIED. Status resminya di `NUI/LAYER7.md`.
 
-`tests/test_ai/test_nui_layer7.py`, 25 tes, di store sementara yang dibangun
+`tests/test_ai/test_nui_layer7.py`, 25 tes untuk evaluator, di store sementara yang dibangun
 `layer5.record` sendiri:
 - tiap prasyarat dan tiap kondisi stop diuji satu per satu, dengan batas 300
   detik inklusif dibaca dari spec;
@@ -1407,10 +1407,116 @@ dikarang di tempat nama modul diselesaikan. Bentuk pertamanya, yang ditaruh di
 pembaca spec, tidak pernah tereksekusi — modul yang bukan fungsi berhenti lebih
 dulu — dan yang cacat sabotasenya, bukan tesnya.
 
+**7.7 pada `layer5.record`, perintah pemilik 30 September 2026.** Tindakan yang
+divalidasi adalah satu-satunya yang AUTHORIZED dan menghasilkan evidence; tidak
+ada tindakan DENIED yang dibuka. `src/hijaiyyah/nui/layer7.py` tetap tidak
+menjalankan tindakan apa pun:
+- `expect(vm_name)` mengevaluasi keenam prasyarat 7.6 untuk merekam evidence VM
+  itu, lalu menetapkan outcome **sebelum** tindakan. Prasyaratnya:
+  - identitas `(vm_name, run_id)`;
+  - provenance baseline, yaitu observasi terbaru tiap kolektor VM itu;
+  - baseline current, dengan batas 300 detik yang tidak dilonggarkan;
+  - outcome baseline tergolong salah satu kelas `outcomes` spec;
+  - kontrak kolektornya `ditetapkan`;
+  - kategori 7.4 *Evidence, provenance, freshness, delta* AUTHORIZED.
+  Outcome yang ditetapkan adalah kelas outcome baseline tiap kolektor: yang PASS
+  tetap PASS, yang lain tetap di kelasnya. Ditambah daftar run dan hash seluruh
+  evidence store serta berkas terlindung sebelum tindakan.
+- Pemanggil menjalankan `layer5.record` hanya bila `expect` PASS.
+- `confirm(expected)` memegang evidence pascatindakan terhadap outcome itu dengan
+  tujuh pemeriksaan dari contoh pemilik, lewat verifikasi `layer5` sendiri. Exit
+  code hanya satu medan, bukan vonis.
+
+**Label pemeriksaan 7.7.** Hanya tujuh nama 7.6 yang dipakai. Dua disetujui
+pemilik 30 September 2026; lima lainnya penerapan pelaksana atas definisi 7.6
+dan 7.8 yang sudah ada:
+
+| pemeriksaan yang gagal | label | dasar |
+|---|---|---|
+| tidak ada run baru | `UNKNOWN` | penerapan pelaksana |
+| lebih dari satu run baru, atau run baru milik VM lain | `AMBIGUOUS TARGET` | penerapan pelaksana |
+| manifest tak terbaca atau tanpa hash; provenance ditolak | `INVALID PROVENANCE` | penerapan pelaksana |
+| evidence tidak terbaca kembali | `UNKNOWN` | penerapan pelaksana |
+| outcome berbeda dari yang ditetapkan | `KNOWN_DISCREPANCY` | **pemilik** |
+| evidence bercap sebelum keputusan, atau tidak current saat konfirmasi | `STALE` | penerapan pelaksana |
+| perubahan di store selain run baru, atau berkas terlindung berubah | `UNAUTHORIZED ACTION` | **pemilik** — pelanggaran boundary, bukan bukti tindakan gagal secara fungsional |
+
+Berkas terlindung: `NUI/LAYER7.md`, `NUI/spec/layer5_collectors.json`,
+`NUI/spec/layer5_lima.yaml`, `src/hijaiyyah/nui/layer5.py`,
+`src/hijaiyyah/nui/layer7.py`, dan `lima.yaml` instance itu.
+
+**Terukur di VM `cosmictera-layer5`, 30 September 2026**, tanpa caffeinate:
+- **`expect` atas baseline lama** `20260930T041907Z-collectors`: STOP STALE,
+  umur 34.604 detik. Tidak ada tindakan.
+- **Baseline segar** `20260930T135604Z-collectors` dibuat lewat
+  `layer5.record`.
+- **Percobaan pertama**: `expect` PASS, lalu `layer5.record` jatuh di detik yang
+  sama dengan baseline. run_id-nya berpresisi detik, jadi ia ditolak
+  `FileExistsError`, exit 1, tanpa menimpa apa pun. `confirm` menjawab STOP
+  UNKNOWN, *the expected result is not there*, dan di luar store tidak ada yang
+  berubah. `src/hijaiyyah/nui/layer5.py` beku, jadi ini **dilaporkan, tidak
+  diubah**.
+- **Percobaan kedua**: `expect` PASS pada 13:56:29Z, umur baseline 25,2 detik.
+  `layer5.record` membuat `20260930T135629Z-collectors`, exit 0. `confirm`
+  menjawab **SUCCESS**: ketujuh pemeriksaan terpenuhi, sembilan kolektor PASS,
+  `journal` dan `containers` tetap di kelasnya, manifest `200e84ca…`.
+- **Sebelum dan sesudah** tindakan, semuanya identik:
+  - hash `lima.yaml` instance, spec, `layer5.py`, `layer7.py`, dan
+    `NUI/LAYER7.md`;
+  - keadaan VM yang `limactl` laporkan;
+  - HEAD git dan status pohon kerja.
+- **Semenit kemudian**, `confirm` yang sama menjawab STOP UNAUTHORIZED ACTION:
+  `NUI/LAYER7.md` berubah di antara keputusan dan konfirmasi, oleh suntingan
+  saya sendiri pada kontrak ini. Pemeriksaan tidak menilai siapa pengubahnya.
+- **Sesudah 300 detik**, dengan jam nyata pada 14:01:41Z: STOP STALE untuk
+  kesebelas kolektor, bersama UNAUTHORIZED ACTION yang sama.
+- Lari-lari di atas memakai `src/hijaiyyah/nui/layer7.py` sebelum satu
+  pembetulan CLI: `--action` yang diberikan eksplisit ke `expect` dulu diganti
+  diam-diam. Karena itu jalurnya **diulang dengan kode yang di-commit**:
+  - baseline `20260930T140258Z-collectors`;
+  - `expect` PASS pada 14:07:24Z, umur baseline 266,0 detik;
+  - `layer5.record` membuat `20260930T140724Z-collectors`, exit 0;
+  - `confirm` **SUCCESS**, ketujuh pemeriksaan terpenuhi, manifest
+    `541ae72f…`;
+  - keadaan sebelum dan sesudah identik lagi.
+
+`tests/test_ai/test_nui_layer7.py` menambah 14 tes untuk 7.7, di store
+sementara dengan jam yang digerakkan tes:
+- satu jalur SUCCESS;
+- exit 0 di semua kolektor tetap STOP bila outcome berbeda dari yang ditetapkan;
+- keenam uji negatif pemilik, masing-masing STOP / REPORT;
+- evidence bercap sebelum keputusan;
+- perubahan pada run lama dan pada berkas terlindung;
+- prasyarat yang menahan tindakan: kategori DENIED, VM tak dikenal, baseline
+  basi, dan tanpa baseline;
+- ekspektasi yang STOP tidak mengonfirmasi apa pun, dan run yang tetap muncul
+  jadi UNAUTHORIZED ACTION;
+- `expect` dan `confirm` dijalankan sementara semua jalan bertindak dibuat
+  gagal;
+- jalur baris perintah yang dipakai lari nyata.
+Sebelas sabotase pada kode 7.7 membuatnya merah:
+- outcome diabaikan;
+- kesegaran diabaikan;
+- run pertama dari banyak diterima;
+- penolakan provenance diabaikan;
+- perubahan di luar diabaikan;
+- kategori tindakan diabaikan;
+- ekspektasi STOP tetap dikonfirmasi;
+- baseline basi diabaikan;
+- hasil yang tak ditemukan diloloskan;
+- `expect` menulis berkas;
+- pelanggaran boundary dibaca sebagai kegagalan fungsional tindakan.
+Kelima belas sabotase lama diulang pada kode ini, dan semuanya tetap merah.
+
+**Status dari pemilik, 30 September 2026:** 7.7 *post-action success*
+VALIDATED pada `layer5.record`, dengan evidence yang mengacu pada kode final.
+Baseline current dikunci, dan presisi `run_id` tidak diubah. Rinciannya di 7.7
+`NUI/LAYER7.md`.
+
 **Yang belum ada.** Tindakan mutatif — seluruhnya DENIED, dan evaluator ini
-tidak membukanya. Karena tidak ada tindakan, kontrak keberhasilan 7.7 belum
-pernah dijalankan: 7.7 NOT YET VALIDATED. `INVALID PROVENANCE` diuji hanya
-pada observasi host. Hari ini jawaban hardware CURRENT tidak punya basis, dan
+tidak membukanya. 7.7 VALIDATED hanya pada satu tindakan AUTHORIZED yang tidak
+mutatif, `layer5.record`. `INVALID PROVENANCE` diuji hanya pada observasi
+host. Hari ini jawaban hardware CURRENT tidak punya basis, dan
 provenance hardware live tidak dibuat untuk memicunya. Aset
 `rtl/scripts/burn_in.py` terbatas pada satu harness dan satu jenis kegagalan. Tidak ada yang memulai ulang layanan atau memulihkan
 kegagalan di luar burn-in, dan tidak ada yang bisa memulihkan host yang

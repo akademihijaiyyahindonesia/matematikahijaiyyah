@@ -276,6 +276,146 @@ Mekanisme evidence yang sudah berjalan:
   (K-7; aturan P1 dan Lapis 4: laporan membaca byte mentah rekaman, bukan teks
   yang dibawanya).
 
+**Validasi pertama, perintah pemilik 30 September 2026: pada tindakan yang
+sudah AUTHORIZED, perekaman evidence melalui `layer5.record`.** Tidak satu pun
+tindakan mutatif yang `DENIED` dibuka. 7.7 tidak mensyaratkan tindakan mengubah
+FPGA, host, atau sistem. Ia hanya mensyaratkan tindakan yang telah diizinkan,
+lalu observasi pascatindakan yang membuktikan outcome yang sudah ditentukan.
+
+```text
+PRECONDITION
+    ↓
+tentukan expected outcome
+    ↓
+AUTHORIZATION = ALLOWED
+    ↓
+layer5.record
+    ↓
+POST-ACTION OBSERVATION
+    ↓
+compare dengan expected outcome
+    ↓
+SUCCESS / STOP-REPORT
+```
+
+Outcome ditetapkan **sebelum** `layer5.record` dijalankan. Contoh pemilik:
+- run_id baru terbentuk;
+- manifest hash tersedia;
+- evidence record dapat dibaca kembali;
+- provenance valid;
+- kolektor yang berhasil tetap PASS;
+- status freshness konsisten dengan waktu evidence;
+- tidak ada perubahan di luar evidence store yang memang diharapkan.
+
+`exit code = 0` tidak dijadikan satu-satunya bukti.
+
+**Uji negatif wajib.** Evidence pascatindakan yang berikut masing-masing harus
+menjadi STOP / REPORT, bukan SUCCESS:
+- manifest hash salah;
+- provenance rusak;
+- outcome tidak sesuai;
+- evidence menjadi STALE;
+- target berubah/ambigu;
+- hasil yang diharapkan tidak ditemukan.
+
+**Tetap dilarang selama uji ini**:
+
+```text
+board reconfiguration       DENIED
+send program                DENIED
+restart/recovery            DENIED
+fault isolation             DENIED
+keep host awake             DENIED
+repository mutation         DENIED
+configuration mutation      DENIED
+self-authorization          DENIED
+```
+
+**Kriteria GREEN 7.7:**
+
+```text
+authorized action
+    + predetermined outcome
+    + post-action evidence
+    + evidence matches outcome
+    = SUCCESS
+
+otherwise
+    = STOP / REPORT
+```
+
+Implementasinya `expect()` dan `confirm()` di `src/hijaiyyah/nui/layer7.py`;
+hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
+
+**Keputusan pemilik sesudah validasi, 30 September 2026.**
+
+*Dua label 7.7 disetujui:*
+- **Outcome berbeda dari outcome yang telah ditetapkan sebelum tindakan →
+  `KNOWN_DISCREPANCY`.** Objek dan tindakan sudah diketahui, tindakannya memang
+  diizinkan, tetapi hasil aktual sesudah tindakan tidak sama dengan outcome
+  yang ditetapkan. Kasus ini tidak diturunkan menjadi `NOT_COVERED` atau
+  `UNKNOWN`.
+- **Perubahan pada protected file atau evidence store di luar perubahan yang
+  dihasilkan tindakan yang diotorisasi → `UNAUTHORIZED ACTION`.** Suntingan
+  `NUI/LAYER7.md` di antara `expect` dan `confirm` adalah bukti konkret bahwa
+  kontrak mendeteksi perubahan di luar boundary tindakan. `UNAUTHORIZED ACTION`
+  **tidak pernah dianggap bukti bahwa tindakan yang bersangkutan gagal secara
+  fungsional**: ia pelanggaran boundary terhadap kontrak eksekusi.
+
+```text
+AUTHORIZATION
+    ↓
+PRE-ACTION EXPECTATION
+    ↓
+AUTHORIZED ACTION
+    ↓
+POST-ACTION EVIDENCE
+    ↓
+7 CHECKS
+    ├─ sesuai → SUCCESS
+    ├─ discrepancy → KNOWN_DISCREPANCY → STOP / REPORT
+    └─ boundary violation → UNAUTHORIZED ACTION → STOP / REPORT
+```
+
+*Baseline harus CURRENT — dikunci.* Baseline yang dipakai `expect()` harus
+current pada saat keputusan dibuat. Evidence lama tidak dipakai hanya karena
+masih valid secara sintaksis.
+
+```text
+baseline record
+    ↓
+freshness check ≤ 300 s
+    ↓
+expect()
+    ↓
+outcome ditetapkan
+    ↓
+layer5.record
+    ↓
+confirm()
+```
+
+Satu validasi 7.7 karena itu membutuhkan baseline baru bila baseline
+sebelumnya sudah STALE. Baseline STALE tidak dipakai ulang untuk tindakan, dan
+300 detik tidak dilonggarkan.
+
+*Tabrakan `run_id` pada detik yang sama.* `src/hijaiyyah/nui/layer5.py` beku,
+jadi presisi `run_id` **tidak diubah**. `FileExistsError` pada percobaan
+pertama adalah evidence valid bahwa mekanismenya gagal dengan aman ketika
+identitas run bertabrakan. `confirm` → `UNKNOWN` → STOP / REPORT sesuai
+fail-closed. Tidak ada kebutuhan membuka Lapis 5 untuknya.
+
+*Hasilnya.* Percobaan yang gagal tidak membatalkan validasi. Jalur final
+diuji ulang sesudah pembetulan CLI, jadi evidence-nya mengacu pada kode
+final:
+
+```text
+Layer 7 evaluator                 GREEN
+7.7 post-action success           VALIDATED
+Authorization boundary            UNCHANGED
+Mutative DENIED actions            DENIED
+```
+
 ## 7.8 UNKNOWN / NOT_COVERED Contract
 
 Keadaan ketika sistem **wajib berhenti**, dari klaim maupun dari tindakan (7.6).
@@ -369,10 +509,10 @@ Mekanisme itu terbatas pada satu harness dan satu jenis kegagalan
   Ia tidak menjalankan perintah, tidak menulis berkas, dan tidak bertindak.
   **PASS berarti prasyarat untuk memakai sebuah observasi terpenuhi**, bukan
   bahwa sesuatu dikerjakan. Hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
-- **7.7 NOT YET VALIDATED**: belum ada tindakan mutatif yang diizinkan, jadi
-  belum ada observasi pascatindakan. Evaluator baru membuktikan
-  read → evaluate → gate → evidence/report, bukan
-  action → postcondition → success.
+- **7.7 VALIDATED hanya pada satu tindakan AUTHORIZED yang tidak mutatif,
+  `layer5.record`** (pemilik, 30 September 2026). Tindakan mutatif tetap
+  DENIED, jadi tidak ada observasi pascatindakan atas tindakan mutatif mana
+  pun, dan tidak ada klaim 7.7 untuknya.
 - Evaluator hanya menjawab keadaan hardware CURRENT, bukan klaim historis
   Lapis 6. Hardware CURRENT tetap UNKNOWN, dan tidak ada provenance hardware
   live yang dibuat untuk memicu `INVALID PROVENANCE` di jalur itu.
