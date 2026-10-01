@@ -13,10 +13,10 @@ harus *membacanya* dari instruksinya.
 ```
 62 program HASM       semuanya terurai dengan tabel opcode assembler sendiri
 1.541 fungsi Python   di src/, lewat ast
-121 modul Verilog     port, blok clocked dan kombinasional, instansiasi
+128 modul Verilog     port, blok clocked dan kombinasional, instansiasi
 
 277 CALL HASM         semuanya mendarat di label nyata
-126 instansiasi       terselesaikan, ditambah 8 primitif vendor
+131 instansiasi       terselesaikan, ditambah 8 primitif vendor
 0 tak terselesaikan
 ```
 

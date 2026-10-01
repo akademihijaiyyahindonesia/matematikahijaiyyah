@@ -219,8 +219,11 @@ def test_the_three_designed_components_are_sorted_correctly() -> None:
 
 
 def test_only_layer_three_is_said_to_carry_security() -> None:
+    """Layer 3 alone carries the security. In RTL it is a slot of its own
+    (1 October 2026), not on Ka'bah's path, so ON.md must not let the HMAC
+    core read as authenticating what Ka'bah emits."""
     assert "satu-satunya pemikul keamanan" in ON
-    assert "tidak ada di RTL" in ON
+    assert "slot sendiri" in ON and "belum terautentikasi sampai" in ON
 
 
 def test_the_kernels_own_limits_are_stated_where_it_is_claimed() -> None:

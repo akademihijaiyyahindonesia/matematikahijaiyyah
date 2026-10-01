@@ -18,7 +18,9 @@ NO_SOURCE = ("belum ada sumbernya", "belum terpisah")
 
 # The four the board cannot answer today, 20 September 2026. Two are
 # derivations NUI will compute (priority 7, not started), one needs a digest
-# the owner has not chosen -- there is no SHA-256 core in RTL (R10) -- and one
+# the owner has not chosen -- the SHA-256 core in RTL is, since 1 October
+# 2026, a slot of its own connected to no HCPU, so it summarises nothing the
+# board holds and state_hash is unchanged (option C) -- and one
 # is a step the loader performs without reporting separately. Pinned because
 # the failure that matters is a field quietly acquiring evidence: a row can be
 # flipped to "ada" and pointed at a real file while nothing measured it.
@@ -78,6 +80,8 @@ def test_every_field_has_a_row() -> None:
 def test_exactly_the_four_unmeasured_fields_are_marked_as_such() -> None:
     marked = {f for f, row in rows().items() if any(s in row for s in NO_SOURCE)}
     assert marked == WITHOUT_SOURCE, marked
+    # An RTL SHA-256 core exists, and it is not a source for state_hash.
+    assert "tidak tersambung ke HCPU" in rows()["state_hash"]
 
 
 def test_every_row_either_points_at_a_file_or_says_there_is_none() -> None:

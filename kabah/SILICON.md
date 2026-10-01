@@ -11,7 +11,7 @@
 | Deserialiser | **RTL** | 8 clock/byte |
 | S-box | **RTL** | logika, bukan tabel |
 | Permutasi & spons | **RTL** | `hijaiyyah_rotate_core.v`, `hijaiyyah_sponge.v` |
-| **HMAC-SHA256** | **perangkat lunak** | **tak ada core SHA-256 di repo ini** |
+| **HMAC-SHA256** | **perangkat lunak**, dan **RTL sebagai slot sendiri** | `crypto/signing.py`; `hijaiyyah_hmac.v`, tidak di jalur `hijaiyyah_kabah_top` |
 | Manifes & segel | perangkat lunak | `crypto/program.py` |
 
 **Baris paling penting adalah yang kedua dari bawah.** Lapis 3 memikul seluruh

@@ -47,7 +47,7 @@ yang terdengar masuk akal.
 | `avalanche` | **ada** — 0,4995 atas 32 bit-flip tunggal; 0,4984 sampai 0,5061 untuk 1–64 bit | [validasi/KABAH.md](../cosmictera-build/validasi/KABAH.md) |
 | `integrity` | **ada** — 8/8 frame berantai dan 32/32 masukan termutasi cocok `cube.py` | [validasi/KABAH.md](../cosmictera-build/validasi/KABAH.md) |
 | `replay_state` | **ada** — dua jawaban: identik sesudah rekonfigurasi, berantai di dalam satu lari | [validasi/KABAH.md](../cosmictera-build/validasi/KABAH.md) |
-| `state_hash` | **belum ada sumbernya** — keadaan 200 byte ada, tetapi tak ada yang meringkasnya, dan tidak ada inti SHA-256 di RTL (R10). Bentuk ringkasannya keputusan pemilik | — |
+| `state_hash` | **belum ada sumbernya** — keadaan 200 byte ada, tetapi tak ada yang meringkasnya. Inti SHA-256 di RTL ada sejak 1 Oktober 2026 sebagai slot sendiri, tetapi tidak tersambung ke HCPU, jadi ia tidak meringkas keadaan ini; `state_hash` tidak berubah (opsi C). Bentuk ringkasannya keputusan pemilik | — |
 | `sd_sector_read` | **ada** — sektor 1 dibaca tiap siklus, statusnya ikut di tiap detak | `rtl/programs/burn_in.hasm` |
 | `hfs_signature` | **ada** — `0x48465331` terbaca dari kartu | [burn-in/](../cosmictera-build/burn-in/README.md) |
 | `read_error_count` | **ada** — pencacah baca kartu yang tak selesai, terpisah dari pencacah kesalahan | `rtl/programs/burn_in.hasm` |
@@ -112,7 +112,7 @@ masing-masing**, bukan pilihan yang diambil sepihak.
 |---|---|
 | **A** — simpan keadaan mentah 200 byte | tidak ada yang perlu dibangun: wrapper Ka'bah **sudah** menjawab 200 byte per frame. Di UART 115200 itu **17,4 ms per keadaan**; pada irama detak burn-in (1,58 detik) ia 1,1% dari kabel |
 | **B** — sidik jari 64-bit dari Ka'bah sendiri | lipatan XOR 64-bit atas 200 byte, 20.000 pesan acak: **20.000 nilai berbeda, 0 tabrakan**. Angka itu **tidak membuktikan banyak** — harapan ulang tahun pada 2⁶⁴ untuk 20.000 nilai adalah 1,1 × 10⁻¹¹, jadi nol adalah yang diharapkan bahkan dari lipatan yang buruk; yang ia singkirkan hanya kemerosotan kasar. Dan lipatan XOR **linier**: tabrakan bisa dibuat sengaja, jadi ia mendeteksi kecelakaan, bukan lawan |
-| **C** — host yang menghitung SHA-256 | **biaya papan nol** — ini persis yang wrapper lakukan sekarang. Tidak ada baris RTL atau HASM yang berubah, dan R10 tidak tersentuh karena tidak ada inti SHA-256 yang dibangun |
+| **C** — host yang menghitung SHA-256 | **biaya papan nol** — ini persis yang wrapper lakukan sekarang. Tidak ada baris RTL atau HASM yang berubah, dan R10 tidak tersentuh karena opsi ini tidak membangun inti SHA-256 untuk `state_hash` |
 
 Pemilik menilai **C paling realistis untuk tahap awal**. Dicatat sebagai
 penilaian; tidak ada pekerjaan yang berangkat darinya sebelum ia dinyatakan

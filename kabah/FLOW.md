@@ -63,9 +63,11 @@ menyala, masing-masing menghentikan penuh.
 FIFO akan memulihkan sebagian besar — 310 clock muat di dalam 1.024 clock
 kedatangan 128 byte berikutnya. **Belum dibangun, belum diukur — [EH].**
 
-**⑦ Yang keluar dari perangkat keras belum terautentikasi.** Tak ada core
-SHA-256 di RTL. Lapis 3 adalah perangkat lunak, dan lapis 3 adalah seluruh
-keamanannya.
+**⑦ Yang keluar dari perangkat keras belum terautentikasi.** Core
+SHA-256/HMAC ada di RTL sejak 1 Oktober 2026, tetapi sebagai slot sendiri
+(`rtl/hijaiyyah_hmac.v`), tidak di jalur `hijaiyyah_kabah_top` atau
+`hijaiyyah_wave`. Keluaran Ka'bah tetap belum terautentikasi sampai
+ditandatangani, dan lapis 3 adalah seluruh keamanannya.
 
 ---
 

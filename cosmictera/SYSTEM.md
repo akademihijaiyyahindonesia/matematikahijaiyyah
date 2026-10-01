@@ -142,9 +142,10 @@ bersembunyi penuh dan sistem berjalan di 8,00. **Belum dibangun, belum diukur �
 | 3 | **Authentic** | **HMAC‑SHA256 atas kunci terikat segel** | **VF** | ya |
 | 4 | Confidential | **ditolak** — pakai AES‑256‑GCM dari pustaka teruji | — | ya |
 
-**Lapis 3 memikul seluruh keamanan.** Dan ia **tidak ada di RTL**: tidak ada
-core SHA‑256 di repositori ini. Yang keluar dari perangkat keras **belum
-terautentikasi** sampai perangkat lunak menandatanganinya.
+**Lapis 3 memikul seluruh keamanan.** Di RTL ia ada **sebagai slot sendiri**
+(`rtl/hijaiyyah_hmac.v`, 1 Oktober 2026), tidak di jalur `hijaiyyah_kabah_top`
+dan **tidak tersambung ke HCPU**. Yang keluar dari perangkat keras Ka'bah
+**belum terautentikasi** sampai ditandatangani.
 
 ## 7. Segel: menutup setiap penentu
 
@@ -173,7 +174,8 @@ Program H‑ISA disegel oleh `seal_program`, dan opcode dibaca **dari
 
 ## 8. Yang tidak dilakukan sistem ini
 
-- **Tidak ada core SHA‑256 di RTL.** Autentikasi adalah perangkat lunak.
+- **Core SHA‑256 di RTL hanya slot sendiri.** Ia tidak tersambung ke HCPU
+  maupun ke jalur Ka'bah, dan `CHASH`/`CSIGN` tetap pertanyaan untuk pemilik.
 - **Tidak ada kerahasiaan.** Lapis 4 ditolak, disengaja.
 - **HCPU tidak dilebur dengan blok kripto.** CosmicTera **membungkus** program
   yang berjalan di H‑ISA; ia tidak menyuntikkan kripto ke datapath.

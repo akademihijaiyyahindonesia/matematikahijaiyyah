@@ -17,8 +17,10 @@
 //   stage 3   canonical report      here only as the output wires; the packing
 //                                  is software.
 //   stage 4   HMAC-SHA256           NOT here. There is no SHA-256 core in this
-//                                  repository. Layer 3 is software, and the
-//                                  findings are unauthenticated until it runs.
+//                                  module: the HMAC core is a slot of its own
+//                                  (rtl/hijaiyyah_hmac.v), not on this path,
+//                                  and the findings are unauthenticated until
+//                                  they are signed.
 //
 // So this module produces findings at line rate and does not authenticate
 // them. That split is the honest one: the part that must keep up with the

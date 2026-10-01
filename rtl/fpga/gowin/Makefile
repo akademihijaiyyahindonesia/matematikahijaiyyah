@@ -62,6 +62,7 @@ SOURCES  = hcpu_gowin_top.v $(wildcard $(RTL_DIR)/hcpu_*.v)
 .PHONY: all sim synth bitstream flash bridge send clean \
         display_synth display_bitstream display_flash \
         sim_kabah kabah_synth kabah_bitstream kabah_flash \
+        sim_hmac hmac_synth hmac_bitstream hmac_flash \
         hdmi_synth hdmi_bitstream hdmi_flash hdmi_bridge \
         kabah_hdmi_synth kabah_hdmi_bitstream kabah_hdmi_flash
 
@@ -187,6 +188,49 @@ kabah_bitstream: $(KABAH_TOP)_pnr.json
 
 kabah_flash: kabah_bitstream
 	$(LOADER) -b $(BOARD) $(KABAH_TOP).fs
+
+# ── HMAC-SHA256: Ka'bah lapis 3 in logic, one bitstream ──────────
+# The layer that carries Ka'bah's security (HMAC-SHA256, until now only
+# hmac.new in src/hijaiyyah/crypto/signing.py) as its own 10-pin slot, the
+# same shape as kabah_*: same constraint file, same UART, same reset. The
+# three benches run from the repo root because they read their golden
+# vectors from rtl/tb/ (rtl/tb/gen_hmac_vectors.py writes them). They are
+# not in `make -C rtl/tb all`, exactly like sim_kabah, so the counted RTL
+# assertion total is untouched; tests/test_integrity/test_hmac_rtl.py runs them.
+HMAC_TOP     = hijaiyyah_hmac_gowin_top
+HMAC_SOURCES = $(HMAC_TOP).v $(RTL_DIR)/hijaiyyah_hmac.v \
+               $(RTL_DIR)/hijaiyyah_sha256_stream.v $(RTL_DIR)/hijaiyyah_sha256_core.v \
+               $(RTL_DIR)/hcpu_uart_rx.v $(RTL_DIR)/hcpu_uart_tx.v
+
+sim_hmac:
+	iverilog -g2012 -o tb_hijaiyyah_sha256_stream.vvp \
+	    $(RTL_DIR)/tb/tb_hijaiyyah_sha256_stream.v \
+	    $(RTL_DIR)/hijaiyyah_sha256_stream.v $(RTL_DIR)/hijaiyyah_sha256_core.v
+	iverilog -g2012 -o tb_hijaiyyah_hmac.vvp \
+	    $(RTL_DIR)/tb/tb_hijaiyyah_hmac.v $(RTL_DIR)/hijaiyyah_hmac.v \
+	    $(RTL_DIR)/hijaiyyah_sha256_stream.v $(RTL_DIR)/hijaiyyah_sha256_core.v
+	iverilog -g2012 -o tb_hijaiyyah_hmac_gowin_top.vvp \
+	    $(RTL_DIR)/tb/tb_hijaiyyah_hmac_gowin_top.v $(HMAC_SOURCES)
+	cd $(RTL_DIR)/.. && vvp rtl/fpga/gowin/tb_hijaiyyah_sha256_stream.vvp
+	cd $(RTL_DIR)/.. && vvp rtl/fpga/gowin/tb_hijaiyyah_hmac.vvp
+	cd $(RTL_DIR)/.. && vvp rtl/fpga/gowin/tb_hijaiyyah_hmac_gowin_top.vvp
+
+hmac_synth:
+	yosys -p "read_verilog -I $(RTL_DIR) $(HMAC_SOURCES); \
+	          synth_gowin $(YOSYS_FLAGS) -top $(HMAC_TOP) -json $(HMAC_TOP).json"
+
+$(HMAC_TOP)_pnr.json: hmac_synth
+	@test -n "$(NEXTPNR)" || { echo "nextpnr-himbaechel not found."; \
+	    echo "Set OSS_CAD=<path to oss-cad-suite> or put it on PATH."; exit 1; }
+	$(NEXTPNR) --json $(HMAC_TOP).json --write $@ \
+	    --device $(DEVICE) --vopt cst=hcpu_gowin.cst \
+	    --vopt family=$(FAMILY)
+
+hmac_bitstream: $(HMAC_TOP)_pnr.json
+	$(GOWIN_PACK) -d $(FAMILY) -o $(HMAC_TOP).fs $<
+
+hmac_flash: hmac_bitstream
+	$(LOADER) -b $(BOARD) $(HMAC_TOP).fs
 
 # ── HDMI: HCPU + loader + 1280x720 over TMDS, one bitstream ─────
 # The recipe that built the bitstream the board ran with a monitor lit --

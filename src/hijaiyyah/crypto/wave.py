@@ -21,9 +21,11 @@ has a fixed latency, and branches on nothing:
                            -> the findings become tamper-evident
 
 Stages 1 and 2 exist in RTL (``rtl/hijaiyyah_wave.v``) and run at line rate.
-**Stage 4 does not**: there is no SHA-256 core in this repository, so layer 3
-is software. A pipeline diagram that implied otherwise would be the most
-convincing wrong thing here, so it is said plainly instead.
+**Stage 4 does not**: HMAC-SHA256 is in RTL only as a slot of its own
+(``rtl/hijaiyyah_hmac.v``, 1 October 2026), not on this path, so the findings
+are unauthenticated until they are signed. A pipeline diagram that implied
+otherwise would be the most convincing wrong thing here, so it is said plainly
+instead.
 
 **What the composition inherits, and what it does not.** It inherits every
 limit measured on the parts, and none of them are softened by putting them

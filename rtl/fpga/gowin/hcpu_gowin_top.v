@@ -224,7 +224,13 @@
 // rtl/, which this slot's fingerprint picks up by wildcard, and the split that
 // gave this file two modules is a design change by any reading. The figures
 // above were re-measured, not carried over.
-// RTL FINGERPRINT: 7ac1fdb6a8b81e1602ff5905dc9f9a9373dec56c7d644d126f05831ea1c94299
+// Restamped 2026-10-01 WITH a fresh place-and-route run, the owner's option
+// (a): the HMAC-SHA256 slot put three modules into rtl/, which this slot's
+// fingerprint picks up by wildcard, though its synthesis reads only hcpu_*.v.
+// The run on this repository's toolchain gave every figure above unchanged --
+// LUT4 15,744, DFF 5,065, BSRAM 18, IOB 11, Fmax 86.18 MHz, and a 7,261,470-byte
+// bitstream -- which is the proof (K6) that the new files touched nothing here.
+// RTL FINGERPRINT: 5e78eab9e50f29beed21d6cb347d4bf06ff8841b39f265d002c90c9834db5e11
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

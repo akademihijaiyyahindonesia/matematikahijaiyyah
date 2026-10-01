@@ -358,13 +358,18 @@ def test_the_rtl_says_what_it_does_not_contain() -> None:
     """
     A pipeline diagram that overstates its own extent is the most convincing
     wrong thing a design can carry. Phase discovery needs a 256-bin histogram
-    and runs once per stream; layer 3 needs a SHA-256 core that does not exist
-    in this repository. The header has to keep saying both.
+    and runs once per stream; layer 3's SHA-256 core is, since 1 October 2026,
+    a slot of its own that this pipeline does not instantiate. The header has
+    to keep saying both.
     """
+    import re
+
     source = (ROOT / "rtl" / "hijaiyyah_wave.v").read_text(encoding="utf-8")
     assert "NOT here" in source
-    assert "no SHA-256 core" in source
+    assert "no SHA-256 core in this" in source and "module: the HMAC core is a slot" in source
     assert "does not authenticate" in source
+    code = "\n".join(line.split("//", 1)[0] for line in source.splitlines())
+    assert not re.search(r"\bhijaiyyah_(hmac|sha256_core|sha256_stream)\b", code)
 
 
 # ══════════════════════════════════════════════════════════════════

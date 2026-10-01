@@ -214,9 +214,17 @@ def test_the_refusals_and_the_unmeasured_are_stated_not_buried() -> None:
     assert "AES-256-GCM" in text or "AES‑256‑GCM" in text
     assert "Fmax" in text
     assert "[EH]" in text and "[AT]" in text
-    # No SHA-256 core in RTL: the doc must say so, and it must stay true.
-    assert re.search(r"tidak ada core SHA.256|SHA.256 di RTL", text, re.I)
-    assert not list((ROOT / "rtl").glob("*sha*"))
+    # The SHA-256/HMAC core is in RTL only as a slot of its own (owner, 1
+    # October 2026), connected to no HCPU: the doc must say so, and it must
+    # stay true -- rtl/*sha* is that slot alone, and no hcpu_*.v uses it.
+    assert "slot sendiri" in text and "tidak tersambung ke HCPU" in text
+    assert sorted(p.name for p in (ROOT / "rtl").glob("*sha*")) == [
+        "hijaiyyah_sha256_core.v", "hijaiyyah_sha256_stream.v"]
+    core = re.compile(r"\bhijaiyyah_(hmac|sha256_core|sha256_stream)\b")
+    for f in sorted((ROOT / "rtl").glob("hcpu_*.v")):
+        code = "\n".join(line.split("//", 1)[0]
+                         for line in f.read_text(encoding="utf-8").splitlines())
+        assert not core.search(code), f.name
 
 
 # ══════════════════════════════════════════════════════════════════

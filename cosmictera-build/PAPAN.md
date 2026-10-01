@@ -1131,6 +1131,39 @@ jumlah; dicatat, bukan disembunyikan. Rinciannya di
 
 ---
 
+## HMAC-SHA256 di slot sendiri — 207 dari 207, 1 Oktober 2026
+
+Ka'bah lapis 3 di logika, sebagai slot sendiri atas keputusan pemilik:
+`rtl/fpga/gowin/hijaiyyah_hmac_gowin_top.v`. Dibangun di toolchain repo —
+5.181 LUT4 (24%), 3.603 DFF, 594 ALU, 0 BSRAM, 10 IOB — lalu dimuat ke SRAM
+dengan `openFPGALoader -b tangnano20k -m`. Uji lewat kabel:
+`rtl/scripts/hmac_uart_test.py /dev/cu.usbserial-20250303171 --random 200`.
+Pembandingnya `sign_bytes` dari perangkat lunak repo sendiri.
+
+| yang diukur | hasil |
+|---|---|
+| RFC 4231, kasus 1–7 | **7/7** |
+| acak: kunci 1–64 byte, pesan 0–1.000 byte | **200/200** |
+| total | **207 PASS, 0 FAIL, dari 207** |
+| jam mesin | hanya mengikuti jumlah blok: 392 untuk tiap kasus RFC satu blok, 656 untuk kasus 7 |
+
+Identitas lari dan buktinya:
+- lari `20261001T000009Z`, UART 115200 dari jam 27 MHz, port
+  `/dev/cu.usbserial-20250303171`;
+- bitstream `hijaiyyah_hmac_gowin_top.fs`, sha256
+  `3a16245b2291efcbd98d3ad8a9e98af7a7e0b76158dbeed451034dc91b4c3585`,
+  dibangun dari sumber commit ini;
+- log mentah: artefak evidence eksternal, di luar git atas keputusan pemilik
+  (`*.log` diabaikan dan tidak dipaksa masuk), disimpan di
+  cosmictera-build/validasi/20261001T000009Z-hmac-uart.log, sha256
+  `b5813891005cf87364c2c46070a990bec947646c0d6b454e0ad90d7f059af9dd`.
+
+Yang dibuktikan: logika HMAC menjawab sama dengan perangkat lunak, byte demi
+byte. Slot ini tidak memuat Ka'bah dan tidak tersambung ke HCPU, jadi keluaran
+Ka'bah tetap belum terautentikasi sampai ditandatangani.
+
+---
+
 ## Validasi Ka'bah — avalanche di silikon, 20 September 2026
 
 Laporan lengkapnya di [validasi/KABAH.md](validasi/KABAH.md). Slot Ka'bah
@@ -1315,7 +1348,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 5.993 tes Python. Simulasi bukan
+langsung dari pytest — dan 5.998 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1358,7 +1391,7 @@ membuat pasangannya diferensial.
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 5.993 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
+| `python3 -m pytest -q` | 5.998 lulus, 0 dilewati — angka itu cacah **terkumpul**, dan hari ini satu di antaranya gagal: sidik jari `hcpu_hdmi_top.v` sengaja tak dicap sejak M5.2B ditunda ([OFF.md](OFF.md)) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

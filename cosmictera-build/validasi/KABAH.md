@@ -71,9 +71,11 @@ avalanche berarti 68 kali muat bitstream, ±2 menit 43 detik seluruhnya.
 
 ## Yang belum diukur, dan kenapa
 
-- **Lapis 3 di papan.** HMAC-SHA256 adalah perangkat lunak dan tidak ada inti
-  SHA-256 di RTL (R10). Papan ini tidak menjalankannya, dan tidak diklaim
-  menjalankannya.
+- **Lapis 3 pada keluaran Ka'bah di papan.** HMAC-SHA256 kini juga ada di RTL
+  sebagai slot sendiri, `hijaiyyah_hmac_gowin_top`, dan slot itu lulus di papan
+  1 Oktober 2026 (207 dari 207, [PAPAN.md](../PAPAN.md)). Tetapi slot Ka'bah
+  yang diukur halaman ini tidak memuatnya, jadi keluarannya tetap belum
+  terautentikasi sampai ditandatangani, dan itu tidak diklaim di sini.
 - **Serangan sungguhan.** Halaman ini mengukur difusi dan integritas, bukan
   ketahanan. Lab serangan adalah prioritas 5 pemilik, dan pemilik sendiri
   menulis alasan urutannya: *"lab serangan tanpa baseline validasi akan

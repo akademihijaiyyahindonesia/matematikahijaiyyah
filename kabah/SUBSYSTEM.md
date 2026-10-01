@@ -69,8 +69,10 @@ terbitannya** — pemeriksaan tambahan diletakkan di batas sistem, bukan di dala
 primitif, karena kasus uji 1 memakai `0x0b × 22` yang pernah ditolak oleh
 pemeriksaan yang salah tempat.
 
-**Label VF. Ini seluruh keamanannya, dan ia tidak ada di RTL** — tak ada core
-SHA-256 di repositori ini.
+**Label VF. Ini seluruh keamanannya.** Di RTL ia ada sebagai slot sendiri
+(`rtl/hijaiyyah_hmac.v`, 1 Oktober 2026), tidak di jalur `hijaiyyah_kabah_top` /
+`hijaiyyah_wave`; keluaran Ka'bah tetap belum terautentikasi sampai
+ditandatangani.
 
 ---
 

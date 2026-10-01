@@ -48,19 +48,36 @@ def test_every_layer_appears_with_the_label_the_code_gives_it() -> None:
     assert AUTHORITATIVE_LAYER == 3
 
 
-def test_the_folder_says_layer_three_carries_everything_and_is_not_in_rtl() -> None:
+def _code(path: Path) -> str:
+    """Verilog without its `//` comments: what synthesis reads."""
+    return "\n".join(line.split("//", 1)[0]
+                     for line in path.read_text(encoding="utf-8").splitlines())
+
+
+HMAC_CORE = re.compile(r"\bhijaiyyah_(hmac|sha256_core|sha256_stream)\b")
+
+
+def test_the_folder_says_layer_three_carries_everything_and_is_its_own_rtl_slot() -> None:
     """
     The sentence the whole folder is built around, checked as a fact rather
-    than as a phrase: there is no SHA-256 core in this repository.
+    than as a phrase. Until 1 October 2026 it was "there is no SHA-256 core in
+    this repository". Since then the owner's decision puts the SHA-256/HMAC
+    core in RTL as a slot of its own, and the fact held is narrower: rtl/*sha*
+    and rtl/*hmac* are exactly that slot's modules, and neither
+    hijaiyyah_kabah_top nor hijaiyyah_wave instantiates them -- Ka'bah's output
+    stays unauthenticated until it is signed.
     """
-    assert not list((ROOT / "rtl").glob("*sha*"))
-    assert not list((ROOT / "rtl").glob("*hmac*"))
+    assert sorted(p.name for p in (ROOT / "rtl").glob("*sha*")) == [
+        "hijaiyyah_sha256_core.v", "hijaiyyah_sha256_stream.v"]
+    assert sorted(p.name for p in (ROOT / "rtl").glob("*hmac*")) == ["hijaiyyah_hmac.v"]
+    for name in ("hijaiyyah_kabah_top.v", "hijaiyyah_wave.v"):
+        assert not HMAC_CORE.search(_code(ROOT / "rtl" / name)), name
 
     readme, subsystem, silicon = (_text(n) for n in
                                   ("README.md", "SUBSYSTEM.md", "SILICON.md"))
     assert "SELURUHNYA" in readme
-    assert re.search(r"tidak ada core SHA.256|tak ada core SHA.256",
-                     subsystem + silicon, re.I)
+    assert "slot sendiri" in subsystem and "slot sendiri" in silicon
+    assert "tidak di jalur `hijaiyyah_kabah_top`" in subsystem + silicon
     assert "AES-256-GCM" in readme, "the layer-4 refusal is missing"
 
 

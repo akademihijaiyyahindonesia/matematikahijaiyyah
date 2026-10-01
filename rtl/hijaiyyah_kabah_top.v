@@ -31,8 +31,10 @@
 // expensive path is not spent on obvious cases, and they prove nothing about
 // origin. The sponge is [EH] -- measured, not cryptanalysed. **Layer 3,
 // HMAC-SHA256 over a seal-bound key, is the security, and it is NOT in this
-// module**: there is no SHA-256 core in this repository. What comes out of
-// here is unauthenticated until software signs it.
+// module**: there is no SHA-256 core in this module. The SHA-256/HMAC core is
+// a slot of its own (rtl/hijaiyyah_hmac.v, 1 October 2026), and this module
+// does not instantiate it. What comes out of here is unauthenticated until it
+// is signed.
 //
 // Phase discovery is also software: finding the byte boundary needs a 256-bin
 // index-of-coincidence histogram and runs once per stream, not per clock.

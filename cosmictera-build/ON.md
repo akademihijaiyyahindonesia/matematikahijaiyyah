@@ -210,7 +210,10 @@ Label: `CC`. Bukti: `rtl/tb/tb_hcpu_hos.v`, `tests/test_integrity/test_hos.py`
 | Gerbang Jamrah | mode gerbang | `rtl/hijaiyyah_jamrah_gate.v` |
 | Lapis 3 (HMAC-SHA256) | **satu-satunya pemikul keamanan** | `src/hijaiyyah/crypto/kabah.py` |
 
-**Hanya lapis 3 yang memikul keamanan**, dan ia **tidak ada di RTL**. Empat
+**Hanya lapis 3 yang memikul keamanan.** Di RTL ia ada sebagai slot sendiri
+(`rtl/hijaiyyah_hmac.v`, 1 Oktober 2026), tidak di jalur `hijaiyyah_kabah_top` /
+`hijaiyyah_wave`; keluaran Ka'bah tetap belum terautentikasi sampai
+ditandatangani. Empat
 lapis lain adalah struktur, bukan jaminan. Menyebut sistem ini "aman" karena
 ada lima lapis adalah salah membaca susunannya.
 
@@ -311,7 +314,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 5.993 lulus, 0 dilewati
+python3 -m pytest -q          # 5.998 lulus, 0 dilewati
 make -C rtl/tb all            # 408 asersi, 39 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

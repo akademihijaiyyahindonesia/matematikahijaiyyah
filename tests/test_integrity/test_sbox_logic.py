@@ -657,15 +657,20 @@ def test_the_top_level_names_what_it_does_not_contain() -> None:
     """
     A block diagram invites the wrong reading, so the header has to refuse it.
     The gate and the counter are keyless triage. The sponge is [EH]. Layer 3 —
-    HMAC-SHA256, the part that actually carries the security — is not in
-    hardware at all, and neither is phase discovery.
+    HMAC-SHA256, the part that actually carries the security — is not in this
+    module: since 1 October 2026 it is a slot of its own, which this module
+    does not instantiate. Neither is phase discovery.
     """
+    import re
+
     raw = (ROOT / "rtl" / "hijaiyyah_kabah_top.v").read_text(encoding="utf-8")
     source = " ".join(raw.replace("//", " ").split())
     assert "is NOT in this module" in source
-    assert "no SHA-256 core" in source
-    assert "unauthenticated until software signs it" in source
+    assert "no SHA-256 core in this module" in source
+    assert "unauthenticated until it is signed" in source
     assert "Phase discovery is also software" in source
+    code = "\n".join(line.split("//", 1)[0] for line in raw.splitlines())
+    assert not re.search(r"\bhijaiyyah_(hmac|sha256_core|sha256_stream)\b", code)
 
 
 @pytest.mark.skipif(shutil.which("iverilog") is None, reason="iverilog not installed")

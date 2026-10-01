@@ -729,8 +729,8 @@ Dua penetapan yang menyertainya menutup pertanyaan yang sempat terbuka:
 **Empat medan belum punya sumber sama sekali**, dan itu dicatat sebagai
 keadaan, bukan utang yang dikarang: `anomaly_score` dan `corruption_score`
 adalah turunan yang menunggu NUI (prioritas 7, belum dimulai), `state_hash`
-menuntut bentuk ringkasan yang belum pemilik tetapkan (tidak ada inti SHA-256
-di RTL, R10), dan `last_relocation` adalah langkah yang loader kerjakan tanpa
+menuntut bentuk ringkasan yang belum pemilik tetapkan (inti SHA-256 di RTL
+hanya slot sendiri yang tidak tersambung ke HCPU, R10), dan `last_relocation` adalah langkah yang loader kerjakan tanpa
 melaporkannya terpisah. `tests/test_integrity/test_telemetry_contract.py`
 menjaga keempatnya tetap ditandai begitu sampai ada yang mengukurnya.
 
@@ -2031,6 +2031,105 @@ paling mudah dilanggar:
   dijalankan manusia atas perintah pemilik, **bukan tindakan otonom NUI**, dan
   tabel 7.4 tidak berubah.
 
+**Keputusan pemilik, 1 Oktober 2026 — inti SHA-256/HMAC di RTL.**
+
+- Inti SHA-256/HMAC dibangun di RTL **sebagai slot sendiri** ("celah 3
+  Ka'bah", kata pemilik): `rtl/hijaiyyah_sha256_core.v`,
+  `rtl/hijaiyyah_sha256_stream.v`, `rtl/hijaiyyah_hmac.v`, dengan bitstream
+  `rtl/fpga/gowin/hijaiyyah_hmac_gowin_top.v`.
+- **R10 tetap**: lapis 3 satu-satunya pemikul keamanan.
+- **HMAC tidak tersambung ke HCPU**, dan tidak di jalur `hijaiyyah_kabah_top`
+  / `hijaiyyah_wave`. Keluaran Ka'bah tetap belum terautentikasi sampai
+  ditandatangani.
+- **`CHASH`/`CSIGN` tetap ditanyakan ke pemilik.**
+- **`state_hash` tidak berubah (opsi C).**
+- Terukur di commit yang memasukkannya:
+  - PnR HCPU diulang dan angkanya **identik**: 15.744 LUT4, 5.065 DFF,
+    18 BSRAM, 11 IOB, 86,18 MHz, bitstream 7.261.470 byte. Itu bukti K6.
+    Sidik jari Ka'bah **tidak bergeser**, karena penjaganya melewati baris
+    komentar, jadi PnR Ka'bah tidak dijalankan.
+  - Slot HMAC di toolchain repo: 5.181 LUT4, 3.603 DFF, 0 BSRAM, 10 IOB.
+  - Di papan: **207 PASS, 0 FAIL, dari 207**.
+- **Status HMAC-SHA256 perangkat keras** (pemilik): simulasi VALIDATED, PnR
+  repo VALIDATED, papan fisik VALIDATED. Angka evidence-nya 5.181 LUT4,
+  3.603 DFF, 594 ALU, 0 BSRAM, 10 IOB, UART 27 MHz / 115200, papan 207 PASS /
+  0 FAIL. **Fmax tidak diklaim** sampai jalur timing yang relevan terukur.
+- **Log mentah UART tetap di luar git** (pemilik): `*.log` tidak dipaksa
+  masuk dan `.gitignore` tidak diubah. Repositori memuat metadata, hash, dan
+  klaimnya di `cosmictera-build/PAPAN.md`; log mentahnya artefak evidence
+  eksternal.
+- **Tiga `--verify` Lapis 6 merah adalah drift pasca-freeze yang diharapkan,
+  bukan regresi** (pemilik, opsi i): `hardware`, `hardware_provenance`, dan
+  `telemetry_sources`. Ketiganya mengutip SHA-256
+  `rtl/fpga/gowin/hcpu_gowin_top.v`, yang
+  berubah oleh cap opsi (a), serta baris `cosmictera-build/PAPAN.md` dan
+  `cosmictera/TELEMETRY.md:50`, yang berubah sesudah freeze. **Data beku tidak
+  dibangkitkan ulang**: freeze Lapis 6 benar untuk keadaannya saat dibekukan,
+  repositori benar untuk keadaan sesudah HMAC, dan yang satu tidak dipalsukan
+  agar sama dengan yang lain.
+- **Syarat PnR Ka'bah dicabut** (pemilik, 1 Oktober 2026, mengoreksi
+  perintahnya sendiri hari yang sama). Perintah awal berbunyi "sidik jari
+  Ka'bah berubah: jalankan ulang PnR Ka'bah dan cap". Terukur, sidik jari itu
+  tidak berubah, karena `_fingerprint()` di
+  `tests/test_integrity/test_place_and_route.py` melewati baris komentar utuh
+  dan perubahan kepala Ka'bah hanya komentar: `90460e66…` sebelum dan sesudah,
+  begitu juga Ka'bah-over-HDMI `ceefd158…`. Jadi PnR Ka'bah tidak dibutuhkan
+  dan tidak dijalankan.
+
+**Keadaan gerbang commit HMAC, dibekukan pemilik 1 Oktober 2026.** Bukan
+"semua gerbang hijau". Statusnya:
+
+```text
+HMAC simulation          PASS
+repo PNR                 PASS
+physical board           PASS
+source hashes            exact
+3 L6 frozen verifies     EXPECTED RED / POST-FREEZE DRIFT
+accepted HDMI            existing accepted red
+```
+
+Pytest gagal tepat di tujuh node ini. Daftarnya **tidak boleh diperluas**
+sesudah commit itu:
+
+1. `tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`
+   — merah HDMI yang sudah diterima (M5.2B ditunda).
+2. `tests/test_ai/test_nui_hardware.py::test_the_inventory_reads_back_exactly`
+   — drift pasca-freeze: 19 pointer, SHA-256 dan baris
+   `rtl/fpga/gowin/hcpu_gowin_top.v` dan `cosmictera-build/PAPAN.md`.
+3. `tests/test_ai/test_nui_hardware_provenance.py::test_the_provenance_reads_back_exactly`
+   — drift pasca-freeze: 27 pointer, ukuran dan SHA-256 evidence.
+4. `tests/test_ai/test_nui_hardware_provenance.py::test_every_check_holds_but_the_three_the_evidence_cannot_date[committed]`
+   — drift pasca-freeze: `rtl/fpga/gowin/hcpu_gowin_top.v` kini 34.404 byte,
+   bukan 33.930.
+5. `tests/test_ai/test_nui_hardware_provenance.py::test_every_check_holds_but_the_three_the_evidence_cannot_date[built]`
+   — drift pasca-freeze: baris `cosmictera-build/PAPAN.md` yang dikutip
+   `reset_button` bergeser.
+6. `tests/test_ai/test_nui_hardware_provenance.py::test_each_sabotage_turns_its_check_red[simulated -> measured]`
+   — garis dasarnya sudah merah oleh drift yang sama, jadi **R3 ini INACTIVE /
+   NOT PROTECTING**: ia tidak menjaga apa pun sampai garis dasarnya hijau lagi.
+7. `tests/test_ai/test_nui_telemetry_sources.py::test_the_registry_reads_back_exactly`
+   — drift pasca-freeze: 8 pointer, termasuk `cosmictera/TELEMETRY.md:50`.
+
+Ditambah tiga `--verify` merah dengan sebab yang sama: `hardware`,
+`hardware_provenance`, `telemetry_sources`. **Berikutnya, wajib, commit
+terpisah: adendum pasca-freeze Lapis 6.**
+- Registry beku tetap immutable, dan adendumnya catatan baru.
+- Tiap entri memuat pointer atau hash lama → keadaan sekarang, alasan
+  konkret, commit penyebab, dan evidence kesetaraan. Tidak ada pemetaan
+  massal tanpa alasan.
+- Verifier membaca keduanya: historical freeze ≠ current repository state.
+- Targetnya: gerbang kembali ke HDMI saja, dan R3 `simulated -> measured`
+  hijau dan aktif lagi.
+- Kalimat yang dulu menyatakan "tidak ada inti SHA-256 di RTL" diganti dengan
+  fakta ini (K14). Keenam tes penjaga fakta **diperbarui untuk menjaga fakta
+  baru, tidak dihapus**: `rtl/*sha*` hanya kedua berkas SHA-256, dan
+  `kabah_top`, `wave`, serta setiap `hcpu_*.v` tidak menginstansiasinya.
+- **Data beku NUI tidak disentuh**: registry Lapis 6,
+  `NUI/spec/telemetry_sources.json`, dan `NUI/spec/hardware_provenance.json`.
+  `NUI/TELEMETRY_SOURCES.md` dibangkitkan dari spec itu dan tidak disunting
+  tangan, jadi kalimat lamanya masih ada di sana, dan itu dilaporkan ke
+  pemilik.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
@@ -2049,7 +2148,8 @@ sementara itu:
 
 - **Yang memikul keamanan di Ka'bah hanya lapis 3**, HMAC-SHA256 standar
   (`a910375`, `kabah/README.md`). Lapis 4 — kerahasiaan — ditolak dengan
-  sengaja, dan tidak ada inti SHA-256 di RTL (R10). Lapisan keamanan yang
+  sengaja, dan inti SHA-256 di RTL hanya slot sendiri, tidak di jalur Ka'bah
+  dan tidak tersambung ke HCPU (R10). Lapisan keamanan yang
   dijanjikan visi ini berdiri di atas satu lapis itu, bukan di atas lima.
 - **Throughput terukur 2,59 MB/s**, hambatannya deserialiser (`49fb3b3`). Itu
   angka yang harus dipegang setiap kalimat tentang "mesin verifikasi di depan
@@ -2147,7 +2247,9 @@ memutuskan:
    - `VPROJ_T`, `VPROJ_N`, `VPROJ_K`, `VPROJ_Q` dan `HCHK` **tidak ada di
      spesifikasi** — tanyakan pemilik
      sebelum menyentuhnya. `CHASH`/`CSIGN` (0x70/0x72) menyentuh aturan R10
-     (tak ada inti SHA-256 di RTL), jadi juga ditanyakan dulu.
+     — lapis 3 satu-satunya pemikul keamanan — jadi juga ditanyakan dulu. Inti
+     HMAC di RTL sejak 1 Oktober 2026 adalah slot sendiri dan tidak tersambung
+     ke HCPU; ia tidak membuka keduanya.
 3. **Fase 6, PDK:** Efabless SKY130 (`rtl/mpw/MPW_SHUTTLE_PLAN.md`).
 
 ### Keputusan pemilik, 12 September 2026

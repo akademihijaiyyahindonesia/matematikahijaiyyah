@@ -35,8 +35,8 @@ tidak.
 | — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |
 | Paket Python | 20 | `src/hijaiyyah/` |
 | Modul RTL HCPU | 30 | `rtl/hcpu_*.v` |
-| Modul RTL Ka'bah | 13 | `rtl/hijaiyyah_*.v` |
-| Testbench RTL | 56 | `rtl/tb/` |
+| Modul RTL Ka'bah | 16 | `rtl/hijaiyyah_*.v` |
+| Testbench RTL | 59 | `rtl/tb/` |
 | Wrapper papan | 8 | `rtl/fpga/` |
 | Program HASM | 59 | `rtl/programs/` |
 | Format berkas | 5 | `.hc` `.hasm` `.hbc` `.hgeo` `.hcai` |
