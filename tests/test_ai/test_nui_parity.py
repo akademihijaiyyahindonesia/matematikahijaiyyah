@@ -309,10 +309,15 @@ def test_an_rtl_value_that_differs_is_named(sim: Path, tmp_path: Path) -> None:
 
 def test_board_records_postdate_the_last_change_to_the_cpu_rtl() -> None:
     """A record older than the design it describes is about a design that is
-    gone (R4). If the CPU's RTL changes, this fails until the board is rerun."""
+    gone (R4). If the CPU's RTL changes, this fails until the board is rerun.
+
+    The scope is the CPU's, as HDMI_FINGERPRINTED in test_place_and_route.py
+    has it: rtl/*.v would also catch the HMAC slot, which the CPU never
+    instantiates. -G skips blank and whole-line `//` changes, the same rule as
+    _fingerprint there: 4bff781 only re-worded comments in hcpu_gowin_top.v."""
     last = subprocess.run(
-        ["git", "log", "-1", "--format=%h %cs", "--", ":(glob)rtl/*.v", ":(glob)rtl/*.vh",
-         ":(glob)rtl/fpga/gowin/hcpu_gowin_*.v"],
+        ["git", "log", "-1", "--format=%h %cs", "-G^[[:space:]]*([^[:space:]/]|/[^/])", "--",
+         ":(glob)rtl/hcpu_*.v", ":(glob)rtl/*.vh", ":(glob)rtl/fpga/gowin/hcpu_gowin_*.v"],
         cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     assert tuple(last) == pm.LAST_CPU_RTL_CHANGE
     assert all(r["date"] > pm.LAST_CPU_RTL_CHANGE[1] for r in _fresh()["board"])
