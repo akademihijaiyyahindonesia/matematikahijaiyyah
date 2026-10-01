@@ -33,6 +33,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from . import layer6_addendum
 from .hardware import _matching, _sha
 from .repository_index import ROOT
 
@@ -151,13 +152,15 @@ def access(name: str, model: dict[str, Any] | None = None) -> str:
 
 
 def verify(committed: dict[str, Any] | None = None) -> list[str]:
+    """The registry as frozen, with its post-freeze addendum beside it,
+    against what the contract and the evidence build today."""
     committed = committed if committed is not None else json.loads(
         MODEL.read_text(encoding="utf-8"))
     try:
         fresh = json.loads(json.dumps(build()))
     except (LookupError, OSError, KeyError) as why:
         return [f"the telemetry sources no longer read back: {why}"]
-    return _diff(committed, fresh)
+    return layer6_addendum.verify("telemetry_sources", fresh, committed)
 
 
 def _diff(a: Any, b: Any, path: str = "") -> list[str]:
@@ -217,7 +220,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"model: {write().relative_to(ROOT)}, page: {PAGE.relative_to(ROOT)}")
         return 0
     problems = verify()
-    print("\n".join(problems) if problems else "telemetry sources reproduced exactly")
+    print("\n".join(problems) if problems else
+          f"telemetry sources reproduced exactly: the frozen record, and "
+          f"{len(layer6_addendum.changes('telemetry_sources'))} changes of the post-freeze "
+          "addendum")
     return 1 if problems else 0
 
 

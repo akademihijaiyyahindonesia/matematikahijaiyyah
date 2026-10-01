@@ -40,6 +40,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from . import layer6_addendum
 from .repository_index import ROOT
 
 SPEC = ROOT / "NUI" / "spec" / "hardware_inventory.json"
@@ -153,15 +154,17 @@ def build() -> dict[str, Any]:
 
 
 def verify(committed: dict[str, Any] | None = None) -> list[str]:
-    """What the evidence says today against what the inventory wrote down.
-    Paths that differ are returned."""
+    """What the evidence says today against what the inventory wrote down:
+    the frozen record and, beside it, the post-freeze addendum (the owner,
+    1 October 2026). Paths that differ, and whatever keeps the addendum from
+    standing, are returned."""
     committed = committed if committed is not None else json.loads(
         MODEL.read_text(encoding="utf-8"))
     try:
         fresh = json.loads(json.dumps(build()))
     except (LookupError, OSError, KeyError) as why:
         return [f"the inventory no longer reads back: {why}"]
-    return _diff(committed, fresh)
+    return layer6_addendum.verify("hardware", fresh, committed)
 
 
 def _diff(a: Any, b: Any, path: str = "") -> list[str]:
@@ -226,7 +229,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"model: {write().relative_to(ROOT)}, page: {PAGE.relative_to(ROOT)}")
         return 0
     problems = verify()
-    print("\n".join(problems) if problems else "hardware inventory reproduced exactly")
+    print("\n".join(problems) if problems else
+          f"hardware inventory reproduced exactly: the frozen record, and "
+          f"{len(layer6_addendum.changes('hardware'))} changes of the post-freeze "
+          "addendum")
     return 1 if problems else 0
 
 

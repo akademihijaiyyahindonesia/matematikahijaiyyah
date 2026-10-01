@@ -49,7 +49,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from . import hardware, telemetry_sources
+from . import hardware, layer6_addendum, telemetry_sources
 from .hardware import _sha
 from .repository_index import ROOT
 
@@ -220,13 +220,13 @@ def origins(inventory: dict[str, Any], registry: dict[str, Any],
 
 def context(inventory: dict[str, Any] | None = None, registry: dict[str, Any] | None = None,
             spec: dict[str, Any] | None = None) -> Context:
-    """What a claim is built and checked against: the spec, the committed 6.1
-    and 6.2 models, and every run as its own evidence names it now."""
+    """What a claim is built and checked against: the spec, the 6.1 and 6.2
+    records as they stand -- frozen, with the post-freeze addendum applied --
+    and every run as its own evidence names it now."""
     spec = spec if spec is not None else load()
-    inventory = inventory if inventory is not None else json.loads(
-        hardware.MODEL.read_text(encoding="utf-8"))
-    registry = registry if registry is not None else json.loads(
-        telemetry_sources.MODEL.read_text(encoding="utf-8"))
+    inventory = inventory if inventory is not None else layer6_addendum.current("hardware")
+    registry = registry if registry is not None else layer6_addendum.current(
+        "telemetry_sources")
     runs = [{**read_run(r), "spec": r} for r in spec["runs"]]
     carried: dict[str, dict[str, Any]] = {}
     for run in runs:
@@ -544,13 +544,15 @@ def claims_for(subject: str, model: dict[str, Any] | None = None) -> list[dict[s
 
 
 def verify(committed: dict[str, Any] | None = None) -> list[str]:
+    """The provenance as frozen, with its post-freeze addendum beside it,
+    against what the evidence builds today."""
     committed = committed if committed is not None else json.loads(
         MODEL.read_text(encoding="utf-8"))
     try:
         fresh = json.loads(json.dumps(build()))
     except (LookupError, OSError, KeyError, ValueError) as why:
         return [f"the hardware provenance no longer reads back: {why}"]
-    return hardware._diff(committed, fresh)
+    return layer6_addendum.verify("hardware_provenance", fresh, committed)
 
 
 def page(model: dict[str, Any]) -> str:
@@ -618,7 +620,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"model: {write().relative_to(ROOT)}, page: {PAGE.relative_to(ROOT)}")
         return 0
     problems = verify()
-    print("\n".join(problems) if problems else "hardware provenance reproduced exactly")
+    print("\n".join(problems) if problems else
+          f"hardware provenance reproduced exactly: the frozen record, and "
+          f"{len(layer6_addendum.changes('hardware_provenance'))} changes of the post-freeze "
+          "addendum")
     return 1 if problems else 0
 
 

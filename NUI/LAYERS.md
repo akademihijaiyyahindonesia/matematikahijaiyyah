@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **40 modul**; `tests/test_ai/` berisi **936 tes**
+`src/hijaiyyah/nui/` berisi **41 modul**; `tests/test_ai/` berisi **961 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -219,6 +219,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
+| `layer6_addendum.py` | adendum pasca-freeze Lapis 6: catatan beku 6.1–6.3 tetap objek di tag, dan tiap perubahan sesudahnya satu baris — pointer, nilai lama → sekarang, alasan, commit penyebab, dan bukti kesetaraan yang diperiksa dari objek git; ketiga verifiernya membaca catatan beku dan adendum | `test_nui_layer6_addendum.py` (25) |
 | `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (40) |
 | `layer7_decision.py` | DECIDE Lapis 7: satu hasil kontrak `layer7.evaluate` atau `layer7.expect` jadi satu decision record deterministik — ALLOW, DENY, atau STOP / REPORT, dengan `record_sha256` dan `verify()`; ALLOW bukan eksekusi, dan tidak ada yang dijalankan | `test_nui_layer7_decision.py` (37) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
@@ -279,7 +280,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.798 node, 4.622 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.828 node, 4.680 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -1224,6 +1225,17 @@ cakupan pemilik. `git diff 80ea5f8 d003cac -- rtl/` kosong: RTL, bench, dan
 sidik jari wrapper tidak berubah sepanjang Lapis 6. HISAB tidak diubah supaya
 freeze tampak bersih — urutan bitnya butir tersendiri.
 
+**Adendum pasca-freeze, 1 Oktober 2026.** Commit HMAC `4bff781` menggeser apa
+yang dikutip catatan beku 6.1–6.3: hash utuh `rtl/fpga/gowin/hcpu_gowin_top.v`
+dan `rtl/fpga/gowin/Makefile`, nomor baris di `rtl/fpga/gowin/hcpu_gowin_top.v`
+dan `cosmictera-build/PAPAN.md`, dan hash baris `state_hash` di
+`cosmictera/TELEMETRY.md`. Keputusan pemilik: catatan beku tetap immutable, dan
+perubahannya catatan baru, `NUI/layer6_addendum.json` — lima entri, 66
+perubahan, tiap satunya dengan nilai lama → sekarang, alasan, commit penyebab,
+dan bukti kesetaraan yang diperiksa dari objek git. Halamannya
+`NUI/LAYER6_ADDENDUM.md`. Ketiga verifier membaca keduanya: **freeze historis ≠
+keadaan repositori sekarang**.
+
 **Yang belum ada.** Tidak ada yang tertunda untuk menutup Lapis 6. Yang tidak
 diklaim — bukan utang, melainkan batas yang tercatat di `NUI/LAYER6.md`:
 - 78 aturan yang kedua audit namai tetap not covered;
@@ -1245,7 +1257,9 @@ korelasi dan memeriksanya terhadap rekamannya sendiri, dan
 fungsi RTL — bench khusus, korpus Lapis 4, kedua bench loader, dan
 `rtl/tb/tb_hcpu_top.v` untuk pemancar, pipeline, dan HCPU — beserta kedua
 audit, lalu membandingkan tiap fungsi per siklus. Freeze-nya dibaca ulang oleh
-`python3 -m hijaiyyah.nui.layer6_freeze --verify` dari objek git yang sama.
+`python3 -m hijaiyyah.nui.layer6_freeze --verify` dari objek git yang sama. Adendumnya
+dibaca ulang oleh `python3 -m hijaiyyah.nui.layer6_addendum --verify`, yang juga
+menuntut catatan beku, halaman, dan spec 6.1–6.3 tetap objek di tag.
 
 **Syarat selesai.** Prediksi keadaan berikutnya untuk modul yang disebut cocok
 dengan benchnya.

@@ -2111,15 +2111,8 @@ sesudah commit itu:
    — drift pasca-freeze: 8 pointer, termasuk `cosmictera/TELEMETRY.md:50`.
 
 Ditambah tiga `--verify` merah dengan sebab yang sama: `hardware`,
-`hardware_provenance`, `telemetry_sources`. **Berikutnya, wajib, commit
-terpisah: adendum pasca-freeze Lapis 6.**
-- Registry beku tetap immutable, dan adendumnya catatan baru.
-- Tiap entri memuat pointer atau hash lama → keadaan sekarang, alasan
-  konkret, commit penyebab, dan evidence kesetaraan. Tidak ada pemetaan
-  massal tanpa alasan.
-- Verifier membaca keduanya: historical freeze ≠ current repository state.
-- Targetnya: gerbang kembali ke HDMI saja, dan R3 `simulated -> measured`
-  hijau dan aktif lagi.
+`hardware_provenance`, `telemetry_sources`. Pemilik mewajibkan adendum
+pasca-freeze Lapis 6 sebagai commit terpisah sesudahnya — lihat di bawah.
 - Kalimat yang dulu menyatakan "tidak ada inti SHA-256 di RTL" diganti dengan
   fakta ini (K14). Keenam tes penjaga fakta **diperbarui untuk menjaga fakta
   baru, tidak dihapus**: `rtl/*sha*` hanya kedua berkas SHA-256, dan
@@ -2129,6 +2122,43 @@ terpisah: adendum pasca-freeze Lapis 6.**
   `NUI/TELEMETRY_SOURCES.md` dibangkitkan dari spec itu dan tidak disunting
   tangan, jadi kalimat lamanya masih ada di sana, dan itu dilaporkan ke
   pemilik.
+
+**Adendum pasca-freeze Lapis 6, 1 Oktober 2026 — commit terpisah sesudah
+`4bff781`.** Perintah pemilik: *"Registry beku tetap immutable; adendum adalah
+catatan baru. Tiap entri: pointer/hash lama → keadaan sekarang, alasan
+konkret, commit penyebab, dan evidence kesetaraan. Tidak ada pemetaan massal
+tanpa alasan. Verifier membaca keduanya: historical freeze ≠ current
+repository state."* Targetnya: gerbang kembali ke HDMI saja, dan R3
+`simulated -> measured` hijau dan aktif lagi.
+
+- Catatannya `NUI/layer6_addendum.json`, halamannya `NUI/LAYER6_ADDENDUM.md`,
+  dibangun `src/hijaiyyah/nui/layer6_addendum.py`. Lima entri, 66 perubahan:
+  `hardware` 19, `telemetry_sources` 8, `hardware_provenance` 39. Tiap
+  pointer ditulis sendiri, dan gabungannya sama persis dengan drift-nya.
+- **Bukti kesetaraannya diperiksa, bukan dipercaya.** Empat jenis, dibaca dari
+  objek git di tag freeze, di induk commit penyebab, di commit penyebab, dan
+  di pohon kerja:
+  - *comment-only* — `rtl/fpga/gowin/hcpu_gowin_top.v`: tiap baris desain
+    sama, menurut aturan sidik jari place and route;
+  - *insert-only* — `rtl/fpga/gowin/Makefile`: barisnya hanya bertambah;
+  - *line-moved* — tiap baris yang dikutip, teksnya sama di nomor barunya;
+  - *row-meaning* — baris `state_hash` di `cosmictera/TELEMETRY.md` tetap
+    medan yang sama, dan tetap tanpa sumber.
+- Catatan beku 6.1–6.3 — model, halaman, dan spec — dijaga tetap objek di tag
+  `layer6-freeze-2026-09-29-final`, byte demi byte. Tidak ada yang dibangkitkan
+  ulang.
+- `src/hijaiyyah/nui/hardware_provenance.py` kini dibangun di atas 6.1 dan 6.2
+  sebagaimana berdirinya sekarang, yaitu catatan beku ditambah adendum.
+  Dibangun dari catatan beku saja, `reset_button` gagal di pemeriksaan 2 karena
+  baris basi, padahal teks yang dikutipnya tidak berubah.
+- Tes `[committed]` 6.3 kini memegang catatan yang di-commit, yaitu catatan
+  beku ditambah adendum. Halaman 6.3 tetap dibandingkan dengan catatan beku.
+- **Hasilnya:** gerbang kembali ke merah HDMI saja. R3 `simulated -> measured`
+  hijau dan aktif lagi: garis dasarnya `[]`, dan sabotasenya merah di
+  pemeriksaan 10.
+- **Yang tidak diubah, dan dilaporkan ke pemilik:** kueri NUI
+  (`src/hijaiyyah/nui/knowledge.py`) dan model 6.4 masih membaca catatan 6.3
+  yang beku, termasuk hash lama `rtl/fpga/gowin/hcpu_gowin_top.v`.
 
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 

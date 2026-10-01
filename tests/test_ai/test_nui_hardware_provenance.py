@@ -30,11 +30,17 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from hijaiyyah.nui import hardware, knowledge  # noqa: E402
+from hijaiyyah.nui import hardware, knowledge, layer6_addendum  # noqa: E402
 from hijaiyyah.nui import hardware_provenance as hp  # noqa: E402
 from hijaiyyah.nui import telemetry_sources as ts  # noqa: E402
 
-MODEL = json.loads(hp.MODEL.read_text(encoding="utf-8"))
+#: The frozen record, the object at layer6-freeze-2026-09-29-final; its page is
+#: drawn from it.
+FROZEN = json.loads(hp.MODEL.read_text(encoding="utf-8"))
+#: What the repository commits as 6.3 today: the frozen record with the
+#: post-freeze addendum applied (the owner, 1 October 2026). The checks read
+#: today's files, so they are held against this, not the freeze.
+MODEL = layer6_addendum.current("hardware_provenance", FROZEN)
 BOTH = pytest.mark.parametrize("model", [MODEL, json.loads(json.dumps(hp.build()))],
                                ids=["committed", "built"])
 INCOMPLETE = {"6.1:hdmi": [6], "6.1:reset_button": [6], "6.2:boot_duration": [1, 6]}
@@ -49,7 +55,7 @@ def test_the_provenance_reads_back_exactly() -> None:
 
 
 def test_the_page_is_drawn_from_the_model() -> None:
-    assert hp.PAGE.read_text(encoding="utf-8") == hp.page(MODEL)
+    assert hp.PAGE.read_text(encoding="utf-8") == hp.page(FROZEN)
 
 
 @BOTH

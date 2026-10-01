@@ -1,0 +1,508 @@
+{
+ "decided": "Keputusan pemilik, 1 Oktober 2026, sesudah commit HMAC `4bff781` membuat tiga `--verify` Lapis 6 merah oleh drift pasca-freeze yang diharapkan",
+ "rule": "Registry beku tetap immutable; adendum adalah catatan baru. Tiap entri: pointer/hash lama → keadaan sekarang, alasan konkret, commit penyebab, dan evidence kesetaraan. Tidak ada pemetaan massal tanpa alasan. Verifier membaca keduanya: historical freeze ≠ current repository state.",
+ "kinds": {
+  "comment-only": "setiap baris yang bukan baris kosong dan bukan komentar utuh `//` sama dan berurutan sama di berkas beku dan berkas sekarang — aturan yang dipakai sidik jari place and route; yang berubah hanya komentar, jadi desainnya tidak",
+  "insert-only": "setiap baris berkas beku masih ada, utuh dan berurutan, di berkas sekarang; barisnya hanya bertambah, tidak ada yang hilang atau diubah",
+  "line-moved": "tiap baris yang dikutip punya teks yang sama persis di nomor barunya — di freeze, tepat sebelum penyebab, di penyebab, dan sekarang",
+  "row-meaning": "baris kontrak diurai dengan pola baris `NUI/spec/telemetry_sources.json`: medan dan asalnya sama, dan medannya tetap tanpa sumber — jadi statusnya tetap"
+ },
+ "entries": [
+  {
+   "id": "hcpu_gowin_top.v — cap ulang opsi (a)",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "4bff781",
+   "reason": "Opsi (a) pemilik, 1 Oktober 2026: tiga modul HMAC di `rtl/` menggeser sidik jari HCPU, karena penjaganya membaca `rtl/*.v` lewat wildcard. Place and route HCPU diulang dan setiap angkanya identik, lalu kepala berkas dicap ulang: satu baris komentar sidik jari diganti tujuh baris komentar yang mencatat lari itu. Berkasnya 33.930 → 34.404 byte, jadi hash utuhnya berubah; tidak ada baris desain yang berubah, dan nilai yang dibaca klaim-klaimnya dari berkas ini sama",
+   "equivalence": {
+    "kind": "comment-only"
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/3/source/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/3/evidence/0/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/source/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/evidence/0/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/source/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/evidence/0/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/source/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/evidence/0/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/14/source/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/14/evidence/0/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/17/source/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/evidence_bytes",
+     "old": 33930,
+     "new": 34404
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/evidence_sha256",
+     "old": "cacdf46a41e09ae1b0628c75e77cba947f5b592f1b26b33d8d9f165a32829d19",
+     "new": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6"
+    }
+   ]
+  },
+  {
+   "id": "hcpu_gowin_top.v — baris turun enam",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "4bff781",
+   "reason": "Cap ulang yang sama menambah enam baris komentar bersih di kepala berkas — satu baris diganti tujuh — jadi setiap baris sesudahnya turun enam: PLL 280 → 286, UART 291 → 297, dan keenam port `tele_*` 327–332 → 333–338. Teks tiap baris yang dikutip sama persis di tempat barunya",
+   "equivalence": {
+    "kind": "line-moved",
+    "lines": [
+     [
+      280,
+      286
+     ],
+     [
+      291,
+      297
+     ],
+     [
+      327,
+      333
+     ],
+     [
+      328,
+      334
+     ],
+     [
+      329,
+      335
+     ],
+     [
+      330,
+      336
+     ],
+     [
+      331,
+      337
+     ],
+     [
+      332,
+      338
+     ]
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/14/source/line",
+     "old": 280,
+     "new": 286
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/17/source/line",
+     "old": 291,
+     "new": 297
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/0/line",
+     "old": 327,
+     "new": 333
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/1/line",
+     "old": 328,
+     "new": 334
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/2/line",
+     "old": 329,
+     "new": 335
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/3/line",
+     "old": 330,
+     "new": 336
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/4/line",
+     "old": 331,
+     "new": 337
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/5/line",
+     "old": 332,
+     "new": 338
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/source/line",
+     "old": 280,
+     "new": 286
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/17/source/line",
+     "old": 291,
+     "new": 297
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/claim",
+     "old": "tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:327",
+     "new": "tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:333"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/source/line",
+     "old": 327,
+     "new": 333
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/claim",
+     "old": "tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:328",
+     "new": "tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:334"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/source/line",
+     "old": 328,
+     "new": 334
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/claim",
+     "old": "tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:329",
+     "new": "tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:335"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/source/line",
+     "old": 329,
+     "new": 335
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/claim",
+     "old": "tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:330",
+     "new": "tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:336"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/source/line",
+     "old": 330,
+     "new": 336
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/claim",
+     "old": "tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:331",
+     "new": "tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:337"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/source/line",
+     "old": 331,
+     "new": 337
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/claim",
+     "old": "tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:332",
+     "new": "tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:338"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/source/line",
+     "old": 332,
+     "new": 338
+    }
+   ]
+  },
+  {
+   "id": "Makefile — target HMAC",
+   "path": "rtl/fpga/gowin/Makefile",
+   "cause": "4bff781",
+   "reason": "4bff781 menambahkan `sim_hmac`, `hmac_synth`, `hmac_bitstream`, dan `hmac_flash` — 44 baris, tidak ada yang dihapus atau diubah. Baris 24 dan 25 yang dibaca `fpga_device` dan `fpga_family` tidak berubah dan tidak bergeser; yang berubah hash utuh berkasnya",
+   "equivalence": {
+    "kind": "insert-only"
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/1/source/sha256",
+     "old": "8f932fad1b613c358edd3f7452b9747fac65000aff8add0c7247753a2611798c",
+     "new": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/1/evidence/0/sha256",
+     "old": "8f932fad1b613c358edd3f7452b9747fac65000aff8add0c7247753a2611798c",
+     "new": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/2/source/sha256",
+     "old": "8f932fad1b613c358edd3f7452b9747fac65000aff8add0c7247753a2611798c",
+     "new": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/2/evidence/0/sha256",
+     "old": "8f932fad1b613c358edd3f7452b9747fac65000aff8add0c7247753a2611798c",
+     "new": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4"
+    }
+   ]
+  },
+  {
+   "id": "PAPAN.md — bagian HMAC disisipkan",
+   "path": "cosmictera-build/PAPAN.md",
+   "cause": "4bff781",
+   "reason": "4bff781 menyisipkan bagian *HMAC-SHA256 di slot sendiri — 207 dari 207, 1 Oktober 2026* (33 baris) sebelum *Validasi Ka'bah*, di atas bagian yang dikutip `reset_button`. Judul *Tiga cacat yang hanya papan bisa temukan* turun 1315 → 1348 dan butir reset pin MODE1 1321 → 1354, dengan teks yang sama: hash baris yang dikutip tidak berubah, dan rantai provenance klaim ini tetap hanya gagal di pemeriksaan 6, seperti saat dibekukan",
+   "equivalence": {
+    "kind": "line-moved",
+    "lines": [
+     [
+      1315,
+      1348
+     ],
+     [
+      1321,
+      1354
+     ]
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/22/source/line",
+     "old": 1321,
+     "new": 1354
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/22/evidence/0/lines/0",
+     "old": 1321,
+     "new": 1354
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/22/source/line",
+     "old": 1321,
+     "new": 1354
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/22/evidence_lines/0",
+     "old": 1315,
+     "new": 1348
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/22/evidence_lines/1",
+     "old": 1321,
+     "new": 1354
+    }
+   ]
+  },
+  {
+   "id": "TELEMETRY.md:50 — baris state_hash (K14)",
+   "path": "cosmictera/TELEMETRY.md",
+   "cause": "4bff781",
+   "reason": "Pembaruan K14 di 4bff781: baris `state_hash` berhenti mengatakan *tidak ada inti SHA-256 di RTL (R10)* dan kini mengatakan inti itu ada sejak 1 Oktober 2026 sebagai slot sendiri, tidak tersambung ke HCPU, jadi tidak meringkas keadaan ini, dan `state_hash` tidak berubah (opsi C). Registry mengutip baris itu dengan hash-nya, jadi hash itu berubah; medannya tetap tanpa sumber dan tetap UNKNOWN",
+   "equivalence": {
+    "kind": "row-meaning",
+    "line": 50
+   },
+   "changes": [
+    {
+     "record": "telemetry_sources",
+     "pointer": "/registry/14/evidence/0/sha256",
+     "old": "f5997abd1937dc10240ad122e73d634baee993f651bbd70ba707bd8c300e279a",
+     "new": "fb93c2c3d3c2415a0058a06e291da3322936b8d987fc80c51d5e9962bc4be2eb"
+    }
+   ]
+  }
+ ]
+}
