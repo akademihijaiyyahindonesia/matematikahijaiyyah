@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **41 modul**; `tests/test_ai/` berisi **961 tes**
+`src/hijaiyyah/nui/` berisi **41 modul**; `tests/test_ai/` berisi **962 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -220,7 +220,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
 | `layer6_addendum.py` | adendum pasca-freeze Lapis 6: catatan beku 6.1–6.3 tetap objek di tag, dan tiap perubahan sesudahnya satu baris — pointer, nilai lama → sekarang, alasan, commit penyebab, dan bukti kesetaraan yang diperiksa dari objek git; ketiga verifiernya membaca catatan beku dan adendum | `test_nui_layer6_addendum.py` (25) |
-| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (40) |
+| `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (41) |
 | `layer7_decision.py` | DECIDE Lapis 7: satu hasil kontrak `layer7.evaluate` atau `layer7.expect` jadi satu decision record deterministik — ALLOW, DENY, atau STOP / REPORT, dengan `record_sha256` dan `verify()`; ALLOW bukan eksekusi, dan tidak ada yang dijalankan | `test_nui_layer7_decision.py` (37) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
@@ -280,7 +280,7 @@ pemilik tuliskan, termasuk "tes mana yang harus gagal kalau berkas ini rusak".
 Direktif keempat meminta node **kelas, fungsi, dan dokumentasi** dengan relasi
 *references*, dan sekarang keduanya ada: 98 dokumen yang **git lacak** (edge
 `references`, tidak pernah dihitung sebagai import) dan 875 definisi tingkat
-atas di `src/` (edge `defines`). Graf kini **1.828 node, 4.682 edge**.
+atas di `src/` (edge `defines`). Graf kini **1.828 node, 4.689 edge**.
 
 **Angka 745 yang dulu tertulis di sini salah.** Ia hasil `find` di disk, yang
 ikut menghitung folder pribadi yang tak pernah di-commit. Repositori memuat
@@ -1458,7 +1458,11 @@ dan 7.8 yang sudah ada:
 
 Berkas terlindung: `NUI/LAYER7.md`, `NUI/spec/layer5_collectors.json`,
 `NUI/spec/layer5_lima.yaml`, `src/hijaiyyah/nui/layer5.py`,
-`src/hijaiyyah/nui/layer7.py`, dan `lima.yaml` instance itu.
+`src/hijaiyyah/nui/layer7.py`, dan `lima.yaml` instance itu. Sejak 3 Oktober
+2026, atas keputusan pemilik menutup celah ini, juga yang dibaca pagar Lapis 5
+sebelum perintah apa pun berjalan — allowlist di `NUI/LAYERS.md` dan katalog
+`NUI/spec/layer5_catalog.json`, keduanya lewat `src/hijaiyyah/nui/usr.py` — dan
+`src/hijaiyyah/nui/layer7_decision.py`.
 
 **Terukur di VM `cosmictera-layer5`, 30 September 2026**, tanpa caffeinate:
 - **`expect` atas baseline lama** `20260930T041907Z-collectors`: STOP STALE,

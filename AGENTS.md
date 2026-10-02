@@ -2167,7 +2167,13 @@ Pemilik memutuskan urutannya:
 1. **Label**: hanya kolektor yang tidak dikenal → `UNKNOWN`; VM dan `run_id`
    tetap `AMBIGUOUS TARGET`. Satu commit tersendiri, tanpa suntingan Lapis 8.
 2. Sesudah itu: tutup celah `PROTECTED` di `src/hijaiyyah/nui/layer7.py`, lalu
-   rapikan kepala `NUI/LAYER7.md`.
+   rapikan kepala `NUI/LAYER7.md`. Yang ditambahkan ke `PROTECTED` adalah yang
+   dibaca pagar Lapis 5 sebelum perintah apa pun berjalan — `NUI/LAYERS.md`,
+   `NUI/spec/layer5_catalog.json`, dan `src/hijaiyyah/nui/usr.py` yang
+   membacanya — serta `src/hijaiyyah/nui/layer7_decision.py`. Tinjauan hanya
+   menyebut yang pertama dan yang terakhir; dua di tengah pilihan pelaksana,
+   karena komentar `PROTECTED` sendiri menyebut spec dan kode yang dijalankan
+   tindakan.
 3. **Syarat selesai Lapis 7 dan nama tag freeze-nya menunggu pemilik.**
 4. Kerangka kontrak Lapis 8 di-commit paling akhir.
 

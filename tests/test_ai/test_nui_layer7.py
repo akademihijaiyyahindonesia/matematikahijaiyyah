@@ -524,6 +524,22 @@ def test_a_change_outside_the_evidence_store_stops(act: SimpleNamespace, tmp_pat
         "no change outside the evidence store"]["why"]
 
 
+def test_what_the_guard_and_decide_read_is_protected() -> None:
+    """The owner's ruling of 3 October 2026: close the PROTECTED gap. What the
+    Layer 5 guard reads before any command runs -- the allowlist and the
+    collector catalog, through usr.py -- and the DECIDE module are held, each
+    path taken from the code that reads it, not written here a second time."""
+    from hijaiyyah.nui import layer7_decision, usr
+    source = (ROOT / "src" / "hijaiyyah" / "nui" / "layer5.py").read_text(encoding="utf-8")
+    assert 'usr.load("layer5_catalog")' in source and "usr.allowlist()" in source
+    read = {usr.LAYERS, usr.SPEC / "layer5_catalog.json"}
+    code = {Path(m.__file__) for m in (layer5, usr, l7, layer7_decision)}
+    held = set(l7.PROTECTED)
+    assert read | code <= held, sorted(map(str, (read | code) - held))
+    assert all(p.is_file() for p in held)
+    assert set(l7._protected(VM)) >= {str(p) for p in read | code}
+
+
 def test_the_preconditions_hold_the_action_back(act: SimpleNamespace) -> None:
     """Before layer5.record may run: a DENIED category, an unknown VM, a
     baseline gone stale, and no baseline at all each stop it."""

@@ -85,11 +85,17 @@ READ = "Observasi / read-only"
 RECORD = "Evidence, provenance, freshness, delta"
 #: What no recording of evidence may change: the contract, and the Layer 5
 #: spec, VM configuration and code that the action runs on (7.5); the VM's own
-#: lima.yaml is added by name. This module is held with them.
+#: lima.yaml is added by name. This module is held with them. Since 3 October
+#: 2026 also what the guard reads before any command runs -- the owner's
+#: allowlist in NUI/LAYERS.md and the collector catalog, both through usr.py --
+#: and the DECIDE module that turns this module's results into decisions.
 PROTECTED = (ROOT / "NUI" / "LAYER7.md", ROOT / "NUI" / "spec" / "layer5_collectors.json",
              ROOT / "NUI" / "spec" / "layer5_lima.yaml",
+             ROOT / "NUI" / "LAYERS.md", ROOT / "NUI" / "spec" / "layer5_catalog.json",
              ROOT / "src" / "hijaiyyah" / "nui" / "layer5.py",
-             ROOT / "src" / "hijaiyyah" / "nui" / "layer7.py")
+             ROOT / "src" / "hijaiyyah" / "nui" / "usr.py",
+             ROOT / "src" / "hijaiyyah" / "nui" / "layer7.py",
+             ROOT / "src" / "hijaiyyah" / "nui" / "layer7_decision.py")
 
 
 def authorizations(contract: Path | None = None) -> dict[str, str]:
