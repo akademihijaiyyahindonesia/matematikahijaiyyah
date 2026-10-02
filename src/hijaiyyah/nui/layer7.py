@@ -122,10 +122,16 @@ def _host(vm_name: Any, collector: Any, run_id: Any, now: datetime | None) -> di
     names = {c["name"]: c for c in spec["collectors"]}
     vms = {spec["host"]["instance"], spec["host"]["test_instance"]}
     k16 = "(vm_name, run_id), K-16"
-    if vm_name not in vms or collector not in names:
-        why = (f"`{vm_name}` is not a VM the Layer 5 spec names" if vm_name not in vms
-               else f"`{collector}` is not a collector of the Layer 5 spec")
-        return {"target identity": _cond("unknown", k16, AMBIGUOUS, why=why)}
+    if vm_name not in vms:
+        return {"target identity": _cond("unknown", k16, AMBIGUOUS,
+                                         why=f"`{vm_name}` is not a VM the Layer 5 spec names")}
+    if collector not in names:
+        # A name that maps to nothing known is UNKNOWN, not an ambiguous
+        # identity: the owner's mapping of 30 September 2026 (7.8), and the
+        # owner's ruling of 3 October 2026 that only the collector moves.
+        return {"target identity": _cond("unknown", "the collectors of the Layer 5 spec",
+                                         UNKNOWN, why=f"`{collector}` is not a collector "
+                                         "of the Layer 5 spec")}
     seen = layer5.observations(collector, vm_name)
     if run_id is not None:
         seen = [s for s in seen if s["run_id"] == run_id]

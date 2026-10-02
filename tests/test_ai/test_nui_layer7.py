@@ -202,7 +202,6 @@ def test_invalid_provenance_stops(run: Path) -> None:
 @pytest.mark.parametrize("target", [
     {"kind": "host", "vm_name": "another-vm", "collector": "processes"},
     {"kind": "host", "vm_name": None, "collector": "processes"},
-    {"kind": "host", "vm_name": VM, "collector": "no_such_collector"},
     {"kind": "host", "vm_name": VM, "collector": "processes", "run_id": "19700101T000000Z-x"},
 ])
 def test_an_ambiguous_identity_stops(run: Path, target: dict[str, Any]) -> None:
@@ -222,12 +221,15 @@ def test_an_ambiguous_identity_stops(run: Path, target: dict[str, Any]) -> None:
     {"kind": "rtl", "module": "hcpu", "rule": "no_such_rule"},
     {"kind": "rtl", "module": "no_such_module", "rule": "reset"},
     {"kind": "rtl", "module": "hcpu_sdio", "rule": "sd_busy"},
+    {"kind": "host", "vm_name": VM, "collector": "no_such_collector"},
     {"kind": "nothing we read"},
 ])
 def test_a_name_that_names_nothing_stops_unknown_never_ambiguous(target: dict[str, Any]) -> None:
     """The owner's fourth row of 7.8: a name that maps to no known object.
     hcpu_sdio is an RTL file the spec does not map to a subsystem, and the
-    evaluator does not invent the link from the name."""
+    evaluator does not invent the link from the name. A collector the Layer 5
+    spec does not name is one too (the owner, 3 October 2026); an unknown VM
+    or run_id stays AMBIGUOUS TARGET."""
     r = l7.evaluate(target)
     assert r["conditions"] == [l7.UNKNOWN] and r["decision"] == l7.STOP
     assert r["preconditions"]["target identity"]["value"] == "unknown"

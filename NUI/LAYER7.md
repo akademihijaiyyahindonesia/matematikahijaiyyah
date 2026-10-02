@@ -842,6 +842,10 @@ menyediakan pemetaan nama itu. Hubungan `hcpu_sdio` → subsistem tertentu
 STOP / REPORT, termasuk `UNKNOWN`: nama yang tidak dikenal tidak pernah menjadi
 alasan Lapis 7 bertindak.
 
+**Kolektor yang tidak dikenal → `UNKNOWN`** (pemilik, 3 Oktober 2026). Nama
+kolektor yang tidak ada di spec Lapis 5 adalah nama yang tak terpetakan, bukan
+identitas yang ambigu. VM dan `run_id` tetap `AMBIGUOUS TARGET`.
+
 Untuk ketiganya, dari pagar 7.2: `UNKNOWN` bukan izin bertindak,
 `NOT_COVERED` bukan keberhasilan, `KNOWN_DISCREPANCY` bukan paritas, dan
 ketiadaan evidence bukan alasan mengubah state.

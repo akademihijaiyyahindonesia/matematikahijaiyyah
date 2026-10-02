@@ -2160,6 +2160,17 @@ repository state."* Targetnya: gerbang kembali ke HDMI saja, dan R3
   (`src/hijaiyyah/nui/knowledge.py`) dan model 6.4 masih membaca catatan 6.3
   yang beku, termasuk hash lama `rtl/fpga/gowin/hcpu_gowin_top.v`.
 
+**Keputusan pemilik, 3 Oktober 2026 — tinjauan Lapis 7, dan urutannya.**
+Sebuah tinjauan Lapis 7 diukur terhadap berkasnya, dan semua klaimnya terbukti.
+Pemilik memutuskan urutannya:
+
+1. **Label**: hanya kolektor yang tidak dikenal → `UNKNOWN`; VM dan `run_id`
+   tetap `AMBIGUOUS TARGET`. Satu commit tersendiri, tanpa suntingan Lapis 8.
+2. Sesudah itu: tutup celah `PROTECTED` di `src/hijaiyyah/nui/layer7.py`, lalu
+   rapikan kepala `NUI/LAYER7.md`.
+3. **Syarat selesai Lapis 7 dan nama tag freeze-nya menunggu pemilik.**
+4. Kerangka kontrak Lapis 8 di-commit paling akhir.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
