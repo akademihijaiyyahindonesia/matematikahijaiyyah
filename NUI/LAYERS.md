@@ -1663,7 +1663,12 @@ berhibernasi — itu yang membunuh percobaan pertama 72 jam.
 **Cara verifikasi.** Pemulihan dihitung dari catatan lari: berapa peluncuran,
 berapa diam, milik siapa.
 
-**Syarat selesai.** Belum ditetapkan.
+**Lapis 7 berhenti di sini** (pemilik, 1 Oktober 2026): `SEND_PROGRAM` tetap
+HARD STOP, dan langkah berikutnya kontrak Lapis 8. Status kininya di kepala
+`NUI/LAYER7.md`.
+
+**Syarat selesai.** Belum ditetapkan — keputusan pemilik, bersama nama tag
+freeze Lapis 7 (pemilik, 3 Oktober 2026).
 
 ---
 

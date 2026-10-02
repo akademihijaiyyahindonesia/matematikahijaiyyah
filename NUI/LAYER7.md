@@ -5,84 +5,24 @@ Kontrak operasi otonom. Kerangkanya ditulis atas perintah pemilik, 30 September
 lapis ini di `NUI/LAYERS.md` adalah *Operasi otonom*; *Autonomous Operation*
 adalah padanan yang pemilik pakai untuk dokumen ini.
 
-**Status keputusan** (pemilik, 30 September 2026):
+**Status kini** (dihimpun dari keputusan pemilik yang tercatat; riwayatnya
+utuh di bagian *Riwayat status* di akhir dokumen):
 
 ```text
-7.2  DEFINED / LOCKED
-7.3  EXISTING CONTRACT
-7.4  READ ACTIONS AUTHORIZED
-     MUTATING ACTIONS DENIED
-7.5  AUTHORIZATION BOUNDARY DEFINED
-7.6  EXISTING CONTRACT
-7.7  EXISTING CONTRACT
-7.8  EXISTING UNKNOWN / NOT_COVERED CONTRACT
-7.9  HISTORICAL EVIDENCE ONLY
-7.10 NON-CLAIMS PRESERVED
-7.11 LOCKED
-```
-
-**Status sesudah evaluator baca-saja** (pemilik, 30 September 2026):
-
-```text
-638d827
-Lapis 7 evaluator read-only: GREEN
-
-7.6:
-AMBIGUOUS TARGET = identity ambiguity only
-
-7.8:
-UNKNOWN              → STOP / REPORT
-NOT_COVERED          → STOP / REPORT
-KNOWN_DISCREPANCY    → STOP / REPORT
-STALE                → STOP / REPORT
-INVALID PROVENANCE   → STOP / REPORT
-UNAUTHORIZED ACTION  → STOP / REPORT
-
-7.7:
-NOT YET VALIDATED — no authorized mutative action exists
-```
-
-**Status resmi sesudah label diselaraskan** (pemilik, 30 September 2026):
-
-```text
-Layer 7 read-only evaluator
-Commit: 865959e
-Status: GREEN
-Scope: READ → EVALUATE → GATE → EVIDENCE / REPORT
-Mutative authorization: DENIED
-```
-
-**Status resmi sesudah 7.7 divalidasi** (pemilik, 30 September 2026):
-
-```text
-Layer 7 evaluator                 GREEN
-7.7 post-action success           VALIDATED
-Commit                            b7fa5e8
-Authorization boundary            UNCHANGED
-Mutative DENIED actions            DENIED
-```
-
-**Status resmi sesudah DECIDE** (pemilik, 30 September 2026):
-
-```text
-Layer 7 evaluator              GREEN
-7.7 post-action success        VALIDATED
-Decision / Dry-Run             GREEN
-Authorization boundary         UNCHANGED
-Mutative actions               DENIED
-Commit                         46f4b14
-```
-
-**Status resmi sesudah proposal `SEND_PROGRAM`** (pemilik, 1 Oktober 2026):
-
-```text
-Layer 7 evaluator              GREEN
-7.7 post-action success        VALIDATED
-Decision / Dry-Run             GREEN
-SEND_PROGRAM proposal          HARD STOP
+7.2  DEFINED / LOCKED                       pemilik, 30 September 2026
+7.5  AUTHORIZATION BOUNDARY DEFINED         pemilik, 30 September 2026
+7.11 LOCKED                                 pemilik, 30 September 2026
+Layer 7 evaluator              GREEN        638d827, 865959e
+7.7 post-action success        VALIDATED    b7fa5e8
+Decision / Dry-Run             GREEN        46f4b14
+SEND_PROGRAM proposal          HARD STOP    590baa6 GREEN
+Readiness evidence discovery   GREEN        08f1e36 — loader readiness not observable
 SEND_PROGRAM authorization     DENIED
 Mutative authorization         DENIED
-Commit                         590baa6
+Authorization boundary         UNCHANGED
+Layer 7                        STOPS HERE   pemilik, 1 Oktober 2026 — next: Layer 8 contract
+Completion condition           OWNER DECISION REQUIRED
+Freeze tag                     OWNER DECISION REQUIRED
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
@@ -922,3 +862,91 @@ sampingnya:
   sumbernya, bukan salinan di sini (R1);
 - nama dan slot baru tidak dikarang. Nama tag freeze Lapis 7, bila tiba
   waktunya, dari pemilik, seperti Lapis 4–6.
+
+---
+
+## Riwayat status
+
+Blok status sebagaimana ditulis pada tanggalnya, dipindah utuh dari kepala
+dokumen 3 Oktober 2026 atas perintah pemilik. Yang berlaku adalah *Status kini*
+di atas; blok yang lebih tua dibaca sebagai keadaan pada hari itu.
+
+**Status keputusan** (pemilik, 30 September 2026):
+
+```text
+7.2  DEFINED / LOCKED
+7.3  EXISTING CONTRACT
+7.4  READ ACTIONS AUTHORIZED
+     MUTATING ACTIONS DENIED
+7.5  AUTHORIZATION BOUNDARY DEFINED
+7.6  EXISTING CONTRACT
+7.7  EXISTING CONTRACT
+7.8  EXISTING UNKNOWN / NOT_COVERED CONTRACT
+7.9  HISTORICAL EVIDENCE ONLY
+7.10 NON-CLAIMS PRESERVED
+7.11 LOCKED
+```
+
+**Status sesudah evaluator baca-saja** (pemilik, 30 September 2026):
+
+```text
+638d827
+Lapis 7 evaluator read-only: GREEN
+
+7.6:
+AMBIGUOUS TARGET = identity ambiguity only
+
+7.8:
+UNKNOWN              → STOP / REPORT
+NOT_COVERED          → STOP / REPORT
+KNOWN_DISCREPANCY    → STOP / REPORT
+STALE                → STOP / REPORT
+INVALID PROVENANCE   → STOP / REPORT
+UNAUTHORIZED ACTION  → STOP / REPORT
+
+7.7:
+NOT YET VALIDATED — no authorized mutative action exists
+```
+
+**Status resmi sesudah label diselaraskan** (pemilik, 30 September 2026):
+
+```text
+Layer 7 read-only evaluator
+Commit: 865959e
+Status: GREEN
+Scope: READ → EVALUATE → GATE → EVIDENCE / REPORT
+Mutative authorization: DENIED
+```
+
+**Status resmi sesudah 7.7 divalidasi** (pemilik, 30 September 2026):
+
+```text
+Layer 7 evaluator                 GREEN
+7.7 post-action success           VALIDATED
+Commit                            b7fa5e8
+Authorization boundary            UNCHANGED
+Mutative DENIED actions            DENIED
+```
+
+**Status resmi sesudah DECIDE** (pemilik, 30 September 2026):
+
+```text
+Layer 7 evaluator              GREEN
+7.7 post-action success        VALIDATED
+Decision / Dry-Run             GREEN
+Authorization boundary         UNCHANGED
+Mutative actions               DENIED
+Commit                         46f4b14
+```
+
+**Status resmi sesudah proposal `SEND_PROGRAM`** (pemilik, 1 Oktober 2026):
+
+```text
+Layer 7 evaluator              GREEN
+7.7 post-action success        VALIDATED
+Decision / Dry-Run             GREEN
+SEND_PROGRAM proposal          HARD STOP
+SEND_PROGRAM authorization     DENIED
+Mutative authorization         DENIED
+Commit                         590baa6
+```
