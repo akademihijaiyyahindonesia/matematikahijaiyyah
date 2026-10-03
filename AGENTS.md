@@ -2177,6 +2177,52 @@ Pemilik memutuskan urutannya:
 3. **Syarat selesai Lapis 7 dan nama tag freeze-nya menunggu pemilik.**
 4. Kerangka kontrak Lapis 8 di-commit paling akhir.
 
+### Keputusan pemilik, 3 Oktober 2026 — Portal 8888 di Tang Nano 20K
+
+Portal 8888 adalah **workstream tersendiri di `portal8888/`**, sengaja di luar
+`rtl/` supaya penjaga sidik jari dan penjaga testbench-yatim tidak terpicu.
+Labelnya tetap **[EH] / DESAIN**: ia belum masuk empat gerbang repo. Bukti dan
+angkanya tinggal di `portal8888/sim/EVIDENCE.md`, tidak disalin ke sini (R1).
+Yang pemilik putuskan hari itu, berurutan:
+
+- **Kalimat "Tang Nano 20K DITOLAK" dan "target KV260" dihapus** dari dokumen
+  Portal. Angka ukurnya tetap.
+- **Buffer frame dipindah ke RAM blok.** Penolakan itu bukan soal ukuran
+  desain: buffer 9.216 byte ditulis di blok ber-reset asinkron, jadi Yosys
+  menjadikannya 73.728 register.
+- **Nama pembungkus papan disetujui: `hijaiyyah_portal8888_gowin_top`**, di
+  `portal8888/fpga/gowin/`, dengan bench `tb_hijaiyyah_portal8888_gowin_top`,
+  protokol `portal8888/ref/portal_uart.py`, dan uji papan
+  `portal8888/scripts/portal8888_uart_test.py`. Sepuluh pin dan berkas
+  constraint yang sama dengan pembungkus HMAC.
+- **Perampingan RTL** sesudah place and route tidak selesai: lima kunci ke RAM
+  blok dan masuk per byte, `sealed_body` tidak lagi register, `cur_hash`
+  dibuang. `rtl/hijaiyyah_hmac.v` tidak disentuh.
+- **Memuat bitstream ke papan dan menjalankan uji papan**, dua kali: skenario,
+  lalu 200 frame asli yang pemilik tangkap sendiri dengan `tcpdump`. Ini uji
+  laboratorium atas perintah pemilik, **bukan tindakan otonom NUI**; tabel 7.4
+  `NUI/LAYER7.md` tidak berubah.
+- **Kartu SD untuk menyimpan catatan tersegel: sesudah ini**, sebagai langkah
+  tersendiri. Kunci tidak ditaruh di kartu.
+- **`portal8888/` di-commit.**
+
+Yang paling mudah dilanggar:
+
+- **Di GW2AR-18C, flip-flop yang masukan D-nya bukan dari LUT-nya sendiri tetap
+  memakai satu situs LUT.** Hitungan sintesis "LUT sekian persen, DFF sekian
+  persen" tidak menangkapnya: desain yang tampak 65% dan 75% ternyata butuh
+  123% situs, dan penempat berputar tanpa pesan galat. Yang dihitung adalah
+  LUT + ALU + flip-flop tanpa pasangan terhadap 20.736. Ini berlaku juga untuk
+  HCPU dan slot lain di papan ini.
+- **Penempat yang diam bukan penempat yang lambat.** nextpnr mencetak tiap
+  iterasi; satu menit tanpa baris iterasi berarti ia tidak maju.
+- **Batas klaim uji papan Portal**: frame dikirim host lewat UART, bukan
+  ditangkap dari kabel jaringan; waktu berjalan bebas, tanpa PPS; kunci
+  dikirim host, jadi host mengenalnya; bitstream di SRAM. Dua lari, satu papan.
+- **Yang masih menunggu pemilik**: perilaku `CTR` pada frame yang overflow
+  (terukur, tidak tertulis di kontrak), perilaku holdover saat PPS kembali,
+  nama modul selain top dan pembungkus, dan Ed25519.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
@@ -2623,6 +2669,32 @@ ia harus lebih baik daripada yang digantikannya — bukan sekadar berjalan. Yang
 mengikat: angka yang diukur ulang setelah desain berubah (R4), gerbang yang
 diuji dengan merusak apa yang dijaganya (R3), dan satu kebenaran di satu tempat
 (R1). Ketiganya di `cosmictera/RULES.md`.
+
+### Arah pemilik, 3 Oktober 2026 — yang terukur dicatat, dan menyempurnakan yang lain
+
+Dua kalimat pemilik, 3 Oktober 2026:
+
+> Setiap perubahan yang terukur dan teruji harus tercatat aturannya di AGENTS.md.
+
+> Dalam proses pengembangan, setiap program baru yang sudah diuji dan terukur
+> hasilnya dapat tercatat dan dimasukkan sebagai penyempurnaan semua program,
+> untuk terus menuju penyempurnaan sistem yang lebih baik.
+
+Cara menjalankannya:
+
+- **Sebuah perubahan belum selesai sebelum tercatat di sini.** Yang dicatat:
+  apa yang berubah, keputusan pemilik yang mendasarinya beserta tanggalnya,
+  tempat buktinya, dan aturan yang lahir darinya. Angkanya tetap tinggal di
+  halaman buktinya (R1); di sini cukup penunjuk dan aturannya.
+- **Hanya yang terukur dan teruji yang dicatat sebagai selesai.** Yang baru
+  ditulis, baru disimulasikan, atau baru sekali jalan dicatat dengan batasnya,
+  apa adanya (K12).
+- **Pelajaran dari satu program diperiksa terhadap program lain.** Bila sebuah
+  pengukuran membuka aturan yang berlaku umum — misalnya aturan situs LUT di
+  atas — ia ditulis sebagai aturan umum, dan program lain yang terkena disebut.
+- **Menerapkannya ke program lain tetap satu butir tersendiri**: diukur dulu,
+  empat gerbang, dan keputusan pemilik bila menyentuh desain, RTL, atau berkas
+  yang beku (K9). Catatan ini memberi arah, bukan izin mengubah.
 
 ### Tidak di-commit
 
