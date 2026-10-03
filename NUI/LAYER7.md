@@ -18,9 +18,10 @@ Decision / Dry-Run             GREEN        46f4b14
 SEND_PROGRAM proposal          HARD STOP    590baa6 GREEN
 Readiness evidence discovery   GREEN        08f1e36 — loader readiness not observable
 SEND_PROGRAM authorization     DENIED
+Portal recovery proposal       AWAITING OWNER DECISION   3 Oktober 2026 — akhir 7.4
 Mutative authorization         DENIED
 Authorization boundary         UNCHANGED
-Layer 7                        STOPS HERE   pemilik, 1 Oktober 2026 — next: Layer 8 contract
+Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
 Completion condition           OWNER DECISION REQUIRED
 Freeze tag                     OWNER DECISION REQUIRED
 ```
@@ -390,6 +391,124 @@ listing* walaupun adaptornya terpasang. Atas keputusan pemilik, 1 Oktober 2026,
 `/dev/tty.X` dan `/dev/cu.X` kini dianggap satu perangkat. Hanya alat capture
 yang berubah: rekaman P1 tetap seperti ditulis, dan kesimpulan penemuan ini
 tidak bergeser, karena identitas adaptor bukan identitas FPGA.
+
+### Proposal otorisasi: pemulihan slot Portal 8888
+
+```text
+STATUS: MENUNGGU KEPUTUSAN PEMILIK (ditulis atas perintah pemilik, 3 Oktober 2026)
+Authorization: DENIED
+Tabel 7.4 di atas tidak berubah. Proposal ini tidak memberi izin apa pun.
+```
+
+Perintah pemilik, 3 Oktober 2026: bagian *memulihkan, memulai ulang,
+mengisolasi kesalahan* dari tujuan Lapis 7 diselesaikan lebih dulu. Sesuai
+keputusan 30 September, jalannya adalah proposal untuk tindakan tertentu —
+target, prasyarat, ruang lingkup otorisasi, postcondition, evidence, dan
+kondisi berhenti — dan proposal itu sendiri tidak memberi izin.
+
+**Kenapa slot ini.** `SEND_PROGRAM` berhenti karena kesiapan loader tidak
+teramati dan hanya pernah tercipta oleh rekonfigurasi. Slot Portal 8888
+(`portal8888/fpga/gowin/hijaiyyah_portal8888_gowin_top.v`) berbeda dalam dua
+hal yang terukur:
+
+- **Ia menjawab.** Perintah jangkar `A` protokolnya hanya membaca: jawabannya
+  putaran, ROOT, dan TAG terakhir tiap sudut, dan tidak mengubah keadaan
+  Portal (`portal8888/ref/portal_uart.py`).
+- **Memuat ulang membuat keadaannya diketahui.** Sesudah bitstream dimuat ke
+  SRAM, Portal berada di keadaan awal: putaran 0, belum diprovisi, dan frame
+  pertama di-drop sebagai belum diprovisi.
+
+Mekanismenya sudah dua kali dijalankan di papan, 3 Oktober 2026, oleh manusia
+atas perintah pemilik — muat ke SRAM, provisi, uji, 0 salah (run
+`20261003T053504Z` dan `20261003T053754Z`, `portal8888/sim/EVIDENCE.md` §9).
+Seperti `rtl/scripts/burn_in.py` di 7.9, itu **historical evidence**, bukan
+dasar pemberian izin.
+
+**Target**: satu Tang Nano 20K di adaptor USB yang nomor serinya tercatat,
+memuat bitstream Portal yang SHA-256-nya tercatat, di port serial 115200.
+
+**Tiga tindakan yang diusulkan.** Urutannya urutan pembukaan: yang pertama
+tidak menyentuh papan sama sekali.
+
+| tindakan | isinya | mekanisme yang sudah ada |
+|---|---|---|
+| `ISOLATE_FAULT` | menggolongkan gangguan, lalu berhenti mengirim frame ke papan itu. Empat golongan: adaptor tidak terdaftar; adaptor ada tetapi papan tidak terdeteksi; papan terdeteksi tetapi tidak menjawab `A`; papan menjawab dengan segel atau jangkar yang salah | `list_ports.comports()`; `openFPGALoader --detect`; pemeriksa `portal8888/ref/portal_uart.py` |
+| `RESTART_PORTAL` | memuat ulang bitstream Portal ke **SRAM** | `openFPGALoader -b tangnano20k -m` |
+| `RECOVER_PORTAL` | `RESTART_PORTAL`, lalu provisi lima kunci, lock, waktu, lalu skenario uji | `portal8888/scripts/portal8888_uart_test.py` |
+
+`ISOLATE_FAULT` di sini penggolongan dan penghentian pengiriman. Ia tidak
+memutus daya, tidak menyentuh host lain, dan tidak mengubah repositori.
+
+**Yang diminta dibuka di tabel 7.4**, dan hanya pemilik yang membukanya (7.11):
+
+1. *Konfigurasi ulang papan* — terbatas pada bitstream Portal yang SHA-256-nya
+   tercatat, ke SRAM. Menulis flash papan tetap di luar.
+2. *Menulis ke UART papan* — terbatas pada protokol Portal, dan hanya sesudah
+   `RESTART_PORTAL` berhasil pada lari yang sama, atau perintah `A` saja
+   terhadap papan yang identitas bitstream-nya sudah KNOWN dari lari itu.
+3. `openFPGALoader --detect` — hanya membaca IDCODE lewat JTAG. Ia kini berada
+   di baris alat yang ditolak; diminta dibuka sebagai pembacaan.
+
+**Prasyarat**, dengan mekanisme yang ada dan keadaannya hari ini:
+
+| prasyarat | mekanisme yang ada | hari ini |
+|---|---|---|
+| target identity = KNOWN | nomor seri adaptor dari `list_ports.comports()`; IDCODE dari `--detect` | adaptor KNOWN; IDCODE UNKNOWN sampai `--detect` dibuka |
+| bitstream = evidence-backed | SHA-256 berkas `.fs` terhadap yang tercatat di `portal8888/sim/EVIDENCE.md` §9 | KNOWN untuk bitstream yang diuji di papan; bitstream yang dibangun ulang harus diukur ulang |
+| required communication | port serial tidak sedang dipegang proses lain | belum ada pemeriksaannya — pekerjaan implementasi |
+| expected outcome = predetermined | jawaban `A` sesudah muat ulang: putaran 0, ROOT nol; skenario `portal_uart.scenario()` | KNOWN |
+| pemicu = teramati | tidak ada jawaban `A` dalam tenggat, atau pemeriksa menemukan mismatch | KNOWN sebagai mekanisme; ambang tenggat belum ditetapkan |
+| authorization | tabel 7.4 | DENIED |
+
+**Postcondition yang ditetapkan sebelumnya:**
+
+- `ISOLATE_FAULT`: golongan gangguan, dengan byte mentah atau keluaran alat
+  yang mendasarinya, tercatat; tidak ada byte yang dikirim ke papan sesudah
+  golongan ditetapkan.
+- `RESTART_PORTAL`: pemuat berakhir tanpa galat — satu medan, bukan vonis —
+  **dan** jawaban `A` dalam tenggat menunjukkan putaran 0 dan ROOT nol.
+- `RECOVER_PORTAL`: skenario selesai dengan 0 mismatch oleh pemeriksa yang
+  sama dengan bench; byte mentah jawaban tersimpan.
+- Untuk ketiganya: berkas terlindung dan evidence store tetap, lewat mekanisme
+  `confirm()` 7.7; evidence di evidence store eksternal, bukan di `git`.
+
+**Hard stop.** Tanpa tindakan bila:
+
+```text
+target identity      UNKNOWN / AMBIGUOUS
+bitstream            hash tidak cocok dengan yang tercatat
+port serial          dipegang proses lain
+authorization        DENIED / absent
+pemicu               tidak teramati (tidak ada gangguan yang tergolong)
+percobaan            melewati batas ulang
+post-action evidence invalid
+```
+
+Dan tetap: `self-authorization = forbidden`.
+
+**Batas ulang**: paling banyak tiga `RESTART_PORTAL` berturut-turut untuk satu
+gangguan — angka usulan, menunggu pemilik. Sesudah itu STOP / REPORT.
+
+**Yang harus dibaca bersama proposal ini:**
+
+- **Pemulihan memutus rantai.** Kunci, PREV, ROOT, dan jangkar tinggal di SRAM;
+  memuat ulang menghapusnya. Catatan sesudah pemulihan adalah rantai baru.
+  Jangkar terakhir sebelum gangguan hanya terselamatkan bila sempat terbaca,
+  dan pemulihan tidak boleh dilaporkan sebagai kelanjutan rantai lama.
+- **Kunci diprovisi host**, jadi pemulihan otonom berarti kunci berada di
+  host yang menjalankannya. Itu batas laboratorium yang sama dengan §9.
+- **Ini pemulihan slot Portal, bukan sistem komputasi utama.** Tidak ada sisi
+  host di repositori yang dipulihkan olehnya.
+- **Byte ke papan yang tidak menjalankan Portal** diterima program yang sedang
+  berjalan — risiko yang sama dengan `SEND_PROGRAM`. Karena itu penulisan UART
+  hanya sesudah muat ulang pada lari yang sama.
+- **`confirm()` masih mempercayai `expected` apa adanya**, dan berkas yang
+  hilang masih memicu exception. Keduanya sebaiknya ditutup sebelum tindakan
+  mutatif pertama dibuka.
+
+**Sengaja tidak masuk proposal ini**: menulis flash papan, sepuluh perintah
+host lama, menjaga host tetap terjaga, mutasi repositori atau konfigurasi,
+`SEND_PROGRAM`, dan slot selain Portal.
 
 ## 7.5 Authorization Boundary
 

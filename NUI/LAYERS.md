@@ -1667,6 +1667,11 @@ berapa diam, milik siapa.
 HARD STOP, dan langkah berikutnya kontrak Lapis 8. Status kininya di kepala
 `NUI/LAYER7.md`.
 
+**Dibuka lagi, pemilik 3 Oktober 2026**: bagian *memulihkan, memulai ulang,
+mengisolasi kesalahan* diselesaikan lebih dulu. Proposalnya — tiga tindakan
+atas slot Portal 8888, semuanya masih DENIED — ada di akhir 7.4
+`NUI/LAYER7.md`, dan kontrak Lapis 8 menunggu sesudahnya.
+
 **Syarat selesai.** Belum ditetapkan — keputusan pemilik, bersama nama tag
 freeze Lapis 7 (pemilik, 3 Oktober 2026).
 

@@ -2223,6 +2223,20 @@ Yang paling mudah dilanggar:
   (terukur, tidak tertulis di kontrak), perilaku holdover saat PPS kembali,
   nama modul selain top dan pembungkus, dan Ed25519.
 
+**Perintah pemilik, 3 Oktober 2026 — pulihkan, mulai ulang, isolasi: proposal
+dulu.** Pemilik memerintahkan bagian *memulihkan, memulai ulang, mengisolasi
+kesalahan* dari tujuan Lapis 7 diselesaikan sebelum lapis itu ditutup, lalu
+memerintahkan proposalnya ditulis. Proposalnya di akhir 7.4 `NUI/LAYER7.md`:
+tiga tindakan atas slot Portal 8888 — `ISOLATE_FAULT`, `RESTART_PORTAL`,
+`RECOVER_PORTAL`. Yang paling mudah dilanggar:
+
+- **Proposal itu belum izin.** Tabel 7.4 tidak berubah dan ketiganya DENIED
+  sampai pemilik membuka barisnya satu per satu.
+- **Syarat selesai dan tag freeze Lapis 7 menunggu ini**, jadi kerangka Lapis 8
+  tetap paling akhir.
+- **Pemulihan memutus rantai Portal** dan tidak boleh dilaporkan sebagai
+  kelanjutannya.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
