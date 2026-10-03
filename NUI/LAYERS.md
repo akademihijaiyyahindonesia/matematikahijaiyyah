@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **41 modul**; `tests/test_ai/` berisi **962 tes**
+`src/hijaiyyah/nui/` berisi **42 modul**; `tests/test_ai/` berisi **982 tes**
 yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -1671,6 +1671,25 @@ HARD STOP, dan langkah berikutnya kontrak Lapis 8. Status kininya di kepala
 mengisolasi kesalahan* diselesaikan lebih dulu. Proposalnya — tiga tindakan
 atas slot Portal 8888, semuanya masih DENIED — ada di akhir 7.4
 `NUI/LAYER7.md`, dan kontrak Lapis 8 menunggu sesudahnya.
+
+**`ISOLATE_FAULT`, 3 Oktober 2026** — dibuka pemilik bersama pembacaan
+`openFPGALoader --detect`; `RESTART_PORTAL`, `RECOVER_PORTAL`, penulisan UART,
+dan konfigurasi ulang papan tetap DENIED. Implementasinya
+`src/hijaiyyah/nui/layer7_portal.py`, dan ia tidak mengirim satu byte pun ke
+papan. `tests/test_ai/test_nui_layer7_portal.py`, 20 tes, dengan rekaman lari
+yang dibuat model papan di dalam tes, bukan oleh pemeriksa yang diuji:
+- empat golongan gangguan, masing-masing dari sumber yang menunjukkannya;
+- papan lain berhenti `AMBIGUOUS TARGET`, papan yang terdeteksi tetapi belum
+  pernah ditanya berhenti `UNKNOWN`, rekaman basi berhenti `STALE`;
+- tanpa kedua baris 7.4, tidak ada perintah yang dijalankan;
+- perintah deteksi persis, pemindai panggilan AST, dan uji tanpa efek samping.
+Sepuluh sabotase membuatnya merah (R3). Terukur di Mac dan papan yang
+terpasang, 3 Oktober 2026, hanya pembacaan: adaptor `2025030317` terdaftar di
+dua port, `--detect` memberi IDCODE `0x81b` dan `GW2A(R)-18(C)`; tanpa rekaman
+hasilnya STOP / `UNKNOWN`, dengan rekaman pagi itu (umur 3.596 detik) STOP /
+`STALE`, dan nomor seri yang tidak ada memberi `ADAPTER_ABSENT`. Golongan
+`BOARD_SILENT` dan `SEAL_MISMATCH` **belum pernah terjadi di papan**: keduanya
+baru terbukti atas rekaman buatan.
 
 **Syarat selesai.** Belum ditetapkan — keputusan pemilik, bersama nama tag
 freeze Lapis 7 (pemilik, 3 Oktober 2026).

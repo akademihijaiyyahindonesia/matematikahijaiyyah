@@ -2237,6 +2237,11 @@ tiga tindakan atas slot Portal 8888 — `ISOLATE_FAULT`, `RESTART_PORTAL`,
   papan. `RESTART_PORTAL`, `RECOVER_PORTAL`, penulisan UART, dan konfigurasi
   ulang papan tetap DENIED. Selama UART belum dibuka, `ISOLATE_FAULT` tidak
   mengirim satu byte pun.
+- **Nama modulnya dari pemilik: `src/hijaiyyah/nui/layer7_portal.py`**, di
+  samping `src/hijaiyyah/nui/layer7.py` dan
+  `src/hijaiyyah/nui/layer7_decision.py`. Hasil ujinya di
+  `NUI/LAYERS.md`, Lapis 7. Dua golongannya, papan diam dan segel salah,
+  baru terbukti atas rekaman buatan, belum di papan.
 - **Syarat selesai dan tag freeze Lapis 7 menunggu ini**, jadi kerangka Lapis 8
   tetap paling akhir.
 - **Pemulihan memutus rantai Portal** dan tidak boleh dilaporkan sebagai

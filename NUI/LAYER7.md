@@ -455,6 +455,15 @@ sudah ada di evidence store — bukan dari perintah `A` yang ia kirim sendiri.
 Papan yang terdeteksi tetapi belum pernah ditanya tetap `UNKNOWN`, bukan
 "diam".
 
+**`ISOLATE_FAULT` diimplementasi**, 3 Oktober 2026, di
+`src/hijaiyyah/nui/layer7_portal.py` — nama modulnya dari pemilik. Satu-satunya
+perintah yang ia jalankan adalah `openFPGALoader --detect -b tangnano20k`,
+persis, tanpa berkas bitstream; ia tidak menulis berkas dan tidak membuka port
+serial. Rekaman lari dinilai oleh pemeriksa yang sama dengan bench dan uji
+papan. Rekaman yang lebih tua dari ambang kesegaran berhenti sebagai `STALE`,
+dan rekaman dengan frame tangkapan (`--pcap`) tidak dinilai ulang karena
+frame-nya tidak ada di rekaman. Hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
+
 **Yang diminta dibuka di tabel 7.4**, dan hanya pemilik yang membukanya (7.11):
 
 1. *Konfigurasi ulang papan* — terbatas pada bitstream Portal yang SHA-256-nya
