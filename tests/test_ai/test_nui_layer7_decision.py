@@ -259,7 +259,10 @@ def test_deciding_has_no_side_effect(run: Path, monkeypatch: pytest.MonkeyPatch)
     records = [d.decide(r) for r in results]
     monkeypatch.undo()
     assert _tree(store) == before
-    assert [r["decision"] for r in records].count(d.ALLOW) == 3
+    # every AUTHORIZED category of 7.4 on fresh evidence, and the expectation
+    allowed = sum(1 for v in l7.authorizations().values() if v == "AUTHORIZED") + 1
+    assert allowed == 5
+    assert [r["decision"] for r in records].count(d.ALLOW) == allowed
 
 
 def test_the_command_line_decides_and_acts_on_nothing(run: Path, tmp_path: Path,
