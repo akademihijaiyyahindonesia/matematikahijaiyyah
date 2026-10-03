@@ -2323,6 +2323,45 @@ dashboard, pencacah siklus bebas, dan timer. Yang belum ada: pengukuran
 milidetik. Anomali laju hanya bisa dinamai sesudah laju normal diukur, dan itu
 persis tahap 4 kerangka laboratorium (burn-in 24/72/168 jam).
 
+### Arah pemilik, 3 Oktober 2026 — CosmicTera Computing: pelengkap, dan cadangan otonom
+
+Kalimat pemilik, 3 Oktober 2026:
+
+> CosmicTera Computing domain baru yang diuji dan dikembangkan untuk melengkapi
+> kekurangan dalam sistem komputasi yang sudah ada, juga sebagai back up
+> komputasi otonom yang memonitor, mengamankan, menjaga sistem komputasi utama.
+
+Ini mempertajam arah 18 September ("lapisan di atas, bukan pengganti"), dan
+seperti arah itu ia **arah, bukan butir kerja**. Dua perannya:
+
+1. **Pelengkap.** Sistem komputasi biasa mencatat dirinya sendiri, jadi siapa
+   pun yang menguasainya bisa mengubah catatannya. CosmicTera menaruh
+   pencatatan, penyegelan, dan pemeriksaan di luar jangkauan sistem itu, di
+   perangkat keras dengan arsitektur yang berbeda.
+2. **Cadangan otonom.** Mesin kedua yang tetap berdiri saat sistem utama
+   terganggu, dan masih memegang catatan yang utuh serta bahan pemulihan.
+
+Tiga tugasnya, dengan yang terukur hari ini. Angkanya tinggal di halaman
+buktinya (R1):
+
+| tugas | yang sudah terukur | yang belum ada |
+|---|---|---|
+| memonitor | Portal 8888 menyegel frame asli di papan (`portal8888/sim/EVIDENCE.md` §9); observasi host baca-saja Lapis 5 | tangkapan langsung dari kabel jaringan; garis dasar "normal" untuk menamai anomali |
+| mengamankan | HMAC-SHA256 di papan; rantai, ROOT, dan jangkar Portal | kunci yang lahir di dalam perangkat; otorisasi Ed25519 |
+| menjaga | kontrak dan evaluator Lapis 7; pemulihan burn-in dalam satu harness | tindakan mutatif seluruhnya DENIED; belum ada pemulihan atas sistem utama |
+
+Yang paling mudah dilanggar:
+
+- **"Otonom" tidak menciptakan kewenangan** (7.2 `NUI/LAYER7.md`). Memonitor
+  dan mengamankan berjalan tanpa tindakan mutatif; "menjaga" dalam arti
+  memulihkan baru ada sesudah pemilik membuka tindakan satu per satu.
+- **Tiga hal memisahkan arah ini dari buktinya**: jalur ke sistem utama (papan
+  hari ini hanya menerima frame yang dikirim host lewat UART), ingatan yang
+  bertahan melewati mati daya (kartu SD, langkah berikutnya), dan kewenangan
+  bertindak.
+- **"Lebih aman" atau "lebih tahan" tidak ditulis sebelum ada lari serangan
+  dan pengukurannya** — syarat pemilik sendiri sejak 18 September.
+
 ### Berikutnya — keputusan pemilik, 11 September 2026
 
 Pekerjaan berikutnya sudah tercatat di `cosmictera-build/ROADMAP.md` (Fase 5–7)
