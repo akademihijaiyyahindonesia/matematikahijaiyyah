@@ -1737,6 +1737,11 @@ atas model, dan terukur satu kali di papan (di atas). Nama tag freeze-nya dari
 pemilik, `layer7-freeze-2026-10-03`, dipasang sesudah uji papan itu atas
 perintah pemilik.
 
+**Sesudah freeze** (pemilik, 3 Oktober 2026): sistem pertama di luar CosmicTera
+yang dijaga adalah VM Linux Lapis 5, lalu Windows. Proposal memulai ulang satu
+layanan di VM itu ada di akhir 7.4 `NUI/LAYER7.md`, sebagai adendum; semuanya
+masih DENIED.
+
 ---
 
 ## Lapis 8 — Diagnostik otonom

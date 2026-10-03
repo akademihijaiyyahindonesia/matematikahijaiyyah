@@ -2267,6 +2267,13 @@ tiga tindakan atas slot Portal 8888 — `ISOLATE_FAULT`, `RESTART_PORTAL`,
   akhir.
 - **Masih menunggu pemilik**: tenggat jawaban (dipakai 5 detik dari skrip
   papan), nama direktori evidence tindakan Portal, dan dua celah `confirm()`.
+- **Arah pemilik sesudah freeze, 3 Oktober 2026: "1. sistem linux kemudian
+  sistem window dst".** Sistem pertama di luar CosmicTera yang dijaga adalah VM
+  Linux yang sudah diamati Lapis 5; Windows sesudahnya, dan belum punya host,
+  kolektor, atau daftar izin di repositori. Proposalnya — memulai ulang satu
+  unit, `cron.service` diusulkan — ada di akhir 7.4 `NUI/LAYER7.md` sebagai
+  adendum pasca-freeze. **Ia tidak membuka apa pun**: `systemctl start` dan
+  `sudo` tetap tidak diizinkan sampai pemilik membukanya.
 - **Pemulihan memutus rantai Portal** dan tidak boleh dilaporkan sebagai
   kelanjutannya.
 

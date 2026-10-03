@@ -25,6 +25,7 @@ Authorization boundary         EXTENDED     pemilik, 3 Oktober 2026 — izin 9�
 Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
 Completion condition           mengisolasi, memulihkan, dan merekam — pemilik, 3 Oktober 2026
 Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan
+Linux service recovery         DIUSULKAN    adendum pasca-freeze, akhir 7.4 — semua DENIED
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
@@ -593,6 +594,99 @@ Angkanya dibaca kode dari blok status proposal ini (R1).
 **Sengaja tidak masuk proposal ini**: menulis flash papan, sepuluh perintah
 host lama, menjaga host tetap terjaga, mutasi repositori atau konfigurasi,
 `SEND_PROGRAM`, dan slot selain Portal.
+
+### Proposal otorisasi: pemulihan satu layanan di VM Linux
+
+```text
+STATUS: DIUSULKAN — adendum pasca-freeze, 3 Oktober 2026
+Authorization: DENIED untuk semua tindakan di bawah
+Tabel 7.4 tidak berubah. Proposal ini tidak memberi izin apa pun.
+```
+
+Arah pemilik, 3 Oktober 2026, dalam kata-katanya: "1. sistem linux kemudian
+sistem window dst". Lapis 7 sudah mengisolasi, memulihkan, dan merekam untuk
+slot Portal 8888 — bagian dari CosmicTera sendiri. Proposal ini untuk sistem
+pertama **di luar** CosmicTera yang dijaga: VM Linux yang sudah diamati
+Lapis 5. Ditulis sesudah tag `layer7-freeze-2026-10-03`, jadi ia adendum, dan
+commit-nya terpisah.
+
+**Yang sudah ada dan terukur.** VM `cosmictera-layer5` (Ubuntu Server 24.04
+ARM64 di bawah Lima) berjalan dan diamati sebelas kolektor baca-saja;
+evidence-nya di luar repositori, dengan aturan kesegaran dari
+`NUI/spec/layer5_collectors.json`. Membaca satu unit sudah diizinkan: katalog
+`READ SERVICE` adalah `systemctl status <unit>`, dan jurnal satu unit adalah
+bentuk K-4. Yang tidak ada: tindakan apa pun. `systemctl start`,
+`systemctl stop`, `kill`, `reboot`, dan enam perintah lain ada di daftar belum
+diizinkan (`NUI/LAYERS.md`, Lapis 5), dan `sudo` tidak diizinkan (K-12).
+
+**Target yang diusulkan**: satu unit, `cron.service`, di instance uji
+`cosmictera-layer5-uji` lebih dulu, baru di `cosmictera-layer5`. Alasannya:
+unit itu ada di observasi `20260930T154243Z-collectors`; ia bukan jalur
+perintah (`ssh.service`), bukan jurnal, dan bukan jaringan; dan menghentikannya
+tidak mengganggu unit lain. Unit dan instansinya keputusan pemilik.
+
+**Tiga tindakan yang diusulkan**, dalam urutan pembukaan:
+
+1. *Menggolongkan gangguan layanan* — hanya membaca. Empat golongan: VM tidak
+   menjawab; unit aktif (tanpa gangguan); unit tidak aktif; unit gagal.
+   Sumbernya `systemctl status <unit>` dan jurnal unit itu, lewat `observe()`
+   dan pagarnya yang sudah ada.
+2. *Memulai ulang satu unit* — `sudo systemctl start <unit>`, argv persis itu,
+   hanya untuk unit yang disebut, dan hanya atas gangguan "tidak aktif" atau
+   "gagal" yang tergolong dari observasi yang masih segar.
+3. *Merekam* — tiap percobaan, exit code, stdout, stderr, dan pembacaan
+   sesudahnya, di evidence store di luar repositori.
+
+**Yang harus dibuka pemilik** (7.11), dan tidak satu pun dibuka di sini:
+
+- `systemctl start`, terbatas pada satu unit yang disebut;
+- `sudo`, terbatas pada argv itu saja. Ini membalik sebagian K-12, jadi
+  keputusannya tersendiri;
+- kelas outcome baru. Hari ini hanya exit 0 yang `PASS`, dan `systemctl status`
+  atas unit yang tidak aktif keluar dengan kode bukan nol, jadi terbaca
+  `collector_error`. Supaya "unit tidak aktif" bisa digolongkan, kontrak
+  outcome perlu satu kelas lagi. Kode keluarnya belum saya ukur di VM ini;
+- batas ulang. Untuk Portal pemilik menetapkan 3; angka yang sama diusulkan.
+
+**Prasyarat**: identitas `(vm_name, run_id)` tunggal; observasi segar;
+provenance manifest sah; unit yang disebut sama dengan unit di otorisasi;
+gangguan tergolong.
+
+**Postcondition yang ditetapkan sebelumnya**: `systemctl status <unit>`
+sesudah tindakan menunjukkan unit aktif, dari observasi baru; exit code
+perintah mulai hanya satu medan, bukan vonis; berkas terlindung dan rekaman
+lama tidak berubah.
+
+**Hard stop.** Tanpa tindakan bila:
+
+```text
+target identity      UNKNOWN / AMBIGUOUS
+observasi            STALE
+unit                 bukan unit yang diotorisasi
+gangguan             tidak tergolong, atau VM tidak menjawab
+authorization        DENIED / absent
+percobaan            melewati batas ulang
+post-action evidence invalid
+```
+
+Dan tetap: `self-authorization = forbidden`.
+
+**Yang harus dibaca bersama proposal ini:**
+
+- **Gangguan ujinya dibuat manusia.** `systemctl stop` tetap DENIED bagi NUI;
+  menghentikan unit untuk uji adalah langkah laboratorium atas perintah
+  pemilik, seperti gangguan Portal 3 Oktober 2026.
+- **VM yang mati tidak dipulihkan olehnya.** Menyalakan VM (`limactl start`)
+  tidak diusulkan; "VM tidak menjawab" berhenti dan melapor.
+- **Ini VM di Mac, bukan sistem produksi.** Yang dibuktikan adalah rantai
+  lihat → putuskan → bertindak → rekam pada satu layanan Linux.
+- **Windows belum punya apa pun di repositori**: tidak ada host, tidak ada
+  kolektor, tidak ada daftar izin. Ia butuh keputusan host sendiri, seperti
+  keputusan 21 September 2026 untuk Linux, sebelum proposal apa pun.
+
+**Sengaja tidak masuk proposal ini**: `systemctl stop`, `kill`, `reboot`,
+`shutdown`, perintah `docker`, `rm`, `mv`, unit selain yang disebut, menyalakan
+atau mematikan VM, Mac host, dan Windows.
 
 ## 7.5 Authorization Boundary
 
