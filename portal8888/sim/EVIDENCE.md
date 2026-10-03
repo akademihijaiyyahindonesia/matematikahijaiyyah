@@ -280,7 +280,7 @@ LUT4      15.848 / 20.736   76%
 DFF        8.080 / 15.552   51%
 ALU        1.840 / 15.552   11%
 BSRAM          6 /     46   13%
-bitstream  7.261.470 byte, sha256 bbf91a4d6c883983...
+bitstream  7.261.470 byte, sha256 bbf91a4d6c883983f667de00b24d123a421189172f52674aab6cacb7f31162b3
 ```
 
 nextpnr mencetak 77,03 MHz sesudah routing untuk clock 27 MHz ini. **Fmax tidak

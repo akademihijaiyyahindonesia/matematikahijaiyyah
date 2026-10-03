@@ -179,8 +179,8 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **42 modul**; `tests/test_ai/` berisi **982 tes**
-yang lulus, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
+`src/hijaiyyah/nui/` berisi **42 modul**; tes di `tests/test_ai/` yang lulus
+berjumlah **1.015**, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
 | modul | apa yang ia lakukan | tes |
@@ -1673,10 +1673,11 @@ atas slot Portal 8888, semuanya masih DENIED — ada di akhir 7.4
 `NUI/LAYER7.md`, dan kontrak Lapis 8 menunggu sesudahnya.
 
 **`ISOLATE_FAULT`, 3 Oktober 2026** — dibuka pemilik bersama pembacaan
-`openFPGALoader --detect`; `RESTART_PORTAL`, `RECOVER_PORTAL`, penulisan UART,
-dan konfigurasi ulang papan tetap DENIED. Implementasinya
-`src/hijaiyyah/nui/layer7_portal.py`, dan ia tidak mengirim satu byte pun ke
-papan. `tests/test_ai/test_nui_layer7_portal.py`, 20 tes, dengan rekaman lari
+`openFPGALoader --detect`; pada keputusan itu `RESTART_PORTAL`,
+`RECOVER_PORTAL`, penulisan UART, dan konfigurasi ulang papan masih DENIED.
+Implementasinya `src/hijaiyyah/nui/layer7_portal.py`, dan ia tidak mengirim
+satu byte pun ke papan. `tests/test_ai/test_nui_layer7_portal.py`, 20 tes
+untuk bagian ini, dengan rekaman lari
 yang dibuat model papan di dalam tes, bukan oleh pemeriksa yang diuji:
 - empat golongan gangguan, masing-masing dari sumber yang menunjukkannya;
 - papan lain berhenti `AMBIGUOUS TARGET`, papan yang terdeteksi tetapi belum
@@ -1687,12 +1688,54 @@ Sepuluh sabotase membuatnya merah (R3). Terukur di Mac dan papan yang
 terpasang, 3 Oktober 2026, hanya pembacaan: adaptor `2025030317` terdaftar di
 dua port, `--detect` memberi IDCODE `0x81b` dan `GW2A(R)-18(C)`; tanpa rekaman
 hasilnya STOP / `UNKNOWN`, dengan rekaman pagi itu (umur 3.596 detik) STOP /
-`STALE`, dan nomor seri yang tidak ada memberi `ADAPTER_ABSENT`. Golongan
-`BOARD_SILENT` dan `SEAL_MISMATCH` **belum pernah terjadi di papan**: keduanya
-baru terbukti atas rekaman buatan.
+`STALE`, dan nomor seri yang tidak ada memberi `ADAPTER_ABSENT`. Pada saat
+itu `BOARD_SILENT` dan `SEAL_MISMATCH` baru terbukti atas rekaman buatan;
+`SEAL_MISMATCH` kemudian terukur di papan (di bawah), `BOARD_SILENT` belum.
 
-**Syarat selesai.** Belum ditetapkan — keputusan pemilik, bersama nama tag
-freeze Lapis 7 (pemilik, 3 Oktober 2026).
+**`RESTART_PORTAL` dan `RECOVER_PORTAL`, 3 Oktober 2026** — keputusan kedua
+pemilik hari itu membuka empat baris lagi di tabel 7.4 dan menetapkan batas
+ulang 3. Implementasinya `recover()` di modul yang sama; kontraknya di akhir
+7.4 `NUI/LAYER7.md`. 33 tes lagi di berkas tes yang sama, dengan papan, pemuat,
+dan port yang dimodelkan di dalam tes:
+- gangguan `BOARD_SILENT` atau `SEAL_MISMATCH` dari rekaman lari dipulihkan,
+  dan rekaman yang ditulisnya dibaca balik `ISOLATE_FAULT` sebagai tanpa
+  gangguan;
+- tanpa gangguan yang teramati, tanpa salah satu baris 7.4, dengan bitstream
+  lain, port adaptor lain, port yang dipegang, atau direktori evidence di
+  dalam repositori: tidak ada muat dan tidak ada byte;
+- tidak ada byte sebelum pemuat berakhir 0; muat yang gagal diulang;
+- tiga muat ulang dan tidak lebih, dihitung dari rekaman, dan gangguan yang
+  sudah terjawab tidak dipulihkan dua kali;
+- rekaman lama yang berubah selama tindakan membuat evidence-nya tidak sah.
+Delapan belas sabotase membuatnya merah (R3). Kunci yang diprovisi pemulihan
+adalah kunci laboratorium yang ada di repositori publik.
+
+**Di papan, 3 Oktober 2026, atas perintah pemilik** — satu lari, Tang Nano 20K
+di adaptor `2025030317`, port `/dev/cu.usbserial-20250303171`:
+- *Gangguannya dibuat dengan sengaja, bukan kerusakan.* Portal yang dimuat pagi
+  itu masih berjalan dan terkunci (CTR 211, putaran 53). Skrip papan
+  dijalankan terhadapnya tanpa muat ulang, dan pemeriksa menolaknya: 23
+  perintah, 29 salah. Rekamannya `portal_board_20261003T131922Z.txt`, sha256
+  `1503286142199bcb...`, di `portal8888/build/`, di luar git.
+- `ISOLATE_FAULT` atas rekaman itu, umur 3,3 detik: `SEAL_MISMATCH`.
+- `RECOVER_PORTAL`: percobaan 1 dari 3. Pemuat berakhir 0 pada bitstream
+  `bbf91a4d...`; jawaban `A` putaran 0 dan ROOT nol; skenario 23 perintah, 8
+  tersegel, 2 di-drop, 3 jangkar, 0 salah. Berkas terlindung dan rekaman lama
+  tidak berubah.
+- Rekamannya di luar repositori,
+  `~/cosmictera-layer5/portal8888/20261003T131925Z-recover/`: `manifest.json`
+  dan byte mentah `portal_board_20261003T131925Z.txt`, sha256
+  `5042985046f852c8...`. Dibaca balik `ISOLATE_FAULT`: tanpa gangguan.
+- Yang **belum** terjadi di papan: `BOARD_SILENT`, muat yang gagal, percobaan
+  kedua dan ketiga, dan berhenti di batas ulang. Itu baru terbukti atas model.
+- Nama direktori `portal8888` di bawah `~/cosmictera-layer5/` saya pilih untuk
+  lari ini; pemilik belum menamainya.
+
+**Syarat selesai.** Ditetapkan pemilik, 3 Oktober 2026: Lapis 7 bukan hanya
+mengisolasi, tetapi memulihkan dan merekam. Ketiganya diimplementasi, diuji
+atas model, dan terukur satu kali di papan (di atas). Nama tag freeze-nya dari
+pemilik, `layer7-freeze-2026-10-03`, dipasang sesudah uji papan itu atas
+perintah pemilik.
 
 ---
 

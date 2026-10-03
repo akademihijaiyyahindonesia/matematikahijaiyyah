@@ -116,7 +116,17 @@ def test_the_7_4_statuses_are_read_from_the_contract() -> None:
         "Observasi / read-only", "Evidence, provenance, freshness, delta",
         # opened by the owner, 3 October 2026: neither changes the board
         "Pembacaan identitas papan lewat JTAG (`openFPGALoader --detect`)",
-        "Isolasi kesalahan slot Portal 8888 (`ISOLATE_FAULT`)"}
+        "Isolasi kesalahan slot Portal 8888 (`ISOLATE_FAULT`)",
+        # opened by the owner's second decision of 3 October 2026: these four
+        # do change the board, within the Portal slot and nowhere else
+        "Konfigurasi ulang papan ke SRAM dengan bitstream Portal 8888 yang "
+        "SHA-256-nya tercatat",
+        "Penulisan UART protokol Portal 8888 sesudah muat ulang pada lari yang sama",
+        "Mulai ulang slot Portal 8888 (`RESTART_PORTAL`)",
+        "Pemulihan slot Portal 8888 (`RECOVER_PORTAL`)"}
+    for general in ("Konfigurasi ulang papan (`openFPGALoader`)", "Restart / recovery",
+                    "Isolasi kesalahan", "Mengirim program ke papan"):
+        assert table[general] == "DENIED", general
     assert sum(1 for v in table.values() if v == "DENIED") == 7
     text = l7.CONTRACT.read_text(encoding="utf-8")
     assert all(f"| {k} |" in text for k in table)

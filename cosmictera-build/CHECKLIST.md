@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **6.044 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **6.077 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 158 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,13 +41,13 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 6.044 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 6.077 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **6.042 lulus, 1 dilewati, 1 gagal dari 6.044**: sidik jari
+Hari ini kebenarannya **6.075 lulus, 1 dilewati, 1 gagal dari 6.077**: sidik jari
 `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.
 

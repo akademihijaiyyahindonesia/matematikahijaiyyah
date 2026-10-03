@@ -2240,10 +2240,33 @@ tiga tindakan atas slot Portal 8888 — `ISOLATE_FAULT`, `RESTART_PORTAL`,
 - **Nama modulnya dari pemilik: `src/hijaiyyah/nui/layer7_portal.py`**, di
   samping `src/hijaiyyah/nui/layer7.py` dan
   `src/hijaiyyah/nui/layer7_decision.py`. Hasil ujinya di
-  `NUI/LAYERS.md`, Lapis 7. Dua golongannya, papan diam dan segel salah,
-  baru terbukti atas rekaman buatan, belum di papan.
-- **Syarat selesai dan tag freeze Lapis 7 menunggu ini**, jadi kerangka Lapis 8
-  tetap paling akhir.
+  `NUI/LAYERS.md`, Lapis 7. Golongan papan diam baru terbukti atas rekaman
+  buatan, belum di papan.
+- **Keputusan kedua pemilik, 3 Oktober 2026**, kata-katanya: "batas percobaan
+  ulang 3x, tabel 7.4 sampai di buka lapis 7 bukan hanyanmengisolasi tapi
+  memulihkan dan merekam syarat selesai lapis 7 , layer7-freeze-2026-10-03".
+  Dibaca sesempit yang masih memenuhinya: empat baris baru di tabel 7.4 —
+  muat bitstream Portal yang SHA-256-nya tercatat ke SRAM, penulisan UART
+  protokol Portal sesudah muat ulang pada lari yang sama, `RESTART_PORTAL`,
+  `RECOVER_PORTAL` — dan batas ulang 3. Baris umum *Konfigurasi ulang papan*,
+  *Mengirim program ke papan*, *Restart / recovery*, dan *Isolasi kesalahan*
+  tetap DENIED, dan flash papan tidak pernah ditulis.
+- **`recover()` hanya bertindak atas gangguan yang tergolong dari rekaman
+  lari.** Papan yang belum pernah ditanya tidak dimuat ulang. Tidak ada byte
+  sebelum pemuat berakhir 0 pada lari yang sama. Evidence-nya di luar
+  repositori (K-11), di direktori yang disebut pemanggil.
+- **Kunci yang diprovisi pemulihan adalah kunci laboratorium di repositori
+  publik.** Jangan melaporkannya sebagai pemulihan ke kunci rahasia.
+- **Syarat selesai Lapis 7 dari pemilik: mengisolasi, memulihkan, dan
+  merekam. Nama tag freeze-nya dari pemilik: `layer7-freeze-2026-10-03`.**
+  Pemilik memerintahkan tag dipasang sesudah uji papan. Uji papan itu satu
+  lari, 3 Oktober 2026: gangguan `SEAL_MISMATCH` yang dibuat dengan sengaja,
+  dipulihkan pada percobaan pertama, direkam di luar repositori; angkanya di
+  `NUI/LAYERS.md`, Lapis 7. `BOARD_SILENT`, muat yang gagal, dan berhenti di
+  batas ulang belum pernah terjadi di papan. Kerangka Lapis 8 tetap paling
+  akhir.
+- **Masih menunggu pemilik**: tenggat jawaban (dipakai 5 detik dari skrip
+  papan), nama direktori evidence tindakan Portal, dan dua celah `confirm()`.
 - **Pemulihan memutus rantai Portal** dan tidak boleh dilaporkan sebagai
   kelanjutannya.
 

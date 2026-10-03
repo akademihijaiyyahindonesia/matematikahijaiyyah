@@ -19,18 +19,20 @@ SEND_PROGRAM proposal          HARD STOP    590baa6 GREEN
 Readiness evidence discovery   GREEN        08f1e36 — loader readiness not observable
 SEND_PROGRAM authorization     DENIED
 Portal slot: --detect, ISOLATE_FAULT   AUTHORIZED   pemilik, 3 Oktober 2026 — tanpa penulisan UART
-Portal slot: RESTART, RECOVER          DENIED       menunggu pemilik — akhir 7.4
-Mutative authorization         DENIED
-Authorization boundary         UNCHANGED
+Portal slot: RESTART, RECOVER          AUTHORIZED   pemilik, 3 Oktober 2026 — bitstream tercatat, SRAM, paling banyak 3 ulang
+Mutative authorization         DENIED       kecuali empat baris slot Portal 8888 di 7.4
+Authorization boundary         EXTENDED     pemilik, 3 Oktober 2026 — izin 9–12 di 7.5
 Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
-Completion condition           OWNER DECISION REQUIRED
-Freeze tag                     OWNER DECISION REQUIRED
+Completion condition           mengisolasi, memulihkan, dan merekam — pemilik, 3 Oktober 2026
+Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
-otonom di luar batas yang ditetapkan. Otonomi NUI saat ini hanya di wilayah
-**read → evaluate → verify → evidence**. Tidak ada mutasi sistem tanpa
-keputusan otorisasi berikutnya.
+otonom di luar batas yang ditetapkan. Otonomi NUI berada di wilayah
+**read → evaluate → verify → evidence**, ditambah satu wilayah mutatif yang
+dibuka pemilik 3 Oktober 2026: memulai ulang dan memulihkan slot Portal 8888,
+di dalam batas baris 7.4-nya. Tidak ada mutasi lain tanpa keputusan otorisasi
+berikutnya.
 
 Isinya menunjuk ke sumber yang sudah terukur, tidak menyalin nilainya (R1). Nilai
 yang bisa berubah — misalnya ambang kesegaran atau daftar kolektor — tinggal di
@@ -109,6 +111,10 @@ dibuka pemilik 3 Oktober 2026; keduanya tidak mengubah papan.
 | Evidence, provenance, freshness, delta | Mekanisme Lapis 5 (7.3, 7.6, 7.7) | **AUTHORIZED** |
 | Pembacaan identitas papan lewat JTAG (`openFPGALoader --detect`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | Isolasi kesalahan slot Portal 8888 (`ISOLATE_FAULT`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
+| Konfigurasi ulang papan ke SRAM dengan bitstream Portal 8888 yang SHA-256-nya tercatat | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
+| Penulisan UART protokol Portal 8888 sesudah muat ulang pada lari yang sama | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
+| Mulai ulang slot Portal 8888 (`RESTART_PORTAL`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
+| Pemulihan slot Portal 8888 (`RECOVER_PORTAL`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | 10 perintah host lama: `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` | Daftar "belum diizinkan" Lapis 5 di `NUI/LAYERS.md` | **DENIED** |
 | Konfigurasi ulang papan (`openFPGALoader`) | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
 | Mengirim program ke papan | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
@@ -399,14 +405,19 @@ tidak bergeser, karena identitas adaptor bukan identitas FPGA.
 ### Proposal otorisasi: pemulihan slot Portal 8888
 
 ```text
-STATUS: DIBUKA SEBAGIAN (pemilik, 3 Oktober 2026)
+STATUS: DIBUKA (pemilik, 3 Oktober 2026, dua keputusan)
 openFPGALoader --detect     AUTHORIZED — pembacaan IDCODE saja
 ISOLATE_FAULT               AUTHORIZED — tanpa penulisan UART
-RESTART_PORTAL              DENIED
-RECOVER_PORTAL              DENIED
-Penulisan UART ke papan     DENIED
-Konfigurasi ulang papan     DENIED
+RESTART_PORTAL              AUTHORIZED — hanya atas gangguan yang tergolong dari rekaman lari
+RECOVER_PORTAL              AUTHORIZED — hanya atas gangguan yang tergolong dari rekaman lari
+Penulisan UART ke papan     AUTHORIZED — protokol Portal, sesudah muat ulang pada lari yang sama
+Konfigurasi ulang papan     AUTHORIZED — bitstream Portal yang SHA-256-nya tercatat, ke SRAM
+Batas ulang RESTART_PORTAL untuk satu gangguan: 3
 ```
+
+Di luar baris-baris itu tabel 7.4 tidak berubah: baris umum *Konfigurasi ulang
+papan (`openFPGALoader`)*, *Mengirim program ke papan*, *Restart / recovery*,
+dan *Isolasi kesalahan* tetap DENIED. Flash papan tidak pernah ditulis.
 
 Perintah pemilik, 3 Oktober 2026: bagian *memulihkan, memulai ulang,
 mengisolasi kesalahan* dari tujuan Lapis 7 diselesaikan lebih dulu. Sesuai
@@ -464,13 +475,58 @@ papan. Rekaman yang lebih tua dari ambang kesegaran berhenti sebagai `STALE`,
 dan rekaman dengan frame tangkapan (`--pcap`) tidak dinilai ulang karena
 frame-nya tidak ada di rekaman. Hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
 
-**Yang diminta dibuka di tabel 7.4**, dan hanya pemilik yang membukanya (7.11):
+**Keputusan pemilik kedua, 3 Oktober 2026**, dalam kata-katanya sendiri:
+
+> batas percobaan ulang 3x, tabel 7.4 sampai di buka lapis 7 bukan
+> hanyanmengisolasi tapi memulihkan dan merekam syarat selesai lapis 7 ,
+> layer7-freeze-2026-10-03
+
+Dibaca sesempit yang masih memenuhinya: empat baris baru di tabel 7.4, persis
+selebar butir 1 dan 2 di bawah dan dua tindakan proposal ini; batas ulang 3;
+syarat selesai Lapis 7 adalah mengisolasi, memulihkan, dan merekam; dan nama
+tag freeze-nya `layer7-freeze-2026-10-03`.
+
+**`RESTART_PORTAL` dan `RECOVER_PORTAL` diimplementasi**, 3 Oktober 2026, di
+modul yang sama, fungsi `recover()`:
+
+- Pemicunya hanya gangguan yang `ISOLATE_FAULT` golongkan dari rekaman lari
+  yang masih segar: `BOARD_SILENT` atau `SEAL_MISMATCH`. Papan yang belum
+  pernah ditanya, adaptor yang tidak ada, dan papan yang tidak terdeteksi
+  berhenti tanpa tindakan.
+- Perintah muatnya `openFPGALoader -b tangnano20k -m <bitstream>`, dan hanya
+  bila SHA-256 berkasnya sama dengan yang tercatat di
+  `portal8888/sim/EVIDENCE.md` §9.
+- Tidak ada byte yang ditulis sebelum pemuat berakhir 0 pada lari yang sama.
+  Sesudah itu perintah `A`; putaran 0 dan ROOT nol berarti Portal di keadaan
+  awal. `RECOVER_PORTAL` lalu menjalankan skenario skrip papan, dinilai
+  pemeriksa yang sama.
+- Port dibuka dengan kunci eksklusif pyserial; port yang tidak bisa dibuka
+  sendirian berhenti tanpa tindakan. Kunci itu hanya melihat proses lain yang
+  memakai kunci yang sama.
+- Tenggat jawaban 5 detik — tenggat serial skrip papan yang sudah ada, dipakai
+  apa adanya; pemilik belum menetapkan angka lain.
+- **Merekam**: tiap percobaan, kode keluar pemuat, jawaban `A`, byte mentah
+  skenario, dan vonisnya ditulis ke direktori evidence di luar repositori
+  (K-11) yang disebut pemanggilnya. Batas ulang dihitung dari rekaman itu,
+  jadi tidak bisa dilewati dengan memanggil ulang; gangguan yang sudah terjawab
+  tidak memicu pemulihan kedua.
+- Kunci yang diprovisi adalah kunci laboratorium `portal8888/ref/portal_ref.py`,
+  yang ada di repositori publik. Pemulihan ini memulihkan slot ke keadaan uji,
+  bukan ke kunci rahasia.
+
+**Terukur di papan satu kali**, 3 Oktober 2026, atas perintah pemilik:
+gangguan `SEAL_MISMATCH` yang dibuat dengan sengaja dipulihkan pada percobaan
+pertama dan direkam di luar repositori. Angkanya di `NUI/LAYERS.md`, Lapis 7.
+
+**Yang dibuka di tabel 7.4**, dan hanya pemilik yang membukanya (7.11):
 
 1. *Konfigurasi ulang papan* — terbatas pada bitstream Portal yang SHA-256-nya
-   tercatat, ke SRAM. Menulis flash papan tetap di luar.
+   tercatat, ke SRAM. Menulis flash papan tetap di luar. **Dibuka**,
+   3 Oktober 2026.
 2. *Menulis ke UART papan* — terbatas pada protokol Portal, dan hanya sesudah
    `RESTART_PORTAL` berhasil pada lari yang sama, atau perintah `A` saja
    terhadap papan yang identitas bitstream-nya sudah KNOWN dari lari itu.
+   **Dibuka**, 3 Oktober 2026.
 3. `openFPGALoader --detect` — hanya membaca IDCODE lewat JTAG. **Dibuka**,
    3 Oktober 2026, sebagai pembacaan; `openFPGALoader` dengan berkas bitstream
    tetap baris *Konfigurasi ulang papan*, DENIED.
@@ -481,10 +537,10 @@ frame-nya tidak ada di rekaman. Hasil ujinya di `NUI/LAYERS.md`, Lapis 7.
 |---|---|---|
 | target identity = KNOWN | nomor seri adaptor dari `list_ports.comports()`; IDCODE dari `--detect` | adaptor dan IDCODE terbaca; bitstream yang termuat tetap UNKNOWN tanpa muat ulang |
 | bitstream = evidence-backed | SHA-256 berkas `.fs` terhadap yang tercatat di `portal8888/sim/EVIDENCE.md` §9 | KNOWN untuk bitstream yang diuji di papan; bitstream yang dibangun ulang harus diukur ulang |
-| required communication | port serial tidak sedang dipegang proses lain | belum ada pemeriksaannya — pekerjaan implementasi |
+| required communication | port serial tidak sedang dipegang proses lain | kunci eksklusif pyserial saat port dibuka |
 | expected outcome = predetermined | jawaban `A` sesudah muat ulang: putaran 0, ROOT nol; skenario `portal_uart.scenario()` | KNOWN |
-| pemicu = teramati | tidak ada jawaban `A` dalam tenggat, atau pemeriksa menemukan mismatch | KNOWN sebagai mekanisme; ambang tenggat belum ditetapkan |
-| authorization | tabel 7.4 | DENIED |
+| pemicu = teramati | tidak ada jawaban `A` dalam tenggat, atau pemeriksa menemukan mismatch | KNOWN sebagai mekanisme; tenggat 5 detik dari skrip papan, belum ditetapkan pemilik |
+| authorization | tabel 7.4 | AUTHORIZED untuk keenam baris slot Portal (pemilik, 3 Oktober 2026) |
 
 **Postcondition yang ditetapkan sebelumnya:**
 
@@ -513,7 +569,8 @@ post-action evidence invalid
 Dan tetap: `self-authorization = forbidden`.
 
 **Batas ulang**: paling banyak tiga `RESTART_PORTAL` berturut-turut untuk satu
-gangguan — angka usulan, menunggu pemilik. Sesudah itu STOP / REPORT.
+gangguan — ditetapkan pemilik, 3 Oktober 2026. Sesudah itu STOP / REPORT.
+Angkanya dibaca kode dari blok status proposal ini (R1).
 
 **Yang harus dibaca bersama proposal ini:**
 
@@ -529,8 +586,9 @@ gangguan — angka usulan, menunggu pemilik. Sesudah itu STOP / REPORT.
   berjalan — risiko yang sama dengan `SEND_PROGRAM`. Karena itu penulisan UART
   hanya sesudah muat ulang pada lari yang sama.
 - **`confirm()` masih mempercayai `expected` apa adanya**, dan berkas yang
-  hilang masih memicu exception. Keduanya sebaiknya ditutup sebelum tindakan
-  mutatif pertama dibuka.
+  hilang masih memicu exception. Keduanya belum ditutup. `recover()` tidak
+  memakai `confirm()`: ia membandingkan sendiri berkas terlindung dan rekaman
+  lama sebelum dan sesudah tindakan.
 
 **Sengaja tidak masuk proposal ini**: menulis flash papan, sepuluh perintah
 host lama, menjaga host tetap terjaga, mutasi repositori atau konfigurasi,
@@ -555,13 +613,17 @@ DECIDED BY: pemilik, 30 September 2026
 | 6 | Menghasilkan evidence baru dari observasi tersebut | `layer5.record`, ke evidence store di luar repositori (K-11) |
 | 7 | Membaca identitas papan lewat JTAG (pemilik, 3 Oktober 2026) | `openFPGALoader --detect` — tanpa berkas bitstream |
 | 8 | Menggolongkan gangguan slot Portal 8888 dan berhenti mengirim (pemilik, 3 Oktober 2026) | `ISOLATE_FAULT`, akhir 7.4 — tanpa penulisan UART |
+| 9 | Memuat bitstream Portal 8888 yang SHA-256-nya tercatat ke SRAM (pemilik, 3 Oktober 2026) | `openFPGALoader -b tangnano20k -m` — flash tidak ditulis |
+| 10 | Menulis protokol Portal 8888 ke UART sesudah muat ulang pada lari yang sama (pemilik, 3 Oktober 2026) | `portal8888/ref/portal_uart.py`, `exchange()` skrip papan |
+| 11 | Memulai ulang slot Portal 8888 atas gangguan yang tergolong, paling banyak 3 kali (pemilik, 3 Oktober 2026) | `RESTART_PORTAL`, akhir 7.4 |
+| 12 | Memulihkan slot Portal 8888 dan merekam hasilnya di luar repositori (pemilik, 3 Oktober 2026) | `RECOVER_PORTAL`, akhir 7.4 |
 
 **Tetap tidak diizinkan — DENIED pada Lapis 7 awal:**
 
-- konfigurasi ulang papan;
+- konfigurasi ulang papan di luar izin 9;
 - mengirim program ke papan;
 - mengubah persistent state HFS/SD;
-- restart atau recovery otomatis;
+- restart atau recovery otomatis di luar slot Portal 8888 (izin 11 dan 12);
 - isolasi kesalahan di luar `ISOLATE_FAULT` slot Portal 8888 (izin 8);
 - menjaga host tetap terjaga;
 - seluruh 10 perintah host yang pada Lapis 5 berstatus belum diizinkan;
@@ -598,8 +660,9 @@ ACTION REQUIRED
 NUI decides to authorize itself
 ```
 
-Jadi NUI sudah punya operasi otonom, tetapi hanya di wilayah read/verify/evidence.
-Itu disengaja, supaya lapisan pertama dapat diuji sebelum ada kemampuan mutasi
+Jadi NUI sudah punya operasi otonom di wilayah read/verify/evidence, dan sejak
+3 Oktober 2026 satu wilayah mutatif yang sempit: slot Portal 8888. Urutan itu
+disengaja, supaya lapisan pertama dapat diuji sebelum ada kemampuan mutasi
 sistem.
 
 ## 7.6 Pre/Post-State Contract
