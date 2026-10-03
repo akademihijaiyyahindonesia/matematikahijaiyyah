@@ -113,7 +113,10 @@ def test_the_labels_are_the_contracts_own() -> None:
 def test_the_7_4_statuses_are_read_from_the_contract() -> None:
     table = l7.authorizations()
     assert {k for k, v in table.items() if v == "AUTHORIZED"} == {
-        "Observasi / read-only", "Evidence, provenance, freshness, delta"}
+        "Observasi / read-only", "Evidence, provenance, freshness, delta",
+        # opened by the owner, 3 October 2026: neither changes the board
+        "Pembacaan identitas papan lewat JTAG (`openFPGALoader --detect`)",
+        "Isolasi kesalahan slot Portal 8888 (`ISOLATE_FAULT`)"}
     assert sum(1 for v in table.values() if v == "DENIED") == 7
     text = l7.CONTRACT.read_text(encoding="utf-8")
     assert all(f"| {k} |" in text for k in table)

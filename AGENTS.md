@@ -2230,8 +2230,13 @@ memerintahkan proposalnya ditulis. Proposalnya di akhir 7.4 `NUI/LAYER7.md`:
 tiga tindakan atas slot Portal 8888 — `ISOLATE_FAULT`, `RESTART_PORTAL`,
 `RECOVER_PORTAL`. Yang paling mudah dilanggar:
 
-- **Proposal itu belum izin.** Tabel 7.4 tidak berubah dan ketiganya DENIED
-  sampai pemilik membuka barisnya satu per satu.
+- **Proposal itu belum izin.** Yang dibuka hanya yang pemilik buka satu per
+  satu.
+- **Dibuka pemilik, 3 Oktober 2026: `openFPGALoader --detect` dan
+  `ISOLATE_FAULT`** — dua baris baru di tabel 7.4, keduanya tidak mengubah
+  papan. `RESTART_PORTAL`, `RECOVER_PORTAL`, penulisan UART, dan konfigurasi
+  ulang papan tetap DENIED. Selama UART belum dibuka, `ISOLATE_FAULT` tidak
+  mengirim satu byte pun.
 - **Syarat selesai dan tag freeze Lapis 7 menunggu ini**, jadi kerangka Lapis 8
   tetap paling akhir.
 - **Pemulihan memutus rantai Portal** dan tidak boleh dilaporkan sebagai

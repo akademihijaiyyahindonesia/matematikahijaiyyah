@@ -18,7 +18,8 @@ Decision / Dry-Run             GREEN        46f4b14
 SEND_PROGRAM proposal          HARD STOP    590baa6 GREEN
 Readiness evidence discovery   GREEN        08f1e36 — loader readiness not observable
 SEND_PROGRAM authorization     DENIED
-Portal recovery proposal       AWAITING OWNER DECISION   3 Oktober 2026 — akhir 7.4
+Portal slot: --detect, ISOLATE_FAULT   AUTHORIZED   pemilik, 3 Oktober 2026 — tanpa penulisan UART
+Portal slot: RESTART, RECOVER          DENIED       menunggu pemilik — akhir 7.4
 Mutative authorization         DENIED
 Authorization boundary         UNCHANGED
 Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
@@ -99,12 +100,15 @@ kontrak kuerinya ada di `NUI/spec/query_contract.json`.
 ## 7.4 Action Contract
 
 Status tiap kategori, ditetapkan pemilik 30 September 2026. Daftar tindakan lama
-dipertahankan, dengan statusnya.
+dipertahankan, dengan statusnya. Dua baris yang menyebut slot Portal 8888
+dibuka pemilik 3 Oktober 2026; keduanya tidak mengubah papan.
 
 | kategori | asal catatannya | status |
 |---|---|---|
 | Observasi / read-only | Mekanisme Lapis 5 dan state model Lapis 6 (7.3) | **AUTHORIZED** |
 | Evidence, provenance, freshness, delta | Mekanisme Lapis 5 (7.3, 7.6, 7.7) | **AUTHORIZED** |
+| Pembacaan identitas papan lewat JTAG (`openFPGALoader --detect`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
+| Isolasi kesalahan slot Portal 8888 (`ISOLATE_FAULT`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | 10 perintah host lama: `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` | Daftar "belum diizinkan" Lapis 5 di `NUI/LAYERS.md` | **DENIED** |
 | Konfigurasi ulang papan (`openFPGALoader`) | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
 | Mengirim program ke papan | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
@@ -395,9 +399,13 @@ tidak bergeser, karena identitas adaptor bukan identitas FPGA.
 ### Proposal otorisasi: pemulihan slot Portal 8888
 
 ```text
-STATUS: MENUNGGU KEPUTUSAN PEMILIK (ditulis atas perintah pemilik, 3 Oktober 2026)
-Authorization: DENIED
-Tabel 7.4 di atas tidak berubah. Proposal ini tidak memberi izin apa pun.
+STATUS: DIBUKA SEBAGIAN (pemilik, 3 Oktober 2026)
+openFPGALoader --detect     AUTHORIZED — pembacaan IDCODE saja
+ISOLATE_FAULT               AUTHORIZED — tanpa penulisan UART
+RESTART_PORTAL              DENIED
+RECOVER_PORTAL              DENIED
+Penulisan UART ke papan     DENIED
+Konfigurasi ulang papan     DENIED
 ```
 
 Perintah pemilik, 3 Oktober 2026: bagian *memulihkan, memulai ulang,
@@ -439,6 +447,14 @@ tidak menyentuh papan sama sekali.
 `ISOLATE_FAULT` di sini penggolongan dan penghentian pengiriman. Ia tidak
 memutus daya, tidak menyentuh host lain, dan tidak mengubah repositori.
 
+**Yang dibuka pemilik, 3 Oktober 2026**: `openFPGALoader --detect` dan
+`ISOLATE_FAULT`. Selama penulisan UART belum dibuka, `ISOLATE_FAULT` tidak
+mengirim satu byte pun: dua golongan pertama ia tetapkan dari daftar adaptor
+dan `--detect`, dan dua golongan terakhir hanya dari byte mentah lari yang
+sudah ada di evidence store — bukan dari perintah `A` yang ia kirim sendiri.
+Papan yang terdeteksi tetapi belum pernah ditanya tetap `UNKNOWN`, bukan
+"diam".
+
 **Yang diminta dibuka di tabel 7.4**, dan hanya pemilik yang membukanya (7.11):
 
 1. *Konfigurasi ulang papan* — terbatas pada bitstream Portal yang SHA-256-nya
@@ -446,14 +462,15 @@ memutus daya, tidak menyentuh host lain, dan tidak mengubah repositori.
 2. *Menulis ke UART papan* — terbatas pada protokol Portal, dan hanya sesudah
    `RESTART_PORTAL` berhasil pada lari yang sama, atau perintah `A` saja
    terhadap papan yang identitas bitstream-nya sudah KNOWN dari lari itu.
-3. `openFPGALoader --detect` — hanya membaca IDCODE lewat JTAG. Ia kini berada
-   di baris alat yang ditolak; diminta dibuka sebagai pembacaan.
+3. `openFPGALoader --detect` — hanya membaca IDCODE lewat JTAG. **Dibuka**,
+   3 Oktober 2026, sebagai pembacaan; `openFPGALoader` dengan berkas bitstream
+   tetap baris *Konfigurasi ulang papan*, DENIED.
 
 **Prasyarat**, dengan mekanisme yang ada dan keadaannya hari ini:
 
 | prasyarat | mekanisme yang ada | hari ini |
 |---|---|---|
-| target identity = KNOWN | nomor seri adaptor dari `list_ports.comports()`; IDCODE dari `--detect` | adaptor KNOWN; IDCODE UNKNOWN sampai `--detect` dibuka |
+| target identity = KNOWN | nomor seri adaptor dari `list_ports.comports()`; IDCODE dari `--detect` | adaptor dan IDCODE terbaca; bitstream yang termuat tetap UNKNOWN tanpa muat ulang |
 | bitstream = evidence-backed | SHA-256 berkas `.fs` terhadap yang tercatat di `portal8888/sim/EVIDENCE.md` §9 | KNOWN untuk bitstream yang diuji di papan; bitstream yang dibangun ulang harus diukur ulang |
 | required communication | port serial tidak sedang dipegang proses lain | belum ada pemeriksaannya — pekerjaan implementasi |
 | expected outcome = predetermined | jawaban `A` sesudah muat ulang: putaran 0, ROOT nol; skenario `portal_uart.scenario()` | KNOWN |
@@ -527,6 +544,8 @@ DECIDED BY: pemilik, 30 September 2026
 | 4 | Memvalidasi provenance, freshness, manifest hash, dan `outcomes` | verifikasi manifest `layer5`, `layer5.freshness`, `layer5.outcome` |
 | 5 | Menjalankan fungsi verifikasi/read-only yang tidak mengubah host, repository, FPGA, program, atau persistent state | `--verify` modul NUI yang sudah ada |
 | 6 | Menghasilkan evidence baru dari observasi tersebut | `layer5.record`, ke evidence store di luar repositori (K-11) |
+| 7 | Membaca identitas papan lewat JTAG (pemilik, 3 Oktober 2026) | `openFPGALoader --detect` — tanpa berkas bitstream |
+| 8 | Menggolongkan gangguan slot Portal 8888 dan berhenti mengirim (pemilik, 3 Oktober 2026) | `ISOLATE_FAULT`, akhir 7.4 — tanpa penulisan UART |
 
 **Tetap tidak diizinkan — DENIED pada Lapis 7 awal:**
 
@@ -534,7 +553,7 @@ DECIDED BY: pemilik, 30 September 2026
 - mengirim program ke papan;
 - mengubah persistent state HFS/SD;
 - restart atau recovery otomatis;
-- isolasi kesalahan;
+- isolasi kesalahan di luar `ISOLATE_FAULT` slot Portal 8888 (izin 8);
 - menjaga host tetap terjaga;
 - seluruh 10 perintah host yang pada Lapis 5 berstatus belum diizinkan;
 - tindakan jaringan eksternal;
