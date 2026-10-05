@@ -15,7 +15,15 @@
 | Manifes & segel | perangkat lunak | `crypto/program.py` |
 
 **Baris paling penting adalah yang kedua dari bawah.** Lapis 3 memikul seluruh
-keamanan, dan ia tidak ada di perangkat keras.
+keamanan, dan di perangkat keras ia baru ada dengan kunci uji.
+
+Sejak 3 Oktober 2026 pembungkus slot UART, `hijaiyyah_kabah_gowin_top.v`,
+menginstansiasi `hijaiyyah_hmac` dan mengirim tag HMAC-SHA256 32 byte di belakang
+200 byte keadaan. Kuncinya **kunci uji publik** — RFC 4231 kasus uji 1, dua puluh
+byte `0x0b`, ditanam di bitstream: ia membuktikan jalurnya, bukan mengamankan apa
+pun. Ka'bah-HDMI dan top gabungan tetap tanpa HMAC: lapis 3 hanya
+dibangun bila `KABAH_WITH_HMAC` didefinisikan, dan hanya build slot UART yang
+mendefinisikannya.
 
 ---
 
@@ -81,6 +89,25 @@ di header (`tests/test_integrity/test_place_and_route.py`):
 | DFF | 1.965 / 15.552 | 12% |
 | BSRAM | 0 / 46 | 0% |
 | Fmax | **165,98 MHz** (routed, `gowin_pack` sukses, bitstream 4,6 MB) | |
+
+Tabel di atas adalah pembungkus **tanpa lapis 3** (`KABAH_WITH_HMAC` tidak didefinisikan). Dengan
+lapis 3, yang sejak 3 Oktober 2026 menjadi bawaan `make kabah_bitstream`:
+
+| | terpakai / kapasitas | % |
+|---|---:|---:|
+| IOB | 10 / 384 | 2% |
+| LUT4 | 15.030 / 20.736 | **72%** |
+| DFF | 4.132 / 15.552 | 26% |
+| ALU | 604 / 15.552 | 3% |
+| BSRAM | 0 / 46 | 0% |
+
+Bitstream 4.618.782 byte, sha256
+`fdc84e3d1cf2a565fa495ecbdd3b10d792464f1e8385240d77e3c39492a86b49`. **Fmax
+tidak diklaim**: nextpnr mencetak 97,93 MHz sesudah routing dan menilainya
+terhadap batas bawaan 12 MHz; yang ditunjukkan angka itu hanya jarak di atas
+27 MHz. Di simulasi lewat pin UART: 400/400 byte keadaan cocok `cube.py` dan
+64/64 byte tag cocok `hmac`/`hashlib`; sebelas sabotase jalur tanda tangan
+membuat bench merah. **Bitstream ini belum dijalankan di papan.**
 
 Diukur ulang 10 September 2026, dan kali ini bitstream-nya **dijalankan**:
 `kabah_uart_test.py` melaporkan 2/2 frame, 400/400 byte cocok dengan

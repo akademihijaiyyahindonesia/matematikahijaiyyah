@@ -50,7 +50,16 @@
 //
 // Restamped 15 September 2026 WITH a fresh place-and-route run -- the figures
 // above are that run's, not the old ones carried over.
-// RTL FINGERPRINT: ceefd15841209ced006cb5ec43764e0170cf72a7dfd7b336ca8913cc0086ef58
+//
+// Restamped 4 October 2026 WITH a fresh place-and-route run, and the figures
+// above are what it returned, unchanged to the last digit: 15 IOB, 12,133
+// LUT4, 2,036 DFF, 0 BSRAM, 104.35 MHz and 180.86 MHz. The hash moved because
+// hijaiyyah_kabah_gowin_top.v gained layer 3 under `ifdef KABAH_WITH_HMAC;
+// this build defines nothing, so every line synthesis reads of that wrapper
+// is the line it read before, and no SHA-256 cell is in the netlist. A first
+// attempt that switched the layer off with a parameter placed at 11,728
+// LUT4 -- the same behaviour from different text -- and was not accepted.
+// RTL FINGERPRINT: 806d7dbac71d852acb5668bbea91b00b7838b4ad4a8c99cd15d41f16e7208e9a
 
 module kabah_hdmi_top (
     input wire        clk_27m,

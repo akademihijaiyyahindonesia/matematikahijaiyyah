@@ -47,13 +47,13 @@ def test_the_rack_costs_its_largest_slot_not_their_sum() -> None:
         "the video slot -- HCPU plus TMDS -- is the largest, and that only "
         "became visible once its cost was measured")
 
-    assert rack.naive_sum_lut4() == 15_744 + 12_061 + 15_994 == 43_799
+    assert rack.naive_sum_lut4() == 15_744 + 15_030 + 15_994 == 46_768
     assert rack.naive_sum_lut4() > rack.BOARD_LUT4, (
         "the slots would still fit side by side, so sequencing buys nothing")
     assert top.lut4 < rack.BOARD_LUT4, "the largest slot no longer fits alone"
 
     assert int(top.lut4 / rack.BOARD_LUT4 * 100) == 77
-    assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 211
+    assert int(rack.naive_sum_lut4() / rack.BOARD_LUT4 * 100) == 225
 
 
 def test_the_spare_is_largest_where_the_slot_is_smallest() -> None:
@@ -148,9 +148,14 @@ def test_the_figures_come_from_the_wrapper_that_measured_them() -> None:
     assert slots["hcpu"].lut4 == 15_744 and slots["hcpu"].dff == 5_065
     assert slots["hcpu"].fmax_mhz == 86.18 and "86.18 MHz" in hcpu
 
+    # Since 3 October 2026 the slot carries layer 3 (HMAC-SHA256); the figures
+    # without it stay in the header as that configuration's record.
     assert re.search(r"LUT4\s+12,061/\s+20,736\s+58%", kabah)
-    assert slots["kabah"].lut4 == 12_061 and slots["kabah"].dff == 1_965
-    assert slots["kabah"].fmax_mhz == 165.98 and "165.98 MHz" in kabah
+    assert re.search(r"LUT4\s+15,030/\s+20,736\s+72%", kabah)
+    assert slots["kabah"].lut4 == 15_030 and slots["kabah"].dff == 4_132
+    assert slots["kabah"].fmax_mhz == 97.93 and "97.93 MHz" in kabah
+    assert "FMAX IS NOT QUOTED" in kabah
+    assert "NOT YET RUN ON THE BOARD" in slots["kabah"].verified
 
     hdmi = (GOWIN / "hcpu_hdmi_top.v").read_text(encoding="utf-8")
     assert re.search(r"LUT4\s+15,994 /\s+20,736\s+77%", hdmi)
@@ -187,7 +192,7 @@ def test_an_unmeasured_slot_cannot_move_the_rack_cost(monkeypatch) -> None:
     monkeypatch.setattr(rack, "SLOTS", (*rack.SLOTS, ghost))
     assert not ghost.measured
     assert rack.largest().name == "hdmi"
-    assert rack.naive_sum_lut4() == 43_799
+    assert rack.naive_sum_lut4() == 46_768
     assert "Belum terukur: ghost" in rack.render()
 
 

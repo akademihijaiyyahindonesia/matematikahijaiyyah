@@ -28,8 +28,10 @@
 // The host sends exactly 128 bytes over UART — one full rate block (16
 // lanes x 8 bytes, matching src/hijaiyyah/crypto/cube.py's RATE=128 — and
 // the wrapper answers with exactly 200 bytes: out_state, most-significant
-// byte first (out_state[1599:1592] first, out_state[7:0] last). It then
-// waits for the next 128-byte block. `load` fires once, for one clock,
+// byte first (out_state[1599:1592] first, out_state[7:0] last). Built with
+// KABAH_WITH_HMAC defined, as the UART slot is since 3 October 2026, 32 more
+// bytes follow: the HMAC-SHA256 tag of those 200 bytes, most-significant byte
+// first, so a reply is 232 bytes. It then waits for the next 128-byte block. `load` fires once, for one clock,
 // right after reset — clearing the sponge — and never again, so a host that
 // keeps sending blocks gets a real multi-block absorb, not 128 bytes
 // re-hashed in isolation each time.
@@ -126,7 +128,45 @@
 // Not packed in this run: `make hijaiyyah_kabah_gowin_top_pnr.json` stops at
 // the routed JSON. The gowin_pack line above belongs to the 5 September run
 // and is left standing as that run's record, not re-claimed as this one's.
-// RTL FINGERPRINT: 90460e66f4f107ec86f509381e9803d525e9bec848d64d31a36983e62315ad30
+//
+// ── LAYER 3 ON THE WAY OUT, 3 October 2026 — owner's decision ───────────
+//
+// The owner's target: HMAC-SHA256 instantiated by the Ka'bah path, in the
+// UART slot only, with a fixed test key. hijaiyyah_hmac is instantiated here,
+// under `ifdef KABAH_WITH_HMAC, which only the UART slot's own build defines
+// (KABAH_L3_DEFINE in the Makefile). hijaiyyah_kabah_top.v and
+// hijaiyyah_wave.v are unchanged and still hold no SHA-256 core;
+// kabah_hdmi_top.v and hijaiyyah_cosmictera_gowin_top.v are unchanged too,
+// define nothing, and so build this wrapper as it was.
+//
+// THE KEY IS A PUBLIC TEST KEY: RFC 4231 test case 1, twenty bytes of 0x0b.
+// A tag under it proves the path -- the bytes that left were the bytes that
+// were signed -- and secures nothing, because anyone can compute it. Ka'bah's
+// output stays unauthenticated until it is signed under a key that is secret.
+//
+// Everything above this block measures the wrapper WITHOUT layer 3 (what
+// the macro left undefined still builds). With it, `make kabah_bitstream`, same flags:
+//
+//     GW2AR-18C  (Tang Nano 20K)  IOB       10/    384    2%
+//                                  LUT4  15,030/ 20,736   72%   fits, routed
+//                                  DFF    4,132/ 15,552   26%
+//                                  ALU      604/ 15,552    3%
+//                                  BSRAM      0/     46    0%
+//
+// +2,969 LUT4 and +2,167 DFF against 12,061 / 1,965. Place and route took
+// about 14 minutes. The bitstream is 4,618,782 bytes, sha256
+// fdc84e3d1cf2a565fa495ecbdd3b10d792464f1e8385240d77e3c39492a86b49.
+//
+// FMAX IS NOT QUOTED. nextpnr prints 97.93 MHz after routing and judges it
+// against its default 12 MHz, not against a constraint of this design. What
+// the number shows is a margin far above the 27 MHz the board runs at.
+//
+// In simulation, through the UART pins only (tb_hijaiyyah_kabah_gowin_top.v):
+// two frames, 400/400 state bytes matching cube.py and 64/64 tag bytes
+// matching hmac/hashlib. Eleven sabotages of the signing path turn that bench
+// red. THIS BITSTREAM HAS NOT RUN ON THE BOARD: the board result above
+// (2/2 frames, 400/400 bytes) belongs to the wrapper without layer 3.
+// RTL FINGERPRINT: 76235f2e973b5881937ed5a6779dba08403cf895ad11a6c86aad5721d70c04c6
 //
 `include "hcpu_pkg.vh"
 
@@ -223,8 +263,32 @@ module hijaiyyah_kabah_gowin_top #(
     reg [7:0] rx_pend_byte;
     reg       frame_err_sticky;
 
+    // ── Layer 3 is a compile-time choice: `KABAH_WITH_HMAC ─────
+    //
+    // Undefined, every line synthesis sees is the line this file had before
+    // 3 October 2026: the `else branches below are that text, untouched, so
+    // kabah_hdmi_top.v and hijaiyyah_cosmictera_gowin_top.v -- which
+    // instantiate this module and define nothing -- build what was measured
+    // and run on the board. A parameter was tried first and was not enough:
+    // the same wrapper with the layer switched off by a parameter placed at
+    // 11,728 LUT4 against the recorded 12,133, because synthesis is sensitive
+    // to the text it is given, not only to the logic that text means.
+    //
+    // Defined -- `make kabah_bitstream` and `make sim_kabah` define it -- the
+    // reply is the 200 state bytes and then their 32-byte HMAC-SHA256 tag.
+`ifdef KABAH_WITH_HMAC
+    // A TEST KEY, fixed in the bitstream and published: the key of RFC 4231
+    // test case 1, twenty bytes of 0x0b, padded to the 64-byte block. It
+    // proves the path; it is not a secret and not a root of trust.
+    localparam [511:0] HMAC_KEY = {{20{8'h0b}}, 352'd0};
+
+    localparam ST_RECV = 3'd0, ST_FEED = 3'd1, ST_PERM = 3'd2, ST_DUMP = 3'd3,
+               ST_SIGN = 3'd4, ST_TAG = 3'd5;
+    reg [2:0] st;
+`else
     localparam ST_RECV = 2'd0, ST_FEED = 2'd1, ST_PERM = 2'd2, ST_DUMP = 2'd3;
     reg [1:0] st;
+`endif
 
     wire rx_consume = rx_pend && (st == ST_RECV);
 
@@ -322,6 +386,139 @@ module hijaiyyah_kabah_gowin_top #(
     // before the fix -- byte 0 missing, every later byte one ahead.
     wire [10:0] dump_bit_hi = 11'd1599 - ({3'b0, dump_idx} * 11'd8);
 
+`ifdef KABAH_WITH_HMAC
+    // ── Layer 3: HMAC-SHA256 over the 200 bytes that leave ─────
+    //
+    // The message is exactly what the wire carries: out_state, most-
+    // significant byte first, each byte handed to the HMAC on the same edge
+    // it is handed to the UART. A UART byte takes ~2,344 clocks and a SHA-256
+    // block well under 200, so the HMAC has always taken the last byte before
+    // the next is offered; h_bv holds until it has, so that is by
+    // construction and not by that margin. After the 200th byte the message
+    // is finished, and the 32 tag bytes follow the state on the same wire.
+    reg          h_start;
+    reg          h_bv;
+    reg  [7:0]   h_byte;
+    reg          fin_sent;
+    reg  [5:0]   tag_idx;
+    wire         h_ready, h_done;
+    wire [255:0] h_mac;
+    wire         h_fin = (st == ST_SIGN) && !fin_sent && !h_bv && h_ready;
+    wire [7:0]   tag_byte = h_mac[({2'b00, 6'd31 - tag_idx} * 8'd8) +: 8];
+
+    hijaiyyah_hmac u_hmac (
+        .clk        (clk_sys),
+        .rst_n      (sys_rst_n),
+        .start      (h_start),
+        .key        (HMAC_KEY),
+        .byte_valid (h_bv),
+        .byte_in    (h_byte),
+        .byte_ready (h_ready),
+        .finish     (h_fin),
+        .idle       (),
+        .done       (h_done),
+        .mac        (h_mac)
+    );
+
+    always @(posedge clk_sys or negedge sys_rst_n) begin
+        if (!sys_rst_n) begin
+            st           <= ST_RECV;
+            cur_byte     <= 8'h00;
+            bit_idx      <= 3'd0;
+            byte_count   <= 8'd0;
+            dump_idx     <= 8'd0;
+            kabah_bv_r   <= 1'b0;
+            kabah_bi_r   <= 1'b0;
+            perm_started <= 1'b0;
+            tx_start_r   <= 1'b0;
+            tx_data_r    <= 8'h00;
+            h_start      <= 1'b0;
+            h_bv         <= 1'b0;
+            h_byte       <= 8'h00;
+            fin_sent     <= 1'b0;
+            tag_idx      <= 6'd0;
+        end else begin
+            tx_start_r <= 1'b0;
+            kabah_bv_r <= 1'b0;
+            h_start    <= 1'b0;
+            if (h_bv && h_ready) h_bv <= 1'b0;
+
+            case (st)
+                ST_RECV: begin
+                    if (rx_consume) begin
+                        cur_byte <= rx_pend_byte;
+                        bit_idx  <= 3'd0;
+                        st       <= ST_FEED;
+                    end
+                end
+
+                ST_FEED: begin
+                    if (bits_ready) begin
+                        kabah_bi_r <= cur_byte[bit_idx];
+                        kabah_bv_r <= 1'b1;
+                        if (bit_idx == 3'd7) begin
+                            if (byte_count == 8'd127) begin
+                                byte_count   <= 8'd0;
+                                st           <= ST_PERM;
+                                perm_started <= 1'b0;
+                            end else begin
+                                byte_count <= byte_count + 8'd1;
+                                st         <= ST_RECV;
+                            end
+                        end else begin
+                            bit_idx <= bit_idx + 3'd1;
+                        end
+                    end
+                end
+
+                ST_PERM: begin
+                    if (!perm_started) begin
+                        if (permuting) perm_started <= 1'b1;
+                    end else if (!permuting) begin
+                        dump_idx <= 8'd0;
+                        h_start  <= 1'b1;
+                        st       <= ST_DUMP;
+                    end
+                end
+
+                ST_DUMP: begin
+                    if (dump_idx == 8'd200) begin
+                        fin_sent <= 1'b0;
+                        st       <= ST_SIGN;
+                    end else if (!tx_busy && !tx_start_r && !h_bv) begin
+                        tx_data_r  <= out_state[dump_bit_hi -: 8];
+                        h_byte     <= out_state[dump_bit_hi -: 8];
+                        h_bv       <= 1'b1;
+                        tx_start_r <= 1'b1;
+                        dump_idx   <= dump_idx + 8'd1;
+                    end
+                end
+
+                // The message ends once the HMAC has taken the 200th byte;
+                // then wait for the tag.
+                ST_SIGN: begin
+                    if (h_fin) fin_sent <= 1'b1;
+                    if (h_done) begin
+                        tag_idx <= 6'd0;
+                        st      <= ST_TAG;
+                    end
+                end
+
+                // 32 tag bytes, most-significant first, after the state.
+                ST_TAG: begin
+                    if (!tx_busy && !tx_start_r) begin
+                        tx_data_r  <= tag_byte;
+                        tx_start_r <= 1'b1;
+                        tag_idx    <= tag_idx + 6'd1;
+                        if (tag_idx == 6'd31) st <= ST_RECV;
+                    end
+                end
+
+                default: st <= ST_RECV;
+            endcase
+        end
+    end
+`else
     always @(posedge clk_sys or negedge sys_rst_n) begin
         if (!sys_rst_n) begin
             st           <= ST_RECV;
@@ -387,6 +584,7 @@ module hijaiyyah_kabah_gowin_top #(
             endcase
         end
     end
+`endif
 
     // ── LED mapping (active low) ────────────────────────────────
     // LED[0]: absorbing (a lane is being taken)
@@ -397,7 +595,11 @@ module hijaiyyah_kabah_gowin_top #(
     // LED[5]: a UART frame error happened, ever, since reset
     assign led[0] = ~absorbing;
     assign led[1] = ~permuting;
+`ifdef KABAH_WITH_HMAC
+    assign led[2] = ~(st == ST_DUMP || st == ST_SIGN || st == ST_TAG);
+`else
     assign led[2] = ~(st == ST_DUMP);
+`endif
     assign led[3] = ~sys_rst_n;
     assign led[4] = ~pll_locked;
     assign led[5] = ~frame_err_sticky;

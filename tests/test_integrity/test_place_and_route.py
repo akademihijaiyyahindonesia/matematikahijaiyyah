@@ -67,7 +67,7 @@ FINGERPRINTED = sorted((ROOT / "rtl").glob("*.v")) + sorted((ROOT / "rtl").glob(
 # hijaiyyah_sbox_router.v and hijaiyyah_wave.v -- retired/alternate designs
 # this wrapper does not instantiate.
 KABAH_WRAPPER_PATH = GOWIN / "hijaiyyah_kabah_gowin_top.v"
-KABAH_FINGERPRINTED = [
+KABAH_BASE = [
     KABAH_WRAPPER_PATH,
     ROOT / "rtl" / "hijaiyyah_kabah_top.v",
     ROOT / "rtl" / "hijaiyyah_deserialiser.v",
@@ -83,6 +83,18 @@ KABAH_FINGERPRINTED = [
     ROOT / "rtl" / "hcpu_uart_tx.v",
     GOWIN / "hcpu_gowin.cst",
 ]
+# Layer 3 (owner, 3 October 2026): the UART slot's own build reads
+# kabah_with_hmac.vh first, which defines KABAH_WITH_HMAC, and these three
+# sources as well -- the Makefile's KABAH_L3_DEFINE and KABAH_L3_SOURCES.
+# Ka'bah over HDMI defines nothing and does not read them, so its fingerprint
+# is taken over KABAH_BASE alone.
+KABAH_L3 = [
+    GOWIN / "kabah_with_hmac.vh",
+    ROOT / "rtl" / "hijaiyyah_hmac.v",
+    ROOT / "rtl" / "hijaiyyah_sha256_stream.v",
+    ROOT / "rtl" / "hijaiyyah_sha256_core.v",
+]
+KABAH_FINGERPRINTED = [*KABAH_BASE, *KABAH_L3]
 
 
 # The HDMI slot's own dependency set -- exactly the Makefile's HDMI_SOURCES
@@ -108,7 +120,7 @@ KABAH_HDMI_FINGERPRINTED = [
     GOWIN / "tmds_rpll.v",
     ROOT / "rtl" / "hcpu_video_timing.v",
     GOWIN / "kabah_hdmi.cst",
-    *(f for f in KABAH_FINGERPRINTED if f.name != "hcpu_gowin.cst"),
+    *(f for f in KABAH_BASE if f.name != "hcpu_gowin.cst"),
 ]
 
 def _fingerprint(sources: list[Path]) -> str:
@@ -313,6 +325,37 @@ def test_the_kabah_wrapper_narrows_the_interface_and_says_so() -> None:
     assert "1,665" in wrapper and "384 IOB" in wrapper
 
 
+KABAH_BENCH_SOURCES = [
+    "rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.v",
+    "rtl/hijaiyyah_kabah_top.v", "rtl/hijaiyyah_deserialiser.v",
+    "rtl/hijaiyyah_jamrah_gate.v", "rtl/hijaiyyah_node_counter.v",
+    "rtl/hijaiyyah_sponge.v", "rtl/hijaiyyah_ramal_impulse.v",
+    "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
+    "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
+    "rtl/hcpu_uart_rx.v", "rtl/hcpu_uart_tx.v",
+    "rtl/tb/tb_hijaiyyah_kabah_gowin_top.v",
+]
+KABAH_L3_BENCH_SOURCES = ["rtl/hijaiyyah_hmac.v", "rtl/hijaiyyah_sha256_stream.v",
+                          "rtl/hijaiyyah_sha256_core.v"]
+
+
+def _kabah_bench(layer3: bool) -> str:
+    out = "/tmp/tb_kabah_gowin_top_l3" if layer3 else "/tmp/tb_kabah_gowin_top"
+    # The Makefile's order: the bench, then -- for layer 3 -- the file that
+    # defines the macro, ahead of the wrapper it switches.
+    bench, design = KABAH_BENCH_SOURCES[-1], KABAH_BENCH_SOURCES[:-1]
+    sources = [bench, *(["rtl/fpga/gowin/kabah_with_hmac.vh"] if layer3 else []), *design,
+               *(KABAH_L3_BENCH_SOURCES if layer3 else [])]
+    build = subprocess.run(
+        ["iverilog", "-g2012", "-I", "rtl",
+         "-s", "tb_hijaiyyah_kabah_gowin_top", "-o", out, *sources],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert build.returncode == 0, build.stderr
+    run = subprocess.run(["vvp", out], cwd=ROOT, capture_output=True, text=True, timeout=60)
+    return run.stdout
+
+
 def test_the_kabah_wrapper_dumps_exactly_cube_pys_state_over_simulated_uart() -> None:
     """
     The wrapper's own logic -- UART framing, the bit-serial feed, the
@@ -322,27 +365,25 @@ def test_the_kabah_wrapper_dumps_exactly_cube_pys_state_over_simulated_uart() ->
     out_state directly. It caught a real bug before this test existed --
     tx_data raced dump_idx and byte 0 of every dump was skipped -- so it
     stays here as the thing that would catch it coming back.
+
+    This is the wrapper WITHOUT layer 3 -- kabah_with_hmac.vh not read, no
+    SHA-256 source read -- which is what Ka'bah over HDMI and the combined top
+    build: 200 bytes a reply and nothing after them.
     """
-    sources = [
-        "rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.v",
-        "rtl/hijaiyyah_kabah_top.v", "rtl/hijaiyyah_deserialiser.v",
-        "rtl/hijaiyyah_jamrah_gate.v", "rtl/hijaiyyah_node_counter.v",
-        "rtl/hijaiyyah_sponge.v", "rtl/hijaiyyah_ramal_impulse.v",
-        "rtl/hijaiyyah_rotate_core.v", "rtl/hijaiyyah_linear.v",
-        "rtl/hijaiyyah_sbox.v", "rtl/hijaiyyah_round_constants.v",
-        "rtl/hcpu_uart_rx.v", "rtl/hcpu_uart_tx.v",
-        "rtl/tb/tb_hijaiyyah_kabah_gowin_top.v",
-    ]
-    build = subprocess.run(
-        ["iverilog", "-g2012", "-I", "rtl",
-         "-s", "tb_hijaiyyah_kabah_gowin_top", "-o", "/tmp/tb_kabah_gowin_top", *sources],
-        cwd=ROOT, capture_output=True, text=True,
-    )
-    assert build.returncode == 0, build.stderr
-    run = subprocess.run(["vvp", "/tmp/tb_kabah_gowin_top"], cwd=ROOT,
-                         capture_output=True, text=True, timeout=60)
-    assert "PASS:" in run.stdout, run.stdout
-    assert "400/400 bytes" in run.stdout
+    stdout = _kabah_bench(layer3=False)
+    assert "PASS:" in stdout, stdout
+    assert "400/400 bytes" in stdout
+    assert "HMAC" not in stdout and "64/64" not in stdout
+
+
+def test_the_uart_slot_signs_each_reply_over_simulated_uart() -> None:
+    """Layer 3 in the UART slot (owner, 3 October 2026): with kabah_with_hmac.vh
+    read first, as the slot's own build reads it, each 200-byte reply is
+    followed by its 32-byte HMAC-SHA256 tag, and both are checked -- the state
+    against cube.py, the tag against hmac/hashlib."""
+    stdout = _kabah_bench(layer3=True)
+    assert "PASS:" in stdout, stdout
+    assert "400/400 bytes" in stdout and "64/64 bytes" in stdout
 
 
 def test_nodsp_is_required_and_the_reason_is_the_packer() -> None:

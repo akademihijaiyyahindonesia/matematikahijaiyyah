@@ -495,7 +495,7 @@ wrapper), memori instruksi yang kosong di **setiap** bitstream yang pernah
 dibangun — tak terlihat karena `OP_NOP` kebetulan `8'h00` — dan driver
 diferensial TMDS yang dibuang nextpnr sebelum sampai ke pad. Ketiganya lolos
 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil langsung
-dari pytest — dan 6.077 tes Python.
+dari pytest — dan 6.083 tes Python.
 
 ---
 

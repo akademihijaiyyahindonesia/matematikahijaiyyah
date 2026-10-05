@@ -17,9 +17,11 @@ cube.py: "not a vetted hash -- use hashlib.sha256 for anything that matters".
 Layer 3, HMAC-SHA256, is the one that carries security. Nothing here is a
 security claim; these are measurements of a permutation's diffusion in silicon.
 
--- the protocol, unchanged -------------------------------------------------
-The wrapper takes exactly 128 bytes and answers with 200: the whole state,
-most significant byte first. `load` fires once after reset, so frames sent back
+-- the protocol ------------------------------------------------------------
+The wrapper takes exactly 128 bytes and answers with 232: the whole state,
+most significant byte first, then (since 3 October 2026) the 32-byte
+HMAC-SHA256 tag of those 200 bytes under the bitstream's test key. Every tag
+is checked here; the measurements below are still of the state. `load` fires once after reset, so frames sent back
 to back CHAIN into one absorb. Two messages can therefore only be compared from
 a fresh configuration each -- which is why an avalanche trial reconfigures the
 board between its two halves, and why "replay" here has two different answers
@@ -38,8 +40,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "rtl" / "scripts"))
 
-from kabah_uart_test import RATE, STATE_BYTES, expected_states  # noqa: E402
+from kabah_uart_test import (  # noqa: E402
+    RATE, REPLY_BYTES, STATE_BYTES, expected_states, expected_tag)
 
+#: Replies whose tag was not HMAC-SHA256 of the state they came with.
+TAGS = {"checked": 0, "bad": 0}
 STATE_BITS = STATE_BYTES * 8
 
 
@@ -60,7 +65,8 @@ def configure(bitstream: Path) -> None:
 
 
 def run_message(port: str, message: bytes, baud: int = 115200) -> list[bytes]:
-    """Send the message frame by frame; one 200-byte reply per frame."""
+    """Send the message frame by frame; the 200 state bytes of each reply.
+    Each reply's tag is checked against the state it came with."""
     import serial  # pyserial, optional
     out = []
     with serial.Serial(port, baud, timeout=5) as link:
@@ -68,7 +74,11 @@ def run_message(port: str, message: bytes, baud: int = 115200) -> list[bytes]:
         for i in range(0, len(message), RATE):
             link.write(message[i:i + RATE])
             link.flush()
-            out.append(link.read(STATE_BYTES))
+            reply = link.read(REPLY_BYTES)
+            state, tag = reply[:STATE_BYTES], reply[STATE_BYTES:]
+            TAGS["checked"] += 1
+            TAGS["bad"] += tag != expected_tag(state)
+            out.append(state)
     return out
 
 
@@ -155,6 +165,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"states that should differ: {distinct}/{len(seen)} distinct")
     print("  no collision found -- which is a statement about "
           f"{len(seen)} states, not about the sponge")
+
+    # 5. layer 3: every reply's tag is HMAC-SHA256 of the state it came with
+    ok &= TAGS["bad"] == 0
+    print(f"tags: {TAGS['checked'] - TAGS['bad']}/{TAGS['checked']} are HMAC-SHA256 of "
+          "their state under the bitstream's test key")
     return 0 if ok else 1
 
 

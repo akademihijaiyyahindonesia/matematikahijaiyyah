@@ -69,6 +69,16 @@ SHA-256/HMAC ada di RTL sejak 1 Oktober 2026, tetapi sebagai slot sendiri
 `hijaiyyah_wave`. Keluaran Ka'bah tetap belum terautentikasi sampai
 ditandatangani, dan lapis 3 adalah seluruh keamanannya.
 
+Sejak 3 Oktober 2026 pembungkus slot UART, `hijaiyyah_kabah_gowin_top.v`,
+menginstansiasi `hijaiyyah_hmac` dan mengirim tag HMAC-SHA256 32 byte di belakang
+200 byte keadaan. Kuncinya **kunci uji publik** — RFC 4231 kasus uji 1, dua puluh
+byte `0x0b`, ditanam di bitstream: ia membuktikan jalurnya, bukan mengamankan apa
+pun. Ka'bah-HDMI dan top gabungan tetap tanpa HMAC: lapis 3 hanya
+dibangun bila `KABAH_WITH_HMAC` didefinisikan, dan hanya build slot UART yang
+mendefinisikannya. Jadi kalimat di
+atas tetap berlaku: tag di bawah kunci yang bisa dibaca siapa pun tidak
+mengautentikasi apa pun.
+
 ---
 
 ## Rotasi menuju inti

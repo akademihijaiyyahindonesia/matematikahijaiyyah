@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **6.077 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **6.083 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 158 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,13 +41,13 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 6.077 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 6.083 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **6.075 lulus, 1 dilewati, 1 gagal dari 6.077**: sidik jari
+Hari ini kebenarannya **6.081 lulus, 1 dilewati, 1 gagal dari 6.083**: sidik jari
 `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.
 
@@ -187,7 +187,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 | | apa | perintah |
 |---|---|---|
 | ✅ | **Bitstream HCPU, Tang Nano 20K: 75% LUT4, 116,44 MHz** | `make -C rtl/fpga/gowin bitstream` |
-| ✅ | **Bitstream Ka'bah, Tang Nano 20K: 58% LUT4, 165,98 MHz** | `make -C rtl/fpga/gowin kabah_bitstream` |
+| ✅ | **Bitstream Ka'bah, Tang Nano 20K: 72% LUT4 dengan lapis 3 (HMAC-SHA256, kunci uji)** — tanpa lapis 3: 58% LUT4, 165,98 MHz | `make -C rtl/fpga/gowin kabah_bitstream` |
 | ✅ | **`CSET` (0x45) dijalankan di papan: `5 6 2 0`** | `make -C rtl/fpga/gowin bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_cset.hasm` |
 | ✅ | **HFS baca mengembalikan H-Reg hidup di papan: `1 1 1 2 1`** | `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_hfs.hasm` |
 | ✅ | **Kartu MicroSD bertahan melewati mati daya: `1 1 1 10`** — SDIO 1-bit, LBA 1; lima checkpoint `10` → `1 1 0 10` → `1 1 1 1 10` → reset → mati daya ([PAPAN.md](PAPAN.md)) | `make -C rtl/fpga/gowin bridge` lalu `send PROG=../../programs/sdio_verify.hasm` |

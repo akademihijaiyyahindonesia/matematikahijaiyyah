@@ -213,7 +213,9 @@ Label: `CC`. Bukti: `rtl/tb/tb_hcpu_hos.v`, `tests/test_integrity/test_hos.py`
 **Hanya lapis 3 yang memikul keamanan.** Di RTL ia ada sebagai slot sendiri
 (`rtl/hijaiyyah_hmac.v`, 1 Oktober 2026), tidak di jalur `hijaiyyah_kabah_top` /
 `hijaiyyah_wave`; keluaran Ka'bah tetap belum terautentikasi sampai
-ditandatangani. Empat
+ditandatangani. Sejak 3 Oktober 2026 pembungkus slot UART
+(`hijaiyyah_kabah_gowin_top.v`) menginstansiasinya dengan **kunci uji publik**
+(RFC 4231 kasus uji 1): jalurnya terbukti di simulasi, keamanannya belum. Empat
 lapis lain adalah struktur, bukan jaminan. Menyebut sistem ini "aman" karena
 ada lima lapis adalah salah membaca susunannya.
 
@@ -254,6 +256,10 @@ GW2AR-LV18QN88C8/I7 (Tang Nano 20K, papan target
 IOB     10 / 384    2%
 LUT4    12.061 / 20.736   58%
 Fmax    165,98 MHz, terrout, bitstream 4,6 MB — dijalankan di papan
+
+dengan lapis 3 (HMAC-SHA256, kunci uji), bawaan sejak 3 Oktober 2026:
+LUT4    15.030 / 20.736   72%
+DFF      4.132 / 15.552   26%   — belum dijalankan di papan; Fmax tidak diklaim
 ```
 
 Fingerprint RTL-nya sendiri, terpisah dari fingerprint HCPU — lihat
@@ -314,7 +320,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 6.077 lulus, 0 dilewati
+python3 -m pytest -q          # 6.083 lulus, 0 dilewati
 make -C rtl/tb all            # 408 asersi, 39 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

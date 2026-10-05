@@ -161,6 +161,22 @@ KABAH_SOURCES = $(KABAH_TOP).v $(RTL_DIR)/hijaiyyah_kabah_top.v \
                 $(RTL_DIR)/hijaiyyah_round_constants.v \
                 $(RTL_DIR)/hcpu_uart_rx.v $(RTL_DIR)/hcpu_uart_tx.v
 
+# Layer 3 in the UART slot (owner, 3 October 2026): the slot's own build
+# defines KABAH_WITH_HMAC, and the wrapper then signs each reply with
+# HMAC-SHA256 under a public test key. Ka'bah over HDMI and the combined top
+# read KABAH_SOURCES and define nothing, so they build the wrapper as it was.
+#
+# It is done with a target-specific KABAH_SOURCES, added below the list and
+# touching no line that was here before: for these two targets alone the list
+# is led by kabah_with_hmac.vh, which defines the macro for the files read
+# after it, and followed by the three layer-3 sources. The recipes of
+# sim_kabah and kabah_synth are the lines they always were. A -D flag could
+# not do it: iverilog takes none after its first source file.
+KABAH_L3_DEFINE  = kabah_with_hmac.vh
+KABAH_L3_SOURCES = $(RTL_DIR)/hijaiyyah_hmac.v $(RTL_DIR)/hijaiyyah_sha256_stream.v \
+                   $(RTL_DIR)/hijaiyyah_sha256_core.v
+sim_kabah kabah_synth: KABAH_SOURCES := $(KABAH_L3_DEFINE) $(KABAH_SOURCES) $(KABAH_L3_SOURCES)
+
 # No program.hex: the wrapper's protocol is fixed (128 bytes in, 200 out),
 # not a loaded program. But the testbench does $readmemh two want-vectors by
 # a path relative to the repo root ("rtl/tb/kabah_uart_want.hex") -- it was

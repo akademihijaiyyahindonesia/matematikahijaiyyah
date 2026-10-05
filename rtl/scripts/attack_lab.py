@@ -95,7 +95,7 @@ from jamrah_board import GATE, gate_body, parse  # noqa: E402
 from jamrah_board import run_board as run_program  # noqa: E402
 from jim_stream import PERIODS, stream  # noqa: E402
 from kabah_board import STATE_BITS, distance, flip  # noqa: E402
-from kabah_uart_test import RATE, STATE_BYTES, expected_states  # noqa: E402
+from kabah_uart_test import RATE, REPLY_BYTES, STATE_BYTES, expected_states  # noqa: E402
 from send_container import chunks, read_line  # noqa: E402
 from send_program import encode  # noqa: E402
 
@@ -560,7 +560,10 @@ def send_raw(port: str, pieces: list[bytes],
         for piece in pieces:
             link.write(piece)
             link.flush()
-            out.append(link.read(STATE_BYTES))
+            # 232 on the wire since 3 October 2026: the state, then its tag.
+            # The cases here are about the state; the tag is read and dropped
+            # so it cannot be taken for the next reply.
+            out.append(link.read(REPLY_BYTES)[:STATE_BYTES])
     return out
 
 

@@ -67,6 +67,15 @@ module tb_hijaiyyah_kabah_gowin_top;
 
     reg [1599:0] want_state  [0:0];
     reg [1599:0] want_state2 [0:0];
+    reg [255:0]  want_tag    [0:0];
+    reg [255:0]  want_tag2   [0:0];
+    reg [7:0]    got_tag [0:31];
+
+    // Whether the wrapper under test was built with layer 3 is read from the
+    // wrapper itself -- its FSM state is three bits wide with layer 3, two
+    // without -- and not from a macro here: this file is read before the
+    // wrapper's sources, so a macro defined for them would arrive too late.
+    localparam L3 = ($bits(dut.st) == 3);
     reg [7:0]    got   [0:199];
     reg [7:0]    b;
     integer      i, bad, total_bad;
@@ -88,9 +97,30 @@ module tb_hijaiyyah_kabah_gowin_top;
         end
     endtask
 
+    // Layer 3: the 32 bytes after the state are HMAC-SHA256 of the 200 state
+    // bytes under the wrapper's test key, computed by hmac/hashlib in
+    // gen_kabah_uart_want.py -- not by anything in this repository's RTL.
+    task check_tag(input [255:0] want, input [8*8-1:0] label);
+        integer j;
+        begin
+            bad = 0;
+            for (j = 0; j < 32; j = j + 1) begin
+                expected_byte = want[(255 - j*8) -: 8];
+                if (got_tag[j] !== expected_byte) begin
+                    bad = bad + 1;
+                    if (bad <= 5)
+                        $display("MISMATCH %0s tag byte %0d: got %02h want %02h", label, j, got_tag[j], expected_byte);
+                end
+            end
+            total_bad = total_bad + bad;
+        end
+    endtask
+
     initial begin
         $readmemh("rtl/tb/kabah_uart_want.hex",  want_state);
         $readmemh("rtl/tb/kabah_uart_want2.hex", want_state2);
+        $readmemh("rtl/tb/kabah_uart_tag.hex",   want_tag);
+        $readmemh("rtl/tb/kabah_uart_tag2.hex",  want_tag2);
         total_bad = 0;
 
         repeat (4) @(posedge clk);
@@ -105,6 +135,13 @@ module tb_hijaiyyah_kabah_gowin_top;
             got[i] = b;
         end
         check_frame(want_state[0], "frame1");
+        if (L3) begin
+            for (i = 0; i < 32; i = i + 1) begin
+                recv_byte(b);
+                got_tag[i] = b;
+            end
+            check_tag(want_tag[0], "frame1");
+        end
 
         // Frame 2: bytes(128..255), sent right behind frame 1 with no reset
         // in between. `load` only ever pulses once, so this is a genuine
@@ -119,10 +156,20 @@ module tb_hijaiyyah_kabah_gowin_top;
             got[i] = b;
         end
         check_frame(want_state2[0], "frame2");
+        if (L3) begin
+            for (i = 0; i < 32; i = i + 1) begin
+                recv_byte(b);
+                got_tag[i] = b;
+            end
+            check_tag(want_tag2[0], "frame2");
+        end
 
-        if (total_bad == 0)
-            $display("PASS: two 128-byte frames over simulated UART, no reset between them -> wrapper dumped exactly cube.py's chained state each time, 400/400 bytes, 10 pins wide");
-        else
+        if (total_bad == 0) begin
+            if (L3)
+                $display("PASS: two 128-byte frames over simulated UART, no reset between them -> wrapper dumped exactly cube.py's chained state each time, 400/400 bytes, each followed by its HMAC-SHA256 tag, 64/64 bytes, 10 pins wide");
+            else
+                $display("PASS: two 128-byte frames over simulated UART, no reset between them -> wrapper dumped exactly cube.py's chained state each time, 400/400 bytes, 10 pins wide");
+        end else
             $display("FAIL: %0d mismatched bytes total", total_bad);
 
         $finish;

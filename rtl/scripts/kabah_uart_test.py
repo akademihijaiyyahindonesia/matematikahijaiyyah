@@ -3,7 +3,9 @@
 Test hijaiyyah_kabah_gowin_top.v against real hardware over a real port.
 
 The wrapper's protocol: send exactly 128 bytes (one rate block), it answers
-with exactly 200 bytes -- out_state, most-significant byte first. `load`
+with exactly 232 bytes -- out_state, most-significant byte first, 200 bytes,
+then layer 3: the 32-byte HMAC-SHA256 tag of those 200 bytes under the test
+key fixed in the bitstream (since 3 October 2026). `load`
 fires once, right after reset, so blocks sent back to back chain into one
 absorb rather than 128 bytes re-hashed in isolation each time -- the same
 thing tb_hijaiyyah_kabah_gowin_top.v proves in simulation, and the reason
@@ -24,6 +26,8 @@ what the tests use, since there is no board in a test run.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import sys
 from pathlib import Path
 
@@ -33,7 +37,19 @@ sys.path.insert(0, str(ROOT / "src"))
 from hijaiyyah.crypto import cube  # noqa: E402
 
 RATE = cube.RATE            # 128: one absorbed block
-STATE_BYTES = cube.STATE_LANES * cube.LANE_BYTES   # 200: one dumped reply
+STATE_BYTES = cube.STATE_LANES * cube.LANE_BYTES   # 200: the dumped state
+TAG_BYTES = 32                                     # layer 3: HMAC-SHA256 of it
+REPLY_BYTES = STATE_BYTES + TAG_BYTES              # 232: one reply on the wire
+#: The wrapper's HMAC_KEY: RFC 4231 test case 1, twenty bytes of 0x0b. A
+#: published test key fixed in the bitstream -- it proves the path and is no
+#: secret; a tag under it authenticates nothing to anyone who can read this.
+TEST_KEY = bytes([0x0B]) * 20
+
+
+def expected_tag(state: bytes) -> bytes:
+    """Layer 3 over one reply: HMAC-SHA256 of the 200 state bytes as dumped,
+    by hmac/hashlib -- not by anything of this repository's."""
+    return hmac.new(TEST_KEY, state, hashlib.sha256).digest()
 
 
 def expected_states(message: bytes) -> list[bytes]:
@@ -73,9 +89,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.port is None:
         print(f"{frames} frame(s), {len(message)} bytes total, "
-              f"{STATE_BYTES} expected bytes each:", file=sys.stderr)
+              f"{STATE_BYTES} expected state bytes and a {TAG_BYTES}-byte tag each:",
+              file=sys.stderr)
         for i, want in enumerate(wants, 1):
             print(f"frame{i} want: {want.hex()}", file=sys.stderr)
+            print(f"frame{i} tag:  {expected_tag(want).hex()}", file=sys.stderr)
         return 0
 
     try:
@@ -90,14 +108,25 @@ def main(argv: list[str] | None = None) -> int:
             block = message[i * RATE:(i + 1) * RATE]
             link.write(block)
             link.flush()
-            got = link.read(STATE_BYTES)
+            reply = link.read(REPLY_BYTES)
+            got, tag = reply[:STATE_BYTES], reply[STATE_BYTES:]
             want = wants[i]
-            if len(got) != STATE_BYTES:
-                print(f"frame{i + 1}: only got {len(got)}/{STATE_BYTES} bytes "
+            if len(reply) != REPLY_BYTES:
+                print(f"frame{i + 1}: only got {len(reply)}/{REPLY_BYTES} bytes "
                       f"-- timed out or the wrapper sent less than it should",
                       file=sys.stderr)
                 failures += 1
                 continue
+            # The tag is checked against the bytes the board SENT, so a wrong
+            # state and a wrong tag are two findings, not one.
+            if not hmac.compare_digest(tag, expected_tag(got)):
+                print(f"frame{i + 1}: TAG MISMATCH -- got {tag.hex()}, "
+                      f"HMAC-SHA256 of the state received is {expected_tag(got).hex()}",
+                      file=sys.stderr)
+                failures += 1
+            else:
+                print(f"frame{i + 1}: tag PASS, HMAC-SHA256 of the 200 bytes received",
+                      file=sys.stderr)
             if got != want:
                 mismatches = [j for j in range(STATE_BYTES) if got[j] != want[j]]
                 print(f"frame{i + 1}: MISMATCH at {len(mismatches)} byte(s), "
@@ -112,7 +141,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FAIL: {failures}/{frames} frame(s) mismatched", file=sys.stderr)
         return 1
     print(f"PASS: {frames}/{frames} frame(s), {STATE_BYTES * frames} bytes total, "
-          f"all match cube.py", file=sys.stderr)
+          f"all match cube.py, and {frames}/{frames} tag(s) are HMAC-SHA256 of them",
+          file=sys.stderr)
     return 0
 
 

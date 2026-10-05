@@ -145,7 +145,10 @@ bersembunyi penuh dan sistem berjalan di 8,00. **Belum dibangun, belum diukur �
 **Lapis 3 memikul seluruh keamanan.** Di RTL ia ada **sebagai slot sendiri**
 (`rtl/hijaiyyah_hmac.v`, 1 Oktober 2026), tidak di jalur `hijaiyyah_kabah_top`
 dan **tidak tersambung ke HCPU**. Yang keluar dari perangkat keras Ka'bah
-**belum terautentikasi** sampai ditandatangani.
+**belum terautentikasi** sampai ditandatangani. Sejak 3 Oktober 2026 pembungkus
+slot UART (`hijaiyyah_kabah_gowin_top.v`) menginstansiasi HMAC itu dengan
+**kunci uji publik** (RFC 4231 kasus uji 1): jalurnya terbukti, keamanannya
+belum.
 
 ## 7. Segel: menutup setiap penentu
 
@@ -174,8 +177,9 @@ Program H‑ISA disegel oleh `seal_program`, dan opcode dibaca **dari
 
 ## 8. Yang tidak dilakukan sistem ini
 
-- **Core SHA‑256 di RTL hanya slot sendiri.** Ia tidak tersambung ke HCPU
-  maupun ke jalur Ka'bah, dan `CHASH`/`CSIGN` tetap pertanyaan untuk pemilik.
+- **Core SHA‑256 di RTL hanya slot sendiri**, ditambah satu pemakaian: slot
+  UART Ka'bah, dengan kunci uji publik (3 Oktober 2026). Ia tidak tersambung
+  ke HCPU maupun ke `hijaiyyah_kabah_top`, dan `CHASH`/`CSIGN` tetap pertanyaan untuk pemilik.
 - **Tidak ada kerahasiaan.** Lapis 4 ditolak, disengaja.
 - **HCPU tidak dilebur dengan blok kripto.** CosmicTera **membungkus** program
   yang berjalan di H‑ISA; ia tidak menyuntikkan kripto ke datapath.

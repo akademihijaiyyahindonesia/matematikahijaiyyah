@@ -2041,6 +2041,33 @@ paling mudah dilanggar:
 - **HMAC tidak tersambung ke HCPU**, dan tidak di jalur `hijaiyyah_kabah_top`
   / `hijaiyyah_wave`. Keluaran Ka'bah tetap belum terautentikasi sampai
   ditandatangani.
+- **Keputusan pemilik, 3 Oktober 2026 — HMAC di slot UART Ka'bah.** Kata
+  pemilik: "HMAC harus benar-benar diinstansiasikan oleh jalur Ka'bah, bukan
+  hanya tersedia sebagai modul RTL terpisah", dengan dua pilihan: **kunci uji
+  di bitstream**, dan **hanya slot UART Ka'bah**. Yang paling mudah dilanggar:
+  - `hijaiyyah_hmac` diinstansiasi di `rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.v`
+    di bawah makro `KABAH_WITH_HMAC`, yang hanya didefinisikan build slot UART
+    (`KABAH_L3_DEFINE` di `rtl/fpga/gowin/Makefile`). `rtl/hijaiyyah_kabah_top.v`
+    dan `rtl/hijaiyyah_wave.v` **tidak disentuh** dan tetap tanpa inti SHA-256.
+  - `rtl/fpga/gowin/kabah_hdmi_top.v` dan
+    `rtl/fpga/gowin/hijaiyyah_cosmictera_gowin_top.v` menginstansiasi pembungkus
+    itu sendiri. Keduanya **tidak diubah** dan tidak mendefinisikan makro itu,
+    jadi tetap tanpa HMAC. HCPU dan Portal tidak diubah.
+  - **Kenapa makro, bukan parameter** (terukur, 4 Oktober 2026): dengan lapis
+    3 dimatikan lewat parameter, Ka'bah-HDMI ter-PnR di 11.728 LUT4, bukan
+    12.133 yang tercatat — DFF sama, tanpa sel HMAC, perilaku 200 byte sama,
+    tetapi sintesis peka terhadap teks yang ia terima. Pemilik menolak
+    melonggarkan kriteria "identik". Dengan makro, tanpa definisi setiap baris
+    kode pembungkus adalah baris yang lama, dan sebuah tes menjaganya.
+  - **Kuncinya kunci uji publik**: RFC 4231 kasus uji 1, dua puluh byte
+    `0x0b`. Tag di bawahnya membuktikan jalurnya, bukan mengamankan apa pun.
+    **Status keamanan Ka'bah tidak naik karenanya**, dan kalimat "belum
+    terautentikasi sampai ditandatangani" tetap berlaku.
+  - Balasan slot menjadi 232 byte: 200 byte keadaan, lalu 32 byte tag.
+    `rtl/scripts/kabah_uart_test.py`, `rtl/scripts/kabah_board.py`, dan
+    `rtl/scripts/attack_lab.py` mengikutinya.
+  - Angkanya di kepala pembungkus dan di `kabah/SILICON.md`. Fmax tidak
+    diklaim. Uji papan langkah laboratorium atas perintah pemilik.
 - **`CHASH`/`CSIGN` tetap ditanyakan ke pemilik.**
 - **`state_hash` tidak berubah (opsi C).**
 - Terukur di commit yang memasukkannya:

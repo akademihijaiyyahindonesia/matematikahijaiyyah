@@ -110,10 +110,17 @@ SLOTS: Tuple[Slot, ...] = (
     Slot(
         name="kabah",
         bitstream="rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.fs",
-        runs="Ka'bah sponge, SLICE_BYTES=25, UART feed and dump",
-        verified="2/2 frames, 400/400 bytes matching cube.py, chained with "
-                 "no reset between them",
-        lut4=12_061, dff=1_965, bsram=0, fmax_mhz=165.98,
+        runs="Ka'bah sponge, SLICE_BYTES=25, UART feed and dump, and since "
+             "3 October 2026 layer 3: each 200-byte reply followed by its "
+             "32-byte HMAC-SHA256 tag under a public test key",
+        verified="in simulation through the UART pins: 400/400 state bytes "
+                 "matching cube.py and 64/64 tag bytes matching hmac/hashlib. "
+                 "NOT YET RUN ON THE BOARD with layer 3; without it the board "
+                 "returned 2/2 frames, 400/400 bytes, chained with no reset "
+                 "between them",
+        # nextpnr prints 97.93 MHz after routing; it is a margin above the
+        # board's 27 MHz, not a validated Fmax (see the wrapper's header).
+        lut4=15_030, dff=4_132, bsram=0, fmax_mhz=97.93,
     ),
     Slot(
         name="hdmi",
