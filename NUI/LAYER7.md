@@ -26,6 +26,8 @@ Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover 
 Completion condition           mengisolasi, memulihkan, dan merekam — pemilik, 3 Oktober 2026
 Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan
 Linux service recovery         DIUSULKAN    adendum pasca-freeze, akhir 7.4 — semua DENIED
+Linux: VM uji, cron, kelas, ISOLATE_SERVICE   DISETUJUI   pemilik, 6 Oktober 2026 — baca-saja; RESTART_SERVICE belum
+Linux: ISOLATE_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — baris 7.4 sendiri, izin 13 di 7.5; tanpa tindakan
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
@@ -104,7 +106,8 @@ kontrak kuerinya ada di `NUI/spec/query_contract.json`.
 
 Status tiap kategori, ditetapkan pemilik 30 September 2026. Daftar tindakan lama
 dipertahankan, dengan statusnya. Dua baris yang menyebut slot Portal 8888
-dibuka pemilik 3 Oktober 2026; keduanya tidak mengubah papan.
+dibuka pemilik 3 Oktober 2026; keduanya tidak mengubah papan. Satu baris untuk
+VM uji Linux dibuka pemilik 6 Oktober 2026; ia hanya membaca.
 
 | kategori | asal catatannya | status |
 |---|---|---|
@@ -116,6 +119,7 @@ dibuka pemilik 3 Oktober 2026; keduanya tidak mengubah papan.
 | Penulisan UART protokol Portal 8888 sesudah muat ulang pada lari yang sama | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | Mulai ulang slot Portal 8888 (`RESTART_PORTAL`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | Pemulihan slot Portal 8888 (`RECOVER_PORTAL`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
+| Penggolongan gangguan `cron.service` di VM uji Linux (`ISOLATE_SERVICE`) | Keputusan pemilik 6 Oktober 2026 atas proposal layanan Linux, di bawah | **AUTHORIZED** |
 | 10 perintah host lama: `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` | Daftar "belum diizinkan" Lapis 5 di `NUI/LAYERS.md` | **DENIED** |
 | Konfigurasi ulang papan (`openFPGALoader`) | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
 | Mengirim program ke papan | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
@@ -688,6 +692,134 @@ Dan tetap: `self-authorization = forbidden`.
 `shutdown`, perintah `docker`, `rm`, `mv`, unit selain yang disebut, menyalakan
 atau mematikan VM, Mac host, dan Windows.
 
+#### Keputusan pemilik, 6 Oktober 2026 — Linux, sebelum `RESTART_SERVICE`
+
+Empat keputusan, dicatat sebelum evidence Linux dipakai untuk membuka tindakan
+apa pun:
+
+| keputusan | status |
+|---|---|
+| `cosmictera-layer5-uji` dibuat kembali sebagai VM laboratorium | **Disetujui** |
+| `cron.service` sebagai target layanan pertama | **Disetujui** |
+| `UNIT_INACTIVE` dan `UNIT_FAILED` sebagai klasifikasi lokal Lapis 7 | **Disetujui** |
+| `ISOLATE_SERVICE` sebagai tindakan baca-saja di `src/hijaiyyah/nui/layer7_linux.py` | **Disetujui** |
+
+Batasnya, kata pemilik:
+
+```text
+Lapis 5 frozen
+        ↓
+observasi systemctl status
+        ↓
+Lapis 7 mengklasifikasikan:
+  active         → kondisi sehat
+  inactive       → UNIT_INACTIVE
+  failed         → UNIT_FAILED
+  tidak menjawab → VM_UNREACHABLE
+```
+
+`UNIT_INACTIVE` dan `UNIT_FAILED` **tidak** ditambahkan ke kontrak outcome
+Lapis 5. Di Lapis 5, `systemctl status` atas unit yang tidak aktif tetap
+terbaca `collector_error`.
+
+**Namespace evidence.** `~/cosmictera-layer5/linux-service/<waktu>/` adalah
+evidence Lapis 7 di luar repositori, **bukan** bagian evidence store Lapis 5 dan
+bukan bukti yang mengubah Lapis 5.
+
+**Alat ukur dan provenance-nya.** Alatnya `portal8888/build/diag/measure_unit.py`,
+di folder yang di-gitignore. Ia tidak dijadikan source repositori hanya karena
+dipakai mengukur, tetapi provenance-nya dicatat di sini supaya evidence dapat
+diaudit ulang:
+
+- SHA-256 `5810582e488c78f71393cd4ead795a5007397b689f4dbc76ef01585806966f8a`,
+  1.559 byte;
+- argv tetap `systemctl status cron.service` di `cosmictera-layer5-uji`, diizinkan
+  lewat `layer5.guard` (entri `systemctl status`), dijalankan
+  `limactl shell <vm> -- <argv>` dengan `LIMA_HOME` dari `layer5.host()`;
+- tiap lari menulis `record.json`, `stdout.txt`, dan `stderr.txt` ke direktori
+  bercap waktu, dan `record.json` memuat label, VM, argv, entri izin, waktu
+  mulai, exit code, outcome Lapis 5, serta SHA-256 stdout dan stderr.
+
+**Yang terukur sampai keputusan ini:**
+
+| lari | `Active:` | exit | outcome Lapis 5 | SHA-256 stdout |
+|---|---|---:|---|---|
+| `20261006T151343Z-measure-active` | `active (running)` | 0 | `PASS` | `4398ac39764f…` |
+| `20261006T151947Z-measure-inactive` | `inactive (dead)` | 3 | `collector_error` | `4c068df78915…` |
+| `20261006T153611Z-measure-failed` | `failed (Result: exit-code)` | 3 | `collector_error` | `61a942fffa2a…` |
+| `20261006T153714Z-measure-inactive-after-reset` | `inactive (dead)` | 3 | `collector_error` | `9b26eef8e057…` |
+| `20261006T153920Z-measure-vm-missing` | — (stdout kosong) | 1 | `collector_error` | `e3b0c44298fc…` |
+| `20261006T153928Z-measure-vm-stopped` | — (stdout kosong) | 1 | `collector_error` | `e3b0c44298fc…` |
+| `20261006T154021Z-measure-active-after-boot` | `active (running)` | 0 | `PASS` | `4f60abe00643…` |
+
+Yang dibaca dari tujuh ukuran itu, dan tidak dari kebiasaan systemd:
+
+- **Tidak aktif dan gagal sama-sama keluar dengan kode 3.** Kode keluar tidak
+  membedakan keduanya; baris `Active:` yang membedakan. `UNIT_INACTIVE` ≠
+  `UNIT_FAILED`.
+- **`UNIT_FAILED` yang terukur satu bentuk saja**: `ExecStart` keluar bukan nol
+  dengan `Restart=no` (`Result: exit-code`). Unit aslinya `Restart=on-failure`,
+  jadi keadaan itu dibuat operator dengan drop-in sementara
+  `/run/systemd/system/cron.service.d/lab.conf` (`ExecStart=/bin/false`), lalu
+  dihapus, `daemon-reload`, `reset-failed`. Kegagalan karena batas waktu atau
+  sinyal tidak terukur.
+- **Baris `Main PID` tidak dapat dipakai.** Sesudah `reset-failed`, unit yang
+  `inactive (dead)` masih menampilkan `status=1/FAILURE` proses terakhirnya.
+- **VM yang tidak menjawab punya dua bentuk terukur**, keduanya dari `limactl`
+  sendiri di stderr dengan kode 1 dan stdout kosong: `instance … is stopped`
+  (VM uji dihentikan dengan `limactl stop`, lalu dinyalakan lagi) dan
+  `instance … does not exist` (nama yang tidak ada). Alat ukur untuk nama VM
+  lain adalah salinan `portal8888/build/diag/measure_vm.py`, SHA-256
+  `529d874cdb8cd0ec7a7543e165469d3684382452dd77afe44ee80dc71f1b83b5`; bedanya
+  hanya nama VM dibaca dari argumen.
+- **Jurnal unit bukan sumber.** `journalctl -b -u cron.service -n 200
+  --no-pager` lolos pagar, tetapi `unavailable_due_to_permissions` (K-12).
+  Penggolongan bersandar pada `systemctl status` saja.
+- Sesudah VM uji dinyalakan lagi, unitnya `active (running)`: ia `enabled`.
+
+Menghentikan unit, drop-in, dan `limactl stop`/`start` adalah langkah
+laboratorium — tangan operator dan, untuk `limactl`, perintah pemilik — bukan
+tindakan NUI.
+
+**`ISOLATE_SERVICE` — AUTHORIZED, baca-saja** (pemilik, 6 Oktober 2026). Kata
+pemilik: *"baris AUTHORIZED baru khusus `ISOLATE_SERVICE`. Saya tidak setuju
+menyembunyikan tindakan bernama di bawah 'Observasi / read-only'."* Barisnya di
+tabel 7.4 di atas; implementasinya `src/hijaiyyah/nui/layer7_linux.py`.
+
+```text
+argv        limactl shell <VM uji> -- systemctl status cron.service
+pagar       layer5.guard, sebelum dijalankan; tanpa shell, tanpa sudo
+target      VM uji dari spec Lapis 5 (`test_instance`) dan `cron.service` saja
+hasil       NO FAULT | FAULT ISOLATED (satu dari tiga golongan) | STOP / REPORT
+may_act     false, selalu
+```
+
+| yang terbaca | golongan |
+|---|---|
+| `Active: active (running)`, kode 0 | tanpa gangguan |
+| `Active: inactive (dead)`, kode 3 | `UNIT_INACTIVE` |
+| `Active: failed (Result: exit-code)`, kode 3 | `UNIT_FAILED` |
+| `limactl`: instance `is stopped` atau `does not exist`, kode 1, stdout kosong | `VM_UNREACHABLE` |
+| apa pun selain itu | `UNKNOWN` → STOP / REPORT |
+
+Hanya bentuk yang terukur yang diberi nama. Baris `Active:` dengan kata lain,
+kode keluar yang tidak cocok dengan barisnya, stderr yang tidak kosong, status
+unit lain, unit yang tidak ada, dan diam melewati batas waktu semuanya
+`UNKNOWN`. VM atau unit selain yang disebut baris ini `UNAUTHORIZED ACTION`.
+`cosmictera-layer5`, instance utama, **bukan** target.
+
+**Syarat sebelum `RESTART_SERVICE`.** Evidence `ACTIVE` dan `INACTIVE` yang ada
+**tidak** membukanya. Yang masih dibutuhkan:
+
+1. pengukuran `UNIT_FAILED` yang benar-benar terjadi — **ada**, 6 Oktober 2026;
+2. implementasi dan tes `ISOLATE_SERVICE` — **ada**, `tests/test_ai/test_nui_layer7_linux.py`;
+3. pencatatan keempat keputusan ini di dokumentasi Lapis 7 dan `AGENTS.md`;
+4. gerbang untuk perubahan itu.
+
+Sesudah itu, keputusan **terpisah** untuk membuka `RESTART_SERVICE` —
+`sudo systemctl start cron.service`, hanya `cron.service`, paling banyak 3
+ulang. **Sampai saat itu tidak ada izin tindakan otomatis pada Linux.**
+
 ## 7.5 Authorization Boundary
 
 ```text
@@ -711,6 +843,7 @@ DECIDED BY: pemilik, 30 September 2026
 | 10 | Menulis protokol Portal 8888 ke UART sesudah muat ulang pada lari yang sama (pemilik, 3 Oktober 2026) | `portal8888/ref/portal_uart.py`, `exchange()` skrip papan |
 | 11 | Memulai ulang slot Portal 8888 atas gangguan yang tergolong, paling banyak 3 kali (pemilik, 3 Oktober 2026) | `RESTART_PORTAL`, akhir 7.4 |
 | 12 | Memulihkan slot Portal 8888 dan merekam hasilnya di luar repositori (pemilik, 3 Oktober 2026) | `RECOVER_PORTAL`, akhir 7.4 |
+| 13 | Menggolongkan gangguan `cron.service` di VM uji Linux, tanpa tindakan (pemilik, 6 Oktober 2026) | `ISOLATE_SERVICE`, akhir 7.4 — `systemctl status` lewat `layer5.guard` |
 
 **Tetap tidak diizinkan — DENIED pada Lapis 7 awal:**
 
@@ -718,7 +851,8 @@ DECIDED BY: pemilik, 30 September 2026
 - mengirim program ke papan;
 - mengubah persistent state HFS/SD;
 - restart atau recovery otomatis di luar slot Portal 8888 (izin 11 dan 12);
-- isolasi kesalahan di luar `ISOLATE_FAULT` slot Portal 8888 (izin 8);
+- isolasi kesalahan di luar `ISOLATE_FAULT` slot Portal 8888 (izin 8) dan
+  `ISOLATE_SERVICE` VM uji Linux (izin 13);
 - menjaga host tetap terjaga;
 - seluruh 10 perintah host yang pada Lapis 5 berstatus belum diizinkan;
 - tindakan jaringan eksternal;

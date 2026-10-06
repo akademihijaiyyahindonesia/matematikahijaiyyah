@@ -179,7 +179,7 @@ salah. Dilaporkan, belum disentuh.
 
 ## Yang sudah berjalan hari ini, diukur
 
-`src/hijaiyyah/nui/` berisi **42 modul**; tes di `tests/test_ai/` yang lulus
+`src/hijaiyyah/nui/` berisi **43 modul**; tes di `tests/test_ai/` yang lulus
 berjumlah **1.015**, ditambah 10 tes inventaris fakta. PyTorch 2.14.0 terpasang. Semua
 angka di halaman ini datang dari menghitung berkasnya.
 
@@ -222,6 +222,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `layer6_addendum.py` | adendum pasca-freeze Lapis 6: catatan beku 6.1–6.3 tetap objek di tag, dan tiap perubahan sesudahnya satu baris — pointer, nilai lama → sekarang, alasan, commit penyebab, dan bukti kesetaraan yang diperiksa dari objek git; berkas yang berubah dua kali ditulis sebagai rantai eksplisit yang tiap mata rantainya diperiksa; ketiga verifiernya membaca catatan beku dan adendum | `test_nui_layer6_addendum.py` (37) |
 | `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (41) |
 | `layer7_decision.py` | DECIDE Lapis 7: satu hasil kontrak `layer7.evaluate` atau `layer7.expect` jadi satu decision record deterministik — ALLOW, DENY, atau STOP / REPORT, dengan `record_sha256` dan `verify()`; ALLOW bukan eksekusi, dan tidak ada yang dijalankan | `test_nui_layer7_decision.py` (37) |
+| `layer7_linux.py` | Lapis 7 pada satu layanan Linux: `ISOLATE_SERVICE` membaca `systemctl status cron.service` di VM uji lewat pagar Lapis 5 dan menggolongkannya dari bentuk yang terukur — tanpa gangguan, `UNIT_INACTIVE`, `UNIT_FAILED`, `VM_UNREACHABLE`, atau `UNKNOWN` → STOP / REPORT; tidak bertindak atas apa pun | `test_nui_layer7_linux.py` (45) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
 | `off_db.py` | `cosmictera-build/OFF.md` dibaca jadi rekaman, bukan ditulis tangan | `test_nui_knowledge.py` (168) |
 | `knowledge.py` | apa yang diketahui tentang opcode, program, butir OFF, huruf, kata kunci HC, istilah, berkas, modul RTL, papan terakhir, host, hardware beserta jenis keadaannya dan korelasinya — dalam tujuh domain, HOST hanya dari observasi terverifikasi dan tidak pernah dari `facts/`, tiap butir bersumber, dan kontrak kueri tujuh pertanyaan pemilik | `test_nui_knowledge.py` |
@@ -1747,8 +1748,21 @@ perintah pemilik.
 
 **Sesudah freeze** (pemilik, 3 Oktober 2026): sistem pertama di luar CosmicTera
 yang dijaga adalah VM Linux Lapis 5, lalu Windows. Proposal memulai ulang satu
-layanan di VM itu ada di akhir 7.4 `NUI/LAYER7.md`, sebagai adendum; semuanya
-masih DENIED.
+layanan di VM itu ada di akhir 7.4 `NUI/LAYER7.md`, sebagai adendum.
+
+**Linux, langkah pertama — `ISOLATE_SERVICE`, 6 Oktober 2026.** Keputusan
+pemilik: instance uji `cosmictera-layer5-uji` dibuat lagi sebagai VM
+laboratorium — **K-17 dibalik untuk itu saja**, dan `cosmictera-layer5` tetap
+hanya diamati, bukan target tindakan; `cron.service` unit pertama;
+`UNIT_INACTIVE`, `UNIT_FAILED`, dan `VM_UNREACHABLE` golongan lokal Lapis 7,
+tidak masuk kontrak outcome Lapis 5; dan `ISOLATE_SERVICE` baris 7.4 sendiri,
+AUTHORIZED dan baca-saja. Implementasinya `src/hijaiyyah/nui/layer7_linux.py`:
+satu argv, `systemctl status cron.service`, lewat pagar Lapis 5, lalu
+digolongkan dari baris `Active:` dan kode keluarnya bersama-sama. Hanya bentuk
+yang terukur di VM uji hari itu yang diberi nama; selebihnya `UNKNOWN` dan
+berhenti. `tests/test_ai/test_nui_layer7_linux.py`, 45 tes, memegang keluaran
+terukur itu byte demi byte terhadap hash rekamannya. Memulai ulang unit
+(`RESTART_SERVICE`) **belum dibuka**: tidak ada tindakan otomatis pada Linux.
 
 ---
 

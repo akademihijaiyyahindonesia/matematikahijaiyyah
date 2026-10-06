@@ -2340,6 +2340,49 @@ tiga tindakan atas slot Portal 8888 — `ISOLATE_FAULT`, `RESTART_PORTAL`,
 - **Pemulihan memutus rantai Portal** dan tidak boleh dilaporkan sebagai
   kelanjutannya.
 
+**Keputusan pemilik, 6 Oktober 2026 — Linux, sebelum `RESTART_SERVICE`.**
+Dicatat di akhir 7.4 `NUI/LAYER7.md`, tidak disalin ke sini (R1). Yang paling
+mudah dilanggar:
+
+- **Empat yang disetujui**: `cosmictera-layer5-uji` dibuat kembali sebagai VM
+  laboratorium; `cron.service` target layanan pertama; `UNIT_INACTIVE` dan
+  `UNIT_FAILED` klasifikasi **lokal Lapis 7** — tidak masuk kontrak outcome
+  Lapis 5; dan `ISOLATE_SERVICE` tindakan **baca-saja** di modul NUI bernama
+  `layer7_linux`, nama dari pemilik — berkasnya belum ada.
+- **`~/cosmictera-layer5/linux-service/<waktu>/` adalah evidence Lapis 7** di
+  luar repositori, bukan evidence store Lapis 5. Alat ukurnya
+  `portal8888/build/diag/measure_unit.py` boleh tetap di folder yang
+  di-gitignore, dengan provenance-nya tercatat di 7.4.
+- **`sudo` dan perubahan `/run` untuk membuat gangguan adalah tangan operator**,
+  bukan tindakan NUI; `UNIT_FAILED` baru terukur sesudah alat ukur merekamnya.
+- **Belum ada izin tindakan otomatis pada Linux.** `RESTART_SERVICE` dibuka
+  lewat keputusan terpisah, sesudah `UNIT_FAILED` terukur, `ISOLATE_SERVICE`
+  diimplementasi dan diuji, dan gerbangnya hijau.
+- **K-17 dibalik untuk ini, dan hanya untuk ini.** K-17 (27 September 2026)
+  memensiunkan `cosmictera-layer5-uji` dan menjadikan `cosmictera-layer5`
+  satu-satunya instance aktif. Pemilik, 6 Oktober 2026: *"buat ulang instance
+  uji dulu … jangan mengubah proposal secara diam-diam hanya karena
+  `cosmictera-layer5` kebetulan hidup."* Instance uji dibuat lagi dari
+  `NUI/spec/layer5_lima.yaml` yang sama dan image yang sama; ia VM
+  laboratorium Lapis 7. `cosmictera-layer5` tetap hanya diamati dan **bukan**
+  target tindakan Linux. Run lama instance uji (26–27 September) tinggal di
+  namespace yang sama dan tidak dipindahkan.
+- **`ISOLATE_SERVICE` punya baris 7.4 sendiri — AUTHORIZED, baca-saja**
+  (pemilik, 6 Oktober 2026: tindakan bernama tidak disembunyikan di bawah
+  "Observasi / read-only"). Tabel 7.4 kini 16 baris, 9 AUTHORIZED, 7 DENIED.
+  Implementasinya `src/hijaiyyah/nui/layer7_linux.py`: satu argv,
+  `systemctl status cron.service`, lewat `layer5.guard`, di VM uji saja.
+- **Penggolong ditulis dari yang terukur, bukan dari kebiasaan systemd.** Tujuh
+  ukuran di VM uji, 6 Oktober 2026, sebelum kodenya ada. Tidak aktif dan gagal
+  **sama-sama keluar dengan kode 3**; yang membedakan baris `Active:`. Baris
+  `Main PID` menyesatkan sesudah `reset-failed`. `UNIT_FAILED` hanya bentuk
+  yang dibuat dan diukur (`Result: exit-code`); bentuk lain `UNKNOWN` dan
+  berhenti. Angkanya di akhir 7.4 `NUI/LAYER7.md`.
+- **Pola yang berlaku umum**: bentuk keluaran yang belum pernah diukur tidak
+  diberi nama. Menambah golongan berarti mengukurnya dulu.
+- R3: dua puluh delapan mutasi pada `src/hijaiyyah/nui/layer7_linux.py`, dua
+  puluh delapan tertangkap pada putaran pertama.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
