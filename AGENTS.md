@@ -2398,8 +2398,15 @@ Sesudah `59a7b0b` dan gerbang penuhnya. Enam ketetapannya di akhir 7.4
   dari rekaman yang tersimpan, lintas lari; satu gangguan = satu masa
   `inactive (dead) since …`. Angkanya dibaca dari kontrak (R1).
 - **Berhasil adalah pembacaan sesudahnya**, bukan kode keluar `start`.
-- **Yang membuat gangguan tetap manusia**, dan aturan OS yang mempersempit
-  `sudo` di VM uji dipasang tangan operator. NUI tidak menyentuhnya.
+- **Yang membuat gangguan tetap manusia.** NUI tidak menyentuh aturan `sudo`
+  di VM uji.
+- **Diralat pemilik, 7 Oktober 2026: `sudo` tidak disempitkan di OS.** Terukur
+  di VM uji dari tangan operator: akun `lima` memiliki `(ALL) NOPASSWD: ALL`.
+  Aturan sempit yang semula direncanakan **tidak dipasang** dan aturan yang
+  ada **tidak diubah**. Batas `RESTART_SERVICE` ditegakkan argv tetap dan
+  guard NUI saja: batasan lab, bukan model least-privilege OS yang kuat.
+  **Jangan menulis bahwa `sudo` sudah dipersempit di tingkat OS.** Sumber hak
+  itu belum dibaca.
 - **Lari di VM menunggu perintah pemilik.** Sampai itu ada, keluaran argv
   tersebut belum pernah diukur, dan kodenya tidak bergantung padanya.
 - R3 di **salinan** pohon kerja (pelajaran dari folder sisa mutasi di akar

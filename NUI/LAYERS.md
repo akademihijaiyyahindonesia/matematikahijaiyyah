@@ -1772,7 +1772,10 @@ sesudah `59a7b0b`: satu baris 7.4 lagi, AUTHORIZED, untuk satu argv,
 banyak tiga percobaan **total** untuk satu gangguan, dihitung dari rekaman;
 berhasil adalah pembacaan sesudahnya, bukan kode keluar. K-12 dibalik untuk
 argv itu saja; daftar izin Lapis 5 di halaman ini **tidak berubah** dan
-pagarnya tetap menolak argv itu. Implementasinya di
+pagarnya tetap menolak argv itu. Batasnya ditegakkan argv tetap dan guard
+NUI, **bukan** aturan OS: akun `lima` di VM uji terukur memiliki
+`(ALL) NOPASSWD: ALL` (7 Oktober 2026), dan pemilik memilih tidak mengubahnya
+— batasan lab, bukan model least-privilege OS yang kuat. Implementasinya di
 `src/hijaiyyah/nui/layer7_linux.py`; tesnya memakai model VM yang menjawab
 dengan keluaran terukur. **Lari di VM belum ada**: itu langkah laboratorium
 atas perintah pemilik.

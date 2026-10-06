@@ -847,13 +847,29 @@ Enam ketetapan pemilik, dan cara masing-masing dipegang:
 1. **Baris 7.4 sendiri, AUTHORIZED.** Tabel menjadi 17 baris: 10 AUTHORIZED,
    7 DENIED. Baris umum "10 perintah host lama", yang memuat
    `systemctl start`, **tetap DENIED**: yang dibuka satu argv di satu VM.
-2. **`sudo` dibuka, dan dipersempit di OS VM uji.** Ini membalik sebagian K-12
-   untuk argv ini saja. NUI membangun argv itu sendiri, utuh, dan tidak
-   menerima unit atau perintah dari masukan bebas; pagar Lapis 5 tetap menolak
-   `sudo` dan `systemctl start`, dan tidak ditanya untuk argv ini — izinnya baris
-   7.4 ini, bukan daftar izin Lapis 5. Di sisi OS, aturan `sudoers` VM uji yang
-   hanya mengizinkan `systemctl start cron.service` dipasang **tangan
-   operator**; NUI tidak menyentuh `sudoers`.
+2. **`sudo` dibuka; batasnya ditegakkan NUI, bukan OS.** Ini membalik
+   sebagian K-12 untuk argv ini saja. NUI membangun argv itu sendiri, utuh, dan
+   tidak menerima unit atau perintah dari masukan bebas; pagar Lapis 5 tetap
+   menolak `sudo` dan `systemctl start`, dan tidak ditanya untuk argv ini —
+   izinnya baris 7.4 ini, bukan daftar izin Lapis 5. NUI tidak menyentuh
+   `sudoers`.
+
+   **Diralat pemilik, 7 Oktober 2026.** Ketetapan ini semula meminta `sudo`
+   disempitkan juga di OS VM uji, dengan satu aturan `sudoers` yang dipasang
+   tangan operator. Aturan itu **tidak dipasang**, dan `sudoers` VM uji
+   **tidak diubah**. Yang terukur hari itu, dengan `sudo -l -U lima` dari
+   tangan operator di dalam VM uji:
+
+   Pada VM uji ini, akun `lima` memiliki `(ALL) NOPASSWD: ALL`. Karena itu
+   batas perintah `RESTART_SERVICE` ditegakkan oleh argv tetap dan guard NUI,
+   bukan oleh pembatasan sudoers tingkat OS. Ini merupakan batasan lab, bukan
+   model least-privilege OS yang kuat.
+
+   Pemilik memilih tidak mengubahnya untuk lari pertama: mengganti aturan umum
+   itu dapat menghilangkan kemampuan operator membuat gangguan, atau mengubah
+   perilaku Lima dan cloud-init, dan keduanya belum diukur. Direktori aturan
+   VM uji memuat dua berkas, `90-cloud-init-users` (135 byte) dan `README`;
+   **isi berkas pertama belum dibaca**, jadi sumber hak itu belum dinyatakan.
 3. **Tiga percobaan, total** — bukan tiga ulang sesudah yang pertama. Tidak ada
    percobaan keempat. Angkanya dibaca dari baris di atas (R1) dan dihitung dari
    rekaman yang tersimpan, lintas lari; satu gangguan adalah satu masa

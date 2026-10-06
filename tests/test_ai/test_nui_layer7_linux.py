@@ -720,6 +720,16 @@ def test_the_contract_opens_one_row_and_keeps_the_general_one_denied() -> None:
                    "**Berhasil = pembacaan sesudahnya**", "**Gangguan dibuat manusia.**",
                    "**Lari di VM belum ada.**"):
         assert needle in text, needle
+    # Owner, 7 October 2026: the test VM's account may run everything, so the
+    # bound is NUI's and the contract may not say the OS narrows it.
+    flat = " ".join(text.split())
+    for needle in ("akun `lima` memiliki `(ALL) NOPASSWD: ALL`",
+                   "ditegakkan oleh argv tetap dan guard NUI, bukan oleh pembatasan "
+                   + "su" + "doers tingkat OS",
+                   "batasan lab, bukan model least-privilege OS yang kuat",
+                   "Aturan itu **tidak dipasang**"):
+        assert needle in flat, needle
+    assert "dipersempit di OS VM uji" not in flat
 
 
 def test_the_command_line_restarts_only_when_asked(monkeypatch: pytest.MonkeyPatch,
