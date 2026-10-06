@@ -12,6 +12,8 @@ here:
     the addendum covers exactly the drift, pointer by pointer;
     frozen plus addendum is today's build, and the freeze alone is not;
     every entry has its reason, its cause and evidence that holds;
+    a file changed twice is a chain written out link by link (owner,
+    5 October 2026), and a second change with no link is still refused;
     and each guard turns red when what it guards is broken (R3).
 """
 from __future__ import annotations
@@ -38,6 +40,9 @@ from hijaiyyah.nui.layer6_freeze import TAG, _diff  # noqa: E402
 ADDENDUM = la.load()
 MODULES = {"hardware": hardware, "telemetry_sources": ts, "hardware_provenance": hp}
 CAUSE = "4bff781"
+#: The Ka'bah layer 3 commit, which added lines to the Makefile a second time.
+CAUSE2 = "004b9a0"
+FIRST, SECOND = "Makefile — target HMAC", "Makefile — lapis 3 slot UART Ka'bah"
 
 
 def _frozen(name: str) -> dict[str, Any]:
@@ -65,10 +70,15 @@ def test_the_addendum_covers_exactly_the_drift() -> None:
     for name in la.FROZEN:
         drift = set(_diff(_frozen(name), _fresh(name)))
         named = [c["pointer"] for c in la.changes(name)]
-        assert sorted(named) == sorted(drift) and len(named) == len(set(named)), name
+        assert sorted(set(named)) == sorted(drift), name
+        # Named once -- except the four pointers of the one chain, twice.
+        twice = sorted(p for p in set(named) if named.count(p) > 1)
+        assert all(named.count(p) == 2 for p in twice), name
+        assert twice == (sorted(c["pointer"] for c in _entry(ADDENDUM, SECOND)["changes"])
+                         if name == "hardware" else []), name
     assert {n: len(la.changes(n)) for n in la.FROZEN} == {
-        "hardware": 19, "telemetry_sources": 8, "hardware_provenance": 39}
-    assert len(ADDENDUM["entries"]) == 5
+        "hardware": 23, "telemetry_sources": 8, "hardware_provenance": 39}
+    assert len(ADDENDUM["entries"]) == 6
 
 
 def test_the_historical_freeze_is_not_the_current_state() -> None:
@@ -94,15 +104,104 @@ def test_the_freeze_read_against_today_is_red_and_the_current_state_is_not() -> 
 
 
 def test_every_entry_says_why_by_what_and_with_what_evidence() -> None:
-    touched = subprocess.run(["git", "diff-tree", "--no-commit-id", "--name-only", "-r", CAUSE],
-                             cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    def touched(commit: str) -> list[str]:
+        return subprocess.run(["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit],
+                              cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     for e in ADDENDUM["entries"]:
-        assert e["reason"] and e["cause"] == CAUSE and e["path"] in touched, e["id"]
+        assert e["cause"] == (CAUSE2 if e["id"] == SECOND else CAUSE), e["id"]
+        assert e["reason"] and e["path"] in touched(e["cause"]), e["id"]
+        assert ("after" in e) == (e["id"] == SECOND), e["id"]
         assert e["equivalence"]["kind"] in la.KINDS, e["id"]
         assert e["changes"] and all(set(c) == {"record", "pointer", "old", "new"}
                                     and c["old"] != c["new"] for c in e["changes"]), e["id"]
     assert list(ADDENDUM["kinds"]) == list(la.KINDS)
     assert {e["equivalence"]["kind"] for e in ADDENDUM["entries"]} == set(la.KINDS)
+
+
+def _show(commit: str, path: str) -> bytes:
+    return subprocess.run(["git", "show", f"{commit}:{path}"], cwd=ROOT,
+                          capture_output=True, check=True).stdout
+
+
+def test_the_chain_is_written_out_and_every_link_of_it_is_checked() -> None:
+    """Owner, 5 October 2026: frozen Makefile -> 4bff781 -> 004b9a0, each
+    change pointing at the one before it, each hash read from git here and
+    not from the module."""
+    first, second = _entry(ADDENDUM, FIRST), _entry(ADDENDUM, SECOND)
+    path = "rtl/fpga/gowin/Makefile"
+    assert first["path"] == second["path"] == path and second["after"] == FIRST
+    assert ADDENDUM["entries"].index(first) < ADDENDUM["entries"].index(second)
+    assert (first["cause"], second["cause"]) == (CAUSE, CAUSE2)
+    assert subprocess.run(["git", "merge-base", "--is-ancestor", CAUSE, CAUSE2],
+                          cwd=ROOT).returncode == 0
+
+    def sha(data: bytes) -> str:
+        return la._sha(data)
+    frozen, a, b = sha(_show(TAG, path)), sha(_show(CAUSE, path)), sha(_show(CAUSE2, path))
+    assert len({frozen, a, b}) == 3
+    assert sha(_show(CAUSE + "^", path)) == frozen     # nothing before the first cause
+    assert sha(_show(CAUSE2 + "^", path)) == a         # nothing between the two causes
+    assert sha((ROOT / path).read_bytes()) == b        # nothing since the second
+    keys = [(c["record"], c["pointer"]) for c in first["changes"]]
+    assert keys == [(c["record"], c["pointer"]) for c in second["changes"]] and len(keys) == 4
+    assert {(c["old"], c["new"]) for c in first["changes"]} == {(frozen, a)}
+    assert {(c["old"], c["new"]) for c in second["changes"]} == {(a, b)}
+    links, unlinked = la._links(ADDENDUM)
+    assert links == {FIRST: (None, SECOND), SECOND: (FIRST, None)}
+    assert unlinked == {SECOND: []}
+    # Each step only added lines, and so did the whole.
+    for was, now in ((TAG, CAUSE), (CAUSE, CAUSE2), (TAG, CAUSE2)):
+        rest = iter(_show(now, path).decode().splitlines())
+        assert all(line in rest for line in _show(was, path).decode().splitlines()), (was, now)
+
+
+def test_a_chain_is_never_inferred() -> None:
+    """Without `after` the second entry is a pointer changed twice, and the
+    record is refused before it is built."""
+    addendum = copy.deepcopy(ADDENDUM)
+    del _entry(addendum, SECOND)["after"]
+    assert la._links(addendum) == ({}, {})
+    assert sum("is changed twice" in p for p in la.problems("hardware", addendum)) == 4
+    with pytest.raises(LookupError, match="the frozen record holds"):
+        la.current("hardware", addendum=addendum)
+
+    # Naming a link is not enough: one that does not hold leaves the pointer
+    # changed twice, beside what is wrong with the link.
+    named = copy.deepcopy(ADDENDUM)
+    _entry(named, SECOND)["after"] = "Makefile — nothing"
+    bad = la.problems("hardware", named)
+    assert sum("is changed twice" in p for p in bad) == 4
+    assert any("which is no entry written before it" in p for p in bad)
+
+    # And an entry that stands alone answers from the freeze, not from just
+    # before its own cause: the second change cannot pass as the first.
+    alone = copy.deepcopy(ADDENDUM)
+    alone["entries"].remove(_entry(alone, FIRST))
+    del _entry(alone, SECOND)["after"]
+    assert sum("at the freeze and until its cause" in p
+               for p in la.problems("hardware", alone)) == 4
+
+
+def test_a_chain_does_not_fork_and_does_not_reach_forward() -> None:
+    addendum = copy.deepcopy(ADDENDUM)
+    third = copy.deepcopy(_entry(addendum, SECOND))
+    third["id"] = "Makefile — a second continuation"
+    addendum["entries"].append(third)
+    links, unlinked = la._links(addendum)
+    assert links[FIRST] == (None, SECOND) and third["id"] not in links
+    assert any("is already continued by" in p for p in unlinked[third["id"]])
+    assert any("is already continued by" in p for p in la.problems("hardware", addendum))
+
+    forged = copy.deepcopy(ADDENDUM)
+    _first(forged, SECOND, "hardware")["old"] = "0" * 64
+    assert any("its old values are not the new values of" in p
+               for p in la._links(forged)[1][SECOND])
+
+    forward = copy.deepcopy(ADDENDUM)
+    entries = forward["entries"]
+    entries.insert(0, entries.pop(entries.index(_entry(forward, SECOND))))
+    assert any("which is no entry written before it" in p
+               for p in la._links(forward)[1][SECOND])
 
 
 def test_the_verifiers_read_both_and_the_addendum_holds() -> None:
@@ -184,6 +283,27 @@ SABOTAGES: dict[str, tuple[str, Sabotage, str]] = {
         lambda d: d.replace("| `state_hash` | **belum ada".encode(),
                             "| `state_hash` | **ada".encode(), 1)),
         "changed whether its field has a source"),
+    # -- the chain (owner, 5 October 2026) ------------------------------------------
+    "a second change with no link": ("hardware", lambda a, _: _entry(a, SECOND).pop("after"),
+                                     "the frozen record holds"),
+    "a link to an entry that is not there": ("hardware", lambda a, _: _entry(a, SECOND).update(
+        after="Makefile — nothing"), "which is no entry written before it"),
+    "a link to an entry about another file": ("hardware", lambda a, _: _entry(a, SECOND).update(
+        after=_entry(a, TOP)["id"]), "which is about another file"),
+    "a link past its predecessor's hash": ("hardware", lambda a, _: _first(
+        a, SECOND, "hardware").update(old="0" * 64), "the record after"),
+    "a predecessor rewritten under its link": ("hardware", lambda a, _: _first(
+        a, FIRST, "hardware").update(new="0" * 64), "the record after"),
+    "a link that skips a pointer": ("hardware", lambda a, _: _entry(a, SECOND)["changes"].pop(),
+                                    "does not change the pointers"),
+    "a link whose cause is not later": ("hardware", lambda a, _: _entry(a, SECOND).update(
+        cause=CAUSE), "does not come after"),
+    "a link on evidence that is not a whole file's hash": (
+        "hardware", lambda a, _: _entry(a, PAPAN).update(after=_entry(a, TOP)["id"]),
+        "a chain is only for a whole file's hash"),
+    "a last link that is not the file now": ("hardware", lambda a, mp: _edit_file(
+        mp, "rtl/fpga/gowin/Makefile", lambda d: d + b"\n# one more line\n"),
+        "at its cause and now"),
     "a frozen record edited": ("hardware", lambda a, mp: _edit_file(
         mp, "NUI/hardware_inventory.json", lambda d: d + b"\n"), "is not the object frozen at"),
     "a frozen page edited": ("telemetry_sources", lambda a, mp: _edit_file(

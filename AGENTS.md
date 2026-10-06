@@ -2187,6 +2187,35 @@ repository state."* Targetnya: gerbang kembali ke HDMI saja, dan R3
   (`src/hijaiyyah/nui/knowledge.py`) dan model 6.4 masih membaca catatan 6.3
   yang beku, termasuk hash lama `rtl/fpga/gowin/hcpu_gowin_top.v`.
 
+**Adendum Lapis 6 menerima rantai perubahan — keputusan pemilik, 5 Oktober
+2026, commit terpisah sesudah `004b9a0`.** Commit lapis 3 Ka'bah menambah baris
+ke `rtl/fpga/gowin/Makefile`, berkas yang hash utuhnya sudah pernah digeser
+`4bff781`. Mekanisme 1 Oktober menolak perubahan kedua pada satu pointer, jadi
+empat tes Lapis 6 merah dan tidak bisa ditutup dengan entri saja. Tiga pilihan
+dilaporkan; pemilik memilih memperluas model provenance: *"ubah mekanisme
+adendum agar menerima rantai perubahan … jangan membuat guard menjadi 'lebih
+longgar' secara umum … Setiap perubahan harus menunjuk parent/commit sebelumnya
+secara eksplisit dan hash-nya harus diverifikasi. Jangan membuat aturan seperti
+'semua perubahan kedua setelah freeze dianggap sah'."*
+
+- Sebuah entri boleh menyebut, di `after`, satu entri yang dilanjutkannya.
+  Rantai tidak pernah disimpulkan; ia tertulis, dan tiap mata rantainya
+  diperiksa `src/hijaiyyah/nui/layer6_addendum.py`: entri yang disebut ditulis
+  lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja;
+  pointernya persis sama dan nilai lama di sini adalah nilai baru di sana;
+  commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum
+  penyebabnya ber-hash nilai lamanya, jadi tidak ada yang menyentuh berkas di
+  antara keduanya; dan bukti kesetaraannya berlaku sejak penyebab entri itu.
+- Hanya hash berkas utuh yang berantai (*comment-only*, *insert-only*).
+  Pointer yang diubah dua kali tanpa mata rantai yang sah **tetap ditolak**.
+- Catatannya kini enam entri, 70 perubahan: `hardware` 23,
+  `telemetry_sources` 8, `hardware_provenance` 39. Rantainya satu: Makefile
+  beku → `4bff781` → `004b9a0`, tiap langkah *insert-only*.
+- Catatan beku 6.1–6.3 tetap objek di tag; yang berubah mekanisme adendum,
+  catatannya, halamannya, dan tesnya.
+- R3: lima belas mutasi pada mekanisme rantai, lima belas tertangkap. Dua
+  lolos pada putaran pertama dan tesnya yang ditambal, bukan mutasinya.
+
 **Keputusan pemilik, 3 Oktober 2026 — tinjauan Lapis 7, dan urutannya.**
 Sebuah tinjauan Lapis 7 diukur terhadap berkasnya, dan semua klaimnya terbukti.
 Pemilik memutuskan urutannya:

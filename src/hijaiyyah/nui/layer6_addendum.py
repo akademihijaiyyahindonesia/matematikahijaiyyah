@@ -30,6 +30,26 @@ the freeze, at the causing commit's parent, at the causing commit, and now:
 For every change, too: the old value is the frozen record's and reproduces
 from the file at the freeze and just before the cause, and the new value is
 today's build's and reproduces from the file at the cause and now.
+
+A CHAIN (owner, 5 October 2026). One file can be changed again after its
+entry was written -- the Ka'bah layer 3 commit added lines to the Makefile
+that 4bff781 had already added lines to. A second change is not accepted
+because it is a second change. It is accepted only as an entry that names,
+in `after`, the one entry it continues, and every link of that is checked:
+
+    the entry it names was written before it and is about the same file;
+    that entry is continued by this one alone -- a chain does not fork;
+    it changes exactly the pointers that entry changed, and each old value
+    here is that entry's new value;
+    its cause comes after that entry's cause;
+    the file just before its cause hashes to its old value -- so nothing
+    touched the file between the two causes;
+    and its own evidence of equivalence holds from that entry's cause on.
+
+The entry it continues then answers for the file at its own cause only, and
+the last entry of a chain for the file now. Only a whole file's hash chains
+(comment-only, insert-only). A pointer changed twice with no such link is
+still refused.
 """
 from __future__ import annotations
 
@@ -57,6 +77,8 @@ FROZEN = {
                             "NUI/spec/hardware_provenance.json"),
 }
 KINDS = ("comment-only", "insert-only", "line-moved", "row-meaning")
+#: The kinds that speak for a whole file's hash -- the only ones that chain.
+WHOLE = ("comment-only", "insert-only")
 CONTRACT = "NUI/spec/telemetry_sources.json"
 Change = dict[str, Any]
 
@@ -132,19 +154,29 @@ def current(name: str, frozen: dict[str, Any] | None = None,
     """The frozen record with the addendum's changes to it applied: what the
     repository holds as that record today. A change whose old value is not
     the frozen record's is refused -- the addendum amends the freeze, it does
-    not stand in for it."""
+    not stand in for it. The one exception is written into the entry: an
+    entry that names the entry it comes `after` must hold, as its old value,
+    what that entry left there."""
     frozen = frozen if frozen is not None else json.loads(
         (ROOT / FROZEN[name][0]).read_text(encoding="utf-8"))
+    addendum = addendum if addendum is not None else load()
     out = copy.deepcopy(frozen)
-    for c in changes(name, addendum):
-        try:
-            was = _get(frozen, c["pointer"])
-        except (LookupError, ValueError, TypeError):
-            raise LookupError(f"{name}{c['pointer']} is not in the frozen record") from None
-        if was != c["old"]:
-            raise LookupError(f"{name}{c['pointer']}: the frozen record holds {was!r}, "
-                              f"not {c['old']!r}")
-        _put(out, c["pointer"], c["new"])
+    for e in addendum["entries"]:
+        # An entry that continues another amends the record as that entry
+        # left it; every other entry amends the freeze itself.
+        held, whose = (out, f"the record after {e['after']!r}") if "after" in e \
+            else (frozen, "the frozen record")
+        for c in e["changes"]:
+            if c["record"] != name:
+                continue
+            try:
+                was = _get(held, c["pointer"])
+            except (LookupError, ValueError, TypeError):
+                raise LookupError(f"{name}{c['pointer']} is not in the frozen record") from None
+            if was != c["old"]:
+                raise LookupError(f"{name}{c['pointer']}: {whose} holds {was!r}, "
+                                  f"not {c['old']!r}")
+            _put(out, c["pointer"], c["new"])
     return out
 
 
@@ -156,16 +188,25 @@ def _design(data: bytes) -> list[str]:
     return [ln for ln in _lines(data) if ln.strip() and not ln.strip().startswith("//")]
 
 
-def _whole(who: str, path: str, cs: list[Change], v: dict[str, bytes]) -> list[str]:
-    """A whole file's hash or size, as the record wrote it before and after."""
+Link = tuple[str | None, str | None]
+
+
+def _whole(who: str, path: str, cs: list[Change], v: dict[str, bytes],
+           link: Link = (None, None)) -> list[str]:
+    """A whole file's hash or size, as the record wrote it before and after.
+    `from` and `to` are the ends this entry answers for: the freeze and now,
+    unless it continues an entry or is continued by one."""
+    after, then = link
+    was = f"from the cause of {after!r} until its own" if after \
+        else "at the freeze and until its cause"
+    now = f"at its cause, where {then!r} takes over" if then else "at its cause and now"
     bad = []
     for c in cs:
         size = c["pointer"].endswith("_bytes")
-        if {len(b) if size else _sha(b) for b in (v["freeze"], v["before"])} != {c["old"]}:
-            bad.append(f"{who}: {c['record']}{c['pointer']} was not {path} at the freeze and "
-                       "until its cause")
-        if {len(b) if size else _sha(b) for b in (v["cause"], v["now"])} != {c["new"]}:
-            bad.append(f"{who}: {c['record']}{c['pointer']} is not {path} at its cause and now")
+        if {len(b) if size else _sha(b) for b in (v["from"], v["before"])} != {c["old"]}:
+            bad.append(f"{who}: {c['record']}{c['pointer']} was not {path} {was}")
+        if {len(b) if size else _sha(b) for b in (v["cause"], v["to"])} != {c["new"]}:
+            bad.append(f"{who}: {c['record']}{c['pointer']} is not {path} {now}")
     return bad
 
 
@@ -188,17 +229,18 @@ def _row(data: bytes, n: Any) -> re.Match[str] | None:
 
 
 def _equivalent(who: str, e: dict[str, Any], cs: list[Change],
-                v: dict[str, bytes]) -> list[str]:
+                v: dict[str, bytes], link: Link = (None, None)) -> list[str]:
     kind, path, eq = e["equivalence"]["kind"], e["path"], e["equivalence"]
+    since = f"since the cause of {link[0]!r}" if link[0] else "since the freeze"
     if kind == "comment-only":
-        same = _design(v["freeze"]) == _design(v["now"])
-        return ([] if same else [f"{who}: {path} changed in more than comments since the "
-                                 "freeze"]) + _whole(who, path, cs, v)
+        same = _design(v["from"]) == _design(v["to"])
+        return ([] if same else [f"{who}: {path} changed in more than comments {since}"]) \
+            + _whole(who, path, cs, v, link)
     if kind == "insert-only":
-        rest = iter(_lines(v["now"]))
-        kept = all(line in rest for line in _lines(v["freeze"]))
-        return ([] if kept else [f"{who}: {path} lost or changed a line since the freeze, not "
-                                 "only gained some"]) + _whole(who, path, cs, v)
+        rest = iter(_lines(v["to"]))
+        kept = all(line in rest for line in _lines(v["from"]))
+        return ([] if kept else [f"{who}: {path} lost or changed a line {since}, not "
+                                 "only gained some"]) + _whole(who, path, cs, v, link)
     if kind == "line-moved":
         bad, pairs = [], [(int(a), int(b)) for a, b in eq.get("lines", [])]
         for a, b in pairs:
@@ -238,15 +280,64 @@ def _equivalent(who: str, e: dict[str, Any], cs: list[Change],
     return bad
 
 
-def _entry(e: dict[str, Any], cs: list[Change]) -> list[str]:
+def _links(addendum: dict[str, Any]) -> tuple[dict[str, Link], dict[str, list[str]]]:
+    """The chains the addendum writes out: for each entry, the entry it
+    continues and the entry that continues it -- and, for each entry that
+    names one in `after`, what keeps that link from holding. A link is never
+    inferred; it is the entry's own `after`, and it is checked."""
+    entries = addendum["entries"]
+    ids = [e.get("id") for e in entries]
+    after: dict[str, str] = {}
+    then: dict[str, str] = {}
+    bad: dict[str, list[str]] = {}
+    for i, e in enumerate(entries):
+        if "after" not in e:
+            continue
+        who, a = str(e.get("id") or "an entry with no id"), e["after"]
+        why = bad.setdefault(who, [])
+        if not isinstance(a, str) or a not in ids[:i]:
+            why.append(f"{who}: comes after {a!r}, which is no entry written before it")
+            continue
+        p = entries[ids.index(a)]
+        if p.get("path") != e.get("path"):
+            why.append(f"{who}: continues {a!r}, which is about another file")
+        if a in then:
+            why.append(f"{who}: {a!r} is already continued by {then[a]!r}")
+            continue
+        after[who], then[a] = a, who
+        left = {(c.get("record"), c.get("pointer")): c.get("new") for c in p.get("changes", [])}
+        held = {(c.get("record"), c.get("pointer")): c.get("old") for c in e.get("changes", [])}
+        if set(left) != set(held):
+            why.append(f"{who}: does not change the pointers {a!r} changed, all of them and "
+                       "no other")
+        elif left != held:
+            why.append(f"{who}: its old values are not the new values of {a!r}")
+        try:
+            first, second = _commit(str(p.get("cause"))), _commit(str(e.get("cause")))
+        except LookupError:
+            continue
+        if first == second or not _ancestor(first, second):
+            why.append(f"{who}: {e.get('cause')} does not come after {p.get('cause')}, the "
+                       f"cause of {a!r}")
+    return {i: (after.get(i), then.get(i)) for i in set(after) | set(then)}, bad
+
+
+def _entry(e: dict[str, Any], cs: list[Change], link: Link = (None, None),
+           unlinked: list[str] | None = None) -> list[str]:
     """One entry, held to its reason, its cause and its evidence of
-    equivalence -- for the changes it makes to one record."""
+    equivalence -- for the changes it makes to one record -- and, when it
+    continues an entry or is continued by one, to that link."""
     who = str(e.get("id") or "an entry with no id")
     empty = [f for f in ("id", "path", "cause", "reason", "equivalence") if not e.get(f)]
     if empty:
         return [f"{who}: no {', '.join(empty)}"]
     if e["equivalence"].get("kind") not in KINDS:
         return [f"{who}: {e['equivalence'].get('kind')!r} is not evidence of equivalence"]
+    if ("after" in e or link[1]) and e["equivalence"]["kind"] not in WHOLE:
+        return [f"{who}: a chain is only for a whole file's hash, and "
+                f"{e['equivalence']['kind']!r} is not one"]
+    if unlinked:
+        return list(unlinked)
     path, cause = e["path"], e["cause"]
     try:
         commit = _commit(cause)
@@ -262,28 +353,38 @@ def _entry(e: dict[str, Any], cs: list[Change]) -> list[str]:
              "cause": _at(commit, path), "now": _now(path)}
     except (LookupError, OSError) as why:
         return [*bad, f"{who}: {why}"]
-    return bad + _equivalent(who, e, cs, v)
+    # The ends this entry answers for. Alone: the freeze, and now. Continuing
+    # an entry: from just before its own cause -- which must hash to that
+    # entry's new value, so the file did not move in between. Continued by
+    # one: up to its own cause, and the next entry answers from there.
+    v["from"] = v["before"] if link[0] else v["freeze"]
+    v["to"] = v["cause"] if link[1] else v["now"]
+    return bad + _equivalent(who, e, cs, v, link)
 
 
 def problems(name: str, addendum: dict[str, Any] | None = None) -> list[str]:
     """What keeps the addendum from standing beside one record: a frozen file
     that is no longer the tag's object, a pointer changed twice or changed to
-    itself, or an entry without its reason, cause or evidence."""
+    itself, or an entry without its reason, cause or evidence. A pointer is
+    changed twice unless the second entry names, in `after`, the entry that
+    changed it last -- and that link holds."""
     addendum = addendum if addendum is not None else load()
     bad = [f"{p} is not the object frozen at {TAG}" for p in FROZEN[name]
            if _now(p) != _at(TAG, p)]
-    seen: set[str] = set()
+    links, unlinked = _links(addendum)
+    last: dict[str, Any] = {}
     for e in addendum["entries"]:
         cs = [c for c in e.get("changes", []) if c.get("record") == name]
         if not cs:
             continue
-        bad += _entry(e, cs)
+        who = str(e.get("id") or "an entry with no id")
+        bad += _entry(e, cs, links.get(who, (None, None)), unlinked.get(who))
         for c in cs:
-            if c["pointer"] in seen:
+            if c["pointer"] in last and links.get(who, (None, None))[0] != last[c["pointer"]]:
                 bad.append(f"{name}{c['pointer']} is changed twice")
             if c["old"] == c["new"]:
                 bad.append(f"{name}{c['pointer']} is changed to itself")
-            seen.add(c["pointer"])
+            last[c["pointer"]] = e.get("id")
     return bad
 
 
@@ -362,6 +463,8 @@ def page(addendum: dict[str, Any]) -> str:
            + ", ".join(f"`{n}` {k}" for n, k in counts.items()) + ".", "",
            "## Bukti kesetaraan", ""]
     out += [f"- **{k}** — {v}." for k, v in addendum["kinds"].items()]
+    if addendum.get("chain"):
+        out += ["", "## Rantai perubahan", "", f"{addendum['chain']}."]
     out += ["", "Untuk tiap perubahan: nilai lama adalah nilai catatan beku dan dihasilkan "
             "ulang dari berkasnya di freeze dan tepat sebelum commit penyebab; nilai sekarang "
             "adalah hasil build hari ini dan dihasilkan ulang dari berkasnya di commit penyebab "
@@ -374,7 +477,8 @@ def page(addendum: dict[str, Any]) -> str:
             where = f"baris {eq['line']}"
         out += [f"## {e['id']}", "",
                 f"`{e['path']}` · penyebab `{e['cause']}` · bukti kesetaraan "
-                f"**{eq['kind']}**" + (f", {where}" if where else ""), "",
+                f"**{eq['kind']}**" + (f", {where}" if where else "")
+                + (f" · melanjutkan entri **{e['after']}**" if "after" in e else ""), "",
                 f"{e['reason']}.", "",
                 "| catatan | butir | pointer | lama | sekarang |", "|---|---|---|---|---|"]
         out += [f"| `{c['record']}` | {_subject(frozen[c['record']], c['pointer'])} | "

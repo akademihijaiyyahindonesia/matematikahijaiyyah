@@ -219,7 +219,7 @@ angka di halaman ini datang dari menghitung berkasnya.
 | `hardware_state.py` | model keadaan hardware Lapis 6.4: IDENTITY, CAPABILITY, OBSERVED, CURRENT untuk tiap klaim dan tiap opcode kolom P3, precedence LIVE > MEASURED > SIMULATED > UNKNOWN, dan kueri CURRENT yang tidak pernah jatuh ke lari historis | `test_nui_hardware_state.py` (29) |
 | `layer5_freeze.py` | Lapis 5 dibekukan: baseline utama sebelas kolektor, aturan kesegaran, delta ke run berikutnya, dan riwayat P8 — pointer dan hash saja, isinya tetap di evidence store | `test_nui_layer5_freeze.py` (10) |
 | `layer6_freeze.py` | Lapis 6 dibekukan: tujuh bagian cakupan pemilik dengan tiap commit Lapis 6 di tepat satu bagian, hash artefak di commit beku, hasil model HCPU yang diterima, yang tidak diklaim, dan RTL yang tidak berubah — dibaca dari objek git, bukan pohon kerja | `test_nui_layer6_freeze.py` (16) |
-| `layer6_addendum.py` | adendum pasca-freeze Lapis 6: catatan beku 6.1–6.3 tetap objek di tag, dan tiap perubahan sesudahnya satu baris — pointer, nilai lama → sekarang, alasan, commit penyebab, dan bukti kesetaraan yang diperiksa dari objek git; ketiga verifiernya membaca catatan beku dan adendum | `test_nui_layer6_addendum.py` (25) |
+| `layer6_addendum.py` | adendum pasca-freeze Lapis 6: catatan beku 6.1–6.3 tetap objek di tag, dan tiap perubahan sesudahnya satu baris — pointer, nilai lama → sekarang, alasan, commit penyebab, dan bukti kesetaraan yang diperiksa dari objek git; berkas yang berubah dua kali ditulis sebagai rantai eksplisit yang tiap mata rantainya diperiksa; ketiga verifiernya membaca catatan beku dan adendum | `test_nui_layer6_addendum.py` (37) |
 | `layer7.py` | evaluator Lapis 7, baca-saja: keenam prasyarat 7.6 untuk satu observasi host, keadaan hardware CURRENT, atau satu nama fungsi RTL, tiap yang gagal dengan namanya sendiri — `AMBIGUOUS TARGET` hanya untuk identitas `(vm_name, run_id)`, state opaque dan hasil luar `NOT_COVERED`, ketidaksesuaian HISAB `KNOWN_DISCREPANCY` — lalu PASS atau STOP / REPORT; dan 7.7: `expect()` menetapkan outcome sebelum `layer5.record`, `confirm()` memegang evidence pascatindakan terhadapnya, SUCCESS atau STOP / REPORT; tidak menjalankan perintah dan tidak menulis berkas | `test_nui_layer7.py` (41) |
 | `layer7_decision.py` | DECIDE Lapis 7: satu hasil kontrak `layer7.evaluate` atau `layer7.expect` jadi satu decision record deterministik — ALLOW, DENY, atau STOP / REPORT, dengan `record_sha256` dan `verify()`; ALLOW bukan eksekusi, dan tidak ada yang dijalankan | `test_nui_layer7_decision.py` (37) |
 | `registry.py` | registry Hijaiyyah: 28 huruf → operator → HC → HISA, tiap kolom dibaca dari tempatnya | `test_nui_registry.py` (7) |
@@ -1235,6 +1235,14 @@ perubahan, tiap satunya dengan nilai lama → sekarang, alasan, commit penyebab,
 dan bukti kesetaraan yang diperiksa dari objek git. Halamannya
 `NUI/LAYER6_ADDENDUM.md`. Ketiga verifier membaca keduanya: **freeze historis ≠
 keadaan repositori sekarang**.
+
+**Rantai perubahan, 5 Oktober 2026.** Commit lapis 3 Ka'bah `004b9a0` menambah
+baris ke `rtl/fpga/gowin/Makefile` untuk kedua kalinya sejak freeze. Keputusan
+pemilik: perubahan kedua pada satu berkas diterima hanya sebagai entri yang
+menyebut, di `after`, satu entri yang dilanjutkannya, dan tiap mata rantainya
+diperiksa — urutan, berkas, pointer, kesinambungan hash, keturunan commit, dan
+bukti kesetaraan. Pointer yang diubah dua kali tanpa mata rantai itu tetap
+ditolak. Catatannya kini enam entri, 70 perubahan.
 
 **Yang belum ada.** Tidak ada yang tertunda untuk menutup Lapis 6. Yang tidak
 diklaim — bukan utang, melainkan batas yang tercatat di `NUI/LAYER6.md`:

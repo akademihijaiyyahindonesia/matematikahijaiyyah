@@ -503,6 +503,43 @@
      "new": "fb93c2c3d3c2415a0058a06e291da3322936b8d987fc80c51d5e9962bc4be2eb"
     }
    ]
+  },
+  {
+   "id": "Makefile — lapis 3 slot UART Ka'bah",
+   "path": "rtl/fpga/gowin/Makefile",
+   "cause": "004b9a0",
+   "after": "Makefile — target HMAC",
+   "reason": "004b9a0 menambahkan `KABAH_L3_DEFINE`, `KABAH_L3_SOURCES`, dan satu baris variabel khusus-target untuk `sim_kabah` dan `kabah_synth`, supaya hanya build slot UART Ka'bah yang membaca `kabah_with_hmac.vh` dan tiga sumber HMAC — 16 baris, tidak ada yang dihapus atau diubah. Baris 24 dan 25 yang dibaca `fpga_device` dan `fpga_family` tidak berubah dan tidak bergeser; yang berubah hash utuh berkasnya, untuk kedua kalinya sejak freeze",
+   "equivalence": {
+    "kind": "insert-only"
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/1/source/sha256",
+     "old": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4",
+     "new": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/1/evidence/0/sha256",
+     "old": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4",
+     "new": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/2/source/sha256",
+     "old": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4",
+     "new": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/2/evidence/0/sha256",
+     "old": "9143ca3e6e8826c5b3be06c15dc15e0deb553235c7ce57df74337b470b4866f4",
+     "new": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f"
+    }
+   ]
   }
- ]
+ ],
+ "chain": "Keputusan pemilik, 5 Oktober 2026, sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai lamanya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh yang berantai (`comment-only`, `insert-only`). Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak"
 }

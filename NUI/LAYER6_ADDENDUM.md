@@ -6,7 +6,7 @@ Dihasilkan `src/hijaiyyah/nui/layer6_addendum.py` dari `NUI/layer6_addendum.json
 
 Catatan beku Lapis 6.1–6.3 — model, halaman, dan spec-nya — tetap byte demi byte objek di tag `layer6-freeze-2026-09-29-final`. Adendum ini catatan baru di sampingnya, bukan bangkitan ulang: **freeze historis ≠ keadaan repositori sekarang**. Keadaan sekarang adalah catatan beku dengan perubahan di bawah ini, dan harus sama dengan yang dibangun buktinya hari ini.
 
-**5 entri, 66 perubahan**: `hardware` 19, `telemetry_sources` 8, `hardware_provenance` 39.
+**6 entri, 70 perubahan**: `hardware` 23, `telemetry_sources` 8, `hardware_provenance` 39.
 
 ## Bukti kesetaraan
 
@@ -14,6 +14,10 @@ Catatan beku Lapis 6.1–6.3 — model, halaman, dan spec-nya — tetap byte dem
 - **insert-only** — setiap baris berkas beku masih ada, utuh dan berurutan, di berkas sekarang; barisnya hanya bertambah, tidak ada yang hilang atau diubah.
 - **line-moved** — tiap baris yang dikutip punya teks yang sama persis di nomor barunya — di freeze, tepat sebelum penyebab, di penyebab, dan sekarang.
 - **row-meaning** — baris kontrak diurai dengan pola baris `NUI/spec/telemetry_sources.json`: medan dan asalnya sama, dan medannya tetap tanpa sumber — jadi statusnya tetap.
+
+## Rantai perubahan
+
+Keputusan pemilik, 5 Oktober 2026, sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai lamanya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh yang berantai (`comment-only`, `insert-only`). Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak.
 
 Untuk tiap perubahan: nilai lama adalah nilai catatan beku dan dihasilkan ulang dari berkasnya di freeze dan tepat sebelum commit penyebab; nilai sekarang adalah hasil build hari ini dan dihasilkan ulang dari berkasnya di commit penyebab dan di pohon kerja.
 
@@ -127,6 +131,19 @@ Pembaruan K14 di 4bff781: baris `state_hash` berhenti mengatakan *tidak ada inti
 | catatan | butir | pointer | lama | sekarang |
 |---|---|---|---|---|
 | `telemetry_sources` | `state_hash` | `/registry/14/evidence/0/sha256` | `f5997abd1937…` | `fb93c2c3d3c2…` |
+
+## Makefile — lapis 3 slot UART Ka'bah
+
+`rtl/fpga/gowin/Makefile` · penyebab `004b9a0` · bukti kesetaraan **insert-only** · melanjutkan entri **Makefile — target HMAC**
+
+004b9a0 menambahkan `KABAH_L3_DEFINE`, `KABAH_L3_SOURCES`, dan satu baris variabel khusus-target untuk `sim_kabah` dan `kabah_synth`, supaya hanya build slot UART Ka'bah yang membaca `kabah_with_hmac.vh` dan tiga sumber HMAC — 16 baris, tidak ada yang dihapus atau diubah. Baris 24 dan 25 yang dibaca `fpga_device` dan `fpga_family` tidak berubah dan tidak bergeser; yang berubah hash utuh berkasnya, untuk kedua kalinya sejak freeze.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `fpga_device` | `/items/1/source/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
+| `hardware` | `fpga_device` | `/items/1/evidence/0/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
+| `hardware` | `fpga_family` | `/items/2/source/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
+| `hardware` | `fpga_family` | `/items/2/evidence/0/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
 
 ## Mengulang
 
