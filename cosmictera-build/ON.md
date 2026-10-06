@@ -259,7 +259,7 @@ Fmax    165,98 MHz, terrout, bitstream 4,6 MB — dijalankan di papan
 
 dengan lapis 3 (HMAC-SHA256, kunci uji), bawaan sejak 3 Oktober 2026:
 LUT4    15.030 / 20.736   72%
-DFF      4.132 / 15.552   26%   — belum dijalankan di papan; Fmax tidak diklaim
+DFF      4.132 / 15.552   26%   — dijalankan di papan 6 Oktober 2026 (SRAM, satu run); Fmax tidak diklaim
 ```
 
 Fingerprint RTL-nya sendiri, terpisah dari fingerprint HCPU — lihat

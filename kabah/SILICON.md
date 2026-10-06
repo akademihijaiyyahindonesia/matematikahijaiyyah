@@ -107,7 +107,16 @@ tidak diklaim**: nextpnr mencetak 97,93 MHz sesudah routing dan menilainya
 terhadap batas bawaan 12 MHz; yang ditunjukkan angka itu hanya jarak di atas
 27 MHz. Di simulasi lewat pin UART: 400/400 byte keadaan cocok `cube.py` dan
 64/64 byte tag cocok `hmac`/`hashlib`; sebelas sabotase jalur tanda tangan
-membuat bench merah. **Bitstream ini belum dijalankan di papan.**
+membuat bench merah.
+
+**Di papan, 6 Oktober 2026.** Bitstream itu — sha256 di atas — dimuat ke Tang
+Nano 20K lewat **SRAM, bukan flash**, dan menjalankan **satu run dua frame**
+(`rtl/scripts/kabah_uart_test.py`, vektor `bytes(range(256))`): 2/2 frame,
+**400/400 byte keadaan** cocok `cube.py`, **64/64 byte tag** cocok
+`hmac`/`hashlib` yang dihitung host sendiri atas byte yang diterimanya,
+exit 0. Batasnya: satu run, dengan kunci uji publik RFC 4231. Ini membuktikan
+jalur HMAC bekerja di FPGA ini; **bukan** uji ketahanan, dan **bukan**
+keamanan produksi. Log menyimpan putusan tiap frame, bukan byte-nya.
 
 Diukur ulang 10 September 2026, dan kali ini bitstream-nya **dijalankan**:
 `kabah_uart_test.py` melaporkan 2/2 frame, 400/400 byte cocok dengan

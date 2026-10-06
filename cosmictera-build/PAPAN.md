@@ -1387,6 +1387,41 @@ membuat pasangannya diferensial.
 
 ---
 
+## Ka'bah + HMAC di slot UART — satu run, 6 Oktober 2026
+
+Atas perintah pemilik, sesudah `004b9a0` dan `2928254` dan gerbang penuh dari
+`2928254`. Bitstream `rtl/fpga/gowin/hijaiyyah_kabah_gowin_top.fs`, sha256
+`fdc84e3d1cf2a565fa495ecbdd3b10d792464f1e8385240d77e3c39492a86b49`, dimuat ke
+**SRAM, bukan flash**, dengan `openFPGALoader -b tangnano20k`; JTAG mendeteksi
+GW2A(R)-18(C). Lalu satu run:
+`rtl/scripts/kabah_uart_test.py /dev/cu.usbserial-20250303171`.
+
+| | Hasil |
+|---|---|
+| frame | 2/2 |
+| byte keadaan cocok `cube.py` | 400/400 |
+| byte tag cocok `hmac`/`hashlib` host | 64/64 |
+| exit | 0 |
+
+Tag dihitung host sendiri atas 200 byte yang diterimanya dari papan, dengan
+kunci uji RFC 4231 kasus uji 1.
+
+Batasnya, apa adanya (K12):
+
+- **Satu run, dua frame**, vektor baku `bytes(range(256))`. Bukan uji masukan
+  acak, bukan uji lama, bukan uji ketahanan.
+- **Kunci uji publik.** Yang terbukti jalur HMAC Ka'bah bekerja di FPGA ini
+  dan tag-nya diperiksa host secara independen — bukan keamanan produksi.
+- Log menyimpan putusan tiap frame, bukan byte dan tag mentahnya.
+- SRAM: bitstream hilang saat papan dimatikan; isi flash papan tidak berubah.
+
+Log mentah di luar git, `~/cosmictera-layer5/kabah-hmac/20261006T091813Z/`:
+`00_before.txt` sha256 `0abdb8ef0a21aa19fcb80634c35bca87dab4902800f30b1d0305b9111c8d56c4`,
+`01_load.txt` sha256 `ccde4f5fa0e971136ac77c9c96277969c360deb5d7a8db15621386aad125f6c0`,
+`02_run.txt` sha256 `65ca7df6e73009b69d22bf132d929557134b1345114ac969c447520b52f64e38`.
+
+---
+
 ## Suite yang mendampingi
 
 | | Hasil |

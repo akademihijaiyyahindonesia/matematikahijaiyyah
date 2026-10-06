@@ -164,7 +164,16 @@
 // In simulation, through the UART pins only (tb_hijaiyyah_kabah_gowin_top.v):
 // two frames, 400/400 state bytes matching cube.py and 64/64 tag bytes
 // matching hmac/hashlib. Eleven sabotages of the signing path turn that bench
-// red. THIS BITSTREAM HAS NOT RUN ON THE BOARD: the board result above
+// red.
+//
+// ON THE BOARD, 6 October 2026: this bitstream (the sha256 above) was loaded
+// into the Tang Nano 20K's SRAM, not its flash, and ran once -- two frames,
+// bytes(range(256)), rtl/scripts/kabah_uart_test.py: 2/2 frames, 400/400
+// state bytes matching cube.py and 64/64 tag bytes matching hmac/hashlib as
+// the host computed them over the bytes it received, exit 0.
+// ONE RUN, A PUBLIC TEST KEY. It shows the HMAC path works in this FPGA; it
+// is not a robustness result and it secures nothing. The log keeps the
+// verdict of each frame, not the bytes. The earlier board result above
 // (2/2 frames, 400/400 bytes) belongs to the wrapper without layer 3.
 // RTL FINGERPRINT: 76235f2e973b5881937ed5a6779dba08403cf895ad11a6c86aad5721d70c04c6
 //

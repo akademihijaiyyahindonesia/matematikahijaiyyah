@@ -156,7 +156,7 @@ GW2AR‑LV18QN88C8/I7 (Tang Nano 20K, papan target):
 | IOB | 10 / 384 | **2%** |
 | LUT4 | 12.061 / 20.736 | **58%** |
 | DFF | 1.965 / 15.552 | 12% |
-| Dengan lapis 3 (3 Oktober 2026) | 15.030 LUT4 / 4.132 DFF | **72%** — HMAC-SHA256 dengan kunci uji publik; belum dijalankan di papan |
+| Dengan lapis 3 (3 Oktober 2026) | 15.030 LUT4 / 4.132 DFF | **72%** — HMAC-SHA256 dengan kunci uji publik; dijalankan di papan 6 Oktober 2026, satu run lewat SRAM: 400/400 byte keadaan, 64/64 byte tag |
 | Fmax | **165,98 MHz** — tanpa lapis 3; terrout, `gowin_pack` sukses, bitstream 4,6 MB, **dijalankan di papan**: 400/400 byte cocok `cube.py` | |
 
 Wrapper ini diverifikasi lewat framing UART sungguhan — bukan `bit_in` atau

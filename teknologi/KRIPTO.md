@@ -35,7 +35,9 @@ Fmax   165,98 MHz
 
 Itu pembungkus tanpa lapis 3. Sejak 3 Oktober 2026 slot UART Ka'bah membawa
 HMAC-SHA256 dengan kunci uji publik: 15.030 LUT4 (72%), 4.132 DFF, 0 BSRAM;
-Fmax tidak diklaim, dan bitstream itu belum dijalankan di papan.
+Fmax tidak diklaim. Bitstream itu dijalankan di papan pada 6 Oktober 2026 —
+satu run dua frame lewat SRAM, 400/400 byte keadaan dan 64/64 byte tag cocok
+hitungan host. Itu membuktikan jalurnya, bukan keamanannya: kuncinya publik.
 
 Nol BSRAM — seluruh keadaan spons ada di flip-flop dan logika.
 

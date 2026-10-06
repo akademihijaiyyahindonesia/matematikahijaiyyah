@@ -371,10 +371,28 @@ def test_a_reply_is_the_state_and_then_its_tag() -> None:
         assert f"frame{i} tag:  {tool.expected_tag(state).hex()}" in out
 
 
-def test_the_new_bitstream_is_not_claimed_to_have_run_on_the_board() -> None:
-    """Until the board run exists, every place that carries the layer-3
-    figures says so; the 400/400 board result belongs to the wrapper without
-    layer 3."""
+def test_the_board_run_is_stated_as_one_run_under_a_test_key_and_no_more() -> None:
+    """Owner, 6 October 2026: the layer-3 bitstream ran on the board once.
+    Every place that carries the layer-3 figures says that, with the bitstream
+    it was, how it was loaded and what was measured -- and says its limits.
+    Nothing here calls it secure."""
+    sha = "fdc84e3d1cf2a565fa495ecbdd3b10d792464f1e8385240d77e3c39492a86b49"
     header = (GOWIN / "hijaiyyah_kabah_gowin_top.v").read_text(encoding="utf-8")
-    assert "THIS BITSTREAM HAS NOT RUN ON THE BOARD" in header
-    assert "Bitstream ini belum dijalankan di papan" in _text("SILICON.md")
+    silicon = _text("SILICON.md")
+    assert "HAS NOT RUN ON THE BOARD" not in header
+    assert "belum dijalankan di papan" not in silicon
+    for needle in ("ON THE BOARD, 6 October 2026", "SRAM, not its flash", "ran once",
+                   "400/400", "64/64 tag bytes", "ONE RUN, A PUBLIC TEST KEY",
+                   "it secures nothing", sha):
+        assert needle in header, needle
+    for needle in ("Di papan, 6 Oktober 2026", "SRAM, bukan flash", "satu run dua frame",
+                   "400/400 byte keadaan", "64/64 byte tag", "kunci uji publik",
+                   "keamanan produksi", sha):
+        assert needle in silicon, needle
+    papan = (ROOT / "cosmictera-build" / "PAPAN.md").read_text(encoding="utf-8")
+    assert sha in papan and "Satu run, dua frame" in papan and "Kunci uji publik" in papan
+    for text in (header, silicon, papan):
+        low = text.lower()
+        for claim in ("ka'bah aman", "ka'bah is secure", "secure production key",
+                      "tahan serangan hardware", "production-ready"):
+            assert claim not in low, claim

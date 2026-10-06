@@ -2068,6 +2068,13 @@ paling mudah dilanggar:
     `rtl/scripts/attack_lab.py` mengikutinya.
   - Angkanya di kepala pembungkus dan di `kabah/SILICON.md`. Fmax tidak
     diklaim. Uji papan langkah laboratorium atas perintah pemilik.
+  - **Di papan, 6 Oktober 2026 — atas perintah pemilik, satu run.** Bitstream
+    slot itu dimuat ke SRAM (bukan flash) dan menjawab dua frame: 400/400
+    byte keadaan cocok `src/hijaiyyah/crypto/cube.py`, 64/64 byte tag cocok `hmac`/`hashlib` host,
+    exit 0. Hasil dan hash log mentahnya di `cosmictera-build/PAPAN.md`.
+    Tingkatnya: **tervalidasi di perangkat keras, satu run terkendali, kunci
+    uji publik**. Yang belum ada dan tidak diklaim: uji acak atau uji lama di
+    papan, dan kunci produksi. Kalimat tentang status keamanan di atas tetap.
 - **`CHASH`/`CSIGN` tetap ditanyakan ke pemilik.**
 - **`state_hash` tidak berubah (opsi C).**
 - Terukur di commit yang memasukkannya:

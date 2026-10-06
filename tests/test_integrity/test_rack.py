@@ -155,7 +155,11 @@ def test_the_figures_come_from_the_wrapper_that_measured_them() -> None:
     assert slots["kabah"].lut4 == 15_030 and slots["kabah"].dff == 4_132
     assert slots["kabah"].fmax_mhz == 97.93 and "97.93 MHz" in kabah
     assert "FMAX IS NOT QUOTED" in kabah
-    assert "NOT YET RUN ON THE BOARD" in slots["kabah"].verified
+    said = slots["kabah"].verified
+    assert "NOT YET RUN" not in said
+    assert "on the board with layer 3, 6 October 2026" in said and "SRAM" in said
+    assert "one run" in said and "public test key" in said
+    assert "not a robustness or security result" in said
 
     hdmi = (GOWIN / "hcpu_hdmi_top.v").read_text(encoding="utf-8")
     assert re.search(r"LUT4\s+15,994 /\s+20,736\s+77%", hdmi)
