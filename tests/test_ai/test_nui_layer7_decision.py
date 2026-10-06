@@ -261,7 +261,7 @@ def test_deciding_has_no_side_effect(run: Path, monkeypatch: pytest.MonkeyPatch)
     assert _tree(store) == before
     # every AUTHORIZED category of 7.4 on fresh evidence, and the expectation
     allowed = sum(1 for v in l7.authorizations().values() if v == "AUTHORIZED") + 1
-    assert allowed == 10
+    assert allowed == 11
     assert [r["decision"] for r in records].count(d.ALLOW) == allowed
 
 

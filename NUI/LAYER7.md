@@ -20,7 +20,7 @@ Readiness evidence discovery   GREEN        08f1e36 — loader readiness not obs
 SEND_PROGRAM authorization     DENIED
 Portal slot: --detect, ISOLATE_FAULT   AUTHORIZED   pemilik, 3 Oktober 2026 — tanpa penulisan UART
 Portal slot: RESTART, RECOVER          AUTHORIZED   pemilik, 3 Oktober 2026 — bitstream tercatat, SRAM, paling banyak 3 ulang
-Mutative authorization         DENIED       kecuali empat baris slot Portal 8888 di 7.4
+Mutative authorization         DENIED       kecuali empat baris slot Portal 8888 dan satu baris RESTART_SERVICE di 7.4
 Authorization boundary         EXTENDED     pemilik, 3 Oktober 2026 — izin 9–12 di 7.5
 Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
 Completion condition           mengisolasi, memulihkan, dan merekam — pemilik, 3 Oktober 2026
@@ -28,6 +28,7 @@ Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; d
 Linux service recovery         DIUSULKAN    adendum pasca-freeze, akhir 7.4 — semua DENIED
 Linux: VM uji, cron, kelas, ISOLATE_SERVICE   DISETUJUI   pemilik, 6 Oktober 2026 — baca-saja; RESTART_SERVICE belum
 Linux: ISOLATE_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — baris 7.4 sendiri, izin 13 di 7.5; tanpa tindakan
+Linux: RESTART_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — UNIT_INACTIVE saja, 3 percobaan; lari di VM menunggu perintah pemilik
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
@@ -107,7 +108,8 @@ kontrak kuerinya ada di `NUI/spec/query_contract.json`.
 Status tiap kategori, ditetapkan pemilik 30 September 2026. Daftar tindakan lama
 dipertahankan, dengan statusnya. Dua baris yang menyebut slot Portal 8888
 dibuka pemilik 3 Oktober 2026; keduanya tidak mengubah papan. Satu baris untuk
-VM uji Linux dibuka pemilik 6 Oktober 2026; ia hanya membaca.
+VM uji Linux dibuka pemilik 6 Oktober 2026; ia hanya membaca. Satu baris lagi,
+dibuka pemilik hari yang sama, memulai satu unit di VM uji itu.
 
 | kategori | asal catatannya | status |
 |---|---|---|
@@ -120,6 +122,7 @@ VM uji Linux dibuka pemilik 6 Oktober 2026; ia hanya membaca.
 | Mulai ulang slot Portal 8888 (`RESTART_PORTAL`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | Pemulihan slot Portal 8888 (`RECOVER_PORTAL`) | Proposal pemulihan slot Portal 8888, di bawah | **AUTHORIZED** |
 | Penggolongan gangguan `cron.service` di VM uji Linux (`ISOLATE_SERVICE`) | Keputusan pemilik 6 Oktober 2026 atas proposal layanan Linux, di bawah | **AUTHORIZED** |
+| Mulai ulang `cron.service` di VM uji Linux (`RESTART_SERVICE`) | Keputusan pemilik 6 Oktober 2026 atas proposal layanan Linux, di bawah | **AUTHORIZED** |
 | 10 perintah host lama: `rm`, `mv`, `kill`, `reboot`, `shutdown`, `systemctl start`, `systemctl stop`, `docker rm`, `docker stop`, `docker exec` | Daftar "belum diizinkan" Lapis 5 di `NUI/LAYERS.md` | **DENIED** |
 | Konfigurasi ulang papan (`openFPGALoader`) | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
 | Mengirim program ke papan | Dijalankan `rtl/scripts/burn_in.py` di dalam satu lari burn-in (7.9) | **DENIED** |
@@ -818,7 +821,79 @@ unit lain, unit yang tidak ada, dan diam melewati batas waktu semuanya
 
 Sesudah itu, keputusan **terpisah** untuk membuka `RESTART_SERVICE` —
 `sudo systemctl start cron.service`, hanya `cron.service`, paling banyak 3
-ulang. **Sampai saat itu tidak ada izin tindakan otomatis pada Linux.**
+ulang. Keputusan itu ada di bawah.
+
+#### Keputusan pemilik, 6 Oktober 2026 — `RESTART_SERVICE`
+
+Dibuka sesudah `59a7b0b` (`ISOLATE_SERVICE`) dan gerbang penuhnya. Kata
+pemilik: *"Saya tetapkan kontrak `RESTART_SERVICE` sekarang, tetapi belum
+mengizinkan eksekusi tindakan di VM. Implementasi, test, commit, dan gate harus
+selesai lebih dulu."* Lapis 7 Linux bergerak dari *observe → classify* ke
+*observe → classify → satu tindakan pemulihan yang sangat sempit → verify →
+stop*.
+
+```text
+tindakan    RESTART_SERVICE
+VM          cosmictera-layer5-uji
+argv        sudo systemctl start cron.service
+gangguan    UNIT_INACTIVE saja
+berhasil    ISOLATE_SERVICE sesudah tindakan membaca Active: active (running)
+```
+
+Batas percobaan RESTART_SERVICE untuk satu gangguan: 3
+
+Enam ketetapan pemilik, dan cara masing-masing dipegang:
+
+1. **Baris 7.4 sendiri, AUTHORIZED.** Tabel menjadi 17 baris: 10 AUTHORIZED,
+   7 DENIED. Baris umum "10 perintah host lama", yang memuat
+   `systemctl start`, **tetap DENIED**: yang dibuka satu argv di satu VM.
+2. **`sudo` dibuka, dan dipersempit di OS VM uji.** Ini membalik sebagian K-12
+   untuk argv ini saja. NUI membangun argv itu sendiri, utuh, dan tidak
+   menerima unit atau perintah dari masukan bebas; pagar Lapis 5 tetap menolak
+   `sudo` dan `systemctl start`, dan tidak ditanya untuk argv ini — izinnya baris
+   7.4 ini, bukan daftar izin Lapis 5. Di sisi OS, aturan `sudoers` VM uji yang
+   hanya mengizinkan `systemctl start cron.service` dipasang **tangan
+   operator**; NUI tidak menyentuh `sudoers`.
+3. **Tiga percobaan, total** — bukan tiga ulang sesudah yang pertama. Tidak ada
+   percobaan keempat. Angkanya dibaca dari baris di atas (R1) dan dihitung dari
+   rekaman yang tersimpan, lintas lari; satu gangguan adalah satu masa
+   `inactive (dead) since …`.
+4. **`UNIT_INACTIVE` saja.** `UNIT_FAILED` digolongkan dan direkam, **tidak**
+   dimulai ulang: kegagalan yang terukur adalah unit yang `start`-nya memang
+   gagal, dan memulainya lagi tidak memperbaiki apa pun. `VM_UNREACHABLE` dan
+   `UNKNOWN` berhenti dengan cara yang sama.
+5. **Berhasil = pembacaan sesudahnya**, bukan kode keluar `start`. `start`
+   yang keluar 0 dengan unit yang belum `active (running)` adalah percobaan
+   yang belum berhasil, dan pencacah maju.
+6. **Gangguan dibuat manusia.** `systemctl stop` tetap tangan operator. NUI
+   tidak mendapat `stop`, `kill`, `reboot`, atau bentuk sabotase lain.
+
+```text
+UNIT_INACTIVE
+      │
+      ▼
+RESTART_SERVICE percobaan 1
+      ├── active (running) → SUCCESS
+      └── masih UNIT_INACTIVE → percobaan 2 → percobaan 3 → FAILED_RECOVERY
+
+UNIT_FAILED / VM_UNREACHABLE / UNKNOWN → tanpa start → rekam → STOP / REPORT
+```
+
+Dua hal yang dipegang implementasinya di luar enam ketetapan itu, keduanya ke
+arah berhenti:
+
+- Bila pembacaan sesudah sebuah percobaan **bukan** `UNIT_INACTIVE` dan bukan
+  aktif — misalnya unit menjadi `failed` — ia berhenti di situ dan tidak
+  mencoba lagi, sesuai ketetapan 4.
+- Tanpa tempat di luar repositori untuk menyimpan rekamannya, tidak ada yang
+  dijalankan. Rekaman ditulis sesudah tiap langkah, di
+  `~/cosmictera-layer5/linux-service/<waktu>-restart/`.
+
+**Lari di VM belum ada.** Baris ini memberi izin dalam kontrak; lari pertama
+`RESTART_SERVICE` di VM uji adalah langkah laboratorium atas perintah pemilik,
+sesudah implementasi, tes, commit, dan gerbangnya. Keluaran
+`sudo systemctl start cron.service` sendiri **belum pernah diukur**, dan
+implementasinya tidak bergantung pada keluaran itu.
 
 ## 7.5 Authorization Boundary
 
@@ -844,13 +919,15 @@ DECIDED BY: pemilik, 30 September 2026
 | 11 | Memulai ulang slot Portal 8888 atas gangguan yang tergolong, paling banyak 3 kali (pemilik, 3 Oktober 2026) | `RESTART_PORTAL`, akhir 7.4 |
 | 12 | Memulihkan slot Portal 8888 dan merekam hasilnya di luar repositori (pemilik, 3 Oktober 2026) | `RECOVER_PORTAL`, akhir 7.4 |
 | 13 | Menggolongkan gangguan `cron.service` di VM uji Linux, tanpa tindakan (pemilik, 6 Oktober 2026) | `ISOLATE_SERVICE`, akhir 7.4 — `systemctl status` lewat `layer5.guard` |
+| 14 | Memulai `cron.service` di VM uji Linux atas `UNIT_INACTIVE`, paling banyak 3 percobaan, dan merekamnya (pemilik, 6 Oktober 2026) | `RESTART_SERVICE`, akhir 7.4 — `sudo systemctl start cron.service`, argv tetap |
 
 **Tetap tidak diizinkan — DENIED pada Lapis 7 awal:**
 
 - konfigurasi ulang papan di luar izin 9;
 - mengirim program ke papan;
 - mengubah persistent state HFS/SD;
-- restart atau recovery otomatis di luar slot Portal 8888 (izin 11 dan 12);
+- restart atau recovery otomatis di luar slot Portal 8888 (izin 11 dan 12) dan
+  `RESTART_SERVICE` VM uji Linux (izin 14);
 - isolasi kesalahan di luar `ISOLATE_FAULT` slot Portal 8888 (izin 8) dan
   `ISOLATE_SERVICE` VM uji Linux (izin 13);
 - menjaga host tetap terjaga;
@@ -859,7 +936,7 @@ DECIDED BY: pemilik, 30 September 2026
 - perubahan repository;
 - perubahan konfigurasi sistem;
 - tindakan apa pun yang memerlukan pencabutan read-only guard Lapis 5, K-4, atau
-  K-12.
+  K-12 — kecuali satu argv izin 14, yang membalik K-12 untuk dirinya saja.
 
 **Aturan yang dikunci:**
 

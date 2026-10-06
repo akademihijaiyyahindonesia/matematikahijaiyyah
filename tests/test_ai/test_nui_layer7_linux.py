@@ -3,7 +3,10 @@
 The owner's decisions of 6 October 2026: the test VM cosmictera-layer5-uji is
 made again, cron.service is the first unit, UNIT_INACTIVE, UNIT_FAILED and
 VM_UNREACHABLE are classes of Layer 7 alone, and ISOLATE_SERVICE is a row of
-7.4 of its own that only reads. Restarting the unit is not opened.
+7.4 of its own that only reads. By a further decision the same day,
+RESTART_SERVICE is the one action: `sudo systemctl start cron.service` on the
+test VM, for UNIT_INACTIVE only, three attempts in all, success being the
+reading that follows.
 
 Every output below was measured on that VM on 6 October 2026, before the
 classifier was written, and is held here byte for byte: each hashes to the
@@ -13,9 +16,11 @@ contract's table quotes. What is held:
     each measured form gets its name, and only a measured form does;
     inactive and failed are told apart though both exit 3;
     a form that was not measured stops as UNKNOWN, with what was seen;
-    one argv runs, once, through Layer 5's guard, on the test VM and that
-    unit only -- never sudo, never a start, never the main instance;
-    it acts on nothing, and what it keeps is kept outside the repository.
+    isolating runs one argv, once, through Layer 5's guard, on the test VM
+    and that unit only, and acts on nothing;
+    restarting starts an inactive unit and nothing else, reads it again, and
+    stops at three attempts for one fault, counted from the records;
+    and what is kept is kept outside the repository.
 
 No test touches a VM: the runner is a stand-in that returns the measured
 bytes.
@@ -333,15 +338,10 @@ def test_without_its_row_it_does_not_read(tmp_path: Path, edit: Any) -> None:
     assert (r["decision"], r["condition"]) == (l7.STOP, l7.UNAUTHORIZED) and calls == []
 
 
-def test_the_row_is_in_7_4_and_restarting_is_not() -> None:
-    table = l7.authorizations()
-    assert table[lx.ISOLATE] == "AUTHORIZED"
-    assert not any("RESTART_SERVICE" in row for row in table)
-    assert not any("systemctl start" in row and status == "AUTHORIZED"
-                   for row, status in table.items())
+def test_the_isolate_row_is_in_7_4_with_its_permission() -> None:
+    assert l7.authorizations()[lx.ISOLATE] == "AUTHORIZED"
     text = CONTRACT.read_text(encoding="utf-8")
     assert "| 13 | Menggolongkan gangguan `cron.service` di VM uji Linux, tanpa tindakan" in text
-    assert "Sampai saat itu tidak ada izin tindakan otomatis pada Linux" in text
 
 
 # -- it acts on nothing --------------------------------------------------------------------
@@ -355,29 +355,19 @@ def test_every_report_says_it_may_not_act() -> None:
     assert {r["decision"] for r in reports} == {lx.NO_FAULT, lx.ISOLATED, l7.STOP}
 
 
-def test_the_module_holds_one_argv_and_no_way_to_change_the_vm() -> None:
-    tree = ast.parse(SOURCE.read_text(encoding="utf-8"))
-    doc = ast.get_docstring(tree) or ""
-    assert "sudo" in doc and "RESTART_SERVICE" in doc      # said, as what it does not do
-    head = tree.body[0]
-    assert isinstance(head, ast.Expr)
-    strings = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant)
-               and isinstance(n.value, str) and n is not head.value]
-    for word in ("sudo", "start", "stop", "restart", "reload", "kill", "enable", "disable",
-                 "reset-failed", "daemon-reload", "rm", "tee"):
-        assert word not in strings, word
-    assert not any("sudo" in s for s in strings)
+def _is_docstring(tree: ast.AST, node: ast.AST) -> bool:
+    return any(isinstance(f, (ast.FunctionDef, ast.ClassDef)) and f.body
+               and isinstance(f.body[0], ast.Expr) and f.body[0].value is node
+               for f in ast.walk(tree))
+
+
+def test_isolating_runs_the_read_and_nothing_else() -> None:
     assert lx.STATUS_ARGV == ("systemctl", "status", "cron.service")
-    runs = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
-            and isinstance(n.func, ast.Name) and n.func.id == "run"]
-    assert len(runs) == 1
-    first = runs[0].args[0]
-    assert isinstance(first, ast.List)
-    assert [ast.literal_eval(e) for e in first.elts[:2]] == ["limactl", "shell"]
-    assert not any(isinstance(n, ast.Attribute) and n.attr in ("Popen", "system", "check_call",
-                                                               "check_output", "call")
-                   for n in ast.walk(tree))
     assert set(lx.FAULTS) == {"VM_UNREACHABLE", "UNIT_INACTIVE", "UNIT_FAILED"}
+    for name in WANT:
+        calls: list[Any] = []
+        lx.isolate(run=_measured(name, calls))
+        assert [c[0][4:] for c in calls] == [list(lx.STATUS_ARGV)], name
 
 
 # -- what it keeps -------------------------------------------------------------------------
@@ -413,6 +403,333 @@ def test_evidence_inside_the_repository_is_refused(tmp_path: Path) -> None:
 
 
 def test_the_command_line_takes_nothing_but_record(capsys: pytest.CaptureFixture[str]) -> None:
-    for bad in (["--restart"], ["cosmictera-layer5"], ["--record", "x"]):
+    for bad in (["--isolate"], ["cosmictera-layer5"], ["--record", "x"]):
         assert lx.main(bad) == 2
     assert "layer7_linux" in capsys.readouterr().out
+
+
+# ======================================================================================
+# RESTART_SERVICE (owner, 6 October 2026): one narrow action, verified by the reading
+# ======================================================================================
+
+START = ["sudo", "systemctl", "start", "cron.service"]
+STATUS = ["systemctl", "status", "cron.service"]
+SINCE = "Tue 2026-10-06 15:18:02 UTC"
+AT = datetime(2026, 10, 6, 16, 0, 0, tzinfo=timezone.utc)
+READINGS = {"active": (ACTIVE_OUT, "", 0), "inactive": (INACTIVE_OUT, "", 3),
+            "failed": (FAILED_OUT, "", 3), "stopped": ("", STOPPED_ERR, 1),
+            "activating": (_line("activating (start)"), "", 3)}
+
+
+class Box:
+    """A stand-in for the test VM: the unit's state, and what each start does
+    to it. The readings it gives are the measured ones."""
+
+    def __init__(self, state: str = "inactive", then: tuple[str, ...] = ("active",),
+                 start_exit: int = 0, since: str = SINCE) -> None:
+        self.state, self.then, self.start_exit, self.since = state, list(then), start_exit, since
+        self.calls: list[list[str]] = []
+        self.kw: list[dict[str, Any]] = []
+        self.on_start: Any = None
+
+    @property
+    def starts(self) -> int:
+        return sum(1 for c in self.calls if c[4:] == START)
+
+    def run(self, argv: list[str], **kw: Any) -> Any:
+        self.calls.append(argv)
+        self.kw.append(kw)
+        assert argv[:4] == ["limactl", "shell", VM, "--"], argv
+        if argv[4:] == STATUS:
+            out, err, code = READINGS[self.state]
+            return SimpleNamespace(returncode=code, stdout=out.replace(SINCE, self.since),
+                                   stderr=err)
+        assert argv[4:] == START, argv
+        if self.on_start is not None:
+            self.on_start()
+        if self.then:
+            self.state = self.then.pop(0)
+        return SimpleNamespace(returncode=self.start_exit, stdout="", stderr="")
+
+
+def _kept(result: dict[str, Any]) -> dict[str, Any]:
+    kept: dict[str, Any] = json.loads(
+        (Path(result["evidence"]) / "record.json").read_text(encoding="utf-8"))
+    return kept
+
+
+def test_an_inactive_unit_is_started_once_and_read_again(tmp_path: Path) -> None:
+    box = Box()
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], r["fault"], r["condition"]) == (lx.RESTORED, lx.UNIT_INACTIVE, None)
+    assert [c[4:] for c in box.calls] == [STATUS, START, STATUS]
+    assert all(k["stdin"] is subprocess.DEVNULL and k["timeout"] == lx.TIMEOUT_S
+               and k["env"]["LIMA_HOME"] == layer5.host()["lima_home"] for k in box.kw)
+    assert [a["attempt"] for a in r["attempts"]] == [1]
+    assert r["attempts"][0]["after"]["decision"] == lx.NO_FAULT
+    where = Path(r["evidence"])
+    assert where == tmp_path.resolve() / "20261006T160000Z-restart"
+    assert sorted(p.name for p in where.iterdir()) == [
+        "attempt-1.after.stderr.txt", "attempt-1.after.stdout.txt",
+        "attempt-1.start.stderr.txt", "attempt-1.start.stdout.txt",
+        "before.stderr.txt", "before.stdout.txt", "record.json"]
+    assert (where / "before.stdout.txt").read_text(encoding="utf-8") == INACTIVE_OUT
+    assert (where / "attempt-1.after.stdout.txt").read_text(encoding="utf-8") == ACTIVE_OUT
+    kept = _kept(r)
+    assert kept["decision"] == lx.RESTORED and kept["argv"] == START
+    assert not {"stdout", "stderr"} & set(kept["before"]["observation"])
+
+
+def test_three_attempts_in_all_and_never_a_fourth(tmp_path: Path) -> None:
+    box = Box(then=())                       # every start leaves it inactive
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], box.starts) == (lx.FAILED_RECOVERY, 3)
+    assert [a["attempt"] for a in r["attempts"]] == [1, 2, 3]
+    assert len(box.calls) == 1 + 3 * 2 and lx.attempt_limit() == 3
+    assert _kept(r)["decision"] == lx.FAILED_RECOVERY
+
+
+@pytest.mark.parametrize("then, starts", [(("active",), 1), (("inactive", "active"), 2),
+                                          (("inactive", "inactive", "active"), 3)])
+def test_it_stops_at_the_first_reading_that_is_active(tmp_path: Path, then: tuple[str, ...],
+                                                      starts: int) -> None:
+    box = Box(then=then)
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], box.starts, len(r["attempts"])) == (lx.RESTORED, starts, starts)
+
+
+def test_success_is_the_reading_and_never_the_exit_code_of_the_start(tmp_path: Path) -> None:
+    # exit 0 and the unit is not active: not a success, and the counter moves
+    quiet = Box(then=(), start_exit=0)
+    r = lx.restart(into=tmp_path / "a", run=quiet.run, now=AT)
+    assert r["decision"] == lx.FAILED_RECOVERY
+    assert {a["started"]["exit_code"] for a in r["attempts"]} == {0}
+    # a non-zero exit and the unit is active: the reading says restored
+    loud = Box(then=("active",), start_exit=1)
+    r = lx.restart(into=tmp_path / "b", run=loud.run, now=AT)
+    assert r["decision"] == lx.RESTORED and r["attempts"][0]["started"]["exit_code"] == 1
+
+
+@pytest.mark.parametrize("state, decision, fault, condition", [
+    ("failed", l7.STOP, lx.UNIT_FAILED, l7.UNAUTHORIZED),
+    ("stopped", l7.STOP, lx.VM_UNREACHABLE, l7.UNAUTHORIZED),
+    ("activating", l7.STOP, None, l7.UNKNOWN),
+    ("active", lx.NO_FAULT, None, None)])
+def test_only_an_inactive_unit_is_started(tmp_path: Path, state: str, decision: str,
+                                          fault: str | None, condition: str | None) -> None:
+    box = Box(state=state)
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], r["fault"], r["condition"]) == (decision, fault, condition)
+    assert box.starts == 0 and [c[4:] for c in box.calls] == [STATUS] and r["attempts"] == []
+    # classed and recorded all the same
+    kept = _kept(r)
+    assert (kept["decision"], kept["fault"]) == (decision, fault)
+
+
+def test_a_failed_unit_is_classed_recorded_and_not_restarted(tmp_path: Path) -> None:
+    box = Box(state="failed")
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert box.starts == 0 and "not restarted" in r["why"] and lx.RESTARTABLE == lx.UNIT_INACTIVE
+    assert (Path(r["evidence"]) / "before.stdout.txt").read_text(encoding="utf-8") == FAILED_OUT
+
+
+@pytest.mark.parametrize("after, condition", [("failed", l7.UNAUTHORIZED),
+                                              ("stopped", l7.UNAUTHORIZED),
+                                              ("activating", l7.UNKNOWN)])
+def test_a_reading_that_is_neither_inactive_nor_active_ends_the_attempts(
+        tmp_path: Path, after: str, condition: str) -> None:
+    box = Box(then=(after, "active"))
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], r["condition"], box.starts) == (l7.STOP, condition, 1)
+    assert "not restarted again" in r["why"]
+
+
+def _limit(tmp_path: Path, n: int | None) -> Path:
+    text = CONTRACT.read_text(encoding="utf-8")
+    line = "Batas percobaan RESTART_SERVICE untuk satu gangguan: 3\n"
+    assert text.count(line) == 1
+    path = tmp_path / f"LAYER7-{n}.md"
+    path.write_text(text.replace(line, "" if n is None else line.replace(": 3", f": {n}")),
+                    encoding="utf-8")
+    return path
+
+
+def test_the_attempts_of_one_fault_are_counted_across_runs(tmp_path: Path) -> None:
+    store = tmp_path / "store"
+    first = Box(then=())
+    r1 = lx.restart(into=store, contract=_limit(tmp_path, 2), run=first.run, now=AT)
+    assert (r1["decision"], first.starts) == (lx.FAILED_RECOVERY, 2)
+    # the same fault, under the owner's limit of three: one start is left
+    second = Box(then=())
+    r2 = lx.restart(into=store, run=second.run, now=AT.replace(minute=1))
+    assert (r2["decision"], second.starts) == (lx.FAILED_RECOVERY, 1)
+    assert r2["attempts_before_this_run"] == 2 and [a["attempt"] for a in r2["attempts"]] == [3]
+    # and then none: the fault has had its three
+    third = Box(then=("active",))
+    r3 = lx.restart(into=store, run=third.run, now=AT.replace(minute=2))
+    assert (r3["decision"], third.starts, r3["attempts"]) == (lx.FAILED_RECOVERY, 0, [])
+    assert "no more" in r3["why"] and [c[4:] for c in third.calls] == [STATUS]
+    # another inactive spell is another fault, with its own three
+    later = Box(then=("active",), since="Tue 2026-10-06 17:30:00 UTC")
+    r4 = lx.restart(into=store, run=later.run, now=AT.replace(minute=3))
+    assert (r4["decision"], later.starts) == (lx.RESTORED, 1)
+    assert r4["fault_id"] != r1["fault_id"] == r2["fault_id"] == r3["fault_id"]
+
+
+def test_what_cannot_be_counted_is_not_started(tmp_path: Path) -> None:
+    broken = tmp_path / "20261006T150000Z-restart"
+    broken.mkdir(parents=True)
+    (broken / "record.json").write_text("{not json", encoding="utf-8")
+    box = Box()
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], r["condition"], box.starts) == (l7.STOP, l7.UNKNOWN, 0)
+
+    class NoSince(Box):
+        def run(self, argv: list[str], **kw: Any) -> Any:
+            got = super().run(argv, **kw)
+            got.stdout = got.stdout.replace(f" since {SINCE}; 1min 44s ago", "")
+            return got
+    assert f" since {SINCE}; 1min 44s ago" in INACTIVE_OUT
+    bare = NoSince()
+    r = lx.restart(into=tmp_path / "other", run=bare.run, now=AT)
+    assert (r["decision"], r["condition"], bare.starts) == (l7.STOP, l7.UNKNOWN, 0)
+    assert r["fault"] == lx.UNIT_INACTIVE and r["fault_id"] is None
+
+
+def test_the_limit_is_the_contract_s_and_without_one_nothing_runs(tmp_path: Path) -> None:
+    one = Box(then=())
+    r = lx.restart(into=tmp_path / "a", contract=_limit(tmp_path, 1), run=one.run, now=AT)
+    assert (r["decision"], one.starts, r["attempt_limit"]) == (lx.FAILED_RECOVERY, 1, 1)
+    for n in (None, 0):
+        none = Box()
+        r = lx.restart(into=tmp_path / "b", contract=_limit(tmp_path, n), run=none.run, now=AT)
+        assert (r["decision"], r["condition"], none.calls) == (l7.STOP, l7.UNAUTHORIZED, [])
+
+
+def _without(tmp_path: Path, name: str, edit: Any) -> Path:
+    text = CONTRACT.read_text(encoding="utf-8")
+    row = next(line for line in text.splitlines() if line.startswith(f"| {name} |"))
+    path = tmp_path / "LAYER7.md"
+    path.write_text(text.replace(row + "\n", edit(row)), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize("name", [lx.ISOLATE, lx.RESTART, l7.RECORD],
+                         ids=["isolate", "restart", "record"])
+@pytest.mark.parametrize("edit", [lambda row: row.replace("**AUTHORIZED**", "**DENIED**") + "\n",
+                                  lambda row: ""], ids=["denied", "absent"])
+def test_without_all_three_rows_nothing_runs(tmp_path: Path, name: str, edit: Any) -> None:
+    box = Box()
+    r = lx.restart(into=tmp_path / "store", contract=_without(tmp_path, name, edit),
+                   run=box.run, now=AT)
+    assert (r["decision"], r["condition"], box.calls) == (l7.STOP, l7.UNAUTHORIZED, [])
+    assert not (tmp_path / "store").exists()
+
+
+@pytest.mark.parametrize("vm, unit", [("cosmictera-layer5", "cron.service"),
+                                      (VM, "ssh.service"), ("another-vm", "cron.service")])
+def test_the_restart_is_for_the_test_vm_and_that_unit_only(tmp_path: Path, vm: str,
+                                                           unit: str) -> None:
+    box = Box()
+    r = lx.restart(vm, unit, into=tmp_path / "store", run=box.run, now=AT)
+    assert (r["decision"], r["condition"], box.calls) == (l7.STOP, l7.UNAUTHORIZED, [])
+    assert not (tmp_path / "store").exists()
+
+
+def test_nothing_is_started_without_a_place_outside_the_repository() -> None:
+    for inside in (ROOT, ROOT / "NUI", ROOT / "portal8888" / "build"):
+        box = Box()
+        r = lx.restart(into=inside, run=box.run, now=AT)
+        assert (r["decision"], r["condition"], box.calls) == (l7.STOP, l7.UNAUTHORIZED, [])
+    assert not list(ROOT.glob("*-restart")) and not list((ROOT / "NUI").glob("*-restart"))
+
+
+def test_a_start_that_does_not_return_is_an_attempt_and_the_reading_decides(
+        tmp_path: Path) -> None:
+    class Hung(Box):
+        def run(self, argv: list[str], **kw: Any) -> Any:
+            if argv[4:] == START:
+                self.calls.append(argv)
+                self.kw.append(kw)
+                self.state = "active"
+                raise subprocess.TimeoutExpired(argv, kw["timeout"])
+            return super().run(argv, **kw)
+    box = Hung()
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert r["decision"] == lx.RESTORED and box.starts == 1
+    assert r["attempts"][0]["started"]["exit_code"] is None
+    assert r["attempts"][0]["started"]["timed_out_after_s"] == lx.TIMEOUT_S
+
+
+def test_an_older_record_changed_during_the_run_is_reported(tmp_path: Path) -> None:
+    old = tmp_path / "20261006T151947Z-measure-inactive"
+    old.mkdir()
+    (old / "stdout.txt").write_text(INACTIVE_OUT, encoding="utf-8")
+    box = Box()
+    box.on_start = lambda: (old / "stdout.txt").write_text("edited", encoding="utf-8")
+    r = lx.restart(into=tmp_path, run=box.run, now=AT)
+    assert (r["decision"], r["condition"]) == (l7.STOP, l7.UNAUTHORIZED)
+    assert "older record" in r["why"] and _kept(r)["condition"] == l7.UNAUTHORIZED
+
+
+def test_the_one_acting_argv_is_whole_and_layer_5_s_guard_still_refuses_it() -> None:
+    assert lx.START_ARGV == tuple(START)
+    for argv in (START, START[1:]):
+        with pytest.raises(layer5.Refused):
+            layer5.guard(argv)
+    tree = ast.parse(SOURCE.read_text(encoding="utf-8"))
+    head = tree.body[0]
+    assert isinstance(head, ast.Expr)
+    strings = [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant)
+               and isinstance(n.value, str) and n is not head.value
+               and not _is_docstring(tree, n)]
+    assert strings.count("sudo") == 1 and strings.count("start") == 1
+    assert sum("sudo" in s for s in strings) == 1
+    for word in ("stop", "restart", "reload", "kill", "enable", "disable", "reset-failed",
+                 "daemon-reload", "rm", "tee", "reboot", "shutdown", "mask"):
+        assert word not in strings, word
+    runs = [n for n in ast.walk(tree) if isinstance(n, ast.Call)
+            and isinstance(n.func, ast.Name) and n.func.id == "run"]
+    assert len(runs) == 2
+    for call in runs:
+        first = call.args[0]
+        assert isinstance(first, ast.List)
+        assert [ast.literal_eval(e) for e in first.elts[:2]] == ["limactl", "shell"]
+        assert isinstance(first.elts[-1], ast.Starred)      # *argv, the module's own
+    assert not any(isinstance(n, ast.Attribute) and n.attr in ("Popen", "system", "check_call",
+                                                               "check_output", "call")
+                   for n in ast.walk(tree))
+    # restart() takes no argv, no command and no unit list from its caller
+    import inspect
+    assert list(inspect.signature(lx.restart).parameters) == [
+        "vm", "unit", "into", "contract", "run", "now"]
+    assert list(inspect.signature(lx._start).parameters) == ["vm", "run"]
+
+
+def test_the_contract_opens_one_row_and_keeps_the_general_one_denied() -> None:
+    table = l7.authorizations()
+    assert table[lx.RESTART] == "AUTHORIZED" and table[lx.ISOLATE] == "AUTHORIZED"
+    assert (len(table), sum(v == "AUTHORIZED" for v in table.values()),
+            sum(v == "DENIED" for v in table.values())) == (17, 10, 7)
+    general = next(row for row in table if row.startswith("10 perintah host lama"))
+    assert "`systemctl start`" in general and table[general] == "DENIED"
+    assert lx.attempt_limit() == 3
+    text = CONTRACT.read_text(encoding="utf-8")
+    for needle in ("| 14 | Memulai `cron.service` di VM uji Linux atas `UNIT_INACTIVE`",
+                   "**Tiga percobaan, total**", "**`UNIT_INACTIVE` saja.**",
+                   "**Berhasil = pembacaan sesudahnya**", "**Gangguan dibuat manusia.**",
+                   "**Lari di VM belum ada.**"):
+        assert needle in text, needle
+
+
+def test_the_command_line_restarts_only_when_asked(monkeypatch: pytest.MonkeyPatch,
+                                                   capsys: pytest.CaptureFixture[str]) -> None:
+    asked: list[str] = []
+    monkeypatch.setattr(lx, "restart", lambda: asked.append("restart") or {
+        "decision": lx.RESTORED})
+    assert lx.main(["--restart"]) == 0 and asked == ["restart"]
+    monkeypatch.setattr(lx, "restart", lambda: {"decision": lx.FAILED_RECOVERY})
+    assert lx.main(["--restart"]) == 1
+    for bad in (["--restart", "ssh.service"], ["--start"], ["--restart", "--record"]):
+        assert lx.main(bad) == 2
+    capsys.readouterr()

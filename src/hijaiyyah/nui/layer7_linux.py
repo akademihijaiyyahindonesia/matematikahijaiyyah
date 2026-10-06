@@ -1,7 +1,8 @@
-"""Layer 7 on one Linux service: ISOLATE_SERVICE reads cron.service and classes what it shows.
+"""Layer 7 on one Linux service: read cron.service, class it, and start it if it is inactive.
 
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7_linux            # read, class, print
     PYTHONPATH=src python3 -m hijaiyyah.nui.layer7_linux --record   # and keep the evidence
+    PYTHONPATH=src python3 -m hijaiyyah.nui.layer7_linux --restart  # RESTART_SERVICE
 
 The owner's decisions of 6 October 2026 (NUI/LAYER7.md, end of 7.4). The
 first system Layer 7 looks after outside CosmicTera is a Linux VM: the test
@@ -38,16 +39,32 @@ stderr that is not empty, a status of another unit: each of these is UNKNOWN
 and stops, with what was seen. It is not guessed from how systemd usually
 behaves.
 
-IT ACTS ON NOTHING. `may_act` is false in every report. Restarting the unit
-(RESTART_SERVICE, `sudo systemctl start cron.service`) is not in 7.4 and is
-not written here; `systemctl stop`, sudo and every change to the VM stay
-outside what NUI may do. The faults this was measured on were made by the
-owner's own hand. The main instance, cosmictera-layer5, is not a target of
-this action.
+ISOLATE_SERVICE ACTS ON NOTHING. `may_act` is false in every one of its
+reports. The faults it was measured on were made by the owner's own hand.
+The main instance, cosmictera-layer5, is not a target of anything here.
+
+RESTART_SERVICE (owner, 6 October 2026) is the one action, and it is narrow:
+
+    limactl shell <test instance> -- sudo systemctl start cron.service
+
+-- that argv whole, built here and taken from no input. It runs only for a
+unit ISOLATE_SERVICE has just read as UNIT_INACTIVE. UNIT_FAILED is classed
+and recorded and NOT restarted: the failure that was measured is a unit whose
+start fails, and starting it again mends nothing. VM_UNREACHABLE and UNKNOWN
+stop likewise. After each start the unit is read again; success is that
+reading -- `Active: active (running)` -- and never the start's exit code. One
+fault gets at most the owner's number of starts in all, read from 7.4 and
+counted from the records kept, across runs; a fault is one inactive spell,
+named by its `since`. If a reading after a start is neither inactive nor
+active, it stops there. `systemctl stop`, kill, reboot and every other change
+to the VM stay outside what NUI may do.
 
 The evidence of a run -- the report, stdout and stderr -- goes to
-~/cosmictera-layer5/linux-service/<time>-isolate/ (the owner's namespace for
-it, 6 October 2026), outside the repository and apart from Layer 5's store.
+~/cosmictera-layer5/linux-service/<time>-isolate/ or <time>-restart/ (the
+owner's namespace for it, 6 October 2026), outside the repository and apart
+from Layer 5's store. A restart keeps the reading before, each start and the
+reading after it, and writes its record after every step. Nothing is started
+without a place outside the repository to keep that.
 """
 from __future__ import annotations
 
@@ -212,8 +229,198 @@ def record(report: dict[str, Any], into: Path | None = None,
     return where
 
 
+#: The 7.4 row the one action stands on (owner, 6 October 2026).
+RESTART = "Mulai ulang `cron.service` di VM uji Linux (`RESTART_SERVICE`)"
+#: The one argv that acts, whole. Layer 5's guard refuses it and is not asked:
+#: it is opened by its own row of 7.4 and by nothing else.
+START_ARGV = ("sudo", "systemctl", "start", UNIT)
+#: The one fault the owner opened the restart for.
+RESTARTABLE = UNIT_INACTIVE
+RESTORED, FAILED_RECOVERY = layer7.SUCCESS, "FAILED_RECOVERY"
+#: The line that tells one inactive spell from the next: its `since`.
+SINCE = re.compile(r"^ +(Active: inactive \(dead\) since [^;\n]+);", re.M)
+
+
+def attempt_limit(contract: Path | None = None) -> int:
+    """How many starts one fault may get, in all: the owner's number, read
+    from 7.4 (R1). Not that many retries after a first -- that many attempts."""
+    text = (contract or layer7.CONTRACT).read_text(encoding="utf-8")
+    found = re.search(r"^Batas percobaan RESTART_SERVICE untuk satu gangguan: (\d+)\b", text,
+                      flags=re.M)
+    return int(found.group(1)) if found else 0
+
+
+def fault_id(seen: dict[str, Any]) -> str | None:
+    """One inactive spell of the unit on one VM, named by its `since`; None
+    when the reading does not carry one."""
+    found = SINCE.findall(seen["stdout"])
+    return _sha(f"{seen['vm_name']}\n{UNIT}\n{found[0]}") if len(found) == 1 else None
+
+
+def _brief(report: dict[str, Any]) -> dict[str, Any]:
+    """A report without the bytes it was classed from; those are kept as files."""
+    seen = report.get("observation")
+    return {**report, "observation": None if seen is None else
+            {k: v for k, v in seen.items() if k not in ("stdout", "stderr")}}
+
+
+def _files(base: Path, but: Path | None = None) -> dict[str, str]:
+    """Every file already kept under the evidence directory, by its hash."""
+    if not base.is_dir():
+        return {}
+    return {str(p.relative_to(base)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(base.rglob("*"))
+            if p.is_file() and (but is None or but not in p.parents)}
+
+
+def spent(base: Path, fault: str) -> int | None:
+    """How many starts this fault has already had, counted from the records
+    kept; None when a record cannot be read -- then nothing is counted on."""
+    total = 0
+    for path in sorted(base.glob("*-restart/record.json")):
+        try:
+            kept = json.loads(path.read_text(encoding="utf-8"))
+            if kept["fault_id"] == fault:
+                total += len(kept["attempts"])
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+    return total
+
+
+def _start(vm: str, run: Runner) -> dict[str, Any]:
+    """START_ARGV on the test VM through limactl, once, and what came back.
+    The verdict is not here: it is the reading that follows."""
+    argv = list(START_ARGV)
+    where = layer5.host()
+    started = datetime.now(timezone.utc)
+    try:
+        proc = run(["limactl", "shell", vm, "--", *argv], capture_output=True, text=True,
+                   timeout=TIMEOUT_S, stdin=subprocess.DEVNULL,
+                   env={**os.environ, "LIMA_HOME": where["lima_home"]})
+    except subprocess.TimeoutExpired:
+        return {"argv": argv, "started_utc": started.isoformat(), "exit_code": None,
+                "stdout": "", "stderr": "", "timed_out_after_s": TIMEOUT_S,
+                "stdout_sha256": _sha(""), "stderr_sha256": _sha("")}
+    return {"argv": argv, "started_utc": started.isoformat(), "exit_code": proc.returncode,
+            "stdout": proc.stdout, "stderr": proc.stderr,
+            "stdout_sha256": _sha(proc.stdout), "stderr_sha256": _sha(proc.stderr)}
+
+
+def _keep(where: Path, name: str, seen: dict[str, Any] | None) -> None:
+    if seen is not None:
+        (where / f"{name}.stdout.txt").write_text(seen["stdout"], encoding="utf-8")
+        (where / f"{name}.stderr.txt").write_text(seen["stderr"], encoding="utf-8")
+
+
+def restart(vm: str | None = None, unit: str = UNIT, into: Path | None = None,
+            contract: Path | None = None, run: Runner = subprocess.run,
+            now: datetime | None = None) -> dict[str, Any]:
+    """RESTART_SERVICE: for a unit that ISOLATE_SERVICE reads as UNIT_INACTIVE,
+    START_ARGV, then the reading again -- at most the owner's number of starts
+    for one fault, counted from the records. Success is the reading, never the
+    start's exit code. Every other state is classed, recorded and left alone."""
+    vm = instance() if vm is None else vm
+    table = layer7.authorizations(contract)
+    authorization = {name: table.get(name) or "unlisted"
+                     for name in (ISOLATE, RESTART, layer7.RECORD)}
+    limit = attempt_limit(contract)
+    result: dict[str, Any] = {
+        "action": RESTART, "authorization": authorization,
+        "target": {"vm_name": vm, "unit": unit}, "argv": list(START_ARGV),
+        "restartable": RESTARTABLE, "attempt_limit": limit, "before": None,
+        "fault": None, "fault_id": None, "attempts_before_this_run": None,
+        "attempts": [], "condition": None, "evidence": None}
+
+    def close(decision: str, why: str, **more: Any) -> dict[str, Any]:
+        return {**result, **more, "decision": decision, "why": why}
+
+    if set(authorization.values()) != {"AUTHORIZED"}:
+        return close(layer7.STOP, "7.4 does not authorize all three rows: fail-closed",
+                     condition=layer7.UNAUTHORIZED)
+    if limit < 1:
+        return close(layer7.STOP, "7.4 names no attempt limit: fail-closed",
+                     condition=layer7.UNAUTHORIZED)
+    if unit != UNIT:
+        return close(layer7.STOP, f"`{unit}` is not the unit this row names, {UNIT}",
+                     condition=layer7.UNAUTHORIZED)
+    if vm != instance():
+        return close(layer7.STOP, f"`{vm}` is not the test instance this row is opened on, "
+                                  f"{instance()}", condition=layer7.UNAUTHORIZED)
+    base = (into or Path(os.path.expanduser(EVIDENCE))).resolve()
+    if base == ROOT.resolve() or ROOT.resolve() in base.parents:
+        return close(layer7.STOP, f"{base} is inside the repository: evidence is kept "
+                                  "outside it, and nothing runs without a place for it",
+                     condition=layer7.UNAUTHORIZED)
+
+    seen = isolate(vm, unit, contract, run)
+    result["before"] = _brief(seen)
+    if seen["decision"] == layer7.STOP and seen["observation"] is None:
+        return close(layer7.STOP, seen["why"], condition=seen["condition"])
+    older = _files(base)
+    at = now or datetime.now(timezone.utc)
+    where = base / f"{at.strftime('%Y%m%dT%H%M%SZ')}-restart"
+    where.mkdir(parents=True)
+    result["evidence"] = str(where)
+    _keep(where, "before", seen["observation"])
+
+    def kept(decision: str, why: str, **more: Any) -> dict[str, Any]:
+        done = close(decision, why, **more)
+        if _files(base, where) != older:
+            done = {**done, "decision": layer7.STOP, "condition": layer7.UNAUTHORIZED,
+                    "why": "an older record under the evidence directory changed during the "
+                           f"run; before that: {why}"}
+        (where / "record.json").write_text(
+            json.dumps(done, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        return done
+
+    if seen["decision"] == NO_FAULT:
+        return kept(NO_FAULT, "the unit is active: nothing to restart")
+    if seen["decision"] != ISOLATED:
+        return kept(layer7.STOP, seen["why"], condition=seen["condition"])
+    result["fault"] = fault = seen["fault"]
+    if fault != RESTARTABLE:
+        return kept(layer7.STOP, f"{fault}: 7.4 opens the restart for {RESTARTABLE} only; "
+                                 "classed and recorded, not restarted",
+                    condition=layer7.UNAUTHORIZED)
+    result["fault_id"] = this = fault_id(seen["observation"])
+    if this is None:
+        return kept(layer7.STOP, "the reading names no `since`: this fault cannot be told "
+                                 "from another, so its attempts cannot be counted",
+                    condition=layer7.UNKNOWN)
+    result["attempts_before_this_run"] = had = spent(base, this)
+    if had is None:
+        return kept(layer7.STOP, "a kept restart record cannot be read: the attempts already "
+                                 "made cannot be counted", condition=layer7.UNKNOWN)
+    if had >= limit:
+        return kept(FAILED_RECOVERY, f"this fault has had its {limit} attempts: no more")
+
+    for n in range(had + 1, limit + 1):
+        acted = _start(vm, run)
+        after = isolate(vm, unit, contract, run)
+        _keep(where, f"attempt-{n}.start", acted)
+        _keep(where, f"attempt-{n}.after", after["observation"])
+        result["attempts"].append({
+            "attempt": n,
+            "started": {k: v for k, v in acted.items() if k not in ("stdout", "stderr")},
+            "after": _brief(after)})
+        if after["decision"] == NO_FAULT:
+            return kept(RESTORED, f"after attempt {n} of {limit}: {after['why']}")
+        if (after["decision"], after["fault"]) != (ISOLATED, RESTARTABLE):
+            return kept(layer7.STOP,
+                        f"after attempt {n} the unit is not {RESTARTABLE} and not active "
+                        f"({after['fault'] or after['condition']}: {after['why']}): "
+                        "not restarted again",
+                        condition=after["condition"] or layer7.UNAUTHORIZED)
+        kept("IN PROGRESS", f"attempt {n} of {limit}: still {RESTARTABLE}")
+    return kept(FAILED_RECOVERY, f"{limit} attempts and the unit is still {RESTARTABLE}")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
+    if args == ["--restart"]:
+        done = restart()
+        print(json.dumps(done, indent=1, ensure_ascii=False))
+        return 0 if done["decision"] in (RESTORED, NO_FAULT) else 1
     if args not in ([], ["--record"]):
         print((__doc__ or "").split("\n\n")[1])
         return 2

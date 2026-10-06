@@ -2383,6 +2383,30 @@ mudah dilanggar:
 - R3: dua puluh delapan mutasi pada `src/hijaiyyah/nui/layer7_linux.py`, dua
   puluh delapan tertangkap pada putaran pertama.
 
+**Keputusan pemilik, 6 Oktober 2026 — `RESTART_SERVICE`, satu tindakan sempit.**
+Sesudah `59a7b0b` dan gerbang penuhnya. Enam ketetapannya di akhir 7.4
+`NUI/LAYER7.md`; yang paling mudah dilanggar:
+
+- **Satu argv, utuh**: `sudo systemctl start cron.service`, di VM uji saja.
+  Baris 7.4-nya sendiri; tabel kini 17 baris, 10 AUTHORIZED, 7 DENIED. Baris
+  umum "10 perintah host lama" **tetap DENIED**, dan pagar Lapis 5 tetap
+  menolak argv itu — izinnya baris 7.4, bukan daftar izin Lapis 5. **K-12
+  dibalik untuk argv ini saja.**
+- **`UNIT_INACTIVE` saja.** `UNIT_FAILED` digolongkan dan direkam, tidak
+  dimulai ulang; begitu juga `VM_UNREACHABLE` dan `UNKNOWN`.
+- **Tiga percobaan total**, bukan tiga ulang sesudah yang pertama. Dihitung
+  dari rekaman yang tersimpan, lintas lari; satu gangguan = satu masa
+  `inactive (dead) since …`. Angkanya dibaca dari kontrak (R1).
+- **Berhasil adalah pembacaan sesudahnya**, bukan kode keluar `start`.
+- **Yang membuat gangguan tetap manusia**, dan aturan OS yang mempersempit
+  `sudo` di VM uji dipasang tangan operator. NUI tidak menyentuhnya.
+- **Lari di VM menunggu perintah pemilik.** Sampai itu ada, keluaran argv
+  tersebut belum pernah diukur, dan kodenya tidak bergantung padanya.
+- R3 di **salinan** pohon kerja (pelajaran dari folder sisa mutasi di akar
+  repo): tiga puluh satu mutasi, tiga puluh tertangkap. Yang satu setara dan
+  tidak dipaksa merah: pemeriksaan VM dan unit di `restart()` berlapis dengan
+  yang di `isolate()`, jadi membuang satu lapis tidak mengubah hasil.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

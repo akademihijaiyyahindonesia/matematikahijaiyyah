@@ -126,7 +126,10 @@ def test_the_7_4_statuses_are_read_from_the_contract() -> None:
         "Pemulihan slot Portal 8888 (`RECOVER_PORTAL`)",
         # opened by the owner, 6 October 2026: it reads one unit on the test
         # VM and classes it, and acts on nothing
-        "Penggolongan gangguan `cron.service` di VM uji Linux (`ISOLATE_SERVICE`)"}
+        "Penggolongan gangguan `cron.service` di VM uji Linux (`ISOLATE_SERVICE`)",
+        # opened by the owner's further decision of 6 October 2026: one argv
+        # on the test VM, for UNIT_INACTIVE only, three attempts in all
+        "Mulai ulang `cron.service` di VM uji Linux (`RESTART_SERVICE`)"}
     for general in ("Konfigurasi ulang papan (`openFPGALoader`)", "Restart / recovery",
                     "Isolasi kesalahan", "Mengirim program ke papan"):
         assert table[general] == "DENIED", general
