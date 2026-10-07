@@ -2407,8 +2407,16 @@ Sesudah `59a7b0b` dan gerbang penuhnya. Enam ketetapannya di akhir 7.4
   guard NUI saja: batasan lab, bukan model least-privilege OS yang kuat.
   **Jangan menulis bahwa `sudo` sudah dipersempit di tingkat OS.** Sumber hak
   itu belum dibaca.
-- **Lari di VM menunggu perintah pemilik.** Sampai itu ada, keluaran argv
-  tersebut belum pernah diukur, dan kodenya tidak bergantung padanya.
+- **Satu lari di VM uji, 7 Oktober 2026, atas perintah pemilik: `SUCCESS`
+  pada percobaan 1 dari 3.** Gangguan `UNIT_INACTIVE` dibuat tangan operator;
+  tindakannya dijalankan implementasi NUI. Pembacaan sesudahnya
+  `Active: active (running)`, 46 ms sesudah unit mulai. Rekaman mentahnya di
+  luar git, folder 20261006T193152Z-restart di namespace linux-service.
+  **Jangan menulis lebih dari itu**: percobaan 2 dan 3, `FAILED_RECOVERY`, dan
+  jalur "selain aktif/inactive → berhenti" belum pernah terjadi di VM; tidak
+  ada bukti unit tetap hidup sesudah 46 ms; ini bukan validasi produksi; dan
+  batas perintahnya di NUI, bukan di OS (`lima` ber-`(ALL) NOPASSWD: ALL`).
+  Lari kedua butuh perintah pemilik tersendiri.
 - R3 di **salinan** pohon kerja (pelajaran dari folder sisa mutasi di akar
   repo): tiga puluh satu mutasi, tiga puluh tertangkap. Yang satu setara dan
   tidak dipaksa merah: pemeriksaan VM dan unit di `restart()` berlapis dengan

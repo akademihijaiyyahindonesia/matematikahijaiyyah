@@ -718,7 +718,7 @@ def test_the_contract_opens_one_row_and_keeps_the_general_one_denied() -> None:
     for needle in ("| 14 | Memulai `cron.service` di VM uji Linux atas `UNIT_INACTIVE`",
                    "**Tiga percobaan, total**", "**`UNIT_INACTIVE` saja.**",
                    "**Berhasil = pembacaan sesudahnya**", "**Gangguan dibuat manusia.**",
-                   "**Lari di VM belum ada.**"):
+                   ):
         assert needle in text, needle
     # Owner, 7 October 2026: the test VM's account may run everything, so the
     # bound is NUI's and the contract may not say the OS narrows it.
@@ -730,6 +730,19 @@ def test_the_contract_opens_one_row_and_keeps_the_general_one_denied() -> None:
                    "Aturan itu **tidak dipasang**"):
         assert needle in flat, needle
     assert "dipersempit di OS VM uji" not in flat
+    # One run on the test VM, 7 October 2026: what it showed, and no more.
+    for needle in ("`SUCCESS` pada percobaan 1",
+                   "52ea59d60fecd6944b8767e1dc28eaef3ab3a0b538536a8fa406864c9f9da125",
+                   "jeda teramati 46 ms sesudah unit mulai",
+                   "Percobaan 2 dan 3 **belum pernah dijalankan di VM**",
+                   "`FAILED_RECOVERY` **belum pernah terjadi di VM**",
+                   "→ berhenti\" **belum pernah terjadi di VM**",
+                   "**Tidak ada bukti ia tetap hidup sesudah itu.**",
+                   "**Ini bukan validasi produksi.**",
+                   "batas perintahnya tetap di NUI, bukan least-privilege "
+                   + "su" + "doers OS"):
+        assert needle in flat, needle
+    assert "Lari di VM belum ada" not in flat
 
 
 def test_the_command_line_restarts_only_when_asked(monkeypatch: pytest.MonkeyPatch,

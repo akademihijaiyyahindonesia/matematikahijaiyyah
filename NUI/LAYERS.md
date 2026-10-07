@@ -1777,8 +1777,12 @@ NUI, **bukan** aturan OS: akun `lima` di VM uji terukur memiliki
 `(ALL) NOPASSWD: ALL` (7 Oktober 2026), dan pemilik memilih tidak mengubahnya
 — batasan lab, bukan model least-privilege OS yang kuat. Implementasinya di
 `src/hijaiyyah/nui/layer7_linux.py`; tesnya memakai model VM yang menjawab
-dengan keluaran terukur. **Lari di VM belum ada**: itu langkah laboratorium
-atas perintah pemilik.
+dengan keluaran terukur. **Satu lari di VM uji, 7 Oktober 2026**, atas
+perintah pemilik: `UNIT_INACTIVE` buatan tangan operator, `SUCCESS` pada
+percobaan 1 dari 3, pembacaan sesudahnya `Active: active (running)` 46 ms
+sesudah unit mulai. Percobaan 2 dan 3, `FAILED_RECOVERY`, dan jalur berhenti
+belum pernah terjadi di VM; tidak ada bukti unit tetap hidup sesudah itu; ini
+lab, bukan validasi produksi.
 
 ---
 

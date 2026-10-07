@@ -28,7 +28,7 @@ Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; d
 Linux service recovery         DIUSULKAN    adendum pasca-freeze, akhir 7.4 — semua DENIED
 Linux: VM uji, cron, kelas, ISOLATE_SERVICE   DISETUJUI   pemilik, 6 Oktober 2026 — baca-saja; RESTART_SERVICE belum
 Linux: ISOLATE_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — baris 7.4 sendiri, izin 13 di 7.5; tanpa tindakan
-Linux: RESTART_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — UNIT_INACTIVE saja, 3 percobaan; lari di VM menunggu perintah pemilik
+Linux: RESTART_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — UNIT_INACTIVE saja, 3 percobaan; satu lari di VM uji, 7 Oktober 2026: SUCCESS pada percobaan 1
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
@@ -905,11 +905,44 @@ arah berhenti:
   dijalankan. Rekaman ditulis sesudah tiap langkah, di
   `~/cosmictera-layer5/linux-service/<waktu>-restart/`.
 
-**Lari di VM belum ada.** Baris ini memberi izin dalam kontrak; lari pertama
-`RESTART_SERVICE` di VM uji adalah langkah laboratorium atas perintah pemilik,
-sesudah implementasi, tes, commit, dan gerbangnya. Keluaran
-`sudo systemctl start cron.service` sendiri **belum pernah diukur**, dan
-implementasinya tidak bergantung pada keluaran itu.
+**Satu lari di VM uji, 7 Oktober 2026 — `SUCCESS` pada percobaan 1.** Atas
+perintah pemilik, sesudah `c167893` dan gerbang penuhnya; jam di bawah UTC,
+6 Oktober. Gangguannya dibuat tangan operator
+(`sudo systemctl stop cron.service`, 19:31:28); tindakannya dijalankan
+implementasi NUI (`--restart`), bukan tangan.
+
+```text
+RESTART_SERVICE    perangkat keras: tidak — lab VM Linux
+VM                 cosmictera-layer5-uji
+gangguan           UNIT_INACTIVE — Active: inactive (dead) since 19:31:28, keluar 3
+percobaan          1 dari 3 — keluar 0, stdout dan stderr kosong
+pembacaan sesudah  Active: active (running), keluar 0, PID 1518 (sebelumnya 680)
+jeda teramati      46 ms sesudah unit mulai
+hasil              SUCCESS
+```
+
+Rekaman mentahnya di luar git, di
+`~/cosmictera-layer5/linux-service/20261006T193152Z-restart/`; SHA-256
+`record.json`-nya
+`52ea59d60fecd6944b8767e1dc28eaef3ab3a0b538536a8fa406864c9f9da125`.
+
+Yang **tidak** dibuktikan lari itu:
+
+- Percobaan 2 dan 3 **belum pernah dijalankan di VM**, dan `FAILED_RECOVERY`
+  **belum pernah terjadi di VM**.
+- Jalur "pembacaan sesudah bukan aktif dan bukan `UNIT_INACTIVE` → berhenti"
+  **belum pernah terjadi di VM**. Ketiga jalur itu baru dipegang tes terhadap
+  model VM.
+- Unit terbaca hidup 46 ms sesudah mulai. **Tidak ada bukti ia tetap hidup
+  sesudah itu.**
+- Satu lari atas satu gangguan buatan tangan. **Ini bukan validasi produksi.**
+- Akun `lima` di VM itu memiliki `(ALL) NOPASSWD: ALL`: batas perintahnya
+  tetap di NUI, bukan least-privilege sudoers OS.
+
+Keluaran `sudo systemctl start cron.service` kini terukur **sekali**: keluar
+0, tanpa keluaran. Implementasinya tetap tidak bergantung pada keluaran itu.
+Lari kedua bukan bagian dari tonggak ini; menguji ulang-coba dan
+`FAILED_RECOVERY` di VM adalah pekerjaan terpisah atas perintah pemilik.
 
 ## 7.5 Authorization Boundary
 
