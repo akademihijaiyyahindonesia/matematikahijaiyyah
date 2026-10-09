@@ -2347,8 +2347,8 @@ mudah dilanggar:
 - **Empat yang disetujui**: `cosmictera-layer5-uji` dibuat kembali sebagai VM
   laboratorium; `cron.service` target layanan pertama; `UNIT_INACTIVE` dan
   `UNIT_FAILED` klasifikasi **lokal Lapis 7** — tidak masuk kontrak outcome
-  Lapis 5; dan `ISOLATE_SERVICE` tindakan **baca-saja** di modul NUI bernama
-  `layer7_linux`, nama dari pemilik — berkasnya belum ada.
+  Lapis 5; dan `ISOLATE_SERVICE` tindakan **baca-saja** di
+  `src/hijaiyyah/nui/layer7_linux.py`, nama dari pemilik, dibuat di `59a7b0b`.
 - **`~/cosmictera-layer5/linux-service/<waktu>/` adalah evidence Lapis 7** di
   luar repositori, bukan evidence store Lapis 5. Alat ukurnya
   `portal8888/build/diag/measure_unit.py` boleh tetap di folder yang
