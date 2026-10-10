@@ -124,13 +124,7 @@ TAG = HMAC-SHA256(K_segel, DEV ‖ PORT ‖ T_sec ‖ T_tick ‖ T_sumber ‖ T_
                            ‖ OBS ‖ FRAME_HASH ‖ IDX ‖ PREV)
 ```
 
-Pada v1, `K_segel` diprovisi dari luar ke slot kunci tulis-sekali dan tidak
-pernah keluar lagi sebagai port, ke software host, atau ke NUI: `key_rd` hanya
-mengisi `h_key`, yang hanya masuk ke port `key` `hijaiyyah_hmac`
-(`rtl/hijaiyyah_portal8888.v:161`, `:222`, `:116`), dan port top serta balasan
-UART wrapper Gowin tidak membawa byte kunci, hanya tag. Kunci di repositori
-dibangkitkan `random.Random(8888)` (`ref/portal_ref.py:73`) dan bersifat
-publik; kunci yang lahir di dalam FPGA belum diimplementasikan. Setelah disegel, setiap field — termasuk waktu — tidak bisa
+Pada v1, K_segel tidak lahir di FPGA. Host membangkitkan kunci uji menggunakan random.Random(8888) (ref/portal_ref.py:73), sehingga nilainya bersifat publik, lalu mengirimkannya tanpa enkripsi melalui UART untuk ditulis ke key_mem. Karena host melakukan provisioning, host mengetahui nilai kunci tersebut. RTL tidak menyediakan port readback untuk mengeluarkan kembali isi key_mem ke host atau NUI. Isi key_mem hilang ketika daya mati atau FPGA dikonfigurasi ulang; penguncian provisioning hanya berlaku sampai reset. Setelah disegel, setiap field — termasuk waktu — tidak bisa
 diubah tanpa ketahuan.
 
 - Mesin HMAC-SHA256: **tervalidasi di papan Tang Nano 20K, 207/207**
