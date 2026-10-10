@@ -19,8 +19,9 @@ Top operasional v1 adalah `hijaiyyah_portal8888`, dengan satu domain clock PHY
 dan satu stream byte. Cap waktu dibaca pada byte valid pertama (SOF), setelah
 UTC diprovisi lewat `provision_time`, `provision_utc_sec`, dan
 `provision_uncert_ns`; holdover 50 ppm tetap milik `hijaiyyah_timestamp`.
-Kunci lima slot diprovisi sekali lalu dikunci permanen dan tidak muncul sebagai
-port input operasional atau output. Frame sampai 9.216 byte disimpan lalu
+Kunci lima slot diprovisi sekali lalu dikunci sampai reset — `provision_locked`
+kembali 0 saat `rst_n` turun (`rtl/hijaiyyah_portal8888.v:166`) — dan tidak
+muncul sebagai port input operasional atau output. Frame sampai 9.216 byte disimpan lalu
 di-replay ke SHA-256 agar stall hash tidak mengubah byte yang di-hash. Tidak
 ada CDC pada v1. Jika frame melebihi batas atau datang saat buffer sedang
 direplay/disegel, v1 menjatuhkannya dan memberi sinyal drop; ia tidak membuat
