@@ -535,6 +535,8 @@ Dua penetapan lain dari keputusan yang sama:
   cukup untuk memilih, dan tidak ada pekerjaan KV260 yang boleh berangkat dari
   salah satu jalur sebelum pemilik memilih.
 
+**Keputusan pemilik, 10 Oktober 2026:** Untuk workstream Portal 8888 dan secure element, evaluasi selanjutnya diarahkan ke AMD Kria KV260 melalui jalur yang tidak bergantung pada TROPIC01 USB DevKit. Keputusan ini hanya berlaku untuk evaluasi Portal dan secure element; gerbang enam tahap perangkat lunak HCPU sebelum KV260 digunakan sebagai papan CosmicTera Computer tetap berlaku. Keputusan ini bukan bukti kompatibilitas, keberhasilan integrasi, hasil sintesis atau place-and-route, maupun validasi fisik. Peran HCPU pada jalur A/B/C, antarmuka secure element, dan nomor komponen final belum diputuskan.
+
 ### Keputusan pemilik, 18 September 2026 — tahap 1 ditutup di papan dulu
 
 - **Tahap 1 tutup di papan pada hari yang sama, 18 September 2026**: `1 1 1`,
