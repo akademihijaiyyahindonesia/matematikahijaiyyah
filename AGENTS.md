@@ -2384,6 +2384,7 @@ mudah dilanggar:
   diberi nama. Menambah golongan berarti mengukurnya dulu.
 - R3: dua puluh delapan mutasi pada `src/hijaiyyah/nui/layer7_linux.py`, dua
   puluh delapan tertangkap pada putaran pertama.
+- **Catatan retrospektif K4, 10 Oktober 2026.** Commit `59a7b0b` mencatat keputusan terkait Linux bersama implementasi `ISOLATE_SERVICE` dan tesnya. Catatan ini merekam riwayat yang sudah terjadi, bukan pengecualian yang boleh diulang. Riwayat Git tidak ditulis ulang; koreksi berikutnya yang memiliki sebab berbeda masuk ke commit terpisah.
 
 **Keputusan pemilik, 6 Oktober 2026 — `RESTART_SERVICE`, satu tindakan sempit.**
 Sesudah `59a7b0b` dan gerbang penuhnya. Enam ketetapannya di akhir 7.4
