@@ -2952,6 +2952,7 @@ Cara menjalankannya:
   sebelum jadi riwayat; yang mencegahnya berulang adalah kebiasaan ini, bukan
   `.gitignore` (berkas-berkas itu memang tidak terabaikan, hanya tidak
   di-commit).
+- **Tidak di-push tanpa keputusan pemilik.** Cabang ini sengaja lokal. Jumlah commit di depan origin diukur dengan `git rev-list --count @{u}..HEAD`, tidak ditulis di sini supaya tidak basi.
 
 ---
 
