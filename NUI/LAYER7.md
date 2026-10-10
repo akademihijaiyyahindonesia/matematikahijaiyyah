@@ -24,19 +24,21 @@ Mutative authorization         DENIED       kecuali empat baris slot Portal 8888
 Authorization boundary         EXTENDED     pemilik, 3 Oktober 2026 — izin 9–12 di 7.5
 Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
 Completion condition           mengisolasi, memulihkan, dan merekam — pemilik, 3 Oktober 2026
-Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan
-Linux service recovery         DIUSULKAN    adendum pasca-freeze, akhir 7.4 — semua DENIED
-Linux: VM uji, cron, kelas, ISOLATE_SERVICE   DISETUJUI   pemilik, 6 Oktober 2026 — baca-saja; RESTART_SERVICE belum
+Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan; tidak mencakup adendum Linux sesudahnya (59a7b0b, 81fcd38, c167893, c325eb4)
+Linux service recovery         ADENDUM      pasca-freeze, akhir 7.4 — sesudah tag layer7-freeze-2026-10-03
+Linux: VM uji, cron, kelas, ISOLATE_SERVICE   DISETUJUI   pemilik, 6 Oktober 2026 — baca-saja; RESTART_SERVICE dibuka terpisah (baris di bawah)
 Linux: ISOLATE_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — baris 7.4 sendiri, izin 13 di 7.5; tanpa tindakan
 Linux: RESTART_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — UNIT_INACTIVE saja, 3 percobaan; satu lari di VM uji, 7 Oktober 2026: SUCCESS pada percobaan 1
 ```
 
 Keputusan ini dokumen dan spec. Ia tidak memberi izin implementasi tindakan
 otonom di luar batas yang ditetapkan. Otonomi NUI berada di wilayah
-**read → evaluate → verify → evidence**, ditambah satu wilayah mutatif yang
-dibuka pemilik 3 Oktober 2026: memulai ulang dan memulihkan slot Portal 8888,
-di dalam batas baris 7.4-nya. Tidak ada mutasi lain tanpa keputusan otorisasi
-berikutnya.
+**read → evaluate → verify → evidence**, ditambah dua wilayah mutatif yang
+dibedakan: memulai ulang dan memulihkan slot Portal 8888 (pemilik, 3 Oktober
+2026, dalam freeze `layer7-freeze-2026-10-03`), dan memulai ulang `cron.service`
+di VM uji Linux atas `UNIT_INACTIVE` (pemilik, 6 Oktober 2026, adendum
+pasca-freeze) — masing-masing di dalam batas baris 7.4-nya. Tidak ada mutasi
+lain tanpa keputusan otorisasi berikutnya.
 
 Isinya menunjuk ke sumber yang sudah terukur, tidak menyalin nilainya (R1). Nilai
 yang bisa berubah — misalnya ambang kesegaran atau daftar kolektor — tinggal di
