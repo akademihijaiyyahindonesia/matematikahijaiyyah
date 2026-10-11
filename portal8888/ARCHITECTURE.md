@@ -75,7 +75,7 @@ rantai tahan-rollback CosmicTera dengan disiplin bukti yang sama.
 ```text
 L0  TANGKAP          perangkat keras, sebelum software menyentuh
 L1  SUSUN CATATAN    rakit field termasuk WAKTU TEPAT
-L2  SEGEL            HMAC di FPGA; kunci diprovisi host (v1), disimpan di key_mem sampai reset
+L2  SEGEL            HMAC di FPGA; kunci diprovisi host (v1), disimpan di key_mem; reset menghapus status lock, bukan isi key_mem
 L3  RANTAI           4 sudut + portal + jangkar kepala (anti-rollback)
 L4  OTORISASI        Ed25519, kunci pemilik — gerbang tindakan
 L5  SERAH & TELUSUR  bukti ke pemilik → sumber eksternal yang tersedia → lokasi
