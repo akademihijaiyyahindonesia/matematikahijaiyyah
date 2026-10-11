@@ -75,7 +75,7 @@ rantai tahan-rollback CosmicTera dengan disiplin bukti yang sama.
 ```text
 L0  TANGKAP          perangkat keras, sebelum software menyentuh
 L1  SUSUN CATATAN    rakit field termasuk WAKTU TEPAT
-L2  SEGEL            HMAC, kunci pemilik, di dalam FPGA
+L2  SEGEL            HMAC di FPGA; kunci diprovisi host (v1), disimpan di key_mem sampai reset
 L3  RANTAI           4 sudut + portal + jangkar kepala (anti-rollback)
 L4  OTORISASI        Ed25519, kunci pemilik — gerbang tindakan
 L5  SERAH & TELUSUR  bukti ke pemilik → sumber eksternal yang tersedia → lokasi
@@ -124,7 +124,7 @@ TAG = HMAC-SHA256(K_segel, DEV ‖ PORT ‖ T_sec ‖ T_tick ‖ T_sumber ‖ T_
                            ‖ OBS ‖ FRAME_HASH ‖ IDX ‖ PREV)
 ```
 
-Pada v1, K_segel tidak lahir di FPGA. Host membangkitkan kunci uji menggunakan random.Random(8888) (ref/portal_ref.py:73), sehingga nilainya bersifat publik, lalu mengirimkannya tanpa enkripsi melalui UART untuk ditulis ke key_mem. Karena host melakukan provisioning, host mengetahui nilai kunci tersebut. RTL tidak menyediakan port readback untuk mengeluarkan kembali isi key_mem ke host atau NUI. Isi key_mem hilang ketika daya mati atau FPGA dikonfigurasi ulang; penguncian provisioning hanya berlaku sampai reset. Setelah disegel, setiap field — termasuk waktu — tidak bisa
+Pada v1, `K_segel` tidak lahir di FPGA. Host membangkitkan kunci uji menggunakan `random.Random(8888)` (`ref/portal_ref.py:73`), sehingga nilainya bersifat publik, lalu mengirimkannya tanpa enkripsi melalui UART untuk ditulis ke `key_mem`. Karena host melakukan provisioning, host mengetahui nilai kunci tersebut. RTL tidak menyediakan port readback untuk mengeluarkan kembali isi `key_mem` ke host atau NUI. Isi `key_mem` hilang ketika daya mati atau FPGA dikonfigurasi ulang; penguncian provisioning hanya berlaku sampai reset. Setelah disegel, setiap field — termasuk waktu — tidak bisa
 diubah tanpa ketahuan.
 
 - Mesin HMAC-SHA256: **tervalidasi di papan Tang Nano 20K, 207/207**
@@ -161,7 +161,7 @@ Tindakan sensitif (membuka/mengekspor bukti, mengunci perangkat) butuh
 | | HMAC (penyegelan) | Ed25519 (otorisasi) |
 |---|---|---|
 | sifat | simetris | asimetris |
-| penandatangan | pemilik (dalam FPGA) | **pemilik (kunci privat)** |
+| penandatangan | FPGA dengan kunci yang diprovisi host (v1) | **pemilik (kunci privat)** |
 | pemverifikasi | FPGA | **NUI (kunci publik saja)** |
 | akibat | NUI tak bisa palsukan bukti | **NUI tak bisa palsukan izin** |
 
@@ -273,7 +273,7 @@ Portal menyediakan bukti yang dapat diperiksa dan diverifikasi pemilik.
 
 | lapis | primitif | kunci | tinggal di |
 |---|---|---|---|
-| Penyegelan bukti | HMAC-SHA256 | K_segel | dalam FPGA, tak pernah keluar |
+| Penyegelan bukti | HMAC-SHA256 | K_segel | diprovisi host lewat UART (v1); tidak ada readback dari FPGA; kunci uji publik |
 | Otorisasi tindakan | Ed25519 | privat pemilik / publik di NUI | privat di luar jangkauan NUI |
 | Identitas perangkat | per-perangkat | kunci perangkat | dalam perangkat |
 
