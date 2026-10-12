@@ -353,7 +353,7 @@ sampai menjadi satu sistem yang bisa dipakai:
 | M5 | HFS baca/tulis | **create → write → read → verify jalan di papan** (`1 0 1 1 1 1 0`), dan **medianya kini persisten**: kartu TF terbukti bertahan melewati mati daya, 15 September 2026 | `hos_fs_*` masih menulis ke RAM data — jalur kartu hidup, keduanya belum disambung |
 | M6 | HISAB | `HPACK`/`HCRC` di RTL, 124 asersi | dibungkus jadi layanan kernel bernama, bukan instruksi langsung |
 | M7 | Ka'bah dipanggil dari HCPU | Ka'bah jalan sendiri di papan, 400/400 byte cocok `cube.py` | jadi co-processor: perintah lewat MMIO, hasil kembali ke HCPU |
-| M8 | JIM/HIJRAH di perangkat keras | 28 opcode huruf `0xE0`–`0xFB` dijalankan di pipeline | instruksi JIM yang dirakit, didekode, dieksekusi, lalu diverifikasi di papan |
+| M8 | JIM/HIJRAH di perangkat keras | 28 opcode huruf `0xE0`–`0xFB` dijalankan di pipeline; **di papan** ke-28-nya, termasuk `L_JIM` (`0xE4`), PARITY di korpus papan (`letters.hasm`, `3b49061`, 24 September 2026); Hijrah dihitung HCPU dari ROM-nya sendiri, 700/700 (`803ac4a`) | mesin Jim (LFSR periode 31 atas GF(2), 3.124 atas GF(5)) dihitung oleh HCPU di papan — alirannya sekarang dibangkitkan host (`rtl/scripts/jim_stream.py`) |
 | M9 | Program loader | loader UART menaruh program di alamat 64 | memuat program dari penyimpanan, bukan dari kabel |
 | M10 | Konsol HDMI | 1280×720 menyala bersama HCPU dan loader | framebuffer + perender teks + layanan display di kernel |
 | M11 | Jembatan NUI | `nui_embedding` jalan di papan, `2 2 2 6 6` | protokol PC→papan untuk data inferensi |
