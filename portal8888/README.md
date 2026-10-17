@@ -1,7 +1,8 @@
 # Portal 8888
 
-**[EH] / DESAIN — belum masuk gerbang; satu lari di papan Tang Nano 20K.** Folder
-ini berdiri sendiri di luar `rtl/` dengan sengaja: menaruh `.v` di `rtl/` akan
+**[EH] / DESAIN — belum masuk gerbang; bukti fisik terbatas dari dua lari di satu
+papan Tang Nano 20K lewat UART (`sim/EVIDENCE.md` §9).** Folder ini berdiri
+sendiri di luar `rtl/` dengan sengaja: menaruh `.v` di `rtl/` akan
 memicu penjaga sidik jari dan penjaga testbench-yatim. Nama yang sudah
 disetujui pemilik: top `hijaiyyah_portal8888` dan pembungkus
 `hijaiyyah_portal8888_gowin_top`; nama modul lain tetap usulan (`AGENTS.md` §2).
@@ -44,7 +45,7 @@ otorisasi, dasar hukum) dan [`sim/EVIDENCE.md`](sim/EVIDENCE.md) (hasil uji).
 | `rtl/ingress_parse_v1.v` | baca header v1, frame kontinu sampai 9.216 byte | ✅ sim; ✅ papan, 200 frame asli |
 | `fpga/gowin/hijaiyyah_portal8888_gowin_top.v` | pembungkus Tang Nano 20K: Portal di balik UART, 10 pin | ✅ sim lewat pin UART: 23 perintah, 0 salah |
 | `ref/portal_uart.py` | protokol UART pembungkus: satu penyandi dan satu pemeriksa, untuk bench dan papan | — |
-| `scripts/portal8888_uart_test.py` | uji papan lewat port serial, memakai pemeriksa yang sama | ✅ papan, satu lari: 23 perintah, 0 salah |
+| `scripts/portal8888_uart_test.py` | uji papan lewat port serial, memakai pemeriksa yang sama | ✅ papan, dua lari: 23 perintah, lalu 224 perintah dengan 200 frame asli; 0 salah |
 | `tb/*.v` | testbench masing-masing, keluar non-nol saat gagal | — |
 | `ref/*.py` | model perangkat lunak, verifier byte-exact, kampanye serangan, generator vektor | — |
 | `Makefile` | mengulang seluruh bukti dari build bersih | — |

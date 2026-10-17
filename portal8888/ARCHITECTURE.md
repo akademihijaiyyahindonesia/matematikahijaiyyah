@@ -1,7 +1,8 @@
 # Portal 8888 — Arsitektur Lengkap
 
 **Label: [EH] / DESAIN.** Portal 8888 adalah workstream eksperimental:
-tervalidasi di simulasi dan belum punya bukti fisik. Angka yang ditandai
+tervalidasi di simulasi, dengan bukti fisik terbatas dari dua lari di satu
+papan Tang Nano 20K lewat UART (`sim/EVIDENCE.md` §9). Angka yang ditandai
 "terukur" berasal dari
 simulasi/sintesis yang diulang di Mac 1 Oktober 2026 (`sim/EVIDENCE.md`,
 `make`); yang lain adalah desain yang menunggu diukur. Tidak ada klaim yang naik
@@ -299,10 +300,13 @@ jumbo frame 9.216 B                  VALIDATED simulasi: dua frame kontinu
 pembungkus UART Tang Nano 20K        VALIDATED simulasi lewat pin UART: rantai
                                      PREV, ROOT, jangkar (`sim/EVIDENCE.md` §9)
 PnR Tang Nano 20K                    SELESAI: 15.848 LUT4, 8.080 DFF, 6 BSRAM;
-                                     bitstream dimuat, satu lari di papan 0 salah
+                                     bitstream dimuat ke SRAM
 Ed25519 otorisasi                    DESAIN — belum ada di repo
-validasi fisik                       Tang Nano 20K, satu lari lewat UART
-                                     (`sim/EVIDENCE.md` §9); PHY dan PPS belum
+validasi fisik                       Tang Nano 20K, dua lari lewat UART di satu
+                                     papan (`sim/EVIDENCE.md` §9): skenario 23
+                                     perintah, lalu 200 frame asli (224
+                                     perintah), keduanya 0 salah; frame dikirim
+                                     host; PHY, PPS, dan lari berulang belum
 ```
 
 ---
