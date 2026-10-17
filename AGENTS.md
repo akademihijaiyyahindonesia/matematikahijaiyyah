@@ -2425,6 +2425,32 @@ Sesudah `59a7b0b` dan gerbang penuhnya. Enam ketetapannya di akhir 7.4
   tidak dipaksa merah: pemeriksaan VM dan unit di `restart()` berlapis dengan
   yang di `isolate()`, jadi membuang satu lapis tidak mengubah hasil.
 
+### Keputusan pemilik, 12 Oktober 2026 — tahap 3–4 jalur HCPU tersendiri
+
+Adendum atas blok *Keputusan pemilik, 20 September 2026 — sembilan prioritas
+sesudah loader*. Blok itu mencatat bahwa daftarnya tidak memuat overlay runtime
+(tahap 3) dan HVM (tahap 4) dari gerbang enam tahap 17 September, dan
+menyebutnya dua urutan yang belum dipertemukan. Blok historis itu tidak
+disunting.
+
+- **Tahap 3 adalah overlay runtime.**
+- **Tahap 4 adalah HVM di papan**, dan baru dikerjakan sesudah tahap 3
+  memenuhi kriteria penerimaannya.
+- **Tahap 3–4 adalah jalur HCPU tersendiri**, independen dari Command Center
+  Docker.
+- **Command Center Docker tetap membutuhkan izin pemilik** sebelum mengunduh
+  perangkat lunak pihak ketiga.
+- **Peran HCPU di KV260 — Jalur A, B, atau C — tetap belum diputuskan.**
+
+Blok ini tidak menetapkan kriteria penerimaan tahap 3 maupun tahap 4. Jangan
+mengarang, memperluas, atau menetapkan kriteria yang belum disetujui pemilik.
+
+**Burn-in 168 jam tetap `BELUM DIJALANKAN`**
+(`cosmictera-build/burn-in/README.md:127` dan
+`cosmictera-build/burn-in/README.md:353`). Angka 168.620.032 di catatan burn-in
+tingkat 2 (bagian 24 September di atas) adalah hitungan siklus lari 72 jam,
+bukan lari 168 jam.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
