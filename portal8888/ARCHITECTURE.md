@@ -306,7 +306,9 @@ validasi fisik                       Tang Nano 20K, dua lari lewat UART di satu
                                      papan (`sim/EVIDENCE.md` §9): skenario 23
                                      perintah, lalu 200 frame asli (224
                                      perintah), keduanya 0 salah; frame dikirim
-                                     host; PHY, PPS, dan lari berulang belum
+                                     host melalui UART, bukan melalui kabel
+                                     jaringan; PHY, PPS, dan lari berulang
+                                     belum diuji
 ```
 
 ---
