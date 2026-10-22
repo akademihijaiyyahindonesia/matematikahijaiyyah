@@ -30,7 +30,8 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **6.172 tes lulus**, 0 dilewati † | `python3 -m pytest -q` |
+| ✅ | **6.201 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
+| ⬜ | lari penuh keluar 1 — hasilnya di † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 159 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -41,18 +42,17 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 6.172 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 6.201 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
 sama. Yang tetap tak terjaga hanyalah berapa yang **lulus**: untuk itu memang
 harus menjalankan pytest, dan perintah di sebelahnya yang jadi kebenarannya.
-Hari ini kebenarannya **6.170 lulus, 1 dilewati, 1 gagal dari 6.172**: sidik jari
-`hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik — konsekuensi
-yang tercatat di [OFF.md](OFF.md), bukan regresi.
+Hasil lari penuh terakhir ditulis di satu tempat saja: bagian
+[Lari terakhir](#lari-terakhir) di akhir halaman ini.
 
-**Angka "0 dilewati" itu sendiri sebuah koreksi.** Empat tes dulu melewati diri
-sendiri dengan pesan `not present` — dokumen paten di
+**Angka "0 dilewati" yang dulu tertulis di baris pytest pun sebuah koreksi.** Empat
+tes dulu melewati diri sendiri dengan pesan `not present` — dokumen paten di
 `Matematika Hijaiyyah/OFFICIAL_PATENT_RELEASE/`, folder yang sudah berganti nama
 jadi `Buku Matematika Hijaiyyah/`. Berkasnya ada sepanjang waktu; yang tidak ada
 adalah jalurnya. Sebuah instrumen hukum berhenti diperiksa karena sebuah
@@ -272,7 +272,18 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 5.019 lulus, 0 dilewati
+python3 -m pytest -q             # 6.201 tes terkumpul; hasilnya di † atas
 make -C rtl/tb all               # 408 asersi, 39 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```
+
+---
+
+## Lari terakhir
+
+Lari terakhir, 22 Oktober 2026: **6.199 lulus, 1 dilewati, 1 gagal, 0 error dari
+6.201 terkumpul**. Yang gagal:
+`tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`
+— sidik jari `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik, konsekuensi
+yang tercatat di [OFF.md](OFF.md), bukan regresi.
+Yang error: tidak ada.

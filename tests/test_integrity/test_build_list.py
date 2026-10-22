@@ -16,9 +16,12 @@ list does not, these fail.
 
 from __future__ import annotations
 
+import functools
 import re
 import subprocess
 import sys
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -43,10 +46,11 @@ PREFIXES = ("rtl/", "src/", "tests/", "docs/", "cosmictera/", "hijrah/",
 
 
 def _cited_paths(text: str) -> set[str]:
-    """Repo paths named in backticks or as markdown links."""
+    """Repo paths named in backticks or as markdown links. A test id names its file
+    before `::`; whether the test itself is collected is the run record's check."""
     found = set(re.findall(r"`([^`\s]+)`", text))
     found |= set(re.findall(r"\]\(([^)]+)\)", text))
-    return {p for p in found if p.startswith(PREFIXES) or p.startswith("../")}
+    return {p.split("::", 1)[0] for p in found if p.startswith(PREFIXES) or p.startswith("../")}
 
 
 def test_every_path_the_list_cites_exists() -> None:
@@ -439,104 +443,337 @@ def test_the_counts_agree_across_the_folder() -> None:
     assert layers.count(f"{benches} testbench yang dijalankan `make -C rtl/tb all`") == 2
 
 
-def _quoted_pytest_counts() -> dict[str, tuple[int, int]]:
-    """The passed/skipped pair each file quotes, as ints."""
-    out: dict[str, tuple[int, int]] = {}
-    for name, text in (("CHECKLIST", CHECKLIST), ("ON", ON),
-                       ("README", README), ("PAPAN", PAPAN)):
-        m = re.search(r"([\d.]+) (?:tes )?(?:tes Python )?lulus\*{0,2},? "
-                      r"(\d+) dilewati", text)
-        assert m, f"{name} no longer quotes a pytest passed/skipped pair"
-        out[name] = (int(m.group(1).replace(".", "")), int(m.group(2)))
-    return out
+# -- The suite figure, and the run's result ------------------------------------------------
+# Two numbers, kept apart. How many tests EXIST is what the documents quote: `pytest
+# --collect-only` counts it in about twelve seconds and runs none of them. How many PASS only a
+# full run can say, so it is written once, as the record of a run, under CHECKLIST.md's
+# "Lari terakhir".
+#
+# Until 20 October 2026 these guards read a "<N> lulus, <n> dilewati" pair from four files and
+# demanded N + n == collected. That was true on 10 September (422a07b), when nothing failed.
+# Once the accepted HDMI red existed, no true pair could satisfy it -- 6.170 passed + 1 skipped
+# is 6.171, not 6.172 -- so the guard made four files say that every test passed (owner,
+# 20 October 2026).
+
+# A four-digit figure grouped the Indonesian way, read between digit boundaries so that 15.933
+# is never read as 5.933 (owner, 1 October 2026).
+_FIGURE = r"(?<![\d.])(\d\.\d{3})(?!\d)"
+_SELF = Path(__file__).resolve().relative_to(ROOT).as_posix()
+_CHECKLIST = "cosmictera-build/CHECKLIST.md"
 
 
-def test_the_quoted_pytest_counts_agree_with_each_other() -> None:
-    """They drifted apart the moment nothing read them together.
+def _grouped(n: int) -> str:
+    return f"{n:,}".replace(",", ".")
 
-    The guard this replaces checked only that CHECKLIST matched the SHAPE
-    `**<number> tes lulus**, <n> dilewati` -- and the number sub-pattern
-    matched any number at all. ON.md and README.md were not read for this figure whatsoever. All
-    three were free to drift independently, and did: CHECKLIST said 4.565
-    while ON.md and README.md sat at 4.454, a figure no run had produced for
-    weeks. Same class of defect as the "269 asersi" above, and found the same
-    way -- by measuring instead of comparing transcriptions.
+
+def _number(text: str) -> int:
+    return int(text.replace(".", ""))
+
+
+def _line(text: str, at: int) -> int:
+    return text.count("\n", 0, at) + 1
+
+
+@dataclass(frozen=True)
+class _Collection:
+    collected: int
+    module_skips: int
+    nodes: frozenset[str]
+
+
+@functools.cache
+def _collection() -> _Collection:
+    """One `--collect-only` over the whole of tests/, shared by every check below.
+
+    No -k, --ignore or --deselect: the count has to include this file's own tests, because
+    changing this file changes it. -qq on top of the configured -v prints one node id per line.
+    -rs lists the modules skipped at import, which yield no node but count once each in a
+    run's skipped total (422a07b); `SKIPPED [n]` is summed, not counted, because -rs folds
+    identical reasons into one line.
+
+    -p no:cacheprovider keeps the child from writing the parent's cache.
     """
-    counts = _quoted_pytest_counts()
-    distinct = set(counts.values())
-    assert len(distinct) == 1, f"the folder disagrees with itself: {counts}"
-
-
-# Four files outside cosmictera-build/ quote the same suite figure, and the
-# guard above never read one of them. Left unwatched they drifted to four
-# DIFFERENT numbers -- 4.606, 4.570, 4.570 and 4.540 -- none of which any run
-# had produced, plus the root README's tree annotation still at 1.649, roughly
-# three thousand tests stale. The folder guard was doing its job perfectly and
-# the drift simply moved to where it was not looking.
-OUTSIDE_FOLDER = [
-    "README.md",
-    "docs/ARCHITECTURE.md",
-    "teknologi/SILIKON.md",
-    "cosmictera/COMPUTING.md",
-    "cosmictera-build/ROADMAP.md",
-]
-
-@pytest.mark.parametrize("relpath", OUTSIDE_FOLDER)
-def test_a_file_outside_the_folder_quotes_the_same_suite_figure(relpath: str) -> None:
-    """One number, measured once, quoted identically everywhere it appears."""
-    quoted, _ = _quoted_pytest_counts()["CHECKLIST"]
-    grouped = f"{quoted // 1000}.{quoted % 1000:03d}"
-    text = (ROOT / relpath).read_text(encoding="utf-8")
-    assert grouped in text, (
-        f"{relpath} no longer quotes {grouped}, the figure "
-        f"cosmictera-build/CHECKLIST.md carries. If the suite grew, update "
-        f"every file in OUTSIDE_FOLDER together with the four in the folder."
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-qq", "-rs",
+         "-p", "no:cacheprovider", str(ROOT / "tests")],
+        cwd=ROOT, capture_output=True, text=True, timeout=300,
     )
+    return _read_collection(proc.returncode, proc.stdout, proc.stderr)
+
+
+def _read_collection(returncode: int, stdout: str, stderr: str) -> _Collection:
+    """What one `--collect-only` reported, accepted only when it exited 0.
+
+    A collection that fails still prints a count: a test file that does not import exits 2 with
+    "6199 tests collected, 1 error", and its tests are missing from the count and the node ids
+    alike, so the two still agree. Measured 22 October 2026 on a copy with one broken file: G2,
+    G6 and G7 all passed. A non-zero exit is therefore never read as a count (owner,
+    22 October 2026)."""
+    assert returncode == 0, (
+        f"pytest --collect-only exited {returncode}, so its count is not the suite's.\n"
+        f"stdout (last 2000 characters):\n{stdout[-2000:]}\n"
+        f"stderr (last 2000 characters):\n{stderr[-2000:]}")
+    m = re.search(r"^(\d+) tests? collected", stdout, re.M)
+    assert m, f"could not read a collected count:\n{stdout[-2000:]}"
+    nodes = frozenset(re.findall(r"^(tests/\S+?\.py::.+)$", stdout, re.M))
+    skips = sum(int(n) for n in re.findall(r"^SKIPPED \[(\d+)\]", stdout, re.M))
+    return _Collection(int(m.group(1)), skips, nodes)
+
+
+@functools.cache
+def _tracked_markdown() -> dict[str, str]:
+    """Every tracked .md, by repository path.
+
+    Tracked, not every .md on disk. On 20 October 2026 the sweep that walked the disk read 305
+    files in the source tree: 108 tracked, and 197 more from a vendored three.js, two
+    virtualenvs, a pytest cache and the owner's private folders -- none of them this
+    repository's documents, and none present in a clean clone.
+    """
+    out = subprocess.run(["git", "ls-files", "-z", "--", "*.md"], cwd=ROOT,
+                         capture_output=True, text=True, check=True).stdout
+    return {rel: (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+            for rel in out.split("\0") if rel}
+
+
+# An exception is a place, not a kind of sentence: a path, the exact text, and why. Each one
+# must match exactly once, so an exception whose text has gone cannot sit in the list unseen.
+_Except = tuple[str, str, str]
+
+
+def _excepted(rel: str, text: str, m: re.Match[str], exceptions: tuple[_Except, ...]) -> bool:
+    for path, exact, _why in exceptions:
+        at = text.find(exact) if path == rel else -1
+        if at != -1 and at <= m.start() and m.end() <= at + len(exact):
+            return True
+    return False
+
+
+def _exception_problems(docs: dict[str, str], exceptions: tuple[_Except, ...],
+                        pattern: str) -> list[str]:
+    problems = []
+    for path, exact, _why in exceptions:
+        n = docs.get(path, "").count(exact)
+        if n != 1:
+            problems.append(f"the exception {exact!r} matches {n} times in {path}, not once")
+        elif not re.search(pattern, exact):
+            problems.append(f"the exception {exact!r} in {path} no longer excepts anything")
+    return problems
+
+
+# G1 -- the four folder files each state the collected figure once, in their own sentence, and
+# agree. This is the folder agreeing with itself; whether it agrees with pytest is G2.
+_HEADLINES = {
+    _CHECKLIST: rf"\*\*{_FIGURE} tes terkumpul\*\* †",
+    "cosmictera-build/ON.md": rf"# {_FIGURE} tes terkumpul; hasil: CHECKLIST\.md †",
+    "cosmictera-build/README.md": rf"{_FIGURE} tes Python terkumpul",
+    "cosmictera-build/PAPAN.md": rf"\| {_FIGURE} tes terkumpul; hasil lari terakhir",
+}
+
+
+def _folder_problems(docs: dict[str, str]) -> list[str]:
+    problems, figures = [], {}
+    for rel, pattern in _HEADLINES.items():
+        found = re.findall(pattern, docs.get(rel, ""))
+        if len(found) != 1:
+            problems.append(f"{rel} states the collected figure {len(found)} times, not once")
+        else:
+            figures[rel] = found[0]
+    if len(set(figures.values())) > 1:
+        problems.append(f"the folder disagrees with itself: {figures}")
+    return problems
+
+
+# G2 -- the folder's figure is what pytest collects, and pytest was asked about everything.
+def _collected_problems(docs: dict[str, str], col: _Collection) -> list[str]:
+    problems = []
+    if len(col.nodes) != col.collected:
+        problems.append(f"read {len(col.nodes)} node ids, but pytest collected {col.collected}")
+    if not any(n.startswith(f"{_SELF}::") for n in col.nodes):
+        problems.append(f"the collection does not hold {_SELF}'s own tests")
+    m = re.search(_HEADLINES[_CHECKLIST], docs.get(_CHECKLIST, ""))
+    if not m:
+        problems.append(f"{_CHECKLIST} states no collected figure")
+    elif _number(m.group(1)) != col.collected:
+        problems.append(
+            f"{_CHECKLIST} quotes {m.group(1)} collected tests; pytest collects "
+            f"{_grouped(col.collected)}. Run `python3 -m pytest --collect-only -q` and update "
+            f"every place G7 lists, then re-run the suite for the record under \"Lari terakhir\".")
+    return problems
+
+
+# G4 -- any "<figure> tes|test" in a tracked .md is the collected figure, unless it is listed
+# below with its reason. Nothing is. Until 20 October 2026 a paragraph was exempt when it held
+# any of eight words ("dulu", "sementara", ...); measured that day, those words exempted no
+# figure at all, and words that common could have exempted the next stale one.
+_STALE_EXCEPTIONS: tuple[_Except, ...] = ()
+_COUNT = rf"{_FIGURE}\s+(?:tes|test)\b"
+
+
+def _stale_problems(docs: dict[str, str], collected: int) -> list[str]:
+    problems = _exception_problems(docs, _STALE_EXCEPTIONS, _COUNT)
+    for rel, text in sorted(docs.items()):
+        for m in re.finditer(_COUNT, text):
+            if m.group(1) != _grouped(collected) and not _excepted(rel, text, m,
+                                                                   _STALE_EXCEPTIONS):
+                problems.append(f"{rel}:{_line(text, m.start())} quotes {m.group(1)}")
+    return problems
+
+
+# G5 -- no tracked .md says how many tests passed, except the run's record and the three
+# places below. The defect this guards is the one the old pair guard forced: a collected count
+# written as a pass count.
+_PASS = rf"{_FIGURE}\s+(?:tes\s+)?(?:Python\s+)?lulus"
+_PASS_EXCEPTIONS: tuple[_Except, ...] = (
+    ("cosmictera-build/PAPAN.md", "berbunyi 4.519 lulus / 16 dilewati",
+     "a correction note, quoting what the line used to say"),
+    ("cosmictera-build/PAPAN.md", "> 4.961 lulus, 0 dilewati, 0 gagal",
+     "a dated result inside the same quoted history"),
+    ("cosmictera/CODEX.md",
+     "`python3 -m pytest tests/test_full_verification.py -q` → 1.380 lulus",
+     "one file's count, not the suite's; its figure is not checked here"),
+)
+
+
+def _pass_problems(docs: dict[str, str]) -> list[str]:
+    problems = _exception_problems(docs, _PASS_EXCEPTIONS, _PASS)
+    records = [(rel, m.span()) for rel, m in _records(docs)]
+    for rel, text in sorted(docs.items()):
+        for m in re.finditer(_PASS, text):
+            if _excepted(rel, text, m, _PASS_EXCEPTIONS):
+                continue
+            if any(r == rel and a <= m.start() < b for r, (a, b) in records):
+                continue
+            problems.append(f"{rel}:{_line(text, m.start())} says {m.group(0)!r}; how many "
+                            f"tests passed is written only in {_CHECKLIST}'s record")
+    return problems
+
+
+# G6 -- the record of a run: one place, consistent with the collection, failures and errors
+# named and kept apart. It checks that the record is consistent, never that it is true: only a
+# full run says how many passed, and a test that starts failing without the count changing is
+# invisible here (R13 is what covers that).
+_RECORD = re.compile(
+    r"Lari\s+terakhir,\s+\d{1,2}\s+\w+\s+\d{4}:\s+\*\*(?P<P>[\d.]+)\s+lulus,\s+"
+    r"(?P<S>[\d.]+)\s+dilewati,\s+(?P<F>[\d.]+)\s+gagal,\s+(?P<E>[\d.]+)\s+error\s+dari\s+"
+    r"(?P<C>[\d.]+)\s+terkumpul\*\*\.(?P<rest>.*?)(?=\n\n|\Z)", re.S)
+_NODE = r"`(tests/[^`\s]+?\.py::[^`]+)`"
+
+
+def _records(docs: dict[str, str]) -> list[tuple[str, re.Match[str]]]:
+    return [(rel, m) for rel, text in sorted(docs.items()) for m in _RECORD.finditer(text)]
+
+
+def _record_problems(docs: dict[str, str], col: _Collection) -> list[str]:
+    found = _records(docs)
+    if len(found) != 1:
+        return [f"the run's record appears {len(found)} times, not once: "
+                f"{[rel for rel, _ in found]}"]
+    rel, m = found[0]
+    problems = [] if rel == _CHECKLIST else [f"the run's record is in {rel}, not {_CHECKLIST}"]
+    p, s, f, e, c = (_number(m.group(k)) for k in "PSFEC")
+    if c != col.collected:
+        problems.append(f"the record is of {_grouped(c)} tests; pytest collects "
+                        f"{_grouped(col.collected)} -- the suite changed and was not re-run")
+    if p + s + f + e != col.collected + col.module_skips:
+        problems.append(f"passed + skipped + failed + errors = {p + s + f + e}, but pytest "
+                        f"collects {col.collected} and skips {col.module_skips} module(s) at "
+                        f"import, for {col.collected + col.module_skips}")
+    lists = re.fullmatch(r"\s*Yang\s+gagal:(?P<gagal>.*?)Yang\s+error:(?P<error>.*)", m["rest"],
+                         re.S)
+    if not lists:
+        return [*problems, "the record does not list `Yang gagal:` and then `Yang error:`"]
+    named: dict[str, list[str]] = {}
+    for label, count in (("gagal", f), ("error", e)):
+        section = lists[label]
+        ids = re.findall(_NODE, section)
+        named[label] = ids
+        if count == 0 and (ids or not re.match(r"\s*tidak\s+ada\b", section)):
+            problems.append(f"`Yang {label}:` must say `tidak ada` when the record counts 0")
+        if count != 0 and len(ids) != count:
+            problems.append(f"the record counts {count} {label} but names {len(ids)}")
+        if len(set(ids)) != len(ids):
+            problems.append(f"`Yang {label}:` names a test twice")
+        problems += [f"`Yang {label}:` names {i}, which pytest does not collect"
+                     for i in ids if i not in col.nodes]
+    problems += [f"{i} is named as both failed and errored; a run that counts one test twice "
+                 f"cannot be recorded until it is fixed"
+                 for i in sorted(set(named["gagal"]) & set(named["error"]))]
+    return problems
+
+
+# G7 -- every place the collected figure is quoted, by position, each matching once. Thirteen
+# places in nine files. Before this, five of them were checked only as "the figure appears
+# somewhere in the file", and CHECKLIST.md's "mencacah" was not checked at all.
+_POSITIONS: tuple[tuple[str, str], ...] = (
+    ("README.md", rf"tests/ +{_FIGURE} test\b"),
+    (_CHECKLIST, rf"\*\*{_FIGURE} tes terkumpul\*\* †"),
+    (_CHECKLIST, rf"mencacah {_FIGURE} dalam"),
+    (_CHECKLIST, rf"error\s+dari\s+{_FIGURE}\s+terkumpul\*\*"),
+    (_CHECKLIST, rf"# {_FIGURE} tes terkumpul; hasilnya di † atas"),
+    ("cosmictera-build/ON.md", rf"# {_FIGURE} tes terkumpul; hasil: CHECKLIST\.md †"),
+    ("cosmictera-build/PAPAN.md", rf"dan {_FIGURE} tes Python\. Simulasi bukan$"),
+    ("cosmictera-build/PAPAN.md", rf"\| {_FIGURE} tes terkumpul; hasil lari terakhir"),
+    ("cosmictera-build/README.md", rf"{_FIGURE} tes Python terkumpul"),
+    ("cosmictera-build/ROADMAP.md", rf"← sekarang {_FIGURE}"),
+    ("cosmictera/COMPUTING.md", rf"{_FIGURE} tes Python terkumpul —"),
+    ("docs/ARCHITECTURE.md", rf"dan {_FIGURE} tes Python\.$"),
+    ("teknologi/SILIKON.md", rf"dan {_FIGURE} tes Python\. Simulasi bukan lalai"),
+)
+
+
+def _position_problems(docs: dict[str, str], col: _Collection) -> list[str]:
+    problems = []
+    for rel, pattern in _POSITIONS:
+        found = re.findall(pattern, docs.get(rel, ""), re.M)
+        if len(found) != 1:
+            problems.append(f"{rel}: {pattern!r} matches {len(found)} times, not once")
+        elif _number(found[0]) != col.collected:
+            problems.append(f"{rel} quotes {found[0]}; pytest collects {_grouped(col.collected)}")
+    return problems
+
+
+_GUARDS: dict[str, Callable[[dict[str, str], _Collection], list[str]]] = {
+    "G1": lambda docs, col: _folder_problems(docs),
+    "G2": _collected_problems,
+    "G4": lambda docs, col: _stale_problems(docs, col.collected),
+    "G5": lambda docs, col: _pass_problems(docs),
+    "G6": _record_problems,
+    "G7": _position_problems,
+}
+
+
+def test_the_folder_states_one_collected_figure() -> None:
+    """G1. The folder agreeing with itself, before anyone asks pytest."""
+    assert _folder_problems(_tracked_markdown()) == []
+
+
+def test_the_collected_figure_is_what_pytest_collects() -> None:
+    """G2. A figure that agrees across four files is still a transcription until it is
+    compared with the collection -- the "269 asersi" lesson above, for the pytest count."""
+    assert _collected_problems(_tracked_markdown(), _collection()) == []
 
 
 def test_no_document_quotes_a_suite_figure_that_is_not_the_current_one() -> None:
-    """The half a per-file check cannot do: find the ones nobody listed.
+    """G4. A file added tomorrow with a fresh transcription of today's number would pass every
+    per-file check by not being in any list. This one sweeps every tracked .md instead, so a
+    stale figure fails on the commit that introduces it."""
+    assert _stale_problems(_tracked_markdown(), _collection().collected) == []
 
-    A file added tomorrow with a fresh transcription of today's number would
-    pass every test above by simply not being in any list. This one sweeps
-    every tracked .md instead and demands that any four-digit figure presented
-    as a test count be the current one -- so a new stale figure fails on the
-    commit that introduces it, not months later.
 
-    Figures inside correction notes are exempt by construction: those sentences
-    say what a number USED to be, and rewriting them would erase the record of
-    the drift. They are recognised by the words that mark them as history.
-    """
-    quoted, _ = _quoted_pytest_counts()["CHECKLIST"]
-    grouped = f"{quoted // 1000}.{quoted % 1000:03d}"
-    historical = ("pernah berbunyi", "dulu", "tertinggal", "sementara",
-                  "SUDAH BASI", "per Maret", "sebelumnya", "Maret 2026")
+def test_no_document_says_how_many_tests_passed_but_the_record() -> None:
+    """G5. The defect the pair guard forced, now refused wherever it is written."""
+    assert _pass_problems(_tracked_markdown()) == []
 
-    stale: list[str] = []
-    for path in sorted(ROOT.rglob("*.md")):
-        rel = path.relative_to(ROOT).as_posix()
-        if rel.startswith((".claude/", ".agents/", "node_modules/")):
-            continue
-        if "/node_modules/" in rel or "/.claude/" in rel or "/.agents/" in rel:
-            continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        for m in re.finditer(r"(\d\.\d{3})\s+(?:tes|test)\b", text):
-            figure = m.group(1)
-            if figure == grouped:
-                continue
-            start = text.rfind("\n\n", 0, m.start()) + 1
-            end = text.find("\n\n", m.end())
-            para = text[start : end if end != -1 else len(text)]
-            if any(word in para for word in historical):
-                continue
-            line = text[: m.start()].count("\n") + 1
-            stale.append(f"{rel}:{line} quotes {figure}")
 
-    assert not stale, (
-        f"the suite collects {grouped}, but these read as current figures and "
-        f"are not: {stale}. Re-run `python3 -m pytest -q` and update them, or "
-        f"mark the sentence as history if it is describing a past value."
-    )
+def test_the_run_is_recorded_once_and_consistently() -> None:
+    """G6. Consistency, not truth: P + S + F + E == C + I, the failures and the errors named
+    apart and found in the collection."""
+    assert _record_problems(_tracked_markdown(), _collection()) == []
+
+
+def test_every_place_the_figure_is_quoted_holds_the_collected_figure() -> None:
+    """G7. Position by position, each matching once."""
+    assert _position_problems(_tracked_markdown(), _collection()) == []
 
 
 def test_the_m5_control_figure_is_the_one_measured() -> None:
@@ -550,47 +787,199 @@ def test_the_m5_control_figure_is_the_one_measured() -> None:
     assert "melawan kontrol 15.933 yang terrout bersih" in PAPAN
 
 
-def test_the_quoted_pytest_total_is_what_pytest_actually_collects() -> None:
-    """Not pytest inside pytest -- collection, which runs no test at all.
+# What pytest printed on 22 October 2026: a clean collection, one with a test file that does
+# not import, and one with nothing to collect.
+_COLLECTED = "tests/test_a.py::test_a\n\n1 test collected in 0.29s\n"
+_NOT_COLLECTED = {
+    2: "tests/test_a.py::test_a\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection "
+       "!!!!!!!!!!!!!!!!!!!!\n1 test collected, 1 error in 0.17s\n",
+    5: "no tests collected in 0.09s\n",
+}
 
-    CHECKLIST.md's footnote used to say this figure "cannot be checked without
-    running pytest inside pytest". Half true: what CANNOT be checked is how
-    many PASS. How many EXIST is `--collect-only`, ~12 seconds, executing
-    nothing.
 
-    But `passed + skipped == collected` was one term short, and the missing
-    term cost a real investigation: the run reported 12 skipped while only 9
-    SKIPPED lines existed, and the totals disagreed by exactly 3 no matter
-    which figure the folder quoted. A module skipped at import -- three of
-    them here, `pytest.importorskip("torch")` at the top of test_nui.py,
-    test_nui_atom.py and test_nui_multitask.py -- counts once in the summary's
-    skipped total and yields no collected item at all. The nine pymupdf skips
-    sit inside their files, so those ARE collected and do appear per test.
+@pytest.mark.parametrize("code", sorted(_NOT_COLLECTED),
+                         ids=["2: a test file does not import", "5: nothing to collect"])
+def test_a_failed_collection_is_never_read_as_a_count(code: int) -> None:
+    """Exit 2 still says "1 test collected", and its one node id agrees with it: only the exit
+    code tells that collection failed. The control is the same reader on a clean collection."""
+    assert _read_collection(0, _COLLECTED, "") == _Collection(
+        1, 0, frozenset({"tests/test_a.py::test_a"}))
+    with pytest.raises(AssertionError) as refused:
+        _read_collection(code, _NOT_COLLECTED[code], "what pytest wrote to stderr")
+    said = str(refused.value)  # pytest indents a multi-line message, so read it line by line
+    assert f"exited {code}" in said and "what pytest wrote to stderr" in said, said
+    assert all(line in said for line in _NOT_COLLECTED[code].splitlines()), said
 
-    So the identity is: quoted passed + quoted skipped == collected + the
-    skips that happen during collection. Both halves come from the same
-    ~12-second run, because -rs lists them there too.
 
-    -p no:cacheprovider keeps the child from writing the parent's cache.
-    """
-    proc = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-rs",
-         "-p", "no:cacheprovider", str(ROOT / "tests")],
-        cwd=ROOT, capture_output=True, text=True, timeout=300,
-    )
-    m = re.search(r"(\d+) tests? collected", proc.stdout)
-    assert m, f"could not read a collected count:\n{proc.stdout[-2000:]}"
-    collected = int(m.group(1))
-    module_skips = len(re.findall(r"^SKIPPED ", proc.stdout, re.M))
+def test_a_figure_inside_a_larger_number_is_not_read() -> None:
+    """15.933 is a measured LUT4 control, not a count; read without digit boundaries it holds
+    a "5.933". None of the patterns above may see it."""
+    text = "kontrol 15.933 tes, 15.933 lulus, 15.933 test"
+    assert re.findall(_COUNT, text) == [] and re.findall(_PASS, text) == []
+    assert _stale_problems({"x.md": text}, 1) == []
+    assert _pass_problems({**_tracked_markdown(), "x.md": text}) == []
 
-    passed, skipped = _quoted_pytest_counts()["CHECKLIST"]
-    assert passed + skipped == collected + module_skips, (
-        f"the folder quotes {passed} passed + {skipped} skipped = "
-        f"{passed + skipped}, but pytest collects {collected} and skips "
-        f"{module_skips} more module(s) at import, for {collected + module_skips}. "
-        f"Re-run `python3 -m pytest -q` and update CHECKLIST.md, ON.md, "
-        f"README.md and PAPAN.md together."
-    )
+
+# -- Each guard refuses the damage it exists for (R3) --------------------------------------
+# Pure checks over in-memory copies: no document or test is touched. Every case first proves
+# its guard passes on the control, so a red sabotage is the damage, not a guard already red.
+Docs = dict[str, str]
+Inputs = tuple[Docs, _Collection]
+
+
+def _swap(docs: Docs, rel: str, old: str, new: str) -> Docs:
+    assert docs[rel].count(old) == 1, f"the sabotage did not apply: {old!r} in {rel}"
+    return {**docs, rel: docs[rel].replace(old, new)}
+
+
+def _swap_figure(docs: Docs, rel: str, pattern: str, new: int) -> Docs:
+    text = docs[rel]
+    (m,) = list(re.finditer(pattern, text, re.M))
+    return {**docs, rel: text[: m.start(1)] + _grouped(new) + text[m.end(1):]}
+
+
+def _record(docs: Docs) -> re.Match[str]:
+    ((_rel, m),) = _records(docs)
+    return m
+
+
+def _with_record(docs: Docs, *, p: int = 0, f: int = 0, e: int = 0, gagal: str | None = None,
+                 error: str | None = None) -> Docs:
+    """The record rewritten: P, F and E shifted by p, f and e, and either list replaced."""
+    m, text = _record(docs), docs[_CHECKLIST]
+    lists = re.fullmatch(r"(\s*Yang\s+gagal:)(.*?)(Yang\s+error:)(.*)", m["rest"], re.S)
+    assert lists
+    rest = (lists[1] + (lists[2] if gagal is None else f" {gagal}\n") + lists[3]
+            + (lists[4] if error is None else f" {error}"))
+    head = text[m.start(): m.start("rest")]
+    head = re.sub(r"\*\*[\d.]+ lulus", f"**{_grouped(_number(m['P']) + p)} lulus", head, count=1)
+    head = re.sub(r"[\d.]+(?=\s+gagal,)", str(_number(m["F"]) + f), head, count=1)
+    head = re.sub(r"[\d.]+(?=\s+error\s+dari)", str(_number(m["E"]) + e), head, count=1)
+    return {**docs, _CHECKLIST: text[: m.start()] + head + rest + text[m.end():]}
+
+
+def _first_failed(docs: Docs) -> str:
+    return re.findall(_NODE, _record(docs)["rest"].split("Yang error:")[0])[0]
+
+
+def _not_failed(docs: Docs, col: _Collection) -> str:
+    return sorted(col.nodes - set(re.findall(_NODE, _record(docs)["rest"])))[0]
+
+
+def _sabotages() -> list[tuple[str, str, Callable[[Inputs], tuple[Inputs, Inputs]]]]:
+    def same(change: Callable[[Docs, _Collection], Inputs]) -> Callable[[Inputs], tuple[
+            Inputs, Inputs]]:
+        return lambda real: (real, change(*real))
+
+    def every_figure(docs: Docs, col: _Collection) -> Inputs:
+        old, new = _grouped(col.collected), _grouped(col.collected + 1)
+        return {r: re.sub(rf"(?<![\d.]){re.escape(old)}(?!\d)", new, t)
+                for r, t in docs.items()}, col
+
+    def double_counted(real: Inputs) -> tuple[Inputs, Inputs]:
+        docs, col = real
+        node = f"`{_first_failed(docs)}`"
+        return real, (_with_record(docs, p=-1, e=1, error=node), col)
+
+    def error_as_failure(real: Inputs) -> tuple[Inputs, Inputs]:
+        docs, col = real
+        node = f"`{_not_failed(docs, col)}`"
+        control = _with_record(docs, p=-1, e=1, error=node)
+        failed = _record(control)["rest"].split("Yang error:")[0].split("Yang gagal:")[1]
+        return (control, col), (_with_record(control, gagal=f"{failed.strip()} {node}",
+                                             error="tidak ada."), col)
+
+    def moved_record(docs: Docs, col: _Collection) -> Inputs:
+        record = _record(docs).group(0)
+        docs = _swap(docs, _CHECKLIST, record, "")
+        return {**docs, "cosmictera-build/ON.md": docs["cosmictera-build/ON.md"]
+                + "\n\n" + record + "\n"}, col
+
+    on_headline = "# {} tes terkumpul; hasil: CHECKLIST.md †"
+    head = _HEADLINES[_CHECKLIST]
+    return [
+        ("S1 one folder file is off by one", "G1",
+         same(lambda d, c: (_swap_figure(d, _CHECKLIST, head, c.collected + 1), c))),
+        ("S1 one folder file is off by one", "G7",
+         same(lambda d, c: (_swap_figure(d, _CHECKLIST, head, c.collected + 1), c))),
+        ("S1b a folder file states its figure twice", "G1",
+         same(lambda d, c: (_swap(d, "cosmictera-build/ON.md", on_headline.format(
+             _grouped(c.collected)), on_headline.format(_grouped(c.collected)) * 2), c))),
+        ("S2 every place agrees on one more", "G2", same(every_figure)),
+        ("S2 every place agrees on one more", "G7", same(every_figure)),
+        ("S3 a file outside the folder changes its figure", "G7",
+         same(lambda d, c: (_swap_figure(d, "README.md", _POSITIONS[0][1], c.collected - 1),
+                            c))),
+        ("S3b a position is quoted twice", "G7",
+         same(lambda d, c: (_swap(d, "README.md", f"tests/           {_grouped(c.collected)} test",
+                                  f"tests/           {_grouped(c.collected)} test\n" * 2), c))),
+        ("S4 a stale figure in another document", "G4",
+         same(lambda d, c: ({**d, "docs/ARCHITECTURE.md": d["docs/ARCHITECTURE.md"]
+                             + f"\nAda {_grouped(c.collected - 100)} tes di sini.\n"}, c))),
+        ("S5 the pass claim back in ON.md", "G5",
+         same(lambda d, c: (_swap(d, "cosmictera-build/ON.md",
+                                  f"# {_grouped(c.collected)} tes terkumpul; hasil: CHECKLIST.md †",
+                                  f"# {_grouped(c.collected)} lulus, 0 dilewati"), c))),
+        ("S6a the stale one-breath claim back", "G5",
+         same(lambda d, c: (_swap(d, _CHECKLIST,
+                                  f"# {_grouped(c.collected)} tes terkumpul; hasilnya di † atas",
+                                  "# 5.019 lulus, 0 dilewati"), c))),
+        ("S6b an exception no longer matches", "G5",
+         same(lambda d, c: (_swap(d, "cosmictera-build/PAPAN.md", "berbunyi 4.519 lulus",
+                                  "berbunyi 4.520 lulus"), c))),
+        ("S6c an exception's sentence is gone", "G5",
+         same(lambda d, c: (_swap(d, "cosmictera-build/PAPAN.md",
+                                  "berbunyi 4.519 lulus / 16 dilewati", "berbunyi lain"), c))),
+        ("S7 the record's pass count is off by one", "G6",
+         same(lambda d, c: (_with_record(d, p=1), c))),
+        ("S7b the record names another collected figure", "G6",
+         same(lambda d, c: (_swap_figure(d, _CHECKLIST, _POSITIONS[3][1], c.collected + 1),
+                            c))),
+        ("S8 one more test, nothing re-measured", "G2",
+         same(lambda d, c: (d, _Collection(c.collected + 1, c.module_skips,
+                                           c.nodes | {"tests/test_new.py::test_new"})))),
+        ("S8 one more test, nothing re-measured", "G6",
+         same(lambda d, c: (d, _Collection(c.collected + 1, c.module_skips,
+                                           c.nodes | {"tests/test_new.py::test_new"})))),
+        ("S8 one more test, nothing re-measured", "G7",
+         same(lambda d, c: (d, _Collection(c.collected + 1, c.module_skips,
+                                           c.nodes | {"tests/test_new.py::test_new"})))),
+        ("S8b the collection leaves this file out", "G2",
+         same(lambda d, c: (d, _Collection(c.collected, c.module_skips, frozenset(
+             n.replace(f"{_SELF}::", "tests/test_elsewhere.py::") for n in c.nodes))))),
+        ("S8c a node id the parser missed", "G2",
+         same(lambda d, c: (d, _Collection(c.collected, c.module_skips,
+                                           c.nodes - {sorted(c.nodes)[0]})))),
+        ("S9a the record is gone", "G6",
+         same(lambda d, c: (_swap(d, _CHECKLIST, "Lari terakhir,", "Lari lain,"), c))),
+        ("S9b the record is written twice", "G6",
+         same(lambda d, c: ({**d, "cosmictera-build/ON.md": d["cosmictera-build/ON.md"]
+                             + "\n\n" + _record(d).group(0) + "\n"}, c))),
+        ("S9c the record leaves CHECKLIST.md", "G6", same(moved_record)),
+        ("S10a a failure without its name", "G6",
+         same(lambda d, c: (_with_record(d, gagal="tidak ada."), c))),
+        ("S10b a name the collection does not hold", "G6",
+         same(lambda d, c: (_swap(d, _CHECKLIST, f"`{_first_failed(d)}`",
+                                  f"`{_first_failed(d)}_gone`"), c))),
+        ("S10c one test both failed and errored", "G6", double_counted),
+        ("S10e a name under a list that counts 0", "G6",
+         same(lambda d, c: (_with_record(d, error=f"`{_not_failed(d, c)}`."), c))),
+        ("S10f one failure named twice", "G6",
+         same(lambda d, c: (_with_record(d, p=-1, f=1, gagal=_record(d)["rest"].split(
+             "Yang error:")[0].split("Yang gagal:")[1].strip() + f" `{_first_failed(d)}`"),
+                            c))),
+        ("S10d an error written as a failure", "G6", error_as_failure),
+    ]
+
+
+@pytest.mark.parametrize(("case", "guard", "build"), _sabotages(),
+                         ids=[f"{case} -> {guard}" for case, guard, _ in _sabotages()])
+def test_each_sabotage_is_refused_by_its_guard(
+    case: str, guard: str, build: Callable[[Inputs], tuple[Inputs, Inputs]],
+) -> None:
+    (docs, col), (bad_docs, bad_col) = build((dict(_tracked_markdown()), _collection()))
+    assert _GUARDS[guard](docs, col) == [], f"{guard} is already red before {case!r}"
+    assert _GUARDS[guard](bad_docs, bad_col), f"{guard} let {case!r} through"
 
 
 def test_the_quoted_mypy_file_count_is_what_mypy_actually_checks() -> None:
