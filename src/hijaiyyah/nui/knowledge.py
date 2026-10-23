@@ -305,16 +305,50 @@ def _program(given: str) -> Answer:
                               "reason": row["reason"],
                               "source": f"NUI/parity_model.json#programs/{path}"})
     stem = re.escape(base.rsplit(".", 1)[0])
+    # A board record names a program by its repository path or by its stem, in backticks and
+    # nothing else: PAPAN.md writes `rtl/programs/hfs_lifecycle.hasm`, which a pattern taking only
+    # the stem missed, and the closing backtick keeps `hal` from matching `hal_sd`.
     answer["PAPAN"] = [{"what": "board record", **line}
-                       for line in _lines("cosmictera-build/PAPAN.md", rf"`{stem}(?:\.hasm)?`")]
+                       for line in _lines("cosmictera-build/PAPAN.md",
+                                          rf"`(?:{re.escape(path)}|{stem}(?:\.hasm)?)`")]
     answer["PAPAN"] += [{"what": "board run", "board": r["board"], "status": r["status"],
                          "date": r["date"], "source": r["record"]}
                         for r in parity["board"] if r["program"] == path]
+    # The board parity run's own report, the record parity_model.json names in board_corpus. Its
+    # row is shown when nothing above names the program, and always when it says "not sent": a
+    # program can have run on the board in another run and still be absent from this one.
+    record = (parity.get("board_corpus") or {}).get("record")
+    report = f"cosmictera-build/parity-board/{record}-parity.report.json" if record else None
+    board_row = (_json(ROOT / report)["programs"].get(path)
+                 if report and (ROOT / report).is_file() else None)
+    found = bool(answer["PAPAN"])
+    if board_row is not None:
+        sent = not str(board_row.get("reason", "")).startswith("not sent")
+        if not sent:
+            answer["PAPAN"].append({"what": "board parity run: not sent", "record": record,
+                                    "reason": board_row.get("reason", ""),
+                                    "source": f"{report}#programs/{path}"})
+        elif not found:
+            answer["PAPAN"].append({"what": "board parity run", "record": record,
+                                    "status": board_row["status"],
+                                    "reason": board_row.get("reason", ""),
+                                    "source": f"{report}#programs/{path}"})
     answer["NUI"] = _facts([base, path])
     answer["OFF"] = _off([base])
     answer["tests"] = _tests(rf"\b{re.escape(base)}\b")
-    if not answer["PAPAN"]:
-        answer["unknown"].append("cosmictera-build/PAPAN.md records no board run of it")
+    if not found and not any(i["what"] == "board parity run" for i in answer["PAPAN"]):
+        # Neither of these is "never run". What was searched is PAPAN.md (directly, and through the
+        # parity model's board rows, which it reads) and the board parity run's report -- and a
+        # report row that says "not sent" is a row, so it is not reported as missing.
+        if board_row is not None:
+            answer["unknown"].append(
+                "no board record of it was found in cosmictera-build/PAPAN.md, and the board "
+                f"parity run {record} did not send it; neither says whether it ever ran on the "
+                "board")
+        else:
+            answer["unknown"].append(
+                "no board record of it was found in cosmictera-build/PAPAN.md or in the board "
+                "parity run's report; that does not say it never ran on the board")
     return answer
 
 

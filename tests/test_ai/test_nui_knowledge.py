@@ -650,3 +650,83 @@ def test_kworker_is_never_reported_as_a_new_process(
     assert kernel["appeared"] == ["root [kworker/1:1-cgroup_free]"]
     assert kernel["disappeared"] == ["root [kworker/0:0-events]"]
     assert kernel["between"]["to"]["run_id"] == kernel["to_run"]
+
+
+# -- Q-QB1: a program the board recorded must not be answered as unrecorded --------------------
+# Measured 19 October 2026: answers saying "PAPAN.md records no board run of it" were wrong for
+# programs PAPAN.md names by repository path, and for programs the board parity run's report
+# covers; and a run the report did not send says nothing about every other board run.
+_BOARD_RECORDED = ["rtl/programs/hfs_lifecycle.hasm", "rtl/programs/guard_negative.hasm",
+                   "rtl/programs/burn_in.hasm", "rtl/programs/hijrah_sweep.hasm"]
+# "Not found anywhere searched" and "the parity run did not send it" are two answers, not one.
+_NOT_FOUND = ("no board record of it was found in cosmictera-build/PAPAN.md or in the board "
+              "parity run's report")
+_NOT_SENT = "no board record of it was found in cosmictera-build/PAPAN.md, and the board parity run"
+
+
+@pytest.mark.parametrize("program", _BOARD_RECORDED)
+def test_a_program_the_board_recorded_is_not_answered_as_unrecorded(program: str) -> None:
+    a = knowledge.query(f"program {program}")
+    assert a["PAPAN"], program
+    assert not any("board" in u for u in a["unknown"]), a["unknown"]
+
+
+def test_a_board_record_written_as_a_repository_path_is_found() -> None:
+    a = knowledge.query("program rtl/programs/hfs_lifecycle.hasm")
+    assert any(i["source"] == "cosmictera-build/PAPAN.md:389" for i in a["PAPAN"])
+
+
+def test_a_stem_does_not_match_a_longer_name() -> None:
+    lines = [i for i in knowledge.query("program rtl/programs/hal.hasm")["PAPAN"]
+             if i["what"] == "board record"]
+    assert lines
+    for item in lines:
+        assert re.search(r"`(?:rtl/programs/hal\.hasm|hal|hal\.hasm)`", item["text"]), item
+
+
+def test_not_sent_in_the_board_parity_run_is_said_as_that_and_no_more() -> None:
+    # flags_board is the case that matters: cosmictera-build/OFF.md records a board run of it,
+    # which this answer does not search -- so it must not say the board never ran it.
+    a = knowledge.query("program rtl/programs/flags_board.hasm")
+    (row,) = [i for i in a["PAPAN"] if i["what"] == "board parity run: not sent"]
+    assert row["reason"].startswith("not sent") and row["record"]
+    (said,) = [u for u in a["unknown"] if "board" in u]
+    assert said.startswith(_NOT_SENT) and not said.startswith(_NOT_FOUND), said
+    assert f"run {row['record']} did not send it" in said
+    assert "neither says whether it ever ran on the board" in said
+
+
+def test_a_program_the_parity_report_names_is_never_said_to_be_missing_from_it() -> None:
+    record = knowledge._json(knowledge.PARITY)["board_corpus"]["record"]
+    report = knowledge.ROOT / "cosmictera-build" / "parity-board" / f"{record}-parity.report.json"
+    named = knowledge._json(report)["programs"]
+    programs = [p for p in named if p.endswith(".hasm") and (knowledge.ROOT / p).is_file()]
+    assert programs
+    for program in programs:
+        a = knowledge.query(f"program {program}")
+        assert not any(u.startswith(_NOT_FOUND) for u in a["unknown"]), (program, a["unknown"])
+
+
+def test_a_record_not_found_is_not_reported_as_never_tested(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    real = knowledge._json
+    program = "rtl/tb/prog_load_probe.hasm"
+
+    def without(path: Any) -> Any:
+        data = real(path)
+        if str(path).endswith("-parity.report.json"):
+            data = {**data, "programs": {k: v for k, v in data["programs"].items() if k != program}}
+        return data
+
+    monkeypatch.setattr(knowledge, "_json", without)
+    a = knowledge.query(f"program {program}")
+    assert a["PAPAN"] == []
+    assert any(u.startswith(_NOT_FOUND) for u in a["unknown"]), a["unknown"]
+
+
+@pytest.mark.parametrize("program", ["rtl/programs/burn_in.hasm", "rtl/programs/hijrah_sweep.hasm"])
+def test_a_board_record_and_absence_from_the_parity_run_are_both_said(program: str) -> None:
+    a = knowledge.query(f"program {program}")
+    assert any(i["what"] == "board record" for i in a["PAPAN"]), a["PAPAN"]
+    assert [i["what"] for i in a["PAPAN"]].count("board parity run: not sent") == 1
