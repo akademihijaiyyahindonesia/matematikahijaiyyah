@@ -157,11 +157,13 @@ def _tests(pattern: str) -> list[dict[str, Any]]:
     return out
 
 
-def _off(words: list[str]) -> list[dict[str, Any]]:
+def _off(words: list[str], named: str | None = None) -> list[dict[str, Any]]:
+    """OFF entries naming any of `words`, or matching the pattern `named`."""
     out = []
     for record, body in off_db.entries():
         text = record["title"] + "\n" + body
-        if any(re.search(rf"(?<![\w.]){re.escape(w)}(?![\w])", text) for w in words):
+        if (any(re.search(rf"(?<![\w.]){re.escape(w)}(?![\w])", text) for w in words)
+                or (named is not None and re.search(named, text))):
             out.append({k: record[k] for k in ("id", "key", "title", "status", "layer",
                                                "source")})
     return out
@@ -308,9 +310,9 @@ def _program(given: str) -> Answer:
     # A board record names a program by its repository path or by its stem, in backticks and
     # nothing else: PAPAN.md writes `rtl/programs/hfs_lifecycle.hasm`, which a pattern taking only
     # the stem missed, and the closing backtick keeps `hal` from matching `hal_sd`.
+    named = rf"`(?:{re.escape(path)}|{stem}(?:\.hasm)?)`"
     answer["PAPAN"] = [{"what": "board record", **line}
-                       for line in _lines("cosmictera-build/PAPAN.md",
-                                          rf"`(?:{re.escape(path)}|{stem}(?:\.hasm)?)`")]
+                       for line in _lines("cosmictera-build/PAPAN.md", named)]
     answer["PAPAN"] += [{"what": "board run", "board": r["board"], "status": r["status"],
                          "date": r["date"], "source": r["record"]}
                         for r in parity["board"] if r["program"] == path]
@@ -334,7 +336,9 @@ def _program(given: str) -> Answer:
                                     "reason": board_row.get("reason", ""),
                                     "source": f"{report}#programs/{path}"})
     answer["NUI"] = _facts([base, path])
-    answer["OFF"] = _off([base])
+    # OFF.md names programs the same way -- flags_board's board run is a row there, `flags_board`
+    # -- so an entry is found by that pattern as well as by the basename.
+    answer["OFF"] = _off([base], named)
     answer["tests"] = _tests(rf"\b{re.escape(base)}\b")
     if not found and not any(i["what"] == "board parity run" for i in answer["PAPAN"]):
         # Neither of these is "never run". What was searched is PAPAN.md (directly, and through the

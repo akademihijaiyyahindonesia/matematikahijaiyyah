@@ -686,7 +686,8 @@ def test_a_stem_does_not_match_a_longer_name() -> None:
 
 def test_not_sent_in_the_board_parity_run_is_said_as_that_and_no_more() -> None:
     # flags_board is the case that matters: cosmictera-build/OFF.md records a board run of it,
-    # which this answer does not search -- so it must not say the board never ran it.
+    # which the board part of this answer does not search -- so it must not say the board never
+    # ran it. (The answer's OFF part lists that entry.)
     a = knowledge.query("program rtl/programs/flags_board.hasm")
     (row,) = [i for i in a["PAPAN"] if i["what"] == "board parity run: not sent"]
     assert row["reason"].startswith("not sent") and row["record"]
@@ -730,3 +731,44 @@ def test_a_board_record_and_absence_from_the_parity_run_are_both_said(program: s
     a = knowledge.query(f"program {program}")
     assert any(i["what"] == "board record" for i in a["PAPAN"]), a["PAPAN"]
     assert [i["what"] for i in a["PAPAN"]].count("board parity run: not sent") == 1
+
+
+# -- the OFF part of a program's answer finds an entry that names it by stem ---------------
+# Measured 23 October 2026: it looked for the basename (flags_board.hasm), while OFF.md names
+# programs as `flags_board`, so six of the 62 programs layer 3 ran had an OFF entry that named
+# them and an answer that showed none -- flags_board's board run among them (OFF.md:632).
+def _named(program: str) -> str:
+    stem = program.split("/")[-1].rsplit(".", 1)[0]
+    return rf"`(?:{re.escape(program)}|{re.escape(stem)}(?:\.hasm)?)`"
+
+
+def _off_texts() -> dict[str, str]:
+    return {record["key"]: record["title"] + "\n" + body for record, body in off_db.entries()}
+
+
+def test_every_off_entry_that_names_a_program_is_in_its_answer() -> None:
+    programs = sorted({p.split("#")[0] for p in knowledge._json(knowledge.EXECUTION)["programs"]})
+    assert programs
+    texts = _off_texts()
+    for program in programs:
+        named = {key for key, text in texts.items() if re.search(_named(program), text)}
+        found = {r["key"] for r in knowledge.query(f"program {program}")["OFF"]}
+        assert named <= found, (program, sorted(named - found))
+
+
+def test_the_board_run_of_flags_board_in_off_md_is_in_its_answer() -> None:
+    texts = _off_texts()
+    found = knowledge.query("program rtl/programs/flags_board.hasm")["OFF"]
+    assert any("| papan, `flags_board` |" in texts[r["key"]] for r in found), found
+
+
+def test_an_off_stem_does_not_match_a_longer_name() -> None:
+    # OFF.md names `syscall_io` in an entry that never names `syscall`; a stem taken without the
+    # closing backtick would hand that entry to syscall.hasm.
+    texts = _off_texts()
+    longer = {key for key, text in texts.items()
+              if re.search(_named("rtl/programs/syscall_io.hasm"), text)
+              and not re.search(_named("rtl/programs/syscall.hasm"), text)}
+    assert longer
+    found = {r["key"] for r in knowledge.query("program rtl/programs/syscall.hasm")["OFF"]}
+    assert not longer & found, sorted(longer & found)
