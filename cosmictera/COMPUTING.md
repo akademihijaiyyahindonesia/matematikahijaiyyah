@@ -153,7 +153,7 @@ python3 NUI/pipeline.py --quick     # NUI, ujung ke ujung, ~20 detik
 ```
 
 Angka hari ini (bisa berubah — jalankan ulang, jangan dikutip dari sini):
-6.215 tes Python terkumpul — berapa yang lulus dicatat di catatan †
+6.218 tes Python terkumpul — berapa yang lulus dicatat di catatan †
 [cosmictera-build/CHECKLIST.md](../cosmictera-build/CHECKLIST.md); 408 asersi
 RTL di 39 testbench
 `make all`, 0 gagal — dari 36 berkas bench yang seluruhnya dijalankan

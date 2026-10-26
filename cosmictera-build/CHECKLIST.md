@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **6.215 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
+| ✅ | **6.218 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
 | ⬜ | lari penuh keluar 1 — hasilnya di † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 159 berkas | `make typecheck` |
@@ -42,7 +42,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 6.215 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 6.218 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -272,7 +272,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 6.215 tes terkumpul; hasilnya di † atas
+python3 -m pytest -q             # 6.218 tes terkumpul; hasilnya di † atas
 make -C rtl/tb all               # 408 asersi, 39 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```
@@ -281,8 +281,8 @@ make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 
 ## Lari terakhir
 
-Lari terakhir, 23 Oktober 2026: **6.213 lulus, 1 dilewati, 1 gagal, 0 error dari
-6.215 terkumpul**. Yang gagal:
+Lari terakhir, 26 Oktober 2026: **6.216 lulus, 1 dilewati, 1 gagal, 0 error dari
+6.218 terkumpul**. Yang gagal:
 `tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`
 — sidik jari `hcpu_hdmi_top.v` tak dicap sejak nasib M5.2B ditunda pemilik, konsekuensi
 yang tercatat di [OFF.md](OFF.md), bukan regresi.

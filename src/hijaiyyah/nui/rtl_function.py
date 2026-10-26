@@ -108,6 +108,17 @@ State = dict[str, int]
 Step = Callable[[State, int, int, dict[str, int]], tuple[State, list[str]]]
 
 
+def _file_sha(path: Path) -> str:
+    """A pin on a source file: the hash of its content with LF line endings, the form git holds.
+
+    Every pinned file is text that .gitattributes stores as LF or leaves as committed, so a
+    checkout that writes CRLF and one that writes LF hold the same file. Measured 23 October
+    2026: two pins were taken over a CRLF working tree, and a clean clone, which writes LF,
+    failed three tests over files whose git blobs were identical.
+    """
+    return _sha(path.read_bytes().replace(b"\r\n", b"\n"))
+
+
 def load() -> dict[str, Any]:
     data: dict[str, Any] = json.loads(SPEC.read_text(encoding="utf-8"))
     return data
@@ -1478,8 +1489,8 @@ def pipeline_audit(a: dict[str, Any], trace: dict[str, Any], root: Path | None =
                    None)
     text = "\n".join(" ".join(str(v) for v in r.values()) for r in after)
     return {
-        "bench_sha256": _sha((root / a["bench"]).read_bytes()),
-        "files_sha256": {f: _sha((root / f).read_bytes()) for f in a["files"]},
+        "bench_sha256": _file_sha(root / a["bench"]),
+        "files_sha256": {f: _file_sha(root / f) for f in a["files"]},
         "trace_sha256": _sha(text.encode("utf-8")), "edges": len(after),
         "live_edges": compared,
         "sampling": {"compared": compared, "mismatched": timing, "release_edges": release},
@@ -2562,8 +2573,8 @@ def hcpu_audit(h: dict[str, Any], a: dict[str, Any], trace: dict[str, Any],
                    None)
     text = "\n".join(" ".join(str(v) for v in r.values()) for r in after)
     return {
-        "bench_sha256": _sha((root / a["bench"]).read_bytes()),
-        "files_sha256": {f: _sha((root / f).read_bytes()) for f in h["files"]},
+        "bench_sha256": _file_sha(root / a["bench"]),
+        "files_sha256": {f: _file_sha(root / f) for f in h["files"]},
         "trace_sha256": _sha(text.encode("utf-8")), "edges": len(after),
         "live_edges": compared,
         "sampling": {"compared": compared, "mismatched": timing, "release_edges": release},
@@ -2985,12 +2996,12 @@ def build(root: Path | None = None) -> dict[str, Any]:
             text = "\n".join(" ".join(str(r[k]) for k in r) for r in trace["rows"])
             trace_sha = _sha(text.encode("utf-8"))
         entry = {"name": m["name"], "rtl": m["rtl"],
-                 "rtl_sha256": _sha((root / m["rtl"]).read_bytes()),
-                 "bench": m["bench"], "bench_sha256": _sha((root / m["bench"]).read_bytes())}
+                 "rtl_sha256": _file_sha(root / m["rtl"]),
+                 "bench": m["bench"], "bench_sha256": _file_sha(root / m["bench"])}
         if "modelled" in m:
-            entry["modelled_sha256"] = {f: _sha((root / f).read_bytes()) for f in m["modelled"]}
+            entry["modelled_sha256"] = {f: _file_sha(root / f) for f in m["modelled"]}
         if "pinned" in m:
-            entry["pinned_sha256"] = {f: _sha((root / f).read_bytes()) for f in m["pinned"]}
+            entry["pinned_sha256"] = {f: _file_sha(root / f) for f in m["pinned"]}
         modules.append({
             **entry, "trace_sha256": trace_sha, **result,
             "rules": [{"id": r["id"], **({"file": r["file"]} if r["file"] != m["rtl"] else {}),
@@ -3106,7 +3117,7 @@ def check(model: dict[str, Any]) -> list[str]:
             bad += _check_hcpu_model(m, s, model, declared)
         held = {s["rtl"]: m["rtl_sha256"], s["bench"]: m["bench_sha256"],
                 **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
-        if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
+        if any(_file_sha(ROOT / f) != h for f, h in held.items()):
             bad.append(f"F5 {m['name']}: an RTL or bench file is not the one the model holds")
     return bad + check_audit(model, spec) + check_hcpu(model, spec)
 
@@ -3150,7 +3161,7 @@ def check_hcpu(model: dict[str, Any], spec: dict[str, Any]) -> list[str]:
         bad.append(f"A4 hcpu: {r['bench_said']}")
     a = spec[h["run"]]
     held = {a["bench"]: r["bench_sha256"], **r["files_sha256"]}
-    if any(_sha((ROOT / f).read_bytes()) != v for f, v in held.items()):
+    if any(_file_sha(ROOT / f) != v for f, v in held.items()):
         bad.append("A5 hcpu: an RTL or bench file is not the one the audit holds")
     ports = _ports(ROOT)
     moving = [k for k, v in r["inputs"].items() if v["changes"]]
@@ -3262,7 +3273,7 @@ def check_audit(model: dict[str, Any], spec: dict[str, Any]) -> list[str]:
     if not r["bench_pass"]:
         bad.append(f"A4 pipeline: {r['bench_said']}")
     held = {a["bench"]: r["bench_sha256"], **r["files_sha256"]}
-    if any(_sha((ROOT / f).read_bytes()) != h for f, h in held.items()):
+    if any(_file_sha(ROOT / f) != h for f, h in held.items()):
         bad.append("A5 pipeline: an RTL or bench file is not the one the audit holds")
     return bad
 
@@ -3542,7 +3553,15 @@ def page(model: dict[str, Any]) -> str:
            f"Dihasilkan `{model['generated_by']}` dari `{model['spec']}`. RTL dan bench "
            "dikompilasi apa adanya dengan satu modul probe di sampingnya yang mencetak register "
            "desain sekali tiap siklus; tidak ada port atau baris yang berubah. "
-           f"Simulator: {model['simulator']}.", ""]
+           f"Simulator: {model['simulator']}.", "",
+           "**Revisi pasca-freeze (pin kanonik LF).** Freeze Lapis 6 (`NUI/LAYER6.md`, tag "
+           "`layer6-freeze-2026-09-29-final` di `d003cac`) memegang objek git historis "
+           "`NUI/rtl_function.json` (`9b92b7293fa6…`), dan `layer6_freeze --verify` memeriksa "
+           "objek git di tag itu, bukan pohon kerja. Di pohon kerja aktif, pin sumber dihitung "
+           "atas isi ber-akhir-baris LF (`_file_sha`), bentuk yang disimpan git, sehingga dua pin "
+           "di `/modules/6/pinned_sha256` (`src/hijaiyyah/hisa/registers.py` dan "
+           "`src/hijaiyyah/hisab/protocol.py`, yang di pohon sumber saat freeze tertulis CRLF) "
+           "diperbarui sebagai revisi aktif pasca-freeze tanpa mengubah tag historis.", ""]
     for m in model["modules"]:
         s, p = spec[m["name"]], m["parameters"]
         timing = m["input_timing"]

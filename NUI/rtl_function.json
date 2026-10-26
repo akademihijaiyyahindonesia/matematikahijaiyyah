@@ -2526,9 +2526,9 @@
    "pinned_sha256": {
     "src/hijaiyyah/hisa/machine.py": "9d855be4d2b495e3d4fcbb68c95b3405c02039939b1705dc5f1c0c1adbcd0308",
     "src/hijaiyyah/hisa/opcodes.py": "d23f216e06d2589dd443b7db7256627f60d62ed636888671c5a0dfacb5e5994b",
-    "src/hijaiyyah/hisa/registers.py": "70a48facb278923ed95b0edcb77ce425684607fac6499604c885171035aa97ea",
+    "src/hijaiyyah/hisa/registers.py": "9bed88e78f97f35b0ede05e4fa23edf1d05bb966621ea3d8d05ae37aa4ecfc6f",
     "src/hijaiyyah/hisab/serialize.py": "5cf98d27be91723d09c2d826d84a25790c9f75002304e2b5c38f8c633d30facd",
-    "src/hijaiyyah/hisab/protocol.py": "56b855bb60afef72c106609db308875afea6bdaafe0b51befe2e877cce59ca8a",
+    "src/hijaiyyah/hisab/protocol.py": "11ba0c0b7fa193f05aef29b57e7335a3920c6a86f40a92279f9f91a94301223e",
     "src/hijaiyyah/hisab/digest.py": "6de0cfbfd7c8fb4c3962285af3b6c14716a56c4746d12cb8c55ee198bc2c4467"
    },
    "trace_sha256": "7ae2e579209836bbd192f5373aa59184b21f80dd9412517e590585c87b2d185e",

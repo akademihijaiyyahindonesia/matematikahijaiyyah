@@ -65,7 +65,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from . import hardware_state, layer5
+from . import hardware_state, layer5, rtl_function
 from .repository_index import ROOT
 
 CONTRACT = ROOT / "NUI" / "LAYER7.md"
@@ -254,7 +254,9 @@ def _rtl(module: str, rule: str) -> dict[str, Any]:
     out = {"target identity": _cond("known", "NUI/rtl_function.json", module=module, rule=rule)}
     held = {m["rtl"]: m["rtl_sha256"], m["bench"]: m["bench_sha256"],
             **m.get("modelled_sha256", {}), **m.get("pinned_sha256", {})}
-    moved = sorted(f for f, h in held.items() if _sha(ROOT / f) != h)
+    # The model's pins are over LF line endings, the form git holds (rtl_function._file_sha), so
+    # a CRLF checkout of the same files is not mistaken for files that have changed.
+    moved = sorted(f for f, h in held.items() if rtl_function._file_sha(ROOT / f) != h)
     out["observation provenance"] = _cond("valid", "the hashes the model holds (F5)",
                                           files=len(held))
     out["evidence freshness"] = (

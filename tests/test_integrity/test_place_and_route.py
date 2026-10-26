@@ -22,6 +22,8 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -151,6 +153,46 @@ def _fingerprint(sources: list[Path]) -> str:
     return h.hexdigest()
 
 
+# A fingerprint has to be a function of what a checkout holds. A fingerprinted file git does not
+# track is listed here with the script that makes it from tracked sources. Measured 23 October
+# 2026: in a clean clone, where rtl/hcpu_dashboard_pos.vh had not been generated, the CPU
+# fingerprint was taken over one file fewer than in the source tree, and the test said the RTL
+# had changed.
+GENERATED = {ROOT / "rtl" / "hcpu_dashboard_pos.vh": ROOT / "rtl" / "scripts" / "gen_dashboard.py"}
+MAKE_GENERATED = "make -C rtl/fpga/gowin ../../hcpu_dashboard_pos.vh"
+
+
+def _tracked() -> set[str]:
+    out = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, capture_output=True, text=True,
+                         check=True).stdout
+    return {p for p in out.split("\0") if p}
+
+
+def _generated_problems(sources: list[Path], tracked: set[str],
+                        generated: dict[Path, Path]) -> list[str]:
+    """Why a fingerprint over `sources` would not be a function of the checkout, if it would not:
+    a file neither tracked nor generated, or a generated file that is absent or not what its
+    script makes now. The script is run in a temporary root, never over the working tree."""
+    problems = [f"{f.relative_to(ROOT)} is fingerprinted but neither tracked nor generated"
+                for f in sources if f.relative_to(ROOT).as_posix() not in tracked
+                and f not in generated]
+    for out, script in generated.items():
+        rel = out.relative_to(ROOT)
+        if not out.exists():
+            problems.append(f"{rel} is generated, not tracked, and absent: run `{MAKE_GENERATED}`")
+            continue
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = Path(tmp) / script.relative_to(ROOT)
+            copy.parent.mkdir(parents=True)
+            shutil.copy(script, copy)
+            subprocess.run([sys.executable, str(copy)], cwd=tmp, capture_output=True, check=True)
+            made = Path(tmp) / rel
+            if not made.exists() or made.read_bytes() != out.read_bytes():
+                problems.append(f"{rel} is not what {script.relative_to(ROOT)} makes now: "
+                                f"run `{MAKE_GENERATED}`")
+    return problems
+
+
 def _routed_table() -> dict[str, tuple[int, int]]:
     """
     Parse the utilisation block, rather than searching the file for numbers.
@@ -173,12 +215,39 @@ def test_the_recorded_numbers_belong_to_this_rtl() -> None:
     retyped header no matter what the design does; a hash does not."""
     recorded = re.search(rf"^{re.escape(FP_MARK)}([0-9a-f]{{64}})$", WRAPPER, re.M)
     assert recorded, "the wrapper no longer records an RTL fingerprint"
+    assert _generated_problems(FINGERPRINTED, _tracked(), GENERATED) == []
     assert recorded.group(1) == _fingerprint(FINGERPRINTED), (
         "the RTL has changed since place and route was last run, so the "
         "numbers in hcpu_gowin_top.v no longer describe this design. Re-run "
         "`make -C rtl/fpga/gowin hcpu_gowin_top_pnr.json`, put the new figures "
         "in the header, and restamp the fingerprint."
     )
+
+
+def test_every_fingerprinted_file_is_tracked_or_generated_from_tracked_sources() -> None:
+    sources = {*FINGERPRINTED, *KABAH_FINGERPRINTED, *HDMI_FINGERPRINTED, *KABAH_HDMI_FINGERPRINTED}
+    assert _generated_problems(sorted(sources), _tracked(), GENERATED) == []
+
+
+def test_a_generated_file_that_is_absent_or_stale_is_named_not_read_as_an_rtl_change(
+    tmp_path: Path,
+) -> None:
+    script = GENERATED[ROOT / "rtl" / "hcpu_dashboard_pos.vh"]
+    absent = _generated_problems([], set(), {ROOT / "rtl" / "no_such_generated.vh": script})
+    assert absent and "absent" in absent[0] and MAKE_GENERATED in absent[0], absent
+    stale = _generated_problems([], set(), {ROOT / "rtl" / "hcpu_pkg.vh": script})
+    assert stale and "not what" in stale[0], stale
+    untracked = _generated_problems([ROOT / "rtl" / "hcpu_pkg.vh"], set(), {})
+    assert untracked and "neither tracked nor generated" in untracked[0], untracked
+    # And when the generated header is valid while a tracked RTL file changes,
+    # _generated_problems stays empty and _fingerprint catches the RTL change.
+    pkg = ROOT / "rtl" / "hcpu_pkg.vh"
+    changed_pkg = tmp_path / "hcpu_pkg.vh"
+    changed_pkg.write_text(pkg.read_text(encoding="utf-8") + "\nwire _qb4_probe = 1'b0;\n",
+                           encoding="utf-8")
+    sources = [changed_pkg if f == pkg else f for f in FINGERPRINTED]
+    assert _generated_problems(FINGERPRINTED, _tracked(), GENERATED) == []
+    assert _fingerprint(sources) != _fingerprint(FINGERPRINTED)
 
 
 def test_the_kabah_wrapper_records_its_own_fingerprint() -> None:

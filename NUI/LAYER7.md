@@ -24,7 +24,8 @@ Mutative authorization         DENIED       kecuali empat baris slot Portal 8888
 Authorization boundary         EXTENDED     pemilik, 3 Oktober 2026 — izin 9–12 di 7.5
 Layer 7                        REOPENED     pemilik, 3 Oktober 2026 — recover / restart / isolate first
 Completion condition           mengisolasi, memulihkan, dan merekam — pemilik, 3 Oktober 2026
-Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan; tidak mencakup adendum Linux sesudahnya (59a7b0b, 81fcd38, c167893, c325eb4)
+Freeze tag                     layer7-freeze-2026-10-03 — nama dari pemilik; dipasang sesudah uji papan; tidak mencakup adendum Linux sesudahnya (59a7b0b, 81fcd38, c167893, c325eb4) maupun revisi pasca-freeze pemeriksaan F5 pin LF di bawah
+F5 pin model fungsi RTL        REVISI PASCA-FREEZE — `layer7.py` memakai `rtl_function._file_sha` (LF kanonik); hash byte-persis untuk berkas terlindung dan evidence store tetap
 Linux service recovery         ADENDUM      pasca-freeze, akhir 7.4 — sesudah tag layer7-freeze-2026-10-03
 Linux: VM uji, cron, kelas, ISOLATE_SERVICE   DISETUJUI   pemilik, 6 Oktober 2026 — baca-saja; RESTART_SERVICE dibuka terpisah (baris di bawah)
 Linux: ISOLATE_SERVICE                AUTHORIZED   pemilik, 6 Oktober 2026 — baris 7.4 sendiri, izin 13 di 7.5; tanpa tindakan

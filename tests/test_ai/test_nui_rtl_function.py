@@ -151,3 +151,42 @@ def test_a_rule_citing_no_line_of_the_rtl_is_refused(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(rf, "load", lambda: spec)
     with pytest.raises(LookupError, match="9999"):
         rf.build()
+
+
+def test_a_pin_holds_whichever_line_ending_the_checkout_wrote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A pin is taken over LF line endings, the form git holds: the same file written CRLF reads
+    back to the same pin in both rtl_function and Layer 7's F5 check, while a content change is
+    caught as STALE and Layer 7's byte-exact _sha stays byte-exact."""
+    from hijaiyyah.nui import layer7 as l7
+
+    pinned = _module("hcpu")["pinned_sha256"]
+    for path in ("src/hijaiyyah/hisa/registers.py", "src/hijaiyyah/hisab/protocol.py"):
+        lf = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+        crlf = lf.replace(b"\n", b"\r\n")
+        for name, body in (("lf.py", lf), ("crlf.py", crlf)):
+            (tmp_path / name).write_bytes(body)
+            assert rf._file_sha(tmp_path / name) == pinned[path], (path, name)
+        assert l7._sha(tmp_path / "lf.py") != l7._sha(tmp_path / "crlf.py")
+        (tmp_path / "changed.py").write_bytes(lf.replace(b"class", b"klass", 1))
+        assert rf._file_sha(tmp_path / "changed.py") != pinned[path]
+
+    real_file_sha = rf._file_sha
+    override: dict[Path, Path] = {}
+    monkeypatch.setattr(rf, "_file_sha", lambda p: real_file_sha(override.get(p, p)))
+    target = {"kind": "rtl", "module": "hcpu", "rule": "fetch_latch"}
+    reg = ROOT / "src/hijaiyyah/hisa/registers.py"
+    reg_lf = reg.read_bytes().replace(b"\r\n", b"\n")
+    for name, body in (("reg_lf.py", reg_lf), ("reg_crlf.py", reg_lf.replace(b"\n", b"\r\n"))):
+        p = tmp_path / name
+        p.write_bytes(body)
+        override[reg] = p
+        res = l7.evaluate(target)
+        assert res["decision"] == l7.PASS, (name, res["stops"])
+        assert res["preconditions"]["evidence freshness"]["value"] == "current"
+    bad = tmp_path / "reg_changed.py"
+    bad.write_bytes(reg_lf.replace(b"class", b"klass", 1))
+    override[reg] = bad
+    res = l7.evaluate(target)
+    assert res["decision"] == l7.STOP and l7.STALE in res["conditions"]

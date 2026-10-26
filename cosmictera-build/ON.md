@@ -320,7 +320,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 6.215 tes terkumpul; hasil: CHECKLIST.md †
+python3 -m pytest -q          # 6.218 tes terkumpul; hasil: CHECKLIST.md †
 make -C rtl/tb all            # 408 asersi, 39 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

@@ -2,6 +2,8 @@
 
 Dihasilkan `src/hijaiyyah/nui/rtl_function.py` dari `NUI/spec/rtl_function.json`. RTL dan bench dikompilasi apa adanya dengan satu modul probe di sampingnya yang mencetak register desain sekali tiap siklus; tidak ada port atau baris yang berubah. Simulator: Icarus Verilog version 14.0 (devel) (s20260301-394-g9edaf7b6a-dirty).
 
+**Revisi pasca-freeze (pin kanonik LF).** Freeze Lapis 6 (`NUI/LAYER6.md`, tag `layer6-freeze-2026-09-29-final` di `d003cac`) memegang objek git historis `NUI/rtl_function.json` (`9b92b7293fa6…`), dan `layer6_freeze --verify` memeriksa objek git di tag itu, bukan pohon kerja. Di pohon kerja aktif, pin sumber dihitung atas isi ber-akhir-baris LF (`_file_sha`), bentuk yang disimpan git, sehingga dua pin di `/modules/6/pinned_sha256` (`src/hijaiyyah/hisa/registers.py` dan `src/hijaiyyah/hisab/protocol.py`, yang di pohon sumber saat freeze tertulis CRLF) diperbarui sebagai revisi aktif pasca-freeze tanpa mengubah tag historis.
+
 ## `hcpu_uart_rx`
 
 `rtl/hcpu_uart_rx.v` `3dbb9f127825…`, bench `rtl/tb/tb_hcpu_uart_rx.v` `0b422f1855e6…`. CLK_HZ 27000000, BAUD 115200, DIVISOR 234, HALF 117, CNT_W 8.
