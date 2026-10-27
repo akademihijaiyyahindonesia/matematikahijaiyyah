@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Sequence, Tuple
 
 from hijaiyyah.assembler import HBC_HEADER_SIZE, HBC_MAGIC_INT, HBCHeader
 
@@ -39,6 +39,7 @@ from hijaiyyah.core.master_table import MASTER_TABLE
 # was objecting to. tests/test_integrity/test_no_dead_delegation.py keeps
 # every remaining guarded import honest.
 from hijaiyyah.hisa.machine import HISAMachine as _Machine
+from hijaiyyah.hisa.opcodes import InstructionWord, OpCode
 
 # ── Register & flags ──────────────────────────────────────────
 
@@ -209,6 +210,209 @@ class HybitEngine:
         return float(sum((a[i] - b[i]) ** 2 for i in range(14)) ** 0.5)
 
 
+# ── Static Control-Flow Verifier (4-B′) ──────────────────────
+
+_ABSOLUTE_JUMP_OPS: frozenset[OpCode] = frozenset({
+    OpCode.JMP,
+    OpCode.CALL,
+    OpCode.JGP,
+    OpCode.JGF,
+    OpCode.JNP,
+})
+_CONDITIONAL_ABSOLUTE_OPS: frozenset[OpCode] = frozenset({
+    OpCode.JGP,
+    OpCode.JGF,
+    OpCode.JNP,
+})
+_RELATIVE_BRANCH_OPS: frozenset[OpCode] = frozenset({
+    OpCode.JEQ,
+    OpCode.JNE,
+    OpCode.JGD,
+    OpCode.JNGD,
+})
+_TERMINATING_OPS: frozenset[OpCode] = frozenset({
+    OpCode.HALT,
+    OpCode.HALT_ERR,
+    OpCode.RET,
+    OpCode.ERET,
+})
+
+
+def _sext12(imm: int) -> int:
+    """Sign-extend a 12-bit immediate field (matching HISAMachine._sext12)."""
+    return imm - 0x1000 if imm & 0x800 else imm
+
+
+@dataclass(frozen=True)
+class ControlFlowReport:
+    """Structured result of static H-ISA control-flow verification (4-B′)."""
+
+    valid: bool
+    words: int
+    entry_word: Optional[int] = None
+    first_bad: Optional[int] = None
+    reason: str = ""
+
+
+def verify_control_flow(
+    words: Sequence[int],
+    entry_point: int = 0,
+    *,
+    base: int = 0,
+) -> ControlFlowReport:
+    """Verify static control-flow safety of an H-ISA instruction stream.
+
+    Checks:
+      1. The code section is non-empty and ``entry_point`` resolves to a valid
+         instruction word in ``[base, base + len(words))``.
+      2. Every branch, jump, and call instruction across the program names an
+         in-bounds target word (absolute ``imm`` for ``JMP``, ``CALL``,
+         ``JGP``, ``JGF``, ``JNP``; PC-relative ``own_pc + _sext12(imm)`` for
+         ``JEQ``, ``JNE``, ``JGD``, ``JNGD``), and every ``CALL`` has a valid
+         continuation word at ``own_pc + 1``.
+      3. Starting from ``entry_point``, no reachable control-flow path (walking
+         both legs of conditional branches and both the target and continuation
+         of ``CALL``) can fall through past the end of the program without
+         reaching a valid terminator (``HALT``, ``HALT_ERR``, ``RET``,
+         ``ERET``) or an intentional loop.
+    """
+    n = len(words)
+    if n == 0:
+        return ControlFlowReport(
+            valid=False,
+            words=0,
+            entry_word=None,
+            first_bad=0,
+            reason="code section is empty (0 instruction words)",
+        )
+
+    lo, hi = base, base + n
+    entry_word = entry_point - base
+    if not (0 <= entry_word < n):
+        return ControlFlowReport(
+            valid=False,
+            words=n,
+            entry_word=entry_word,
+            first_bad=entry_word,
+            reason=(
+                f"entry_point {entry_point} (word {entry_word}) is outside "
+                f"program bounds [{lo}, {hi})"
+            ),
+        )
+
+    for idx, raw in enumerate(words):
+        own_pc = base + idx
+        iw = InstructionWord(raw)
+        try:
+            op = OpCode(iw.opcode)
+        except ValueError:
+            return ControlFlowReport(
+                valid=False,
+                words=n,
+                entry_word=entry_word,
+                first_bad=idx,
+                reason=(
+                    f"word {idx} (pc {own_pc}) holds undefined opcode "
+                    f"{iw.opcode:#04x}"
+                ),
+            )
+
+        if op in _ABSOLUTE_JUMP_OPS:
+            target_addr = iw.imm
+            target_word = target_addr - base
+            if not (0 <= target_word < n):
+                return ControlFlowReport(
+                    valid=False,
+                    words=n,
+                    entry_word=entry_word,
+                    first_bad=idx,
+                    reason=(
+                        f"word {idx} (pc {own_pc}): {op.name} target "
+                        f"{target_addr} (word {target_word}) is "
+                        f"outside program bounds [{lo}, {hi})"
+                    ),
+                )
+            if op == OpCode.CALL:
+                return_word = idx + 1
+                return_addr = own_pc + 1
+                if not (0 <= return_word < n):
+                    return ControlFlowReport(
+                        valid=False,
+                        words=n,
+                        entry_word=entry_word,
+                        first_bad=idx,
+                        reason=(
+                            f"word {idx} (pc {own_pc}): CALL return address "
+                            f"{return_addr} (word {return_word}) is outside "
+                            f"program bounds [{lo}, {hi})"
+                        ),
+                    )
+        elif op in _RELATIVE_BRANCH_OPS:
+            offset = _sext12(iw.imm)
+            target_addr = own_pc + offset
+            target_word = idx + offset
+            if not (0 <= target_word < n):
+                return ControlFlowReport(
+                    valid=False,
+                    words=n,
+                    entry_word=entry_word,
+                    first_bad=idx,
+                    reason=(
+                        f"word {idx} (pc {own_pc}): {op.name} relative offset "
+                        f"{offset:+d} targets {target_addr} (word "
+                        f"{target_word}), outside program bounds [{lo}, {hi})"
+                    ),
+                )
+
+    visited: set[int] = set()
+    worklist: List[int] = [entry_word]
+    while worklist:
+        idx = worklist.pop(0)
+        if idx in visited:
+            continue
+        visited.add(idx)
+
+        own_pc = base + idx
+        iw = InstructionWord(words[idx])
+        op = OpCode(iw.opcode)
+
+        if op in _TERMINATING_OPS:
+            continue
+
+        if op == OpCode.JMP:
+            successors = [iw.imm - base]
+        elif op in _CONDITIONAL_ABSOLUTE_OPS:
+            successors = [iw.imm - base, idx + 1]
+        elif op in _RELATIVE_BRANCH_OPS:
+            successors = [idx + _sext12(iw.imm), idx + 1]
+        elif op == OpCode.CALL:
+            successors = [iw.imm - base, idx + 1]
+        else:
+            successors = [idx + 1]
+
+        for succ in successors:
+            if not (0 <= succ < n):
+                return ControlFlowReport(
+                    valid=False,
+                    words=n,
+                    entry_word=entry_word,
+                    first_bad=idx,
+                    reason=(
+                        f"word {idx} (pc {own_pc}): {op.name} falls through "
+                        f"to {base + succ} (word {succ}) past program bounds "
+                        f"[{lo}, {hi}) without a valid terminator"
+                    ),
+                )
+            if succ not in visited:
+                worklist.append(succ)
+
+    return ControlFlowReport(
+        valid=True,
+        words=n,
+        entry_word=entry_word,
+    )
+
+
 # ── HVM — Main Virtual Machine ───────────────────────────────
 
 class HVM:
@@ -255,8 +459,9 @@ class HVM:
 
         Raises:
             ValueError: If the image is truncated, is not HBYT, fails its
-                CRC, or names a code section that runs past the file. A
-                bad image is refused rather than executed.
+                CRC, names a code section that runs past the file, or fails
+                static control-flow verification (4-B′). A bad image is
+                refused rather than executed.
         """
         if len(data) < HBC_HEADER_SIZE:
             raise ValueError(
@@ -288,9 +493,17 @@ class HVM:
             int.from_bytes(code[i:i + 4], "big") for i in range(0, len(code), 4)
         ]
 
+        report = verify_control_flow(words, entry_point=header.entry_point)
+        if not report.valid:
+            raise ValueError(
+                f"bytecode control-flow verification failed: {report.reason}"
+            )
+
         if self._machine is None:
             raise ValueError("no interpreter available")
         self._machine.load_program(words)
+        assert report.entry_word is not None
+        self._machine.regs.pc = report.entry_word
         self.pc = header.entry_point
         self.exit_code = ExitCode.SUCCESS
         return header
@@ -387,6 +600,7 @@ __all__ = [
     "HYBIT_DIM",
     "NUM_REGISTERS",
     "STACK_MAX",
+    "ControlFlowReport",
     "ExitCode",
     "GuardStatus",
     "GuardSystem",
@@ -395,4 +609,5 @@ __all__ = [
     "HybitEngine",
     "HybitRegister",
     "VMFlags",
+    "verify_control_flow",
 ]
