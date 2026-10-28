@@ -1085,9 +1085,9 @@ yang signifikan harus:
 
 © 2026 Maulana Amratulloh
 
-*Yayasan Akademi Hijaiyyah Indonesia — HMCL
+*Yayasan Amratulloh International Academy — HMCL
 (Hijaiyyah Mathematics Computational Laboratory)*
 
-*Yayasan menerbitkan dan menaungi; hak paten dipegang pencipta pribadi.*
+*Yayasan menerbitkan lewat AMRA Publishing dan menaungi; hak paten dipegang pencipta pribadi.*
 
 </div>

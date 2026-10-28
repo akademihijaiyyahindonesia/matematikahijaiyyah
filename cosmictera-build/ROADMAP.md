@@ -418,7 +418,7 @@ diputuskan-tapi-belum-dikerjakan adalah yang paling mudah dikira sudah beres.
 | **BAB III** | dirombak menyesuaikan hasil akhir Tang Nano 20K | **AT** |
 | **Edisi II** | penuh Cosmictera/Hybit + seluruh hasil uji fisik | **AT** |
 
-Penerbitnya Yayasan Akademi Hijaiyyah Indonesia untuk keduanya.
+Penerbitnya AMRA Publishing, unit penerbitan Yayasan Amratulloh International Academy, untuk keduanya.
 
 ### `verification_summary` di CERTIFICATE.json masih angka lama
 

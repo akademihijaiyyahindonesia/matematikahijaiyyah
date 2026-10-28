@@ -14,7 +14,7 @@ export default function Layout({ children }) {
           <span className="neon-text font-bold">HOM</span> — {t('layout.footer')}
         </div>
         <div className="text-[10px] text-white/30 tracking-[0.4em] font-bold uppercase transition-colors hover:text-hom-accent/50 cursor-default">
-          YAYASAN AKADEMI HIJAIYYAH INDONESIA
+          YAYASAN AMRATULLOH INTERNATIONAL ACADEMY
         </div>
       </footer>
     </div>

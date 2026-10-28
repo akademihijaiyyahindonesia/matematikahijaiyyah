@@ -104,7 +104,7 @@
 //
 // Fingerprint restamped 2026-09-10 WITHOUT a new place-and-route run, and the
 // justification is mechanical rather than a promise: the institution changed
-// (HMCL became a research unit under Yayasan Akademi Hijaiyyah Indonesia, and
+// (HMCL became a research unit under Yayasan Amratulloh International Academy, and
 // the rights line became the inventor personally), which rewrote one comment
 // line in every fingerprinted source. Reversing only those copyright lines in
 // memory reproduces the previously recorded hash exactly, for this wrapper and

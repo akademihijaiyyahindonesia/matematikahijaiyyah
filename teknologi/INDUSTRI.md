@@ -161,9 +161,9 @@ Rantai itu utuh dan seluruhnya ada di repositori ini.
 aljabar abstrak ke silikon yang benar-benar berjalan tanpa memotong di
 tengah.
 
-**Yang sedang berjalan:** Yayasan Akademi Hijaiyyah Indonesia menerbitkan
-Edisi I (Bab I–II) dan Edisi II (Cosmictera Hybit beserta seluruh hasil uji
-fisik).
+**Yang sedang berjalan:** AMRA Publishing, unit penerbitan Yayasan Amratulloh
+International Academy, menerbitkan Edisi I (Bab I–II) dan Edisi II
+(Cosmictera Hybit beserta seluruh hasil uji fisik).
 
 ---
 

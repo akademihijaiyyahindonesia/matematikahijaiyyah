@@ -27,8 +27,14 @@ CANONICAL_KEY_ID = "MA-SIG"
 # the canonical form names both and in that order. The rights holder is
 # deliberately NOT the institution -- patents are held by the inventor
 # personally, and AUTHORS says so under its own heading.
-INSTITUTION = ("Yayasan Akademi Hijaiyyah Indonesia — HMCL "
+INSTITUTION = ("Yayasan Amratulloh International Academy — HMCL "
                "(Hijaiyyah Mathematics Computational Laboratory)")
+# The foundation's name of record, as its own website states it
+# (www.akademihijaiyyahindonesia.com, read 28 October 2026): Akademi Hijaiyyah
+# Indonesia is the institution it runs, AMRA Publishing its publishing unit,
+# HMCL its research unit.
+FOUNDATION = "Yayasan Amratulloh International Academy"
+PUBLISHER = "AMRA Publishing, Yayasan Amratulloh International Academy"
 DATASET_SEAL = "f82d385917ffe32ae2b5711409b1341e90934c52172ae9d0fa68888e3b9c51c8"
 
 # Directories that are vendored, generated, or otherwise not ours to police.
@@ -116,7 +122,7 @@ SUPERSEDED = re.compile(r"Firman\s+Arief|Hidayatullah")
 
 # The publisher of record changed once the foundation's notarial deed was
 # issued: PT Puri Pertiwi International no longer publishes this work, and
-# Yayasan Akademi Hijaiyyah Indonesia does. A superseded PUBLISHER on a patent
+# the foundation does, through AMRA Publishing. A superseded PUBLISHER on a patent
 # instrument misstates who holds the publishing right -- the same class of
 # defect as a superseded author, and it survived in five files (both research
 # proposals, twice each, plus a scratch draft) after the folder's own
@@ -142,7 +148,7 @@ def test_no_superseded_publisher_remains() -> None:
     assert not offenders, (
         f"superseded publisher (PT Puri Pertiwi International) still present "
         f"in: {offenders}. The publisher of record is "
-        f"Yayasan Akademi Hijaiyyah Indonesia."
+        f"{PUBLISHER}."
     )
 
 
@@ -186,7 +192,7 @@ def test_patent_instrument_names_the_foundation_and_its_website(tail: str) -> No
     if not path.exists():                                     # pragma: no cover
         pytest.skip(f"{tail} not present under any *Matematika Hijaiyyah* folder")
     text = read(path)
-    assert "Yayasan Akademi Hijaiyyah Indonesia" in text, (
+    assert FOUNDATION in text, (
         f"{tail} does not name the publisher of record")
     assert CANONICAL_WEBSITE in text, (
         f"{tail} does not carry the live website {CANONICAL_WEBSITE}")
