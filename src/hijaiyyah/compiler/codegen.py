@@ -18,10 +18,12 @@ compilable subset raises :class:`CodegenError` naming what is missing.
 HC                           H-ISA
 ===========================  =========================================
 ``let h = 'ب'``              ``HLOAD Hn, #2``
+``'ب' + 'س' + 'م'``          ``CZERO H0`` + ``ب``, ``س``, ``م`` (0xE0–0xFB)
 ``a + b`` (hybits)           ``HCADD Hd, Ha, Hb``
 ``h.guard()``                ``HGRD Hs`` — elided when Ψ proved it
 ``h.theta()``, ``h.Qc()``…   ``CGET Rd, Hs, #i``
-``h.U()``, ``h.rho()``       ``CGET`` + integer arithmetic
+``h.U()``                    ``CU Rd, Hs`` (0x4D)
+``h.rho()``                  ``CRHO Rd, Hs`` (0x4C)
 ``h.pack(i)``, ``h.crc()``   ``HPACK Rd, Hs, i`` / ``HCRC Rd, Hs``
 ``h.norm2()``                ``HNRM2 Rd, Hs``
 ``a.dist2(b)``               ``HDIST Rd, Ha, Hb``
@@ -30,25 +32,25 @@ integers and ``+ - *``       ``MOVI`` / ``ADD`` / ``SUB`` / ``MUL``
 ``println(x)`` for an int    ``PRINT Rs``
 ===========================  =========================================
 
-**What cannot compile, and why it is not a limitation of this file**
+**Register ABI and Bounds (§IIIF.3.3.1 & §IIIJ.3.3.1)**
 
-``h.theta()``, ``h.Na()``, ``h.U()``, ``h.rho()`` — every accessor that reads
-one component out of a codex — have no encoding in the frozen H-ISA. The 28
-opcodes of §IIIM.3.1 contain no AND, no shift, no DIV and no MOD, and no
-opcode that projects a component. ``HPACK`` packs the 18 components into three
-GPR words as nibbles, but nothing can mask a nibble back out.
+The H-ISA instruction word provides 4-bit register fields (`DST` `[23:20]`,
+`S1` `[19:16]`, `S2` `[15:12]`), which can address `R0`–`R15` and `H0`–`H15`
+(`MAX_GPR = 15` in `hijaiyyah.hisa.assembler`). `R16` and `R17` cannot be
+encoded in any 32-bit H-ISA instruction word and are never allocated.
 
-That gap reaches the book: the example program in §IIIF.3.1.2 uses
-``PROJ THETA word``, so it cannot be assembled against the instruction table
-in §IIIM.3.1 either. Closing it needs a new opcode — a projection that reads
-``H[S1][IMM]`` into ``GPR[DST]`` — which is an ISA decision, not a compiler
-one. Until then this generator says so rather than guessing.
+On the HCPU (`rtl/hcpu_regfile.v`, `rtl/hcpu_decode.v`), `R0` is an ordinary
+writable 32-bit register (not hardwired to zero). By ABI convention, `R0` is
+reserved as the scratch/MMIO base register, while `R1`–`R15` form the
+allocatable scalar register pool with temporary register liveness reuse.
+`H0`–`H15` form the 144-bit hybit register pool, with `H0` also serving as the
+implicit accumulator for native letter instructions (`0xE0`–`0xFB`).
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from hijaiyyah.core.exceptions import HijaiyyahError
 from hijaiyyah.core.master_table import MASTER_TABLE
@@ -66,8 +68,10 @@ from hijaiyyah.language.evaluator import _SLOT_MAP
 
 from .psi import PsiReport
 
-#: Register files, from §IIIJ.3.3. R0 is left free as a scratch slot.
-GPR_FIRST, GPR_LAST = 1, 17
+#: Register files: R0 is reserved by ABI as a scratch/MMIO base slot;
+#: R1–R15 are the 15 encodable general-purpose registers (4-bit field limit).
+GPR_SCRATCH = 0
+GPR_FIRST, GPR_LAST = 1, 15
 HREG_FIRST, HREG_LAST = 0, 15
 
 #: Component accessors, compiled with CGET. The map is the evaluator's, so
@@ -121,33 +125,51 @@ class CodeGenerator:
     """
 
     def __init__(
-        self, psi: Optional[PsiReport] = None, *, insert_guards: bool = False
+        self,
+        psi: Optional[PsiReport] = None,
+        *,
+        insert_guards: bool = False,
+        use_native_letter_opcodes: bool = True,
     ) -> None:
         self._psi = psi
         self._insert = insert_guards
+        self._use_letter_ops = use_native_letter_opcodes
         self._out = Emitted()
         self._bindings: Dict[str, Tuple[str, int]] = {}
-        self._next_h = HREG_FIRST
-        self._next_r = GPR_FIRST
+        self._free_h: List[int] = list(range(HREG_FIRST, HREG_LAST + 1))
+        self._free_r: List[int] = list(range(GPR_FIRST, GPR_LAST + 1))
+        self._bound_h: Set[int] = set()
+        self._bound_r: Set[int] = set()
 
-    # ── Allocation ───────────────────────────────────────────────
+    # ── Allocation & Liveness Reuse ──────────────────────────────
 
-    def _alloc_hybit(self) -> int:
-        if self._next_h > HREG_LAST:
+    def _alloc_hybit(self, *, prefer: Optional[int] = None) -> int:
+        if not self._free_h:
             raise CodegenError(
-                f"out of hybit registers: H{HREG_FIRST}–H{HREG_LAST} are all live. "
-                "This generator does not reuse registers yet."
+                f"out of hybit registers: H{HREG_FIRST}–H{HREG_LAST} are all live."
             )
-        self._next_h += 1
-        return self._next_h - 1
+        if prefer is not None and prefer in self._free_h:
+            self._free_h.remove(prefer)
+            return prefer
+        return self._free_h.pop(0)
 
     def _alloc_scalar(self) -> int:
-        if self._next_r > GPR_LAST:
+        if not self._free_r:
             raise CodegenError(
                 f"out of general registers: R{GPR_FIRST}–R{GPR_LAST} are all live."
             )
-        self._next_r += 1
-        return self._next_r - 1
+        return self._free_r.pop(0)
+
+    def _release_if_temp(self, kind: str, reg: int) -> None:
+        """Return a temporary register to the free pool if no `let` binding owns it."""
+        if kind == SCALAR and reg not in self._bound_r and reg not in self._free_r:
+            self._free_r.insert(0, reg)
+        elif kind == HYBIT and reg not in self._bound_h and reg not in self._free_h:
+            self._free_h.insert(0, reg)
+
+    def _recompute_bound_sets(self) -> None:
+        self._bound_r = {reg for k, reg in self._bindings.values() if k == SCALAR}
+        self._bound_h = {reg for k, reg in self._bindings.values() if k == HYBIT}
 
     def _emit(self, text: str) -> None:
         self._out.lines.append(f"        {text}")
@@ -155,23 +177,16 @@ class CodeGenerator:
     # ── Entry point ──────────────────────────────────────────────
 
     def generate(self, node: Any) -> Emitted:
-        """Compile a program and return its assembly.
-
-        Args:
-            node: The AST root, a :class:`Program`.
-
-        Returns:
-            The emitted assembly and the guard statistics.
-
-        Raises:
-            CodegenError: On any construct outside the compilable subset.
-        """
+        """Compile a program and return its assembly."""
         if not isinstance(node, Program):
             raise CodegenError(f"expected a Program, got {type(node).__name__}")
 
         self._out = Emitted()
         self._bindings.clear()
-        self._next_h, self._next_r = HREG_FIRST, GPR_FIRST
+        self._free_h = list(range(HREG_FIRST, HREG_LAST + 1))
+        self._free_r = list(range(GPR_FIRST, GPR_LAST + 1))
+        self._bound_h.clear()
+        self._bound_r.clear()
 
         self._out.lines.append("; dihasilkan oleh HCC — jangan disunting tangan")
         self._out.lines.append("main:")
@@ -184,8 +199,12 @@ class CodeGenerator:
 
     def _statement(self, node: Any) -> None:
         if isinstance(node, LetStmt):
+            old_binding = self._bindings.get(node.name)
             kind, register = self._expression(node.value)
             self._bindings[node.name] = (kind, register)
+            self._recompute_bound_sets()
+            if old_binding is not None:
+                self._release_if_temp(old_binding[0], old_binding[1])
             if kind is HYBIT:
                 self._maybe_insert_guard(node.value, register, node.name)
             return
@@ -217,22 +236,15 @@ class CodeGenerator:
                     "PRINT takes a scalar register; a hybit has no decimal form"
                 )
             self._emit(f"PRINT   R{register}")
+            self._release_if_temp(kind, register)
             return
 
         # Anything else evaluated for its value alone has no effect.
-        self._expression(node)
+        kind, register = self._expression(node)
+        self._release_if_temp(kind, register)
 
     def _maybe_insert_guard(self, value: Any, register: int, name: str) -> None:
-        """Emit HGRD for a hybit the analysis could not prove.
-
-        The other half of Ψ. Elision removes a check that closure already
-        guarantees; insertion adds one where closure says nothing — a value
-        arriving from outside the sealed world, which is precisely where
-        "guard-on-the-fly" has to stop being the programmer's discipline.
-
-        Ψ already separates the two: proven_valid is the same field, read on
-        its false branch.
-        """
+        """Emit HGRD for a hybit the analysis could not prove."""
         if not self._insert or self._psi is None:
             return
 
@@ -258,12 +270,33 @@ class CodeGenerator:
                 self._out.lines.append(
                     f"        ; HGRD H{register} dihilangkan — {facts.reason}"
                 )
+                self._release_if_temp(kind, register)
                 return
 
         self._out.guards_emitted += 1
         self._emit(f"HGRD    H{register}")
+        self._release_if_temp(kind, register)
 
     # ── Expressions ──────────────────────────────────────────────
+
+    @staticmethod
+    def _extract_literal_letter_chain(node: Any) -> Optional[List[str]]:
+        """Return the sequence of canonical Hijaiyyah letters if `node` is a pure
+        `+` tree of `hybit_ref` literals (`'ب' + 'س' + 'م'`), else None."""
+        if isinstance(node, Literal) and node.lit_type == "hybit_ref":
+            entry = MASTER_TABLE.get_by_char(node.value)
+            if entry is None:
+                return None
+            return [entry.char]
+        if isinstance(node, BinaryExpr) and node.op == "+":
+            left_chain = CodeGenerator._extract_literal_letter_chain(node.left)
+            if left_chain is None:
+                return None
+            right_chain = CodeGenerator._extract_literal_letter_chain(node.right)
+            if right_chain is None:
+                return None
+            return left_chain + right_chain
+        return None
 
     def _expression(self, node: Any) -> Tuple[str, int]:
         if isinstance(node, Literal):
@@ -290,16 +323,18 @@ class CodeGenerator:
         if len(node.args) != 1:
             raise CodegenError("load_id takes one argument")
 
-        register = self._alloc_hybit()
         argument = node.args[0]
         if isinstance(argument, Literal) and isinstance(argument.value, int):
+            register = self._alloc_hybit()
             self._emit(f"HLOAD   H{register}, #{argument.value}")
             return HYBIT, register
 
         kind, index = self._expression(argument)
         if kind is not SCALAR:
             raise CodegenError("load_id takes a scalar index")
+        register = self._alloc_hybit()
         self._emit(f"HLOAD   H{register}, R{index}")
+        self._release_if_temp(kind, index)
         return HYBIT, register
 
     def _literal(self, node: Literal) -> Tuple[str, int]:
@@ -321,6 +356,25 @@ class CodeGenerator:
         )
 
     def _binary(self, node: BinaryExpr) -> Tuple[str, int]:
+        # When compiling a literal letter chain ('ب' + 'س' + 'م') of >= 2 letters
+        # with Ψ hardware-safety proof and H0 free, lower directly to native
+        # letter opcodes (0xE0–0xFB) accumulating into H0.
+        if self._use_letter_ops and node.op == "+" and self._psi is not None:
+            chain = self._extract_literal_letter_chain(node)
+            facts = self._psi.facts.get(id(node))
+            if (
+                chain is not None
+                and len(chain) >= 2
+                and facts is not None
+                and facts.can_discharge_guard()
+                and 0 in self._free_h
+            ):
+                reg_h0 = self._alloc_hybit(prefer=0)
+                self._emit("CZERO   H0")
+                for ch in chain:
+                    self._emit(ch)
+                return HYBIT, reg_h0
+
         left_kind, left = self._expression(node.left)
         right_kind, right = self._expression(node.right)
 
@@ -335,6 +389,8 @@ class CodeGenerator:
                     f"'{node.op}' has no hybit encoding — ℋ is a monoid, and "
                     "HCADD is the only codex arithmetic in H-ISA"
                 )
+            self._release_if_temp(left_kind, left)
+            self._release_if_temp(right_kind, right)
             register = self._alloc_hybit()
             self._emit(f"HCADD   H{register}, H{left}, H{right}")
             return HYBIT, register
@@ -342,6 +398,8 @@ class CodeGenerator:
         mnemonic = {"+": "ADD", "-": "SUB", "*": "MUL"}.get(node.op)
         if mnemonic is None:
             raise CodegenError(f"'{node.op}' has no scalar encoding in H-ISA")
+        self._release_if_temp(left_kind, left)
+        self._release_if_temp(right_kind, right)
         register = self._alloc_scalar()
         self._emit(f"{mnemonic:<7} R{register}, R{left}, R{right}")
         return SCALAR, register
@@ -359,40 +417,42 @@ class CodeGenerator:
 
         if node.method in _COMPONENT_METHODS:
             index = _COMPONENT_METHODS[node.method]
+            self._release_if_temp(kind, register)
             out = self._alloc_scalar()
             self._emit(f"CGET    R{out}, H{register}, #{index}   ; {node.method}")
             return SCALAR, out
 
         if node.method == "U":
-            return self._budget(register)
+            self._release_if_temp(kind, register)
+            out = self._alloc_scalar()
+            self._emit(f"CU      R{out}, H{register}   ; U")
+            return SCALAR, out
 
         if node.method == "rho":
-            # ρ = Θ̂ − U, the decomposition identity of §IC.1.24.
-            theta = self._alloc_scalar()
-            self._emit(f"CGET    R{theta}, H{register}, #0   ; theta")
-            _, budget = self._budget(register)
+            self._release_if_temp(kind, register)
             out = self._alloc_scalar()
-            self._emit(f"SUB     R{out}, R{theta}, R{budget}")
+            self._emit(f"CRHO    R{out}, H{register}   ; rho")
             return SCALAR, out
 
         if node.method == "pack":
-            # HISAB word select lives in the S2 field as a literal 0–2, so a
-            # bare number is written rather than a register name.
             if len(node.args) != 1 or not isinstance(node.args[0], Literal):
                 raise CodegenError("pack() takes a literal word index 0–2")
             index = node.args[0].value
             if not isinstance(index, int) or not 0 <= index <= 2:
                 raise CodegenError(f"pack({index}): HISAB has words 0–2")
+            self._release_if_temp(kind, register)
             out = self._alloc_scalar()
             self._emit(f"HPACK   R{out}, H{register}, {index}")
             return SCALAR, out
 
         if node.method == "crc":
+            self._release_if_temp(kind, register)
             out = self._alloc_scalar()
             self._emit(f"HCRC    R{out}, H{register}")
             return SCALAR, out
 
         if node.method == "norm2":
+            self._release_if_temp(kind, register)
             out = self._alloc_scalar()
             self._emit(f"HNRM2   R{out}, H{register}")
             return SCALAR, out
@@ -403,50 +463,25 @@ class CodeGenerator:
             other_kind, other = self._expression(node.args[0])
             if other_kind is not HYBIT:
                 raise CodegenError("dist2 takes a hybit argument")
+            self._release_if_temp(kind, register)
+            self._release_if_temp(other_kind, other)
             out = self._alloc_scalar()
             self._emit(f"HDIST   R{out}, H{register}, H{other}")
             return SCALAR, out
 
         raise CodegenError(f".{node.method}() has no H-ISA encoding")
 
-    def _budget(self, register: int) -> Tuple[str, int]:
-        """U = Qx + Qs + Qa + 4·Qc, built out of CGET and integer arithmetic.
-
-        The linearity that makes the monoid close (Lemma IIIA.3.2.2) is also
-        what makes this four reads and three adds rather than a special
-        opcode.
-        """
-        parts = []
-        for name, index in (("Qx", 10), ("Qs", 11), ("Qa", 12), ("Qc", 13)):
-            slot = self._alloc_scalar()
-            self._emit(f"CGET    R{slot}, H{register}, #{index}   ; {name}")
-            parts.append(slot)
-
-        four = self._alloc_scalar()
-        self._emit(f"MOVI    R{four}, #4")
-        scaled = self._alloc_scalar()
-        self._emit(f"MUL     R{scaled}, R{parts[3]}, R{four}   ; 4*Qc")
-
-        total = parts[0]
-        for nxt in (parts[1], parts[2], scaled):
-            acc = self._alloc_scalar()
-            self._emit(f"ADD     R{acc}, R{total}, R{nxt}")
-            total = acc
-        return SCALAR, total
-
 
 def generate(
-    ast: Any, psi: Optional[PsiReport] = None, *, insert_guards: bool = False
+    ast: Any,
+    psi: Optional[PsiReport] = None,
+    *,
+    insert_guards: bool = False,
+    use_native_letter_opcodes: bool = True,
 ) -> Emitted:
-    """Compile an HC AST into H-ISA assembly.
-
-    Args:
-        ast: The parsed program.
-        psi: Optional Ψ report. Guards it has proved are dropped.
-        insert_guards: Emit HGRD for every hybit binding the report could not
-            prove, whether or not the source asked for a check.
-
-    Returns:
-        The emitted assembly.
-    """
-    return CodeGenerator(psi, insert_guards=insert_guards).generate(ast)
+    """Compile an HC AST into H-ISA assembly."""
+    return CodeGenerator(
+        psi,
+        insert_guards=insert_guards,
+        use_native_letter_opcodes=use_native_letter_opcodes,
+    ).generate(ast)

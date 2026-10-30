@@ -165,14 +165,48 @@ def test_component_reads_compile_to_cget() -> None:
         assert projection & 0xFFF == index
 
 
-def test_derived_quantities_compile_to_arithmetic() -> None:
+def test_derived_quantities_compile_to_cu_and_crho() -> None:
     """
-    U = Qx + Qs + Qa + 4·Qc is four reads and three adds. The linearity that
-    makes ℋ close (Lemma IIIA.3.2.2) is what keeps it that simple.
+    Owner Decision 2: .U() lowers to hardware opcode CU (0x4D) and .rho()
+    lowers to hardware opcode CRHO (0x4C), both reading from hcpu_guard.v.
     """
-    words = assemble(compile_hc("let h = 'هـ';\nprintln(h.U());\n").text)
-    assert sum(1 for w in words if w >> 24 == 0x44) == 4, "one CGET per Q component"
-    assert any(w >> 24 == 0x14 for w in words), "MUL for the 4·Qc term"
+    words_u = assemble(compile_hc("let h = 'هـ';\nprintln(h.U());\n").text)
+    assert any((w >> 24) == 0x4D for w in words_u), "expected CU (0x4D) for .U()"
+
+    words_rho = assemble(compile_hc("let h = 'هـ';\nprintln(h.rho());\n").text)
+    assert any((w >> 24) == 0x4C for w in words_rho), "expected CRHO (0x4C) for .rho()"
+
+
+def test_gpr_bound_never_allocates_above_r15_and_reuses_temporaries() -> None:
+    """
+    Owner Decision 2: R16 and R17 cannot be encoded in the 4-bit register field
+    (MAX_GPR = 15). Temporary scalar registers are reused across statements, and
+    16 simultaneously live scalar `let` bindings fail cleanly at R1–R15.
+    """
+    many_prints = "let b = 'ب';\n" + "println(b.U());\nprintln(b.rho());\n" * 12
+    words = assemble(compile_hc(many_prints).text)
+    assert words[-1] >> 24 == 0x01
+
+    sixteen_live_scalars = "".join(f"let r{i} = {i};\n" for i in range(1, 17))
+    with pytest.raises(CodegenError, match="R1–R15"):
+        compile_hc(sixteen_live_scalars)
+
+
+def test_native_letter_opcodes_emitted_for_literal_letter_chains() -> None:
+    """
+    Owner Decision 2: A literal letter sum ('ب' + 'س' + 'م') with static Ψ
+    safety proof and H0 free lowers to CZERO H0 + native letter opcodes
+    (0xE1, 0xEB, 0xF7).
+    """
+    src = (
+        "let bsm = 'ب' + 'س' + 'م';\n"
+        "println(bsm.theta());\nprintln(bsm.U());\nprintln(bsm.rho());\n"
+    )
+    words = assemble(compile_hc(src).text)
+    opcodes = [w >> 24 for w in words]
+    assert 0x47 in opcodes  # CZERO
+    assert [0xE1, 0xEB, 0xF7] == [op for op in opcodes if 0xE0 <= op <= 0xFB]
+    assert run_machine(src) == [10, 6, 4]
 
 
 def test_a_result_with_nowhere_to_go_is_still_refused() -> None:
