@@ -32,8 +32,8 @@ module tb_hcpu_prog_load_multi;
     localparam real    HALF_PERIOD = 18.5;          // 27 MHz
     localparam integer BAUD        = 115200;
     localparam integer LOAD_ADDR   = 12'h900;
-    localparam integer WORDS       = 1505;          // shell.hasm
-    localparam integer RELOC_CNT   = 124;
+    localparam integer WORDS       = 1510;          // shell.hasm
+    localparam integer RELOC_CNT   = 115;
     localparam integer C_WORDS     = 7 + RELOC_CNT + WORDS;
     localparam integer IMAGE_SEC   = 17;
     localparam integer TABLE_SEC   = 16;

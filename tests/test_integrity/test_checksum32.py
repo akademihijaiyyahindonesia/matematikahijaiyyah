@@ -545,3 +545,71 @@ def test_the_hcpu_loader_gives_the_python_loaders_verdict_on_every_card(
         if (answer["DONE"], answer["ANSWER"], answer["ABSENT"]) != (1, want, 0):
             wrong.append((case["id"], case["expect"], answer))
     assert not wrong, wrong
+
+
+def _run_dirty_state_loader(probe_words: list[int],
+                            card: dict[int, list[int]]) -> list[int]:
+    machine = HISAMachine(MASTER_TABLE, hcheck_interval=0)
+    machine.load_program(probe_words)
+    for addr in range(0xA80, 0xE00):
+        machine.data_mem[addr] = 0xFFFFFFFF
+
+    sd_sec = 0
+    sd_idx = 0
+    sd_buf = [0] * 128
+
+    def sd_read(reg: int) -> int:
+        nonlocal sd_idx
+        if reg == 1:
+            return 0xA
+        if reg == 3:
+            val = sd_buf[sd_idx & 0x7F]
+            sd_idx = (sd_idx + 1) & 0x7F
+            return val
+        return 0
+
+    def sd_write(reg: int, value: int) -> None:
+        nonlocal sd_sec, sd_idx, sd_buf
+        if reg == 0 and value == 2:
+            sd_buf = list(card.get(sd_sec, [0] * 128))
+            sd_idx = 0
+        elif reg == 2:
+            sd_sec = value
+        elif reg == 4 and (value & 1):
+            sd_idx = 0
+
+    machine._sd_read = sd_read  # type: ignore[method-assign]
+    machine._sd_write = sd_write  # type: ignore[method-assign]
+    steps = 0
+    while not machine._halted and steps < 500_000:
+        machine.step()
+        steps += 1
+    assert machine._halted, f"loader did not halt within {steps} steps"
+    return list(machine.output)
+
+
+def test_candidate_b_relocation_budget_and_odd_word_dirty_state_invariants() -> None:
+    """Candidate B structural and functional invariants:
+    1. hos_prog_load.hasm uses 892 words and 37 relocations (-9 vs Candidate A),
+       leaving shell.hasm at 1,510 words and 115 / 128 relocations (13 free).
+    2. Pre-filling Data RAM 0xA80..0xDFF with 0xFFFFFFFF does not perturb Phase V1
+       paired zeroing or Phase V2 verification across odd and even word counts."""
+    loader_src = (PROGRAMS_DIR / "hos_prog_load.hasm").read_text(encoding="utf-8")
+    loader_c = build(loader_src, PROGRAMS_DIR, 0)
+    assert (loader_c[2], loader_c[5]) == (892, 37)
+
+    shell_src = (PROGRAMS_DIR / "shell.hasm").read_text(encoding="utf-8")
+    shell_c = build(shell_src, PROGRAMS_DIR, LOAD_ADDR)
+    assert (shell_c[2], shell_c[5]) == (1510, 115)
+
+    prog = PROGRAMS_DIR / "test_prog_load.hasm"
+    probe_words = assemble(prog.read_text(encoding="utf-8"), base_dir=PROGRAMS_DIR, base=0)
+
+    for w_len in (1, 3, 5, 7, 63, 121, 122):
+        asm = "        NOP\n" * (w_len - 1) + "        HALT\n"
+        c = _asm_container(asm)
+        assert c[2] == w_len
+        out = _run_dirty_state_loader(probe_words, card_image(c))
+        assert out == [1], (w_len, out)
+
+

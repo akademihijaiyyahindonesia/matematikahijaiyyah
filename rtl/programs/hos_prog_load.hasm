@@ -114,7 +114,7 @@ pl_ent: CALL  hal_sd_get
 pl_nxt: ADDI  R9, R9, 1
         CMPI  R9, 32                ; 128 words / four words an entry
         JNE   pl_ent
-        JMP   pl_no                 ; no VALID entry carries that id
+        JEQ   pl_no                 ; no VALID entry carries that id
 
 ; ── the header, and every refusal it can earn ───────────────────
 ; CHECKSUM32 begins here, with the table entry itself: PROGRAM_ID + FLAGS +
@@ -154,28 +154,28 @@ pl_hdr: ADD   R4, R4, R3
 
         MOVI  R1, 4095              ; the image's LAST word must still be inside
         ADD   R2, R6, R8            ; the 4,096 words of instruction memory.
-        ADDI  R2, R2, -1            ; 4095, not 4096: an immediate is 12 bits,
-        CALL  hos_size_ge           ; which is the same limit the host tool holds
+        ADDI  R2, R2, -1
+        SUB   R3, R1, R2
+        SHRI  R3, R3, 31
         CMPI  R3, 0
-        JEQ   pl_no
+        JNE   pl_no
 
-        MOV   R1, R9                ; ENTRY >= LOAD_ADDR
-        MOV   R2, R6
-        CALL  hos_size_ge
+        SUB   R3, R9, R6            ; ENTRY >= LOAD_ADDR
+        SHRI  R3, R3, 31
         CMPI  R3, 0
-        JEQ   pl_no
+        JNE   pl_no
         ADD   R1, R6, R8
         ADDI  R1, R1, -1            ; and ENTRY <= the image's last word
-        MOV   R2, R9
-        CALL  hos_size_ge
+        SUB   R3, R1, R9
+        SHRI  R3, R3, 31
         CMPI  R3, 0
-        JEQ   pl_no
+        JNE   pl_no
 
         MOVI  R1, 128               ; the buffer at 0x300-0x37F, and no more
-        MOV   R2, R7
-        CALL  hos_size_ge
+        SUB   R3, R1, R7
+        SHRI  R3, R3, 31
         CMPI  R3, 0
-        JEQ   pl_no
+        JNE   pl_no
 
         MOVI  R2, 0
         LOAD  R3, R2, 2
@@ -213,7 +213,7 @@ p1_cs:  ADDI  R3, R3, -1            ; below zero it never meets 0 again
 p1_nx:  ADDI  R10, R10, 1
         CMPI  R10, 128
         JNE   p1_w
-        JMP   p1_sec
+        JEQ   p1_sec
 p1_end: CMPI  R8, 0
         JNE   pl_no                 ; fewer words on the card than the header said
         CMP   R4, R15
@@ -254,7 +254,8 @@ p2_tg:  CALL  hal_sd_get
         ADDI  R4, R4, 1
         ADDI  R10, R10, 1
         ADDI  R3, R3, -1
-        JMP   p2_tab
+        CMP   R6, R6
+        JEQ   p2_tab
 
 ; R4 is now one past the last entry: the cursor R7 stops there.
 p2_run: MOVI  R7, 0x300             ; the next relocation to apply
@@ -292,13 +293,16 @@ p2_wr:  MOVI  R2, 0
         STORE R1, R2, 0xFF7         ; raw path: IMEM_DATA, one store per word
         CMP   R6, R6
         JEQ   v1_next
-p2_ov:  ADDI  R2, R15, 0x380
-        STORE R1, R2, 0             ; stage PROG[R15] at 0x380 + R15
+p2_ov:  STORE R1, R15, 0x380        ; stage PROG[R15] at 0x380 + R15
+        ANDI  R3, R15, 1
+        CMPI  R3, 0
+        JNE   v1_op
         SHRI  R2, R15, 1
         MOVI  R3, 0xA80
         ADD   R2, R2, R3
         MOVI  R3, 0
-        STORE R3, R2, 0             ; zero STATE_WORD[R15 >> 1]
+        STORE R3, R2, 0             ; zero STATE_WORD[R15 >> 1] once per pair
+v1_op:
 
         ; Phase V1: opcode & static branch/jump/call target bounds check
         SHRI  R2, R1, 24            ; op = R1[31:24]
@@ -348,6 +352,8 @@ v1_mchk:
         ANDI  R12, R12, 1
         CMPI  R12, 0
         JEQ   pl_no                 ; forbidden (PUSH/POP/ERET/HALT_ERR) or undefined
+        CMPI  R3, 1                 ; only chunk 1 (0x20..0x2F) has jump/branch/call
+        JNE   v1_next
 
         ANDI  R3, R1, 0xFFF         ; imm = R1[11:0]
         MOVI  R12, 0
@@ -396,7 +402,8 @@ v1_rpos:
 v1_next:
         ADDI  R15, R15, 1
         ADDI  R8, R8, -1
-        JMP   p2_w
+        CMP   R6, R6
+        JEQ   p2_w
 
 p2_v1_end:
         CMP   R7, R4                ; every relocation entry must be consumed
@@ -448,8 +455,7 @@ v2_mark:
         OR    R1, R1, R2
         STORE R1, R4, 0
 
-        ADDI  R4, R10, 0x380
-        LOAD  R1, R4, 0             ; R1 = PROG[pc]
+        LOAD  R1, R10, 0x380        ; R1 = PROG[pc]
         SHRI  R2, R1, 24            ; op
         ANDI  R3, R1, 0xFFF         ; imm
         CMPI  R2, 0x01              ; OP_HALT?
@@ -534,8 +540,7 @@ v2_commit:
         MOVI  R2, 0
         STORE R6, R2, 0xFF3         ; IMEM_ADDR = LOAD_ADDR
         MOVI  R15, 0
-v2_cp:  ADDI  R4, R15, 0x380
-        LOAD  R1, R4, 0
+v2_cp:  LOAD  R1, R15, 0x380
         STORE R1, R2, 0xFF7         ; IMEM_DATA
         ADDI  R15, R15, 1
         CMP   R15, R8
@@ -543,7 +548,8 @@ v2_cp:  ADDI  R4, R15, 0x380
 
 p2_done:
         MOVI  R1, 1
-        JMP   pl_out
+        CMPI  R1, 1
+        JEQ   pl_out
 pl_no:  MOVI  R1, 0
 pl_out: POP   R15
         POP   R14
