@@ -99,6 +99,29 @@ CODE_DEPTH = 4096
 IMM_MASK = 0xFFF            # IMM_W = 12, rtl/hcpu_pkg.vh
 PROBE_DELTA = 0x100         # the second base used to find relocations
 RELOC_MAX = 128             # the loader's buffer, 0x300-0x37F, owner's decision
+OVERLAY_MAX_WORDS = 1792    # 0x380-0xA7F staging window (4096 - 0x900)
+OVERLAY_MAX_CALL_DEPTH = 28 # RA_DEPTH (32) - 4 supervisor trap margin
+OVERLAY_WORK_MAX = 252      # 0x004-0x0FF worklist capacity in hos_prog_load.hasm
+_ROOT_OWNER = 0x7FF
+
+# 256-bit allowed opcode bitmap (8 x 32-bit chunks) matching hos_prog_load.hasm
+# Phase V1: the 78 valid RTL opcodes for 4-B' overlays (excludes ERET 0x08,
+# PUSH 0x32, POP 0x33, HALT_ERR 0xFF, and all unimplemented/non-RTL opcodes).
+_OVERLAY_OPCODE_MASKS: tuple[int, ...] = (
+    0x00170EDB,  # 0x00..0x1F
+    0x0003C61F,  # 0x20..0x3F
+    0x0003B1F5,  # 0x40..0x5F
+    0x00000001,  # 0x60..0x7F
+    0x00000000,  # 0x80..0x9F
+    0x07FF0005,  # 0xA0..0xBF
+    0x00000000,  # 0xC0..0xDF
+    0x0FFFFFFF,  # 0xE0..0xFF
+)
+
+
+def _sext12(imm: int) -> int:
+    val = imm & IMM_MASK
+    return val - 0x1000 if (val & 0x800) else val
 
 
 def relocations(source: str, base_dir: Path) -> tuple[list[int], list[int]]:
@@ -108,7 +131,7 @@ def relocations(source: str, base_dir: Path) -> tuple[list[int], list[int]]:
     if len(at_zero) != len(at_delta):
         raise ValueError("the program changes length with its base")
     moved: list[int] = []
-    for i, (a, b) in enumerate(zip(at_zero, at_delta)):
+    for i, (a, b) in enumerate(zip(at_zero, at_delta, strict=True)):
         if a == b:
             continue
         if b - a != PROBE_DELTA:
@@ -206,41 +229,203 @@ def card_image(container: list[int], record: list[int] | None = None,
     return sectors
 
 
-def load_check(sectors: dict[int, list[int]], program_id: int = PROGRAM_ID
-               ) -> tuple[bool, str]:
-    """The Python loader: rtl/programs/hos_prog_load.hasm's refusals, in its
-    order, over the words it would read. Values are taken below 2^31, where
-    the HCPU's size comparison and Python's agree."""
+def verify_overlay(relocated: list[int], load_addr: int,
+                   entry: int) -> tuple[bool, str]:
+    """Two-phase 4-B' overlay verification matching hos_prog_load.hasm.
+
+    Distinguishes provably invalid programs (`invalid: ...`) from programs
+    whose control flow or call depth cannot be statically proven
+    (`unverified: ...`).
+    """
+    n = len(relocated)
+    if n > OVERLAY_MAX_WORDS:
+        return False, "invalid: WORDS over overlay staging buffer"
+
+    # Phase V1: opcode bitmap & static branch/jump/call target bounds
+    for idx, word in enumerate(relocated):
+        op = (word >> 24) & 0xFF
+        imm = word & IMM_MASK
+        chunk = op >> 5
+        bit = (_OVERLAY_OPCODE_MASKS[chunk] >> (op & 31)) & 1
+        if not bit:
+            if op == 0x08:
+                return False, f"unverified: dynamic control transfer ERET at word {idx}"
+            if op == 0x32:
+                return False, f"invalid: forbidden opcode PUSH at word {idx}"
+            if op == 0x33:
+                return False, f"invalid: forbidden opcode POP at word {idx}"
+            if op == 0xFF:
+                return False, f"invalid: forbidden opcode HALT_ERR at word {idx}"
+            return False, f"invalid: illegal opcode {op:#04x} at word {idx}"
+
+        if op in (0x22, 0x2E):  # JMP, CALL
+            if op == 0x2E and idx == n - 1:
+                return False, f"invalid: CALL at final word {idx} falls past end"
+            target = imm - load_addr
+            if not (0 <= target < n):
+                return False, f"invalid: absolute target {imm:#x} at word {idx} outside program"
+        elif op in (0x23, 0x24, 0x29, 0x2A):  # JEQ, JNE, JGD, JNGD
+            if idx == n - 1:
+                return False, f"invalid: conditional branch at final word {idx} falls past end"
+            target = idx + _sext12(imm)
+            if not (0 <= target < n):
+                return False, f"invalid: relative target {target} at word {idx} outside program"
+
+    # Phase V2: worklist control-flow & call-depth <= 28 verification from ENTRY
+    entry_idx = entry - load_addr
+    state = [0] * n
+    work: list[tuple[int, int, int]] = []
+    pc = entry_idx
+    owner = _ROOT_OWNER
+    d = 0
+
+    while True:
+        st = state[pc]
+        if st != 0:
+            old_owner = st >> 5
+            old_d_plus_1 = st & 0x1F
+            if old_owner != owner:
+                if pc == entry_idx and owner == pc + 1:
+                    return False, f"unverified: recursive call to ENTRY at word {pc}"
+                return False, f"unverified: cross-procedure control flow at word {pc}"
+            if old_d_plus_1 >= d + 1:
+                if not work:
+                    return True, "loaded"
+                pc, owner, d = work.pop()
+                continue
+
+        state[pc] = (owner << 5) | (d + 1)
+        word = relocated[pc]
+        op = (word >> 24) & 0xFF
+        imm = word & IMM_MASK
+
+        if op == 0x01:  # HALT
+            if not work:
+                return True, "loaded"
+            pc, owner, d = work.pop()
+            continue
+
+        if op == 0x2F:  # RET
+            if d == 0:
+                return False, f"invalid: RET reachable at call depth 0 at word {pc}"
+            if not work:
+                return True, "loaded"
+            pc, owner, d = work.pop()
+            continue
+
+        if op == 0x22:  # JMP
+            pc = imm - load_addr
+            continue
+
+        if op == 0x2E:  # CALL
+            callee = imm - load_addr
+            callee_owner = callee + 1
+            if d == OVERLAY_MAX_CALL_DEPTH:
+                active_owners = {owner} | {w_owner for _, w_owner, _ in work}
+                if callee_owner in active_owners or callee == entry_idx:
+                    return False, f"unverified: recursive call cycle at word {pc}"
+                return (
+                    False,
+                    f"invalid: call depth {d + 1} exceeds maximum "
+                    f"{OVERLAY_MAX_CALL_DEPTH} at word {pc}",
+                )
+            if len(work) >= OVERLAY_WORK_MAX:
+                return (
+                    False,
+                    f"unverified: worklist capacity {OVERLAY_WORK_MAX} "
+                    f"exceeded at word {pc}",
+                )
+            work.append((pc + 1, owner, d))
+            pc = callee
+            owner = callee_owner
+            d = d + 1
+            continue
+
+        if op in (0x23, 0x24, 0x29, 0x2A):  # JEQ, JNE, JGD, JNGD
+            if len(work) >= OVERLAY_WORK_MAX:
+                return (
+                    False,
+                    f"unverified: worklist capacity {OVERLAY_WORK_MAX} "
+                    f"exceeded at word {pc}",
+                )
+            target = pc + _sext12(imm)
+            work.append((target, owner, d))
+            pc = pc + 1
+            continue
+
+        pc = pc + 1
+        if pc >= n:
+            return False, f"invalid: fall-through past end of program at word {pc - 1}"
+
+
+def _extract_relocated(sectors: dict[int, list[int]],
+                       program_id: int = PROGRAM_ID
+                       ) -> tuple[bool, str, list[int], int, int]:
+    """Shared Pass 1 + Pass 2 relocation checks for Stage 2 and Stage 3."""
     table = sectors.get(TABLE_SECTOR, [0] * SECTOR_WORDS)
     for e in range(SECTOR_WORDS // 4):
         pid, flags, start, count = table[4 * e:4 * e + 4]
         if flags & 1 and pid == program_id:
             break
     else:
-        return False, "no VALID entry carries that PROGRAM_ID"
+        return False, "no VALID entry carries that PROGRAM_ID", [], 0, 0
     if count == 0:
-        return False, "the entry claims no sectors"
+        return False, "the entry claims no sectors", [], 0, 0
     words = [w for s in range(start, start + count)
              for w in sectors.get(s, [0] * SECTOR_WORDS)]
     magic, version, n, load_addr, entry, reloc_cnt, stored = words[:HEADER_WORDS]
     if magic != MAGIC:
-        return False, "MAGIC"
+        return False, "MAGIC", [], 0, 0
     if version != VERSION:
-        return False, "VERSION"
+        return False, "VERSION", [], 0, 0
     if n == 0:
-        return False, "WORDS = 0"
+        return False, "WORDS = 0", [], 0, 0
     if load_addr + n - 1 > CODE_DEPTH - 1:
-        return False, "the image runs past instruction memory"
+        return False, "the image runs past instruction memory", [], 0, 0
     if not load_addr <= entry <= load_addr + n - 1:
-        return False, "ENTRY outside the image"
+        return False, "ENTRY outside the image", [], 0, 0
     if reloc_cnt > RELOC_MAX:
-        return False, "RELOC_CNT over the buffer"
+        return False, "RELOC_CNT over the buffer", [], 0, 0
     total = HEADER_WORDS + reloc_cnt + n
     if total > len(words):
-        return False, "fewer words on the card than the header says"
+        return False, "fewer words on the card than the header says", [], 0, 0
     if checksum32([pid, flags, start, count], words[:total]) != stored:
-        return False, "CHECKSUM32"
-    return True, "loaded"
+        return False, "CHECKSUM32", [], 0, 0
+
+    reloc_table = words[HEADER_WORDS:HEADER_WORDS + reloc_cnt]
+    prog_words = words[HEADER_WORDS + reloc_cnt:total]
+    relocated: list[int] = []
+    r_cursor = 0
+    for idx, raw in enumerate(prog_words):
+        w = raw & MASK
+        if r_cursor < reloc_cnt and reloc_table[r_cursor] == idx:
+            if (w & IMM_MASK) + load_addr > IMM_MASK:
+                return False, "invalid: relocation immediate overflow", [], 0, 0
+            w = (w + load_addr) & MASK
+            r_cursor += 1
+        relocated.append(w)
+    if r_cursor != reloc_cnt:
+        return False, "invalid: relocation entry unconsumed", [], 0, 0
+    return True, "loaded", relocated, load_addr, entry
+
+
+def load_check_raw(sectors: dict[int, list[int]], program_id: int = PROGRAM_ID
+                   ) -> tuple[bool, str]:
+    """Stage 2 raw container loader (hos_prog_load_raw): P6 integrity and
+    relocation bounds without 4-B' overlay control-flow restrictions."""
+    ok, reason, _, _, _ = _extract_relocated(sectors, program_id)
+    return ok, reason
+
+
+def load_check(sectors: dict[int, list[int]], program_id: int = PROGRAM_ID,
+               *, overlay: bool = True) -> tuple[bool, str]:
+    """The Python loader: rtl/programs/hos_prog_load.hasm's refusals, in its
+    order, over the words it would read. By default (`overlay=True`), enforces
+    Stage 3 4-B' static overlay verification after Pass 1 CHECKSUM32."""
+    ok, reason, relocated, load_addr, entry = _extract_relocated(sectors, program_id)
+    if not ok or not overlay:
+        return ok, reason
+    return verify_overlay(relocated, load_addr, entry)
 
 
 def relocate(container: list[int]) -> tuple[int, list[int]]:

@@ -100,6 +100,7 @@ module tb_hcpu_prog_load;
 
         // After the card model's own initial block has zeroed its memory.
         #1;
+        dut.u_hcpu.u_dataram.mem[12'hED7] = 32'd1;  // Stage 2 raw container path
         put_word(TABLE_SEC, 0, 32'd1);              // PROGRAM_ID
         put_word(TABLE_SEC, 1, 32'd1);              // FLAGS: bit 0 VALID
         put_word(TABLE_SEC, 2, IMAGE_SEC);          // START_SECTOR

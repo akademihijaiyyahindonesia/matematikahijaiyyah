@@ -32,12 +32,12 @@ module tb_hcpu_prog_load_multi;
     localparam real    HALF_PERIOD = 18.5;          // 27 MHz
     localparam integer BAUD        = 115200;
     localparam integer LOAD_ADDR   = 12'h900;
-    localparam integer WORDS       = 1248;          // shell.hasm
+    localparam integer WORDS       = 1505;          // shell.hasm
     localparam integer RELOC_CNT   = 124;
     localparam integer C_WORDS     = 7 + RELOC_CNT + WORDS;
     localparam integer IMAGE_SEC   = 17;
     localparam integer TABLE_SEC   = 16;
-    localparam integer SEC_COUNT   = (C_WORDS + 127) / 128;   // 11
+    localparam integer SEC_COUNT   = (C_WORDS + 127) / 128;   // 13
 
     reg  clk = 1'b0;
     reg  rst_n = 1'b0;
@@ -106,6 +106,7 @@ module tb_hcpu_prog_load_multi;
 
         // After the card model's own initial block has zeroed its memory.
         #1;
+        dut.u_hcpu.u_dataram.mem[12'hED7] = 32'd1;  // Stage 2 raw container path
         put_word(TABLE_SEC, 0, 32'd1);              // PROGRAM_ID
         put_word(TABLE_SEC, 1, 32'd1);              // FLAGS: bit 0 VALID
         put_word(TABLE_SEC, 2, IMAGE_SEC);          // START_SECTOR

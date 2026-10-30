@@ -1,7 +1,8 @@
 ; hos_prog_load.hasm -- SYSCALL 9's kernel half: a program comes off the card.
 ;
-;   hos_prog_magic  ->  R1 = 0x48504731, "HPG1"
-;   hos_prog_load       R1 = PROGRAM_ID  ->  R1 = 1 loaded, 0 refused
+;   hos_prog_magic     ->  R1 = 0x48504731, "HPG1"
+;   hos_prog_load          R1 = PROGRAM_ID  ->  R1 = 1 loaded, 0 refused (Stage 3 4-B' overlay)
+;   hos_prog_load_raw      R1 = PROGRAM_ID  ->  R1 = 1 loaded, 0 refused (Stage 2 raw container)
 ;
 ; Follows hos.hasm's convention -- R1 result, R3 and R6-R12 scratch -- and also
 ; clobbers R2 and R4 through hal_sd.hasm. R0, R5 and R13-R15 are preserved,
@@ -15,33 +16,18 @@
 ;   sector 17+    containers: seven header words, the relocation table, then
 ;                 the program STORED AT BASE 0
 ;
-; ── why it reads the card twice ─────────────────────────────────
+; ── why it reads the card twice, and stages overlays in RAM ─────
 ; The checksum must pass BEFORE one word reaches instruction memory, and the
 ; CPU cannot read instruction memory back -- 0xFF3 and 0xFF7 are write ports
 ; and there is no read port at all -- so a half-written image could not be
-; undone, or even inspected. Pass one sums; pass two writes. Pass two re-reads
-; the header instead of carrying it in registers: registers are what this walk
-; is short of, and a re-read costs one sector.
-;
-; ── why a relocation buffer, and why 128 ────────────────────────
-; A word is relocated as it is written, because once written it cannot be read
-; back and patched. So the table has to sit in data memory while the program
-; streams past: 0x300-0x37F, the owner's slot, exactly one sector. A container
-; whose RELOC_CNT is larger is refused before anything is written -- the same
-; cap rtl/scripts/build_container.py refuses to exceed, so the refusal normally
-; happens on the host and this one is the backstop.
-;
-; The margin is thin and measured: the shell's own table is 124 entries, because
-; this file brought JMPs and CALLs of its own (the shell was 85 before it; 125
-; before CHECKSUM32's pass one dropped a branch, 26 September 2026). Four more
-; absolute jumps in the resident image and the shell can no longer be loaded
-; by this loader. rtl/tb/tb_hcpu_prog_load_multi.v loads the shell, so it
-; is where that will show first.
-;
-; ── what it does NOT do ─────────────────────────────────────────
-; It does not run the program. ENTRY is checked to lie inside the loaded image
-; and then left alone: making the caller continue there is stage 2B, which the
-; owner has not opened.
+; undone, or even inspected. Pass one sums; pass two reads the relocation
+; table to 0x300-0x37F. On the Stage 3 overlay path (hos_prog_load), pass two
+; stages the relocated words into data RAM at 0x380-0xA7F, verifies Phase V1
+; (78 allowed RTL opcodes excluding PUSH/POP/ERET/HALT_ERR, relocation carry
+; and consumption, static jump/branch bounds) and Phase V2 (reachability from
+; ENTRY, no fall-through past WORDS-1, no RET at depth 0, single-owner
+; procedures, call depth <= 28, fail-closed worklist at 0x004-0x0FF), and
+; writes 0xFF3/0xFF7 only after every check has passed.
 
 hos_prog_magic:
         MOVI  R1, 0x485
@@ -77,11 +63,24 @@ pl_ns_no:
         MOVI  R1, 0
         RET
 
+hos_prog_load_raw:
+        PUSH  R13
+        PUSH  R14
+        PUSH  R15
+        MOVI  R2, 1
+        MOVI  R3, 0
+        STORE R2, R3, 2             ; MEM[0x002] = 1 (Stage 2 raw path)
+        CMP   R2, R2
+        JEQ   pl_go
+
 hos_prog_load:
         PUSH  R13
         PUSH  R14
         PUSH  R15
-        MOV   R6, R1                ; the PROGRAM_ID asked for
+        MOVI  R2, 0
+        LOAD  R3, R2, 0xED7         ; kernel-only Stage 2 raw override (default 0 = 4-B' overlay)
+        STORE R3, R2, 2
+pl_go:  MOV   R6, R1                ; the PROGRAM_ID asked for
 
         MOVI  R1, 1                 ; SD_CMD 1 = init
         CALL  hal_sd_run
@@ -178,16 +177,25 @@ pl_hdr: ADD   R4, R4, R3
         CMPI  R3, 0
         JEQ   pl_no
 
+        MOVI  R2, 0
+        LOAD  R3, R2, 2
+        CMPI  R3, 0
+        JNE   pl_p1                 ; Stage 2 raw path skips overlay staging cap
+
+        ; Overlay staging capacity check: WORDS <= 1792 (0x700)
+        MOVI  R1, 0x700
+        SUB   R3, R1, R8
+        SHRI  R3, R3, 31
+        CMPI  R3, 0
+        JNE   pl_no
+
+        ; Save entry_idx = ENTRY - LOAD_ADDR at MEM[0x000] and WORDS at MEM[0x001]
+        SUB   R1, R9, R6
+        STORE R1, R2, 0
+        STORE R8, R2, 1
+
 ; ── pass one: CHECKSUM32, before anything is written ────────────
-; The whole container is summed -- seven header words, the relocation table,
-; the program -- onto the table entry already in R4, with the CHECKSUM32 word
-; itself counted as zero. The words are the ones hal_sd_get returns: most
-; significant byte first, as rtl/hcpu_sdio.v fills its buffer and as
-; rtl/scripts/build_container.py sums them. Zero padding past the container
-; is outside the sum.
-; R13 start, R14 sectors, R8 container words left, R15 the CHECKSUM32 to match,
-; R3 words until the CHECKSUM32 field, R4 the sum, R11 the cursor.
-        ADD   R8, R8, R7            ; WORDS + RELOC_CNT
+pl_p1:  ADD   R8, R8, R7            ; WORDS + RELOC_CNT
         ADDI  R8, R8, 7             ;   + the header: the whole container
         MOVI  R3, 6                 ; CHECKSUM32 is header word 6
         ADDI  R11, R13, -1
@@ -211,7 +219,7 @@ p1_end: CMPI  R8, 0
         CMP   R4, R15
         JNE   pl_no                 ; the container on the card is not the one sealed
 
-; ── pass two: header again, table to 0x300, then the words ──────
+; ── pass two: header again, table to 0x300, then stage or write ─
         ADDI  R11, R13, -1
         CALL  pl_next_sec
         CMPI  R1, 0
@@ -251,10 +259,13 @@ p2_tg:  CALL  hal_sd_get
 ; R4 is now one past the last entry: the cursor R7 stops there.
 p2_run: MOVI  R7, 0x300             ; the next relocation to apply
         MOVI  R2, 0
-        STORE R6, R2, 0xFF3         ; IMEM_ADDR = LOAD_ADDR, advances itself
-        MOVI  R15, 0                ; index of the word being written
+        LOAD  R3, R2, 2
+        CMPI  R3, 0
+        JEQ   p2_st                 ; overlay path touches IMEM only after Phase V2
+        STORE R6, R2, 0xFF3         ; raw path: IMEM_ADDR = LOAD_ADDR, advances itself
+p2_st:  MOVI  R15, 0                ; index of the word being read
 p2_w:   CMPI  R8, 0
-        JEQ   p2_done
+        JEQ   p2_v1_end
         CMPI  R10, 128
         JNE   p2_wg
         CALL  pl_next_sec
@@ -267,13 +278,268 @@ p2_wg:  CALL  hal_sd_get
         LOAD  R2, R7, 0             ; the index this entry names
         CMP   R2, R15
         JNE   p2_wr
+        ANDI  R2, R1, 0xFFF         ; check 12-bit imm + LOAD_ADDR <= 0xFFF
+        ADD   R2, R2, R6
+        SHRI  R2, R2, 12
+        CMPI  R2, 0
+        JNE   pl_no
         ADD   R1, R1, R6            ; an address: move it to where this lands
         ADDI  R7, R7, 1
 p2_wr:  MOVI  R2, 0
-        STORE R1, R2, 0xFF7         ; IMEM_DATA, one store per word
+        LOAD  R3, R2, 2
+        CMPI  R3, 0
+        JEQ   p2_ov
+        STORE R1, R2, 0xFF7         ; raw path: IMEM_DATA, one store per word
+        CMP   R6, R6
+        JEQ   v1_next
+p2_ov:  ADDI  R2, R15, 0x380
+        STORE R1, R2, 0             ; stage PROG[R15] at 0x380 + R15
+        SHRI  R2, R15, 1
+        MOVI  R3, 0xA80
+        ADD   R2, R2, R3
+        MOVI  R3, 0
+        STORE R3, R2, 0             ; zero STATE_WORD[R15 >> 1]
+
+        ; Phase V1: opcode & static branch/jump/call target bounds check
+        SHRI  R2, R1, 24            ; op = R1[31:24]
+        SHRI  R3, R2, 5             ; chunk = op >> 5 (0..7)
+        CMPI  R3, 0
+        JNE   v1_c1
+        MOVI  R12, 0x170
+        SHLI  R12, R12, 12
+        ORI   R12, R12, 0xEDB       ; chunk 0 mask: 0x00170EDB (excludes ERET 0x08)
+        CMP   R6, R6
+        JEQ   v1_mchk
+v1_c1:  CMPI  R3, 1
+        JNE   v1_c2
+        MOVI  R12, 0x03C
+        SHLI  R12, R12, 12
+        ORI   R12, R12, 0x61F       ; chunk 1 mask: 0x0003C61F (excludes PUSH/POP)
+        CMP   R6, R6
+        JEQ   v1_mchk
+v1_c2:  CMPI  R3, 2
+        JNE   v1_c3
+        MOVI  R12, 0x03B
+        SHLI  R12, R12, 12
+        ORI   R12, R12, 0x1F5       ; chunk 2 mask: 0x0003B1F5
+        CMP   R6, R6
+        JEQ   v1_mchk
+v1_c3:  CMPI  R3, 3
+        JNE   v1_c5
+        MOVI  R12, 1                ; chunk 3 mask: 0x00000001 (HGRD 0x60)
+        CMP   R6, R6
+        JEQ   v1_mchk
+v1_c5:  CMPI  R3, 5
+        JNE   v1_c7
+        MOVI  R12, 0x7FF
+        SHLI  R12, R12, 16
+        ORI   R12, R12, 0x005       ; chunk 5 mask: 0x07FF0005
+        CMP   R6, R6
+        JEQ   v1_mchk
+v1_c7:  CMPI  R3, 7
+        JNE   pl_no                 ; chunks 4 and 6 have no valid opcodes
+        MOVI  R12, 0xFFF
+        SHLI  R12, R12, 12
+        ORI   R12, R12, 0xFFF
+        SHLI  R12, R12, 4
+        ORI   R12, R12, 0x00F       ; chunk 7 mask: 0x0FFFFFFF (0xE0..0xFB)
+v1_mchk:
+        SHR   R12, R12, R2          ; bit (op & 31)
+        ANDI  R12, R12, 1
+        CMPI  R12, 0
+        JEQ   pl_no                 ; forbidden (PUSH/POP/ERET/HALT_ERR) or undefined
+
+        ANDI  R3, R1, 0xFFF         ; imm = R1[11:0]
+        MOVI  R12, 0
+        LOAD  R12, R12, 1           ; R12 = total WORDS
+        CMPI  R2, 0x22              ; OP_JMP?
+        JEQ   v1_abs
+        CMPI  R2, 0x2E              ; OP_CALL?
+        JNE   v1_rel_chk
+        CMPI  R8, 1                 ; CALL at final word?
+        JEQ   pl_no
+v1_abs: SUB   R3, R3, R6            ; target = imm - LOAD_ADDR
+        SHRI  R1, R3, 31
+        CMPI  R1, 0
+        JNE   pl_no                 ; target < 0
+        SUB   R1, R3, R12
+        SHRI  R1, R1, 31
+        CMPI  R1, 0
+        JEQ   pl_no                 ; target >= WORDS
+        JNE   v1_next
+v1_rel_chk:
+        CMPI  R2, 0x23              ; OP_JEQ?
+        JEQ   v1_rel
+        CMPI  R2, 0x24              ; OP_JNE?
+        JEQ   v1_rel
+        CMPI  R2, 0x29              ; OP_JGD?
+        JEQ   v1_rel
+        CMPI  R2, 0x2A              ; OP_JNGD?
+        JNE   v1_next
+v1_rel: CMPI  R8, 1                 ; conditional branch at final word?
+        JEQ   pl_no
+        SHRI  R1, R3, 11
+        CMPI  R1, 0
+        JEQ   v1_rpos
+        MOVI  R1, 1
+        SHLI  R1, R1, 12
+        SUB   R3, R3, R1            ; sext12(imm)
+v1_rpos:
+        ADD   R3, R15, R3           ; target = idx + sext12(imm)
+        SHRI  R1, R3, 31
+        CMPI  R1, 0
+        JNE   pl_no                 ; target < 0
+        SUB   R1, R3, R12
+        SHRI  R1, R1, 31
+        CMPI  R1, 0
+        JEQ   pl_no                 ; target >= WORDS
+v1_next:
         ADDI  R15, R15, 1
         ADDI  R8, R8, -1
         JMP   p2_w
+
+p2_v1_end:
+        CMP   R7, R4                ; every relocation entry must be consumed
+        JNE   pl_no
+        MOVI  R2, 0
+        LOAD  R3, R2, 2
+        CMPI  R3, 0
+        JNE   p2_done               ; Stage 2 raw path finished
+
+; ── Phase V2: reachability, fall-through, RET@0, owner, call-depth <= 28 ──
+        LOAD  R10, R2, 0            ; R10 = pc = entry_idx
+        LOAD  R8, R2, 1             ; R8  = WORDS
+        MOVI  R11, 0x7FF            ; R11 = F_plus_1 = ROOT_OWNER (0x7FF)
+        MOVI  R12, 0                ; R12 = d = 0
+        MOVI  R9, 4                 ; R9  = WORK_SP (0x004..0x0FF, 252 entries)
+
+v2_step:
+        SHRI  R4, R10, 1
+        MOVI  R1, 0xA80
+        ADD   R4, R4, R1
+        LOAD  R1, R4, 0             ; R1 = STATE_WORD[pc >> 1]
+        ANDI  R3, R10, 1
+        SHLI  R3, R3, 4             ; R3 = 0 or 16
+        SHR   R2, R1, R3
+        SHLI  R2, R2, 16
+        SHRI  R2, R2, 16            ; R2 = 16-bit STATE[pc]
+        CMPI  R2, 0
+        JEQ   v2_mark
+        SHRI  R7, R2, 5             ; R7 = owner
+        CMP   R7, R11
+        JNE   pl_no                 ; cross-procedure control flow -> REJECT!
+        ANDI  R7, R2, 0x1F          ; R7 = prev_d_plus_1
+        ADDI  R2, R12, 1            ; d + 1
+        SUB   R7, R7, R2
+        SHRI  R7, R7, 31
+        CMPI  R7, 0
+        JEQ   v2_pop                ; prev_d_plus_1 >= d + 1 -> already verified
+v2_mark:
+        SHLI  R2, R11, 5
+        ADDI  R7, R12, 1
+        OR    R2, R2, R7            ; new_st = (F_plus_1 << 5) | (d + 1)
+        MOVI  R7, 0xFFF
+        SHLI  R7, R7, 4
+        ORI   R7, R7, 0x00F         ; 0xFFFF
+        SHL   R7, R7, R3
+        NOT   R7, R7
+        AND   R1, R1, R7
+        SHL   R2, R2, R3
+        OR    R1, R1, R2
+        STORE R1, R4, 0
+
+        ADDI  R4, R10, 0x380
+        LOAD  R1, R4, 0             ; R1 = PROG[pc]
+        SHRI  R2, R1, 24            ; op
+        ANDI  R3, R1, 0xFFF         ; imm
+        CMPI  R2, 0x01              ; OP_HALT?
+        JEQ   v2_pop
+        CMPI  R2, 0x2F              ; OP_RET?
+        JNE   v2_not_ret
+        CMPI  R12, 0                ; RET at d == 0?
+        JEQ   pl_no
+        JNE   v2_pop
+v2_not_ret:
+        CMPI  R2, 0x22              ; OP_JMP?
+        JNE   v2_not_jmp
+        SUB   R10, R3, R6           ; pc = imm - LOAD_ADDR
+        CMP   R6, R6
+        JEQ   v2_step
+v2_not_jmp:
+        CMPI  R2, 0x2E              ; OP_CALL?
+        JNE   v2_not_call
+        CMPI  R12, 28               ; d == 28 -> d + 1 == 29 > 28?
+        JEQ   pl_no
+        CMPI  R9, 0x100             ; worklist full (252 entries)? fail-closed!
+        JEQ   pl_no
+        ADDI  R4, R10, 1            ; continuation = pc + 1
+        SHLI  R4, R4, 17
+        SHLI  R7, R11, 5
+        OR    R4, R4, R7
+        OR    R4, R4, R12
+        STORE R4, R9, 0
+        ADDI  R9, R9, 1
+        SUB   R10, R3, R6           ; pc = callee = imm - LOAD_ADDR
+        ADDI  R11, R10, 1           ; owner = callee + 1
+        ADDI  R12, R12, 1           ; d = d + 1
+        CMP   R6, R6
+        JEQ   v2_step
+v2_not_call:
+        CMPI  R2, 0x23              ; OP_JEQ?
+        JEQ   v2_cond
+        CMPI  R2, 0x24              ; OP_JNE?
+        JEQ   v2_cond
+        CMPI  R2, 0x29              ; OP_JGD?
+        JEQ   v2_cond
+        CMPI  R2, 0x2A              ; OP_JNGD?
+        JEQ   v2_cond
+        ADDI  R10, R10, 1           ; sequential instruction -> pc + 1
+        CMP   R10, R8
+        JEQ   pl_no                 ; fall-through past WORDS - 1 -> REJECT!
+        JNE   v2_step
+v2_cond:
+        CMPI  R9, 0x100             ; worklist full (252 entries)? fail-closed!
+        JEQ   pl_no
+        SHRI  R1, R3, 11
+        CMPI  R1, 0
+        JEQ   v2_cpos
+        MOVI  R1, 1
+        SHLI  R1, R1, 12
+        SUB   R3, R3, R1
+v2_cpos:
+        ADD   R3, R10, R3           ; target = pc + sext12(imm)
+        SHLI  R3, R3, 17
+        SHLI  R4, R11, 5
+        OR    R3, R3, R4
+        OR    R3, R3, R12
+        STORE R3, R9, 0
+        ADDI  R9, R9, 1
+        ADDI  R10, R10, 1           ; untaken fall-through at pc + 1
+        CMP   R6, R6
+        JEQ   v2_step
+v2_pop:
+        CMPI  R9, 4
+        JEQ   v2_commit
+        ADDI  R9, R9, -1
+        LOAD  R1, R9, 0
+        SHRI  R10, R1, 17
+        SHRI  R11, R1, 5
+        ANDI  R11, R11, 0xFFF
+        ANDI  R12, R1, 0x1F
+        CMP   R6, R6
+        JEQ   v2_step
+
+; ── Commit verified words from 0x380..0x380+WORDS-1 to IMEM ─────
+v2_commit:
+        MOVI  R2, 0
+        STORE R6, R2, 0xFF3         ; IMEM_ADDR = LOAD_ADDR
+        MOVI  R15, 0
+v2_cp:  ADDI  R4, R15, 0x380
+        LOAD  R1, R4, 0
+        STORE R1, R2, 0xFF7         ; IMEM_DATA
+        ADDI  R15, R15, 1
+        CMP   R15, R8
+        JNE   v2_cp
 
 p2_done:
         MOVI  R1, 1
