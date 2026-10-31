@@ -14,6 +14,7 @@ from hijaiyyah.hmcl import (
     simulate_alt_a2_hdot_20bit,
     verify_all_ecosystem_assets,
 )
+from hijaiyyah.hmcl.multilevel_sim import predict_alt_a1_hvm_steps
 
 
 def test_charter_section_b_formal_asset_registry_and_verification() -> None:
@@ -51,7 +52,12 @@ def test_charter_sections_c_d_f_multilevel_simulation_and_zero_error_calibration
     assert predict_dynamic_loop_rtl_cycles(127) == 4215
     assert predict_dynamic_loop_rtl_cycles(128) == 4248
     assert predict_dynamic_loop_rtl_cycles(256) == 8472
-    assert predict_alt_a1_rtl_cycles(256) == 3846
+    assert predict_alt_a1_hvm_steps(127) == 1527
+    assert predict_alt_a1_hvm_steps(128) == 1539
+    assert predict_alt_a1_hvm_steps(256) == 3075
+    assert predict_alt_a1_rtl_cycles(127) == 1913
+    assert predict_alt_a1_rtl_cycles(128) == 1928
+    assert predict_alt_a1_rtl_cycles(256) == 3848
 
     # Verify Architectural Alternatives A1, A2, A3
     alts = {a.alternative_id: a for a in sim.alternatives}
@@ -69,9 +75,10 @@ def test_charter_sections_c_d_f_multilevel_simulation_and_zero_error_calibration
 def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> None:
     """Verify that:
     1. Alternative A1 (18-lane sticky carry-out + coupled H*) accepts 127×Kaf and 255×Alif,
-       and rejects 128×Kaf, 256×Kaf, AND 256×Alif (where Theta_hat=0 and H*=0).
-    2. Alternative A2 (20-bit OP_HDOT) matches exact inner product even when a_j + b_j > 255
-       (where 8-bit polarization wraps modulo 256)."""
+       and rejects 128×Kaf, 256×Kaf, AND 256×Alif (where Theta_hat=0 and H*=0), with
+       zero cycle prediction error across all N in (1, 4, 16, 64, 127, 128, 256).
+    2. Alternative A2 (20-bit OP_HDOT) matches exact inner product across extreme per-lane
+       patterns (0x00*0xFF, 0x80*0xFF unsigned, 14*255*255 = 910,350, lanes 14..17)."""
     assert simulate_alt_a1_hardware_sticky_guard(["ك"] * 127)["a1_guard_pass"] is True
     assert simulate_alt_a1_hardware_sticky_guard(["ك"] * 128)["a1_guard_pass"] is False
     assert simulate_alt_a1_hardware_sticky_guard(["ك"] * 256)["a1_guard_pass"] is False
@@ -90,6 +97,71 @@ def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> N
     assert dot_sim["a2_dot_20bit"] == 20000
     assert dot_sim["a2_matches_exact"] is True
     assert dot_sim["polarization_matches_exact"] is False
+
+    # Extreme per-lane and unsigned byte tests on HVM + RTL
+    from hijaiyyah.cells.hpg1_bridge import compile_and_execute_cells
+    from hijaiyyah.core.master_table import MasterTable
+    from hijaiyyah.hisa.assembler import assemble
+    from hijaiyyah.hisa.machine import HISAMachine
+
+    # Verify A1 analytical cycle equations against measured RTL across all 7 sweep points
+    for n_val in (1, 4, 16, 64, 127, 128, 256):
+        kaf_src = (
+            "مسار := ك;\nحرف := ك;\nعداد := ١;\n"
+            f"↻ (عداد < {n_val}) {{ مسار := مسار + حرف; عداد := عداد + ١; }}\n"
+            "⊢ مسار;\n↦ Θ̂(مسار);\n↦ مسار[٧];\n↦ H*(مسار);\n"
+        )
+        res_a1 = compile_and_execute_cells(
+            kaf_src,
+            run_rtl=True,
+            use_hw_sticky_guard=True,
+        )
+        assert res_a1.hw_rtl_parity is True
+        assert res_a1.hvm_compute_steps == predict_alt_a1_hvm_steps(n_val)
+        if res_a1.rtl_measurement is not None:
+            assert res_a1.rtl_measurement.compute_cycles == predict_alt_a1_rtl_cycles(n_val)
+            assert (res_a1.rtl_measurement.flags & 0x01) == (1 if n_val <= 127 else 0)
+
+    alif256_src = (
+        "مسار := ا;\nحرف := ا;\nعداد := ١;\n"
+        "↻ (عداد < 256) { مسار := مسار + حرف; عداد := عداد + ١; }\n"
+        "⊢ مسار;\n↦ مسار[٤];\n"
+    )
+    res_a1_alif256 = compile_and_execute_cells(
+        alif256_src,
+        run_rtl=True,
+        use_hw_sticky_guard=True,
+    )
+    if res_a1_alif256.rtl_measurement is not None:
+        assert (res_a1_alif256.rtl_measurement.flags & 0x01) == 0
+
+    res_a2_dot = compile_and_execute_cells(
+        "↦ ⟨ب, م⟩;\n",
+        run_rtl=True,
+        use_native_hdot=True,
+    )
+    assert len(res_a2_dot.compiled.compute_only_words) == 4
+    assert res_a2_dot.eval_result.outputs == [8]
+    if res_a2_dot.rtl_measurement is not None:
+        assert res_a2_dot.rtl_measurement.compute_cycles == 9
+        assert res_a2_dot.rtl_measurement.printed_outputs == [8]
+
+    # Verify HVM HDOT extreme unsigned lane cases (0x80 * 0xFF = 32640, 14 * 255 * 255 = 910350)
+    mt = MasterTable()
+    words = assemble("HDOT R3, H1, H2\nHALT\n")
+    vm = HISAMachine(mt)
+    vm.load_program(words)
+    vm.regs.hreg[1] = [255] * 18
+    vm.regs.hreg[2] = [255] * 18
+    vm.run()
+    assert vm.regs.gpr[3] == 910350
+
+    vm2 = HISAMachine(mt)
+    vm2.load_program(words)
+    vm2.regs.hreg[1] = [0x80] + [0] * 13 + [0xFF] * 4
+    vm2.regs.hreg[2] = [0xFF] + [0] * 13 + [0xFF] * 4
+    vm2.run()
+    assert vm2.regs.gpr[3] == 32640
 
 
 def test_charter_sections_e_and_i_nui_8axis_benchmark_and_scientific_qa() -> None:

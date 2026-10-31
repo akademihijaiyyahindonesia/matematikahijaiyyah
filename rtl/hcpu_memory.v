@@ -18,6 +18,7 @@ module hcpu_memory (
     input  wire [3:0]              ex_dst,
     input  wire [`XLEN-1:0]        ex_gpr_result,
     input  wire [`HREG_W-1:0]      ex_hreg_result,
+    input  wire                    ex_hreg_ovf,
     input  wire                    ex_gpr_we,
     input  wire                    ex_hreg_we,
     input  wire [7:0]              ex_flags_new,
@@ -44,6 +45,7 @@ module hcpu_memory (
     output reg  [3:0]              mem_dst,
     output wire [`XLEN-1:0]        mem_gpr_result,
     output reg  [`HREG_W-1:0]      mem_hreg_result,
+    output reg                     mem_hreg_ovf,
     output reg                     mem_gpr_we,
     output reg                     mem_hreg_we,
     output reg  [7:0]              mem_flags_new,
@@ -135,6 +137,7 @@ module hcpu_memory (
             mem_is_load      <= 1'b0;
             mem_is_pop       <= 1'b0;
             mem_hreg_result <= {`HREG_W{1'b0}};
+            mem_hreg_ovf    <= 1'b0;
             mem_gpr_we      <= 1'b0;
             mem_hreg_we     <= 1'b0;
             mem_flags_new   <= 8'h00;
@@ -143,6 +146,7 @@ module hcpu_memory (
         end else if (!stall) begin
             mem_dst         <= ex_dst;
             mem_hreg_result <= ex_hreg_result;
+            mem_hreg_ovf    <= ex_hreg_ovf;
             mem_gpr_we      <= ex_gpr_we;
             mem_hreg_we     <= ex_hreg_we;
             mem_flags_new   <= ex_flags_new;

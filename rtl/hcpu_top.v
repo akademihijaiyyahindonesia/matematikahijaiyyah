@@ -141,6 +141,7 @@ module hcpu_top #(
     wire [11:0] id_imm;
     wire [`XLEN-1:0]  id_gpr_s1, id_gpr_s2;
     wire [`HREG_W-1:0] id_hreg_s1, id_hreg_s2;
+    wire        id_hreg_ovf_s1, id_hreg_ovf_s2;
     wire [`XLEN-1:0]  id_pc;
     wire id_gpr_we, id_hreg_we, id_mem_read, id_mem_write;
     wire id_is_branch, id_is_jump, id_is_codex;
@@ -151,6 +152,7 @@ module hcpu_top #(
     // Forwarded values (from forwarding unit)
     wire [`XLEN-1:0]   fwd_gpr_s1, fwd_gpr_s2;
     wire [`HREG_W-1:0] fwd_hreg_s1, fwd_hreg_s2;
+    wire               fwd_hreg_ovf_s1, fwd_hreg_ovf_s2;
 
     // HISAB serializer outputs
     wire [`XLEN-1:0] hisab_pack0, hisab_pack1, hisab_pack2, hisab_crc;
@@ -161,6 +163,7 @@ module hcpu_top #(
     wire [3:0]  ex_dst;
     wire [`XLEN-1:0]   ex_gpr_result;
     wire [`HREG_W-1:0] ex_hreg_result;
+    wire ex_hreg_ovf;
     wire ex_gpr_we, ex_hreg_we;
     wire [7:0] ex_flags_new;
     wire ex_flags_we, ex_is_halt, ex_is_print;
@@ -177,6 +180,7 @@ module hcpu_top #(
     wire [3:0]  mem_dst;
     wire [`XLEN-1:0]   mem_gpr_result;
     wire [`HREG_W-1:0] mem_hreg_result;
+    wire mem_hreg_ovf;
     wire mem_gpr_we, mem_hreg_we;
     wire [7:0] mem_flags_new;
     wire mem_flags_we, mem_is_halt;
@@ -187,6 +191,7 @@ module hcpu_top #(
     wire [`XLEN-1:0]  wb_gpr_wdata;
     wire [3:0]  wb_hreg_waddr;
     wire [`HREG_W-1:0] wb_hreg_wdata;
+    wire        wb_hreg_ovf_wdata;
     wire [7:0]  wb_flags;
 
     // Register file read wires
@@ -194,6 +199,7 @@ module hcpu_top #(
     wire [`XLEN-1:0]  gpr_rdata1, gpr_rdata2;
     wire [3:0]  hreg_raddr1, hreg_raddr2;
     wire [`HREG_W-1:0] hreg_rdata1, hreg_rdata2;
+    wire        hreg_ovf_rdata1, hreg_ovf_rdata2;
     wire [7:0]  flags_out;
     wire [`XLEN-1:0] pc_out;
 
@@ -216,6 +222,7 @@ module hcpu_top #(
     wire [`XLEN-1:0]   calu_scl;
     wire [`HREG_W-1:0] calu_result_vec;
     wire [`XLEN-1:0]   calu_result_scl;
+    wire               calu_add_ovf;
     wire               calu_done;
 
     // UART
@@ -431,6 +438,8 @@ module hcpu_top #(
         .hreg_raddr2    (hreg_raddr2),
         .hreg_rdata1    (hreg_rdata1),
         .hreg_rdata2    (hreg_rdata2),
+        .hreg_ovf_rdata1(hreg_ovf_rdata1),
+        .hreg_ovf_rdata2(hreg_ovf_rdata2),
         .id_opcode      (id_opcode),
         .id_dst         (id_dst),
         .id_s1          (id_s1),
@@ -440,6 +449,8 @@ module hcpu_top #(
         .id_gpr_s2      (id_gpr_s2),
         .id_hreg_s1     (id_hreg_s1),
         .id_hreg_s2     (id_hreg_s2),
+        .id_hreg_ovf_s1 (id_hreg_ovf_s1),
+        .id_hreg_ovf_s2 (id_hreg_ovf_s2),
         .id_pc          (id_pc),
         .id_gpr_we      (id_gpr_we),
         .id_hreg_we     (id_hreg_we),
@@ -465,20 +476,26 @@ module hcpu_top #(
         .rf_gpr_s2      (id_gpr_s2),
         .rf_hreg_s1     (id_hreg_s1),
         .rf_hreg_s2     (id_hreg_s2),
+        .rf_hreg_ovf_s1 (id_hreg_ovf_s1),
+        .rf_hreg_ovf_s2 (id_hreg_ovf_s2),
         .ex_gpr_we      (ex_gpr_we),
         .ex_hreg_we     (ex_hreg_we),
         .ex_dst         (ex_dst),
         .ex_gpr_result  (ex_gpr_result),
         .ex_hreg_result (ex_hreg_result),
+        .ex_hreg_ovf    (ex_hreg_ovf),
         .mem_gpr_we     (mem_gpr_we),
         .mem_hreg_we    (mem_hreg_we),
         .mem_dst        (mem_dst),
         .mem_gpr_result (mem_gpr_result),
         .mem_hreg_result(mem_hreg_result),
+        .mem_hreg_ovf   (mem_hreg_ovf),
         .fwd_gpr_s1     (fwd_gpr_s1),
         .fwd_gpr_s2     (fwd_gpr_s2),
         .fwd_hreg_s1    (fwd_hreg_s1),
-        .fwd_hreg_s2    (fwd_hreg_s2)
+        .fwd_hreg_s2    (fwd_hreg_s2),
+        .fwd_hreg_ovf_s1(fwd_hreg_ovf_s1),
+        .fwd_hreg_ovf_s2(fwd_hreg_ovf_s2)
     );
 
     // ── Execute ─────────────────────────────────────────────────
@@ -497,6 +514,8 @@ module hcpu_top #(
         .id_gpr_s2      (fwd_gpr_s2),
         .id_hreg_s1     (fwd_hreg_s1),
         .id_hreg_s2     (fwd_hreg_s2),
+        .id_hreg_ovf_s1 (fwd_hreg_ovf_s1),
+        .id_hreg_ovf_s2 (fwd_hreg_ovf_s2),
         .id_pc          (id_pc),
         .id_gpr_we      (id_gpr_we),
         .id_hreg_we     (id_hreg_we),
@@ -525,6 +544,7 @@ module hcpu_top #(
         .calu_scl       (calu_scl),
         .calu_result_vec(calu_result_vec),
         .calu_result_scl(calu_result_scl),
+        .calu_add_ovf   (calu_add_ovf),
         // HISAB serializer
         .hisab_pack0    (hisab_pack0),
         .hisab_pack1    (hisab_pack1),
@@ -534,6 +554,7 @@ module hcpu_top #(
         .ex_dst         (ex_dst),
         .ex_gpr_result  (ex_gpr_result),
         .ex_hreg_result (ex_hreg_result),
+        .ex_hreg_ovf    (ex_hreg_ovf),
         .ex_gpr_we      (ex_gpr_we),
         .ex_hreg_we     (ex_hreg_we),
         .ex_flags_new   (ex_flags_new),
@@ -573,6 +594,7 @@ module hcpu_top #(
         .ex_dst         (ex_dst),
         .ex_gpr_result  (ex_gpr_result),
         .ex_hreg_result (ex_hreg_result),
+        .ex_hreg_ovf    (ex_hreg_ovf),
         .ex_gpr_we      (ex_gpr_we),
         .ex_hreg_we     (ex_hreg_we),
         .ex_flags_new   (ex_flags_new),
@@ -593,6 +615,7 @@ module hcpu_top #(
         .mem_dst        (mem_dst),
         .mem_gpr_result (mem_gpr_result),
         .mem_hreg_result(mem_hreg_result),
+        .mem_hreg_ovf   (mem_hreg_ovf),
         .mem_gpr_we     (mem_gpr_we),
         .mem_hreg_we    (mem_hreg_we),
         .mem_flags_new  (mem_flags_new),
@@ -602,53 +625,58 @@ module hcpu_top #(
 
     // ── Writeback ───────────────────────────────────────────────
     hcpu_writeback u_writeback (
-        .mem_dst        (mem_dst),
-        .mem_gpr_result (mem_gpr_result),
-        .mem_hreg_result(mem_hreg_result),
-        .mem_gpr_we     (mem_gpr_we),
-        .mem_hreg_we    (mem_hreg_we),
-        .mem_flags_new  (mem_flags_new),
-        .mem_flags_we   (mem_flags_we),
-        .mem_is_halt    (mem_is_halt),
-        .wb_gpr_we      (wb_gpr_we),
-        .wb_gpr_waddr   (wb_gpr_waddr),
-        .wb_gpr_wdata   (wb_gpr_wdata),
-        .wb_hreg_we     (wb_hreg_we),
-        .wb_hreg_waddr  (wb_hreg_waddr),
-        .wb_hreg_wdata  (wb_hreg_wdata),
-        .wb_flags_we    (wb_flags_we),
-        .wb_flags       (wb_flags),
-        .wb_halt        (wb_halt)
+        .mem_dst          (mem_dst),
+        .mem_gpr_result   (mem_gpr_result),
+        .mem_hreg_result  (mem_hreg_result),
+        .mem_hreg_ovf     (mem_hreg_ovf),
+        .mem_gpr_we       (mem_gpr_we),
+        .mem_hreg_we      (mem_hreg_we),
+        .mem_flags_new    (mem_flags_new),
+        .mem_flags_we     (mem_flags_we),
+        .mem_is_halt      (mem_is_halt),
+        .wb_gpr_we        (wb_gpr_we),
+        .wb_gpr_waddr     (wb_gpr_waddr),
+        .wb_gpr_wdata     (wb_gpr_wdata),
+        .wb_hreg_we       (wb_hreg_we),
+        .wb_hreg_waddr    (wb_hreg_waddr),
+        .wb_hreg_wdata    (wb_hreg_wdata),
+        .wb_hreg_ovf_wdata(wb_hreg_ovf_wdata),
+        .wb_flags_we      (wb_flags_we),
+        .wb_flags         (wb_flags),
+        .wb_halt          (wb_halt)
     );
 
     // ── Register file ───────────────────────────────────────────
     hcpu_regfile u_regfile (
-        .clk         (clk),
-        .rst_n       (rst_n),
-        .gpr_raddr1  (gpr_raddr1),
-        .gpr_raddr2  (gpr_raddr2),
-        .gpr_rdata1  (gpr_rdata1),
-        .gpr_rdata2  (gpr_rdata2),
-        .gpr_we      (wb_gpr_we),
-        .gpr_waddr   (wb_gpr_waddr),
-        .gpr_wdata   (wb_gpr_wdata),
-        .hreg_raddr1 (hreg_raddr1),
-        .hreg_raddr2 (hreg_raddr2),
-        .hreg_rdata1 (hreg_rdata1),
-        .hreg_rdata2 (hreg_rdata2),
-        .hreg_we     (wb_hreg_we),
-        .hreg_waddr  (wb_hreg_waddr),
-        .hreg_wdata  (wb_hreg_wdata),
-        .flags_we    (wb_flags_we),
-        .flags_in    (wb_flags),
-        .flags_out   (flags_out),
-        .pc_we       (1'b0),
-        .pc_in       ({`XLEN{1'b0}}),
-        .pc_out      (pc_out),
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .gpr_raddr1      (gpr_raddr1),
+        .gpr_raddr2      (gpr_raddr2),
+        .gpr_rdata1      (gpr_rdata1),
+        .gpr_rdata2      (gpr_rdata2),
+        .gpr_we          (wb_gpr_we),
+        .gpr_waddr       (wb_gpr_waddr),
+        .gpr_wdata       (wb_gpr_wdata),
+        .hreg_raddr1     (hreg_raddr1),
+        .hreg_raddr2     (hreg_raddr2),
+        .hreg_rdata1     (hreg_rdata1),
+        .hreg_rdata2     (hreg_rdata2),
+        .hreg_ovf_rdata1 (hreg_ovf_rdata1),
+        .hreg_ovf_rdata2 (hreg_ovf_rdata2),
+        .hreg_we         (wb_hreg_we),
+        .hreg_waddr      (wb_hreg_waddr),
+        .hreg_wdata      (wb_hreg_wdata),
+        .hreg_ovf_wdata  (wb_hreg_ovf_wdata),
+        .flags_we        (wb_flags_we),
+        .flags_in        (wb_flags),
+        .flags_out       (flags_out),
+        .pc_we           (1'b0),
+        .pc_in           ({`XLEN{1'b0}}),
+        .pc_out          (pc_out),
         // Debug / Wishbone read-back
-        .dbg_gpr_raddr (dbg_gpr_raddr),
-        .dbg_gpr_rdata (dbg_gpr_rdata),
-        .dbg_flags     (dbg_flags)
+        .dbg_gpr_raddr   (dbg_gpr_raddr),
+        .dbg_gpr_rdata   (dbg_gpr_rdata),
+        .dbg_flags       (dbg_flags)
     );
 
     // ── Master Table ROM ────────────────────────────────────────
@@ -683,6 +711,7 @@ module hcpu_top #(
         .src_scl    (calu_scl),
         .result_vec (calu_result_vec),
         .result_scl (calu_result_scl),
+        .add_ovf    (calu_add_ovf),
         .done       (calu_done)
     );
 

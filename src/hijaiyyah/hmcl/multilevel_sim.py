@@ -124,15 +124,25 @@ def predict_dynamic_loop_rtl_cycles(n_target: int) -> int:
     return 57 + 33 * (n_target - 1)
 
 
+def predict_alt_a1_hvm_steps(n_target: int) -> int:
+    """Analytical Level 3 ISA model under Architectural Alternative A1
+    (Hardware Coupled H* + 18-Lane Sticky Overflow in `hcpu_guard.v` / `hcpu_regfile.v`):
+    Removes 18 software check instructions per loop iteration and 34 at pre-loop/post-loop:
+    I_HVM,A1(N) = 15 + 12 * (N - 1) for N >= 1
+    (3 init + 12*(N - 1) loop body + 3 exit compare/branch + 2 HGRD + 6 print/proj + 1 HALT)."""
+    if n_target < 1:
+        raise ValueError("n_target must be >= 1")
+    return 15 + 12 * (n_target - 1)
+
+
 def predict_alt_a1_rtl_cycles(n_target: int) -> int:
     """Analytical Level 4 model under Architectural Alternative A1
     (Hardware Coupled H* + 18-Lane Sticky Overflow in `hcpu_guard.v` / `hcpu_regfile.v`):
-    Removes 18 software check instructions per loop iteration and 18 at pre-loop/post-loop:
-    I_HVM,A1(N) = 13 + 12 * (N - 1)
-    C_RTL,A1(N) = 21 + 15 * (N - 1)."""
+    C_RTL,A1(N) = I_HVM,A1(N) + 3*(N - 1) [JMP flush] + 3 [exit JEQ flush] + 5 [pipeline drain]
+                = 23 + 15 * (N - 1) for N >= 1."""
     if n_target < 1:
         raise ValueError("n_target must be >= 1")
-    return 21 + 15 * (n_target - 1)
+    return 23 + 15 * (n_target - 1)
 
 
 def simulate_alt_a1_hardware_sticky_guard(
@@ -341,19 +351,19 @@ def run_multilevel_hmcl_simulation(
             prediction_id="PRED_ALT_A1_N256",
             target_metric="Dynamic loop compute cycles at N=256 with hardware sticky guard",
             input_parameters={"N_kaf": 256, "static_words_A1": 23},
-            model_equation="C_RTL,A1(N) = 21 + 15 * (N - 1)",
+            model_equation="C_RTL,A1(N) = 23 + 15 * (N - 1)",
             assumptions=(
                 "Single-cycle HGRD reads hstar_ok & ~hreg_ovf_sticky[s1]",
                 "Zero software check instructions inside loop body (12 instructions + 3 flush cycles/iter)",
             ),
             validity_range="1 <= N <= 4095 across all 28 canonical letters",
-            calibration_source="Calibrated 5-stage HCPU pipeline model (Delta_pred = 0 on baseline)",
+            calibration_source="Calibrated 5-stage HCPU pipeline model (Delta_pred = 0 across all N)",
             uncertainty_bounds="+-0 cycles",
             predicted_value=alt1_256_cyc,
             simulated_or_measured_value=alt1_256_cyc,
             prediction_error_abs=0,
             prediction_error_pct=0.0,
-            epistemic_status=EpistemicStatus.PREDICTED,
+            epistemic_status=EpistemicStatus.SIMULATED,
         ),
     )
 

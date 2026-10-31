@@ -991,12 +991,15 @@ class HISAMachine:
             self.regs.gpr[dst] = n2
             return f"VNORM GPR[{dst}] = ‖H{s1}‖² = {n2}"
 
-        if op == OpCode.CDOT:
+        if op in (OpCode.CDOT, OpCode.HDOT):
             a = self.regs.hreg[s1]
             b = self.regs.hreg[s2]
             ip = sum(a[i] * b[i] for i in range(14))
+            if op == OpCode.HDOT:
+                ip &= 0xFFFFF
             self.regs.gpr[dst] = self._u32(ip)
-            return f"CDOT GPR[{dst}] = ⟨H{s1}, H{s2}⟩₁₄ = {ip}"
+            op_name = "HDOT" if op == OpCode.HDOT else "CDOT"
+            return f"{op_name} GPR[{dst}] = ⟨H{s1}, H{s2}⟩₁₄ = {ip}"
 
         # ── Subroutines ─────────────────────────────────────────
         # A return stack of their own, matching hcpu_execute.v. The data stack

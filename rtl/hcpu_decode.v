@@ -27,6 +27,8 @@ module hcpu_decode (
     output wire [3:0]              hreg_raddr2,
     input  wire [`HREG_W-1:0]      hreg_rdata1,    // ← regfile
     input  wire [`HREG_W-1:0]      hreg_rdata2,
+    input  wire                    hreg_ovf_rdata1,
+    input  wire                    hreg_ovf_rdata2,
 
     // ── Output to Execute (pipeline register) ───────────────────
     output reg  [7:0]              id_opcode,
@@ -38,6 +40,8 @@ module hcpu_decode (
     output reg  [`XLEN-1:0]        id_gpr_s2,     // GPR[S2] value
     output reg  [`HREG_W-1:0]      id_hreg_s1,    // H-Reg[S1] value
     output reg  [`HREG_W-1:0]      id_hreg_s2,    // H-Reg[S2] value
+    output reg                     id_hreg_ovf_s1,// H-Reg[S1] sticky ovf
+    output reg                     id_hreg_ovf_s2,// H-Reg[S2] sticky ovf
     output reg  [`XLEN-1:0]        id_pc,         // PC of this instruction
 
     // ── Decoded control signals ─────────────────────────────────
@@ -89,7 +93,7 @@ module hcpu_decode (
             `OP_ANDI, `OP_ORI, `OP_XORI, `OP_SHLI, `OP_SHRI,
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
             `OP_CGET, `OP_CSET,
-            `OP_CMOV, `OP_CEQ, `OP_CRHO, `OP_CU, `OP_CMOD4,
+            `OP_CMOV, `OP_CEQ, `OP_CRHO, `OP_CU, `OP_HDOT, `OP_CMOD4,
             `OP_FWR,
             `OP_HPACK, `OP_HCRC,
             `OP_PRINT, `OP_PUSH: id_uses_s1 = 1'b1;
@@ -100,7 +104,7 @@ module hcpu_decode (
         case (opcode)
             `OP_ADD, `OP_SUB, `OP_MUL, `OP_CMP,
             `OP_AND, `OP_OR, `OP_XOR, `OP_SHL, `OP_SHR,
-            `OP_STORE, `OP_HCADD, `OP_HDIST,
+            `OP_STORE, `OP_HCADD, `OP_HDIST, `OP_HDOT,
             `OP_CEQ: id_uses_s2 = 1'b1;
             default: ;
         endcase
@@ -160,67 +164,73 @@ module hcpu_decode (
         // makes the block un-inferrable (yosys: "Multiple edge sensitive
         // events found for this signal").
         if (!rst_n) begin
-            id_opcode    <= `OP_NOP;
-            id_dst       <= 4'd0;
-            id_s1        <= 4'd0;
-            id_s2        <= 4'd0;
-            id_imm       <= 12'd0;
-            id_gpr_s1    <= {`XLEN{1'b0}};
-            id_gpr_s2    <= {`XLEN{1'b0}};
-            id_hreg_s1   <= {`HREG_W{1'b0}};
-            id_hreg_s2   <= {`HREG_W{1'b0}};
-            id_pc        <= {`XLEN{1'b0}};
-            id_gpr_we    <= 1'b0;
-            id_hreg_we   <= 1'b0;
-            id_mem_read  <= 1'b0;
-            id_mem_write <= 1'b0;
-            id_is_branch <= 1'b0;
-            id_is_jump   <= 1'b0;
-            id_is_call   <= 1'b0;
-            id_is_ret    <= 1'b0;
-            id_is_codex  <= 1'b0;
-            id_is_halt   <= 1'b0;
-            id_is_print  <= 1'b0;
-            id_is_emits  <= 1'b0;
-            id_is_push   <= 1'b0;
-            id_is_pop    <= 1'b0;
+            id_opcode      <= `OP_NOP;
+            id_dst         <= 4'd0;
+            id_s1          <= 4'd0;
+            id_s2          <= 4'd0;
+            id_imm         <= 12'd0;
+            id_gpr_s1      <= {`XLEN{1'b0}};
+            id_gpr_s2      <= {`XLEN{1'b0}};
+            id_hreg_s1     <= {`HREG_W{1'b0}};
+            id_hreg_s2     <= {`HREG_W{1'b0}};
+            id_hreg_ovf_s1 <= 1'b0;
+            id_hreg_ovf_s2 <= 1'b0;
+            id_pc          <= {`XLEN{1'b0}};
+            id_gpr_we      <= 1'b0;
+            id_hreg_we     <= 1'b0;
+            id_mem_read    <= 1'b0;
+            id_mem_write   <= 1'b0;
+            id_is_branch   <= 1'b0;
+            id_is_jump     <= 1'b0;
+            id_is_call     <= 1'b0;
+            id_is_ret      <= 1'b0;
+            id_is_codex    <= 1'b0;
+            id_is_halt     <= 1'b0;
+            id_is_print    <= 1'b0;
+            id_is_emits    <= 1'b0;
+            id_is_push     <= 1'b0;
+            id_is_pop      <= 1'b0;
         end else if (flush) begin
-            id_opcode    <= `OP_NOP;
-            id_dst       <= 4'd0;
-            id_s1        <= 4'd0;
-            id_s2        <= 4'd0;
-            id_imm       <= 12'd0;
-            id_gpr_s1    <= {`XLEN{1'b0}};
-            id_gpr_s2    <= {`XLEN{1'b0}};
-            id_hreg_s1   <= {`HREG_W{1'b0}};
-            id_hreg_s2   <= {`HREG_W{1'b0}};
-            id_pc        <= {`XLEN{1'b0}};
-            id_gpr_we    <= 1'b0;
-            id_hreg_we   <= 1'b0;
-            id_mem_read  <= 1'b0;
-            id_mem_write <= 1'b0;
-            id_is_branch <= 1'b0;
-            id_is_jump   <= 1'b0;
-            id_is_call   <= 1'b0;
-            id_is_ret    <= 1'b0;
-            id_is_codex  <= 1'b0;
-            id_is_halt   <= 1'b0;
-            id_is_print  <= 1'b0;
-            id_is_emits  <= 1'b0;
-            id_is_push   <= 1'b0;
-            id_is_pop    <= 1'b0;
+            id_opcode      <= `OP_NOP;
+            id_dst         <= 4'd0;
+            id_s1          <= 4'd0;
+            id_s2          <= 4'd0;
+            id_imm         <= 12'd0;
+            id_gpr_s1      <= {`XLEN{1'b0}};
+            id_gpr_s2      <= {`XLEN{1'b0}};
+            id_hreg_s1     <= {`HREG_W{1'b0}};
+            id_hreg_s2     <= {`HREG_W{1'b0}};
+            id_hreg_ovf_s1 <= 1'b0;
+            id_hreg_ovf_s2 <= 1'b0;
+            id_pc          <= {`XLEN{1'b0}};
+            id_gpr_we      <= 1'b0;
+            id_hreg_we     <= 1'b0;
+            id_mem_read    <= 1'b0;
+            id_mem_write   <= 1'b0;
+            id_is_branch   <= 1'b0;
+            id_is_jump     <= 1'b0;
+            id_is_call     <= 1'b0;
+            id_is_ret      <= 1'b0;
+            id_is_codex    <= 1'b0;
+            id_is_halt     <= 1'b0;
+            id_is_print    <= 1'b0;
+            id_is_emits    <= 1'b0;
+            id_is_push     <= 1'b0;
+            id_is_pop      <= 1'b0;
         end else if (!stall) begin
             // Latch fields
-            id_opcode  <= opcode;
-            id_dst     <= dst;
-            id_s1      <= s1;
-            id_s2      <= s2;
-            id_imm     <= imm;
-            id_gpr_s1  <= gpr_rdata1;
-            id_gpr_s2  <= gpr_rdata2;
-            id_hreg_s1 <= hreg_rdata1;
-            id_hreg_s2 <= hreg_rdata2;
-            id_pc      <= if_pc;
+            id_opcode      <= opcode;
+            id_dst         <= dst;
+            id_s1          <= s1;
+            id_s2          <= s2;
+            id_imm         <= imm;
+            id_gpr_s1      <= gpr_rdata1;
+            id_gpr_s2      <= gpr_rdata2;
+            id_hreg_s1     <= hreg_rdata1;
+            id_hreg_s2     <= hreg_rdata2;
+            id_hreg_ovf_s1 <= hreg_ovf_rdata1;
+            id_hreg_ovf_s2 <= hreg_ovf_rdata2;
+            id_pc          <= if_pc;
 
             // ── Control signal decode ───────────────────────────
             // Defaults
@@ -323,6 +333,7 @@ module hcpu_decode (
                 `OP_CEQ:   begin id_is_codex <= 1'b1; end
                 `OP_CRHO:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_CU:    begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_HDOT:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_CMOD4: begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
 

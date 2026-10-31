@@ -26,6 +26,8 @@ module hcpu_execute #(
     input  wire [`XLEN-1:0]        id_gpr_s2,
     input  wire [`HREG_W-1:0]      id_hreg_s1,
     input  wire [`HREG_W-1:0]      id_hreg_s2,
+    input  wire                    id_hreg_ovf_s1,
+    input  wire                    id_hreg_ovf_s2,
     input  wire [`XLEN-1:0]        id_pc,
     input  wire                    id_gpr_we,
     input  wire                    id_hreg_we,
@@ -62,6 +64,7 @@ module hcpu_execute #(
     output wire [`XLEN-1:0]        calu_scl,
     input  wire [`HREG_W-1:0]      calu_result_vec,
     input  wire [`XLEN-1:0]        calu_result_scl,
+    input  wire                    calu_add_ovf,
 
     // ── HISAB serializer interface ───────────────────────────
     input  wire [`XLEN-1:0]        hisab_pack0,
@@ -74,6 +77,7 @@ module hcpu_execute #(
     output reg  [3:0]              ex_dst,
     output reg  [`XLEN-1:0]        ex_gpr_result,
     output reg  [`HREG_W-1:0]      ex_hreg_result,
+    output reg                     ex_hreg_ovf,
     output reg                     ex_gpr_we,
     output reg                     ex_hreg_we,
     output reg  [7:0]              ex_flags_new,
@@ -204,7 +208,8 @@ module hcpu_execute #(
                        (id_opcode == `OP_HDIST) ? 3'd2 :
                        (id_opcode == `OP_CGET) ? 3'd3 :
                        (id_opcode == `OP_CSET) ? 3'd4 :
-                       (id_opcode == `OP_CMOD4) ? 3'd5 : 3'd0;
+                       (id_opcode == `OP_CMOD4) ? 3'd5 :
+                       (id_opcode == `OP_HDOT) ? 3'd6 : 3'd0;
     // CGET and CSET both name their component in the immediate.
     assign calu_index = id_imm;
     assign calu_src1 = id_hreg_s1;
@@ -221,27 +226,45 @@ module hcpu_execute #(
     // component's eight bits happens in the ALU, where that width is stated.
     assign calu_scl = id_gpr_s1;
 
-    // Codex result mux
+    // Codex result mux + sticky 8-bit overflow propagation (Alternative A1)
     reg [`HREG_W-1:0] codex_hvec;
     reg [`XLEN-1:0]   codex_gpr;
+    reg               codex_hovf;
 
     always @(*) begin
         codex_hvec = {`HREG_W{1'b0}};
         codex_gpr  = {`XLEN{1'b0}};
+        codex_hovf = 1'b0;
         case (id_opcode)
-            `OP_HLOAD: codex_hvec = rom_data;
-            `OP_HCADD: codex_hvec = calu_result_vec;
+            `OP_HLOAD: begin
+                codex_hvec = rom_data;
+                codex_hovf = 1'b0;
+            end
+            `OP_HCADD: begin
+                codex_hvec = calu_result_vec;
+                codex_hovf = id_hreg_ovf_s1 | id_hreg_ovf_s2 | calu_add_ovf;
+            end
             `OP_HNRM2: codex_gpr  = calu_result_scl;
             `OP_HDIST: codex_gpr  = calu_result_scl;
-            `OP_CGET: codex_gpr  = calu_result_scl;
+            `OP_HDOT:  codex_gpr  = calu_result_scl;
+            `OP_CGET:  codex_gpr  = calu_result_scl;
             // CSET is the write half: the ALU hands back the whole codex with
             // one component replaced, and the H-Reg write enable carries it to
             // the register file.
-            `OP_CSET: codex_hvec = calu_result_vec;
+            `OP_CSET: begin
+                codex_hvec = calu_result_vec;
+                codex_hovf = id_hreg_ovf_s2;
+            end
             // CMOV and CZERO need no ALU: one is the source itself, the other
             // is the identity of the monoid the codex lives in.
-            `OP_CMOV:  codex_hvec = id_hreg_s1;
-            `OP_CZERO: codex_hvec = {`HREG_W{1'b0}};
+            `OP_CMOV: begin
+                codex_hvec = id_hreg_s1;
+                codex_hovf = id_hreg_ovf_s1;
+            end
+            `OP_CZERO: begin
+                codex_hvec = {`HREG_W{1'b0}};
+                codex_hovf = 1'b0;
+            end
             `OP_CMOD4: codex_gpr  = calu_result_scl;
             // U and rho arrive from the guard, which is already looking at
             // this same vector: guard_vec is id_hreg_s1.
@@ -268,7 +291,10 @@ module hcpu_execute #(
             // declaration rather than a measurement -- so nothing disagreed.
             // ||Ba+Sin+Mim||^2 is 112 through HLOAD/HCADD and was 0 through
             // the letters.
-            default:   if (is_letter) codex_hvec = calu_result_vec;
+            default: if (is_letter) begin
+                codex_hvec = calu_result_vec;
+                codex_hovf = id_hreg_ovf_s1 | calu_add_ovf;
+            end
         endcase
     end
 
@@ -394,6 +420,7 @@ module hcpu_execute #(
             ex_dst         <= 4'd0;
             ex_gpr_result  <= {`XLEN{1'b0}};
             ex_hreg_result <= {`HREG_W{1'b0}};
+            ex_hreg_ovf    <= 1'b0;
             ex_gpr_we      <= 1'b0;
             ex_hreg_we     <= 1'b0;
             ex_flags_new   <= 8'h00;
@@ -415,6 +442,7 @@ module hcpu_execute #(
             ex_dst         <= 4'd0;
             ex_gpr_result  <= {`XLEN{1'b0}};
             ex_hreg_result <= {`HREG_W{1'b0}};
+            ex_hreg_ovf    <= 1'b0;
             ex_gpr_we      <= 1'b0;
             ex_hreg_we     <= 1'b0;
             ex_flags_new   <= 8'h00;
@@ -459,7 +487,7 @@ module hcpu_execute #(
 
             // GPR result selection
             if (id_is_codex && (id_opcode == `OP_HNRM2 || id_opcode == `OP_HDIST ||
-                                id_opcode == `OP_CGET ||
+                                id_opcode == `OP_HDOT  || id_opcode == `OP_CGET  ||
                                 id_opcode == `OP_CMOD4 ||
                                 id_opcode == `OP_CU   || id_opcode == `OP_CRHO ||
                                 id_opcode == `OP_HPACK || id_opcode == `OP_HCRC))
@@ -479,8 +507,9 @@ module hcpu_execute #(
             else
                 ex_gpr_result <= alu_result;
 
-            // H-Reg result
+            // H-Reg result + sticky overflow bit
             ex_hreg_result <= codex_hvec;
+            ex_hreg_ovf    <= codex_hovf;
 
             // Write enables
             ex_gpr_we  <= id_gpr_we;
@@ -488,8 +517,8 @@ module hcpu_execute #(
 
             // Flags
             if (id_opcode == `OP_HGRD) begin
-                // Guard check — update GUARD flag
-                ex_flags_new <= {current_flags[7:1], guard_pass};
+                // Guard check — update GUARD flag (G1-G4, T1-T2, H*, and ~sticky_ovf)
+                ex_flags_new <= {current_flags[7:1], guard_pass & ~id_hreg_ovf_s1};
                 ex_flags_we  <= 1'b1;
             end else if (id_opcode == `OP_CEQ) begin
                 // CEQ sets Z and touches nothing else, the way CMP does for

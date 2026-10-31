@@ -107,13 +107,24 @@ def _get_parity_sim_binary() -> Path | None:
     global _PARITY_SIM_CACHE
     if shutil.which("iverilog") is None or shutil.which("vvp") is None:
         return None
-    if _PARITY_SIM_CACHE is not None and _PARITY_SIM_CACHE.is_file():
-        return _PARITY_SIM_CACHE
 
     out_dir = Path(tempfile.gettempdir()) / "hijaiyyah_cells_rtl_sim"
     out_dir.mkdir(parents=True, exist_ok=True)
     vvp_path = out_dir / "tb_parity_cells.vvp"
-    if not vvp_path.is_file():
+    rtl_files = [
+        TB_DIR / "tb_parity.v",
+        *sorted((ROOT / "rtl").glob("*.v")),
+        *sorted((ROOT / "rtl").glob("*.vh")),
+    ]
+    newest_rtl_mtime = max(p.stat().st_mtime for p in rtl_files if p.is_file())
+    if (
+        _PARITY_SIM_CACHE is not None
+        and _PARITY_SIM_CACHE.is_file()
+        and _PARITY_SIM_CACHE.stat().st_mtime >= newest_rtl_mtime
+    ):
+        return _PARITY_SIM_CACHE
+
+    if not vvp_path.is_file() or vvp_path.stat().st_mtime < newest_rtl_mtime:
         sources = [
             str(TB_DIR / "tb_parity.v"),
             *sorted(str(p) for p in (ROOT / "rtl").glob("*.v")),
@@ -225,22 +236,38 @@ def _run_hvm_program(
         return
 
     hfs_files: dict[int, tuple[int, ...]] = {}
+    hreg_ovf: list[bool] = [False] * 16
     while not hvm._halted and hvm.cycle < 50000:
         pc_before = hvm.regs.pc
         raw_iw = hvm.code[pc_before] if 0 <= pc_before < len(hvm.code) else 0
         op_byte = (raw_iw >> 24) & 0xFF
+        dst_idx = (raw_iw >> 20) & 0xF
         s1_idx = (raw_iw >> 16) & 0xF
+        s2_idx = (raw_iw >> 12) & 0xF
         step_entry = hvm.step()
         if step_entry is None:
             break
         if wrap_hreg_8bit:
+            if op_byte == 0x40 or op_byte == 0x47:  # HLOAD or CZERO clears sticky ovf
+                hreg_ovf[dst_idx] = False
+            elif op_byte == 0x46:  # CMOV copies sticky ovf
+                hreg_ovf[dst_idx] = hreg_ovf[s1_idx]
+            elif op_byte == 0x42:  # HCADD latches sticky ovf if any lane > 255
+                any_ovf = any(int(c) > 255 for c in hvm.regs.hreg[dst_idx])
+                hreg_ovf[dst_idx] = hreg_ovf[s1_idx] or hreg_ovf[s2_idx] or any_ovf
+            elif 0xE0 <= op_byte <= 0xFB:  # Letter instruction into H0
+                any_ovf = any(int(c) > 255 for c in hvm.regs.hreg[0])
+                hreg_ovf[0] = hreg_ovf[0] or any_ovf
             for h_idx in range(len(hvm.regs.hreg)):
                 hvm.regs.hreg[h_idx] = [int(c) & 0xFF for c in hvm.regs.hreg[h_idx]]
             if op_byte == 0x4C:  # CRHO in 8-bit hardware returns 32-bit two's complement
-                dst_idx = (raw_iw >> 20) & 0xF
                 hvm.regs.gpr[dst_idx] = int(hvm.regs.gpr[dst_idx]) & 0xFFFFFFFF
-            elif op_byte == 0x60:  # HGRD on 8-bit wrapped H-Reg
-                hvm.regs.sr.guard_pass = bool(guard_check(hvm.regs.hreg[s1_idx]))
+            elif op_byte == 0x60:  # HGRD on 8-bit wrapped H-Reg (coupled H* + sticky ovf)
+                v = hvm.regs.hreg[s1_idx]
+                hstar_ok = (v[17] == v[7]) and (v[17] <= (v[0] >> 1))
+                hvm.regs.sr.guard_pass = bool(
+                    guard_check(v) and hstar_ok and not hreg_ovf[s1_idx]
+                )
         if hvm._syscall:
             hvm._syscall = False
             sys_num = int(hvm.regs.gpr[1]) & 0xFFFFFFFF
@@ -400,6 +427,8 @@ def compile_and_execute_cells(
     is_hc_compat: bool = False,
     use_native_letter_opcodes: bool = True,
     reuse_registers: bool = True,
+    use_hw_sticky_guard: bool = False,
+    use_native_hdot: bool = False,
     run_rtl: bool = True,
     run_rtl_loader: bool = False,
     load_addr: int = DEFAULT_OVERLAY_LOAD_ADDR,
@@ -418,6 +447,8 @@ def compile_and_execute_cells(
     backend = CellHISABackend(
         use_native_letter_opcodes=use_native_letter_opcodes,
         reuse_registers=reuse_registers,
+        use_hw_sticky_guard=use_hw_sticky_guard,
+        use_native_hdot=use_native_hdot,
     )
     compiled = backend.compile(graph)
     compile_ms = (time.perf_counter() - t0) * 1000.0

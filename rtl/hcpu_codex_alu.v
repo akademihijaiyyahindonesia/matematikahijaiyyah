@@ -5,38 +5,35 @@
 // ============================================================================
 //
 // Operations (all single-cycle, combinational):
-//   HCADD: H[dst] ← H[s1] + H[s2]   (18 × 8-bit parallel adds)
+//   HCADD: H[dst] ← H[s1] + H[s2]   (18 × 8-bit parallel adds + lane overflow)
 //   HNRM2: GPR[dst] ← ‖H[s1]‖²₁₄   (sum of squares, 14 components)
 //   HDIST: GPR[dst] ← ‖H[s1]−H[s2]‖²₁₄  (sq. Euclidean distance)
 //   CGET: GPR[dst] ← H[s1][index]      (one codex component)
 //   CSET: H[dst][index] ← GPR[s1]      (one codex component, written back)
 //   CMOD4: GPR[dst] ← Θ̂(H[s1]) mod 4   (the Mod-4 gate's key)
+//   HDOT: GPR[dst] ← ⟨H[s1], H[s2]⟩₁₄  (20-bit unsigned inner product, A2)
 //
-// CSET is the write half of CGET, and it reads the register it writes: the
-// other seventeen components have to survive, so the codex being modified
-// arrives on src2 (decode points the second H-Reg read port at DST) and the
-// scalar being written arrives on src_scl.
-//
-// Values in the master table are small (max Θ̂=8), so:
-//   - Each square fits in 7 bits (max 64)
-//   - Sum of 14 squares fits in 11 bits (max 896)
-//   - For accumulated strings (HCADD), 8-bit per component
-//     supports up to ~30 characters safely.
-//
+// Unified 14-Lane 8x8 Multiplier & CSA 20-Bit Accumulator Architecture (A2):
+//   HNRM2, HDIST, and HDOT share a SINGLE 14-lane 8x8 unsigned multiplier array
+//   and a SINGLE 14-input 20-bit Carry-Save Adder ($macc) tree:
+//     - ALU_HNRM2: mul_a[i] = s1[i],       mul_b[i] = s1[i]
+//     - ALU_HDIST: mul_a[i] = |s1[i]-s2[i]|, mul_b[i] = |s1[i]-s2[i]|
+//     - ALU_HDOT:  mul_a[i] = s1[i],       mul_b[i] = s2[i]
 
 `include "hcpu_pkg.vh"
 
 module hcpu_codex_alu (
     // Inputs
     input  wire [2:0]              op,         // 0=HCADD 1=HNRM2 2=HDIST 3=CGET
-                                               // 4=CSET 5=CMOD4
+                                               // 4=CSET 5=CMOD4 6=HDOT
     input  wire [11:0]             index,      // CGET/CSET: component 0–17
     input  wire [`HREG_W-1:0]     src1,       // H-Reg source 1 (144-bit)
     input  wire [`HREG_W-1:0]     src2,       // H-Reg source 2 (144-bit), CSET: H[dst]
     input  wire [`XLEN-1:0]       src_scl,    // Scalar source, CSET: GPR[s1]
     // Outputs
     output reg  [`HREG_W-1:0]     result_vec, // Vector result (for HCADD/CSET)
-    output reg  [`XLEN-1:0]       result_scl, // Scalar result (for HNRM2/HDIST)
+    output reg  [`XLEN-1:0]       result_scl, // Scalar result (for HNRM2/HDIST/HDOT)
+    output wire                   add_ovf,    // 1 if any of 18 8-bit lanes overflows (>255) on HCADD
     output wire                   done        // Always 1 (single-cycle)
 );
 
@@ -46,6 +43,7 @@ module hcpu_codex_alu (
     localparam ALU_CGET = 3'd3;
     localparam ALU_CSET = 3'd4;
     localparam ALU_CMOD4 = 3'd5;
+    localparam ALU_HDOT  = 3'd6;
 
     assign done = 1'b1;  // All ops are single-cycle
 
@@ -63,11 +61,17 @@ module hcpu_codex_alu (
 
     // ── HCADD: component-wise addition (18 parallel adds) ───────
     wire [7:0] add_result [0:17];
+    wire [17:0] add_carry;
     generate
         for (gi = 0; gi < 18; gi = gi + 1) begin : cadd
-            assign add_result[gi] = s1[gi] + s2_c[gi];
+            wire [8:0] sum9 = {1'b0, s1[gi]} + {1'b0, s2_c[gi]};
+            assign add_result[gi] = sum9[7:0];
+            assign add_carry[gi]  = sum9[8];
         end
     endgenerate
+
+    // Alternative A1: Hardware Sticky Prefix Guard lane overflow detection
+    assign add_ovf = |add_carry;
 
     // Pack addition result back into 144-bit vector
     wire [`HREG_W-1:0] packed_add;
@@ -78,43 +82,34 @@ module hcpu_codex_alu (
                          add_result[ 5], add_result[ 4], add_result[ 3],
                          add_result[ 2], add_result[ 1], add_result[ 0]};
 
-    // ── HNRM2: ‖v‖² = Σ v[i]² for i=0..13 (codex14) ───────────
-    // Each v[i] ≤ 8, so v[i]² ≤ 64 (7 bits). Sum of 14 ≤ 896 (10 bits).
-    wire [15:0] sq1 [0:13];
+    // ── Unified 14-Lane 8x8 Unsigned Multiplier & CSA 20-Bit Adder Tree ──
+    wire [7:0]  abs_diff  [0:13];
+    wire [7:0]  mul_a     [0:13];
+    wire [7:0]  mul_b     [0:13];
+    wire [15:0] lane_prod [0:13];
+
     generate
-        for (gi = 0; gi < 14; gi = gi + 1) begin : sq_norm
-            assign sq1[gi] = s1[gi] * s1[gi];
+        for (gi = 0; gi < 14; gi = gi + 1) begin : unified_mac14
+            assign abs_diff[gi]  = (s1[gi] >= s2_c[gi]) ? (s1[gi] - s2_c[gi])
+                                                        : (s2_c[gi] - s1[gi]);
+            assign mul_a[gi]     = (op == ALU_HDIST) ? abs_diff[gi] : s1[gi];
+            assign mul_b[gi]     = (op == ALU_HDIST) ? abs_diff[gi] :
+                                   (op == ALU_HDOT)  ? s2_c[gi]     : s1[gi];
+            assign lane_prod[gi] = mul_a[gi] * mul_b[gi];
         end
     endgenerate
 
-    // Adder tree for sum of 14 squares
-    wire [15:0] norm2_sum;
-    assign norm2_sum = sq1[ 0] + sq1[ 1] + sq1[ 2] + sq1[ 3]
-                     + sq1[ 4] + sq1[ 5] + sq1[ 6] + sq1[ 7]
-                     + sq1[ 8] + sq1[ 9] + sq1[10] + sq1[11]
-                     + sq1[12] + sq1[13];
-
-    // ── HDIST: ‖s1−s2‖² = Σ (s1[i]−s2[i])² for i=0..13 ────────
-    wire signed [8:0] diff [0:13];
-    wire [15:0] sq_diff [0:13];
-    generate
-        for (gi = 0; gi < 14; gi = gi + 1) begin : sq_dist
-            assign diff[gi]    = $signed({1'b0, s1[gi]}) - $signed({1'b0, s2_c[gi]});
-            assign sq_diff[gi] = diff[gi] * diff[gi];
-        end
-    endgenerate
-
-    wire [15:0] dist2_sum;
-    assign dist2_sum = sq_diff[ 0] + sq_diff[ 1] + sq_diff[ 2] + sq_diff[ 3]
-                     + sq_diff[ 4] + sq_diff[ 5] + sq_diff[ 6] + sq_diff[ 7]
-                     + sq_diff[ 8] + sq_diff[ 9] + sq_diff[10] + sq_diff[11]
-                     + sq_diff[12] + sq_diff[13];
+    // Single expression enables Yosys alumacc to build a Carry-Save Adder (CSA) tree
+    wire [19:0] mac14_sum;
+    assign mac14_sum = {4'd0, lane_prod[ 0]} + {4'd0, lane_prod[ 1]}
+                     + {4'd0, lane_prod[ 2]} + {4'd0, lane_prod[ 3]}
+                     + {4'd0, lane_prod[ 4]} + {4'd0, lane_prod[ 5]}
+                     + {4'd0, lane_prod[ 6]} + {4'd0, lane_prod[ 7]}
+                     + {4'd0, lane_prod[ 8]} + {4'd0, lane_prod[ 9]}
+                     + {4'd0, lane_prod[10]} + {4'd0, lane_prod[11]}
+                     + {4'd0, lane_prod[12]} + {4'd0, lane_prod[13]};
 
     // ── CSET: one component replaced, seventeen kept ────────────
-    // A component is eight bits wide (HREG_W = 18 × 8), so only the low byte
-    // of the scalar can land in one. The interpreter masks with 0xFF for the
-    // same reason -- a width that differs between the two machines is exactly
-    // how HLOAD's 0-based/1-based split stayed invisible.
     wire [7:0] set_shift = {index[4:0], 3'b000};          // component × 8 bits
     wire [`HREG_W-1:0] set_mask  = {{(`HREG_W-8){1'b0}}, 8'hFF}         << set_shift;
     wire [`HREG_W-1:0] set_field = {{(`HREG_W-8){1'b0}}, src_scl[7:0]}  << set_shift;
@@ -126,26 +121,12 @@ module hcpu_codex_alu (
         result_scl = {`XLEN{1'b0}};
         case (op)
             ALU_HCADD: result_vec = packed_add;
-            ALU_HNRM2: result_scl = {16'd0, norm2_sum};
-            ALU_HDIST: result_scl = {16'd0, dist2_sum};
-            // CSET writes one component back into the codex it came from. An
-            // index past 17 names no component, so the register keeps the
-            // value it had -- the same convention CGET uses when it returns
-            // zero for an index that names nothing.
-            ALU_CSET: result_vec = (index <= 12'd17) ? packed_set : src2;
-            // Theta-hat mod 4 is the low two bits of component 0, read off the
-            // register rather than computed: the Mod-4 gate of IC.1.27 is a
-            // congruence, and a congruence modulo a power of two is a slice.
+            ALU_HNRM2,
+            ALU_HDIST,
+            ALU_HDOT:  result_scl = {12'd0, mac14_sum};
+            ALU_CSET:  result_vec = (index <= 12'd17) ? packed_set : src2;
             ALU_CMOD4: result_scl = {30'd0, s1[0][1:0]};
-            // CGET reads one component out of the codex. An index past
-            // 17 has no component to name, so it yields zero rather than
-            // whatever the wider bus happens to carry.
-            // The whole 12-bit immediate is compared, not its low five
-            // bits. Truncating first made IMM=99 arrive as 3 and return Ba's
-            // Nd, where the Python machine checked the full immediate and
-            // returned 0 — the two disagreed for every out-of-range index
-            // whose low five bits named a non-zero component.
-            ALU_CGET: result_scl = (index <= 12'd17)
+            ALU_CGET:  result_scl = (index <= 12'd17)
                                   ? {24'd0, s1[index[4:0]]} : {`XLEN{1'b0}};
             default: begin
                 result_vec = {`HREG_W{1'b0}};

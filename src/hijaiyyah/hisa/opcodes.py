@@ -184,6 +184,7 @@ class OpCode(IntEnum):
     VDIST = 0x4B    # Squared distance → GPR      (software only; RTL: HDIST)
     CRHO = 0x4C     # GPR[dst] ← ρ(H[s1]) = Θ̂ − U, signed
     CU = 0x4D       # GPR[dst] ← U(H[s1]) = Qx + Qs + Qa + 4·Qc
+    HDOT = 0x4E     # GPR[dst] ← ⟨H[s1], H[s2]⟩₁₄ (20-bit unsigned, Alternative A2)
     CMOD4 = 0x4F    # GPR[dst] ← Θ̂(H[s1]) mod 4
 
     HPACK = 0x50    # Nibble-pack a hybit into words

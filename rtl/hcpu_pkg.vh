@@ -181,9 +181,10 @@
 `define OP_CEQ         8'h48       // FLAGS.Z ← (H[S1] == H[S2])
 `define OP_CRHO        8'h4C       // GPR[DST] ← ρ(H[S1]) = Θ̂ − U   (signed)
 `define OP_CU          8'h4D       // GPR[DST] ← U(H[S1]) = Qx+Qs+Qa+4·Qc
+  `define OP_HDOT        8'd78       // GPR[DST] ← ⟨H[S1], H[S2]⟩₁₄   (20-bit unsigned, 0x4E)
 `define OP_CMOD4       8'h4F       // GPR[DST] ← Θ̂(H[S1]) mod 4
 `define OP_HCADD        8'h42       // H[DST] ← H[S1] + H[S2]  (18×add)
-`define OP_HGRD         8'h60       // Guard G1–G4,T1–T2 on H[S1] → GUARD flag
+`define OP_HGRD         8'h60       // Guard G1–G4,T1–T2,H* on H[S1] → GUARD flag
 `define OP_HNRM2        8'h06       // GPR[DST] ← ‖H[S1]‖²₁₄
 `define OP_HDIST        8'h07       // GPR[DST] ← ‖H[S1]−H[S2]‖²₁₄
 
@@ -262,7 +263,9 @@
 `define SD_SECTOR         4'h2       // RW: the block number
 `define SD_DATA           4'h3       // RW: one buffer word, index advances
 `define SD_CONTROL        4'h4       // RW: bit0 reset index, bit1 reset ctrl
-// 0xFE5-0xFEF remain free. Eleven words of affordance, not a gap to fill.
+`define SD_CSUM           4'h5       // R: 32-bit streaming Checksum32 of last read sector (Alternative A3)
+`define SD_PRESCAN        4'h6       // R: 4-B' opcode pre-scan status of last read sector (Alternative A3)
+// 0xFE7-0xFEF remain free. Nine words of affordance, not a gap to fill.
 
 // ── The boot path ───────────────────────────────────────────────
 // Without these the program lives inside the bitstream: $readmemh puts it

@@ -94,6 +94,8 @@ module hcpu_sdio #(
     input  wire [6:0]  buf_addr,
     input  wire [31:0] buf_wdata,
     output reg  [31:0] buf_rdata,
+    output wire [31:0] sector_csum,    // Alternative A3: streaming Checksum32
+    output wire [31:0] prescan_status, // Alternative A3: 4-B' opcode pre-scan
 
     // ── the card ────────────────────────────────────────────────
     output reg         sd_clk,
@@ -171,6 +173,67 @@ module hcpu_sdio #(
             crc16_step = {c[14:0], 1'b0} ^ ((c[15] ^ b) ? 16'h1021 : 16'h0000);
         end
     endfunction
+
+    // ── Alternative A3: Streaming Sector Checksum32 & 4-B' Pre-Scan ──
+    // Computes 32-bit additive Checksum32 (Σ word[i] mod 2^32) and 4-B'
+    // user-mode opcode validity inline as each 32-bit word is assembled
+    // during S_DAT_RECV (or written via buf_we).
+    reg [31:0] csum_acc;
+    reg        prescan_all_bad;   // 1 if any word in 0..127 has invalid/forbidden 4-B' opcode
+    reg        prescan_body_bad;  // 1 if any word in 7..127 (after 7-word HPG1 header) is bad
+    reg  [6:0] prescan_first_idx; // word index (0..127) of first offending word
+    reg  [7:0] prescan_bad_cnt;   // count of offending words in sector
+    reg  [7:0] prescan_first_opc; // opcode byte [31:24] of first offending word
+
+    // Exact 4-B' opcode table from hos_prog_load.hasm (H-ISA v1.2 user-mode legal set):
+    //   0x00 (NOP), 0x03..0x04 (MOV/MOVI), 0x06..0x07 (HNRM2/HDIST),
+    //   0x09..0x0B (SYSCALL/FRD/FWR) — note 0x01 (HALT) & 0x08 (ERET) are FORBIDDEN!
+    //   0x10..0x12 (ADD/ADDI/SUB), 0x14 (MUL),
+    //   0x20..0x24 (CMP..JNE), 0x29..0x2A (JGD/JNGD), 0x2E..0x2F (CALL/RET),
+    //   0x30..0x33 (LOAD/STORE/PUSH/POP),
+    //   0x40 (HLOAD), 0x42 (HCADD), 0x44..0x48 (CGET..CEQ), 0x4C..0x4F (CRHO/CU/HDOT/CMOD4),
+    //   0x50..0x51 (HPACK/HCRC), 0x60 (HGRD), 0xA0 (PRINT), 0xA2 (EMITS),
+    //   0xB0..0xBA (AND..SHRI), 0xE0..0xFB (28 letter instructions).
+    function is_invalid_4b_prime_opcode;
+        input [7:0] opc;
+        begin
+            case (opc)
+                8'h00,
+                8'h03, 8'h04,
+                8'h06, 8'h07,
+                8'h09, 8'h0A, 8'h0B,
+                8'h10, 8'h11, 8'h12, 8'h14,
+                8'h20, 8'h21, 8'h22, 8'h23, 8'h24,
+                8'h29, 8'h2A, 8'h2E, 8'h2F,
+                8'h30, 8'h31, 8'h32, 8'h33,
+                8'h40, 8'h42,
+                8'h44, 8'h45, 8'h46, 8'h47, 8'h48,
+                8'h4C, 8'h4D, 8'h4E, 8'h4F,
+                8'h50, 8'h51,
+                8'h60,
+                8'hA0, 8'hA2,
+                8'hB0, 8'hB1, 8'hB2, 8'hB3, 8'hB4, 8'hB5,
+                8'hB6, 8'hB7, 8'hB8, 8'hB9, 8'hBA:
+                    is_invalid_4b_prime_opcode = 1'b0;
+                default: begin
+                    if (opc >= 8'hE0 && opc <= 8'hFB)
+                        is_invalid_4b_prime_opcode = 1'b0;
+                    else
+                        is_invalid_4b_prime_opcode = 1'b1;
+                end
+            endcase
+        end
+    endfunction
+
+    assign sector_csum = csum_acc;
+    assign prescan_status = {
+        prescan_first_opc,          // [31:24] first offending opcode byte
+        prescan_bad_cnt,            // [23:16] number of offending words
+        1'b0, prescan_first_idx,    // [15:8]  word index (0..127) of first violation
+        6'd0,
+        prescan_body_bad,           // [1]     1 if any word in 7..127 is invalid/forbidden
+        prescan_all_bad             // [0]     1 if any word in 0..127 is invalid/forbidden
+    };
 
     // ── the sector buffer: 128 words, block RAM ─────────────────
     // 512 bytes, exactly one sector, and it stays in BSRAM. The board tried to
@@ -270,6 +333,15 @@ module hcpu_sdio #(
     reg [2:0]   ack_sh;
     reg [19:0]  acmd41_tries;
 
+    wire [31:0] rx_word_assembled = {word_sh[30:0], dat_in};
+    wire        a3_rx_strobe      = (state == S_DAT_RECV) && tick_rise && (dat_cnt[4:0] == 5'd31);
+    wire        a3_buf_strobe     = (!busy) && buf_we;
+    wire        a3_word_strobe    = a3_rx_strobe || a3_buf_strobe;
+    wire        a3_word_reset     = a3_buf_strobe && (buf_addr == 7'd0);
+    wire [6:0]  a3_word_idx       = busy ? dat_cnt[11:5]     : buf_addr;
+    wire [31:0] a3_word_data      = busy ? rx_word_assembled : buf_wdata;
+    wire        a3_word_bad_opc   = is_invalid_4b_prime_opcode(a3_word_data[31:24]);
+
     // ── the CPU-side buffer port ────────────────────────────────
     // Only reachable while the controller is idle; a read or write during a
     // transfer would fight the FSM for the same array. `busy` is what a driver
@@ -311,8 +383,36 @@ module hcpu_sdio #(
             fsm_we       <= 1'b0;
             acmd41_tries <= 20'd0;
             gap_cnt      <= 8'd0;
+            csum_acc          <= 32'd0;
+            prescan_all_bad   <= 1'b0;
+            prescan_body_bad  <= 1'b0;
+            prescan_first_idx <= 7'd0;
+            prescan_bad_cnt   <= 8'd0;
+            prescan_first_opc <= 8'd0;
         end else begin
             fsm_we <= 1'b0;
+
+            // Alternative A3: shared streaming Checksum32 & 4-B' pre-scan update
+            // (shared by both S_DAT_RECV and idle host buf_we)
+            if (a3_word_strobe) begin
+                csum_acc <= a3_word_reset ? a3_word_data : (csum_acc + a3_word_data);
+                if (a3_word_reset) begin
+                    prescan_all_bad   <= a3_word_bad_opc;
+                    prescan_body_bad  <= 1'b0;
+                    prescan_first_idx <= 7'd0;
+                    prescan_bad_cnt   <= a3_word_bad_opc ? 8'd1 : 8'd0;
+                    prescan_first_opc <= a3_word_bad_opc ? a3_word_data[31:24] : 8'd0;
+                end else if (a3_word_bad_opc) begin
+                    if (!prescan_all_bad) begin
+                        prescan_first_idx <= a3_word_idx;
+                        prescan_first_opc <= a3_word_data[31:24];
+                    end
+                    prescan_all_bad <= 1'b1;
+                    if (a3_word_idx >= 7'd7)
+                        prescan_body_bad <= 1'b1;
+                    prescan_bad_cnt <= prescan_bad_cnt + 8'd1;
+                end
+            end
 
             case (state)
 
@@ -547,10 +647,16 @@ module hcpu_sdio #(
                     state      <= S_FINISH;
                 end
                 5'd10: begin
-                    dat_cnt <= 13'd0;
-                    crc16   <= 16'd0;
-                    timeout <= TIMEOUT[TO_W-1:0];
-                    state   <= S_DAT_WAIT;
+                    dat_cnt           <= 13'd0;
+                    crc16             <= 16'd0;
+                    csum_acc          <= 32'd0;
+                    prescan_all_bad   <= 1'b0;
+                    prescan_body_bad  <= 1'b0;
+                    prescan_first_idx <= 7'd0;
+                    prescan_bad_cnt   <= 8'd0;
+                    prescan_first_opc <= 8'd0;
+                    timeout           <= TIMEOUT[TO_W-1:0];
+                    state             <= S_DAT_WAIT;
                 end
                 5'd12: begin
                     bit_cnt <= 8'd0;
@@ -578,11 +684,11 @@ module hcpu_sdio #(
 
             S_DAT_RECV: begin
                 if (tick_rise) begin
-                    word_sh <= {word_sh[30:0], dat_in};
+                    word_sh <= rx_word_assembled;
                     crc16   <= crc16_step(crc16, dat_in);
                     if (dat_cnt[4:0] == 5'd31) begin
                         fsm_addr  <= dat_cnt[11:5];
-                        fsm_wdata <= {word_sh[30:0], dat_in};
+                        fsm_wdata <= rx_word_assembled;
                         fsm_we    <= 1'b1;
                     end
                     if (dat_cnt == 13'd4095) begin

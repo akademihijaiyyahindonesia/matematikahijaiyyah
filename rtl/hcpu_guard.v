@@ -61,6 +61,7 @@ module hcpu_guard #(
     wire [7:0] a_n   = vec[8*`C_AN    +: 8];   // A_N
     wire [7:0] a_k   = vec[8*`C_AK    +: 8];   // A_K
     wire [7:0] a_q   = vec[8*`C_AQ    +: 8];   // A_Q
+    wire [7:0] hstar = vec[8*`C_HSTAR +: 8];   // H*
 
     // ── G1: A_N = Na + Nb + Nd ──────────────────────────────────
     wire [9:0] sum_n = na + nb + nd;
@@ -100,9 +101,13 @@ module hcpu_guard #(
     // mask a corrupted ROM entry and was removed once the data was corrected.)
     wire t2_comb = (kc == 8'd0) || (qc >= 8'd1);
 
+    // ── H* Coupled Structural Guard (HMCL Alternative A1) ───────
+    // H* == Ka AND 2*H* <= Theta_hat (equivalently H* <= floor(Theta_hat/2))
+    wire hstar_comb = (hstar == ka) && (hstar <= {1'b0, theta[7:1]});
+
     // ── Combined combinational result ───────────────────────────
     wire guard_pass_comb = g1_comb & g2_comb & g3_comb & g4_comb
-                         & t1_comb & t2_comb;
+                         & t1_comb & t2_comb & hstar_comb;
 
     // ── Output: optional pipeline register ──────────────────────
     generate

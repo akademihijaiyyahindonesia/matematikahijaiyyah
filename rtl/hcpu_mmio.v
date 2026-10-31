@@ -265,6 +265,8 @@ module hcpu_mmio #(
     wire        sd_busy, sd_ok, sd_err, sd_card_ready;
     wire [3:0]  sd_err_code;
     wire [31:0] sd_buf_rdata;
+    wire [31:0] sd_sector_csum;
+    wire [31:0] sd_prescan_status;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -308,6 +310,8 @@ module hcpu_mmio #(
         .div_sel(sd_div),
         .buf_we(sd_data_we), .buf_re(sd_data_re), .buf_addr(sd_index),
         .buf_wdata(wdata), .buf_rdata(sd_buf_rdata),
+        .sector_csum(sd_sector_csum),
+        .prescan_status(sd_prescan_status),
         .sd_clk(sd_clk),
         .cmd_out(sd_cmd_out), .cmd_oe(sd_cmd_oe), .cmd_in(sd_cmd_in),
         .dat_out(sd_dat_out), .dat_oe(sd_dat_oe), .dat_in(sd_dat_in)
@@ -345,6 +349,8 @@ module hcpu_mmio #(
                                                  sd_err, sd_ok, sd_busy};
                     `SD_SECTOR:  periph_rdata <= sd_sector;
                     `SD_CONTROL: periph_rdata <= {28'd0, sd_div, 2'b00};
+                    `SD_CSUM:    periph_rdata <= sd_sector_csum;
+                    `SD_PRESCAN: periph_rdata <= sd_prescan_status;
                     default:     periph_rdata <= {`XLEN{1'b0}};
                 endcase
             end else

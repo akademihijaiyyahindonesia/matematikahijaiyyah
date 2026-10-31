@@ -27,11 +27,14 @@ module hcpu_regfile (
     input  wire [3:0]              hreg_raddr2,
     output wire [`HREG_W-1:0]      hreg_rdata1,
     output wire [`HREG_W-1:0]      hreg_rdata2,
+    output wire                    hreg_ovf_rdata1,
+    output wire                    hreg_ovf_rdata2,
 
     // ── H-Reg write port ────────────────────────────────────────
     input  wire                    hreg_we,
     input  wire [3:0]              hreg_waddr,
     input  wire [`HREG_W-1:0]      hreg_wdata,
+    input  wire                    hreg_ovf_wdata,
 
     // ── FLAGS ─────────────────────────────────────────────────
     input  wire                    flags_we,
@@ -54,6 +57,8 @@ module hcpu_regfile (
 
     // ── H-Reg storage (packed 144-bit per register) ─────────────
     reg [`HREG_W-1:0] hreg [0:`HREG_COUNT-1];
+    // Alternative A1: per-H-Reg sticky 8-bit lane overflow bit
+    reg [`HREG_COUNT-1:0] hreg_ovf;
 
     // ── Special registers ───────────────────────────────────────
     reg [7:0]        flags;
@@ -64,8 +69,10 @@ module hcpu_regfile (
     assign gpr_rdata2 = (gpr_we && gpr_waddr == gpr_raddr2) ? gpr_wdata : gpr[gpr_raddr2];
 
     // ── H-Reg read (with transparent write-through) ─────────────
-    assign hreg_rdata1 = (hreg_we && hreg_waddr == hreg_raddr1) ? hreg_wdata : hreg[hreg_raddr1];
-    assign hreg_rdata2 = (hreg_we && hreg_waddr == hreg_raddr2) ? hreg_wdata : hreg[hreg_raddr2];
+    assign hreg_rdata1     = (hreg_we && hreg_waddr == hreg_raddr1) ? hreg_wdata     : hreg[hreg_raddr1];
+    assign hreg_rdata2     = (hreg_we && hreg_waddr == hreg_raddr2) ? hreg_wdata     : hreg[hreg_raddr2];
+    assign hreg_ovf_rdata1 = (hreg_we && hreg_waddr == hreg_raddr1) ? hreg_ovf_wdata : hreg_ovf[hreg_raddr1];
+    assign hreg_ovf_rdata2 = (hreg_we && hreg_waddr == hreg_raddr2) ? hreg_ovf_wdata : hreg_ovf[hreg_raddr2];
 
     // ── FLAGS / PC read ───────────────────────────────────────
     // FLAGS needs the same write-through GPR and H-Reg already have, above,
@@ -106,13 +113,16 @@ module hcpu_regfile (
                 gpr[i] <= {`XLEN{1'b0}};
             for (i = 0; i < `HREG_COUNT; i = i + 1)
                 hreg[i] <= {`HREG_W{1'b0}};
+            hreg_ovf <= {`HREG_COUNT{1'b0}};
             flags <= 8'h00;
             pc    <= {`XLEN{1'b0}};
         end else begin
             if (gpr_we)
                 gpr[gpr_waddr] <= gpr_wdata;
-            if (hreg_we)
-                hreg[hreg_waddr] <= hreg_wdata;
+            if (hreg_we) begin
+                hreg[hreg_waddr]     <= hreg_wdata;
+                hreg_ovf[hreg_waddr] <= hreg_ovf_wdata;
+            end
             if (flags_we)
                 flags <= flags_in;
             if (pc_we)

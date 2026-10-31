@@ -85,9 +85,13 @@ class CellHISABackend:
         *,
         use_native_letter_opcodes: bool = True,
         reuse_registers: bool = True,
+        use_hw_sticky_guard: bool = False,
+        use_native_hdot: bool = False,
     ) -> None:
         self._use_letter_ops = use_native_letter_opcodes
         self._reuse = reuse_registers
+        self._use_hw_sticky_guard = use_hw_sticky_guard
+        self._use_native_hdot = use_native_hdot
         self._label_counter = 0
 
     def _new_label(self, prefix: str) -> str:
@@ -438,11 +442,25 @@ class CellHISABackend:
                 _, rh = reg_of[r_cid]
                 consume(l_cid)
                 consume(r_cid)
-                dst_h = alloc_h()
+                inplace_target_h: int | None = None
+                if self._use_hw_sticky_guard and remaining_uses.get(cid, 0) == 1:
+                    for other_nd in graph.nodes.values():
+                        if (
+                            other_nd.op == CellOp.VAR_ASSIGN
+                            and len(other_nd.inputs) == 1
+                            and other_nd.inputs[0] == cid
+                            and other_nd.binding_name in graph.bindings
+                        ):
+                            root_c = graph.bindings[other_nd.binding_name]
+                            if root_c in reg_of and reg_of[root_c][0] == "H":
+                                inplace_target_h = reg_of[root_c][1]
+                            break
+                dst_h = inplace_target_h if inplace_target_h is not None else alloc_h()
                 record_and_emit(step_lines, f"HCADD   H{dst_h}, H{lh}, H{rh}")
                 reg_of[cid] = ("H", dst_h)
                 alloc_label = f"H{dst_h}"
-                maybe_free(cid)
+                if inplace_target_h is None:
+                    maybe_free(cid)
 
             elif op == CellOp.HYBIT_EQ:
                 l_cid, r_cid = node.inputs[0], node.inputs[1]
@@ -598,25 +616,34 @@ class CellHISABackend:
                 a_cid, b_cid = node.inputs[0], node.inputs[1]
                 _, ah = reg_of[a_cid]
                 _, bh = reg_of[b_cid]
-                tmp_h = alloc_h()
-                dst_r = alloc_r()
-                tmp_r = alloc_r()
-                record_and_emit(step_lines, f"HCADD   H{tmp_h}, H{ah}, H{bh}")
-                record_and_emit(step_lines, f"HNRM2   R{dst_r}, H{tmp_h}")
-                record_and_emit(step_lines, f"HNRM2   R{tmp_r}, H{ah}")
-                record_and_emit(step_lines, f"SUB     R{dst_r}, R{dst_r}, R{tmp_r}")
-                record_and_emit(step_lines, f"HNRM2   R{tmp_r}, H{bh}")
-                record_and_emit(step_lines, f"SUB     R{dst_r}, R{dst_r}, R{tmp_r}")
-                record_and_emit(step_lines, f"SHRI    R{dst_r}, R{dst_r}, #1")
-                active_h.remove(tmp_h)
-                free_h.insert(0, tmp_h)
-                active_r.remove(tmp_r)
-                free_r.insert(0, tmp_r)
-                consume(a_cid)
-                consume(b_cid)
-                reg_of[cid] = ("R", dst_r)
-                alloc_label = f"R{dst_r}"
-                maybe_free(cid)
+                if self._use_native_hdot:
+                    dst_r = alloc_r()
+                    record_and_emit(step_lines, f"HDOT    R{dst_r}, H{ah}, H{bh}")
+                    consume(a_cid)
+                    consume(b_cid)
+                    reg_of[cid] = ("R", dst_r)
+                    alloc_label = f"R{dst_r}"
+                    maybe_free(cid)
+                else:
+                    tmp_h = alloc_h()
+                    dst_r = alloc_r()
+                    tmp_r = alloc_r()
+                    record_and_emit(step_lines, f"HCADD   H{tmp_h}, H{ah}, H{bh}")
+                    record_and_emit(step_lines, f"HNRM2   R{dst_r}, H{tmp_h}")
+                    record_and_emit(step_lines, f"HNRM2   R{tmp_r}, H{ah}")
+                    record_and_emit(step_lines, f"SUB     R{dst_r}, R{dst_r}, R{tmp_r}")
+                    record_and_emit(step_lines, f"HNRM2   R{tmp_r}, H{bh}")
+                    record_and_emit(step_lines, f"SUB     R{dst_r}, R{dst_r}, R{tmp_r}")
+                    record_and_emit(step_lines, f"SHRI    R{dst_r}, R{dst_r}, #1")
+                    active_h.remove(tmp_h)
+                    free_h.insert(0, tmp_h)
+                    active_r.remove(tmp_r)
+                    free_r.insert(0, tmp_r)
+                    consume(a_cid)
+                    consume(b_cid)
+                    reg_of[cid] = ("R", dst_r)
+                    alloc_label = f"R{dst_r}"
+                    maybe_free(cid)
 
             elif op == CellOp.HISAB_PACK:
                 src_cid = node.inputs[0]
@@ -647,6 +674,12 @@ class CellHISABackend:
                     out.guards_elided += 1
                     comment = f"; HGRD H{sh} dihilangkan — {node.provenance_note}"
                     record_and_emit(step_lines, comment)
+                elif self._use_hw_sticky_guard:
+                    out.guards_emitted += 1
+                    record_and_emit(
+                        step_lines,
+                        f"HGRD    H{sh}   ; HW A1 coupled H* + sticky prefix overflow guard",
+                    )
                 else:
                     out.guards_emitted += 1
                     emit_hybit_check_to_r0(
@@ -863,7 +896,8 @@ class CellHISABackend:
                 )
 
             if (
-                cid in loop_mutated_hybit_roots
+                not self._use_hw_sticky_guard
+                and cid in loop_mutated_hybit_roots
                 and cid not in sticky_reg_of
                 and cid in reg_of
                 and reg_of[cid][0] == "H"

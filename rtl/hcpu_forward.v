@@ -26,6 +26,8 @@ module hcpu_forward (
     input  wire [`XLEN-1:0]        rf_gpr_s2,      // GPR[S2] from regfile
     input  wire [`HREG_W-1:0]      rf_hreg_s1,     // H-Reg[S1] from regfile
     input  wire [`HREG_W-1:0]      rf_hreg_s2,     // H-Reg[S2] from regfile
+    input  wire                    rf_hreg_ovf_s1, // H-Reg[S1] sticky ovf
+    input  wire                    rf_hreg_ovf_s2, // H-Reg[S2] sticky ovf
 
     // ── Execute stage forward ───────────────────────────────────
     input  wire                    ex_gpr_we,       // EX writes GPR
@@ -33,6 +35,7 @@ module hcpu_forward (
     input  wire [3:0]              ex_dst,          // EX destination register
     input  wire [`XLEN-1:0]        ex_gpr_result,   // EX GPR result
     input  wire [`HREG_W-1:0]      ex_hreg_result,  // EX H-Reg result
+    input  wire                    ex_hreg_ovf,     // EX H-Reg sticky ovf
 
     // ── Memory stage forward ────────────────────────────────────
     input  wire                    mem_gpr_we,      // MEM writes GPR
@@ -40,12 +43,15 @@ module hcpu_forward (
     input  wire [3:0]              mem_dst,         // MEM destination register
     input  wire [`XLEN-1:0]        mem_gpr_result,  // MEM GPR result
     input  wire [`HREG_W-1:0]      mem_hreg_result, // MEM H-Reg result
+    input  wire                    mem_hreg_ovf,    // MEM H-Reg sticky ovf
 
     // ── Forwarded output values ─────────────────────────────────
     output reg  [`XLEN-1:0]        fwd_gpr_s1,      // Final GPR S1 value
     output reg  [`XLEN-1:0]        fwd_gpr_s2,      // Final GPR S2 value
     output reg  [`HREG_W-1:0]      fwd_hreg_s1,     // Final H-Reg S1 value
-    output reg  [`HREG_W-1:0]      fwd_hreg_s2      // Final H-Reg S2 value
+    output reg  [`HREG_W-1:0]      fwd_hreg_s2,     // Final H-Reg S2 value
+    output reg                     fwd_hreg_ovf_s1, // Final H-Reg S1 sticky ovf
+    output reg                     fwd_hreg_ovf_s2  // Final H-Reg S2 sticky ovf
 );
 
     // ── GPR S1 forwarding ───────────────────────────────────────
@@ -70,22 +76,30 @@ module hcpu_forward (
 
     // ── H-Reg S1 forwarding ─────────────────────────────────────
     always @(*) begin
-        if (ex_hreg_we && ex_dst == id_s1)
-            fwd_hreg_s1 = ex_hreg_result;
-        else if (mem_hreg_we && mem_dst == id_s1)
-            fwd_hreg_s1 = mem_hreg_result;
-        else
-            fwd_hreg_s1 = rf_hreg_s1;
+        if (ex_hreg_we && ex_dst == id_s1) begin
+            fwd_hreg_s1     = ex_hreg_result;
+            fwd_hreg_ovf_s1 = ex_hreg_ovf;
+        end else if (mem_hreg_we && mem_dst == id_s1) begin
+            fwd_hreg_s1     = mem_hreg_result;
+            fwd_hreg_ovf_s1 = mem_hreg_ovf;
+        end else begin
+            fwd_hreg_s1     = rf_hreg_s1;
+            fwd_hreg_ovf_s1 = rf_hreg_ovf_s1;
+        end
     end
 
     // ── H-Reg S2 forwarding ─────────────────────────────────────
     always @(*) begin
-        if (ex_hreg_we && ex_dst == id_s2)
-            fwd_hreg_s2 = ex_hreg_result;
-        else if (mem_hreg_we && mem_dst == id_s2)
-            fwd_hreg_s2 = mem_hreg_result;
-        else
-            fwd_hreg_s2 = rf_hreg_s2;
+        if (ex_hreg_we && ex_dst == id_s2) begin
+            fwd_hreg_s2     = ex_hreg_result;
+            fwd_hreg_ovf_s2 = ex_hreg_ovf;
+        end else if (mem_hreg_we && mem_dst == id_s2) begin
+            fwd_hreg_s2     = mem_hreg_result;
+            fwd_hreg_ovf_s2 = mem_hreg_ovf;
+        end else begin
+            fwd_hreg_s2     = rf_hreg_s2;
+            fwd_hreg_ovf_s2 = rf_hreg_ovf_s2;
+        end
     end
 
 endmodule
