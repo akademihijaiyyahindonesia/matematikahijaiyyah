@@ -2451,6 +2451,36 @@ mengarang, memperluas, atau menetapkan kriteria yang belum disetujui pemilik.
 tingkat 2 (bagian 24 September di atas) adalah hitungan siklus lari 72 jam,
 bukan lari 168 jam.
 
+### Keputusan pemilik, 31 Oktober – 1 November 2026 — HMCL
+
+Diambil atas pertanyaan sesi, sesudah pemilik memberi piagam *COSMICTERA
+FUTURE COMPUTING CHARTER* (31 Oktober 2026). Keempatnya datang sesudah
+`48cf0e5` (alternatif RTL A1–A3) dan `2f51be9` di-commit; kedua commit itu
+tidak ditinjau ulang di sini.
+
+1. **Nama: Hijaiyyah Mathematical Computing Laboratory (HMCL)**, dalam bahasa
+   Indonesia **Laboratorium Komputasi Matematis Hijaiyyah** (1 November 2026).
+   - Nama ini menggantikan dua bentuk yang sempat hidup bersamaan: "…
+     Mathematics Computational …" di berkas legal dan dokumen, dan "…
+     Mathematics Computing …" di paket `src/hijaiyyah/hmcl/`.
+   - Ia juga menggantikan jawaban "Computational" sehari sebelumnya.
+   - Bentuk kanoniknya di `AUTHORS`. `tests/test_integrity/test_authorship.py`
+     menolak kedua bentuk lama di berkas tracked, termasuk yang terbelah
+     baris (`0037398`).
+   - **Belum diubah:** berkas di luar git (dokumen paten, proposal, dan draf
+     penerbitan di folder buku; dua PDF jurnal) dan situs lembaga masih
+     menulis bentuk lama. Mengubahnya menunggu perintah pemilik.
+2. **Eksplorasi bukan adopsi.**
+   - Alternatif desain boleh dimodelkan, disimulasikan, dan diukur di berkas
+     laboratorium, tanpa menyentuh RTL, ISA, matematika, atau desain yang
+     berlaku.
+   - Memasukkannya ke desain yang berlaku tetap keputusan pemilik per butir.
+   - K9 tidak berubah.
+3. **"J-Machine" di piagam adalah mesin Jim** (`cosmic-codex-jim/MACHINE.md`),
+   dan "Codex ج" adalah Codex JIM. Tidak ada nama baru.
+4. **Selisih hitungan sesudah paket `cells`** dipegang sesi lain: jumlah tes
+   terkumpul, jumlah paket, berkas mypy, dan fungsi Python.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,
