@@ -194,23 +194,42 @@ pl_hdr: ADD   R4, R4, R3
         STORE R1, R2, 0
         STORE R8, R2, 1
 
-; ── pass one: CHECKSUM32, before anything is written ────────────
+; ── pass one: CHECKSUM32 via SD_CSUM (0xFE5) + Sector 0 reuse ───
 pl_p1:  ADD   R8, R8, R7            ; WORDS + RELOC_CNT
         ADDI  R8, R8, 7             ;   + the header: the whole container
-        MOVI  R3, 6                 ; CHECKSUM32 is header word 6
-        ADDI  R11, R13, -1
+        MOVI  R3, 6                 ; CHECKSUM32 is header word 6 (in Sector 0)
+        CALL  hal_sd_rewind         ; reuse Sector 0 already in sbuf from pl_hdr
+        MOVI  R10, 0
+        CMP   R6, R6
+        JEQ   p1_chk
 p1_sec: CALL  pl_next_sec
         CMPI  R1, 0
         JEQ   p1_end                ; the sectors ran out; the counts decide
+p1_chk: CMPI  R8, 0
+        JEQ   p1_sec                ; past the container: skip remaining words in sector
+        MOVI  R1, 128
+        SUB   R2, R8, R1            ; R2 = R8 - 128
+        SHRI  R2, R2, 31            ; R2 = 1 if R8 < 128, 0 if R8 >= 128
+        CMPI  R2, 0
+        JNE   p1_w                  ; partial sector (R8 < 128): sum exact R8 words
+        CALL  hal_sd_csum           ; full sector (R8 >= 128): R1 = SD_CSUM (0xFE5)
+        ADD   R4, R4, R1
+        ADDI  R8, R8, -128
+        CMPI  R3, 6
+        JNE   p1_sec
+        SUB   R4, R4, R15           ; Sector 0: subtract header word 6 (CHECKSUM32)
+        MOVI  R3, -1
+        CMP   R6, R6
+        JEQ   p1_sec
 p1_w:   CALL  hal_sd_get            ; clobbers R1 and R12 only
-        CMPI  R8, 0
-        JEQ   p1_nx                 ; past the container: zero padding
         ADDI  R8, R8, -1
         CMPI  R3, 0
         JEQ   p1_cs                 ; the CHECKSUM32 field adds nothing
         ADD   R4, R4, R1
 p1_cs:  ADDI  R3, R3, -1            ; below zero it never meets 0 again
-p1_nx:  ADDI  R10, R10, 1
+        ADDI  R10, R10, 1
+        CMPI  R8, 0
+        JEQ   p1_sec                ; stop as soon as R8 container words are summed
         CMPI  R10, 128
         JNE   p1_w
         JEQ   p1_sec
@@ -220,10 +239,22 @@ p1_end: CMPI  R8, 0
         JNE   pl_no                 ; the container on the card is not the one sealed
 
 ; ── pass two: header again, table to 0x300, then stage or write ─
-        ADDI  R11, R13, -1
+        CMPI  R14, 1                ; single-sector container? Sector 0 is still in sbuf!
+        JNE   p2_r0
+        MOV   R11, R13
+        CALL  hal_sd_rewind
+        MOVI  R10, 0
+        CMP   R6, R6
+        JEQ   p2_h0
+p2_r0:  ADDI  R11, R13, -1
         CALL  pl_next_sec
         CMPI  R1, 0
         JEQ   pl_no
+p2_h0:  CALL  hal_sd_prescan        ; R1 = SD_PRESCAN (0xFE6) for Sector 0
+        SHRI  R1, R1, 1
+        ANDI  R1, R1, 1             ; bit 1: prescan_body_bad (words 7..127)
+        MOVI  R2, 0
+        STORE R1, R2, 3             ; MEM[0x003] = 0 if Sector 0 body is 4-B' clean
         MOVI  R3, 0                 ; index within the header
 p2_hdr: CALL  hal_sd_get
         CMPI  R3, 2
@@ -249,6 +280,10 @@ p2_tab: CMPI  R3, 0
         CALL  pl_next_sec           ; the table crossed a sector boundary
         CMPI  R1, 0
         JEQ   pl_no
+        CALL  hal_sd_prescan
+        ANDI  R1, R1, 1             ; bit 0: prescan_all_bad (words 0..127)
+        MOVI  R2, 0
+        STORE R1, R2, 3
 p2_tg:  CALL  hal_sd_get
         STORE R1, R4, 0
         ADDI  R4, R4, 1
@@ -272,6 +307,10 @@ p2_w:   CMPI  R8, 0
         CALL  pl_next_sec
         CMPI  R1, 0
         JEQ   pl_no
+        CALL  hal_sd_prescan
+        ANDI  R1, R1, 1             ; bit 0: prescan_all_bad (words 0..127)
+        MOVI  R2, 0
+        STORE R1, R2, 3
 p2_wg:  CALL  hal_sd_get
         ADDI  R10, R10, 1
         CMP   R7, R4
@@ -304,28 +343,32 @@ p2_ov:  STORE R1, R15, 0x380        ; stage PROG[R15] at 0x380 + R15
         STORE R3, R2, 0             ; zero STATE_WORD[R15 >> 1] once per pair
 v1_op:
 
-        ; Phase V1: opcode & static branch/jump/call target bounds check
+        ; Phase V1: SD_PRESCAN (0xFE6) fast-path + opcode & target bounds check
         SHRI  R2, R1, 24            ; op = R1[31:24]
         SHRI  R3, R2, 5             ; chunk = op >> 5 (0..7)
+        CMPI  R3, 1                 ; chunk 1 (0x20..0x3F: branches/calls & PUSH/POP)
+        JEQ   v1_c1
+        MOVI  R12, 0
+        LOAD  R12, R12, 3           ; MEM[0x003]: 0 if hardware SD_PRESCAN passed
+        CMPI  R12, 0
+        JEQ   v1_next               ; hardware pre-scan verified non-chunk-1 opcode!
         CMPI  R3, 0
-        JNE   v1_c1
+        JNE   v1_c2
         MOVI  R12, 0x170
         SHLI  R12, R12, 12
         ORI   R12, R12, 0xEDB       ; chunk 0 mask: 0x00170EDB (excludes ERET 0x08)
         CMP   R6, R6
         JEQ   v1_mchk
-v1_c1:  CMPI  R3, 1
-        JNE   v1_c2
-        MOVI  R12, 0x03C
+v1_c1:  MOVI  R12, 0x03C
         SHLI  R12, R12, 12
         ORI   R12, R12, 0x61F       ; chunk 1 mask: 0x0003C61F (excludes PUSH/POP)
         CMP   R6, R6
         JEQ   v1_mchk
 v1_c2:  CMPI  R3, 2
         JNE   v1_c3
-        MOVI  R12, 0x03B
+        MOVI  R12, 0x03F
         SHLI  R12, R12, 12
-        ORI   R12, R12, 0x1F5       ; chunk 2 mask: 0x0003B1F5
+        ORI   R12, R12, 0x1F5       ; chunk 2 mask: 0x0003F1F5 (includes OP_HDOT 0x4E)
         CMP   R6, R6
         JEQ   v1_mchk
 v1_c3:  CMPI  R3, 3

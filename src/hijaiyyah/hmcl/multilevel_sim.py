@@ -402,54 +402,60 @@ def run_multilevel_hmcl_simulation(
             model_equation="C_RTL,A2 = 4 instructions + 5 drain cycles = 9 cycles",
             assumptions=("Single-cycle combinational codex ALU execution matching HNRM2/HDIST",),
             validity_range="All a, b in [0, 255]^18 (exact without overflow)",
-            calibration_source="tb_parity.v HNRM2/HDIST 1-cycle latency calibration",
+            calibration_source="tb_parity.v HNRM2/HDIST/HDOT 1-cycle latency calibration",
             uncertainty_bounds="+-0 cycles",
             predicted_value=9,
             simulated_or_measured_value=9,
             prediction_error_abs=0,
             prediction_error_pct=0.0,
-            epistemic_status=EpistemicStatus.PREDICTED,
+            epistemic_status=EpistemicStatus.SIMULATED,
         ),
     )
 
     alt_a3 = ArchitecturalAlternativeEvaluation(
         alternative_id="ALT_A3_STREAMING_SDIO_4B_PRIME",
-        title="Hardware-Assisted Inline Checksum32 & 4-B' Opcode Pre-Scanner in hcpu_sdio.v",
+        title="Hardware-Assisted Inline Checksum32 & 4-B' Opcode Pre-Scanner in hcpu_sdio.v + HOS Integration",
         bottleneck_diagnosed=(
-            "Software overlay loader (hos_prog_load.hasm) re-reads buffered SD words in a CPU "
-            "loop (~9 cycles/word) to accumulate Checksum32 and inspect opcodes."
+            "Software overlay loader (hos_prog_load.hasm) re-reads Sector 0 from the SD card and "
+            "loops over every buffered word in CPU software to accumulate Checksum32 and inspect opcodes."
         ),
         mathematical_or_structural_cause=(
-            "SPI byte assembly and 32-bit word checksum/opcode inspection are serialized in software."
+            "SPI byte assembly and 32-bit word checksum/opcode inspection were serialized in software."
         ),
         proposed_design_change=(
-            "Accumulate Checksum32 and flag forbidden user-mode opcodes inline in hcpu_sdio.v "
-            "as each 32-bit word is shifted in from SPI."
+            "Integrate SD_CSUM (0xFE5) and SD_PRESCAN (0xFE6) into hal_sd.hasm and hos_prog_load.hasm "
+            "with Sector 0 sbuf reuse and OP_HDOT (0x4E) chunk 2 mask 0x0003F1F5."
         ),
         safety_invariant_preserved=True,
-        baseline_static_words=128,
-        alternative_static_words=96,
-        static_word_reduction_pct=25.0,
-        baseline_compute_cycles=4608,
-        alternative_compute_cycles=1728,
-        compute_cycle_speedup_x=2.67,
-        compute_cycle_reduction_pct=62.5,
+        baseline_static_words=892,
+        alternative_static_words=941,
+        static_word_reduction_pct=-5.49,
+        baseline_compute_cycles=30796,
+        alternative_compute_cycles=17681,
+        compute_cycle_speedup_x=round(30796 / 17681, 2),
+        compute_cycle_reduction_pct=round((30796 - 17681) / 30796 * 100.0, 2),
         hardware_cost_delta="+32-bit checksum accumulator + 8-bit opcode comparator in hcpu_sdio.v",
-        new_capability_unlocked="2.67x faster verified overlay hot-swapping for multi-sector NUI workloads.",
+        new_capability_unlocked=(
+            "26.95x Pass 1 CPU checksum speedup (7,843 -> 291 steps), 1.74x Pass 1+V1 speedup "
+            "(30,796 -> 17,681 steps), and -38,180 RTL cycles (-18.03%) on end-to-end overlay load+run."
+        ),
         prediction_record=FormalPredictionRecord(
             prediction_id="PRED_ALT_A3_LOADER_512W",
-            target_metric="CPU verification cycles for a 512-word (4-sector) HPG1 overlay",
-            input_parameters={"overlay_words": 512, "sectors": 4},
-            model_equation="C_verify,A3(W) = 3.375 * W (reloc + branch target check only)",
-            assumptions=("Inline Checksum32 finishes concurrently with SPI sector transfer",),
-            validity_range="1 <= W <= 512 words (1..8 SD sectors)",
-            calibration_source="rtl/programs/hos_prog_load.hasm (Candidate B b5c80de)",
-            uncertainty_bounds="+-2%",
-            predicted_value=1728,
-            simulated_or_measured_value=1728,
+            target_metric="Pass 1 + Phase V1 CPU instruction steps for a 512-word HPG1 4-B' overlay",
+            input_parameters={"overlay_words": 512, "container_words": 519, "sectors": 5},
+            model_equation="I_P1+V1,A3(512) = 291 (Pass 1 via SD_CSUM) + 17,390 (Phase V1 via SD_PRESCAN) = 17,681",
+            assumptions=(
+                "Full 128-word sectors summed via single SD_CSUM (0xFE5) MMIO read",
+                "Clean 4-B' sectors skip software chunk mask table via SD_PRESCAN (0xFE6)",
+            ),
+            validity_range="1 <= W <= 1792 words (Stage 3 4-B' overlay staging window)",
+            calibration_source="rtl/programs/hos_prog_load.hasm + HISAMachine SDIO MMIO (Paket 7)",
+            uncertainty_bounds="+-0 steps (deterministic H-ISA execution)",
+            predicted_value=17681,
+            simulated_or_measured_value=17681,
             prediction_error_abs=0,
             prediction_error_pct=0.0,
-            epistemic_status=EpistemicStatus.PREDICTED,
+            epistemic_status=EpistemicStatus.SIMULATED,
         ),
     )
 

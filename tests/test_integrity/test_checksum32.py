@@ -345,6 +345,23 @@ def _overlay_cases() -> list[dict[str, Any]]:
         ("wide_branch_253_fail_closed",
          _asm_container(_wide_branch_fanout_source(OVERLAY_WORK_MAX + 1)),
          "reject", "unverified: worklist capacity 252 exceeded"),
+        # 8. Paket 7: OP_HDOT (0x4E) authorization & multi-sector SD_CSUM/SD_PRESCAN
+        ("hdot_native_overlay",
+         _asm_container("        HLOAD H1, 2\n        HLOAD H2, 24\n"
+                        "        HDOT R3, H1, H2\n        HALT\n"),
+         "accept", "loaded"),
+        ("multisector_hdot_prescan_accepted",
+         _asm_container("        HLOAD H1, 2\n        HLOAD H2, 24\n"
+                        + "        HDOT R3, H1, H2\n" * 140
+                        + "        HALT\n"),
+         "accept", "loaded"),
+        ("multisector_illegal_in_sec1_rejected",
+         _raw_container(
+             [(int(OpCode.HDOT) << 24) | (3 << 20) | (1 << 16) | (2 << 12)] * 130
+             + [(0x99 << 24), halt],
+             [],
+         ),
+         "reject", "invalid: illegal opcode 0x99"),
     ]
     out: list[dict[str, Any]] = []
     for cid, stream, expect, reason_prefix in raw_cases:
@@ -364,40 +381,15 @@ OVERLAY_CASES = _overlay_cases()
 def _run_interpreter_loader(card: dict[int, list[int]],
                             *, raw_mode: bool = False) -> tuple[int, int]:
     """Run assembled test_prog_load.hasm (which includes hos_prog_load.hasm)
-    on HISAMachine with an attached SD card image. Returns (verdict, imem_writes)."""
+    on HISAMachine with an attached SD card image using native SDIO MMIO
+    (0xFE0..0xFE6). Returns (verdict, imem_writes)."""
     prog = PROGRAMS_DIR / "test_prog_load.hasm"
     words = assemble(prog.read_text(encoding="utf-8"), base_dir=PROGRAMS_DIR, base=0)
     machine = HISAMachine(MASTER_TABLE, hcheck_interval=0)
     machine.load_program(words)
     if raw_mode:
         machine.data_mem[0xED7] = 1
-
-    sd_sec = 0
-    sd_idx = 0
-    sd_buf = [0] * 128
-
-    def sd_read(reg: int) -> int:
-        nonlocal sd_idx
-        if reg == 1:  # SD_STATUS: bit 1 ok | bit 3 present
-            return 0xA
-        if reg == 3:  # SD_DATA
-            val = sd_buf[sd_idx & 0x7F]
-            sd_idx = (sd_idx + 1) & 0x7F
-            return val
-        return 0
-
-    def sd_write(reg: int, value: int) -> None:
-        nonlocal sd_sec, sd_idx, sd_buf
-        if reg == 0 and value == 2:  # SD_CMD = read
-            sd_buf = list(card.get(sd_sec, [0] * 128))
-            sd_idx = 0
-        elif reg == 2:  # SD_SECTOR
-            sd_sec = value
-        elif reg == 4 and (value & 1):  # SD_CONTROL rewind
-            sd_idx = 0
-
-    machine._sd_read = sd_read  # type: ignore[method-assign]
-    machine._sd_write = sd_write  # type: ignore[method-assign]
+    machine.sd_card = {sec: list(w) for sec, w in card.items()}
 
     imem_writes = 0
     orig_periph_write = machine._periph_write
@@ -511,7 +503,7 @@ HAVE_SIM = shutil.which("iverilog") is not None and shutil.which("vvp") is not N
 def bench() -> Path:
     if not HAVE_SIM and os.environ.get("HOM_REQUIRE_IVERILOG") != "1":
         pytest.skip("Icarus Verilog is required to run the HCPU loader")
-    subprocess.run(["make", "-s", "tb_hcpu_prog_load_card.vvp", "shell_progload.hex"],
+    subprocess.run(["make", "-B", "-s", "tb_hcpu_prog_load_card.vvp", "shell_progload.hex"],
                    cwd=TB, check=True, capture_output=True)
     return TB / "tb_hcpu_prog_load_card.vvp"
 
@@ -553,33 +545,7 @@ def _run_dirty_state_loader(probe_words: list[int],
     machine.load_program(probe_words)
     for addr in range(0xA80, 0xE00):
         machine.data_mem[addr] = 0xFFFFFFFF
-
-    sd_sec = 0
-    sd_idx = 0
-    sd_buf = [0] * 128
-
-    def sd_read(reg: int) -> int:
-        nonlocal sd_idx
-        if reg == 1:
-            return 0xA
-        if reg == 3:
-            val = sd_buf[sd_idx & 0x7F]
-            sd_idx = (sd_idx + 1) & 0x7F
-            return val
-        return 0
-
-    def sd_write(reg: int, value: int) -> None:
-        nonlocal sd_sec, sd_idx, sd_buf
-        if reg == 0 and value == 2:
-            sd_buf = list(card.get(sd_sec, [0] * 128))
-            sd_idx = 0
-        elif reg == 2:
-            sd_sec = value
-        elif reg == 4 and (value & 1):
-            sd_idx = 0
-
-    machine._sd_read = sd_read  # type: ignore[method-assign]
-    machine._sd_write = sd_write  # type: ignore[method-assign]
+    machine.sd_card = {sec: list(w) for sec, w in card.items()}
     steps = 0
     while not machine._halted and steps < 500_000:
         machine.step()
@@ -589,18 +555,31 @@ def _run_dirty_state_loader(probe_words: list[int],
 
 
 def test_candidate_b_relocation_budget_and_odd_word_dirty_state_invariants() -> None:
-    """Candidate B structural and functional invariants:
-    1. hos_prog_load.hasm uses 892 words and 37 relocations (-9 vs Candidate A),
-       leaving shell.hasm at 1,510 words and 115 / 128 relocations (13 free).
+    """Paket 7 hardware-accelerated loader structural and functional invariants:
+    1. hos_prog_load.hasm (with SD_CSUM 0xFE5, SD_PRESCAN 0xFE6, and OP_HDOT 0x4E)
+       uses 941 words and 43 relocations, leaving shell.hasm at 1,559 words and
+       121 / 128 relocations (7 free).
     2. Pre-filling Data RAM 0xA80..0xDFF with 0xFFFFFFFF does not perturb Phase V1
-       paired zeroing or Phase V2 verification across odd and even word counts."""
+       paired zeroing or Phase V2 verification across odd and even word counts.
+    3. Legacy isa_profile='v1.2' rejects OP_HDOT (0x4E) while default 'v1.3-hmcl'
+       and HOS hardware loader accept it."""
     loader_src = (PROGRAMS_DIR / "hos_prog_load.hasm").read_text(encoding="utf-8")
     loader_c = build(loader_src, PROGRAMS_DIR, 0)
-    assert (loader_c[2], loader_c[5]) == (892, 37)
+    assert (loader_c[2], loader_c[5]) == (941, 43)
 
     shell_src = (PROGRAMS_DIR / "shell.hasm").read_text(encoding="utf-8")
     shell_c = build(shell_src, PROGRAMS_DIR, LOAD_ADDR)
-    assert (shell_c[2], shell_c[5]) == (1510, 115)
+    assert (shell_c[2], shell_c[5]) == (1559, 121)
+
+    hdot_c = _asm_container(
+        "        HLOAD H1, 2\n        HLOAD H2, 24\n        HDOT R3, H1, H2\n        HALT\n"
+    )
+    hdot_card = card_image(hdot_c)
+    assert load_check(hdot_card, isa_profile="v1.3-hmcl") == (True, "loaded")
+    assert load_check(hdot_card, isa_profile="v1.2") == (
+        False,
+        "invalid: illegal opcode 0x4e at word 2",
+    )
 
     prog = PROGRAMS_DIR / "test_prog_load.hasm"
     probe_words = assemble(prog.read_text(encoding="utf-8"), base_dir=PROGRAMS_DIR, base=0)

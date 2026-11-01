@@ -137,6 +137,12 @@ class HISAMachine:
         #: Bytes EMITS put on the wire. Separate from `output`, which holds
         #: the values PRINT printed -- a character is not a value.
         self.chars: list[int] = []
+        #: SDIO peripheral state (0xFE0..0xFE6), mirroring hcpu_sdio.v / hcpu_mmio.v.
+        #: Stored as dict/lists so execution_trace._state (which snapshots bool/int
+        #: attributes) stays identical when no card is attached.
+        self.sd_card: Dict[int, List[int]] = {}
+        self.sd_buf: List[int] = [0] * 128
+        self.sd_regs: List[int] = [0] * 7
 
     def load_program(self, code: List[int]) -> None:
         """Load bytecode into code memory."""
@@ -148,6 +154,8 @@ class HISAMachine:
         self._flag_o = 0
         self._flag_reserved = 0
         self.chars.clear()
+        self.sd_buf = [0] * 128
+        self.sd_regs = [0] * 7
         self._halted = False
         self._exit_code = 0
 
@@ -371,25 +379,147 @@ class HISAMachine:
             return
         self.data_mem[masked] = self._u32(value)
 
-    # ── The card, and the fact that this interpreter has none ──────
+    # ── The card (0xFE0..0xFE6), mirroring hcpu_sdio.v & hcpu_mmio.v ──
     #
-    # There is no SD card in a Python process, and pretending otherwise would
-    # be worse than saying so: a modelled card would make a program pass here
-    # and fail on the board, which is the one direction of disagreement this
-    # repository refuses. So the block reads as all zeros -- not busy, not ok,
-    # no error, no card -- and writes go nowhere.
+    # There is no SD card in a Python process by default (`self.sd_card == {}`),
+    # and pretending otherwise when the slot is empty would make a program pass
+    # here and fail on a board with no card. So when `self.sd_card` is empty,
+    # SD_STATUS reads as zero -- not busy, not ok, no error, no card.
     #
-    # A driver that polls SD_STATUS after SD_CMD therefore sees "finished, not
-    # ok" and takes its error path, which is the correct behaviour for a
-    # machine with an empty slot. What a program may NOT do is read a sector
-    # here and believe it; that path exists on hardware only, and
-    # cosmictera-build/OFF.md records it as such.
+    # When a card image is attached (`self.sd_card = card_image(...)`) or host
+    # words are written to `SD_DATA` (0xFE3), this block models `hcpu_sdio.v`
+    # and `hcpu_mmio.v` bit-for-bit, including Paket 6 / A3 streaming
+    # `SD_CSUM` (0xFE5) and `SD_PRESCAN` (0xFE6).
+
+    SD_CMD = 0x0
+    SD_STATUS = 0x1
+    SD_SECTOR = 0x2
+    SD_DATA = 0x3
+    SD_CONTROL = 0x4
+    SD_CSUM = 0x5
+    SD_PRESCAN = 0x6
+
+    _SD_PRESCAN_VALID_OPCODES: frozenset[int] = frozenset({
+        0x00, 0x03, 0x04, 0x06, 0x07, 0x09, 0x0A, 0x0B,
+        0x10, 0x11, 0x12, 0x14,
+        0x20, 0x21, 0x22, 0x23, 0x24, 0x29, 0x2A, 0x2E, 0x2F,
+        0x30, 0x31, 0x32, 0x33,
+        0x40, 0x42, 0x44, 0x45, 0x46, 0x47, 0x48, 0x4C, 0x4D, 0x4E, 0x4F,
+        0x50, 0x51,
+        0x60,
+        0xA0, 0xA2,
+        0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA,
+        *range(0xE0, 0xFC),
+    })
 
     def _sd_read(self, reg: int) -> int:
+        if reg == self.SD_STATUS:
+            return self.sd_regs[1] if self.sd_card else 0
+        if reg == self.SD_SECTOR:
+            return self.sd_regs[2] if self.sd_card else 0
+        if reg == self.SD_DATA:
+            idx = self.sd_regs[3] & 0x7F
+            val = self.sd_buf[idx]
+            self.sd_regs[3] = (idx + 1) & 0x7F
+            return val if (self.sd_card or self.sd_regs[5] or self.sd_regs[6]) else 0
+        if reg == self.SD_CONTROL:
+            return (self.sd_regs[4] << 2) if self.sd_card else 0
+        if reg == self.SD_CSUM:
+            return self.sd_regs[5]
+        if reg == self.SD_PRESCAN:
+            return self.sd_regs[6]
         return 0
 
     def _sd_write(self, reg: int, value: int) -> None:
-        return
+        w = self._u32(value)
+        if reg == self.SD_CMD:
+            op = w & 0x3
+            self.sd_regs[0] = op
+            if not self.sd_card:
+                self.sd_regs[1] = 0
+                return
+            if op == 1:  # init
+                self.sd_regs[1] = 0x0A
+            elif op == 2:  # read block
+                sec = self.sd_regs[2]
+                raw_sec = self.sd_card.get(sec, [0] * 128)
+                words = [
+                    (int(raw_sec[i]) & 0xFFFFFFFF) if i < len(raw_sec) else 0
+                    for i in range(128)
+                ]
+                self.sd_buf = words
+                csum_acc = 0
+                all_bad = 0
+                body_bad = 0
+                first_idx = 0
+                bad_cnt = 0
+                first_opc = 0
+                for idx, word in enumerate(words):
+                    csum_acc = (csum_acc + word) & 0xFFFFFFFF
+                    opc = (word >> 24) & 0xFF
+                    if opc not in self._SD_PRESCAN_VALID_OPCODES:
+                        if not all_bad:
+                            first_idx = idx
+                            first_opc = opc
+                        all_bad = 1
+                        if idx >= 7:
+                            body_bad = 1
+                        bad_cnt = (bad_cnt + 1) & 0xFF
+                self.sd_regs[5] = csum_acc
+                self.sd_regs[6] = (
+                    (first_opc << 24)
+                    | (bad_cnt << 16)
+                    | ((first_idx & 0x7F) << 8)
+                    | (body_bad << 1)
+                    | all_bad
+                )
+                self.sd_regs[1] = 0x0A
+            elif op == 3:  # write block
+                sec = self.sd_regs[2]
+                self.sd_card[sec] = list(self.sd_buf)
+                self.sd_regs[1] = 0x0A
+        elif reg == self.SD_SECTOR:
+            self.sd_regs[2] = w
+        elif reg == self.SD_DATA:
+            idx = self.sd_regs[3] & 0x7F
+            self.sd_buf[idx] = w
+            opc = (w >> 24) & 0xFF
+            bad_opc = opc not in self._SD_PRESCAN_VALID_OPCODES
+            if idx == 0:
+                self.sd_regs[5] = w
+                all_bad = 1 if bad_opc else 0
+                first_opc = opc if bad_opc else 0
+                self.sd_regs[6] = (first_opc << 24) | (all_bad << 16) | all_bad
+            else:
+                self.sd_regs[5] = (self.sd_regs[5] + w) & 0xFFFFFFFF
+                if bad_opc:
+                    prev = self.sd_regs[6]
+                    all_bad = prev & 1
+                    body_bad = (prev >> 1) & 1
+                    first_idx = (prev >> 8) & 0x7F
+                    bad_cnt = (prev >> 16) & 0xFF
+                    first_opc = (prev >> 24) & 0xFF
+                    if not all_bad:
+                        first_idx = idx
+                        first_opc = opc
+                    all_bad = 1
+                    if idx >= 7:
+                        body_bad = 1
+                    bad_cnt = (bad_cnt + 1) & 0xFF
+                    self.sd_regs[6] = (
+                        (first_opc << 24)
+                        | (bad_cnt << 16)
+                        | (first_idx << 8)
+                        | (body_bad << 1)
+                        | all_bad
+                    )
+            self.sd_regs[3] = (idx + 1) & 0x7F
+        elif reg == self.SD_CONTROL:
+            self.sd_regs[4] = (w >> 2) & 0x3
+            if w & 0x1:
+                self.sd_regs[3] = 0
+            if w & 0x2:
+                self.sd_regs = [0] * 7
 
     def _periph_read(self, reg: int) -> int:
         if reg == self.REG_RX_DATA:

@@ -70,6 +70,9 @@ def test_charter_sections_c_d_f_multilevel_simulation_and_zero_error_calibration
     assert alts["ALT_A1_HW_STICKY_PREFIX_AND_HSTAR"].compute_cycle_speedup_x == 2.20
     assert alts["ALT_A2_NATIVE_OP_HDOT_20BIT"].safety_invariant_preserved is True
     assert alts["ALT_A2_NATIVE_OP_HDOT_20BIT"].alternative_compute_cycles == 9
+    assert alts["ALT_A3_STREAMING_SDIO_4B_PRIME"].safety_invariant_preserved is True
+    assert alts["ALT_A3_STREAMING_SDIO_4B_PRIME"].alternative_compute_cycles == 17681
+    assert alts["ALT_A3_STREAMING_SDIO_4B_PRIME"].compute_cycle_speedup_x == 1.74
 
 
 def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> None:
@@ -138,13 +141,23 @@ def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> N
     res_a2_dot = compile_and_execute_cells(
         "↦ ⟨ب, م⟩;\n",
         run_rtl=True,
+        run_rtl_loader=True,
         use_native_hdot=True,
     )
     assert len(res_a2_dot.compiled.compute_only_words) == 4
+    assert res_a2_dot.verify_4b_prime_ok is True
+    assert res_a2_dot.verify_4b_prime_reason == "loaded"
+    assert res_a2_dot.three_way_parity is True
+    assert res_a2_dot.hw_rtl_parity is True
     assert res_a2_dot.eval_result.outputs == [8]
     if res_a2_dot.rtl_measurement is not None:
         assert res_a2_dot.rtl_measurement.compute_cycles == 9
         assert res_a2_dot.rtl_measurement.printed_outputs == [8]
+        assert res_a2_dot.rtl_measurement.rtl_4b_prime_verdict == {
+            "DONE": 1,
+            "ANSWER": 1,
+            "ABSENT": 0,
+        }
 
     # Verify HVM HDOT extreme unsigned lane cases (0x80 * 0xFF = 32640, 14 * 255 * 255 = 910350)
     mt = MasterTable()
@@ -162,6 +175,42 @@ def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> N
     vm2.regs.hreg[2] = [0xFF] + [0] * 13 + [0xFF] * 4
     vm2.run()
     assert vm2.regs.gpr[3] == 32640
+
+    # Verify HISAMachine SDIO MMIO (0xFE0..0xFE6) parity with tb_hmcl_rtl_alternatives.v
+    sd_words = assemble(
+        "MOVI R12, 0\n"
+        "MOVI R1, 1\n"
+        "STORE R1, R12, 0xFE4\n"  # rewind SD_CONTROL
+        "LOAD R2, R12, 0x100\n"
+        "STORE R2, R12, 0xFE3\n"  # word 0: 0x04100005 (MOVI)
+        "LOAD R2, R12, 0x101\n"
+        "STORE R2, R12, 0xFE3\n"  # word 1: 0x4E312000 (HDOT 0x4E)
+        "LOAD R3, R12, 0xFE5\n"   # SD_CSUM after 2 valid words
+        "LOAD R4, R12, 0xFE6\n"   # SD_PRESCAN after 2 valid words (expect 0)
+        "LOAD R2, R12, 0x102\n"
+        "STORE R2, R12, 0xFE3\n"  # word 2: 0x08000000 (ERET -> forbidden!)
+        "LOAD R5, R12, 0xFE6\n"   # SD_PRESCAN (expect 0x08010201)
+        "MOVI R2, 0\n"
+        "STORE R2, R12, 0xFE3\n"  # word 3: NOP
+        "STORE R2, R12, 0xFE3\n"  # word 4: NOP
+        "STORE R2, R12, 0xFE3\n"  # word 5: NOP
+        "STORE R2, R12, 0xFE3\n"  # word 6: NOP
+        "LOAD R2, R12, 0x103\n"
+        "STORE R2, R12, 0xFE3\n"  # word 7: 0xFF000000 (HALT_ERR -> body_bad!)
+        "LOAD R6, R12, 0xFE6\n"   # SD_PRESCAN (expect 0x08020203)
+        "HALT\n"
+    )
+    vm_sd = HISAMachine(mt, hcheck_interval=0)
+    vm_sd.load_program(sd_words)
+    vm_sd.data_mem[0x100] = 0x04100005
+    vm_sd.data_mem[0x101] = 0x4E312000
+    vm_sd.data_mem[0x102] = 0x08000000
+    vm_sd.data_mem[0x103] = 0xFF000000
+    vm_sd.run()
+    assert vm_sd.regs.gpr[3] == (0x04100005 + 0x4E312000) & 0xFFFFFFFF
+    assert vm_sd.regs.gpr[4] == 0x00000000
+    assert vm_sd.regs.gpr[5] == 0x08010201
+    assert vm_sd.regs.gpr[6] == 0x08020203
 
 
 def test_charter_sections_e_and_i_nui_8axis_benchmark_and_scientific_qa() -> None:

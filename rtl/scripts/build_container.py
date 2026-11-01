@@ -105,17 +105,29 @@ OVERLAY_WORK_MAX = 252      # 0x004-0x0FF worklist capacity in hos_prog_load.has
 _ROOT_OWNER = 0x7FF
 
 # 256-bit allowed opcode bitmap (8 x 32-bit chunks) matching hos_prog_load.hasm
-# Phase V1: the 78 valid RTL opcodes for 4-B' overlays (excludes ERET 0x08,
-# PUSH 0x32, POP 0x33, HALT_ERR 0xFF, and all unimplemented/non-RTL opcodes).
+# Phase V1: the 79 valid RTL opcodes for 4-B' overlays under H-ISA v1.3-hmcl
+# (includes OP_HDOT 0x4E; excludes ERET 0x08, PUSH 0x32, POP 0x33, HALT_ERR 0xFF,
+# and all unimplemented/non-RTL opcodes).
 _OVERLAY_OPCODE_MASKS: tuple[int, ...] = (
     0x00170EDB,  # 0x00..0x1F
     0x0003C61F,  # 0x20..0x3F
-    0x0003B1F5,  # 0x40..0x5F
+    0x0003F1F5,  # 0x40..0x5F (includes OP_HDOT 0x4E)
     0x00000001,  # 0x60..0x7F
     0x00000000,  # 0x80..0x9F
     0x07FF0005,  # 0xA0..0xBF
     0x00000000,  # 0xC0..0xDF
     0x0FFFFFFF,  # 0xE0..0xFF
+)
+
+_OVERLAY_OPCODE_MASKS_V1_2: tuple[int, ...] = (
+    0x00170EDB,
+    0x0003C61F,
+    0x0003B1F5,  # 0x40..0x5F without OP_HDOT 0x4E (legacy v1.2)
+    0x00000001,
+    0x00000000,
+    0x07FF0005,
+    0x00000000,
+    0x0FFFFFFF,
 )
 
 
@@ -230,7 +242,8 @@ def card_image(container: list[int], record: list[int] | None = None,
 
 
 def verify_overlay(relocated: list[int], load_addr: int,
-                   entry: int) -> tuple[bool, str]:
+                   entry: int, *,
+                   isa_profile: str = "v1.3-hmcl") -> tuple[bool, str]:
     """Two-phase 4-B' overlay verification matching hos_prog_load.hasm.
 
     Distinguishes provably invalid programs (`invalid: ...`) from programs
@@ -241,12 +254,14 @@ def verify_overlay(relocated: list[int], load_addr: int,
     if n > OVERLAY_MAX_WORDS:
         return False, "invalid: WORDS over overlay staging buffer"
 
+    masks = _OVERLAY_OPCODE_MASKS_V1_2 if isa_profile == "v1.2" else _OVERLAY_OPCODE_MASKS
+
     # Phase V1: opcode bitmap & static branch/jump/call target bounds
     for idx, word in enumerate(relocated):
         op = (word >> 24) & 0xFF
         imm = word & IMM_MASK
         chunk = op >> 5
-        bit = (_OVERLAY_OPCODE_MASKS[chunk] >> (op & 31)) & 1
+        bit = (masks[chunk] >> (op & 31)) & 1
         if not bit:
             if op == 0x08:
                 return False, f"unverified: dynamic control transfer ERET at word {idx}"
@@ -418,14 +433,15 @@ def load_check_raw(sectors: dict[int, list[int]], program_id: int = PROGRAM_ID
 
 
 def load_check(sectors: dict[int, list[int]], program_id: int = PROGRAM_ID,
-               *, overlay: bool = True) -> tuple[bool, str]:
+               *, overlay: bool = True,
+               isa_profile: str = "v1.3-hmcl") -> tuple[bool, str]:
     """The Python loader: rtl/programs/hos_prog_load.hasm's refusals, in its
     order, over the words it would read. By default (`overlay=True`), enforces
     Stage 3 4-B' static overlay verification after Pass 1 CHECKSUM32."""
     ok, reason, relocated, load_addr, entry = _extract_relocated(sectors, program_id)
     if not ok or not overlay:
         return ok, reason
-    return verify_overlay(relocated, load_addr, entry)
+    return verify_overlay(relocated, load_addr, entry, isa_profile=isa_profile)
 
 
 def relocate(container: list[int]) -> tuple[int, list[int]]:

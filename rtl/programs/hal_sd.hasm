@@ -79,3 +79,13 @@ hal_sd_get:
         MOVI  R12, 0
         LOAD  R1, R12, 0xFE3        ; SD_DATA
         RET
+
+hal_sd_csum:
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFE5        ; SD_CSUM (Alternative A3 streaming Checksum32)
+        RET
+
+hal_sd_prescan:
+        MOVI  R12, 0
+        LOAD  R1, R12, 0xFE6        ; SD_PRESCAN (Alternative A3 4-B' opcode pre-scan)
+        RET
