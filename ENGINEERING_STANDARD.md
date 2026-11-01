@@ -336,7 +336,7 @@ version = "1.0.0"
 description = "Hijaiyyah Operating Machine — Core Computational System"
 authors = [
     { name = "Maulana Amratulloh" },
-    { name = "Hijaiyyah Mathematics Computational Laboratory (HMCL)" }
+    { name = "Hijaiyyah Mathematical Computing Laboratory (HMCL)" }
 ]
 requires-python = ">=3.11"
 license = { text = "Proprietary" }

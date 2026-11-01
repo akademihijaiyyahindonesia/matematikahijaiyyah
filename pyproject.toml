@@ -14,7 +14,7 @@ license = {text = "Proprietary"}
 requires-python = ">=3.11"
 authors = [
     {name = "Maulana Amratulloh"},
-    {name = "Hijaiyyah Mathematics Computational Laboratory (HMCL)"},
+    {name = "Hijaiyyah Mathematical Computing Laboratory (HMCL)"},
 ]
 keywords = [
     "hijaiyyah", "mathematics", "codex", "hybit",

@@ -38,7 +38,7 @@ RELEASE_VERSION = "1.0.0"
 RELEASE_DATE = "2026"
 AUTHOR_NAME = "Maulana Amratulloh"
 AUTHOR_KEY_ID = "MA-SIG"
-COPYRIGHT = f"© {RELEASE_DATE} Hijaiyyah Mathematics Computational Laboratory (HMCL)"
+COPYRIGHT = f"© {RELEASE_DATE} Hijaiyyah Mathematical Computing Laboratory (HMCL)"
 LICENSE_TYPE = "Proprietary — All Rights Reserved"
 
 COMPONENTS: List[Dict[str, str]] = [
@@ -389,7 +389,7 @@ class ReleaseTab:
         self._out.writeln(f"  ║     Seal:       VERIFIED & SEALED{'':>24s}║", "pass")
         self._out.writeln("  ║                                                          ║", "border")
         self._out.writeln("  ║     © 2026 (HMCL)                                        ║", "dim")
-        self._out.writeln("  ║     Hijaiyyah Mathematics Computational Laboratory       ║", "dim")
+        self._out.writeln("  ║     Hijaiyyah Mathematical Computing Laboratory          ║", "dim")
         self._out.writeln("  ║                                                          ║", "border")
         self._out.writeln("  ╚" + "═" * 58 + "╝", "border")
         self._out.writeln()

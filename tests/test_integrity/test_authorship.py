@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import List
 
@@ -28,7 +29,10 @@ CANONICAL_KEY_ID = "MA-SIG"
 # deliberately NOT the institution -- patents are held by the inventor
 # personally, and AUTHORS says so under its own heading.
 INSTITUTION = ("Yayasan Amratulloh International Academy — HMCL "
-               "(Hijaiyyah Mathematics Computational Laboratory)")
+               "(Hijaiyyah Mathematical Computing Laboratory)")
+# The owner named the research unit on 1 November 2026, in English and in
+# Indonesian; AUTHORS carries both.
+LABORATORY_ID = "Laboratorium Komputasi Matematis Hijaiyyah"
 # The foundation's name of record, as its own website states it
 # (www.akademihijaiyyahindonesia.com, read 28 October 2026): Akademi Hijaiyyah
 # Indonesia is the institution it runs, AMRA Publishing its publishing unit,
@@ -103,6 +107,7 @@ def test_authors_file_exists_and_declares_the_canonical_form() -> None:
     assert CANONICAL_NAME in text
     assert CANONICAL_ROLE in text
     assert INSTITUTION in text
+    assert LABORATORY_ID in text
 
 
 def test_notice_file_exists_and_carries_attribution() -> None:
@@ -202,6 +207,58 @@ def test_patent_instrument_names_the_foundation_and_its_website(tail: str) -> No
 def test_no_superseded_author_name_remains() -> None:
     offenders = superseded_in(SUPERSEDED)
     assert not offenders, f"superseded author name still present in: {offenders}"
+
+
+# The research unit's name, as the owner set it on 1 November 2026. Until then
+# the tree carried two expansions of HMCL at once -- "Mathematics
+# Computational" in the legal files and "Mathematics Computing" on the hmcl
+# package -- which is two names for one thing. \s+ is not slack: README.md and
+# NOTICE both broke the old name across a line, where a one-line search would
+# not see it.
+SUPERSEDED_LABORATORY = re.compile(
+    r"Hijaiyyah\s+Mathematics\s+Comput(?:ational|ing)\s+Laboratory")
+
+
+def tracked_text_files() -> List[Path]:
+    """repo_text_files(), less what git does not track.
+
+    The book folder, the patent instruments and the journal PDFs sit outside
+    git and still carry the old name; revising those is the owner's call, not
+    this guard's.
+    """
+    listed = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, capture_output=True,
+                            check=True).stdout.decode("utf-8").split("\0")
+    tracked = {ROOT / rel for rel in listed if rel}
+    return [path for path in repo_text_files() if path in tracked]
+
+
+def test_no_superseded_laboratory_name_remains_in_git() -> None:
+    files = tracked_text_files()
+    # A listing that broke would pass everything below, so the files the name
+    # of record lives in must be among those read.
+    assert {ROOT / "AUTHORS", ROOT / "LICENSE", ROOT / "NOTICE", ROOT / "README.md"} <= set(files)
+    offenders = superseded_in(SUPERSEDED_LABORATORY, files)
+    assert not offenders, (
+        f"superseded HMCL expansion still present in: {offenders}. The name of "
+        f"record is {INSTITUTION} -- in Indonesian, {LABORATORY_ID}.")
+
+
+def test_the_laboratory_guard_reads_both_old_forms_and_a_broken_line(tmp_path: Path) -> None:
+    """R3: both old expansions, and the old name broken across a line as
+    README.md and NOTICE had it, are named; the name of record is not."""
+    texts = {
+        "LICENSE": "Copyright (c) 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)\n",
+        "README.md": "Hak cipta © 2026 Hijaiyyah Mathematics\nComputational Laboratory (HMCL).\n",
+        "pkg.py": '"""Hijaiyyah Mathematics Computing Laboratory (HMCL)."""\n',
+        "AUTHORS": f"{INSTITUTION}\n{LABORATORY_ID}\n",
+    }
+    paths = []
+    for name, text in texts.items():
+        path = tmp_path / name
+        path.write_text(text, encoding="utf-8")
+        paths.append(path)
+    found = sorted(superseded_in(SUPERSEDED_LABORATORY, paths, root=tmp_path))
+    assert found == ["LICENSE", "README.md", "pkg.py"]
 
 
 def test_the_historical_names_exception_is_one_exact_path() -> None:

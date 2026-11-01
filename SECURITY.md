@@ -386,6 +386,6 @@ Keamanan sistem ini bergantung pada kewaspadaan bersama.
 
 **HOM — Hijaiyyah Operating Machine**
 
-© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+© 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL)
 
 </div>

@@ -28,7 +28,7 @@ yang berlaku untuk proyek ini.
 ## Status Proyek
 
 HOM saat ini dikelola secara internal oleh
-**Hijaiyyah Mathematics Computational Laboratory (HMCL)**.
+**Hijaiyyah Mathematical Computing Laboratory (HMCL)**.
 
 Kontribusi eksternal **diterima dengan senang hati**, tetapi
 tunduk pada proses review dan persetujuan dari maintainer.
@@ -533,6 +533,6 @@ Kami menghargai waktu, pikiran, dan niat baik Anda.
 
 **HOM — Hijaiyyah Operating Machine**
 
-© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+© 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL)
 
 </div>

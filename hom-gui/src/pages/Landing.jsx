@@ -1327,7 +1327,7 @@ npm run dev
         <div className="mt-12 max-w-4xl mx-auto flex flex-col items-center gap-8 px-4">
           <div className="text-[10px] md:text-xs text-white leading-relaxed text-justify space-y-4 p-8 rounded-xl border border-hom-border/20 bg-hom-panel w-full shadow-lg shadow-black/20">
             <p className="font-semibold text-white text-center mb-6 text-sm">
-              {t('© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL). All rights reserved.')}
+              {t('© 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL). All rights reserved.')}
             </p>
             <p>
               {t('The content, technology, and materials available within this platform—including but not limited to mathematical frameworks, computational models, software implementations, datasets, language specifications, compilation pipelines, file formats, processor architectures, and operating system designs—are proprietary to HMCL and are protected by applicable intellectual property laws.')}
@@ -1336,7 +1336,7 @@ npm run dev
               {t('No part of this platform may be copied, modified, distributed, transmitted, displayed, published, or otherwise used for commercial or non-commercial purposes without prior written authorization from HMCL.')}
             </p>
             <p>
-              {t('HMCL, Hijaiyyah Mathematics, and all related names, logos, product names, and design marks are trademarks or registered trademarks of Hijaiyyah Mathematics Computational Laboratory.')}
+              {t('HMCL, Hijaiyyah Mathematics, and all related names, logos, product names, and design marks are trademarks or registered trademarks of Hijaiyyah Mathematical Computing Laboratory.')}
             </p>
             <p className="font-semibold text-hom-red/90 text-center py-2 bg-hom-red/5 rounded-lg border border-hom-red/10">
               {t('Unauthorized use, reproduction, or distribution may result in civil and/or criminal penalties under applicable laws.')}

@@ -698,7 +698,7 @@ HOM/
 ## Lisensi
 
 \`\`\`
-© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+© 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL)
 All Rights Reserved.
 
 Seluruh kerangka matematika, implementasi perangkat lunak, dataset,
@@ -723,7 +723,7 @@ hak cipta.
 ║  Framework:  1.380/1.380 PASS — 0 FAIL                       ║
 ║                                                              ║
 ║  © 2026 (HMCL)                                               ║
-║  Hijaiyyah Mathematics Computational Laboratory              ║
+║  Hijaiyyah Mathematical Computing Laboratory                 ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
 \`\`\`

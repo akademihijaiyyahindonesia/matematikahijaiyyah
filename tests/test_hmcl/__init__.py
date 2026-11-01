@@ -1,1 +1,1 @@
-"""Tests for Hijaiyyah Mathematics Computing Laboratory (HMCL) — Package 5."""
+"""Tests for Hijaiyyah Mathematical Computing Laboratory (HMCL) — Package 5."""

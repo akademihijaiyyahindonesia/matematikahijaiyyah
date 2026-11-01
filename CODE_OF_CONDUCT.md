@@ -57,6 +57,6 @@ versi 2.1.
 
 <div align="center">
 
-© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+© 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL)
 
 </div>

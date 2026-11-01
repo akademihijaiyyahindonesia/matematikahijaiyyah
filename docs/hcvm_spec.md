@@ -1327,6 +1327,6 @@ while not vm.state.halted:
 
 *Version 1.0 · HM-28-v1.0-HC18D · 2026*
 
-© 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+© 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL)
 
 </div>

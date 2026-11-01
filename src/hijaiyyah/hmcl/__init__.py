@@ -1,4 +1,4 @@
-"""Hijaiyyah Mathematics Computing Laboratory (HMCL) — CosmicTera Future Computing Charter.
+"""Hijaiyyah Mathematical Computing Laboratory (HMCL) — CosmicTera Future Computing Charter.
 
 Provides the unified multi-level simulation, formal asset verification, architectural
 optimization, and 8-axis operational NUI benchmark suite mandated by the

@@ -302,7 +302,7 @@ lengkapnya di [`rtl/mpw/hcpu_synth_report.txt`](rtl/mpw/hcpu_synth_report.txt).
   author    = {Maulana Amratulloh},
   title     = {Matematika Hijaiyyah: Fondasi Formal, Codex Teknologi,
                dan Arsitektur Hybit},
-  publisher = {Hijaiyyah Mathematics Computational Laboratory},
+  publisher = {Hijaiyyah Mathematical Computing Laboratory},
   year      = {2026},
   note      = {Master Table HM-28-v.1.0-HC18D,
                SHA-256 f82d385917ffe32ae2b5711409b1341e90934c52172ae9d0fa68888e3b9c51c8}
@@ -313,8 +313,9 @@ lengkapnya di [`rtl/mpw/hcpu_synth_report.txt`](rtl/mpw/hcpu_synth_report.txt).
 
 ## Lisensi dan atribusi
 
-Perangkat lunak proprietary. Hak cipta © 2026 Hijaiyyah Mathematics
-Computational Laboratory (HMCL). Seluruh hak dilindungi — lihat
+Perangkat lunak proprietary. Hak cipta © 2026 Laboratorium Komputasi Matematis
+Hijaiyyah (Hijaiyyah Mathematical Computing Laboratory, HMCL). Seluruh hak
+dilindungi — lihat
 [`LICENSE`](LICENSE) dan [`NOTICE`](NOTICE).
 
 **Inventor & Chief Architect:** Maulana Amratulloh — lihat [`AUTHORS`](AUTHORS).
@@ -326,7 +327,7 @@ dengan atribusi sebagaimana tercantum di atas.
 
 ---
 
-**Hijaiyyah Mathematics Computational Laboratory**
+**Hijaiyyah Mathematical Computing Laboratory** · *Laboratorium Komputasi Matematis Hijaiyyah*
 Fondasi Formal · Codex Teknologi · Arsitektur Hybit
 
 </div>

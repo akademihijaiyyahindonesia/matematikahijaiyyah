@@ -3,7 +3,7 @@ NOTICE
 Matematika Hijaiyyah / Hijaiyyah Operating Machine (HOM)
 ================================================================================
 
-Copyright (c) 2026 Hijaiyyah Mathematics Computational Laboratory (HMCL)
+Copyright (c) 2026 Hijaiyyah Mathematical Computing Laboratory (HMCL)
 All Rights Reserved.
 
 Inventor & Chief Architect:  Maulana Amratulloh
@@ -27,7 +27,7 @@ ATTRIBUTION REQUIREMENT
 Any permitted use, citation, or reference to this work must attribute it as:
 
     Maulana Amratulloh, "Matematika Hijaiyyah: Fondasi Formal, Codex
-    Teknologi, dan Arsitektur Hybit", Hijaiyyah Mathematics Computational
+    Teknologi, dan Arsitektur Hybit", Hijaiyyah Mathematical Computing
     Laboratory (HMCL), 2026.
 
 BibTeX:
@@ -36,7 +36,7 @@ BibTeX:
       author    = {Maulana Amratulloh},
       title     = {Matematika Hijaiyyah: Fondasi Formal, Codex Teknologi,
                    dan Arsitektur Hybit},
-      publisher = {Hijaiyyah Mathematics Computational Laboratory},
+      publisher = {Hijaiyyah Mathematical Computing Laboratory},
       year      = {2026},
       note      = {Master Table HM-28-v.1.0-HC18D}
     }
