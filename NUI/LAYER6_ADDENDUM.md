@@ -6,18 +6,20 @@ Dihasilkan `src/hijaiyyah/nui/layer6_addendum.py` dari `NUI/layer6_addendum.json
 
 Catatan beku Lapis 6.1–6.3 — model, halaman, dan spec-nya — tetap byte demi byte objek di tag `layer6-freeze-2026-09-29-final`. Adendum ini catatan baru di sampingnya, bukan bangkitan ulang: **freeze historis ≠ keadaan repositori sekarang**. Keadaan sekarang adalah catatan beku dengan perubahan di bawah ini, dan harus sama dengan yang dibangun buktinya hari ini.
 
-**6 entri, 70 perubahan**: `hardware` 23, `telemetry_sources` 8, `hardware_provenance` 39.
+**12 entri, 151 perubahan**: `hardware` 48, `telemetry_sources` 15, `hardware_provenance` 88.
 
 ## Bukti kesetaraan
 
 - **comment-only** — setiap baris yang bukan baris kosong dan bukan komentar utuh `//` sama dan berurutan sama di berkas beku dan berkas sekarang — aturan yang dipakai sidik jari place and route; yang berubah hanya komentar, jadi desainnya tidak.
 - **insert-only** — setiap baris berkas beku masih ada, utuh dan berurutan, di berkas sekarang; barisnya hanya bertambah, tidak ada yang hilang atau diubah.
-- **line-moved** — tiap baris yang dikutip punya teks yang sama persis di nomor barunya — di freeze, tepat sebelum penyebab, di penyebab, dan sekarang.
+- **line-moved** — tiap baris yang dikutip punya teks yang sama persis di nomor barunya — di freeze (atau di pendahulunya pada rantai `after`), tepat sebelum penyebab, di penyebab, dan sekarang.
 - **row-meaning** — baris kontrak diurai dengan pola baris `NUI/spec/telemetry_sources.json`: medan dan asalnya sama, dan medannya tetap tanpa sumber — jadi statusnya tetap.
+- **remeasured-header** — angka synthesis dan place-and-route di kepala pembungkus FPGA diukur ulang dan diikat ke sidik jari RTL hidup, hash berkas sumber, konfigurasi target/constraint/build, versi perkakas, dan hash laporan mentah synthesis/PnR serta catatan papan, sambil menjaga kelas `SIMULATED` (`PNR/build-derived`) tetap terpisah dari klaim `MEASURED` papan fisik.
+- **claim-unchanged** — berkas sumber RTL berubah secara desain sehingga hanya metadata hash/ukuran bukti berkas utuh yang bergeser, sementara kontrak spesifikasi, identitas klaim, sumber, nomor baris, nilai, status, dan baris jangkar arsitekturnya tetap sama.
 
 ## Rantai perubahan
 
-Keputusan pemilik, 5 Oktober 2026, sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai lamanya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh yang berantai (`comment-only`, `insert-only`). Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak.
+Keputusan pemilik, 5 Oktober 2026 (diperluas 2 November 2026 untuk Jalur A), sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781` dan commit Paket 8 `f9c8349` mencap ulang `hcpu_gowin_top.v` serta memperbarui `hcpu_top.v`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai di penyebab pendahulunya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh (`comment-only`, `insert-only`, `claim-unchanged`) dan pergeseran nomor baris linear (`line-moved`) yang berantai. Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak.
 
 Untuk tiap perubahan: nilai lama adalah nilai catatan beku dan dihasilkan ulang dari berkasnya di freeze dan tepat sebelum commit penyebab; nilai sekarang adalah hasil build hari ini dan dihasilkan ulang dari berkasnya di commit penyebab dan di pohon kerja.
 
@@ -144,6 +146,141 @@ Pembaruan K14 di 4bff781: baris `state_hash` berhenti mengatakan *tidak ada inti
 | `hardware` | `fpga_device` | `/items/1/evidence/0/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
 | `hardware` | `fpga_family` | `/items/2/source/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
 | `hardware` | `fpga_family` | `/items/2/evidence/0/sha256` | `9143ca3e6e88…` | `7a2b150d6247…` |
+
+## hcpu_top.v — alternatif RTL A1–A3 (P6)
+
+`rtl/hcpu_top.v` · penyebab `48cf0e5` · bukti kesetaraan **claim-unchanged**, klaim `cpu_pipeline`
+
+48cf0e5 menambahkan pengkabelan alternatif RTL A1–A3 (`calu_add_ovf`, `sd_sector_csum`, `sd_prescan_status`, dan `OP_HDOT`) ke `rtl/hcpu_top.v`. Ukuran berkas bergeser 37.028 → 38.350 byte, tetapi struktur pipeline lima tahap (`5-stage pipeline with forwarding` di baris 7) beserta instansiasi kelima tahapnya dan klaim `cpu_pipeline` tetap tidak berubah.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `cpu_pipeline` | `/items/8/source/sha256` | `98f70974c232…` | `ff79c907ba8b…` |
+| `hardware` | `cpu_pipeline` | `/items/8/evidence/0/sha256` | `98f70974c232…` | `ff79c907ba8b…` |
+| `hardware_provenance` | `6.1:cpu_pipeline` | `/claims/8/evidence_bytes` | `37028` | `38350` |
+| `hardware_provenance` | `6.1:cpu_pipeline` | `/claims/8/evidence_sha256` | `98f70974c232…` | `ff79c907ba8b…` |
+
+## hcpu_pkg.vh — alternatif RTL A1–A3 (P6)
+
+`rtl/hcpu_pkg.vh` · penyebab `48cf0e5` · bukti kesetaraan **claim-unchanged**, klaim `isa_rtl`
+
+48cf0e5 menambahkan konstanta register MMIO kartu `SD_CSUM` (`0x5`), `SD_PRESCAN` (`0x6`), dan `OP_HDOT` (`8'h4E`) ke `rtl/hcpu_pkg.vh`. Ukuran berkas bergeser 21.087 → 21.408 byte; seluruh definisi opcode beku tetap ada, sumber klaim `isa_rtl` di `teknologi/README.md` serta cacah 62 opcode RTL tidak berubah.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `isa_rtl` | `/items/9/evidence/1/sha256` | `bca67ed7cfbd…` | `2e0c3df26eb5…` |
+| `hardware_provenance` | `6.1:isa_rtl` | `/claims/9/evidence_bytes` | `21087` | `21408` |
+| `hardware_provenance` | `6.1:isa_rtl` | `/claims/9/evidence_sha256` | `bca67ed7cfbd…` | `2e0c3df26eb5…` |
+
+## hcpu_top.v — CODEX_PROFILE dan calu_done (Paket 8)
+
+`rtl/hcpu_top.v` · penyebab `f9c8349` · bukti kesetaraan **claim-unchanged**, klaim `cpu_pipeline` · melanjutkan entri **hcpu_top.v — alternatif RTL A1–A3 (P6)**
+
+f9c8349 meneruskan parameter `CODEX_PROFILE` dan `HDOT_ENABLE` ke `hcpu_codex_alu` serta `hcpu_decode`, dan menahan pipeline lewat `calu_done` selama `OP_HDOT` 14 siklus pada profil 2. Ukuran berkas bergeser 38.350 → 38.892 byte; struktur lima tahap pipeline pada baris 7 dan klaim `cpu_pipeline` tetap tidak berubah.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `cpu_pipeline` | `/items/8/source/sha256` | `ff79c907ba8b…` | `b903847fe23f…` |
+| `hardware` | `cpu_pipeline` | `/items/8/evidence/0/sha256` | `ff79c907ba8b…` | `b903847fe23f…` |
+| `hardware_provenance` | `6.1:cpu_pipeline` | `/claims/8/evidence_bytes` | `38350` | `38892` |
+| `hardware_provenance` | `6.1:cpu_pipeline` | `/claims/8/evidence_sha256` | `ff79c907ba8b…` | `b903847fe23f…` |
+
+## hcpu_gowin_top.v — cap ulang Paket 8
+
+`rtl/fpga/gowin/hcpu_gowin_top.v` · penyebab `f9c8349` · bukti kesetaraan **comment-only** · melanjutkan entri **hcpu_gowin_top.v — cap ulang opsi (a)**
+
+f9c8349 mencap ulang kepala `rtl/fpga/gowin/hcpu_gowin_top.v` sesudah place-and-route Paket 8 (`CODEX_PROFILE=2` pada `USE_DSP=0`): 19 baris komentar bersih ditambahkan untuk mencatat hasil pengukuran baru dan sidik jari `c9fdd83e97fe…`, sementara seluruh baris kode Verilog di dalam berkas ini tetap identik (`comment-only`, 34.404 → 35.688 byte).
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `fpga_lut4` | `/items/3/source/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_lut4` | `/items/3/evidence/0/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_dff` | `/items/4/source/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_dff` | `/items/4/evidence/0/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_bsram` | `/items/5/source/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_bsram` | `/items/5/evidence/0/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_fmax` | `/items/6/source/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `fpga_fmax` | `/items/6/evidence/0/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `clock_pll` | `/items/14/source/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `clock_pll` | `/items/14/evidence/0/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware` | `uart` | `/items/17/source/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `telemetry_sources` | — | `/rtl_signals/sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.1:fpga_dff` | `/claims/4/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.1:fpga_dff` | `/claims/4/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.1:fpga_bsram` | `/claims/5/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.1:fpga_bsram` | `/claims/5/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.1:clock_pll` | `/claims/14/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.1:clock_pll` | `/claims/14/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.2:tele_pc` | `/claims/61/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.2:tele_pc` | `/claims/61/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.2:tele_instr` | `/claims/62/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.2:tele_instr` | `/claims/62/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.2:tele_halted` | `/claims/63/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.2:tele_halted` | `/claims/63/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.2:tele_guard` | `/claims/64/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.2:tele_guard` | `/claims/64/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.2:tele_cycles` | `/claims/65/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.2:tele_cycles` | `/claims/65/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+| `hardware_provenance` | `6.2:tele_flags` | `/claims/66/evidence_bytes` | `34404` | `35688` |
+| `hardware_provenance` | `6.2:tele_flags` | `/claims/66/evidence_sha256` | `b4f03c9d1365…` | `7e42e6890d25…` |
+
+## hcpu_gowin_top.v — baris turun sembilan belas
+
+`rtl/fpga/gowin/hcpu_gowin_top.v` · penyebab `f9c8349` · bukti kesetaraan **line-moved**, baris 286 → 305, 297 → 316, 333 → 352, 334 → 353, 335 → 354, 336 → 355, 337 → 356, 338 → 357 · melanjutkan entri **hcpu_gowin_top.v — baris turun enam**
+
+Cap ulang Paket 8 di `f9c8349` menyisipkan 19 baris komentar bersih di kepala `rtl/fpga/gowin/hcpu_gowin_top.v`, sehingga setiap baris di bawah blok riwayat turun 19 baris dari posisinya sesudah `4bff781`: PLL 286 → 305, UART 297 → 316, dan keenam port `tele_*` 333–338 → 352–357, dengan teks baris yang dikutip tetap identik byte demi byte.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `clock_pll` | `/items/14/source/line` | `286` | `305` |
+| `hardware` | `uart` | `/items/17/source/line` | `297` | `316` |
+| `telemetry_sources` | `tele_pc` | `/rtl_signals/signals/0/line` | `333` | `352` |
+| `telemetry_sources` | `tele_instr` | `/rtl_signals/signals/1/line` | `334` | `353` |
+| `telemetry_sources` | `tele_halted` | `/rtl_signals/signals/2/line` | `335` | `354` |
+| `telemetry_sources` | `tele_guard` | `/rtl_signals/signals/3/line` | `336` | `355` |
+| `telemetry_sources` | `tele_cycles` | `/rtl_signals/signals/4/line` | `337` | `356` |
+| `telemetry_sources` | `tele_flags` | `/rtl_signals/signals/5/line` | `338` | `357` |
+| `hardware_provenance` | `6.1:clock_pll` | `/claims/14/source/line` | `286` | `305` |
+| `hardware_provenance` | `6.1:uart` | `/claims/17/source/line` | `297` | `316` |
+| `hardware_provenance` | `6.2:tele_pc` | `/claims/61/claim` | `tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:333` | `tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:352` |
+| `hardware_provenance` | `6.2:tele_pc` | `/claims/61/source/line` | `333` | `352` |
+| `hardware_provenance` | `6.2:tele_instr` | `/claims/62/claim` | `tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:334` | `tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:353` |
+| `hardware_provenance` | `6.2:tele_instr` | `/claims/62/source/line` | `334` | `353` |
+| `hardware_provenance` | `6.2:tele_halted` | `/claims/63/claim` | `tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:335` | `tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:354` |
+| `hardware_provenance` | `6.2:tele_halted` | `/claims/63/source/line` | `335` | `354` |
+| `hardware_provenance` | `6.2:tele_guard` | `/claims/64/claim` | `tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:336` | `tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:355` |
+| `hardware_provenance` | `6.2:tele_guard` | `/claims/64/source/line` | `336` | `355` |
+| `hardware_provenance` | `6.2:tele_cycles` | `/claims/65/claim` | `tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:337` | `tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:356` |
+| `hardware_provenance` | `6.2:tele_cycles` | `/claims/65/source/line` | `337` | `356` |
+| `hardware_provenance` | `6.2:tele_flags` | `/claims/66/claim` | `tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:338` | `tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:357` |
+| `hardware_provenance` | `6.2:tele_flags` | `/claims/66/source/line` | `338` | `357` |
+
+## hcpu_gowin_top.v — angka place-and-route Paket 8
+
+`rtl/fpga/gowin/hcpu_gowin_top.v` · penyebab `f9c8349` · bukti kesetaraan **remeasured-header**, sidik jari `c9fdd83e97fe…`, laporan `9fcd5714b007…`
+
+Paket 8 (`f9c8349`) mengukur ulang slot HCPU (`USE_DSP=0`, `CODEX_PROFILE=2`: squarer nibble 1 siklus untuk `HNRM2`/`HDIST` dan `HDOT` 14 siklus) dengan `make -C rtl/fpga/gowin bitstream` pada Tang Nano 20K (`GW2AR-LV18QN88C8/I7`): LUT4 15.744 → 15.453 (baris 47 → 48), DFF 5.065 → 5.166 (baris 48 → 49), BSRAM tetap 18 / 46 (baris 49 → 50), dan Fmax pasca-routing 86.18 → 120.63 MHz (baris 52 → 53). Klaim tetap berkelas `SIMULATED` (`PNR/build-derived`, K-18), terpisah dari bukti fisik papan Stage B dan Stage C di `cosmictera-build/PAPAN.md`.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `fpga_lut4` | `/items/3/source/line` | `47` | `48` |
+| `hardware` | `fpga_lut4` | `/items/3/value` | `15,744 / 20,736` | `15,453 / 20,736` |
+| `hardware` | `fpga_dff` | `/items/4/source/line` | `48` | `49` |
+| `hardware` | `fpga_dff` | `/items/4/value` | `5,065 / 15,552` | `5,166 / 15,552` |
+| `hardware` | `fpga_bsram` | `/items/5/source/line` | `49` | `50` |
+| `hardware` | `fpga_fmax` | `/items/6/source/line` | `52` | `53` |
+| `hardware` | `fpga_fmax` | `/items/6/value` | `86.18 MHz` | `120.63 MHz` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/claim` | `sumber daya FPGA = 15,744 / 20,736` | `sumber daya FPGA = 15,453 / 20,736` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/source/line` | `47` | `48` |
+| `hardware_provenance` | `6.1:fpga_dff` | `/claims/4/claim` | `sumber daya FPGA = 5,065 / 15,552` | `sumber daya FPGA = 5,166 / 15,552` |
+| `hardware_provenance` | `6.1:fpga_dff` | `/claims/4/source/line` | `48` | `49` |
+| `hardware_provenance` | `6.1:fpga_bsram` | `/claims/5/source/line` | `49` | `50` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/claim` | `sumber daya FPGA = 86.18 MHz` | `sumber daya FPGA = 120.63 MHz` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/source/line` | `52` | `53` |
 
 ## Mengulang
 

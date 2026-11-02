@@ -2481,6 +2481,124 @@ tidak ditinjau ulang di sini.
 4. **Selisih hitungan sesudah paket `cells`** dipegang sesi lain: jumlah tes
    terkumpul, jumlah paket, berkas mypy, dan fungsi Python.
 
+### Keputusan pemilik, 2 November 2026 — Paket 8 (`CODEX_PROFILE=2`), verifikasi papan, dan adendum Lapis 6 Jalur A
+
+Diambil sesudah pengukuran ulang 1–2 November 2026 membuktikan bahwa draf
+pertama Paket 8 — `USE_DSP=0` memecah tiap perkalian 8×8 jadi pasangan produk
+parsial Radix-4 di rantai carry ALU Gowin, sebelum `CODEX_PROFILE` ada —
+memindahkan beban dari LUT4 ke ALU (16.386 LUT4 + 3.256 ALU = 19.642 situs
+terhadap 18.886 pada Paket 7 `2f51be9`) sehingga tetap gagal *placement*. Pemilik menetapkan
+strategi tiga profil arsitektur pada `rtl/hcpu_codex_alu.v`, mengesahkan bukti
+papan fisik Stage B dan Stage C, memerintahkan commit lokal Paket 8
+(`f9c8349`) di atas garis dasar `807d55b`, dan memilih **Jalur A** untuk
+menutup adendum Lapis 6 secara ketat.
+
+1. **Tiga profil arsitektur Codex ALU dan ruang lingkup Paket 8 (`f9c8349`):**
+   - **Profil A (`CODEX_PROFILE=0`, ASIC/generik):** MAC 8×8 14 lajur bersama,
+     reduksi produk parsial Radix-4 8×2 dan pohon penjumlah seimbang; semua
+     operasi, termasuk `HDOT`, satu siklus.
+   - **Profil B (`CODEX_PROFILE=1`, FPGA dengan DSP):** MAC 14 lajur yang sama,
+     dipetakan ke 14 blok `MULT9X9`; satu siklus. Tidak dipakai slot Tang Nano
+     20K, yang disintesis `-nodsp`.
+   - Nilai bawaan parameter, `CODEX_PROFILE=-1`, memilih profil 1 bila
+     `USE_DSP=1` dan profil 2 bila `USE_DSP=0`; pembungkus papan menetapkan
+     `USE_DSP=0`.
+   - **Profil C (`CODEX_PROFILE=2`, FPGA tanpa DSP, slot Tang Nano 20K):**
+     squarer nibble-split kombinasional 1 siklus (`a² = 256·a_hi² + 32·a_hi·a_lo + a_lo²`)
+     untuk `HNRM2` dan `HDIST` (mengikuti single-subtractor `abs_diff`), serta
+     akumulator sekuensial 14 siklus untuk `HDOT` yang menahan pipeline lewat
+     `calu_busy`/`calu_done` sampai selesai. Parameter `HDOT_ENABLE=0` di
+     `rtl/hcpu_decode.v` membuat decode memperlakukan `OP_HDOT` sebagai opcode
+     tak terimplementasi bila fitur dimatikan.
+   - **13 berkas yang masuk di `f9c8349`** (diff ter-stage
+     `5b5618a0a42c6c04dbc12dd3891898fdac0329193a04d459e69b24a7cee93000`,
+     `stash@{0}` tetap utuh):
+     - 6 berkas RTL/HMCL: `rtl/hcpu_codex_alu.v`, `rtl/hcpu_decode.v`,
+       `rtl/hcpu_top.v`, `rtl/tb/tb_hmcl_rtl_alternatives.v`,
+       `src/hijaiyyah/hmcl/multilevel_sim.py`,
+       `tests/test_hmcl/test_hmcl_laboratory.py`.
+     - 7 berkas cap P&R, dokumen, dan tes pendamping:
+       `rtl/fpga/gowin/hcpu_gowin_top.v`, `cosmictera-build/PAPAN.md`,
+       `cosmictera-build/CHECKLIST.md`, `cosmictera/SYSTEM.md`,
+       `rtl/scripts/rack.py`, `tests/test_integrity/test_place_and_route.py`,
+       `tests/test_integrity/test_rack.py`.
+
+2. **Hasil sintesis, place-and-route, simulasi RTL, dan kualitas kode:**
+   - **Sintesis & P&R (`make -C rtl/fpga/gowin bitstream`):** 14.153 sel
+     sintesis (12.785 LUT1–4, 2.275 ALU); pasca-P&R **15.453 / 20.736 LUT4
+     (74%)**, **2.620 ALU** (total situs LUT4+ALU = 18.073), **5.166 / 15.552
+     DFF (33%)**, **18 / 46 BSRAM (39%)**, **11 / 384 IOB (2%)**, **0 MULT9X9**.
+     Fmax pasca-routing **120,63 MHz** (`PASS at 12.00 MHz` dan `PASS at 27.00 MHz`,
+     slack setup minimum 28,747 ns terhadap periode 37,037 ns; bitstream 12 MHz
+     dan 27 MHz byte-identik, 7.261.470 byte,
+     `38956d8842bd1bb191477dbc3f4094afa5c833fdb2645dd97b25453891947abd`).
+     Sidik jari RTL dicap ulang ke
+     `c9fdd83e97fe9b275681bd40208a5311110ecb194d79aac95fb7570134569caa`.
+   - **Simulasi RTL & gerbang statis:** `make -C rtl/tb all` keluar 0 atas 39
+     testbench, tanpa FAIL sejati; `rtl/tb/tb_hmcl_rtl_alternatives.v` menjawab
+     `31 PASS, 0 FAIL`, angka yang dituntut
+     `tests/test_hmcl/test_hmcl_laboratory.py` (4 tes, lulus); `make lint
+     typecheck` bersih (mypy 178 berkas).
+
+3. **Validasi perangkat fisik Tang Nano 20K (SRAM, flash papan tidak disentuh):**
+   - **Stage B (`rtl/programs/test_bsm.hasm` dipanggang di bitstream 27 MHz):** dua lari berurutan di
+     papan fisik GW2AR-18C menghasilkan 23 byte identik
+     (`112\n\nCYCLES=00001B89\r\n\n`, 7.049 siklus; laporan `CYCLES=` dalam
+     bentuk tergeser satu byte yang tercatat sejak P2), cocok byte-per-byte
+     dengan simulasi pembungkus RTL.
+   - **Stage C (slot loader 27 MHz, Fmax 59,69 MHz, tanpa menyentuh
+     `rtl/fpga/gowin/hcpu_gowin_top_loader.fs` maupun `rtl/fpga/gowin/hcpu_gowin_top.fs`):**
+     LBA 0–3 dan 16–20 dicadangkan lebih dulu dengan pembaca belahan 16-bit
+     (menghindari cacat silikon `PRINT >= 2^23`), diuji terhadap ekspektasi yang
+     dibekukan sebelum menyentuh papan (**8/8 lulus**: C2.1, C2.2, C3 `HDOT`
+     17 siklus terhadap `HNRM2` 4 siklus dengan keluaran sama-sama `93`, serta
+     lima kontainer bersegel `CHECKSUM32` sah yang wajib ditolak, kelimanya
+     menjawab `0`), lalu LBA 16–20 dipulihkan (5/5) dan dibaca ulang dua kali
+     identik dengan cadangan (9/9 sektor).
+   - **Arsip bukti mentah permanen:** disimpan di
+     `~/cosmictera-layer5/paket8-codex-profile2/20261102/`
+     (`~/cosmictera-layer5/paket8-codex-profile2/20261102/stage-b/`,
+     `~/cosmictera-layer5/paket8-codex-profile2/20261102/stage-c/`,
+     `~/cosmictera-layer5/paket8-codex-profile2/20261102/toolchain/`,
+     `README.md`, dan `manifest.sha256` per tahap).
+
+4. **Adendum Lapis 6 Jalur A (`src/hijaiyyah/nui/layer6_addendum.py`, `NUI/layer6_addendum.json`, `NUI/LAYER6_ADDENDUM.md`):**
+   - Tag beku `layer6-freeze-2026-09-29-final` (`0a3b446`) beserta kesembilan
+     berkas Lapis 6.1–6.3 tetap tidak tersentuh byte demi byte.
+   - Verifier diperluas secara ketat dengan tiga mekanisme:
+     1. Rantai linear `after` untuk `line-moved` (perbandingan `from` → `to`,
+        teks baris yang dikutip wajib byte-identik, posisi baris menyambung
+        tepat dari pendahulu, tanpa percabangan).
+     2. Jenis bukti `remeasured-header` untuk angka P&R di kepala pembungkus
+        (`fpga_lut4`, `fpga_dff`, `fpga_bsram`, `fpga_fmax`), terikat ke sidik
+        jari RTL yang dihitung ulang langsung, hash SHA-256 delapan berkas
+        sumber (pembungkus, constraint, dan enam berkas RTL), konfigurasi
+        target/constraint/Makefile, versi toolchain, dan hash laporan
+        sintesis/P&R di arsip permanen. Arsip yang tidak ada di mesin yang
+        memverifikasi membuat pemeriksaan itu merah, bukan dilewati. Klaim
+        P&R tetap berkelas `SIMULATED` (*PNR/build-derived*, K-18), terpisah
+        dari bukti fisik `MEASURED`.
+     3. Jenis bukti `claim-unchanged` untuk perubahan desain RTL (`rtl/hcpu_top.v`
+        pada `48cf0e5` dan `f9c8349`, serta `rtl/hcpu_pkg.vh` pada `48cf0e5`)
+        yang hanya menggeser hash/ukuran berkas bukti utuh tanpa mengubah
+        kontrak spesifikasi, identitas klaim, baris sumber, nilai, status,
+        maupun baris jangkar arsitektural.
+   - Sabotase R3 baru ditambahkan di `tests/test_ai/test_nui_layer6_addendum.py`
+     untuk ketiga mekanisme di atas, dan pemeriksaan R3 `simulated -> measured`
+     di `tests/test_ai/test_nui_hardware_provenance.py` kembali aktif dan hijau.
+
+5. **Batas klaim yang mengikat (K12):**
+   - Angka Fmax **120,63 MHz** adalah angka timing analisis statis nextpnr pada
+     citra `rtl/programs/test_bsm.hasm` (sedangkan citra `rtl/programs/loader.hasm`
+     dengan RTL yang sama memberi **59,69 MHz**), bukan klaim kenaikan kecepatan
+     arsitektural dan bukan frekuensi kristal papan (27 MHz).
+   - nextpnr tidak melaporkan pelanggaran *hold* maupun *setup* pada constraint
+     12 MHz dan 27 MHz.
+   - Kasus C4.1 (15 kasus matriks alternatif) dan saksi IMEM `0x900` hanya
+     diverifikasi di simulasi, bukan di papan fisik.
+   - Pembaca dan pemulih sektor LBA 16–20 adalah perkakas uji Stage C di arsip
+     luar git, bukan bagian dari kode produksi repositori.
+
 ### Arah pemilik, 18 September 2026 — lapisan di atas, bukan pengganti
 
 CosmicTera **tidak dimaksudkan menggantikan** Windows, Linux, Android, server,

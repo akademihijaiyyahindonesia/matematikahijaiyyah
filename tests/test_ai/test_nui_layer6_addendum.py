@@ -13,7 +13,8 @@ here:
     frozen plus addendum is today's build, and the freeze alone is not;
     every entry has its reason, its cause and evidence that holds;
     a file changed twice is a chain written out link by link (owner,
-    5 October 2026), and a second change with no link is still refused;
+    5 October 2026; extended 2 November 2026 for Jalur A), and a second
+    change with no link is still refused;
     and each guard turns red when what it guards is broken (R3).
 """
 from __future__ import annotations
@@ -40,9 +41,25 @@ from hijaiyyah.nui.layer6_freeze import TAG, _diff  # noqa: E402
 ADDENDUM = la.load()
 MODULES = {"hardware": hardware, "telemetry_sources": ts, "hardware_provenance": hp}
 CAUSE = "4bff781"
-#: The Ka'bah layer 3 commit, which added lines to the Makefile a second time.
 CAUSE2 = "004b9a0"
+CAUSE_P6 = "48cf0e5"
+CAUSE_P8 = "f9c8349"
 FIRST, SECOND = "Makefile — target HMAC", "Makefile — lapis 3 slot UART Ka'bah"
+TOP_CAP_1 = "hcpu_gowin_top.v — cap ulang opsi (a)"
+TOP_CAP_2 = "hcpu_gowin_top.v — cap ulang Paket 8"
+TOP_MOV_1 = "hcpu_gowin_top.v — baris turun enam"
+TOP_MOV_2 = "hcpu_gowin_top.v — baris turun sembilan belas"
+TOP_PNR = "hcpu_gowin_top.v — angka place-and-route Paket 8"
+HCPU_TOP_1 = "hcpu_top.v — alternatif RTL A1–A3 (P6)"
+HCPU_TOP_2 = "hcpu_top.v — CODEX_PROFILE dan calu_done (Paket 8)"
+HCPU_PKG_1 = "hcpu_pkg.vh — alternatif RTL A1–A3 (P6)"
+
+CHAINS = (
+    (FIRST, SECOND, "rtl/fpga/gowin/Makefile", CAUSE, CAUSE2),
+    (HCPU_TOP_1, HCPU_TOP_2, "rtl/hcpu_top.v", CAUSE_P6, CAUSE_P8),
+    (TOP_CAP_1, TOP_CAP_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
+    (TOP_MOV_1, TOP_MOV_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
+)
 
 
 def _frozen(name: str) -> dict[str, Any]:
@@ -56,7 +73,14 @@ def _fresh(name: str) -> dict[str, Any]:
 
 
 def test_the_frozen_records_are_the_objects_at_the_tag() -> None:
-    """Immutable: each record, its page and its spec, byte for byte."""
+    """Immutable: each record, its page and its spec, byte for byte, and the tag
+    object itself has not moved."""
+    tag_obj = subprocess.run(["git", "rev-parse", TAG], cwd=ROOT,
+                             capture_output=True, text=True, check=True).stdout.strip()
+    tag_commit = subprocess.run(["git", "rev-parse", f"{TAG}^{{commit}}"], cwd=ROOT,
+                                capture_output=True, text=True, check=True).stdout.strip()
+    assert tag_obj == "1bb468bfaf8b643249a83dab4fac4dfabe0bf102"
+    assert tag_commit == "0a3b44686b2877ed0bfa085d24650f81fd540887"
     for name, paths in la.FROZEN.items():
         for path in paths:
             held = subprocess.run(["git", "show", f"{TAG}:{path}"], cwd=ROOT,
@@ -67,18 +91,23 @@ def test_the_frozen_records_are_the_objects_at_the_tag() -> None:
 
 def test_the_addendum_covers_exactly_the_drift() -> None:
     """Every pointer that moved since the freeze is named, and nothing else."""
+    chained_second_ids = {SECOND, HCPU_TOP_2, TOP_CAP_2, TOP_MOV_2}
     for name in la.FROZEN:
         drift = set(_diff(_frozen(name), _fresh(name)))
         named = [c["pointer"] for c in la.changes(name)]
         assert sorted(set(named)) == sorted(drift), name
-        # Named once -- except the four pointers of the one chain, twice.
         twice = sorted(p for p in set(named) if named.count(p) > 1)
         assert all(named.count(p) == 2 for p in twice), name
-        assert twice == (sorted(c["pointer"] for c in _entry(ADDENDUM, SECOND)["changes"])
-                         if name == "hardware" else []), name
+        want_twice = sorted(
+            c["pointer"]
+            for eid in chained_second_ids
+            for c in _entry(ADDENDUM, eid)["changes"]
+            if c["record"] == name
+        )
+        assert twice == want_twice, name
     assert {n: len(la.changes(n)) for n in la.FROZEN} == {
-        "hardware": 23, "telemetry_sources": 8, "hardware_provenance": 39}
-    assert len(ADDENDUM["entries"]) == 6
+        "hardware": 48, "telemetry_sources": 15, "hardware_provenance": 88}
+    assert len(ADDENDUM["entries"]) == 12
 
 
 def test_the_historical_freeze_is_not_the_current_state() -> None:
@@ -107,10 +136,20 @@ def test_every_entry_says_why_by_what_and_with_what_evidence() -> None:
     def touched(commit: str) -> list[str]:
         return subprocess.run(["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit],
                               cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    expected_causes = {
+        SECOND: CAUSE2,
+        HCPU_TOP_1: CAUSE_P6,
+        HCPU_PKG_1: CAUSE_P6,
+        HCPU_TOP_2: CAUSE_P8,
+        TOP_CAP_2: CAUSE_P8,
+        TOP_MOV_2: CAUSE_P8,
+        TOP_PNR: CAUSE_P8,
+    }
+    chained_ids = {SECOND, HCPU_TOP_2, TOP_CAP_2, TOP_MOV_2}
     for e in ADDENDUM["entries"]:
-        assert e["cause"] == (CAUSE2 if e["id"] == SECOND else CAUSE), e["id"]
+        assert e["cause"] == expected_causes.get(e["id"], CAUSE), e["id"]
         assert e["reason"] and e["path"] in touched(e["cause"]), e["id"]
-        assert ("after" in e) == (e["id"] == SECOND), e["id"]
+        assert ("after" in e) == (e["id"] in chained_ids), e["id"]
         assert e["equivalence"]["kind"] in la.KINDS, e["id"]
         assert e["changes"] and all(set(c) == {"record", "pointer", "old", "new"}
                                     and c["old"] != c["new"] for c in e["changes"]), e["id"]
@@ -124,35 +163,27 @@ def _show(commit: str, path: str) -> bytes:
 
 
 def test_the_chain_is_written_out_and_every_link_of_it_is_checked() -> None:
-    """Owner, 5 October 2026: frozen Makefile -> 4bff781 -> 004b9a0, each
-    change pointing at the one before it, each hash read from git here and
-    not from the module."""
-    first, second = _entry(ADDENDUM, FIRST), _entry(ADDENDUM, SECOND)
-    path = "rtl/fpga/gowin/Makefile"
-    assert first["path"] == second["path"] == path and second["after"] == FIRST
-    assert ADDENDUM["entries"].index(first) < ADDENDUM["entries"].index(second)
-    assert (first["cause"], second["cause"]) == (CAUSE, CAUSE2)
-    assert subprocess.run(["git", "merge-base", "--is-ancestor", CAUSE, CAUSE2],
-                          cwd=ROOT).returncode == 0
-
-    def sha(data: bytes) -> str:
-        return la._sha(data)
-    frozen, a, b = sha(_show(TAG, path)), sha(_show(CAUSE, path)), sha(_show(CAUSE2, path))
-    assert len({frozen, a, b}) == 3
-    assert sha(_show(CAUSE + "^", path)) == frozen     # nothing before the first cause
-    assert sha(_show(CAUSE2 + "^", path)) == a         # nothing between the two causes
-    assert sha((ROOT / path).read_bytes()) == b        # nothing since the second
-    keys = [(c["record"], c["pointer"]) for c in first["changes"]]
-    assert keys == [(c["record"], c["pointer"]) for c in second["changes"]] and len(keys) == 4
-    assert {(c["old"], c["new"]) for c in first["changes"]} == {(frozen, a)}
-    assert {(c["old"], c["new"]) for c in second["changes"]} == {(a, b)}
+    """Every two-step chain (Makefile, hcpu_top.v, hcpu_gowin_top.v whole-file
+    and line-moved) is verified link by link against git objects."""
     links, unlinked = la._links(ADDENDUM)
-    assert links == {FIRST: (None, SECOND), SECOND: (FIRST, None)}
-    assert unlinked == {SECOND: []}
-    # Each step only added lines, and so did the whole.
-    for was, now in ((TAG, CAUSE), (CAUSE, CAUSE2), (TAG, CAUSE2)):
-        rest = iter(_show(now, path).decode().splitlines())
-        assert all(line in rest for line in _show(was, path).decode().splitlines()), (was, now)
+    for first_id, second_id, path, c1, c2 in CHAINS:
+        first, second = _entry(ADDENDUM, first_id), _entry(ADDENDUM, second_id)
+        assert first["path"] == second["path"] == path and second["after"] == first_id
+        assert ADDENDUM["entries"].index(first) < ADDENDUM["entries"].index(second)
+        assert (first["cause"], second["cause"]) == (c1, c2)
+        assert subprocess.run(["git", "merge-base", "--is-ancestor", c1, c2],
+                              cwd=ROOT).returncode == 0
+        assert links[first_id] == (None, second_id)
+        assert links[second_id] == (first_id, None)
+        assert unlinked[second_id] == []
+        keys = [(c["record"], c["pointer"]) for c in first["changes"]]
+        assert keys == [(c["record"], c["pointer"]) for c in second["changes"]]
+        left = {(c["record"], c["pointer"]): c["new"] for c in first["changes"]}
+        held = {(c["record"], c["pointer"]): c["old"] for c in second["changes"]}
+        assert left == held
+        assert _show(c1 + "^", path) == _show(TAG, path)
+        assert _show(c2 + "^", path) == _show(c1, path)
+        assert (ROOT / path).read_bytes() == _show(c2, path)
 
 
 def test_a_chain_is_never_inferred() -> None:
@@ -160,21 +191,17 @@ def test_a_chain_is_never_inferred() -> None:
     record is refused before it is built."""
     addendum = copy.deepcopy(ADDENDUM)
     del _entry(addendum, SECOND)["after"]
-    assert la._links(addendum) == ({}, {})
+    assert SECOND not in la._links(addendum)[0]
     assert sum("is changed twice" in p for p in la.problems("hardware", addendum)) == 4
     with pytest.raises(LookupError, match="the frozen record holds"):
         la.current("hardware", addendum=addendum)
 
-    # Naming a link is not enough: one that does not hold leaves the pointer
-    # changed twice, beside what is wrong with the link.
     named = copy.deepcopy(ADDENDUM)
     _entry(named, SECOND)["after"] = "Makefile — nothing"
     bad = la.problems("hardware", named)
     assert sum("is changed twice" in p for p in bad) == 4
     assert any("which is no entry written before it" in p for p in bad)
 
-    # And an entry that stands alone answers from the freeze, not from just
-    # before its own cause: the second change cannot pass as the first.
     alone = copy.deepcopy(ADDENDUM)
     alone["entries"].remove(_entry(alone, FIRST))
     del _entry(alone, SECOND)["after"]
@@ -218,7 +245,7 @@ def test_the_page_is_drawn_from_the_record() -> None:
 
 
 def _entry(addendum: dict[str, Any], prefix: str) -> dict[str, Any]:
-    return next(e for e in addendum["entries"] if e["id"].startswith(prefix))
+    return next(e for e in addendum["entries"] if e["id"] == prefix or e["id"].startswith(prefix))
 
 
 def _first(addendum: dict[str, Any], prefix: str, record: str) -> dict[str, Any]:
@@ -236,11 +263,11 @@ def _edit_file(monkeypatch: pytest.MonkeyPatch, path: str, edit: Callable[[bytes
 
 
 Sabotage = Callable[[dict[str, Any], pytest.MonkeyPatch], None]
-TOP, MAKE, PAPAN, ROW = "hcpu_gowin_top.v — cap", "Makefile", "PAPAN.md", "TELEMETRY.md"
+TOP, MAKE, PAPAN, ROW = TOP_CAP_1, FIRST, "PAPAN.md", "TELEMETRY.md"
 
 
 def _drop(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
-    e = _entry(a, TOP)
+    e = _entry(a, TOP_CAP_2)
     e["changes"] = [c for c in e["changes"] if c["pointer"] != "/items/3/source/sha256"]
 
 
@@ -248,11 +275,88 @@ def _no_line(data: bytes) -> bytes:
     return b"\n".join(ln for ln in data.split(b"\n") if not ln.startswith(b".PHONY"))
 
 
+def _fork_line_moved(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    fork = copy.deepcopy(_entry(a, TOP_MOV_2))
+    fork["id"] = "hcpu_gowin_top.v — forked line-moved"
+    a["entries"].append(fork)
+
+
+def _sabotage_remeasured_no_report(a: dict[str, Any], mp: pytest.MonkeyPatch) -> None:
+    _edit_file(
+        mp,
+        "rtl/fpga/gowin/hcpu_gowin_top.v",
+        lambda d: d.replace(b"15,453 / 20,736", b"15,450 / 20,736", 1),
+    )
+
+
+def _sabotage_remeasured_bad_fp(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    _entry(a, TOP_PNR)["equivalence"]["rtl_fingerprint"] = "a" * 64
+
+
+def _sabotage_remeasured_pattern_mismatch(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    items = _entry(a, TOP_PNR)["equivalence"]["items"]
+    items["fpga_lut4"]["pnr_pattern"] = r"LUT4:\s+15744/\s+20736\s+75%"
+
+
+def _sabotage_remeasured_bad_report_sha(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    _entry(a, TOP_PNR)["equivalence"]["reports"]["pnr_sha256"] = "b" * 64
+
+
+def _sabotage_remeasured_no_archive(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    """An archive that is not there must be red, not skipped -- and not found
+    somewhere else either: the first version fell back to a session scratchpad."""
+    reports = _entry(a, TOP_PNR)["equivalence"]["reports"]
+    reports["archive_dir"] = "~/cosmictera-layer5/paket8-codex-profile2/not-here"
+
+
+def _sabotage_claim_unchanged_val(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    _entry(a, HCPU_PKG_1)["changes"].append({
+        "record": "hardware",
+        "pointer": "/items/14/value",
+        "old": "37",
+        "new": "38",
+    })
+
+
+def _sabotage_claim_unchanged_status(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    _entry(a, HCPU_PKG_1)["changes"].append({
+        "record": "hardware_provenance",
+        "pointer": "/claims/14/status",
+        "old": "MEASURED",
+        "new": "SIMULATED",
+    })
+
+
+def _sabotage_claim_unchanged_spec(a: dict[str, Any], mp: pytest.MonkeyPatch) -> None:
+    _edit_file(
+        mp,
+        "NUI/spec/hardware_inventory.json",
+        lambda d: d.replace(b"5-stage pipeline", b"6-stage pipeline", 1),
+    )
+
+
+def _sabotage_claim_unchanged_source_line(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
+    _entry(a, HCPU_PKG_1)["changes"].append({
+        "record": "hardware",
+        "pointer": "/items/14/source/line",
+        "old": 185,
+        "new": 186,
+    })
+
+
+def _sabotage_claim_unchanged_anchor(a: dict[str, Any], mp: pytest.MonkeyPatch) -> None:
+    _edit_file(
+        mp,
+        "rtl/hcpu_top.v",
+        lambda d: d.replace(b"hcpu_writeback u_writeback (", b"hcpu_writeback u_wb_renamed (", 1),
+    )
+
+
 SABOTAGES: dict[str, tuple[str, Sabotage, str]] = {
     "a change dropped": ("hardware", _drop, "/items/3/source/sha256"),
     "an old value forged": ("hardware", lambda a, _: _first(a, TOP, "hardware").update(
         old="0" * 64), "the frozen record holds"),
-    "a new value forged": ("hardware", lambda a, _: _first(a, TOP, "hardware").update(
+    "a new value forged": ("hardware", lambda a, _: _first(a, TOP_CAP_2, "hardware").update(
         new="0" * 64), "/items/3/source/sha256"),
     "a pointer changed twice": ("hardware", lambda a, _: _entry(a, TOP)["changes"].append(
         dict(_first(a, TOP, "hardware"))), "changed twice"),
@@ -283,7 +387,7 @@ SABOTAGES: dict[str, tuple[str, Sabotage, str]] = {
         lambda d: d.replace("| `state_hash` | **belum ada".encode(),
                             "| `state_hash` | **ada".encode(), 1)),
         "changed whether its field has a source"),
-    # -- the chain (owner, 5 October 2026) ------------------------------------------
+    # -- the chain (owner, 5 October 2026 & 2 November 2026) ------------------------
     "a second change with no link": ("hardware", lambda a, _: _entry(a, SECOND).pop("after"),
                                      "the frozen record holds"),
     "a link to an entry that is not there": ("hardware", lambda a, _: _entry(a, SECOND).update(
@@ -298,9 +402,9 @@ SABOTAGES: dict[str, tuple[str, Sabotage, str]] = {
                                     "does not change the pointers"),
     "a link whose cause is not later": ("hardware", lambda a, _: _entry(a, SECOND).update(
         cause=CAUSE), "does not come after"),
-    "a link on evidence that is not a whole file's hash": (
-        "hardware", lambda a, _: _entry(a, PAPAN).update(after=_entry(a, TOP)["id"]),
-        "a chain is only for a whole file's hash"),
+    "a link on evidence that is not chainable": (
+        "telemetry_sources", lambda a, _: _entry(a, ROW).update(after=_entry(a, TOP)["id"]),
+        "a chain is only for a whole file's hash or line-moved"),
     "a last link that is not the file now": ("hardware", lambda a, mp: _edit_file(
         mp, "rtl/fpga/gowin/Makefile", lambda d: d + b"\n# one more line\n"),
         "at its cause and now"),
@@ -308,6 +412,82 @@ SABOTAGES: dict[str, tuple[str, Sabotage, str]] = {
         mp, "NUI/hardware_inventory.json", lambda d: d + b"\n"), "is not the object frozen at"),
     "a frozen page edited": ("telemetry_sources", lambda a, mp: _edit_file(
         mp, "NUI/TELEMETRY_SOURCES.md", lambda d: d + b"\n"), "is not the object frozen at"),
+    # -- R3 for chained line-moved (Jalur A) ----------------------------------------
+    "line-moved chain text altered by one char": (
+        "hardware",
+        lambda a, mp: _edit_file(
+            mp, "rtl/fpga/gowin/hcpu_gowin_top.v",
+            lambda d: d.replace(b"parameter BAUD    = 115200", b"parameter BAUD    = 115201", 1),
+        ),
+        "after 'hcpu_gowin_top.v — baris turun enam' is not",
+    ),
+    "line-moved chain linked to whole-file predecessor": (
+        "hardware",
+        lambda a, _: _entry(a, TOP_MOV_2).update(after=TOP_CAP_1),
+        "cannot link 'comment-only' to 'line-moved'",
+    ),
+    "line-moved chain that forks": (
+        "hardware",
+        _fork_line_moved,
+        "is already continued by",
+    ),
+    "line-moved chain with mismatched line position": (
+        "hardware",
+        lambda a, _: _entry(a, TOP_MOV_2)["equivalence"]["lines"].__setitem__(0, [285, 305]),
+        "do not continue",
+    ),
+    # -- R3 for remeasured-header (Jalur A) -----------------------------------------
+    "remeasured-header figure changed without new report": (
+        "hardware",
+        _sabotage_remeasured_no_report,
+        "fpga_lut4 in rtl/fpga/gowin/hcpu_gowin_top.v (to) is",
+    ),
+    "remeasured-header with wrong RTL fingerprint": (
+        "hardware",
+        _sabotage_remeasured_bad_fp,
+        "does not record RTL FINGERPRINT",
+    ),
+    "remeasured-header where report pattern disagrees with header": (
+        "hardware",
+        _sabotage_remeasured_pattern_mismatch,
+        "pnr_pattern",
+    ),
+    "remeasured-header with mismatched report sha256": (
+        "hardware",
+        _sabotage_remeasured_bad_report_sha,
+        "does not match pnr_sha256",
+    ),
+    "remeasured-header whose archive is not on this machine": (
+        "hardware",
+        _sabotage_remeasured_no_archive,
+        "is not on this machine",
+    ),
+    # -- R3 for claim-unchanged (Jalur A) -------------------------------------------
+    "claim-unchanged where claim value changed": (
+        "hardware",
+        _sabotage_claim_unchanged_val,
+        "changes claim semantics or value",
+    ),
+    "claim-unchanged where status changed": (
+        "hardware_provenance",
+        _sabotage_claim_unchanged_status,
+        "changes claim semantics or value",
+    ),
+    "claim-unchanged where spec contract changed": (
+        "hardware",
+        _sabotage_claim_unchanged_spec,
+        "is not the object frozen at",
+    ),
+    "claim-unchanged where source line changed": (
+        "hardware",
+        _sabotage_claim_unchanged_source_line,
+        "changes claim semantics or value",
+    ),
+    "claim-unchanged disguising architectural anchor change": (
+        "hardware",
+        _sabotage_claim_unchanged_anchor,
+        "anchor line 'hcpu_writeback u_writeback (' missing",
+    ),
 }
 
 

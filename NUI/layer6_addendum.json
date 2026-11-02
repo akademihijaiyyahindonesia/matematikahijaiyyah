@@ -4,8 +4,10 @@
  "kinds": {
   "comment-only": "setiap baris yang bukan baris kosong dan bukan komentar utuh `//` sama dan berurutan sama di berkas beku dan berkas sekarang — aturan yang dipakai sidik jari place and route; yang berubah hanya komentar, jadi desainnya tidak",
   "insert-only": "setiap baris berkas beku masih ada, utuh dan berurutan, di berkas sekarang; barisnya hanya bertambah, tidak ada yang hilang atau diubah",
-  "line-moved": "tiap baris yang dikutip punya teks yang sama persis di nomor barunya — di freeze, tepat sebelum penyebab, di penyebab, dan sekarang",
-  "row-meaning": "baris kontrak diurai dengan pola baris `NUI/spec/telemetry_sources.json`: medan dan asalnya sama, dan medannya tetap tanpa sumber — jadi statusnya tetap"
+  "line-moved": "tiap baris yang dikutip punya teks yang sama persis di nomor barunya — di freeze (atau di pendahulunya pada rantai `after`), tepat sebelum penyebab, di penyebab, dan sekarang",
+  "row-meaning": "baris kontrak diurai dengan pola baris `NUI/spec/telemetry_sources.json`: medan dan asalnya sama, dan medannya tetap tanpa sumber — jadi statusnya tetap",
+  "remeasured-header": "angka synthesis dan place-and-route di kepala pembungkus FPGA diukur ulang dan diikat ke sidik jari RTL hidup, hash berkas sumber, konfigurasi target/constraint/build, versi perkakas, dan hash laporan mentah synthesis/PnR serta catatan papan, sambil menjaga kelas `SIMULATED` (`PNR/build-derived`) tetap terpisah dari klaim `MEASURED` papan fisik",
+  "claim-unchanged": "berkas sumber RTL berubah secara desain sehingga hanya metadata hash/ukuran bukti berkas utuh yang bergeser, sementara kontrak spesifikasi, identitas klaim, sumber, nomor baris, nilai, status, dan baris jangkar arsitekturnya tetap sama"
  },
  "entries": [
   {
@@ -539,7 +541,703 @@
      "new": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f"
     }
    ]
+  },
+  {
+   "id": "hcpu_top.v — alternatif RTL A1–A3 (P6)",
+   "path": "rtl/hcpu_top.v",
+   "cause": "48cf0e5",
+   "reason": "48cf0e5 menambahkan pengkabelan alternatif RTL A1–A3 (`calu_add_ovf`, `sd_sector_csum`, `sd_prescan_status`, dan `OP_HDOT`) ke `rtl/hcpu_top.v`. Ukuran berkas bergeser 37.028 → 38.350 byte, tetapi struktur pipeline lima tahap (`5-stage pipeline with forwarding` di baris 7) beserta instansiasi kelima tahapnya dan klaim `cpu_pipeline` tetap tidak berubah",
+   "equivalence": {
+    "kind": "claim-unchanged",
+    "claims": [
+     "cpu_pipeline"
+    ],
+    "anchor_lines": [
+     "// Architecture: Fetch → Decode → Execute → Memory → Writeback",
+     "hcpu_fetch u_fetch (",
+     "hcpu_forward u_forward (",
+     "hcpu_execute #(.USE_DSP(USE_DSP)) u_execute (",
+     "hcpu_memory u_memory (",
+     "hcpu_writeback u_writeback (",
+     "hcpu_controller u_controller ("
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/8/source/sha256",
+     "old": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+     "new": "ff79c907ba8be6971e3f45e454109a6407de0ae25a7e49aabe409b2af08e9cc1"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/8/evidence/0/sha256",
+     "old": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+     "new": "ff79c907ba8be6971e3f45e454109a6407de0ae25a7e49aabe409b2af08e9cc1"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/8/evidence_bytes",
+     "old": 37028,
+     "new": 38350
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/8/evidence_sha256",
+     "old": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+     "new": "ff79c907ba8be6971e3f45e454109a6407de0ae25a7e49aabe409b2af08e9cc1"
+    }
+   ]
+  },
+  {
+   "id": "hcpu_pkg.vh — alternatif RTL A1–A3 (P6)",
+   "path": "rtl/hcpu_pkg.vh",
+   "cause": "48cf0e5",
+   "reason": "48cf0e5 menambahkan konstanta register MMIO kartu `SD_CSUM` (`0x5`), `SD_PRESCAN` (`0x6`), dan `OP_HDOT` (`8'h4E`) ke `rtl/hcpu_pkg.vh`. Ukuran berkas bergeser 21.087 → 21.408 byte; seluruh definisi opcode beku tetap ada, sumber klaim `isa_rtl` di `teknologi/README.md` serta cacah 62 opcode RTL tidak berubah",
+   "equivalence": {
+    "kind": "claim-unchanged",
+    "claims": [
+     "isa_rtl"
+    ],
+    "anchor_lines": [
+     "`define OP_NOP          8'h00",
+     "`define OP_HALT         8'h01",
+     "`define OP_MOV          8'h03       // DST ← S1",
+     "`define OP_MOVI         8'h04       // DST ← zero_ext(IMM)",
+     "`define OP_ERET         8'h08       // PC ← trap epc; leave trap",
+     "`define OP_SYSCALL      8'h09       // deliberate trap: ask supervisor"
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/9/evidence/1/sha256",
+     "old": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342",
+     "new": "2e0c3df26eb5a6298986c7e7cd35e7f72fc061ad2b787c23ad8fe4c9bd095f43"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/9/evidence_bytes",
+     "old": 21087,
+     "new": 21408
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/9/evidence_sha256",
+     "old": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342",
+     "new": "2e0c3df26eb5a6298986c7e7cd35e7f72fc061ad2b787c23ad8fe4c9bd095f43"
+    }
+   ]
+  },
+  {
+   "id": "hcpu_top.v — CODEX_PROFILE dan calu_done (Paket 8)",
+   "path": "rtl/hcpu_top.v",
+   "cause": "f9c8349",
+   "after": "hcpu_top.v — alternatif RTL A1–A3 (P6)",
+   "reason": "f9c8349 meneruskan parameter `CODEX_PROFILE` dan `HDOT_ENABLE` ke `hcpu_codex_alu` serta `hcpu_decode`, dan menahan pipeline lewat `calu_done` selama `OP_HDOT` 14 siklus pada profil 2. Ukuran berkas bergeser 38.350 → 38.892 byte; struktur lima tahap pipeline pada baris 7 dan klaim `cpu_pipeline` tetap tidak berubah",
+   "equivalence": {
+    "kind": "claim-unchanged",
+    "claims": [
+     "cpu_pipeline"
+    ],
+    "anchor_lines": [
+     "// Architecture: Fetch → Decode → Execute → Memory → Writeback",
+     "hcpu_fetch u_fetch (",
+     "hcpu_forward u_forward (",
+     "hcpu_execute #(.USE_DSP(USE_DSP)) u_execute (",
+     "hcpu_memory u_memory (",
+     "hcpu_writeback u_writeback (",
+     "hcpu_controller u_controller ("
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/8/source/sha256",
+     "old": "ff79c907ba8be6971e3f45e454109a6407de0ae25a7e49aabe409b2af08e9cc1",
+     "new": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/8/evidence/0/sha256",
+     "old": "ff79c907ba8be6971e3f45e454109a6407de0ae25a7e49aabe409b2af08e9cc1",
+     "new": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/8/evidence_bytes",
+     "old": 38350,
+     "new": 38892
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/8/evidence_sha256",
+     "old": "ff79c907ba8be6971e3f45e454109a6407de0ae25a7e49aabe409b2af08e9cc1",
+     "new": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd"
+    }
+   ]
+  },
+  {
+   "id": "hcpu_gowin_top.v — cap ulang Paket 8",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "f9c8349",
+   "after": "hcpu_gowin_top.v — cap ulang opsi (a)",
+   "reason": "f9c8349 mencap ulang kepala `rtl/fpga/gowin/hcpu_gowin_top.v` sesudah place-and-route Paket 8 (`CODEX_PROFILE=2` pada `USE_DSP=0`): 19 baris komentar bersih ditambahkan untuk mencatat hasil pengukuran baru dan sidik jari `c9fdd83e97fe…`, sementara seluruh baris kode Verilog di dalam berkas ini tetap identik (`comment-only`, 34.404 → 35.688 byte)",
+   "equivalence": {
+    "kind": "comment-only"
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/3/source/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/3/evidence/0/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/source/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/evidence/0/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/source/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/evidence/0/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/source/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/evidence/0/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/14/source/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/14/evidence/0/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/17/source/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/evidence_bytes",
+     "old": 34404,
+     "new": 35688
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/evidence_sha256",
+     "old": "b4f03c9d136566f2185e5d99cfd858c6e6e7beca4595354ac4d28083914ff8c6",
+     "new": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709"
+    }
+   ]
+  },
+  {
+   "id": "hcpu_gowin_top.v — baris turun sembilan belas",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "f9c8349",
+   "after": "hcpu_gowin_top.v — baris turun enam",
+   "reason": "Cap ulang Paket 8 di `f9c8349` menyisipkan 19 baris komentar bersih di kepala `rtl/fpga/gowin/hcpu_gowin_top.v`, sehingga setiap baris di bawah blok riwayat turun 19 baris dari posisinya sesudah `4bff781`: PLL 286 → 305, UART 297 → 316, dan keenam port `tele_*` 333–338 → 352–357, dengan teks baris yang dikutip tetap identik byte demi byte",
+   "equivalence": {
+    "kind": "line-moved",
+    "lines": [
+     [
+      286,
+      305
+     ],
+     [
+      297,
+      316
+     ],
+     [
+      333,
+      352
+     ],
+     [
+      334,
+      353
+     ],
+     [
+      335,
+      354
+     ],
+     [
+      336,
+      355
+     ],
+     [
+      337,
+      356
+     ],
+     [
+      338,
+      357
+     ]
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/14/source/line",
+     "old": 286,
+     "new": 305
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/17/source/line",
+     "old": 297,
+     "new": 316
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/0/line",
+     "old": 333,
+     "new": 352
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/1/line",
+     "old": 334,
+     "new": 353
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/2/line",
+     "old": 335,
+     "new": 354
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/3/line",
+     "old": 336,
+     "new": 355
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/4/line",
+     "old": 337,
+     "new": 356
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/signals/5/line",
+     "old": 338,
+     "new": 357
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/source/line",
+     "old": 286,
+     "new": 305
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/17/source/line",
+     "old": 297,
+     "new": 316
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/claim",
+     "old": "tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:333",
+     "new": "tele_pc = port rtl/fpga/gowin/hcpu_gowin_top.v:352"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/source/line",
+     "old": 333,
+     "new": 352
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/claim",
+     "old": "tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:334",
+     "new": "tele_instr = port rtl/fpga/gowin/hcpu_gowin_top.v:353"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/source/line",
+     "old": 334,
+     "new": 353
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/claim",
+     "old": "tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:335",
+     "new": "tele_halted = port rtl/fpga/gowin/hcpu_gowin_top.v:354"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/source/line",
+     "old": 335,
+     "new": 354
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/claim",
+     "old": "tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:336",
+     "new": "tele_guard = port rtl/fpga/gowin/hcpu_gowin_top.v:355"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/source/line",
+     "old": 336,
+     "new": 355
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/claim",
+     "old": "tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:337",
+     "new": "tele_cycles = port rtl/fpga/gowin/hcpu_gowin_top.v:356"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/source/line",
+     "old": 337,
+     "new": 356
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/claim",
+     "old": "tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:338",
+     "new": "tele_flags = port rtl/fpga/gowin/hcpu_gowin_top.v:357"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/source/line",
+     "old": 338,
+     "new": 357
+    }
+   ]
+  },
+  {
+   "id": "hcpu_gowin_top.v — angka place-and-route Paket 8",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "f9c8349",
+   "reason": "Paket 8 (`f9c8349`) mengukur ulang slot HCPU (`USE_DSP=0`, `CODEX_PROFILE=2`: squarer nibble 1 siklus untuk `HNRM2`/`HDIST` dan `HDOT` 14 siklus) dengan `make -C rtl/fpga/gowin bitstream` pada Tang Nano 20K (`GW2AR-LV18QN88C8/I7`): LUT4 15.744 → 15.453 (baris 47 → 48), DFF 5.065 → 5.166 (baris 48 → 49), BSRAM tetap 18 / 46 (baris 49 → 50), dan Fmax pasca-routing 86.18 → 120.63 MHz (baris 52 → 53). Klaim tetap berkelas `SIMULATED` (`PNR/build-derived`, K-18), terpisah dari bukti fisik papan Stage B dan Stage C di `cosmictera-build/PAPAN.md`",
+   "equivalence": {
+    "kind": "remeasured-header",
+    "rtl_fingerprint": "c9fdd83e97fe9b275681bd40208a5311110ecb194d79aac95fb7570134569caa",
+    "sources": {
+     "rtl/fpga/gowin/hcpu_gowin_top.v": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "rtl/fpga/gowin/hcpu_gowin.cst": "eaa86f79a1fc2e41ace6f65c0e4b70a82b5415514e0893f5a84534e90776623c",
+     "rtl/hcpu_codex_alu.v": "f7145486899ff0600b197c09bc6e564fa4c1c1bd61acea9a7b50e9d8b1ce41c0",
+     "rtl/hcpu_decode.v": "a3e5a1aeb22e230add469802a90afa2df3713a8488cb1030a448330b0971d7cb",
+     "rtl/hcpu_top.v": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd",
+     "rtl/hcpu_sdio.v": "9098a35f0f8dc9dee73968c2acc769b166d3e4ada5c1ea6a3506685ea9534f89",
+     "rtl/hcpu_mmio.v": "7a160118c87cb088930d37a79362e3cdb6ecf01726e95f441589a63eee46318b",
+     "rtl/hcpu_pkg.vh": "2e0c3df26eb5a6298986c7e7cd35e7f72fc061ad2b787c23ad8fe4c9bd095f43"
+    },
+    "target": {
+     "board": "Tang Nano 20K",
+     "device": "GW2AR-LV18QN88C8/I7",
+     "family": "GW2A-18C",
+     "cst_path": "rtl/fpga/gowin/hcpu_gowin.cst",
+     "cst_sha256": "eaa86f79a1fc2e41ace6f65c0e4b70a82b5415514e0893f5a84534e90776623c",
+     "makefile_path": "rtl/fpga/gowin/Makefile",
+     "yosys_flags": "-nodsp",
+     "use_dsp": 0,
+     "codex_profile": 2,
+     "constraint_mhz": 12.0
+    },
+    "toolchain": {
+     "yosys": "Yosys 0.68+138 (git sha1 56cf2cf41-dirty)",
+     "nextpnr": "nextpnr-himbaechel (Version nextpnr-0.11.1-19-g8dbcee5c)",
+     "gowin_pack": "Apycula 0.34.dev1+g332809527 gowin_pack (GW2A-18C)",
+     "command": "make -C rtl/fpga/gowin bitstream"
+    },
+    "reports": {
+     "archive_dir": "~/cosmictera-layer5/paket8-codex-profile2/20261102",
+     "synth_report": "stage-b/synth.txt",
+     "synth_sha256": "18737389163eff7ee44d9ea3c60801c6918b1894008f8b6b84181906c955de01",
+     "pnr_report": "stage-b/pnr12.txt",
+     "pnr_sha256": "9fcd5714b007b4489bb7368fd426bfae350b20b70cbaaa4f460fe87032c7b933",
+     "make_bitstream_log": "stage-b/make_bitstream.txt",
+     "make_bitstream_sha256": "6c836822d33a12144a7bbee4289fdd1b48cad0ac679f9afde47c264fe13eb9ab",
+     "bitstream_sha256": "38956d8842bd1bb191477dbc3f4094afa5c833fdb2645dd97b25453891947abd",
+     "bitstream_bytes": 7261470,
+     "board_record_page": "cosmictera-build/PAPAN.md",
+     "board_record_section": "^## Paket 8 — `CODEX_PROFILE=2` di silikon, 2 November 2026"
+    },
+    "items": {
+     "fpga_lut4": {
+      "old_line": 47,
+      "new_line": 48,
+      "old_value": "15,744 / 20,736",
+      "new_value": "15,453 / 20,736",
+      "pnr_pattern": "LUT4:\\s+15453/\\s+20736\\s+74%"
+     },
+     "fpga_dff": {
+      "old_line": 48,
+      "new_line": 49,
+      "old_value": "5,065 / 15,552",
+      "new_value": "5,166 / 15,552",
+      "pnr_pattern": "DFF:\\s+5166/\\s+15552\\s+33%"
+     },
+     "fpga_bsram": {
+      "old_line": 49,
+      "new_line": 50,
+      "old_value": "18 /     46",
+      "new_value": "18 /     46",
+      "pnr_pattern": "BSRAM:\\s+18/\\s+46\\s+39%"
+     },
+     "fpga_fmax": {
+      "old_line": 52,
+      "new_line": 53,
+      "old_value": "86.18 MHz",
+      "new_value": "120.63 MHz",
+      "pnr_pattern": "Max frequency for clock 'u_core\\.clk_27m': 120\\.63 MHz \\(PASS at 12\\.00 MHz\\)"
+     }
+    }
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/3/source/line",
+     "old": 47,
+     "new": 48
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/3/value",
+     "old": "15,744 / 20,736",
+     "new": "15,453 / 20,736"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/source/line",
+     "old": 48,
+     "new": 49
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/value",
+     "old": "5,065 / 15,552",
+     "new": "5,166 / 15,552"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/source/line",
+     "old": 49,
+     "new": 50
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/source/line",
+     "old": 52,
+     "new": 53
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/value",
+     "old": "86.18 MHz",
+     "new": "120.63 MHz"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/claim",
+     "old": "sumber daya FPGA = 15,744 / 20,736",
+     "new": "sumber daya FPGA = 15,453 / 20,736"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/source/line",
+     "old": 47,
+     "new": 48
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/claim",
+     "old": "sumber daya FPGA = 5,065 / 15,552",
+     "new": "sumber daya FPGA = 5,166 / 15,552"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/source/line",
+     "old": 48,
+     "new": 49
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/source/line",
+     "old": 49,
+     "new": 50
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/claim",
+     "old": "sumber daya FPGA = 86.18 MHz",
+     "new": "sumber daya FPGA = 120.63 MHz"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/source/line",
+     "old": 52,
+     "new": 53
+    }
+   ]
   }
  ],
- "chain": "Keputusan pemilik, 5 Oktober 2026, sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai lamanya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh yang berantai (`comment-only`, `insert-only`). Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak"
+ "chain": "Keputusan pemilik, 5 Oktober 2026 (diperluas 2 November 2026 untuk Jalur A), sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781` dan commit Paket 8 `f9c8349` mencap ulang `hcpu_gowin_top.v` serta memperbarui `hcpu_top.v`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai di penyebab pendahulunya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh (`comment-only`, `insert-only`, `claim-unchanged`) dan pergeseran nomor baris linear (`line-moved`) yang berantai. Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak"
 }

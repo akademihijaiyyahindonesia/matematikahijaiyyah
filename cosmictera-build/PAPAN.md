@@ -1489,13 +1489,32 @@ Batasnya, apa adanya (K12):
 - C4.1 (lima belas kasus) dan saksi IMEM `0x900` hanya di simulasi.
 - Pembaca dan pemulih adalah perkakas lari ini, tidak di repositori.
 
-Rekaman di luar git, belum di tempat tetap — lokasinya menunggu pemilik:
-Stage B `board_test_bsm_1.bin` sha256
-`f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0` (lari 2
-identik), Stage C `report.json` sha256
-`ed86e1fa8813ec0e8828622ebe6397347df3ca07df627d190441a80e2ae8acea`, cadangan
-`backup_words.json` sha256
-`62eb73fe993376beee5924ba54c0c467951259fd6d3e4137498d1606c218b106`.
+Arsip bukti mentah di luar git (ditetapkan pemilik, 2 November 2026):
+`~/cosmictera-layer5/paket8-codex-profile2/20261102/` (`README.md`,
+`stage-b/manifest.sha256`, `stage-c/manifest.sha256`, dan `toolchain/`):
+- **Stage B (`stage-b/`):** bitstream `top27.fs` dan `top12.fs` sha256
+  `38956d8842bd1bb191477dbc3f4094afa5c833fdb2645dd97b25453891947abd` (7.261.470
+  byte, byte-identik), tangkapan UART `board_test_bsm_1.bin` dan
+  `board_test_bsm_2.bin` sha256
+  `f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0` (23 byte,
+  dua lari identik), laporan sintesis `synth.txt` sha256
+  `18737389163eff7ee44d9ea3c60801c6918b1894008f8b6b84181906c955de01`, P&R
+  `pnr12.txt` sha256
+  `9fcd5714b007b4489bb7368fd426bfae350b20b70cbaaa4f460fe87032c7b933`, P&R 27 MHz
+  `pnr27.txt` sha256
+  `6abda68ed3e0b664670dec10ac969fce6cfdf61de4739c915e5671138f04d625`, serta log
+  `make_bitstream.txt` sha256
+  `6c836822d33a12144a7bbee4289fdd1b48cad0ac679f9afde47c264fe13eb9ab`.
+- **Stage C (`stage-c/`):** bitstream slot loader `top27_loader.fs` sha256
+  `f45a9b7b99d72f9c9be55066aa76e747f9dc91bc927807f1e69c78beb035c2a1` (7.261.470
+  byte, Fmax 59,69 MHz), laporan `report.json` sha256
+  `ed86e1fa8813ec0e8828622ebe6397347df3ca07df627d190441a80e2ae8acea` (9.627
+  byte, 8/8 cocok; medan `after`-nya mencatat dua baca sesudah pemulihan sama
+  dengan cadangan di kesembilan sektor), cadangan LBA 0–3 dan 16–20
+  `backup_words.json` sha256
+  `62eb73fe993376beee5924ba54c0c467951259fd6d3e4137498d1606c218b106` (6.627
+  byte), serta log P&R loader `pnr.txt` sha256
+  `7b0cb32b0375a4eff1bea55090ec5031f11c8f1646d4ab3d1ac9557a062f119e`.
 
 ---
 
