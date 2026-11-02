@@ -236,7 +236,7 @@ gowin_pack milik suite sendiri gagal identik, jadi bukan ketidakcocokan versi.
 | Marjin ronde | 27,4× di bawah periode | 768 / 28 |
 | Deserialiser | 8 clock/byte | `kabah.DESERIAL_CLOCKS_PER_BYTE` |
 | Lapis otoritatif | 3 | `kabah.AUTHORITATIVE_LAYER` |
-| Opcode H‑ISA | 103 terdefinisi | `program.defined_opcodes()` |
+| Opcode H‑ISA | 104 terdefinisi | `program.defined_opcodes()` |
 | Opcode berencoding RTL | 82 | `define OP_* … 8'h` di `hcpu_pkg.vh` (54 umum + 28 huruf) |
 | Instruksi huruf | 28 (0xE0–0xFB) | satu huruf, tanpa operand |
 | Penyebab trap | 6 terdefinisi, 5 bersumber | `TRAP_CAUSES` di `hcpu_pkg.vh` |

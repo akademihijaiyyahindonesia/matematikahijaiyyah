@@ -2487,11 +2487,12 @@ Diambil sesudah pengukuran ulang 1–2 November 2026 membuktikan bahwa draf
 pertama Paket 8 — `USE_DSP=0` memecah tiap perkalian 8×8 jadi pasangan produk
 parsial Radix-4 di rantai carry ALU Gowin, sebelum `CODEX_PROFILE` ada —
 memindahkan beban dari LUT4 ke ALU (16.386 LUT4 + 3.256 ALU = 19.642 situs
-terhadap 18.886 pada Paket 7 `2f51be9`) sehingga tetap gagal *placement*. Pemilik menetapkan
-strategi tiga profil arsitektur pada `rtl/hcpu_codex_alu.v`, mengesahkan bukti
-papan fisik Stage B dan Stage C, memerintahkan commit lokal Paket 8
-(`f9c8349`) di atas garis dasar `807d55b`, dan memilih **Jalur A** untuk
-menutup adendum Lapis 6 secara ketat.
+terhadap 18.886 pada Paket 7 `2f51be9`) sehingga tetap gagal *placement*.
+Pemilik menetapkan strategi tiga profil arsitektur pada
+`rtl/hcpu_codex_alu.v`, mengesahkan bukti papan fisik Stage B dan Stage C,
+memerintahkan commit lokal Paket 8 (`f9c8349`) di atas garis dasar
+`807d55b`, dan memilih **Jalur A** untuk menutup adendum Lapis 6 secara
+ketat.
 
 1. **Tiga profil arsitektur Codex ALU dan ruang lingkup Paket 8 (`f9c8349`):**
    - **Profil A (`CODEX_PROFILE=0`, ASIC/generik):** MAC 8×8 14 lajur bersama,

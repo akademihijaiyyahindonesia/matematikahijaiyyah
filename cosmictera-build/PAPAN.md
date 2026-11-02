@@ -1348,7 +1348,7 @@ menyala dan menerima 28 nilai yang sama.
 ## Tiga cacat yang hanya papan bisa temukan
 
 Ketiganya lolos 36 testbench RTL — 20 lewat `make -C rtl/tb all`, sisanya dipanggil
-langsung dari pytest — dan 6.243 tes Python. Simulasi bukan
+langsung dari pytest — dan 6.328 tes Python. Simulasi bukan
 lalai — ia secara struktural buta terhadap ketiganya.
 
 **1. Reset yang digerbangi level pin MODE1.** `btn_rst_n` ada di pin 87,
@@ -1522,7 +1522,7 @@ Arsip bukti mentah di luar git (ditetapkan pemilik, 2 November 2026):
 
 | | Hasil |
 |---|---|
-| `python3 -m pytest -q` | 6.243 tes terkumpul; hasil lari terakhir: catatan † di [CHECKLIST.md](CHECKLIST.md) |
+| `python3 -m pytest -q` | 6.328 tes terkumpul; hasil lari terakhir: catatan † di [CHECKLIST.md](CHECKLIST.md) |
 | `make -C rtl/tb all` | 39 testbench, 408 pemeriksaan, 0 gagal |
 
 Rincian per testbench, dijumlah dari baris ringkasan tiap testbench: ROM 30,

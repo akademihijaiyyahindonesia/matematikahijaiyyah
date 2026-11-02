@@ -47,7 +47,7 @@ Label: `CC`.
 | menyala | apa persisnya | bukti |
 |---|---|---|
 | Pipeline HCPU | fetch → decode → execute → mem → writeback | `rtl/hcpu_top.v` |
-| Opcode | **82 dari 103** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
+| Opcode | **82 dari 104** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
 | Opcode huruf | **28** (`0xE0`–`0xFB`), dijalankan di pipeline | `rtl/tb/tb_hcpu_letters.v`, `rtl/programs/letters.hasm` |
 | Codex ALU | HCADD, HNRM2, HDIST, CGET, CSET, CMOD4 | `rtl/hcpu_codex_alu.v`, 6 asersi |
 | Blok codex | CMOV, CZERO, CEQ, CRHO, CU, CMOD4 — `U` dan `ρ` dibaca dari guard, bukan dihitung ulang; `CDOT` tinggal di perangkat lunak, lihat [OFF.md](OFF.md) | `rtl/tb/tb_hcpu_top.v` Program 11 |
@@ -320,7 +320,7 @@ Label: `CC` — sintesis, PNR, pack, dan flash ke papan fisik.
 ## Menjalankan semuanya
 
 ```bash
-python3 -m pytest -q          # 6.243 tes terkumpul; hasil: CHECKLIST.md †
+python3 -m pytest -q          # 6.328 tes terkumpul; hasil: CHECKLIST.md †
 make -C rtl/tb all            # 408 asersi, 39 bench, 0 gagal
 make lint && make typecheck   # ruff, mypy
 ```

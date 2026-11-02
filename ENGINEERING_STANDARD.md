@@ -216,6 +216,29 @@ hijaiyyah-mathematics/
 │       │   ├── __main__.py
 │       │   └── runtime.py
 │       │
+│       ├── cells/                  ← Hijaiyyah Cells (.hcell) & Cell IR
+│       │   ├── __init__.py
+│       │   ├── __main__.py
+│       │   ├── benchmarks.py
+│       │   ├── cost_model.py
+│       │   ├── dataset_engine.py
+│       │   ├── evaluator.py
+│       │   ├── hisa_backend.py
+│       │   ├── hpg1_bridge.py
+│       │   ├── ir.py
+│       │   ├── lexer.py
+│       │   ├── parser.py
+│       │   ├── semantic.py
+│       │   ├── spec.py
+│       │   ├── wave1_overlays.py
+│       │   └── wave2_syscalls.py
+│       │
+│       ├── hmcl/                   ← Hijaiyyah Mathematical Computing Laboratory
+│       │   ├── __init__.py
+│       │   ├── charter_assets.py
+│       │   ├── multilevel_sim.py
+│       │   └── nui_benchmark.py
+│       │
 │       ├── nui/                    ← trained side of NUI; needs `pip install .[nui]`
 │       │   ├── __init__.py
 │       │   ├── features.py         ← titik/garis/lengkung + Theta-hat/rho per letter
