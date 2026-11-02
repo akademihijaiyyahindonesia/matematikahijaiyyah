@@ -19,9 +19,11 @@
 `include "hcpu_pkg.vh"
 
 module hcpu_top #(
-    parameter CLK_HZ  = `SYS_CLK_HZ,
-    parameter BAUD    = `UART_BAUD,
-    parameter USE_DSP = 1  // 1 = FPGA (DSP48), 0 = ASIC (shift-add)
+    parameter CLK_HZ        = `SYS_CLK_HZ,
+    parameter BAUD          = `UART_BAUD,
+    parameter USE_DSP       = 1,  // 1 = FPGA DSP (MULT9X9), 0 = No-DSP (Squarer + Iterative HDOT)
+    parameter CODEX_PROFILE = -1, // -1 = auto (USE_DSP ? 1 : 2), 0 = ASIC MAC, 1 = FPGA DSP, 2 = FPGA No-DSP
+    parameter HDOT_ENABLE   = 1   // 1 = OP_HDOT enabled, 0 = OP_HDOT rejected as illegal opcode
 )(
     input  wire        clk,
     input  wire        rst_n,
@@ -417,7 +419,9 @@ module hcpu_top #(
     );
 
     // ── Decode ──────────────────────────────────────────────────
-    hcpu_decode u_decode (
+    hcpu_decode #(
+        .HDOT_ENABLE    (HDOT_ENABLE)
+    ) u_decode (
         .clk            (clk),
         .rst_n          (rst_n),
         .stall          (id_stall),
@@ -703,7 +707,14 @@ module hcpu_top #(
     );
 
     // ── Codex ALU ───────────────────────────────────────────────
-    hcpu_codex_alu u_codex_alu (
+    hcpu_codex_alu #(
+        .USE_DSP       (USE_DSP),
+        .CODEX_PROFILE (CODEX_PROFILE),
+        .HDOT_ENABLE   (HDOT_ENABLE)
+    ) u_codex_alu (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .stall      (print_active | halted),
         .op         (calu_op),
         .index      (calu_index),
         .src1       (calu_src1),
@@ -836,7 +847,7 @@ module hcpu_top #(
         // have no forward-declaration the way the `wire redirect_target`
         // block above this could rely on for signals already in scope there.
         .pc_now        (branch_taken_w ? branch_target_w : if_pc),
-        .pc_valid      (if_pc_valid),
+        .pc_valid      (if_pc_valid & calu_done),
         .pc_fault      (id_pc),
         .reg_we        (trap_reg_we_w),
         .reg_sel       (trap_reg_sel_w),
@@ -867,7 +878,7 @@ module hcpu_top #(
     hcpu_controller u_controller (
         .clk             (clk),
         .rst_n           (rst_n),
-        .ex_is_print     (print_active),
+        .ex_is_print     (print_active | ~calu_done),
         .branch_taken      (redirect_taken),
         .wb_halt           (wb_halt),
         .load_use_hazard   (load_use_hazard),

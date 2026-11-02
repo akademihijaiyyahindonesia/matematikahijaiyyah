@@ -1422,6 +1422,83 @@ Log mentah di luar git, `~/cosmictera-layer5/kabah-hmac/20261006T091813Z/`:
 
 ---
 
+## Paket 8 — `CODEX_PROFILE=2` di silikon, 2 November 2026
+
+Atas perintah pemilik. Slot CPU dengan `USE_DSP=0`, jadi `hcpu_codex_alu.v`
+membangun profil 2: squarer nibble untuk `HNRM2` dan `HDIST`, dan `HDOT`
+14 siklus dengan pipeline ditahan sampai selesai. Kedua bitstream dibangun dari
+RTL commit ini dan dimuat ke **SRAM, bukan flash**, dengan
+`openFPGALoader -b tangnano20k -m`; JTAG mendeteksi GW2A(R)-18(C), idcode
+`0x81b`. Port `/dev/cu.usbserial-20250303171`.
+
+**Stage B — `test_bsm` dipanggang.** Bitstream `hcpu_gowin_top.fs`, sha256
+`38956d8842bd1bb191477dbc3f4094afa5c833fdb2645dd97b25453891947abd` — yang sama
+dengan hasil `make -C rtl/fpga/gowin bitstream` yang angkanya dicap di kepala
+pembungkus. Ekspektasi dibekukan lebih dulu dari simulasi pembungkus
+(`rtl/tb/tb_gowin_top.v`, 2 PASS): 23 byte.
+
+| lari | keluaran papan |
+|---|---|
+| 1 | **23 byte** — `112`, lalu `CYCLES=00001B89` (7.049) |
+| 2 | byte identik dengan lari 1 |
+
+Cocok byte demi byte dengan simulasi. `test_bsm` menjalankan `HNRM2`, jadi
+squarer profil 2 terbukti di sini; `HDOT` tidak.
+
+**Stage C — loader dan kartu.** Bitstream loader dibangun dari RTL yang sama
+dengan `rtl/programs/loader.hasm` di memori instruksi, sha256
+`f45a9b7b99d72f9c9be55066aa76e747f9dc91bc927807f1e69c78beb035c2a1`. Kasus,
+harness, dan ekspektasinya dibekukan sebelum papan ditanya, lalu diulang di
+simulasi pembungkus dengan `rtl/tb/sd_card_model.v` lewat loader UART yang sama:
+8/8.
+
+| kasus | keluaran papan |
+|---|---|
+| C2.1 — kontainer satu sektor | `1 1 2 3` |
+| C2.2 — kontainer dua sektor | `1 146` |
+| C3 — `HDOT` profil 2 | `1 21 93 93 51 17 4 77` |
+| C4.2 — lima kontainer bersegel sah yang wajib ditolak | `0` kelimanya |
+| **total** | **8/8 cocok ekspektasi** |
+
+Di C3, ⟨H₂,H₂⟩ lewat `HDOT` sama dengan ‖H₂‖² lewat `HNRM2`, 93, dan pencacah
+`0xFF4` mencatat 17 siklus untuk `HDOT` melawan 4 untuk `HNRM2`: tiga belas
+siklus tahan, bentuk 14 siklus profil 2.
+
+**Kartu dikembalikan seperti semula.** Stage C menulis sektor 16 ke atas, jadi
+LBA 0–3 dan 16–20 dicadangkan dulu. Pembacanya mencetak tiap kata 32-bit
+sebagai **dua paruh 16-bit**: `PRINT` salah di silikon mulai 2²³
+([OFF.md](OFF.md), OFF-PRINT-SILICON), dan kata program hampir semuanya di atas
+itu. Pembaca dan pemulihnya diuji lebih dulu di simulasi terhadap
+`sd_card_model.v`: sembilan sektor terbaca kata demi kata, lima sektor
+dipulihkan tepat tanpa menyentuh sektor lain.
+
+| | hasil |
+|---|---|
+| cadangan | dua baca identik, sama dengan baca read-only pukul 18.50 |
+| kontainer di LBA 17 yang terbaca | `loaded` menurut loader Python, `CHECKSUM32` bila satu bitnya dibalik |
+| pemulihan LBA 16–20 | 5/5, percobaan pertama |
+| sesudahnya | dua baca, kesembilan sektor sama dengan cadangan |
+| baca kartu | 12 dari 12 pada percobaan pertama |
+
+Batasnya, apa adanya (K12):
+
+- **Satu lari Stage C, dua lari Stage B, satu papan, SRAM.** Flash papan tidak
+  berubah.
+- Angka `CYCLES` lewat loader tidak dibandingkan: ia menghitung juga waktu
+  menunggu UART.
+- C4.1 (lima belas kasus) dan saksi IMEM `0x900` hanya di simulasi.
+- Pembaca dan pemulih adalah perkakas lari ini, tidak di repositori.
+
+Rekaman di luar git, belum di tempat tetap — lokasinya menunggu pemilik:
+Stage B `board_test_bsm_1.bin` sha256
+`f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0` (lari 2
+identik), Stage C `report.json` sha256
+`ed86e1fa8813ec0e8828622ebe6397347df3ca07df627d190441a80e2ae8acea`, cadangan
+`backup_words.json` sha256
+`62eb73fe993376beee5924ba54c0c467951259fd6d3e4137498d1606c218b106`.
+
+---
+
 ## Suite yang mendampingi
 
 | | Hasil |

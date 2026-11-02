@@ -41,22 +41,24 @@
 // re-measured 2026-09-14, twice: once when H-ISA v1.2 widened the peripheral
 // window and put the onboard TF card behind it, and again after the card's own
 // Ncc gap was fixed. Re-measured again 2026-09-15 after this file was split
-// into hcpu_gowin_core and a pin-level hcpu_gowin_top. These are that run's
-// figures:
+// into hcpu_gowin_core and a pin-level hcpu_gowin_top, and again 2026-11-02
+// for Paket 8 (yosys 0.68+138, nextpnr-himbaechel 0.11.1-19). These are the
+// 2026-11-02 run's figures, from `make -C rtl/fpga/gowin bitstream`:
 //
-//     LUT4       15,744 / 20,736   75%
-//     DFF         5,065 / 15,552   32%
+//     LUT4       15,453 / 20,736   74%
+//     DFF         5,166 / 15,552   33%
 //     BSRAM          18 /     46   39%
 //     IOB            11 /    384    2%
 //
-//     Fmax       86.18 MHz (PASS at the 12.00 MHz constraint)
-//               -- taken after routing. Zero hold and zero setup violations.
+//     Fmax       120.63 MHz (PASS at the 12.00 MHz constraint)
+//               -- taken after routing. No hold or setup violation reported.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
-// +143 LUT4 FOR THE SPLIT, AND NO NEW LOGIC. DFF, BSRAM and IOB do not move at
-// all, which is the check: a wrapper that holds no registers cannot have added
-// a function. The control was measured rather than assumed -- HEAD's
-// single-module wrapper synthesised against this same rtl/*.v:
+// +143 LUT4 FOR THE SPLIT (2026-09-15, 15,744 LUT4), AND NO NEW LOGIC. DFF,
+// BSRAM and IOB do not move at all, which is the check: a wrapper that holds
+// no registers cannot have added a function. The control was measured rather
+// than assumed -- HEAD's single-module wrapper synthesised against this same
+// rtl/*.v:
 //
 //                  HEAD      split     delta
 //        LUT1       891       995      +104
@@ -75,6 +77,16 @@
 // none of which was ever separated into design and placement; 86.18 sits
 // inside that spread. The board's clock is 27 MHz and every run passes the
 // constraint the flow places against.
+//
+// PAKET 8, 2026-11-02: USE_DSP = 0 here, so hcpu_codex_alu.v builds
+// CODEX_PROFILE 2 -- the nibble-split squarer for HNRM2 and HDIST, and HDOT
+// over 14 cycles with the pipeline stalled until it is done. LUT4 15,744 ->
+// 15,453 and DFF 5,065 -> 5,166, but the 2026-09-15 run predates every RTL
+// change since, so the delta is not Paket 8's alone. Fmax 120.63 is NOT
+// claimed as a gain either: the same RTL with rtl/programs/loader.hasm in
+// instruction memory instead of test_bsm, placed at --freq 27, gave 59.69 MHz.
+// Placing this run at --freq 27 instead of the default gave a byte-identical
+// bitstream. Both slots ran on the board from SRAM -- cosmictera-build/PAPAN.md.
 //
 // +1 LUT4 AND +9 DFF against 15,600 / 5,056, and that is the whole price of
 // making every command wait the eight idle SD clocks the standard owes the
@@ -227,10 +239,17 @@
 // Restamped 2026-10-01 WITH a fresh place-and-route run, the owner's option
 // (a): the HMAC-SHA256 slot put three modules into rtl/, which this slot's
 // fingerprint picks up by wildcard, though its synthesis reads only hcpu_*.v.
-// The run on this repository's toolchain gave every figure above unchanged --
-// LUT4 15,744, DFF 5,065, BSRAM 18, IOB 11, Fmax 86.18 MHz, and a 7,261,470-byte
-// bitstream -- which is the proof (K6) that the new files touched nothing here.
-// RTL FINGERPRINT: 5e78eab9e50f29beed21d6cb347d4bf06ff8841b39f265d002c90c9834db5e11
+// The run on this repository's toolchain gave the 2026-09-15 figures unchanged
+// -- LUT4 15,744, DFF 5,065, BSRAM 18, IOB 11, Fmax 86.18 MHz, and a
+// 7,261,470-byte bitstream -- which is the proof (K6) that the new files
+// touched nothing here.
+// Restamped 2026-11-02 WITH a fresh place-and-route run, for Paket 8:
+// hcpu_codex_alu.v, hcpu_decode.v and hcpu_top.v changed, and the stamp was
+// already stale at 807d55b -- rtl/ had changed since 2026-10-01 without a run.
+// The figures at the top of this header are that run's; its bitstream,
+// sha256 38956d8842bd1bb191477dbc3f4094afa5c833fdb2645dd97b25453891947abd,
+// is the one that ran test_bsm on the board.
+// RTL FINGERPRINT: c9fdd83e97fe9b275681bd40208a5311110ecb194d79aac95fb7570134569caa
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

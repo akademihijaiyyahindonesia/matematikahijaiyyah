@@ -379,8 +379,11 @@ def run_multilevel_hmcl_simulation(
             "HCADD (a+b) before squaring, wrapping modulo 256 whenever a_j + b_j >= 256."
         ),
         proposed_design_change=(
-            "Add calu_op = 3'd6 (OP_HDOT, opcode 0x4E) in rtl/hcpu_codex_alu.v computing "
-            "sum_{j=0..13} src1[j] * src2[j] directly on a 20-bit unsigned wire dot_sum[19:0]."
+            "Add calu_op = 3'd6 (OP_HDOT, opcode 0x4E) in rtl/hcpu_codex_alu.v with Paket 8 "
+            "three-profile architecture (CODEX_PROFILE=0 ASIC 14-lane MAC; CODEX_PROFILE=1 "
+            "Tang Nano 20K 14x MULT9X9 Hard-DSP; CODEX_PROFILE=2 Tang Nano 20K No-DSP "
+            "Dedicated 14-Lane Nibble-Split Squarer + 14-Cycle Iterative Shift-Add HDOT) "
+            "and single-subtractor abs_diff."
         ),
         safety_invariant_preserved=True,
         baseline_static_words=10,
@@ -390,19 +393,26 @@ def run_multilevel_hmcl_simulation(
         alternative_compute_cycles=9,
         compute_cycle_speedup_x=round(inner_obs_cyc / 9.0, 2),
         compute_cycle_reduction_pct=round((inner_obs_cyc - 9) / inner_obs_cyc * 100.0, 2),
-        hardware_cost_delta="Reuses 14x 8x8 multiplier array + 20-bit adder tree mux (~45 LUTs, 0 DSPs)",
+        hardware_cost_delta=(
+            "Profile A (ASIC, CODEX_PROFILE=0): 9,362 generic cells (-3,936 vs 3a6aeef, -474 vs Paket 6); "
+            "Profile B (FPGA DSP, CODEX_PROFILE=1): 1,322 LUTs + 432 ALUs + 14x MULT9X9 "
+            "(full hcpu_gowin_top: 10,756 LUT1-4 + 1,856 ALU = 12,612 sites + 14x MULT9X9 + 1x MULT36X36); "
+            "Profile C (FPGA No-DSP, CODEX_PROFILE=2): 2,788 LUTs + 726 ALUs = 3,514 sites "
+            "(-8,002 sites / -69.49% vs Paket 6, -1,262 sites vs Radix-4 Draft 1; "
+            "full hcpu_gowin_top -nodsp: 12,788 LUT1-4 + 2,275 ALU = 15,063 sites, -349 sites below pre-Paket 6 fitting baseline)"
+        ),
         new_capability_unlocked=(
             "Exact inner product over the entire 8-bit cube [0, 255]^14 (max 910,350 < 2^20 - 1) "
-            "without intermediate addition overflow, freeing 1 H-Reg and 1 GPR."
+            "without intermediate addition overflow (1 cycle in Profile A/B, 14 cycles in Profile C)."
         ),
         prediction_record=FormalPredictionRecord(
             prediction_id="PRED_ALT_A2_HDOT",
             target_metric="Compute cycles for 14-dimensional inner product ⟨a, b⟩",
             input_parameters={"lanes": 14, "max_byte": 255, "wire_bits": 20},
-            model_equation="C_RTL,A2 = 4 instructions + 5 drain cycles = 9 cycles",
-            assumptions=("Single-cycle combinational codex ALU execution matching HNRM2/HDIST",),
+            model_equation="C_RTL,A2 = 4 instructions + 5 drain cycles = 9 cycles (Profile A/B); 22 cycles (Profile C 14-cycle iterative HDOT)",
+            assumptions=("Single-cycle combinational MAC in Profile A/B; 14-cycle iterative shift-add in Profile C",),
             validity_range="All a, b in [0, 255]^18 (exact without overflow)",
-            calibration_source="tb_parity.v HNRM2/HDIST/HDOT 1-cycle latency calibration",
+            calibration_source="tb_parity.v & tb_hmcl_rtl_alternatives.v 65,536-pair verification",
             uncertainty_bounds="+-0 cycles",
             predicted_value=9,
             simulated_or_measured_value=9,
@@ -499,6 +509,25 @@ def run_multilevel_hmcl_simulation(
             "hreg_flip_flops": 16 * 144,
             "alt_a1_extra_flip_flops": 16,
             "alt_a2_dot_wire_bits": 20,
+            "codex_alu_profile0_asic_generic_cells": 9362,
+            "codex_alu_profile1_dsp_generic_cells": 9673,
+            "codex_alu_profile2_nodsp_generic_cells": 6564,
+            "codex_alu_gowin_nodsp_luts": 2788,
+            "codex_alu_gowin_nodsp_alus": 726,
+            "codex_alu_gowin_nodsp_sites": 3514,
+            "codex_alu_gowin_dsp_luts": 1322,
+            "codex_alu_gowin_dsp_alus": 432,
+            "codex_alu_gowin_dsp_mult9x9": 14,
+            "hcpu_gowin_top_nodsp_luts": 12788,
+            "hcpu_gowin_top_nodsp_alus": 2275,
+            "hcpu_gowin_top_nodsp_sites": 15063,
+            "hcpu_gowin_top_dsp_luts": 10756,
+            "hcpu_gowin_top_dsp_alus": 1856,
+            "hcpu_gowin_top_dsp_sites": 12612,
+            "hcpu_gowin_top_dsp_mult9x9": 14,
+            "hcpu_gowin_top_dsp_mult36x36": 1,
+            "seven_module_generic_cells_baseline": 47751,
+            "seven_module_generic_cells_paket8": 44358,
         },
         predictions=tuple(predictions),
         alternatives=(alt_a1, alt_a2, alt_a3),

@@ -6,7 +6,9 @@
 
 `include "hcpu_pkg.vh"
 
-module hcpu_decode (
+module hcpu_decode #(
+    parameter HDOT_ENABLE = 1
+) (
     input  wire                    clk,
     input  wire                    rst_n,
 
@@ -333,7 +335,18 @@ module hcpu_decode (
                 `OP_CEQ:   begin id_is_codex <= 1'b1; end
                 `OP_CRHO:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_CU:    begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
-                `OP_HDOT:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_HDOT:  begin
+                    if (HDOT_ENABLE != 0) begin
+                        id_is_codex <= 1'b1;
+                        id_gpr_we   <= 1'b1;
+                    end else begin
+                        id_is_halt   <= 1'b1;
+                        id_dst       <= 4'hE;
+                        id_gpr_we    <= 1'b0;
+                        id_hreg_we   <= 1'b0;
+                        id_mem_write <= 1'b0;
+                    end
+                end
                 `OP_CMOD4: begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
                 `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
 

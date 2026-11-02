@@ -103,9 +103,9 @@ SLOTS: Tuple[Slot, ...] = (
         name="hcpu",
         bitstream="rtl/fpga/gowin/hcpu_gowin_top.fs",
         runs="H-ISA pipeline, 82 opcodes, sealed 28-letter ROM",
-        verified="UART returned 23 bytes matching simulation byte for byte; "
-                 "e3_sweep28 returned 28/28 Theta-hat",
-        lut4=15_744, dff=5_065, bsram=18, fmax_mhz=86.18,
+        verified="Paket 8, 2 November 2026, loaded into SRAM: test_bsm's "
+                 "23 bytes matching simulation byte for byte, two runs",
+        lut4=15_453, dff=5_166, bsram=18, fmax_mhz=120.63,
     ),
     Slot(
         name="kabah",

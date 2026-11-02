@@ -35,7 +35,10 @@ WRAPPER = (GOWIN / "hcpu_gowin_top.v").read_text(encoding="utf-8")
 CRYSTAL_MHZ = 27.0
 
 # What place and route reported at THIS commit, on the Tang Nano 20K.
-# Re-measured 2026-09-15, after hcpu_gowin_top.v was split into
+# Re-measured 2026-11-02 for Paket 8 (CODEX_PROFILE 2 on this slot), with
+# `make -C rtl/fpga/gowin bitstream`; the wrapper's header carries the run.
+#
+# Before that, re-measured 2026-09-15, after hcpu_gowin_top.v was split into
 # hcpu_gowin_core (everything, including the telemetry sideband) and a
 # pin-level hcpu_gowin_top. The split was forced by a measurement: with the
 # sideband on the top level, `make -C rtl/fpga/gowin bitstream` died on
@@ -46,9 +49,9 @@ CRYSTAL_MHZ = 27.0
 # the check that one more level of hierarchy added no function; the wrapper's
 # own header carries the controlled before/after that separates yosys remapping
 # from logic.
-UTILISATION = {"LUT4": (15744, 20736), "DFF": (5065, 15552),
+UTILISATION = {"LUT4": (15453, 20736), "DFF": (5166, 15552),
                "BSRAM": (18, 46), "IOB": (11, 384)}
-MEASURED_FMAX_MHZ = 86.18
+MEASURED_FMAX_MHZ = 120.63
 
 # The commit the fitting result was taken from, re-run to confirm it still
 # reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.

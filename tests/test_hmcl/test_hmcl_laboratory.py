@@ -18,7 +18,13 @@ from hijaiyyah.hmcl.multilevel_sim import predict_alt_a1_hvm_steps
 
 
 def test_charter_section_b_formal_asset_registry_and_verification() -> None:
-    """Charter Section B: Verify all formal mathematical & system assets in the ecosystem."""
+    """Charter Section B: Verify all formal mathematical & system assets in the ecosystem,
+    including the Paket 8 three-profile RTL bench (`rtl/tb/tb_hmcl_rtl_alternatives.v`)."""
+    import shutil
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
     assert HMCL_VERSION == "0.1.0-exp"
     assets = build_ecosystem_asset_registry()
     assert len(assets) == 6
@@ -29,6 +35,39 @@ def test_charter_section_b_formal_asset_registry_and_verification() -> None:
     assert summary.rtl_wide_adders_verified is True
     assert summary.hstar_laws_verified is True
     assert summary.native_letter_opcodes_count == 28
+
+    if shutil.which("iverilog") is not None and shutil.which("vvp") is not None:
+        root_dir = Path(__file__).resolve().parents[2]
+        tb_file = root_dir / "rtl" / "tb" / "tb_hmcl_rtl_alternatives.v"
+        rtl_sources = [
+            str(tb_file),
+            *[str(p) for p in sorted((root_dir / "rtl").glob("hcpu_*.v"))],
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vvp_out = Path(tmpdir) / "tb_hmcl_rtl_alternatives.vvp"
+            subprocess.run(
+                [
+                    "iverilog",
+                    "-g2012",
+                    "-I",
+                    str(root_dir / "rtl"),
+                    "-o",
+                    str(vvp_out),
+                    *rtl_sources,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            run_res = subprocess.run(
+                ["vvp", str(vvp_out)],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            assert "31 PASS, 0 FAIL" in run_res.stdout
 
 
 def test_charter_sections_c_d_f_multilevel_simulation_and_zero_error_calibration() -> None:
@@ -70,6 +109,17 @@ def test_charter_sections_c_d_f_multilevel_simulation_and_zero_error_calibration
     assert alts["ALT_A1_HW_STICKY_PREFIX_AND_HSTAR"].compute_cycle_speedup_x == 2.20
     assert alts["ALT_A2_NATIVE_OP_HDOT_20BIT"].safety_invariant_preserved is True
     assert alts["ALT_A2_NATIVE_OP_HDOT_20BIT"].alternative_compute_cycles == 9
+    assert "2,788 LUTs" in alts["ALT_A2_NATIVE_OP_HDOT_20BIT"].hardware_cost_delta
+    assert "14x MULT9X9" in alts["ALT_A2_NATIVE_OP_HDOT_20BIT"].hardware_cost_delta
+    assert sim.level7_physical_summary["codex_alu_profile0_asic_generic_cells"] == 9362
+    assert sim.level7_physical_summary["codex_alu_gowin_nodsp_luts"] == 2788
+    assert sim.level7_physical_summary["codex_alu_gowin_nodsp_alus"] == 726
+    assert sim.level7_physical_summary["codex_alu_gowin_nodsp_sites"] == 3514
+    assert sim.level7_physical_summary["codex_alu_gowin_dsp_luts"] == 1322
+    assert sim.level7_physical_summary["codex_alu_gowin_dsp_mult9x9"] == 14
+    assert sim.level7_physical_summary["hcpu_gowin_top_nodsp_sites"] == 15063
+    assert sim.level7_physical_summary["hcpu_gowin_top_dsp_sites"] == 12612
+    assert sim.level7_physical_summary["seven_module_generic_cells_paket8"] == 44358
     assert alts["ALT_A3_STREAMING_SDIO_4B_PRIME"].safety_invariant_preserved is True
     assert alts["ALT_A3_STREAMING_SDIO_4B_PRIME"].alternative_compute_cycles == 17681
     assert alts["ALT_A3_STREAMING_SDIO_4B_PRIME"].compute_cycle_speedup_x == 1.74
