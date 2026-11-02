@@ -41,7 +41,7 @@ simulasi.
    82 dari 104 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
     6 penyebab trap, 6 prasyarat OS tertutup, H-Kernel 4 dari 4
-    3 bitstream muat & terrout (HCPU 71%, Ka'bah 58%, HDMI 73% LUT4)
+    3 bitstream muat & terrout (HCPU 74%, Ka'bah 58%, HDMI 73% LUT4)
     3 dari ketiganya di-flash dan dijalankan di papan fisik
 ```
 
