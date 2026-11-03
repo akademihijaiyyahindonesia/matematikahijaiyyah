@@ -44,6 +44,7 @@ CAUSE = "4bff781"
 CAUSE2 = "004b9a0"
 CAUSE_P6 = "48cf0e5"
 CAUSE_P8 = "f9c8349"
+CAUSE_CTHETA = "1aed5e1"
 FIRST, SECOND = "Makefile — target HMAC", "Makefile — lapis 3 slot UART Ka'bah"
 TOP_CAP_1 = "hcpu_gowin_top.v — cap ulang opsi (a)"
 TOP_CAP_2 = "hcpu_gowin_top.v — cap ulang Paket 8"
@@ -53,10 +54,13 @@ TOP_PNR = "hcpu_gowin_top.v — angka place-and-route Paket 8"
 HCPU_TOP_1 = "hcpu_top.v — alternatif RTL A1–A3 (P6)"
 HCPU_TOP_2 = "hcpu_top.v — CODEX_PROFILE dan calu_done (Paket 8)"
 HCPU_PKG_1 = "hcpu_pkg.vh — alternatif RTL A1–A3 (P6)"
+HCPU_PKG_2 = "hcpu_pkg.vh — CTHETA=0x4E dan HDOT=0x52"
+README_OP = "teknologi/README.md — sensus 84 opcode RTL"
 
 CHAINS = (
     (FIRST, SECOND, "rtl/fpga/gowin/Makefile", CAUSE, CAUSE2),
     (HCPU_TOP_1, HCPU_TOP_2, "rtl/hcpu_top.v", CAUSE_P6, CAUSE_P8),
+    (HCPU_PKG_1, HCPU_PKG_2, "rtl/hcpu_pkg.vh", CAUSE_P6, CAUSE_CTHETA),
     (TOP_CAP_1, TOP_CAP_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
     (TOP_MOV_1, TOP_MOV_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
 )
@@ -91,7 +95,7 @@ def test_the_frozen_records_are_the_objects_at_the_tag() -> None:
 
 def test_the_addendum_covers_exactly_the_drift() -> None:
     """Every pointer that moved since the freeze is named, and nothing else."""
-    chained_second_ids = {SECOND, HCPU_TOP_2, TOP_CAP_2, TOP_MOV_2}
+    chained_second_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_MOV_2}
     for name in la.FROZEN:
         drift = set(_diff(_frozen(name), _fresh(name)))
         named = [c["pointer"] for c in la.changes(name)]
@@ -106,8 +110,8 @@ def test_the_addendum_covers_exactly_the_drift() -> None:
         )
         assert twice == want_twice, name
     assert {n: len(la.changes(n)) for n in la.FROZEN} == {
-        "hardware": 48, "telemetry_sources": 15, "hardware_provenance": 88}
-    assert len(ADDENDUM["entries"]) == 12
+        "hardware": 52, "telemetry_sources": 15, "hardware_provenance": 91}
+    assert len(ADDENDUM["entries"]) == 14
 
 
 def test_the_historical_freeze_is_not_the_current_state() -> None:
@@ -144,8 +148,10 @@ def test_every_entry_says_why_by_what_and_with_what_evidence() -> None:
         TOP_CAP_2: CAUSE_P8,
         TOP_MOV_2: CAUSE_P8,
         TOP_PNR: CAUSE_P8,
+        HCPU_PKG_2: CAUSE_CTHETA,
+        README_OP: CAUSE_CTHETA,
     }
-    chained_ids = {SECOND, HCPU_TOP_2, TOP_CAP_2, TOP_MOV_2}
+    chained_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_MOV_2}
     for e in ADDENDUM["entries"]:
         assert e["cause"] == expected_causes.get(e["id"], CAUSE), e["id"]
         assert e["reason"] and e["path"] in touched(e["cause"]), e["id"]

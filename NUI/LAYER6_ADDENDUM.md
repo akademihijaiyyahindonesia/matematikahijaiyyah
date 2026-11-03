@@ -6,7 +6,7 @@ Dihasilkan `src/hijaiyyah/nui/layer6_addendum.py` dari `NUI/layer6_addendum.json
 
 Catatan beku Lapis 6.1–6.3 — model, halaman, dan spec-nya — tetap byte demi byte objek di tag `layer6-freeze-2026-09-29-final`. Adendum ini catatan baru di sampingnya, bukan bangkitan ulang: **freeze historis ≠ keadaan repositori sekarang**. Keadaan sekarang adalah catatan beku dengan perubahan di bawah ini, dan harus sama dengan yang dibangun buktinya hari ini.
 
-**12 entri, 151 perubahan**: `hardware` 48, `telemetry_sources` 15, `hardware_provenance` 88.
+**14 entri, 158 perubahan**: `hardware` 52, `telemetry_sources` 15, `hardware_provenance` 91.
 
 ## Bukti kesetaraan
 
@@ -281,6 +281,31 @@ Paket 8 (`f9c8349`) mengukur ulang slot HCPU (`USE_DSP=0`, `CODEX_PROFILE=2`: sq
 | `hardware_provenance` | `6.1:fpga_bsram` | `/claims/5/source/line` | `49` | `50` |
 | `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/claim` | `sumber daya FPGA = 86.18 MHz` | `sumber daya FPGA = 120.63 MHz` |
 | `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/source/line` | `52` | `53` |
+
+## hcpu_pkg.vh — CTHETA=0x4E dan HDOT=0x52
+
+`rtl/hcpu_pkg.vh` · penyebab `1aed5e1` · bukti kesetaraan **claim-unchanged**, klaim `isa_rtl` · melanjutkan entri **hcpu_pkg.vh — alternatif RTL A1–A3 (P6)**
+
+1aed5e1 memisahkan slot opcode publik `OP_CTHETA` (`8'h4E`, ekstraksi Theta 1 siklus) dan `OP_HDOT` (`8'h52`, produk titik 14-komponen via `ALU_HDOT`) dalam format heksadesimal kanonik di `rtl/hcpu_pkg.vh`. Ukuran berkas bergeser 21.408 → 21.477 byte; seluruh definisi opcode beku tetap utuh dan terverifikasi terhadap 84 opcode di `RTL_IMPLEMENTED`.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `isa_rtl` | `/items/9/evidence/1/sha256` | `2e0c3df26eb5…` | `7422d98c4e01…` |
+| `hardware_provenance` | `6.1:isa_rtl` | `/claims/9/evidence_bytes` | `21408` | `21477` |
+| `hardware_provenance` | `6.1:isa_rtl` | `/claims/9/evidence_sha256` | `2e0c3df26eb5…` | `7422d98c4e01…` |
+
+## teknologi/README.md — sensus 84 opcode RTL
+
+`teknologi/README.md` · penyebab `1aed5e1` · bukti kesetaraan **claim-unchanged**, klaim `isa_rtl`
+
+1aed5e1 memperbarui baris inventaris `Opcode H-ISA` pada `teknologi/README.md` baris 34 dari `82` menjadi `84` untuk mencerminkan 84 opcode perangkat keras di `rtl/hcpu_pkg.vh` dan `RTL_IMPLEMENTED` sesudah pemisahan `CTHETA = 0x4E` dan `HDOT = 0x52`.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `isa_rtl` | `/items/9/value` | `82` | `84` |
+| `hardware` | `isa_rtl` | `/items/9/source/sha256` | `960f357c1436…` | `6c8a721921bc…` |
+| `hardware` | `isa_rtl` | `/items/9/evidence/0/sha256` | `960f357c1436…` | `6c8a721921bc…` |
+| `hardware_provenance` | `6.1:isa_rtl` | `/claims/9/claim` | `H-ISA = 82` | `H-ISA = 84` |
 
 ## Mengulang
 

@@ -1237,6 +1237,92 @@
      "new": 53
     }
    ]
+  },
+  {
+   "id": "hcpu_pkg.vh — CTHETA=0x4E dan HDOT=0x52",
+   "path": "rtl/hcpu_pkg.vh",
+   "cause": "1aed5e1",
+   "after": "hcpu_pkg.vh — alternatif RTL A1–A3 (P6)",
+   "reason": "1aed5e1 memisahkan slot opcode publik `OP_CTHETA` (`8'h4E`, ekstraksi Theta 1 siklus) dan `OP_HDOT` (`8'h52`, produk titik 14-komponen via `ALU_HDOT`) dalam format heksadesimal kanonik di `rtl/hcpu_pkg.vh`. Ukuran berkas bergeser 21.408 → 21.477 byte; seluruh definisi opcode beku tetap utuh dan terverifikasi terhadap 84 opcode di `RTL_IMPLEMENTED`",
+   "equivalence": {
+    "kind": "claim-unchanged",
+    "claims": [
+     "isa_rtl"
+    ],
+    "expected_value": "84",
+    "anchor_lines": [
+     "`define OP_NOP          8'h00",
+     "`define OP_HALT         8'h01",
+     "`define OP_MOV          8'h03       // DST ← S1",
+     "`define OP_MOVI         8'h04       // DST ← zero_ext(IMM)",
+     "`define OP_ERET         8'h08       // PC ← trap epc; leave trap",
+     "`define OP_SYSCALL      8'h09       // deliberate trap: ask supervisor"
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/9/evidence/1/sha256",
+     "old": "2e0c3df26eb5a6298986c7e7cd35e7f72fc061ad2b787c23ad8fe4c9bd095f43",
+     "new": "7422d98c4e014073f3c950177cc398846766099af6f6b4ceae1a04734602b2fc"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/9/evidence_bytes",
+     "old": 21408,
+     "new": 21477
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/9/evidence_sha256",
+     "old": "2e0c3df26eb5a6298986c7e7cd35e7f72fc061ad2b787c23ad8fe4c9bd095f43",
+     "new": "7422d98c4e014073f3c950177cc398846766099af6f6b4ceae1a04734602b2fc"
+    }
+   ]
+  },
+  {
+   "id": "teknologi/README.md — sensus 84 opcode RTL",
+   "path": "teknologi/README.md",
+   "cause": "1aed5e1",
+   "reason": "1aed5e1 memperbarui baris inventaris `Opcode H-ISA` pada `teknologi/README.md` baris 34 dari `82` menjadi `84` untuk mencerminkan 84 opcode perangkat keras di `rtl/hcpu_pkg.vh` dan `RTL_IMPLEMENTED` sesudah pemisahan `CTHETA = 0x4E` dan `HDOT = 0x52`",
+   "equivalence": {
+    "kind": "claim-unchanged",
+    "claims": [
+     "isa_rtl"
+    ],
+    "new_value": "84",
+    "anchor_lines": [
+     "## Inventaris",
+     "| Huruf × dimensi | 28 × 18 | `src/hijaiyyah/core/master_table.py` |",
+     "| — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |"
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/9/value",
+     "old": "82",
+     "new": "84"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/9/source/sha256",
+     "old": "960f357c1436b87c82f93f67bdd376f627e33bbd051976da66ba58e0e5dff8d5",
+     "new": "6c8a721921bc22b69d8ff94b63e43114c7f949819758a90640a5ba806ce89694"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/9/evidence/0/sha256",
+     "old": "960f357c1436b87c82f93f67bdd376f627e33bbd051976da66ba58e0e5dff8d5",
+     "new": "6c8a721921bc22b69d8ff94b63e43114c7f949819758a90640a5ba806ce89694"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/9/claim",
+     "old": "H-ISA = 82",
+     "new": "H-ISA = 84"
+    }
+   ]
   }
  ],
  "chain": "Keputusan pemilik, 5 Oktober 2026 (diperluas 2 November 2026 untuk Jalur A), sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781` dan commit Paket 8 `f9c8349` mencap ulang `hcpu_gowin_top.v` serta memperbarui `hcpu_top.v`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai di penyebab pendahulunya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh (`comment-only`, `insert-only`, `claim-unchanged`) dan pergeseran nomor baris linear (`line-moved`) yang berantai. Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak"

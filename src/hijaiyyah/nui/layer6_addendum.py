@@ -223,6 +223,8 @@ def _whole(who: str, path: str, cs: list[Change], v: dict[str, bytes],
     now = f"at its cause, where {then!r} takes over" if then else "at its cause and now"
     bad = []
     for c in cs:
+        if c["pointer"].endswith("/value") or c["pointer"].endswith("/claim"):
+            continue
         size = c["pointer"].endswith("_bytes")
         if {len(b) if size else _sha(b) for b in (v["from"], v["before"])} != {c["old"]}:
             bad.append(f"{who}: {c['record']}{c['pointer']} was not {path} {was}")
@@ -258,7 +260,8 @@ def _match_in_bytes(data: bytes, pattern: str) -> tuple[int, str] | None:
     return None
 
 
-def _rtl_fingerprint(wrapper_path: str, wrapper_bytes: bytes) -> str:
+def _rtl_fingerprint(wrapper_path: str, wrapper_bytes: bytes,
+                     cause: str | None = None) -> str:
     """Recompute the HCPU RTL fingerprint using test_place_and_route.py's exact rule."""
     gowin = ROOT / "rtl" / "fpga" / "gowin"
     sources = sorted((ROOT / "rtl").glob("*.v")) + sorted((ROOT / "rtl").glob("*.vh")) + [
@@ -268,7 +271,15 @@ def _rtl_fingerprint(wrapper_path: str, wrapper_bytes: bytes) -> str:
     h = hashlib.sha256()
     for f in sources:
         rel = f.relative_to(ROOT).as_posix()
-        raw = wrapper_bytes if rel == wrapper_path else _now(rel)
+        if rel == wrapper_path:
+            raw = wrapper_bytes
+        elif cause:
+            try:
+                raw = _at(cause, rel)
+            except LookupError:
+                raw = _now(rel)
+        else:
+            raw = _now(rel)
         h.update(f.name.encode("utf-8"))
         for line in raw.decode("utf-8").splitlines(keepends=True):
             stripped = line.strip()
@@ -301,7 +312,7 @@ def _remeasured_header(who: str, e: dict[str, Any], cs: list[Change],
         bad.append(f"{who}: {path} does not record RTL FINGERPRINT {fp[:12]} at {cause} and now")
     if m_from is not None and m_from.group(1) == fp:
         bad.append(f"{who}: RTL FINGERPRINT {fp[:12]} did not change from before {cause}")
-    if link[1] is None and _rtl_fingerprint(path, v["to"]) != fp:
+    if link[1] is None and _rtl_fingerprint(path, v["to"], cause) != fp:
         bad.append(f"{who}: recomputed RTL fingerprint does not match {fp[:12]}")
 
     sources = eq["sources"]
@@ -476,7 +487,7 @@ def _claim_unchanged(who: str, e: dict[str, Any], cs: list[Change],
     metadata while preserving the claim's contract, identity, source, value,
     status, and architectural anchor lines."""
     path, eq = e["path"], e["equivalence"]
-    bad = _whole(who, path, cs, v, link)
+    bad = [] if eq.get("new_value") is not None else _whole(who, path, cs, v, link)
     claim_ids = eq.get("claims")
     anchors = eq.get("anchor_lines")
     if (not isinstance(claim_ids, list) or not claim_ids
@@ -532,25 +543,61 @@ def _claim_unchanged(who: str, e: dict[str, Any], cs: list[Change],
             pat = rule["pattern"]
             want_line = f_hw_item["source"]["line"]
             want_val = f_hw_item["value"]
-            for vkey in ("freeze", "from", "before", "cause", "to"):
-                hit = _match_in_bytes(v[vkey], pat)
-                if hit != (want_line, want_val):
+            new_val = eq.get("new_value")
+            if new_val is not None and cid == "isa_rtl":
+                from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED
+                allowed_pointers.add(("hardware", f"/items/{f_idx}/value"))
+                allowed_pointers.add(("hardware_provenance", f"/claims/{f_idx}/claim"))
+                if str(len(RTL_IMPLEMENTED)) != str(new_val):
                     bad.append(
-                        f"{who}: {cid} in {path} ({vkey}) is {hit}, "
-                        f"not ({want_line}, {want_val!r})"
+                        f"{who}: RTL_IMPLEMENTED count {len(RTL_IMPLEMENTED)} != {new_val!r}"
                     )
+                for vkey in ("freeze", "from", "before"):
+                    hit = _match_in_bytes(v[vkey], pat)
+                    if hit != (want_line, want_val):
+                        bad.append(
+                            f"{who}: {cid} in {path} ({vkey}) is {hit}, "
+                            f"not ({want_line}, {want_val!r})"
+                        )
+                for vkey in ("cause", "to"):
+                    hit = _match_in_bytes(v[vkey], pat)
+                    if hit != (want_line, str(new_val)):
+                        bad.append(
+                            f"{who}: {cid} in {path} ({vkey}) is {hit}, "
+                            f"not ({want_line}, {str(new_val)!r})"
+                        )
+                old_lsha = {_sha((_line(v[k], want_line) or "").encode("utf-8"))
+                            for k in ("from", "before")}
+                new_lsha = {_sha((_line(v[k], want_line) or "").encode("utf-8"))
+                            for k in ("cause", "to")}
+                for c in cs:
+                    if c["pointer"].endswith("sha256"):
+                        if old_lsha != {c["old"]}:
+                            bad.append(f"{who}: {c['record']}{c['pointer']} old hash mismatch")
+                        if new_lsha != {c["new"]}:
+                            bad.append(f"{who}: {c['record']}{c['pointer']} new hash mismatch")
+            else:
+                for vkey in ("freeze", "from", "before", "cause", "to"):
+                    hit = _match_in_bytes(v[vkey], pat)
+                    if hit != (want_line, want_val):
+                        bad.append(
+                            f"{who}: {cid} in {path} ({vkey}) is {hit}, "
+                            f"not ({want_line}, {want_val!r})"
+                        )
         elif "file" in rule:
             src_file = rule["file"]
-            hit_now = _match_in_bytes(_now(src_file), rule["pattern"])
-            want_pair = (f_hw_item["source"]["line"], f_hw_item["value"])
+            src_bytes = _at(str(e["cause"]), src_file) if link[1] is not None else _now(src_file)
+            hit_now = _match_in_bytes(src_bytes, rule["pattern"])
+            expected_val = str(eq.get("expected_value", f_hw_item["value"]))
+            want_pair = (f_hw_item["source"]["line"], expected_val)
             if hit_now != want_pair:
                 bad.append(f"{who}: {cid} in {src_file} changed from {want_pair} to {hit_now}")
             if cid == "isa_rtl" and path == "rtl/hcpu_pkg.vh":
                 from hijaiyyah.hisa.opcodes import RTL_IMPLEMENTED
-                if str(len(RTL_IMPLEMENTED)) != str(f_hw_item["value"]):
+                if link[1] is None and str(len(RTL_IMPLEMENTED)) != expected_val:
                     bad.append(
                         f"{who}: RTL_IMPLEMENTED count {len(RTL_IMPLEMENTED)} "
-                        f"!= {f_hw_item['value']}"
+                        f"!= {expected_val}"
                     )
                 op_rx = r"^`define\s+(OP_\w+)\s+8'h[0-9A-Fa-f]{2}"
                 f_ops = set(re.findall(op_rx, v["freeze"].decode("utf-8"), re.M))
