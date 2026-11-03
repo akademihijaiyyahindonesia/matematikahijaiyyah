@@ -369,7 +369,7 @@ def run_multilevel_hmcl_simulation(
 
     alt_a2 = ArchitecturalAlternativeEvaluation(
         alternative_id="ALT_A2_NATIVE_OP_HDOT_20BIT",
-        title="Single-Cycle 20-Bit Combinational Inner Product Opcode OP_HDOT (0x4E)",
+        title="Single-Cycle 20-Bit Combinational Inner Product Opcode OP_HDOT (0x52)",
         bottleneck_diagnosed=(
             "Inner product ⟨a, b⟩ lowers to 7 instructions (10 compute words, 15 RTL cycles) "
             "via polarization and suffers 8-bit wraparound if a_j + b_j > 255."
@@ -379,7 +379,7 @@ def run_multilevel_hmcl_simulation(
             "HCADD (a+b) before squaring, wrapping modulo 256 whenever a_j + b_j >= 256."
         ),
         proposed_design_change=(
-            "Add calu_op = 3'd6 (OP_HDOT, opcode 0x4E) in rtl/hcpu_codex_alu.v with Paket 8 "
+            "Add calu_op = 3'd6 (OP_HDOT, opcode 0x52) in rtl/hcpu_codex_alu.v with Paket 8 "
             "three-profile architecture (CODEX_PROFILE=0 ASIC 14-lane MAC; CODEX_PROFILE=1 "
             "Tang Nano 20K 14x MULT9X9 Hard-DSP; CODEX_PROFILE=2 Tang Nano 20K No-DSP "
             "Dedicated 14-Lane Nibble-Split Squarer + 14-Cycle Iterative Shift-Add HDOT) "
@@ -434,7 +434,7 @@ def run_multilevel_hmcl_simulation(
         ),
         proposed_design_change=(
             "Integrate SD_CSUM (0xFE5) and SD_PRESCAN (0xFE6) into hal_sd.hasm and hos_prog_load.hasm "
-            "with Sector 0 sbuf reuse and OP_HDOT (0x4E) chunk 2 mask 0x0003F1F5."
+            "with Sector 0 sbuf reuse and OP_CTHETA (0x4E) / OP_HDOT (0x52) chunk 2 mask 0x0007F1F5."
         ),
         safety_invariant_preserved=True,
         baseline_static_words=892,

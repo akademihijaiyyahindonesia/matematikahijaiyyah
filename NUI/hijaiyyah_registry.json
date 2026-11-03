@@ -29,7 +29,7 @@
     "opcode": "0xe0",
     "effect": "H0 <- H0 + v(ا)",
     "rom_address": 1,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -54,7 +54,7 @@
    "letter": "ا",
    "word": "0xe0000000",
    "load": "HLOAD Hn, #1",
-   "source": "src/hijaiyyah/hisa/opcodes.py:244"
+   "source": "src/hijaiyyah/hisa/opcodes.py:245"
   }
  },
  {
@@ -87,7 +87,7 @@
     "opcode": "0xe1",
     "effect": "H0 <- H0 + v(ب)",
     "rom_address": 2,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -112,7 +112,7 @@
    "letter": "ب",
    "word": "0xe1000000",
    "load": "HLOAD Hn, #2",
-   "source": "src/hijaiyyah/hisa/opcodes.py:245"
+   "source": "src/hijaiyyah/hisa/opcodes.py:246"
   }
  },
  {
@@ -145,7 +145,7 @@
     "opcode": "0xe2",
     "effect": "H0 <- H0 + v(ت)",
     "rom_address": 3,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 3,
@@ -170,7 +170,7 @@
    "letter": "ت",
    "word": "0xe2000000",
    "load": "HLOAD Hn, #3",
-   "source": "src/hijaiyyah/hisa/opcodes.py:246"
+   "source": "src/hijaiyyah/hisa/opcodes.py:247"
   }
  },
  {
@@ -203,7 +203,7 @@
     "opcode": "0xe3",
     "effect": "H0 <- H0 + v(ث)",
     "rom_address": 4,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -228,7 +228,7 @@
    "letter": "ث",
    "word": "0xe3000000",
    "load": "HLOAD Hn, #4",
-   "source": "src/hijaiyyah/hisa/opcodes.py:247"
+   "source": "src/hijaiyyah/hisa/opcodes.py:248"
   }
  },
  {
@@ -261,7 +261,7 @@
     "opcode": "0xe4",
     "effect": "H0 <- H0 + v(ج)",
     "rom_address": 5,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 5,
@@ -286,7 +286,7 @@
    "letter": "ج",
    "word": "0xe4000000",
    "load": "HLOAD Hn, #5",
-   "source": "src/hijaiyyah/hisa/opcodes.py:248"
+   "source": "src/hijaiyyah/hisa/opcodes.py:249"
   }
  },
  {
@@ -319,7 +319,7 @@
     "opcode": "0xe5",
     "effect": "H0 <- H0 + v(ح)",
     "rom_address": 6,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -344,7 +344,7 @@
    "letter": "ح",
    "word": "0xe5000000",
    "load": "HLOAD Hn, #6",
-   "source": "src/hijaiyyah/hisa/opcodes.py:249"
+   "source": "src/hijaiyyah/hisa/opcodes.py:250"
   }
  },
  {
@@ -377,7 +377,7 @@
     "opcode": "0xe6",
     "effect": "H0 <- H0 + v(خ)",
     "rom_address": 7,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 5,
@@ -402,7 +402,7 @@
    "letter": "خ",
    "word": "0xe6000000",
    "load": "HLOAD Hn, #7",
-   "source": "src/hijaiyyah/hisa/opcodes.py:250"
+   "source": "src/hijaiyyah/hisa/opcodes.py:251"
   }
  },
  {
@@ -435,7 +435,7 @@
     "opcode": "0xe7",
     "effect": "H0 <- H0 + v(د)",
     "rom_address": 8,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 3,
@@ -460,7 +460,7 @@
    "letter": "د",
    "word": "0xe7000000",
    "load": "HLOAD Hn, #8",
-   "source": "src/hijaiyyah/hisa/opcodes.py:251"
+   "source": "src/hijaiyyah/hisa/opcodes.py:252"
   }
  },
  {
@@ -493,7 +493,7 @@
     "opcode": "0xe8",
     "effect": "H0 <- H0 + v(ذ)",
     "rom_address": 9,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -518,7 +518,7 @@
    "letter": "ذ",
    "word": "0xe8000000",
    "load": "HLOAD Hn, #9",
-   "source": "src/hijaiyyah/hisa/opcodes.py:252"
+   "source": "src/hijaiyyah/hisa/opcodes.py:253"
   }
  },
  {
@@ -551,7 +551,7 @@
     "opcode": "0xe9",
     "effect": "H0 <- H0 + v(ر)",
     "rom_address": 10,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 3,
@@ -576,7 +576,7 @@
    "letter": "ر",
    "word": "0xe9000000",
    "load": "HLOAD Hn, #10",
-   "source": "src/hijaiyyah/hisa/opcodes.py:253"
+   "source": "src/hijaiyyah/hisa/opcodes.py:254"
   }
  },
  {
@@ -609,7 +609,7 @@
     "opcode": "0xea",
     "effect": "H0 <- H0 + v(ز)",
     "rom_address": 11,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -634,7 +634,7 @@
    "letter": "ز",
    "word": "0xea000000",
    "load": "HLOAD Hn, #11",
-   "source": "src/hijaiyyah/hisa/opcodes.py:254"
+   "source": "src/hijaiyyah/hisa/opcodes.py:255"
   }
  },
  {
@@ -667,7 +667,7 @@
     "opcode": "0xeb",
     "effect": "H0 <- H0 + v(س)",
     "rom_address": 12,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -692,7 +692,7 @@
    "letter": "س",
    "word": "0xeb000000",
    "load": "HLOAD Hn, #12",
-   "source": "src/hijaiyyah/hisa/opcodes.py:255"
+   "source": "src/hijaiyyah/hisa/opcodes.py:256"
   }
  },
  {
@@ -725,7 +725,7 @@
     "opcode": "0xec",
     "effect": "H0 <- H0 + v(ش)",
     "rom_address": 13,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -750,7 +750,7 @@
    "letter": "ش",
    "word": "0xec000000",
    "load": "HLOAD Hn, #13",
-   "source": "src/hijaiyyah/hisa/opcodes.py:256"
+   "source": "src/hijaiyyah/hisa/opcodes.py:257"
   }
  },
  {
@@ -783,7 +783,7 @@
     "opcode": "0xed",
     "effect": "H0 <- H0 + v(ص)",
     "rom_address": 14,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 1,
@@ -808,7 +808,7 @@
    "letter": "ص",
    "word": "0xed000000",
    "load": "HLOAD Hn, #14",
-   "source": "src/hijaiyyah/hisa/opcodes.py:257"
+   "source": "src/hijaiyyah/hisa/opcodes.py:258"
   }
  },
  {
@@ -841,7 +841,7 @@
     "opcode": "0xee",
     "effect": "H0 <- H0 + v(ض)",
     "rom_address": 15,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 1,
@@ -866,7 +866,7 @@
    "letter": "ض",
    "word": "0xee000000",
    "load": "HLOAD Hn, #15",
-   "source": "src/hijaiyyah/hisa/opcodes.py:258"
+   "source": "src/hijaiyyah/hisa/opcodes.py:259"
   }
  },
  {
@@ -899,7 +899,7 @@
     "opcode": "0xef",
     "effect": "H0 <- H0 + v(ط)",
     "rom_address": 16,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 3,
@@ -924,7 +924,7 @@
    "letter": "ط",
    "word": "0xef000000",
    "load": "HLOAD Hn, #16",
-   "source": "src/hijaiyyah/hisa/opcodes.py:259"
+   "source": "src/hijaiyyah/hisa/opcodes.py:260"
   }
  },
  {
@@ -957,7 +957,7 @@
     "opcode": "0xf0",
     "effect": "H0 <- H0 + v(ظ)",
     "rom_address": 17,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -982,7 +982,7 @@
    "letter": "ظ",
    "word": "0xf0000000",
    "load": "HLOAD Hn, #17",
-   "source": "src/hijaiyyah/hisa/opcodes.py:260"
+   "source": "src/hijaiyyah/hisa/opcodes.py:261"
   }
  },
  {
@@ -1015,7 +1015,7 @@
     "opcode": "0xf1",
     "effect": "H0 <- H0 + v(ع)",
     "rom_address": 18,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 1,
@@ -1040,7 +1040,7 @@
    "letter": "ع",
    "word": "0xf1000000",
    "load": "HLOAD Hn, #18",
-   "source": "src/hijaiyyah/hisa/opcodes.py:261"
+   "source": "src/hijaiyyah/hisa/opcodes.py:262"
   }
  },
  {
@@ -1073,7 +1073,7 @@
     "opcode": "0xf2",
     "effect": "H0 <- H0 + v(غ)",
     "rom_address": 19,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -1098,7 +1098,7 @@
    "letter": "غ",
    "word": "0xf2000000",
    "load": "HLOAD Hn, #19",
-   "source": "src/hijaiyyah/hisa/opcodes.py:262"
+   "source": "src/hijaiyyah/hisa/opcodes.py:263"
   }
  },
  {
@@ -1131,7 +1131,7 @@
     "opcode": "0xf3",
     "effect": "H0 <- H0 + v(ف)",
     "rom_address": 20,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -1156,7 +1156,7 @@
    "letter": "ف",
    "word": "0xf3000000",
    "load": "HLOAD Hn, #20",
-   "source": "src/hijaiyyah/hisa/opcodes.py:263"
+   "source": "src/hijaiyyah/hisa/opcodes.py:264"
   }
  },
  {
@@ -1189,7 +1189,7 @@
     "opcode": "0xf4",
     "effect": "H0 <- H0 + v(ق)",
     "rom_address": 21,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 1,
@@ -1214,7 +1214,7 @@
    "letter": "ق",
    "word": "0xf4000000",
    "load": "HLOAD Hn, #21",
-   "source": "src/hijaiyyah/hisa/opcodes.py:264"
+   "source": "src/hijaiyyah/hisa/opcodes.py:265"
   }
  },
  {
@@ -1247,7 +1247,7 @@
     "opcode": "0xf5",
     "effect": "H0 <- H0 + v(ك)",
     "rom_address": 22,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -1272,7 +1272,7 @@
    "letter": "ك",
    "word": "0xf5000000",
    "load": "HLOAD Hn, #22",
-   "source": "src/hijaiyyah/hisa/opcodes.py:265"
+   "source": "src/hijaiyyah/hisa/opcodes.py:266"
   }
  },
  {
@@ -1305,7 +1305,7 @@
     "opcode": "0xf6",
     "effect": "H0 <- H0 + v(ل)",
     "rom_address": 23,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 4,
@@ -1330,7 +1330,7 @@
    "letter": "ل",
    "word": "0xf6000000",
    "load": "HLOAD Hn, #23",
-   "source": "src/hijaiyyah/hisa/opcodes.py:266"
+   "source": "src/hijaiyyah/hisa/opcodes.py:267"
   }
  },
  {
@@ -1363,7 +1363,7 @@
     "opcode": "0xf7",
     "effect": "H0 <- H0 + v(م)",
     "rom_address": 24,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -1388,7 +1388,7 @@
    "letter": "م",
    "word": "0xf7000000",
    "load": "HLOAD Hn, #24",
-   "source": "src/hijaiyyah/hisa/opcodes.py:267"
+   "source": "src/hijaiyyah/hisa/opcodes.py:268"
   }
  },
  {
@@ -1421,7 +1421,7 @@
     "opcode": "0xf8",
     "effect": "H0 <- H0 + v(ن)",
     "rom_address": 25,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -1446,7 +1446,7 @@
    "letter": "ن",
    "word": "0xf8000000",
    "load": "HLOAD Hn, #25",
-   "source": "src/hijaiyyah/hisa/opcodes.py:268"
+   "source": "src/hijaiyyah/hisa/opcodes.py:269"
   }
  },
  {
@@ -1479,7 +1479,7 @@
     "opcode": "0xf9",
     "effect": "H0 <- H0 + v(و)",
     "rom_address": 26,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -1504,7 +1504,7 @@
    "letter": "و",
    "word": "0xf9000000",
    "load": "HLOAD Hn, #26",
-   "source": "src/hijaiyyah/hisa/opcodes.py:269"
+   "source": "src/hijaiyyah/hisa/opcodes.py:270"
   }
  },
  {
@@ -1537,7 +1537,7 @@
     "opcode": "0xfa",
     "effect": "H0 <- H0 + v(هـ)",
     "rom_address": 27,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 2,
@@ -1562,7 +1562,7 @@
    "letter": "هـ",
    "word": "0xfa000000",
    "load": "HLOAD Hn, #27",
-   "source": "src/hijaiyyah/hisa/opcodes.py:270"
+   "source": "src/hijaiyyah/hisa/opcodes.py:271"
   }
  },
  {
@@ -1595,7 +1595,7 @@
     "opcode": "0xfb",
     "effect": "H0 <- H0 + v(ي)",
     "rom_address": 28,
-    "source": "src/hijaiyyah/hisa/opcodes.py:231"
+    "source": "src/hijaiyyah/hisa/opcodes.py:232"
    },
    "face": {
     "rank_gf2": 1,
@@ -1620,7 +1620,7 @@
    "letter": "ي",
    "word": "0xfb000000",
    "load": "HLOAD Hn, #28",
-   "source": "src/hijaiyyah/hisa/opcodes.py:271"
+   "source": "src/hijaiyyah/hisa/opcodes.py:272"
   }
  }
 ]

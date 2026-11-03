@@ -49,31 +49,31 @@ module hcpu_hisab (
         end
     endgenerate
 
-    // ── Guard status computation (G1-G4, T1-T2) ────────────────
-    // G1: A_N = Na + Nb + Nd     (components match aggregate)
-    // G2: A_K = Kp+Kx+Ks+Ka+Kc
-    // G3: A_Q = Qp+Qx+Qs+Qa+Qc
-    // G4: Θ̂ ≥ U, where U = Qx+Qs+Qa+4*Qc
-    // T1: Ks > 0 ⇒ Qc ≥ 1
-    // T2: Kc > 0 ⇒ Qc ≥ 1
+    // ── Canonical Guard evaluation via hcpu_guard (R1, GAP-02) ──
+    // Single-cycle combinational latency (PIPELINE_GUARD = 0).
+    // All full-width sums (10-bit sum_n, 11-bit sum_k, 11-bit sum_q),
+    // 11-bit U, signed 12-bit rho, T1, T2, and coupled H* come directly
+    // from hcpu_guard.v with zero duplicate formulas.
+    wire guard_pass;
+    wire g1, g2, g3, g4, t1, t2;
+    wire [`XLEN-1:0] unused_guard_u, unused_guard_rho;
 
-    // Note: Guard bit mapping matches hcpu_guard.v
-    wire [15:0] sum_n = c[`C_NA] + c[`C_NB] + c[`C_ND];
-    wire [15:0] sum_k = c[`C_KP] + c[`C_KX] + c[`C_KS] + c[`C_KA] + c[`C_KC];
-    wire [15:0] sum_q = c[`C_QP] + c[`C_QX] + c[`C_QS] + c[`C_QA] + c[`C_QC];
-    wire [15:0] U_val = c[`C_QX] + c[`C_QS] + c[`C_QA] + {c[`C_QC], 2'b00}; // 4*Qc
-
-    wire g1 = (c[`C_AN] == sum_n[7:0]);
-    wire g2 = (c[`C_AK] == sum_k[7:0]);
-    wire g3 = (c[`C_AQ] == sum_q[7:0]);
-    wire g4 = (c[`C_THETA] >= U_val[7:0]);
-    wire t1 = (c[`C_KS] == 0) || (c[`C_QC] >= 1);
-    // T2: Kaf exception — ROM stores Kc=1 but Qc=0 (structural property)
-    wire is_kaf = (c[`C_THETA] == 8'd2 && c[`C_AK] == 8'd1 &&
-                   c[`C_AQ] == 8'd0 && c[`C_KC] == 8'd1);
-    wire t2 = (c[`C_KC] == 0) || (c[`C_QC] >= 1) || is_kaf;
-
-    assign guard_status = {2'b00, t2, t1, g4, g3, g2, g1};
+    hcpu_guard #(.PIPELINE_GUARD(0)) u_guard (
+        .clk        (1'b0),
+        .rst_n      (1'b1),
+        .vec        (vec_in),
+        .guard_pass (guard_pass),
+        .g1_pass    (g1),
+        .g2_pass    (g2),
+        .g3_pass    (g3),
+        .g4_pass    (g4),
+        .t1_pass    (t1),
+        .t2_pass    (t2),
+        .u_value    (unused_guard_u),
+        .rho_value  (unused_guard_rho)
+    );
+    wire [5:0] raw_guards = {t2, t1, g4, g3, g2, g1};
+    assign guard_status = (&raw_guards && !guard_pass) ? 8'h00 : {2'b00, t2, t1, g4, g3, g2, g1};
 
     // ── Nibble-packing (§4.6.1) ─────────────────────────────────
     // 18 components → 9 nibble-packed bytes

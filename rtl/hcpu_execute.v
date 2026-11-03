@@ -268,8 +268,9 @@ module hcpu_execute #(
             `OP_CMOD4: codex_gpr  = calu_result_scl;
             // U and rho arrive from the guard, which is already looking at
             // this same vector: guard_vec is id_hreg_s1.
-            `OP_CU:    codex_gpr  = guard_u;
-            `OP_CRHO:  codex_gpr  = guard_rho;
+            `OP_CU:     codex_gpr  = guard_u;
+            `OP_CRHO:   codex_gpr  = guard_rho;
+            `OP_CTHETA: codex_gpr  = {24'd0, id_hreg_s1[7:0]};
             // HISAB word select. §IIIM.3.1 gives HPACK as
             // GPR[DST] <- nibble_pack(H[S1])[S2], words 0-2. Only word 0 was
             // ever selected: pack_word1 and pack_word2 were wired up to the
@@ -486,11 +487,11 @@ module hcpu_execute #(
             end
 
             // GPR result selection
-            if (id_is_codex && (id_opcode == `OP_HNRM2 || id_opcode == `OP_HDIST ||
-                                id_opcode == `OP_HDOT  || id_opcode == `OP_CGET  ||
-                                id_opcode == `OP_CMOD4 ||
-                                id_opcode == `OP_CU   || id_opcode == `OP_CRHO ||
-                                id_opcode == `OP_HPACK || id_opcode == `OP_HCRC))
+            if (id_is_codex && (id_opcode == `OP_HNRM2  || id_opcode == `OP_HDIST  ||
+                                id_opcode == `OP_HDOT   || id_opcode == `OP_CGET   ||
+                                id_opcode == `OP_CMOD4  || id_opcode == `OP_CTHETA ||
+                                id_opcode == `OP_CU     || id_opcode == `OP_CRHO   ||
+                                id_opcode == `OP_HPACK  || id_opcode == `OP_HCRC))
                 ex_gpr_result <= codex_gpr;
             // FRD hands back `forwarded_flags`, NOT the register file's copy.
             // That is the same source JEQ and JGD read three hundred lines up,

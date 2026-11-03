@@ -1,7 +1,7 @@
 {
  "generated_by": "src/hijaiyyah/nui/rtl_function.py",
  "spec": "NUI/spec/rtl_function.json",
- "simulator": "Icarus Verilog version 14.0 (devel) (s20260301-394-g9edaf7b6a-dirty)",
+ "simulator": "Icarus Verilog version 13.0 (stable) (v13_0)",
  "modules": [
   {
    "name": "hcpu_uart_rx",
@@ -180,7 +180,7 @@
   {
    "name": "hcpu_mmio",
    "rtl": "rtl/hcpu_mmio.v",
-   "rtl_sha256": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd",
+   "rtl_sha256": "7a160118c87cb088930d37a79362e3cdb6ecf01726e95f441589a63eee46318b",
    "bench": "rtl/tb/tb_hcpu_mmio.v",
    "bench_sha256": "4a82b30baf8024b115c5af6d8a563e5921b4e0cadbd30f5165bb5849b7157604",
    "modelled_sha256": {
@@ -887,13 +887,13 @@
    "rtl_sha256": "8731b42a61bbf304078027dd874ffdfabec25bf6d199d53c2a6291c0ce44edfc",
    "bench": "rtl/tb/tb_parity.v",
    "bench_sha256": "94d820fddc2d0bcc40244348a41d4ddf200fa42aa5702e87b7202eddf07800f6",
-   "trace_sha256": "fd58a9384c8940d58f9b64978995be7148d78852cbaef524c39f5f3b67495d16",
+   "trace_sha256": "c5134478d7db010e8f11aa0125e09d5ea604ebc8518899058d7cc8b38507a449",
    "parameters": {
     "XLEN": 32,
     "DATA_ADDR_W": 12,
     "DATA_DEPTH": 4096
    },
-   "cycles": 826030,
+   "cycles": 826078,
    "runs": 107,
    "ram_programs": [
     "parity:mmio_does_not_disturb_ram",
@@ -911,6 +911,8 @@
     "rtl/programs/shell.hasm",
     "rtl/programs/subroutine.hasm",
     "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
     "rtl/programs/trap_hreg.hasm",
     "rtl/tb/hfs_persist_probe.hasm",
     "rtl/tb/hfs_syscall_probe.hasm",
@@ -918,15 +920,15 @@
     "stop-probe:halt-then-store"
    ],
    "input_timing": {
-    "line_changes": 419521,
+    "line_changes": 419559,
     "captured_new": 0,
-    "captured_old": 419521
+    "captured_old": 419559
    },
    "one_step_mismatches": [],
    "open_loop_mismatches": [],
    "output_mismatches": [],
    "harness_trace_mismatches": [],
-   "harness_ram_writes": 26578,
+   "harness_ram_writes": 26580,
    "lapis4": {
     "parity:mmio_does_not_disturb_ram": {
      "status": "PARITY",
@@ -988,6 +990,14 @@
      "status": "MISMATCH",
      "first_divergence": "GPR"
     },
+    "rtl/programs/test_prog_load.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
+    "rtl/programs/test_prog_run.hasm": {
+     "status": "MISMATCH",
+     "first_divergence": "GPR"
+    },
     "rtl/programs/trap_hreg.hasm": {
      "status": "UNKNOWN",
      "first_divergence": null
@@ -1028,11 +1038,11 @@
    "bench_said": "107 of 107 runs reached the harness's final block (HALTED=)",
    "bench_pass": true,
    "rules_fired": {
-    "write": 26578,
-    "read": 8620,
-    "hold": 817410,
+    "write": 26580,
+    "read": 8622,
+    "hold": 817456,
     "read_first": 0,
-    "initial_zero": 6
+    "initial_zero": 8
    },
    "rules": [
     {
@@ -1042,7 +1052,7 @@
       44,
       45
      ],
-     "fired": 26578
+     "fired": 26580
     },
     {
      "id": "read",
@@ -1051,7 +1061,7 @@
       46,
       47
      ],
-     "fired": 8620
+     "fired": 8622
     },
     {
      "id": "hold",
@@ -1059,7 +1069,7 @@
       46,
       50
      ],
-     "fired": 817410
+     "fired": 817456
     },
     {
      "id": "read_first",
@@ -1083,7 +1093,7 @@
       57,
       59
      ],
-     "fired": 6
+     "fired": 8
     }
    ],
    "not_covered": [
@@ -1097,7 +1107,7 @@
    "bench": "rtl/tb/tb_gowin_loader.v",
    "bench_sha256": "ac908f0b53d93afabccfa108fd7e9b157f7818ec0833041a7ec52a3268f64f22",
    "modelled_sha256": {
-    "rtl/hcpu_mmio.v": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd"
+    "rtl/hcpu_mmio.v": "7a160118c87cb088930d37a79362e3cdb6ecf01726e95f441589a63eee46318b"
    },
    "pinned_sha256": {
     "rtl/tb/tb_gowin_loader_nui.v": "cb42a94d70460adc0b05624e481c278d16fbdd27b2b591abc1b8c61174dbbd76",
@@ -1486,7 +1496,7 @@
   {
    "name": "pipeline",
    "rtl": "rtl/hcpu_top.v",
-   "rtl_sha256": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "rtl_sha256": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd",
    "bench": "rtl/tb/tb_hcpu_top.v",
    "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
    "trace_sha256": "411860312c3c24a4f9b49926fcf166b8088d482bb176ab961b90786cca5454bc",
@@ -2502,30 +2512,30 @@
   {
    "name": "hcpu",
    "rtl": "rtl/hcpu_top.v",
-   "rtl_sha256": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "rtl_sha256": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd",
    "bench": "rtl/tb/tb_hcpu_top.v",
    "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
    "modelled_sha256": {
     "rtl/hcpu_fetch.v": "c4cc8c473e9a77f6be543545c8c4ec83b711214f7a7c40567e74e77a513e1deb",
-    "rtl/hcpu_decode.v": "50858a8db6eac9b4aa77097e53e9f11640c790e11c6f7a13aaa4cf8569da878c",
-    "rtl/hcpu_forward.v": "1e02e95e8e8d6b5103c3cfc6fa6e4c95837bbb2a9fe897f3cff626bec551ddbc",
-    "rtl/hcpu_execute.v": "161761534a710a304320c4818bd8207b2c1f84a95ed67d8d1f275aa17a56d4c2",
-    "rtl/hcpu_memory.v": "6738069540e1716ce78fa6eed97e222a35ff9de56aa22e684e12ca3744302b36",
-    "rtl/hcpu_writeback.v": "5cb92f5d8722f1da2b4082dfc336e93d79004bcfd392beb2dc6f83246b082225",
+    "rtl/hcpu_decode.v": "10a30632b4e4b73319ddcada30a9131ecb6ab60d7796d291ef77afe581c67dac",
+    "rtl/hcpu_forward.v": "e41ecf983b711511ef7660f6b5e57cd5f2947ce8947120e88c817a540b846155",
+    "rtl/hcpu_execute.v": "7d07cf6e8d43fe28e25036ee70816ab06ca274bd226d31dcb9ea69802fc7bb19",
+    "rtl/hcpu_memory.v": "21d12d04fa20baf75985e278a6f617b5182f22ae316bee78929a2e526a1fa018",
+    "rtl/hcpu_writeback.v": "e4bd775b66ed577269c48ad2cdee5747bb13bc4d9e339d71816eb101951844fc",
     "rtl/hcpu_controller.v": "ff42dba6347ec50cdccc23659b818f6e19d4f8ce4e32713e43c20e2d10e72ffd",
-    "rtl/hcpu_regfile.v": "64acfdf2f002860ad0e8903f65c298bfb46d4a72b5ac81bcd53dfbf5e88a7ad6",
-    "rtl/hcpu_mmio.v": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd",
+    "rtl/hcpu_regfile.v": "68b70d3952a6041a397a71d075bea3a1011b41207b00cb049828916f548352eb",
+    "rtl/hcpu_mmio.v": "7a160118c87cb088930d37a79362e3cdb6ecf01726e95f441589a63eee46318b",
     "rtl/hcpu_uart_rx.v": "3dbb9f127825ef6afe83f016b84b81360d02f85dcb8d7c16c7ca6ce596a728ad",
     "rtl/hcpu_timer.v": "4847d722d2ca14670b0be614d2f22da46ae2b05ea12edcbbfb0f01395a80283b",
     "rtl/hcpu_uart_tx.v": "89dae1c3dbf1ea2a41fec5206a6654d3411d7757520af07d58ad1e6fca39b519",
     "rtl/hcpu_dataram.v": "8731b42a61bbf304078027dd874ffdfabec25bf6d199d53c2a6291c0ce44edfc",
-    "rtl/hcpu_codex_alu.v": "ad5eda0591752622200461fd7c10551ba8f87ada3cc1f966eaae10d0dd24c63d",
+    "rtl/hcpu_codex_alu.v": "3c4f0231462b19e436791ec65b6b9ef4caa70990af3d9b14551fe81058c8fc7c",
     "rtl/hcpu_mul.v": "de86e5c730e966ea702e60ec4aed2295781e3d3b04872ba6c457359887e010c2",
-    "rtl/hcpu_pkg.vh": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342"
+    "rtl/hcpu_pkg.vh": "7422d98c4e014073f3c950177cc398846766099af6f6b4ceae1a04734602b2fc"
    },
    "pinned_sha256": {
-    "src/hijaiyyah/hisa/machine.py": "9d855be4d2b495e3d4fcbb68c95b3405c02039939b1705dc5f1c0c1adbcd0308",
-    "src/hijaiyyah/hisa/opcodes.py": "d23f216e06d2589dd443b7db7256627f60d62ed636888671c5a0dfacb5e5994b",
+    "src/hijaiyyah/hisa/machine.py": "23ae5ee339ea8e284c71b982e9d8ed0a74d708a66bb4e6dfe652b0094c94cd66",
+    "src/hijaiyyah/hisa/opcodes.py": "fe14b082cb193cb5903f72bc209ddbd91556dff0199bbd275b1a760146e915dc",
     "src/hijaiyyah/hisa/registers.py": "9bed88e78f97f35b0ede05e4fa23edf1d05bb966621ea3d8d05ae37aa4ecfc6f",
     "src/hijaiyyah/hisab/serialize.py": "5cf98d27be91723d09c2d826d84a25790c9f75002304e2b5c38f8c633d30facd",
     "src/hijaiyyah/hisab/protocol.py": "11ba0c0b7fa193f05aef29b57e7335a3920c6a86f40a92279f9f91a94301223e",
@@ -2923,6 +2933,7 @@
     "calu.cset": 2,
     "calu.cset_outside": 1,
     "calu.cmod4": 1,
+    "calu.hdot": 0,
     "calu.default": 0,
     "mul.mul": 0
    },
@@ -4197,7 +4208,7 @@
      "id": "calu.hcadd",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      128
+      282
      ],
      "fired": 3
     },
@@ -4205,7 +4216,7 @@
      "id": "calu.letter",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      128
+      282
      ],
      "fired": 0
     },
@@ -4213,7 +4224,7 @@
      "id": "calu.hnrm2",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      129
+      283
      ],
      "fired": 1
     },
@@ -4221,7 +4232,7 @@
      "id": "calu.hdist",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      130
+      284
      ],
      "fired": 0
     },
@@ -4229,8 +4240,8 @@
      "id": "calu.cget",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      148,
-      149
+      288,
+      289
      ],
      "fired": 9
     },
@@ -4238,8 +4249,8 @@
      "id": "calu.cget_outside",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      148,
-      149
+      288,
+      289
      ],
      "fired": 1
     },
@@ -4247,7 +4258,7 @@
      "id": "calu.cset",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      135
+      286
      ],
      "fired": 2
     },
@@ -4255,7 +4266,7 @@
      "id": "calu.cset_outside",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      135
+      286
      ],
      "fired": 1
     },
@@ -4263,18 +4274,26 @@
      "id": "calu.cmod4",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      139
+      287
      ],
      "fired": 1
+    },
+    {
+     "id": "calu.hdot",
+     "file": "rtl/hcpu_codex_alu.v",
+     "lines": [
+      285
+     ],
+     "fired": 0
     },
     {
      "id": "calu.default",
      "file": "rtl/hcpu_codex_alu.v",
      "lines": [
-      150,
-      151,
-      152,
-      153
+      290,
+      291,
+      292,
+      293
      ],
      "fired": 0
     },
@@ -4365,6 +4384,7 @@
     "dataram.initial_zero",
     "calu.letter",
     "calu.hdist",
+    "calu.hdot",
     "calu.default",
     "mul.mul"
    ]
@@ -4373,16 +4393,16 @@
  "pipeline_audit": {
   "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
   "files_sha256": {
-   "rtl/hcpu_top.v": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
+   "rtl/hcpu_top.v": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd",
    "rtl/hcpu_fetch.v": "c4cc8c473e9a77f6be543545c8c4ec83b711214f7a7c40567e74e77a513e1deb",
-   "rtl/hcpu_decode.v": "50858a8db6eac9b4aa77097e53e9f11640c790e11c6f7a13aaa4cf8569da878c",
-   "rtl/hcpu_forward.v": "1e02e95e8e8d6b5103c3cfc6fa6e4c95837bbb2a9fe897f3cff626bec551ddbc",
-   "rtl/hcpu_execute.v": "161761534a710a304320c4818bd8207b2c1f84a95ed67d8d1f275aa17a56d4c2",
-   "rtl/hcpu_memory.v": "6738069540e1716ce78fa6eed97e222a35ff9de56aa22e684e12ca3744302b36",
-   "rtl/hcpu_writeback.v": "5cb92f5d8722f1da2b4082dfc336e93d79004bcfd392beb2dc6f83246b082225",
+   "rtl/hcpu_decode.v": "10a30632b4e4b73319ddcada30a9131ecb6ab60d7796d291ef77afe581c67dac",
+   "rtl/hcpu_forward.v": "e41ecf983b711511ef7660f6b5e57cd5f2947ce8947120e88c817a540b846155",
+   "rtl/hcpu_execute.v": "7d07cf6e8d43fe28e25036ee70816ab06ca274bd226d31dcb9ea69802fc7bb19",
+   "rtl/hcpu_memory.v": "21d12d04fa20baf75985e278a6f617b5182f22ae316bee78929a2e526a1fa018",
+   "rtl/hcpu_writeback.v": "e4bd775b66ed577269c48ad2cdee5747bb13bc4d9e339d71816eb101951844fc",
    "rtl/hcpu_controller.v": "ff42dba6347ec50cdccc23659b818f6e19d4f8ce4e32713e43c20e2d10e72ffd",
-   "rtl/hcpu_regfile.v": "64acfdf2f002860ad0e8903f65c298bfb46d4a72b5ac81bcd53dfbf5e88a7ad6",
-   "rtl/hcpu_pkg.vh": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342"
+   "rtl/hcpu_regfile.v": "68b70d3952a6041a397a71d075bea3a1011b41207b00cb049828916f548352eb",
+   "rtl/hcpu_pkg.vh": "7422d98c4e014073f3c950177cc398846766099af6f6b4ceae1a04734602b2fc"
   },
   "trace_sha256": "3800ca141985f2a75f16a9c09e00866f56d0c22098ac4c4eaed43b37903bf3bd",
   "edges": 232,
@@ -5188,7 +5208,7 @@
   ],
   "opcodes": {
    "NOP": {
-    "line": 243,
+    "line": 255,
     "IF": [
      1,
      2,
@@ -5243,7 +5263,7 @@
     ]
    },
    "HALT": {
-    "line": 245,
+    "line": 257,
     "IF": [
      1,
      2,
@@ -5298,21 +5318,21 @@
     ]
    },
    "FRD": {
-    "line": 250,
+    "line": 262,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "MOV": {
-    "line": 251,
+    "line": 263,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "MOVI": {
-    "line": 252,
+    "line": 264,
     "IF": [
      1,
      3,
@@ -5355,7 +5375,7 @@
     ]
    },
    "ADD": {
-    "line": 254,
+    "line": 266,
     "IF": [
      6
     ],
@@ -5370,7 +5390,7 @@
     ]
    },
    "ADDI": {
-    "line": 255,
+    "line": 267,
     "IF": [
      3
     ],
@@ -5385,98 +5405,98 @@
     ]
    },
    "SUB": {
-    "line": 256,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "MUL": {
-    "line": 257,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "AND": {
-    "line": 259,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "OR": {
-    "line": 260,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "XOR": {
-    "line": 261,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "NOT": {
-    "line": 262,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "SHL": {
-    "line": 263,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "SHR": {
-    "line": 264,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "ANDI": {
-    "line": 265,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "ORI": {
-    "line": 266,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "XORI": {
-    "line": 267,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "SHLI": {
     "line": 268,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
-   "SHRI": {
+   "MUL": {
     "line": 269,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
-   "CMP": {
+   "AND": {
     "line": 271,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "OR": {
+    "line": 272,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "XOR": {
+    "line": 273,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "NOT": {
+    "line": 274,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHL": {
+    "line": 275,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHR": {
+    "line": 276,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "ANDI": {
+    "line": 277,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "ORI": {
+    "line": 278,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "XORI": {
+    "line": 279,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHLI": {
+    "line": 280,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "SHRI": {
+    "line": 281,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "CMP": {
+    "line": 283,
     "IF": [
      3
     ],
@@ -5491,56 +5511,56 @@
     ]
    },
    "CMPI": {
-    "line": 272,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "FWR": {
-    "line": 278,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "EMITS": {
-    "line": 282,
-    "IF": [],
-    "ID/EX": [],
-    "EX/MEM": [],
-    "MEM/WB": []
-   },
-   "CALL": {
     "line": 284,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
+   "FWR": {
+    "line": 290,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "EMITS": {
+    "line": 294,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
+   "CALL": {
+    "line": 296,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
    "RET": {
-    "line": 285,
+    "line": 297,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "JMP": {
-    "line": 286,
+    "line": 298,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "JEQ": {
-    "line": 287,
+    "line": 299,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "JNE": {
-    "line": 288,
+    "line": 300,
     "IF": [
      3,
      11
@@ -5559,14 +5579,14 @@
     ]
    },
    "JGD": {
-    "line": 289,
+    "line": 301,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "JNGD": {
-    "line": 290,
+    "line": 302,
     "IF": [
      5
     ],
@@ -5581,7 +5601,7 @@
     ]
    },
    "PUSH": {
-    "line": 292,
+    "line": 304,
     "IF": [
      8
     ],
@@ -5596,7 +5616,7 @@
     ]
    },
    "POP": {
-    "line": 293,
+    "line": 305,
     "IF": [
      8
     ],
@@ -5611,7 +5631,7 @@
     ]
    },
    "LOAD": {
-    "line": 294,
+    "line": 306,
     "IF": [
      4,
      6
@@ -5630,7 +5650,7 @@
     ]
    },
    "STORE": {
-    "line": 295,
+    "line": 307,
     "IF": [
      4,
      6
@@ -5649,7 +5669,7 @@
     ]
    },
    "HLOAD": {
-    "line": 297,
+    "line": 309,
     "IF": [
      1,
      2,
@@ -5688,7 +5708,7 @@
     ]
    },
    "HCADD": {
-    "line": 298,
+    "line": 310,
     "IF": [
      2,
      11
@@ -5707,7 +5727,7 @@
     ]
    },
    "HGRD": {
-    "line": 299,
+    "line": 311,
     "IF": [
      1,
      2,
@@ -5730,7 +5750,7 @@
     ]
    },
    "HNRM2": {
-    "line": 300,
+    "line": 312,
     "IF": [
      2
     ],
@@ -5745,7 +5765,7 @@
     ]
    },
    "CGET": {
-    "line": 301,
+    "line": 313,
     "IF": [
      9,
      10
@@ -5764,7 +5784,7 @@
     ]
    },
    "CSET": {
-    "line": 309,
+    "line": 321,
     "IF": [
      10
     ],
@@ -5779,7 +5799,7 @@
     ]
    },
    "CMOV": {
-    "line": 320,
+    "line": 332,
     "IF": [
      11
     ],
@@ -5794,7 +5814,7 @@
     ]
    },
    "CZERO": {
-    "line": 321,
+    "line": 333,
     "IF": [
      11
     ],
@@ -5809,7 +5829,7 @@
     ]
    },
    "CEQ": {
-    "line": 323,
+    "line": 335,
     "IF": [
      11
     ],
@@ -5824,7 +5844,7 @@
     ]
    },
    "CRHO": {
-    "line": 324,
+    "line": 336,
     "IF": [
      11
     ],
@@ -5839,7 +5859,7 @@
     ]
    },
    "CU": {
-    "line": 325,
+    "line": 337,
     "IF": [
      11
     ],
@@ -5853,8 +5873,15 @@
      11
     ]
    },
+   "CTHETA": {
+    "line": 338,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
    "CMOD4": {
-    "line": 326,
+    "line": 339,
     "IF": [
      11
     ],
@@ -5869,14 +5896,14 @@
     ]
    },
    "HDIST": {
-    "line": 327,
+    "line": 340,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "HPACK": {
-    "line": 329,
+    "line": 342,
     "IF": [
      7
     ],
@@ -5891,7 +5918,7 @@
     ]
    },
    "HCRC": {
-    "line": 330,
+    "line": 343,
     "IF": [
      7
     ],
@@ -5905,22 +5932,29 @@
      7
     ]
    },
+   "HDOT": {
+    "line": 344,
+    "IF": [],
+    "ID/EX": [],
+    "EX/MEM": [],
+    "MEM/WB": []
+   },
    "PRINT": {
-    "line": 332,
+    "line": 357,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "ERET": {
-    "line": 342,
+    "line": 367,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
     "MEM/WB": []
    },
    "SYSCALL": {
-    "line": 347,
+    "line": 372,
     "IF": [],
     "ID/EX": [],
     "EX/MEM": [],
@@ -5951,7 +5985,9 @@
    "JMP",
    "JEQ",
    "JGD",
+   "CTHETA",
    "HDIST",
+   "HDOT",
    "PRINT",
    "ERET",
    "SYSCALL"
@@ -5962,30 +5998,30 @@
  "hcpu_audit": {
   "bench_sha256": "fe05c8ac2d539eee474ed82711d3e94f6ee6c8a99aabd5c756213aa81937ffca",
   "files_sha256": {
-   "rtl/hcpu_top.v": "98f70974c232eedaf06a9d70727544e1a94c473cf2441a0458c39b3c04b5db1a",
-   "rtl/hcpu_codex_alu.v": "ad5eda0591752622200461fd7c10551ba8f87ada3cc1f966eaae10d0dd24c63d",
+   "rtl/hcpu_top.v": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd",
+   "rtl/hcpu_codex_alu.v": "3c4f0231462b19e436791ec65b6b9ef4caa70990af3d9b14551fe81058c8fc7c",
    "rtl/hcpu_controller.v": "ff42dba6347ec50cdccc23659b818f6e19d4f8ce4e32713e43c20e2d10e72ffd",
    "rtl/hcpu_dataram.v": "8731b42a61bbf304078027dd874ffdfabec25bf6d199d53c2a6291c0ce44edfc",
-   "rtl/hcpu_decode.v": "50858a8db6eac9b4aa77097e53e9f11640c790e11c6f7a13aaa4cf8569da878c",
-   "rtl/hcpu_execute.v": "161761534a710a304320c4818bd8207b2c1f84a95ed67d8d1f275aa17a56d4c2",
+   "rtl/hcpu_decode.v": "10a30632b4e4b73319ddcada30a9131ecb6ab60d7796d291ef77afe581c67dac",
+   "rtl/hcpu_execute.v": "7d07cf6e8d43fe28e25036ee70816ab06ca274bd226d31dcb9ea69802fc7bb19",
    "rtl/hcpu_fetch.v": "c4cc8c473e9a77f6be543545c8c4ec83b711214f7a7c40567e74e77a513e1deb",
-   "rtl/hcpu_forward.v": "1e02e95e8e8d6b5103c3cfc6fa6e4c95837bbb2a9fe897f3cff626bec551ddbc",
-   "rtl/hcpu_guard.v": "b7ccb07eeae68e51a32a9b703d5c10dee7801ed50e91b324d8e9db383050c3ec",
-   "rtl/hcpu_hisab.v": "2bd82ee9a81a9e481725905396336bf4d856f1a9947bbaad08bf862a1ec44f9e",
-   "rtl/hcpu_memory.v": "6738069540e1716ce78fa6eed97e222a35ff9de56aa22e684e12ca3744302b36",
-   "rtl/hcpu_mmio.v": "7fa8e31111503559a24e372d11e9e5fb03754496a2306caf3ddb0fe183e7cdfd",
+   "rtl/hcpu_forward.v": "e41ecf983b711511ef7660f6b5e57cd5f2947ce8947120e88c817a540b846155",
+   "rtl/hcpu_guard.v": "f4b6daa49bdc477259cf51c50fbb92fb34ce6cbecebf072630e771c15b0ce522",
+   "rtl/hcpu_hisab.v": "f82a562c47623e6ac02d6c0b7661978827b858d96c823deb62f49337cb1bc1b9",
+   "rtl/hcpu_memory.v": "21d12d04fa20baf75985e278a6f617b5182f22ae316bee78929a2e526a1fa018",
+   "rtl/hcpu_mmio.v": "7a160118c87cb088930d37a79362e3cdb6ecf01726e95f441589a63eee46318b",
    "rtl/hcpu_mul.v": "de86e5c730e966ea702e60ec4aed2295781e3d3b04872ba6c457359887e010c2",
-   "rtl/hcpu_pkg.vh": "bca67ed7cfbd3d32bfab6b292ebee36598660ffdf2ec502b8b6d0fcb7fba2342",
-   "rtl/hcpu_regfile.v": "64acfdf2f002860ad0e8903f65c298bfb46d4a72b5ac81bcd53dfbf5e88a7ad6",
+   "rtl/hcpu_pkg.vh": "7422d98c4e014073f3c950177cc398846766099af6f6b4ceae1a04734602b2fc",
+   "rtl/hcpu_regfile.v": "68b70d3952a6041a397a71d075bea3a1011b41207b00cb049828916f548352eb",
    "rtl/hcpu_rom.v": "91e2fb697eb6a711fd243785e6eff3466b57de16184d6c3f0efe614a28d9fcc6",
-   "rtl/hcpu_sdio.v": "619d5211f995b2ecae567d241a9a5ab97c6fbf74644b4ee67a5c087d95bcc7df",
+   "rtl/hcpu_sdio.v": "2d51149fa4ae369bd258f658f1f2035b6eb0ae0067bb2087eec69afa6557f851",
    "rtl/hcpu_timer.v": "4847d722d2ca14670b0be614d2f22da46ae2b05ea12edcbbfb0f01395a80283b",
    "rtl/hcpu_trap.v": "c8087007c83feaec1b417156fbbd6d16378e83216582891c43561c21cf2ef7bc",
    "rtl/hcpu_uart_rx.v": "3dbb9f127825ef6afe83f016b84b81360d02f85dcb8d7c16c7ca6ce596a728ad",
    "rtl/hcpu_uart_tx.v": "89dae1c3dbf1ea2a41fec5206a6654d3411d7757520af07d58ad1e6fca39b519",
-   "rtl/hcpu_writeback.v": "5cb92f5d8722f1da2b4082dfc336e93d79004bcfd392beb2dc6f83246b082225"
+   "rtl/hcpu_writeback.v": "e4bd775b66ed577269c48ad2cdee5747bb13bc4d9e339d71816eb101951844fc"
   },
-  "trace_sha256": "5ebe9560216793e641b0e35d3ef66263d78afafdb1975774f5abbcf277d1dff6",
+  "trace_sha256": "96a5b921dd789279fc86d21e4548dbb9ab8d1a214ec2855e13ee774276180378",
   "edges": 232,
   "live_edges": 178,
   "sampling": {
@@ -6144,7 +6180,7 @@
   },
   "boundary": {
    "files": 21,
-   "registers": 171,
+   "registers": 185,
    "undeclared": [],
    "missing": []
   },
@@ -6154,7 +6190,8 @@
      "u_regfile.flags": 7
     },
     "held": {
-     "u_regfile.pc": "0"
+     "u_regfile.pc": "0",
+     "u_regfile.hreg_ovf": "0"
     },
     "x": []
    },
@@ -6234,6 +6271,7 @@
      "u_mmio.u_sdio.clk_en": "0",
      "u_mmio.u_sdio.cmd_oe": "1",
      "u_mmio.u_sdio.cmd_out": "1",
+     "u_mmio.u_sdio.csum_acc": "0",
      "u_mmio.u_sdio.dat_oe": "0",
      "u_mmio.u_sdio.dat_out": "1",
      "u_mmio.u_sdio.divider": "62",
@@ -6242,6 +6280,11 @@
      "u_mmio.u_sdio.fsm_we": "0",
      "u_mmio.u_sdio.gap_cnt": "0",
      "u_mmio.u_sdio.ok": "0",
+     "u_mmio.u_sdio.prescan_all_bad": "0",
+     "u_mmio.u_sdio.prescan_bad_cnt": "0",
+     "u_mmio.u_sdio.prescan_body_bad": "0",
+     "u_mmio.u_sdio.prescan_first_idx": "0",
+     "u_mmio.u_sdio.prescan_first_opc": "0",
      "u_mmio.u_sdio.rca": "0",
      "u_mmio.u_sdio.sd_clk": "0",
      "u_mmio.u_sdio.state": "0",
@@ -7404,6 +7447,11 @@
     ]
    },
    {
+    "id": "calu.hdot",
+    "fired": 0,
+    "programs": []
+   },
+   {
     "id": "calu.default",
     "fired": 0,
     "programs": []
@@ -7563,6 +7611,7 @@
    "guard.t2_fail",
    "calu.letter",
    "calu.hdist",
+   "calu.hdot",
    "calu.default",
    "mul.mul"
   ],

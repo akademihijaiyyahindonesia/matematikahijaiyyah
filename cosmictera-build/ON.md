@@ -47,7 +47,7 @@ Label: `CC`.
 | menyala | apa persisnya | bukti |
 |---|---|---|
 | Pipeline HCPU | fetch → decode → execute → mem → writeback | `rtl/hcpu_top.v` |
-| Opcode | **82 dari 104** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
+| Opcode | **84 dari 105** terimplementasi di RTL | `RTL_IMPLEMENTED` di `src/hijaiyyah/hisa/opcodes.py` |
 | Opcode huruf | **28** (`0xE0`–`0xFB`), dijalankan di pipeline | `rtl/tb/tb_hcpu_letters.v`, `rtl/programs/letters.hasm` |
 | Codex ALU | HCADD, HNRM2, HDIST, CGET, CSET, CMOD4 | `rtl/hcpu_codex_alu.v`, 6 asersi |
 | Blok codex | CMOV, CZERO, CEQ, CRHO, CU, CMOD4 — `U` dan `ρ` dibaca dari guard, bukan dihitung ulang; `CDOT` tinggal di perangkat lunak, lihat [OFF.md](OFF.md) | `rtl/tb/tb_hcpu_top.v` Program 11 |

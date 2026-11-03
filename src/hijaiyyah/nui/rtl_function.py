@@ -1211,7 +1211,7 @@ def _usage(root: Path) -> tuple[set[str], set[str]]:
     """hcpu_decode.v's own operand-usage lists (lines 86-105): the opcodes it
     marks as reading S1, and as reading S2."""
     lines = (root / "rtl" / "hcpu_decode.v").read_text(encoding="utf-8").splitlines()
-    block = "\n".join(lines[85:105])
+    block = "\n".join(lines[85:115])
     s1, s2 = block.split("id_uses_s1 = 1'b1;")[0], block.split("id_uses_s1 = 1'b1;")[1]
     return set(re.findall(r"`OP_(\w+)", s1)), set(re.findall(r"`OP_(\w+)", s2))
 
@@ -2438,7 +2438,8 @@ def _hcpu_rules(p: dict[str, int], ops: dict[int, str], tx: dict[str, int], rx: 
         "calu.cset": live(lambda r: runs("CSET")(r) and r["id_imm"] <= 17),
         "calu.cset_outside": live(lambda r: runs("CSET")(r) and r["id_imm"] > 17),
         "calu.cmod4": live(runs("CMOD4")),
-        "calu.default": live(lambda r: r["calu_op"] in (6, 7)),
+        "calu.hdot": live(runs("HDOT")),
+        "calu.default": live(lambda r: r["calu_op"] == 7),
         "hisab.word0": live(lambda r: runs("HPACK")(r) and r["id_s2"] == 0),
         "hisab.word1": live(lambda r: runs("HPACK")(r) and r["id_s2"] == 1),
         "hisab.word2": live(lambda r: runs("HPACK")(r) and r["id_s2"] == 2),

@@ -1702,22 +1702,24 @@
       "CSET"
      ],
      "indexed_lines": [
-      135,
-      148
+      286,
+      288
      ],
      "dst_is_source": [
       "CSET"
      ],
-     "dst_is_source_line": "hcpu_decode.v baris 153",
+     "dst_is_source_line": "hcpu_decode.v baris 159",
      "width": {
       "HCADD": 8,
-      "HNRM2": 16,
-      "HDIST": 16
+      "HNRM2": 20,
+      "HDIST": 20,
+      "HDOT": 20
      },
      "width_lines": {
-      "HCADD": 65,
-      "HNRM2": 91,
-      "HDIST": 107
+      "HCADD": 111,
+      "HNRM2": 143,
+      "HDIST": 143,
+      "HDOT": 144
      }
     },
     "mul": {
@@ -1798,12 +1800,12 @@
    "opaque": {
     "unit trap": "tujuh register hcpu_trap.v; tidak pernah meninggalkan keadaan reset di bench ini (hcpu_audit), dan keluarannya masuk sebagai hasil luar",
     "mesin keadaan cetak": "sembilan register hcpu_top.v baris 286-390 dan larik digits[]; tetap P_IDLE",
-    "pengendali kartu": "41 register hcpu_sdio.v termasuk sbuf[]; tetap S_IDLE. Tujuh belas di antaranya tanpa reset dan x di setiap tepi: tidak diberi nilai, tidak masuk klaim paritas",
+    "pengendali kartu": "47 register hcpu_sdio.v termasuk sbuf[] dan 6 register akselerator A3 (csum_acc, prescan_*); tetap S_IDLE. Tujuh belas di antaranya tanpa reset dan x di setiap tepi: tidak diberi nilai, tidak masuk klaim paritas",
     "ra_stack[]": "tumpukan alamat kembali hcpu_execute.v; CALL dan RET tidak tercakup. Dipromosikan menjadi keadaan prediktif bila bench menjalankannya",
     "register pc di register file": "pc_we diikat 0 (hcpu_top.v baris 645)",
     "guard berregister": "tujuh register yang tidak dielaborasi karena PIPELINE_GUARD(0); guard kombinasionalnya aktif, dan hasilnya diambil dari jejak",
-    "is_kaf di hcpu_hisab.v": "override T2 yang tersisa di hcpu_hisab.v baris 72-74, sudah dicabut dari hcpu_guard.v; tidak pernah naik di jejak ini. Tidak dipakai sebagai dasar klaim, tidak diubah",
-    "kata RAM yang belum ditulis": "nol awal simulasi adalah aturan initial_zero yang tidak tercakup di bench ini; fungsi tidak mengklaim kata yang belum ia tulis"
+    "kata RAM yang belum ditulis": "nol awal simulasi adalah aturan initial_zero yang tidak tercakup di bench ini; fungsi tidak mengklaim kata yang belum ia tulis",
+    "u_guard di hcpu_hisab.v": "instansiasi kanonik hcpu_guard #(.PIPELINE_GUARD(0)) u_guard di hcpu_hisab.v baris 61-73 (GAP-02, R1); menggantikan perhitungan ulang U dan override is_kaf lokal, dengan keluaran kombinasional yang diambil dari jejak"
    },
    "known_discrepancy": {
     "hisab": {
@@ -2883,8 +2885,8 @@
    "pkg": "rtl/hcpu_pkg.vh",
    "decode": "rtl/hcpu_decode.v",
    "case_lines": [
-    242,
-    366
+    254,
+    392
    ],
    "not_covered": [
     "FRD",
@@ -2910,7 +2912,9 @@
     "JMP",
     "JEQ",
     "JGD",
+    "CTHETA",
     "HDIST",
+    "HDOT",
     "PRINT",
     "ERET",
     "SYSCALL"
@@ -3077,7 +3081,9 @@
       "id_is_print",
       "id_is_emits",
       "id_is_push",
-      "id_is_pop"
+      "id_is_pop",
+      "id_hreg_ovf_s1",
+      "id_hreg_ovf_s2"
      ],
      "rtl/hcpu_forward.v": [],
      "rtl/hcpu_execute.v": [
@@ -3102,7 +3108,8 @@
       "ex_mem_addr",
       "ex_mem_wdata",
       "ra_sp",
-      "ra_stack[]"
+      "ra_stack[]",
+      "ex_hreg_ovf"
      ],
      "rtl/hcpu_memory.v": [
       "mem_dst",
@@ -3118,7 +3125,8 @@
       "sp",
       "stack_rd",
       "stack_rd_valid",
-      "stack[]"
+      "stack[]",
+      "mem_hreg_ovf"
      ],
      "rtl/hcpu_writeback.v": [],
      "rtl/hcpu_controller.v": [
@@ -3126,7 +3134,11 @@
      ]
     },
     "outside_function": {
-     "rtl/hcpu_execute.v:ra_stack[]": "tumpukan alamat kembali (baris 331): CALL menulisnya dan RET membacanya, keduanya tidak tercakup pipeline_audit, dan larik ini tidak ada di keadaan fungsi pipeline"
+     "rtl/hcpu_execute.v:ra_stack[]": "tumpukan alamat kembali (baris 331): CALL menulisnya dan RET membacanya, keduanya tidak tercakup pipeline_audit, dan larik ini tidak ada di keadaan fungsi pipeline",
+     "rtl/hcpu_decode.v:id_hreg_ovf_s1": "bit sticky overflow H-Reg (Alternatif A1): diteruskan dari register file ke EX",
+     "rtl/hcpu_decode.v:id_hreg_ovf_s2": "bit sticky overflow H-Reg (Alternatif A1): diteruskan dari register file ke EX",
+     "rtl/hcpu_execute.v:ex_hreg_ovf": "bit sticky overflow H-Reg (Alternatif A1): diteruskan dari EX ke MEM/WB",
+     "rtl/hcpu_memory.v:mem_hreg_ovf": "bit sticky overflow H-Reg (Alternatif A1): diteruskan dari MEM/WB ke register file"
     }
    },
    {
@@ -3139,11 +3151,15 @@
       "gpr[]",
       "hreg[]",
       "flags",
-      "pc"
+      "pc",
+      "hreg_ovf",
+      "hreg_ovf[]"
      ]
     },
     "outside_function": {
-     "rtl/hcpu_regfile.v:pc": "pc_we diikat 1'b0 (hcpu_top.v baris 645): register ini tidak pernah ditulis dan bukan bagian register file fungsi pipeline"
+     "rtl/hcpu_regfile.v:pc": "pc_we diikat 1'b0 (hcpu_top.v baris 645): register ini tidak pernah ditulis dan bukan bagian register file fungsi pipeline",
+     "rtl/hcpu_regfile.v:hreg_ovf": "register sticky overflow 16-bit per H-Reg (Alternatif A1): tetap 0 sepanjang lari bench ini",
+     "rtl/hcpu_regfile.v:hreg_ovf[]": "register sticky overflow 16-bit per H-Reg (Alternatif A1): tetap 0 sepanjang lari bench ini"
     }
    },
    {
@@ -3243,6 +3259,7 @@
       "crc16",
       "crc16_rx",
       "crc7",
+      "csum_acc",
       "dat_cnt",
       "dat_oe",
       "dat_out",
@@ -3256,6 +3273,11 @@
       "gap_cnt",
       "ok",
       "op_r",
+      "prescan_all_bad",
+      "prescan_bad_cnt",
+      "prescan_body_bad",
+      "prescan_first_idx",
+      "prescan_first_opc",
       "rca",
       "resp_len",
       "resp_sh",
@@ -3334,6 +3356,15 @@
     "function": null,
     "files": {
      "rtl/hcpu_codex_alu.v": []
+    },
+    "not_elaborated": {
+     "names": {
+      "rtl/hcpu_codex_alu.v": [
+       "hdot_acc",
+       "hdot_lane"
+      ]
+     },
+     "why": "register akumulator dan indeks lane HDOT 14-siklus berada di dalam blok generate g_profile_fpga_nodsp (CODEX_PROFILE 2) dan arm HDOT tidak tercakup pipeline_audit"
     }
    },
    {
@@ -4317,7 +4348,7 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     128
+     282
     ],
     "means": "HCADD dieksekusi: jumlah per komponen"
    },
@@ -4326,7 +4357,7 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     128
+     282
     ],
     "means": "opcode huruf dieksekusi: jumlah dengan vektor ROM (hcpu_execute.v baris 202, 219, 271)"
    },
@@ -4335,7 +4366,7 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     129
+     283
     ],
     "means": "HNRM2 dieksekusi: norma kuadrat"
    },
@@ -4344,7 +4375,7 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     130
+     284
     ],
     "means": "HDIST dieksekusi: jarak kuadrat"
    },
@@ -4353,8 +4384,8 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     148,
-     149
+     288,
+     289
     ],
     "means": "CGET dengan indeks 0-17: satu komponen"
    },
@@ -4363,8 +4394,8 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     148,
-     149
+     288,
+     289
     ],
     "means": "CGET dengan indeks di atas 17: nol"
    },
@@ -4373,7 +4404,7 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     135
+     286
     ],
     "means": "CSET dengan indeks 0-17: satu komponen ditulis"
    },
@@ -4382,7 +4413,7 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     135
+     286
     ],
     "means": "CSET dengan indeks di atas 17: register tetap"
    },
@@ -4391,21 +4422,30 @@
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     139
+     287
     ],
     "means": "CMOD4 dieksekusi: dua bit rendah Theta"
+   },
+   {
+    "id": "calu.hdot",
+    "subsystem": "calu",
+    "file": "rtl/hcpu_codex_alu.v",
+    "lines": [
+     285
+    ],
+    "means": "HDOT dieksekusi: hasil kali dalam 14 komponen"
    },
    {
     "id": "calu.default",
     "subsystem": "calu",
     "file": "rtl/hcpu_codex_alu.v",
     "lines": [
-     150,
-     151,
-     152,
-     153
+     290,
+     291,
+     292,
+     293
     ],
-    "means": "op 6 atau 7: nol"
+    "means": "op 7: nol"
    },
    {
     "id": "hisab.word0",
@@ -4570,8 +4610,9 @@
    "guard.t2_fail": "satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat",
    "calu.letter": "tidak ada opcode huruf 0xE0-0xFB di kesebelas program: decode_letter tidak tercakup pipeline_audit",
    "calu.hdist": "arm HDIST tidak pernah didekode (pipeline_audit)",
-   "calu.default": "tidak terjangkau: hcpu_execute.v baris 202-207 hanya memberi op 0-5",
-   "mul.mul": "arm MUL tidak pernah didekode (pipeline_audit)"
+   "calu.default": "tidak terjangkau: hcpu_execute.v hanya memberi op 0-6",
+   "mul.mul": "arm MUL tidak pernah didekode (pipeline_audit)",
+   "calu.hdot": "arm HDOT tidak pernah didekode (pipeline_audit)"
   },
   "not_covered_why": "transisi RTL HCPU yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti. Pemancar menjawab bench yang sama dengan fungsinya, jadi alasannya milik spec fungsi itu",
   "covered_limits": {

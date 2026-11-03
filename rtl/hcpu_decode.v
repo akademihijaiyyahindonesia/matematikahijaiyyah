@@ -95,9 +95,9 @@ module hcpu_decode #(
             `OP_ANDI, `OP_ORI, `OP_XORI, `OP_SHLI, `OP_SHRI,
             `OP_LOAD, `OP_STORE, `OP_HCADD, `OP_HGRD, `OP_HNRM2, `OP_HDIST,
             `OP_CGET, `OP_CSET,
-            `OP_CMOV, `OP_CEQ, `OP_CRHO, `OP_CU, `OP_HDOT, `OP_CMOD4,
+            `OP_CMOV, `OP_CEQ, `OP_CRHO, `OP_CU, `OP_CTHETA, `OP_CMOD4,
             `OP_FWR,
-            `OP_HPACK, `OP_HCRC,
+            `OP_HPACK, `OP_HCRC, `OP_HDOT,
             `OP_PRINT, `OP_PUSH: id_uses_s1 = 1'b1;
             default: ;
         endcase
@@ -178,20 +178,20 @@ module hcpu_decode #(
             id_hreg_ovf_s1 <= 1'b0;
             id_hreg_ovf_s2 <= 1'b0;
             id_pc          <= {`XLEN{1'b0}};
-            id_gpr_we      <= 1'b0;
-            id_hreg_we     <= 1'b0;
-            id_mem_read    <= 1'b0;
-            id_mem_write   <= 1'b0;
-            id_is_branch   <= 1'b0;
-            id_is_jump     <= 1'b0;
-            id_is_call     <= 1'b0;
-            id_is_ret      <= 1'b0;
-            id_is_codex    <= 1'b0;
-            id_is_halt     <= 1'b0;
-            id_is_print    <= 1'b0;
-            id_is_emits    <= 1'b0;
-            id_is_push     <= 1'b0;
-            id_is_pop      <= 1'b0;
+            id_gpr_we    <= 1'b0;
+            id_hreg_we   <= 1'b0;
+            id_mem_read  <= 1'b0;
+            id_mem_write <= 1'b0;
+            id_is_branch <= 1'b0;
+            id_is_jump   <= 1'b0;
+            id_is_call   <= 1'b0;
+            id_is_ret    <= 1'b0;
+            id_is_codex  <= 1'b0;
+            id_is_halt   <= 1'b0;
+            id_is_print  <= 1'b0;
+            id_is_emits  <= 1'b0;
+            id_is_push   <= 1'b0;
+            id_is_pop    <= 1'b0;
         end else if (flush) begin
             id_opcode      <= `OP_NOP;
             id_dst         <= 4'd0;
@@ -205,20 +205,20 @@ module hcpu_decode #(
             id_hreg_ovf_s1 <= 1'b0;
             id_hreg_ovf_s2 <= 1'b0;
             id_pc          <= {`XLEN{1'b0}};
-            id_gpr_we      <= 1'b0;
-            id_hreg_we     <= 1'b0;
-            id_mem_read    <= 1'b0;
-            id_mem_write   <= 1'b0;
-            id_is_branch   <= 1'b0;
-            id_is_jump     <= 1'b0;
-            id_is_call     <= 1'b0;
-            id_is_ret      <= 1'b0;
-            id_is_codex    <= 1'b0;
-            id_is_halt     <= 1'b0;
-            id_is_print    <= 1'b0;
-            id_is_emits    <= 1'b0;
-            id_is_push     <= 1'b0;
-            id_is_pop      <= 1'b0;
+            id_gpr_we    <= 1'b0;
+            id_hreg_we   <= 1'b0;
+            id_mem_read  <= 1'b0;
+            id_mem_write <= 1'b0;
+            id_is_branch <= 1'b0;
+            id_is_jump   <= 1'b0;
+            id_is_call   <= 1'b0;
+            id_is_ret    <= 1'b0;
+            id_is_codex  <= 1'b0;
+            id_is_halt   <= 1'b0;
+            id_is_print  <= 1'b0;
+            id_is_emits  <= 1'b0;
+            id_is_push   <= 1'b0;
+            id_is_pop    <= 1'b0;
         end else if (!stall) begin
             // Latch fields
             id_opcode      <= opcode;
@@ -333,9 +333,15 @@ module hcpu_decode #(
                 `OP_CZERO: begin id_is_codex <= 1'b1; id_hreg_we <= 1'b1; end
                 // CEQ writes no register: its whole result is the Z flag.
                 `OP_CEQ:   begin id_is_codex <= 1'b1; end
-                `OP_CRHO:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
-                `OP_CU:    begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
-                `OP_HDOT:  begin
+                `OP_CRHO:   begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_CU:     begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_CTHETA: begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_CMOD4:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+                `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
+
+                `OP_HPACK:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB nibble-pack
+                `OP_HCRC:   begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB CRC32
+                `OP_HDOT:   begin
                     if (HDOT_ENABLE != 0) begin
                         id_is_codex <= 1'b1;
                         id_gpr_we   <= 1'b1;
@@ -347,11 +353,6 @@ module hcpu_decode #(
                         id_mem_write <= 1'b0;
                     end
                 end
-                `OP_CMOD4: begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
-                `OP_HDIST:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end
-
-                `OP_HPACK:  begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB nibble-pack
-                `OP_HCRC:   begin id_is_codex <= 1'b1; id_gpr_we <= 1'b1; end  // HISAB CRC32
 
                 `OP_PRINT:  id_is_print <= 1'b1;
 

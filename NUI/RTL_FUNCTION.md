@@ -1,6 +1,6 @@
 # Model RTL sebagai fungsi — Lapis 6
 
-Dihasilkan `src/hijaiyyah/nui/rtl_function.py` dari `NUI/spec/rtl_function.json`. RTL dan bench dikompilasi apa adanya dengan satu modul probe di sampingnya yang mencetak register desain sekali tiap siklus; tidak ada port atau baris yang berubah. Simulator: Icarus Verilog version 14.0 (devel) (s20260301-394-g9edaf7b6a-dirty).
+Dihasilkan `src/hijaiyyah/nui/rtl_function.py` dari `NUI/spec/rtl_function.json`. RTL dan bench dikompilasi apa adanya dengan satu modul probe di sampingnya yang mencetak register desain sekali tiap siklus; tidak ada port atau baris yang berubah. Simulator: Icarus Verilog version 13.0 (stable) (v13_0).
 
 **Revisi pasca-freeze (pin kanonik LF).** Freeze Lapis 6 (`NUI/LAYER6.md`, tag `layer6-freeze-2026-09-29-final` di `d003cac`) memegang objek git historis `NUI/rtl_function.json` (`9b92b7293fa6…`), dan `layer6_freeze --verify` memeriksa objek git di tag itu, bukan pohon kerja. Di pohon kerja aktif, pin sumber dihitung atas isi ber-akhir-baris LF (`_file_sha`), bentuk yang disimpan git, sehingga dua pin di `/modules/6/pinned_sha256` (`src/hijaiyyah/hisa/registers.py` dan `src/hijaiyyah/hisab/protocol.py`, yang di pohon sumber saat freeze tertulis CRLF) diperbarui sebagai revisi aktif pasca-freeze tanpa mengubah tag historis.
 
@@ -39,7 +39,7 @@ Tidak tercakup bench: tidak ada.
 
 ## `hcpu_mmio`
 
-`rtl/hcpu_mmio.v` `7fa8e3111150…`, bench `rtl/tb/tb_hcpu_mmio.v` `4a82b30baf80…`. CLK_HZ 27000000, BAUD 115200, DIVISOR 234, HALF 117, CNT_W 8.
+`rtl/hcpu_mmio.v` `7a160118c87c…`, bench `rtl/tb/tb_hcpu_mmio.v` `4a82b30baf80…`. CLK_HZ 27000000, BAUD 115200, DIVISOR 234, HALF 117, CNT_W 8.
 
 Ikut dimodelkan: `rtl/hcpu_uart_rx.v` `3dbb9f127825…`, `rtl/hcpu_timer.v` `4847d722d2ca…`.
 
@@ -218,14 +218,14 @@ Di luar model — masuk sebagai input, tidak diprediksi:
 
 | pemeriksaan | hasil |
 |---|---|
-| F1 satu langkah, 826030 transisi | 0 berbeda |
-| F1 keluaran kombinasional, 826030 siklus | 0 berbeda |
-| F2 lingkar terbuka dari reset, 826030 siklus | 0 berbeda |
-| lari korpus | 107, 20 menyentuh RAM |
-| F3 jejak tulis RAM harness = tulisan yang fungsi ambil, 26578 tulis | 0 program berbeda |
+| F1 satu langkah, 826078 transisi | 0 berbeda |
+| F1 keluaran kombinasional, 826078 siklus | 0 berbeda |
+| F2 lingkar terbuka dari reset, 826078 siklus | 0 berbeda |
+| lari korpus | 107, 22 menyentuh RAM |
+| F3 jejak tulis RAM harness = tulisan yang fungsi ambil, 26580 tulis | 0 program berbeda |
 | F3 bench | 107 of 107 runs reached the harness's final block (HALTED=) |
-| waktu input: perubahan re/we/addr/wdata, ditangkap nilai baru, ditangkap nilai lama | 419521, 0, 419521 |
-| jejak RTL | `fd58a9384c89…` |
+| waktu input: perubahan re/we/addr/wdata, ditangkap nilai baru, ditangkap nilai lama | 419559, 0, 419559 |
+| jejak RTL | `c5134478d7db…` |
 
 Program korpus yang menyentuh RAM, dan vonis model paritas Lapis 4 yang beku atasnya — dikutip, tidak dinilai ulang. Di model paritas Lapis 4 yang beku, satu-satunya perpisahan pertama berjenis RAM di antara program yang menyentuh RAM: RTL menulis RAM[0x100]=5 sesudah HALT, interpreter tidak (NUI/PARITY.md, cosmictera-build/OFF.md). Tulisan itu sampai ke port dari pipeline -- butir sendiri -- dan RAM menyimpannya persis seperti yang fungsi ramalkan.
 
@@ -246,6 +246,8 @@ Program korpus yang menyentuh RAM, dan vonis model paritas Lapis 4 yang beku ata
 | `rtl/programs/shell.hasm` | MISMATCH | GPR |
 | `rtl/programs/subroutine.hasm` | MISMATCH | GPR |
 | `rtl/programs/test_hfs.hasm` | MISMATCH | GPR |
+| `rtl/programs/test_prog_load.hasm` | MISMATCH | GPR |
+| `rtl/programs/test_prog_run.hasm` | MISMATCH | GPR |
 | `rtl/programs/trap_hreg.hasm` | UNKNOWN | — |
 | `rtl/tb/hfs_persist_probe.hasm` | UNKNOWN | — |
 | `rtl/tb/hfs_syscall_probe.hasm` | UNKNOWN | — |
@@ -261,11 +263,11 @@ Bukti papan untuk jalur yang sama, kolom P3 (tingkat program):
 
 | aturan | baris RTL | arti | dijalankan bench |
 |---|---|---|---|
-| `write` | 43, 44, 45 | we: mem[addr] <- wdata di tepi naik | 26578 |
-| `read` | 43, 46, 47 | re tanpa we: rdata_r <- mem[addr], kata tersedia satu siklus sesudah alamat | 8620 |
-| `hold` | 46, 50 | re rendah: rdata_r tetap, dan rdata adalah rdata_r | 817410 |
+| `write` | 43, 44, 45 | we: mem[addr] <- wdata di tepi naik | 26580 |
+| `read` | 43, 46, 47 | re tanpa we: rdata_r <- mem[addr], kata tersedia satu siklus sesudah alamat | 8622 |
+| `hold` | 46, 50 | re rendah: rdata_r tetap, dan rdata adalah rdata_r | 817456 |
 | `read_first` | 40, 41, 42, 44, 45, 46, 47 | re dan we di tepi yang sama, alamat sama: rdata_r mendapat kata lama (read-first) | 0 |
-| `initial_zero` | 53, 55, 56, 57, 59 | baca kata yang belum pernah ditulis: nol dari blok initial -- hanya simulasi (synthesis translate_off) | 6 |
+| `initial_zero` | 53, 55, 56, 57, 59 | baca kata yang belum pernah ditulis: nol dari blok initial -- hanya simulasi (synthesis translate_off) | 8 |
 
 Tidak tercakup bench: read_first.
 
@@ -286,7 +288,7 @@ Batas yang tercakup — yang dijalankan oracle, dan apa yang pemakaiannya tidak 
 
 **Satu langkah.** PC hanya ada sampai tahap decode (id_pc), jadi keadaan per instruksi tidak teramati tanpa memodelkan pipeline. Fungsi ini berdiri di batas baca MMIO: tiap baca RX_STATUS atau RX_DATA, posisi loader ditentukan alamat yang dibaca dan fase (sebelum atau sesudah IMEM_ADDR ditulis), register dari urutan tulis GPR, dan penunjuk tulis dari hcpu_mmio. Satu langkah = dari satu batas ke batas berikutnya: input nilai yang perangkat keras kembalikan, keluaran tulis GPR, tulis MMIO, tulis port memori instruksi, dan ERET di antaranya, dalam urutan program (WB, lalu MEM, lalu EX dalam satu siklus). FLAGS tidak dibandingkan: tiap CMPI dipakai cabang di langkah yang sama, dan cabangnya teramati lewat kejadian sesudahnya.
 
-Ikut dimodelkan: `rtl/hcpu_mmio.v` `7fa8e3111150…`.
+Ikut dimodelkan: `rtl/hcpu_mmio.v` `7a160118c87c…`.
 
 Di luar model — masuk sebagai input, tidak diprediksi:
 
@@ -348,7 +350,7 @@ Batas yang tercakup — yang dijalankan kedua bench, dan apa yang pemakaiannya t
 
 ## `pipeline`
 
-`rtl/hcpu_top.v` `98f70974c232…`, bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`.
+`rtl/hcpu_top.v` `b903847fe23f…`, bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`.
 
 **Oracle.** pemilik, 28 September 2026, sesudah audit bd8158c GREEN: satu fungsi transisi sinkron atas empat bundle register tahap yang audit catat -- bukan lima fungsi tahap -- dengan input rst_n dan imem_data, dan hasil subsistem luar sebagai input oracle, tidak diprediksi ulang. Dibandingkan per tepi terhadap jejak tb_hcpu_top.v, lalu GPR, H2[7:0], dan guard_led sebagai pemeriksaan terminal. Hanya 45 aturan yang tercakup diberi perilaku; ke-33 lainnya tetap not covered, dan pembekuan sesudah halted tidak diklaim. Interpreter bukan pengganti oracle.
 
@@ -434,7 +436,7 @@ Aturan: fungsi menjalankan 45 dari 78, dengan hitungan per aturan sama persis de
 
 ## `hcpu`
 
-`rtl/hcpu_top.v` `98f70974c232…`, bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`. CLK_HZ 50000000, BAUD 5000000.
+`rtl/hcpu_top.v` `b903847fe23f…`, bench `rtl/tb/tb_hcpu_top.v` `fe05c8ac2d53…`. CLK_HZ 50000000, BAUD 5000000.
 
 **Oracle.** pemilik, 29 September 2026, sesudah audit f590bac GREEN: satu fungsi transisi tingkat sistem dengan state prediktif parsial -- hanya state yang punya aturan transisi tercakup dan dapat diverifikasi. Fungsi yang sudah punya oracle sendiri dikomposisikan apa adanya; yang belum punya oracle tetap hasil luar atau opaque, dan dinyatakan NOT COVERED. Dibandingkan per siklus terhadap tb_hcpu_top.v. RTL, bench, dan bitstream tidak disentuh.
 
@@ -465,12 +467,12 @@ Opaque — keadaan RTL yang tidak diprediksi dan tidak diklaim paritasnya:
 
 - **unit trap** — tujuh register hcpu_trap.v; tidak pernah meninggalkan keadaan reset di bench ini (hcpu_audit), dan keluarannya masuk sebagai hasil luar.
 - **mesin keadaan cetak** — sembilan register hcpu_top.v baris 286-390 dan larik digits[]; tetap P_IDLE.
-- **pengendali kartu** — 41 register hcpu_sdio.v termasuk sbuf[]; tetap S_IDLE. Tujuh belas di antaranya tanpa reset dan x di setiap tepi: tidak diberi nilai, tidak masuk klaim paritas.
+- **pengendali kartu** — 47 register hcpu_sdio.v termasuk sbuf[] dan 6 register akselerator A3 (csum_acc, prescan_*); tetap S_IDLE. Tujuh belas di antaranya tanpa reset dan x di setiap tepi: tidak diberi nilai, tidak masuk klaim paritas.
 - **ra_stack[]** — tumpukan alamat kembali hcpu_execute.v; CALL dan RET tidak tercakup. Dipromosikan menjadi keadaan prediktif bila bench menjalankannya.
 - **register pc di register file** — pc_we diikat 0 (hcpu_top.v baris 645).
 - **guard berregister** — tujuh register yang tidak dielaborasi karena PIPELINE_GUARD(0); guard kombinasionalnya aktif, dan hasilnya diambil dari jejak.
-- **is_kaf di hcpu_hisab.v** — override T2 yang tersisa di hcpu_hisab.v baris 72-74, sudah dicabut dari hcpu_guard.v; tidak pernah naik di jejak ini. Tidak dipakai sebagai dasar klaim, tidak diubah.
 - **kata RAM yang belum ditulis** — nol awal simulasi adalah aturan initial_zero yang tidak tercakup di bench ini; fungsi tidak mengklaim kata yang belum ia tulis.
+- **u_guard di hcpu_hisab.v** — instansiasi kanonik hcpu_guard #(.PIPELINE_GUARD(0)) u_guard di hcpu_hisab.v baris 61-73 (GAP-02, R1); menggantikan perhitungan ulang U dan override is_kaf lokal, dengan keluaran kombinasional yang diambil dari jejak.
 
 **Ketidaksesuaian yang diketahui, HISAB.** hisab/serialize.py (dan HPACK/HCRC interpreter yang memakainya) menaruh status guard dengan urutan bit lain dari hcpu_hisab.v: RTL dan core/guards.py bit 0 = G1 (A_N), bit 1 = G2 (A_K), bit 2 = G3 (A_Q), bit 3 = G4 (rho >= 0); hisab/protocol.py bit 0 = rho >= 0. Word 2 dan CRC berbeda bila sebuah guard gagal. Diukur ulang tiap build: 13 tepi, program 5, 10; di tepi yang memakai HPACK atau HCRC: 0. keputusan pemilik, 29 September 2026: urutan kanonik adalah RTL + core/guards.py; hisab/protocol.py tidak diubah di sini, dan perbaikannya butir HISAB tersendiri. HISAB di fungsi ini hasil luar, jadi selisihnya tidak dipoles menjadi paritas.
 
@@ -490,7 +492,7 @@ Opaque — keadaan RTL yang tidak diprediksi dan tidak diklaim paritasnya:
 | waktu input: perubahan rst_n, ditangkap nilai baru, ditangkap nilai lama | 21, 21, 0 |
 | jejak RTL | `7ae2e5792098…` |
 
-Aturan: fungsi menjalankan 71 dari 149, dengan hitungan per aturan sama persis dengan hitungan kedua audit; tidak tercakup 78 — aturan kedua audit yang tidak dijalankan tb_hcpu_top.v: fungsi berhenti dengan NotCovered, tidak memprediksi.
+Aturan: fungsi menjalankan 71 dari 150, dengan hitungan per aturan sama persis dengan hitungan kedua audit; tidak tercakup 79 — aturan kedua audit yang tidak dijalankan tb_hcpu_top.v: fungsi berhenti dengan NotCovered, tidak memprediksi.
 
 Batas yang dinamai spec, di luar aturan RTL:
 
@@ -654,34 +656,34 @@ Tercakup 45 dari 78 aturan. Tidak tercakup — aturan RTL pipeline yang tidak di
 
 | opcode | baris decode | IF | ID/EX | EX/MEM | MEM/WB |
 |---|---|---|---|---|---|
-| `NOP` | 243 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
-| `HALT` | 245 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
-| `MOVI` | 252 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 |
-| `ADD` | 254 | 6 | 6 | 6 | 6 |
-| `ADDI` | 255 | 3 | 3 | 3 | 3 |
-| `CMP` | 271 | 3 | 3 | 3 | 3 |
-| `JNE` | 288 | 3, 11 | 3, 11 | 3, 11 | 3, 11 |
-| `JNGD` | 290 | 5 | 5 | 5 | 5 |
-| `PUSH` | 292 | 8 | 8 | 8 | 8 |
-| `POP` | 293 | 8 | 8 | 8 | 8 |
-| `LOAD` | 294 | 4, 6 | 4, 6 | 4, 6 | 4, 6 |
-| `STORE` | 295 | 4, 6 | 4, 6 | 4, 6 | 4, 6 |
-| `HLOAD` | 297 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 |
-| `HCADD` | 298 | 2, 11 | 2, 11 | 2, 11 | 2, 11 |
-| `HGRD` | 299 | 1, 2, 5 | 1, 2, 5 | 1, 2, 5 | 1, 2, 5 |
-| `HNRM2` | 300 | 2 | 2 | 2 | 2 |
-| `CGET` | 301 | 9, 10 | 9, 10 | 9, 10 | 9, 10 |
-| `CSET` | 309 | 10 | 10 | 10 | 10 |
-| `CMOV` | 320 | 11 | 11 | 11 | 11 |
-| `CZERO` | 321 | 11 | 11 | 11 | 11 |
-| `CEQ` | 323 | 11 | 11 | 11 | 11 |
-| `CRHO` | 324 | 11 | 11 | 11 | 11 |
-| `CU` | 325 | 11 | 11 | 11 | 11 |
-| `CMOD4` | 326 | 11 | 11 | 11 | 11 |
-| `HPACK` | 329 | 7 | 7 | 7 | 7 |
-| `HCRC` | 330 | 7 | 7 | 7 | 7 |
+| `NOP` | 255 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `HALT` | 257 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `MOVI` | 264 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 | 1, 3, 4, 5, 6, 8, 10, 11 |
+| `ADD` | 266 | 6 | 6 | 6 | 6 |
+| `ADDI` | 267 | 3 | 3 | 3 | 3 |
+| `CMP` | 283 | 3 | 3 | 3 | 3 |
+| `JNE` | 300 | 3, 11 | 3, 11 | 3, 11 | 3, 11 |
+| `JNGD` | 302 | 5 | 5 | 5 | 5 |
+| `PUSH` | 304 | 8 | 8 | 8 | 8 |
+| `POP` | 305 | 8 | 8 | 8 | 8 |
+| `LOAD` | 306 | 4, 6 | 4, 6 | 4, 6 | 4, 6 |
+| `STORE` | 307 | 4, 6 | 4, 6 | 4, 6 | 4, 6 |
+| `HLOAD` | 309 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 | 1, 2, 5, 7, 9, 10, 11 |
+| `HCADD` | 310 | 2, 11 | 2, 11 | 2, 11 | 2, 11 |
+| `HGRD` | 311 | 1, 2, 5 | 1, 2, 5 | 1, 2, 5 | 1, 2, 5 |
+| `HNRM2` | 312 | 2 | 2 | 2 | 2 |
+| `CGET` | 313 | 9, 10 | 9, 10 | 9, 10 | 9, 10 |
+| `CSET` | 321 | 10 | 10 | 10 | 10 |
+| `CMOV` | 332 | 11 | 11 | 11 | 11 |
+| `CZERO` | 333 | 11 | 11 | 11 | 11 |
+| `CEQ` | 335 | 11 | 11 | 11 | 11 |
+| `CRHO` | 336 | 11 | 11 | 11 | 11 |
+| `CU` | 337 | 11 | 11 | 11 | 11 |
+| `CMOD4` | 339 | 11 | 11 | 11 | 11 |
+| `HPACK` | 342 | 7 | 7 | 7 | 7 |
+| `HCRC` | 343 | 7 | 7 | 7 | 7 |
 
-Arm opcode yang tercakup: 26 dari 53; NOP di ID/EX dan sesudahnya termasuk NOP nyata yang diambil sesudah HALT. Tidak tercakup — arm case decode yang opcode-nya tidak ada di kesebelas program tb_hcpu_top.v: tidak pernah masuk ID/EX, jadi tidak ada tahap sesudahnya yang menjalankannya: `FRD`, `MOV`, `SUB`, `MUL`, `AND`, `OR`, `XOR`, `NOT`, `SHL`, `SHR`, `ANDI`, `ORI`, `XORI`, `SHLI`, `SHRI`, `CMPI`, `FWR`, `EMITS`, `CALL`, `RET`, `JMP`, `JEQ`, `JGD`, `HDIST`, `PRINT`, `ERET`, `SYSCALL`.
+Arm opcode yang tercakup: 26 dari 55; NOP di ID/EX dan sesudahnya termasuk NOP nyata yang diambil sesudah HALT. Tidak tercakup — arm case decode yang opcode-nya tidak ada di kesebelas program tb_hcpu_top.v: tidak pernah masuk ID/EX, jadi tidak ada tahap sesudahnya yang menjalankannya: `FRD`, `MOV`, `SUB`, `MUL`, `AND`, `OR`, `XOR`, `NOT`, `SHL`, `SHR`, `ANDI`, `ORI`, `XORI`, `SHLI`, `SHRI`, `CMPI`, `FWR`, `EMITS`, `CALL`, `RET`, `JMP`, `JEQ`, `JGD`, `CTHETA`, `HDIST`, `HDOT`, `PRINT`, `ERET`, `SYSCALL`.
 
 ## HCPU — audit oracle integrasi `tb_hcpu_top.v`, sebelum model
 
@@ -722,16 +724,16 @@ Yang berubah hanya `rst_n`, `imem_data`: itulah input HCPU di bawah oracle ini.
 | `dbg_gpr_rdata` | tidak disambung (baris 45) | 10 | 7 nilai |
 | `dbg_flags` | tidak disambung (baris 46) | 10 | 0, 1, 2, 8 |
 
-**Batas keadaan.** 171 register di 21 berkas, dibaca dari penugasan non-blocking RTL sendiri, lalu dibandingkan dengan batas di spec: tidak dideklarasikan 0, hilang 0. Larik ditulis `nama[]` dan teramati lewat aturan yang menulisnya.
+**Batas keadaan.** 185 register di 21 berkas, dibaca dari penugasan non-blocking RTL sendiri, lalu dibandingkan dengan batas di spec: tidak dideklarasikan 0, hilang 0. Larik ditulis `nama[]` dan teramati lewat aturan yang menulisnya.
 
 | subsistem | jenis | berkas | register | fungsi (oracle-nya) | bergerak | tetap | x di tiap tepi |
 |---|---|---|---|---|---|---|---|
-| pipeline | sinkron | `hcpu_fetch.v`, `hcpu_decode.v`, `hcpu_forward.v`, `hcpu_execute.v`, `hcpu_memory.v`, `hcpu_writeback.v`, `hcpu_controller.v` | 67 | `pipeline` (`tb_hcpu_top.v`; diukur pipeline_audit) | di pipeline_audit | di pipeline_audit | di pipeline_audit |
-| register file | sinkron | `hcpu_regfile.v` | 4 | companion state `pipeline` | `flags` (7) | 1 | 0 |
+| pipeline | sinkron | `hcpu_fetch.v`, `hcpu_decode.v`, `hcpu_forward.v`, `hcpu_execute.v`, `hcpu_memory.v`, `hcpu_writeback.v`, `hcpu_controller.v` | 71 | `pipeline` (`tb_hcpu_top.v`; diukur pipeline_audit) | di pipeline_audit | di pipeline_audit | di pipeline_audit |
+| register file | sinkron | `hcpu_regfile.v` | 6 | companion state `pipeline` | `flags` (7) | 2 | 0 |
 | print | sinkron | `hcpu_top.v` | 10 | — | — | 9 | 0 |
 | trap | sinkron | `hcpu_trap.v` | 7 | — | — | 7 | 0 |
 | mmio | sinkron | `hcpu_mmio.v`, `hcpu_uart_rx.v`, `hcpu_timer.v` | 28 | `hcpu_mmio` (`tb_hcpu_mmio.v`) | `periph_rdata` (14), `counter` (178) | 26 | 0 |
-| sdio | sinkron | `hcpu_sdio.v` | 41 | — | `div_cnt` (11), `wr_data` (30) | 21 | 17 |
+| sdio | sinkron | `hcpu_sdio.v` | 47 | — | `div_cnt` (11), `wr_data` (30) | 27 | 17 |
 | uart_tx | sinkron | `hcpu_uart_tx.v` | 5 | `hcpu_uart_tx` (`tb_hcpu_top.v`) | — | 5 | 0 |
 | dataram | sinkron | `hcpu_dataram.v` | 2 | `hcpu_dataram` (`tb_parity.v`) | `rdata_r` (2) | 0 | 0 |
 | rom | kombinasional | `hcpu_rom.v` | 0 | — | — | 0 | 0 |
@@ -743,8 +745,15 @@ Yang berubah hanya `rst_n`, `imem_data`: itulah input HCPU di bawah oracle ini.
 Di luar fungsi, atau tidak dielaborasi:
 
 - `rtl/hcpu_execute.v:ra_stack[]` — tumpukan alamat kembali (baris 331): CALL menulisnya dan RET membacanya, keduanya tidak tercakup pipeline_audit, dan larik ini tidak ada di keadaan fungsi pipeline.
+- `rtl/hcpu_decode.v:id_hreg_ovf_s1` — bit sticky overflow H-Reg (Alternatif A1): diteruskan dari register file ke EX.
+- `rtl/hcpu_decode.v:id_hreg_ovf_s2` — bit sticky overflow H-Reg (Alternatif A1): diteruskan dari register file ke EX.
+- `rtl/hcpu_execute.v:ex_hreg_ovf` — bit sticky overflow H-Reg (Alternatif A1): diteruskan dari EX ke MEM/WB.
+- `rtl/hcpu_memory.v:mem_hreg_ovf` — bit sticky overflow H-Reg (Alternatif A1): diteruskan dari MEM/WB ke register file.
 - `rtl/hcpu_regfile.v:pc` — pc_we diikat 1'b0 (hcpu_top.v baris 645): register ini tidak pernah ditulis dan bukan bagian register file fungsi pipeline.
+- `rtl/hcpu_regfile.v:hreg_ovf` — register sticky overflow 16-bit per H-Reg (Alternatif A1): tetap 0 sepanjang lari bench ini.
+- `rtl/hcpu_regfile.v:hreg_ovf[]` — register sticky overflow 16-bit per H-Reg (Alternatif A1): tetap 0 sepanjang lari bench ini.
 - `rtl/hcpu_guard.v:g1_r, rtl/hcpu_guard.v:g2_r, rtl/hcpu_guard.v:g3_r, rtl/hcpu_guard.v:g4_r, rtl/hcpu_guard.v:t1_r, rtl/hcpu_guard.v:t2_r, rtl/hcpu_guard.v:guard_r` — cabang generate berregister hanya ada bila PIPELINE_GUARD 1; hcpu_top.v baris 662 memasangnya dengan PIPELINE_GUARD(0), jadi register itu tidak dielaborasi.
+- `rtl/hcpu_codex_alu.v:hdot_acc, rtl/hcpu_codex_alu.v:hdot_lane` — register akumulator dan indeks lane HDOT 14-siklus berada di dalam blok generate g_profile_fpga_nodsp (CODEX_PROFILE 2) dan arm HDOT tidak tercakup pipeline_audit.
 
 Tanpa reset dan tidak pernah ditulis, jadi x di setiap tepi hidup: `u_mmio.u_sdio.ack_sh`, `u_mmio.u_sdio.bit_cnt`, `u_mmio.u_sdio.buf_rdata`, `u_mmio.u_sdio.cmd_index`, `u_mmio.u_sdio.cmd_sh`, `u_mmio.u_sdio.crc16`, `u_mmio.u_sdio.crc16_rx`, `u_mmio.u_sdio.crc7`, `u_mmio.u_sdio.dat_cnt`, `u_mmio.u_sdio.fsm_addr`, `u_mmio.u_sdio.fsm_wdata`, `u_mmio.u_sdio.op_r`, `u_mmio.u_sdio.resp_len`, `u_mmio.u_sdio.resp_sh`, `u_mmio.u_sdio.sector_r`, `u_mmio.u_sdio.timeout`, `u_mmio.u_sdio.word_sh`.
 
@@ -896,16 +905,17 @@ Tanpa reset dan tidak pernah ditulis, jadi x di setiap tepi hidup: `u_mmio.u_sdi
 | `guard.t2_fail` | guard | `hcpu_guard.v` 101 | HGRD dieksekusi, T2 gagal: Kc tanpa Qc | 0 | — |
 | `guard.u` | guard | `hcpu_guard.v` 80, 91 | CU dieksekusi: U dari guard (hcpu_execute.v baris 248) | 1 | 11 |
 | `guard.rho` | guard | `hcpu_guard.v` 90, 92 | CRHO dieksekusi: rho dari guard (hcpu_execute.v baris 249) | 1 | 11 |
-| `calu.hcadd` | calu | `hcpu_codex_alu.v` 128 | HCADD dieksekusi: jumlah per komponen | 3 | 2, 11 |
-| `calu.letter` | calu | `hcpu_codex_alu.v` 128 | opcode huruf dieksekusi: jumlah dengan vektor ROM (hcpu_execute.v baris 202, 219, 271) | 0 | — |
-| `calu.hnrm2` | calu | `hcpu_codex_alu.v` 129 | HNRM2 dieksekusi: norma kuadrat | 1 | 2 |
-| `calu.hdist` | calu | `hcpu_codex_alu.v` 130 | HDIST dieksekusi: jarak kuadrat | 0 | — |
-| `calu.cget` | calu | `hcpu_codex_alu.v` 148, 149 | CGET dengan indeks 0-17: satu komponen | 9 | 9, 10 |
-| `calu.cget_outside` | calu | `hcpu_codex_alu.v` 148, 149 | CGET dengan indeks di atas 17: nol | 1 | 9 |
-| `calu.cset` | calu | `hcpu_codex_alu.v` 135 | CSET dengan indeks 0-17: satu komponen ditulis | 2 | 10 |
-| `calu.cset_outside` | calu | `hcpu_codex_alu.v` 135 | CSET dengan indeks di atas 17: register tetap | 1 | 10 |
-| `calu.cmod4` | calu | `hcpu_codex_alu.v` 139 | CMOD4 dieksekusi: dua bit rendah Theta | 1 | 11 |
-| `calu.default` | calu | `hcpu_codex_alu.v` 150, 151, 152, 153 | op 6 atau 7: nol | 0 | — |
+| `calu.hcadd` | calu | `hcpu_codex_alu.v` 282 | HCADD dieksekusi: jumlah per komponen | 3 | 2, 11 |
+| `calu.letter` | calu | `hcpu_codex_alu.v` 282 | opcode huruf dieksekusi: jumlah dengan vektor ROM (hcpu_execute.v baris 202, 219, 271) | 0 | — |
+| `calu.hnrm2` | calu | `hcpu_codex_alu.v` 283 | HNRM2 dieksekusi: norma kuadrat | 1 | 2 |
+| `calu.hdist` | calu | `hcpu_codex_alu.v` 284 | HDIST dieksekusi: jarak kuadrat | 0 | — |
+| `calu.cget` | calu | `hcpu_codex_alu.v` 288, 289 | CGET dengan indeks 0-17: satu komponen | 9 | 9, 10 |
+| `calu.cget_outside` | calu | `hcpu_codex_alu.v` 288, 289 | CGET dengan indeks di atas 17: nol | 1 | 9 |
+| `calu.cset` | calu | `hcpu_codex_alu.v` 286 | CSET dengan indeks 0-17: satu komponen ditulis | 2 | 10 |
+| `calu.cset_outside` | calu | `hcpu_codex_alu.v` 286 | CSET dengan indeks di atas 17: register tetap | 1 | 10 |
+| `calu.cmod4` | calu | `hcpu_codex_alu.v` 287 | CMOD4 dieksekusi: dua bit rendah Theta | 1 | 11 |
+| `calu.hdot` | calu | `hcpu_codex_alu.v` 285 | HDOT dieksekusi: hasil kali dalam 14 komponen | 0 | — |
+| `calu.default` | calu | `hcpu_codex_alu.v` 290, 291, 292, 293 | op 7: nol | 0 | — |
 | `hisab.word0` | hisab | `hcpu_hisab.v` 94 | HPACK dengan S2 0: word nibble 0 (hcpu_execute.v baris 256) | 1 | 7 |
 | `hisab.word1` | hisab | `hcpu_hisab.v` 95 | HPACK dengan S2 1: word nibble 1 (hcpu_execute.v baris 257) | 1 | 7 |
 | `hisab.word2` | hisab | `hcpu_hisab.v` 96 | HPACK dengan S2 2: byte 8 dan status guard (hcpu_execute.v baris 258) | 1 | 7 |
@@ -913,7 +923,7 @@ Tanpa reset dan tidak pernah ditulis, jadi x di setiap tepi hidup: `u_mmio.u_sdi
 | `hisab.crc` | hisab | `hcpu_hisab.v` 128, 141, 143 | HCRC dieksekusi: CRC32 frame huruf (hcpu_execute.v baris 260) | 1 | 7 |
 | `mul.mul` | mul | `hcpu_mul.v` 27, 63 | MUL dieksekusi: 32 bit rendah perkalian (hcpu_execute.v baris 157) | 0 | — |
 
-Tercakup 47 dari 162 transisi di luar pipeline; pipeline sendiri 45 dari 78 (pipeline_audit). Tidak tercakup — transisi RTL HCPU yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti. Pemancar menjawab bench yang sama dengan fungsinya, jadi alasannya milik spec fungsi itu:
+Tercakup 47 dari 163 transisi di luar pipeline; pipeline sendiri 45 dari 78 (pipeline_audit). Tidak tercakup — transisi RTL HCPU yang tidak dijalankan tb_hcpu_top.v: dinyatakan di sini dengan alasannya, tidak dianggap terbukti. Pemancar menjawab bench yang sama dengan fungsinya, jadi alasannya milik spec fungsi itu:
 
 - `print.print_accept` — arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE.
 - `print.emits_accept` — arm PRINT dan EMITS tidak pernah didekode (pipeline_audit): ex_is_print dan ex_is_emits 0 di setiap tepi, jadi print_state tetap P_IDLE.
@@ -1028,7 +1038,8 @@ Tercakup 47 dari 162 transisi di luar pipeline; pipeline sendiri 45 dari 78 (pip
 - `guard.t2_fail` — satu-satunya vektor negatif yang diambil adalah indeks 31 (program 5), yang hanya menjatuhkan G4; vektor 32-36 tidak pernah dimuat.
 - `calu.letter` — tidak ada opcode huruf 0xE0-0xFB di kesebelas program: decode_letter tidak tercakup pipeline_audit.
 - `calu.hdist` — arm HDIST tidak pernah didekode (pipeline_audit).
-- `calu.default` — tidak terjangkau: hcpu_execute.v baris 202-207 hanya memberi op 0-5.
+- `calu.hdot` — arm HDOT tidak pernah didekode (pipeline_audit).
+- `calu.default` — tidak terjangkau: hcpu_execute.v hanya memberi op 0-6.
 - `mul.mul` — arm MUL tidak pernah didekode (pipeline_audit).
 
 Batas yang tercakup — yang dijalankan bench, dan apa yang pemakaiannya tidak tunjukkan:

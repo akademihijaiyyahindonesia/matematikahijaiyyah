@@ -280,7 +280,7 @@ module hcpu_codex_alu #(
         result_scl = {`XLEN{1'b0}};
         case (op)
             ALU_HCADD: result_vec = packed_add;
-            ALU_HNRM2,
+            ALU_HNRM2: result_scl = {12'd0, scalar_sum_out};
             ALU_HDIST: result_scl = {12'd0, scalar_sum_out};
             ALU_HDOT:  result_scl = (HDOT_ENABLE != 0) ? {12'd0, hdot_sum_out} : {`XLEN{1'b0}};
             ALU_CSET:  result_vec = (index <= 12'd17) ? packed_set : src2;

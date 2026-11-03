@@ -322,7 +322,13 @@ EXTENSIONS: Dict[str, int] = {
     "CEQ": 0x48,
     "CRHO": 0x4C,
     "CU": 0x4D,
+    "CTHETA": 0x4E,
     "CMOD4": 0x4F,
+    # HDOT, 0x52. 14-component unsigned inner product ⟨H[S1], H[S2]⟩₁₄ (20-bit
+    # unsigned result in GPR[DST], 14 cycles on CODEX_PROFILE=2 No-DSP, 1 cycle
+    # on CODEX_PROFILE=0/1). Placed after HPACK (0x50) and HCRC (0x51) per
+    # Owner Architecture Decision so CTHETA retains 0x4E from HISA_SPEC.md §6.2.
+    "HDOT": 0x52,
 
     # CALL and RET. The book puts them at 0x07/0x08, which HCPU cannot: 0x06
     # and 0x07 carry HNRM2 and HDIST, and 0x08 is ERET. HISA_SPEC.md records

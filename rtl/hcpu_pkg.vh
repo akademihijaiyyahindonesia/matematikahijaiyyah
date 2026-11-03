@@ -181,7 +181,7 @@
 `define OP_CEQ         8'h48       // FLAGS.Z ← (H[S1] == H[S2])
 `define OP_CRHO        8'h4C       // GPR[DST] ← ρ(H[S1]) = Θ̂ − U   (signed)
 `define OP_CU          8'h4D       // GPR[DST] ← U(H[S1]) = Qx+Qs+Qa+4·Qc
-  `define OP_HDOT        8'd78       // GPR[DST] ← ⟨H[S1], H[S2]⟩₁₄   (20-bit unsigned, 0x4E)
+`define OP_CTHETA      8'h4E       // GPR[DST] ← Θ̂(H[S1]) = H[S1][7:0]
 `define OP_CMOD4       8'h4F       // GPR[DST] ← Θ̂(H[S1]) mod 4
 `define OP_HCADD        8'h42       // H[DST] ← H[S1] + H[S2]  (18×add)
 `define OP_HGRD         8'h60       // Guard G1–G4,T1–T2,H* on H[S1] → GUARD flag
@@ -192,6 +192,7 @@
 `define OP_HPACK        8'h50       // HISAB nibble-pack: H[S1] → GPR[DST]=pack[31:0]
                                     //   DST+1=pack[63:32], DST+2=byte8+guard
 `define OP_HCRC         8'h51       // HISAB CRC32 digest: GPR[DST] ← CRC32(LETTER frame of H[S1])
+`define OP_HDOT         8'h52       // GPR[DST] ← ⟨H[S1], H[S2]⟩₁₄   (20-bit unsigned)
 
 // I/O (0xA0–0xAF)
 `define OP_PRINT        8'hA0       // UART print GPR[S1] as decimal

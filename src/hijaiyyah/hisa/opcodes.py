@@ -184,11 +184,12 @@ class OpCode(IntEnum):
     VDIST = 0x4B    # Squared distance → GPR      (software only; RTL: HDIST)
     CRHO = 0x4C     # GPR[dst] ← ρ(H[s1]) = Θ̂ − U, signed
     CU = 0x4D       # GPR[dst] ← U(H[s1]) = Qx + Qs + Qa + 4·Qc
-    HDOT = 0x4E     # GPR[dst] ← ⟨H[s1], H[s2]⟩₁₄ (20-bit unsigned, Alternative A2)
+    CTHETA = 0x4E   # GPR[dst] ← Θ̂(H[s1]) = H[s1][7:0]
     CMOD4 = 0x4F    # GPR[dst] ← Θ̂(H[s1]) mod 4
 
     HPACK = 0x50    # Nibble-pack a hybit into words
     HCRC = 0x51     # CRC32 over a packed frame
+    HDOT = 0x52     # GPR[dst] ← ⟨H[s1], H[s2]⟩₁₄ (20-bit unsigned, Alternative A2)
     # 0x55–0x5F is the spec's reserved tail for future codex operations.
     HEXMT = 0x55    # Build 5×5 exomatrix         (software only)
     HDCMP = 0x56    # Decompose into (U, ρ)       (software only)
@@ -324,8 +325,8 @@ RTL_IMPLEMENTED: frozenset[OpCode] = frozenset({
     OpCode.LOAD, OpCode.STORE, OpCode.PUSH, OpCode.POP,
     OpCode.HLOAD, OpCode.CGET, OpCode.CSET, OpCode.HCADD,
     OpCode.CMOV, OpCode.CZERO, OpCode.CEQ,
-    OpCode.CRHO, OpCode.CU, OpCode.CMOD4,
-    OpCode.HPACK, OpCode.HCRC,
+    OpCode.CRHO, OpCode.CU, OpCode.CTHETA, OpCode.CMOD4,
+    OpCode.HPACK, OpCode.HCRC, OpCode.HDOT,
     OpCode.HGRD,
     OpCode.PRINT,
     OpCode.HALT_ERR,

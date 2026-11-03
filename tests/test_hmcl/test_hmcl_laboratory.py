@@ -234,7 +234,7 @@ def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> N
         "LOAD R2, R12, 0x100\n"
         "STORE R2, R12, 0xFE3\n"  # word 0: 0x04100005 (MOVI)
         "LOAD R2, R12, 0x101\n"
-        "STORE R2, R12, 0xFE3\n"  # word 1: 0x4E312000 (HDOT 0x4E)
+        "STORE R2, R12, 0xFE3\n"  # word 1: 0x52312000 (HDOT 0x52)
         "LOAD R3, R12, 0xFE5\n"   # SD_CSUM after 2 valid words
         "LOAD R4, R12, 0xFE6\n"   # SD_PRESCAN after 2 valid words (expect 0)
         "LOAD R2, R12, 0x102\n"
@@ -253,11 +253,11 @@ def test_architectural_alternative_a1_18lane_sticky_and_a2_hdot_exactness() -> N
     vm_sd = HISAMachine(mt, hcheck_interval=0)
     vm_sd.load_program(sd_words)
     vm_sd.data_mem[0x100] = 0x04100005
-    vm_sd.data_mem[0x101] = 0x4E312000
+    vm_sd.data_mem[0x101] = 0x52312000
     vm_sd.data_mem[0x102] = 0x08000000
     vm_sd.data_mem[0x103] = 0xFF000000
     vm_sd.run()
-    assert vm_sd.regs.gpr[3] == (0x04100005 + 0x4E312000) & 0xFFFFFFFF
+    assert vm_sd.regs.gpr[3] == (0x04100005 + 0x52312000) & 0xFFFFFFFF
     assert vm_sd.regs.gpr[4] == 0x00000000
     assert vm_sd.regs.gpr[5] == 0x08010201
     assert vm_sd.regs.gpr[6] == 0x08020203

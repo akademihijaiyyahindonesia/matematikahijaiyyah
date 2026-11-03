@@ -105,13 +105,13 @@ OVERLAY_WORK_MAX = 252      # 0x004-0x0FF worklist capacity in hos_prog_load.has
 _ROOT_OWNER = 0x7FF
 
 # 256-bit allowed opcode bitmap (8 x 32-bit chunks) matching hos_prog_load.hasm
-# Phase V1: the 79 valid RTL opcodes for 4-B' overlays under H-ISA v1.3-hmcl
-# (includes OP_HDOT 0x4E; excludes ERET 0x08, PUSH 0x32, POP 0x33, HALT_ERR 0xFF,
-# and all unimplemented/non-RTL opcodes).
+# Phase V1: the 80 valid RTL opcodes for 4-B' overlays under H-ISA v1.3-hmcl
+# (includes OP_CTHETA 0x4E and OP_HDOT 0x52; excludes ERET 0x08, PUSH 0x32,
+# POP 0x33, HALT_ERR 0xFF, and all unimplemented/non-RTL opcodes).
 _OVERLAY_OPCODE_MASKS: tuple[int, ...] = (
     0x00170EDB,  # 0x00..0x1F
     0x0003C61F,  # 0x20..0x3F
-    0x0003F1F5,  # 0x40..0x5F (includes OP_HDOT 0x4E)
+    0x0007F1F5,  # 0x40..0x5F (includes OP_CTHETA 0x4E and OP_HDOT 0x52)
     0x00000001,  # 0x60..0x7F
     0x00000000,  # 0x80..0x9F
     0x07FF0005,  # 0xA0..0xBF
@@ -122,7 +122,7 @@ _OVERLAY_OPCODE_MASKS: tuple[int, ...] = (
 _OVERLAY_OPCODE_MASKS_V1_2: tuple[int, ...] = (
     0x00170EDB,
     0x0003C61F,
-    0x0003B1F5,  # 0x40..0x5F without OP_HDOT 0x4E (legacy v1.2)
+    0x0003B1F5,  # 0x40..0x5F without OP_CTHETA 0x4E / OP_HDOT 0x52 (legacy v1.2)
     0x00000001,
     0x00000000,
     0x07FF0005,

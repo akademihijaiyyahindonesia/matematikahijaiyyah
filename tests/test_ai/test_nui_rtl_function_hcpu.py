@@ -84,7 +84,7 @@ def test_it_fires_exactly_what_the_two_audits_counted() -> None:
     counted = {t["id"]: t["fired"] for key in ("pipeline_audit", "hcpu_audit")
                for t in MODEL[key]["transitions"]}
     assert R["rules_fired"] == {k: counted[k] for k in R["rules_fired"]}
-    assert (len(R["rules"]), sum(1 for r in R["rules"] if r["fired"])) == (149, 71)
+    assert (len(R["rules"]), sum(1 for r in R["rules"] if r["fired"])) == (150, 71)
     named = set(SPEC["pipeline_audit"]["not_covered"]) | set(rf.hcpu_declared(SPEC["hcpu_audit"]))
     assert set(R["not_covered"]) == named & set(R["rules_fired"])
     assert {r["id"].split(".")[0] for r in R["rules"] if "." in r["id"]} == set(M["composed"])
@@ -92,18 +92,26 @@ def test_it_fires_exactly_what_the_two_audits_counted() -> None:
 
 def test_the_alu_reads_its_ops_and_outputs_from_the_rtl() -> None:
     got = rf._calu_ops(ROOT)
-    assert got["ops"] == {0: "HCADD", 1: "HNRM2", 2: "HDIST", 3: "CGET", 4: "CSET", 5: "CMOD4"}
-    assert got["drives"] == {"HCADD": "vec", "HNRM2": "scl", "HDIST": "scl", "CSET": "vec",
-                             "CMOD4": "scl", "CGET": "scl"}
+    assert got["ops"] == {
+        0: "HCADD", 1: "HNRM2", 2: "HDIST", 3: "CGET", 4: "CSET", 5: "CMOD4", 6: "HDOT"
+    }
+    assert got["drives"] == {
+        "HCADD": "vec", "HNRM2": "scl", "HDIST": "scl", "HDOT": "scl",
+        "CSET": "vec", "CMOD4": "scl", "CGET": "scl"
+    }
     alu = (ROOT / "rtl/hcpu_codex_alu.v").read_text(encoding="utf-8").splitlines()
     u = M["units"]["calu"]
-    for op, want in (("HCADD", "[7:0] add_result"), ("HNRM2", "[15:0] norm2_sum"),
-                     ("HDIST", "[15:0] dist2_sum")):
+    for op, want in (
+        ("HCADD", "[7:0]  add_result"),
+        ("HNRM2", "[19:0] scalar_sum_out"),
+        ("HDIST", "[19:0] scalar_sum_out"),
+        ("HDOT", "[19:0] hdot_sum_out"),
+    ):
         assert want in alu[u["width_lines"][op] - 1]
         assert u["width"][op] == int(want[1:].split(":")[0]) + 1
     assert all("12'd17" in alu[n - 1] for n in u["indexed_lines"])
     decode = (ROOT / "rtl/hcpu_decode.v").read_text(encoding="utf-8").splitlines()
-    assert "OP_CSET) ? dst" in decode[153 - 1]
+    assert "OP_CSET) ? dst" in decode[159 - 1]
 
 
 def test_a_result_wider_than_the_rtl_is_not_covered(x: dict[str, Any]) -> None:
@@ -111,12 +119,14 @@ def test_a_result_wider_than_the_rtl_is_not_covered(x: dict[str, Any]) -> None:
     with pytest.raises(rf.NotCovered, match=r"calu\.width"):
         rf.codex_alu(0, 0, big, big, 0, x["calu"])
     with pytest.raises(rf.NotCovered, match=r"calu\.width"):
-        rf.codex_alu(1, 0, big, 0, 0, x["calu"])
+        rf.codex_alu(1, 0, big, 0, 0, {"ops": x["calu"]["ops"], "drives": x["calu"]["drives"],
+                                       "dst_is_source": x["calu"]["dst_is_source"],
+                                       "width": {**x["calu"]["width"], "HNRM2": 16}})
     assert rf.codex_alu(0, 0, 1, 2, 0, x["calu"]) == (3, 0)
 
 
 def test_an_op_the_case_does_not_name_is_not_covered(x: dict[str, Any]) -> None:
-    for op in (6, 7):
+    for op in (7,):
         with pytest.raises(rf.NotCovered, match=r"calu\.default"):
             rf.codex_alu(op, 0, 0, 0, 0, x["calu"])
 
@@ -154,7 +164,7 @@ def test_the_opaque_counts_are_the_audits() -> None:
     scalars = [n for n in subs["print"]["files"]["rtl/hcpu_top.v"] if not n.endswith("[]")]
     assert len(scalars) == 9 and M["opaque"]["mesin keadaan cetak"].startswith("sembilan")
     assert len(subs["trap"]["files"]["rtl/hcpu_trap.v"]) == 7
-    assert len(subs["sdio"]["files"]["rtl/hcpu_sdio.v"]) == 41 and len(audit["sdio"]["x"]) == 17
+    assert len(subs["sdio"]["files"]["rtl/hcpu_sdio.v"]) == 47 and len(audit["sdio"]["x"]) == 17
     names = subs["guard"]["not_elaborated"]["names"]["rtl/hcpu_guard.v"]
     assert len(names) == 7
 
@@ -183,7 +193,7 @@ def test_the_hisab_discrepancy_is_measured_not_quoted() -> None:
                                                              "programs": [5, 10]}
     top = (ROOT / "rtl/hcpu_hisab.v").read_text(encoding="utf-8").splitlines()
     assert "{2'b00, t2, t1, g4, g3, g2, g1}" in top[76 - 1]
-    assert "is_kaf" in top[72 - 1] and "is_kaf" in top[74 - 1]
+    assert "hcpu_guard #(.PIPELINE_GUARD(0)) u_guard" in top[61 - 1]
 
 
 # -- R3: each composed part, and each check, broken, is red ---------------------------------

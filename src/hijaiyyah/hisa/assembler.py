@@ -174,13 +174,14 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
     "CEQ":      ("s1", "s2"),
     "CRHO":     ("dst", "s1"),
     "CU":       ("dst", "s1"),
-    "HDOT":     ("dst", "s1", "s2"),
+    "CTHETA":   ("dst", "s1"),
     "CMOD4":    ("dst", "s1"),
     "HCADD":    ("dst", "s1", "s2"),
     "HNRM2":    ("dst", "s1"),
     "HDIST":    ("dst", "s1", "s2"),
     "HPACK":    ("dst", "s1", "s2?"),
     "HCRC":     ("dst", "s1"),
+    "HDOT":     ("dst", "s1", "s2"),
     "HGRD":     ("s1",),
     "PRINT":    ("s1",),
 }
@@ -188,7 +189,6 @@ OPERANDS: Dict[str, Tuple[str, ...]] = {
 #: A layout entry ending in "?" may be omitted, defaulting to zero.
 
 _MNEMONICS: Dict[str, OpCode] = {op.name: op for op in RTL_IMPLEMENTED}
-_MNEMONICS["HDOT"] = OpCode.HDOT
 
 # The Arabic letter is an alias for its own instruction, so a source line can
 # be one character. `ج` and `L_JIM` assemble identically.

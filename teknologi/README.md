@@ -31,7 +31,7 @@ tidak.
 |---|---:|---|
 | Huruf × dimensi | 28 × 18 | `src/hijaiyyah/core/master_table.py` |
 | Nilai tersegel | 504 | ROM 252 byte, nibble-packed |
-| Opcode H-ISA | 82 | `rtl/hcpu_pkg.vh` |
+| Opcode H-ISA | 84 | `rtl/hcpu_pkg.vh` |
 | — di antaranya asli-huruf | 9 | `HLOAD HCADD HGRD HNRM2 HDIST HPACK HCRC JGD JNGD` |
 | Paket Python | 22 | `src/hijaiyyah/` |
 | Modul RTL HCPU | 30 | `rtl/hcpu_*.v` |

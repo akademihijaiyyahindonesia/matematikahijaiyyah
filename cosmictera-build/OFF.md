@@ -297,14 +297,14 @@ Label: **EH**.
 
 ## Belum ada
 
-### 22 opcode belum di RTL
+### 21 opcode belum di RTL
 
-82 dari 104 terimplementasi di `RTL_IMPLEMENTED`. Yang di luar himpunan itu:
+84 dari 105 terimplementasi di `RTL_IMPLEMENTED`. Yang di luar himpunan itu:
 
 ```
 VDIST VNORM VSCL                vektor
 VPROJ_K VPROJ_N VPROJ_Q VPROJ_T
-CSUB CDOT HDOT CHASH CSIGN      codex
+CSUB CDOT CHASH CSIGN           codex
 HCHK HDCMP HDES HEXMT
 HPROJ HSER
 JGF JGP JNP PRINTH              lompatan dan cetak
@@ -729,7 +729,7 @@ menyala   matematika, bahasa, mesin, sistem operasi, kripto,
           jembatan (simulasi + bitstream HCPU di Tang Nano 20K)
 terhalang modul Ka'bah mentah, pixel HDMI, PRINT di silikon, instruksi
           sesudah berhenti, SD init sesudah rekonfigurasi
-belum ada 22 opcode, proses dinamis, ASIC
+belum ada 21 opcode, proses dinamis, ASIC
 ```
 
 Enam lapis berjalan. Silikon dedikasi (ASIC, bukan FPGA) belum dimulai, dan

@@ -366,9 +366,9 @@ v1_c1:  MOVI  R12, 0x03C
         JEQ   v1_mchk
 v1_c2:  CMPI  R3, 2
         JNE   v1_c3
-        MOVI  R12, 0x03F
+        MOVI  R12, 0x07F
         SHLI  R12, R12, 12
-        ORI   R12, R12, 0x1F5       ; chunk 2 mask: 0x0003F1F5 (includes OP_HDOT 0x4E)
+        ORI   R12, R12, 0x1F5       ; chunk 2 mask: 0x0007F1F5 (includes OP_CTHETA 0x4E & OP_HDOT 0x52)
         CMP   R6, R6
         JEQ   v1_mchk
 v1_c3:  CMPI  R3, 3

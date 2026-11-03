@@ -561,7 +561,7 @@ def test_candidate_b_relocation_budget_and_odd_word_dirty_state_invariants() -> 
        121 / 128 relocations (7 free).
     2. Pre-filling Data RAM 0xA80..0xDFF with 0xFFFFFFFF does not perturb Phase V1
        paired zeroing or Phase V2 verification across odd and even word counts.
-    3. Legacy isa_profile='v1.2' rejects OP_HDOT (0x4E) while default 'v1.3-hmcl'
+    3. Legacy isa_profile='v1.2' rejects OP_HDOT (0x52) while default 'v1.3-hmcl'
        and HOS hardware loader accept it."""
     loader_src = (PROGRAMS_DIR / "hos_prog_load.hasm").read_text(encoding="utf-8")
     loader_c = build(loader_src, PROGRAMS_DIR, 0)
@@ -578,7 +578,7 @@ def test_candidate_b_relocation_budget_and_odd_word_dirty_state_invariants() -> 
     assert load_check(hdot_card, isa_profile="v1.3-hmcl") == (True, "loaded")
     assert load_check(hdot_card, isa_profile="v1.2") == (
         False,
-        "invalid: illegal opcode 0x4e at word 2",
+        "invalid: illegal opcode 0x52 at word 2",
     )
 
     prog = PROGRAMS_DIR / "test_prog_load.hasm"

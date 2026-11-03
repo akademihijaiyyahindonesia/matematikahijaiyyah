@@ -243,7 +243,7 @@ masih belum ada di [ROADMAP.md](ROADMAP.md).
 | ✅ | Closure monoid dibuktikan, bukan disampel | `tests/test_algebra/` |
 | ✅ | Cakupan guard **93,1%**, dan itu langit-langitnya | `matematika-hijaiyyah/GUARD.md` |
 | ✅ | Throughput **2,59 MB/s**, hambatan = deserialiser | `src/hijaiyyah/crypto/kabah.py` |
-| ✅ | 82 dari 104 opcode di RTL, 22 sisanya dinamai | [OFF.md](OFF.md) |
+| ✅ | 84 dari 105 opcode di RTL, 21 sisanya dinamai | [OFF.md](OFF.md) |
 
 ---
 

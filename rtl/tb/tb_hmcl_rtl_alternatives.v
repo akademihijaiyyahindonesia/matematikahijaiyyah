@@ -775,14 +775,14 @@ module tb_hmcl_rtl_alternatives;
         //     Program:
         //       0: HLOAD H1, #2       (0x40100002) -> Ba  (2,0,0,1,0,1,0,0,0,1,0,0,0,0...)
         //       1: HLOAD H2, #24      (0x40200018) -> Mim (4,0,0,0,0,0,0,0,1,0,0,0,0,1...)
-        //       2: HDOT  R3, H1, H2   (0x4E312000) -> R3 = 2*4 = 8 (takes 14 cycles in EX!)
+        //       2: HDOT  R3, H1, H2   (0x52312000) -> R3 = 2*4 = 8 (takes 14 cycles in EX!)
         //       3: ADDI  R4, R3, #7   (0x11430007) -> R4 = R3 + 7 = 15 (uses EX->ID forwarding!)
         //       4: HNRM2 R5, H2       (0x06520000) -> R5 = 16+1+1 = 18 (1 cycle in EX!)
         //       5: HDIST R6, H1, H2   (0x07612000) -> R6 = 4+1+1+1+1+1 = 9 (1 cycle in EX!)
         //       6: HALT               (0x01000000)
         cpu_imem_rom[0] = 32'h4010_0002;
         cpu_imem_rom[1] = 32'h4020_0018;
-        cpu_imem_rom[2] = 32'h4E31_2000;
+        cpu_imem_rom[2] = 32'h5231_2000;
         cpu_imem_rom[3] = 32'h1143_0007;
         cpu_imem_rom[4] = 32'h0652_0000;
         cpu_imem_rom[5] = 32'h0761_2000;
@@ -814,17 +814,17 @@ module tb_hmcl_rtl_alternatives;
         // ====================================================================
         // TEST 6: Target Capability Gating (HDOT_ENABLE=0) & A3 SDIO Pre-Scan
         // ====================================================================
-        // 6a. Decode capability gating: OP_HDOT (0x4E312000) accepted when HDOT_ENABLE=1,
+        // 6a. Decode capability gating: OP_HDOT (0x52312000) accepted when HDOT_ENABLE=1,
         //     rejected with id_is_halt=1, id_dst=4'hE, id_gpr_we=0 when HDOT_ENABLE=0
-        dec_instr = 32'h4E31_2000;
+        dec_instr = 32'h5231_2000;
         @(posedge clk);
         #1;
         check_cond(dec_en1_is_codex === 1'b1 && dec_en1_gpr_we === 1'b1 && dec_en1_is_halt === 1'b0 &&
                    dec_en0_is_codex === 1'b0 && dec_en0_gpr_we === 1'b0 && dec_en0_is_halt === 1'b1 &&
                    dec_en0_dst === 4'hE && p2_nohdot_scl === 32'd0 && p2_nohdot_done === 1'b1,
-                   "P8_CapabilityGate_HDOT_ENABLE_0_rejects_0x4E");
+                   "P8_CapabilityGate_HDOT_ENABLE_0_rejects_0x52");
 
-        // 6b. Alternative A3: Clean 128-word sector (MOVI 0x04, HDOT 0x4E)
+        // 6b. Alternative A3: Clean 128-word sector (MOVI 0x04, CTHETA 0x4E, HDOT 0x52)
         mmio_write_word(12'hFE4, 32'h0000_0001);
         expected_csum = 32'd0;
         for (i = 0; i < 128; i = i + 1) begin

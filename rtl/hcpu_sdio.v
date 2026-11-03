@@ -191,8 +191,8 @@ module hcpu_sdio #(
     //   0x10..0x12 (ADD/ADDI/SUB), 0x14 (MUL),
     //   0x20..0x24 (CMP..JNE), 0x29..0x2A (JGD/JNGD), 0x2E..0x2F (CALL/RET),
     //   0x30..0x33 (LOAD/STORE/PUSH/POP),
-    //   0x40 (HLOAD), 0x42 (HCADD), 0x44..0x48 (CGET..CEQ), 0x4C..0x4F (CRHO/CU/HDOT/CMOD4),
-    //   0x50..0x51 (HPACK/HCRC), 0x60 (HGRD), 0xA0 (PRINT), 0xA2 (EMITS),
+    //   0x40 (HLOAD), 0x42 (HCADD), 0x44..0x48 (CGET..CEQ), 0x4C..0x4F (CRHO/CU/CTHETA/CMOD4),
+    //   0x50..0x52 (HPACK/HCRC/HDOT), 0x60 (HGRD), 0xA0 (PRINT), 0xA2 (EMITS),
     //   0xB0..0xBA (AND..SHRI), 0xE0..0xFB (28 letter instructions).
     function is_invalid_4b_prime_opcode;
         input [7:0] opc;
@@ -209,7 +209,7 @@ module hcpu_sdio #(
                 8'h40, 8'h42,
                 8'h44, 8'h45, 8'h46, 8'h47, 8'h48,
                 8'h4C, 8'h4D, 8'h4E, 8'h4F,
-                8'h50, 8'h51,
+                8'h50, 8'h51, 8'h52,
                 8'h60,
                 8'hA0, 8'hA2,
                 8'hB0, 8'hB1, 8'hB2, 8'hB3, 8'hB4, 8'hB5,

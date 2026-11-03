@@ -405,7 +405,7 @@ class HISAMachine:
         0x20, 0x21, 0x22, 0x23, 0x24, 0x29, 0x2A, 0x2E, 0x2F,
         0x30, 0x31, 0x32, 0x33,
         0x40, 0x42, 0x44, 0x45, 0x46, 0x47, 0x48, 0x4C, 0x4D, 0x4E, 0x4F,
-        0x50, 0x51,
+        0x50, 0x51, 0x52,
         0x60,
         0xA0, 0xA2,
         0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA,
@@ -1110,6 +1110,11 @@ class HISAMachine:
         # Θ̂ mod 4. IC.1.27 makes it a topological classifier: a MainPath that
         # closes has Θ̂ ≡ 0 (mod 4), so a non-zero answer proves the path is
         # open without looking at the skeleton at all.
+        if op == OpCode.CTHETA:
+            theta = self.regs.hreg[s1][0] & 0xFF
+            self.regs.gpr[dst] = theta
+            return f"CTHETA GPR[{dst}] = Θ̂(H{s1}) = {theta}"
+
         if op == OpCode.CMOD4:
             theta = self.regs.hreg[s1][0]
             self.regs.gpr[dst] = theta % 4
