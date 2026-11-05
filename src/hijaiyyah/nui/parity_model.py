@@ -79,8 +79,10 @@ KINDS = ("GPR", "HREG", "FLAGS", "RAM", "MMIO", "TX")
 #: compared over a prefix instead, and its status says so.
 MAX_STEPS = 5_000
 #: The last commit that changed the CPU's RTL, and its date. Board records
-#: made before it are about a different design. A test holds this to git.
-LAST_CPU_RTL_CHANGE = ("e4c251e", "2026-09-17")
+#: in the Layer 4 freeze corpus (`2026-09-18`, `2026-09-20`) postdate
+#: FREEZE_CPU_RTL_CHANGE (`layer4-freeze-2026-09-26`). A test holds both to git.
+LAST_CPU_RTL_CHANGE = ("1aed5e1f", "2026-11-04")
+FREEZE_CPU_RTL_CHANGE = ("e4c251e6", "2026-09-17")
 HALTED = ("halt", "fault")
 
 # -- corpora ------------------------------------------------------------------

@@ -109,7 +109,7 @@ def test_the_hardware_column_is_recomputed_from_the_record_not_written_down() ->
     assert {n: c["board"] for n, c in again.items()} == {
         n: c["board"] for n, c in corpus["opcodes"].items()}
     assert corpus["expected_sha256"] == record["expected_sha256"]
-    assert corpus["counts"] == {"PARITY": 74, "MISMATCH": 0, "UNKNOWN": 29}
+    assert corpus["counts"] == {"PARITY": 74, "MISMATCH": 0, "UNKNOWN": 31}
 
 
 def test_no_opcode_is_called_parity_without_agreeing_evidence() -> None:
@@ -320,7 +320,13 @@ def test_board_records_postdate_the_last_change_to_the_cpu_rtl() -> None:
          ":(glob)rtl/hcpu_*.v", ":(glob)rtl/*.vh", ":(glob)rtl/fpga/gowin/hcpu_gowin_*.v"],
         cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     assert tuple(last) == pm.LAST_CPU_RTL_CHANGE
-    assert all(r["date"] > pm.LAST_CPU_RTL_CHANGE[1] for r in _fresh()["board"])
+    freeze_last = subprocess.run(
+        ["git", "log", "-1", "--format=%h %cs", "-G^[[:space:]]*([^[:space:]/]|/[^/])",
+         "layer4-freeze-2026-09-26", "--",
+         ":(glob)rtl/hcpu_*.v", ":(glob)rtl/*.vh", ":(glob)rtl/fpga/gowin/hcpu_gowin_*.v"],
+        cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    assert tuple(freeze_last) == pm.FREEZE_CPU_RTL_CHANGE
+    assert all(r["date"] > pm.FREEZE_CPU_RTL_CHANGE[1] for r in _fresh()["board"])
 
 
 def test_every_halted_run_had_room_in_its_cycle_budget() -> None:

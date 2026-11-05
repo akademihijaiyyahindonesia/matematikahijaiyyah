@@ -105,7 +105,7 @@ SLOTS: Tuple[Slot, ...] = (
         runs="H-ISA pipeline, 82 opcodes, sealed 28-letter ROM",
         verified="Paket 8, 2 November 2026, loaded into SRAM: test_bsm's "
                  "23 bytes matching simulation byte for byte, two runs",
-        lut4=15_453, dff=5_166, bsram=18, fmax_mhz=120.63,
+        lut4=15_367, dff=5_166, bsram=18, fmax_mhz=54.86,
     ),
     Slot(
         name="kabah",

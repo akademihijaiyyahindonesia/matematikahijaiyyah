@@ -41,16 +41,16 @@
 // re-measured 2026-09-14, twice: once when H-ISA v1.2 widened the peripheral
 // window and put the onboard TF card behind it, and again after the card's own
 // Ncc gap was fixed. Re-measured again 2026-09-15 after this file was split
-// into hcpu_gowin_core and a pin-level hcpu_gowin_top, and again 2026-11-02
-// for Paket 8 (yosys 0.68+138, nextpnr-himbaechel 0.11.1-19). These are the
-// 2026-11-02 run's figures, from `make -C rtl/fpga/gowin bitstream`:
+// into hcpu_gowin_core and a pin-level hcpu_gowin_top, 2026-11-02 for Paket 8,
+// and again 2026-11-05 after CTHETA=0x4E, HDOT=0x52 and GAP-02 (1aed5e1f,
+// yosys 0.68+138, nextpnr-himbaechel 0.11.1-19). `make -C rtl/fpga/gowin bitstream`:
 //
-//     LUT4       15,453 / 20,736   74%
+//     LUT4       15,367 / 20,736   74%
 //     DFF         5,166 / 15,552   33%
 //     BSRAM          18 /     46   39%
 //     IOB            11 /    384    2%
 //
-//     Fmax       120.63 MHz (PASS at the 12.00 MHz constraint)
+//     Fmax        54.86 MHz (PASS at the 12.00 MHz constraint)
 //               -- taken after routing. No hold or setup violation reported.
 //     Bitstream  7,261,470 bytes, gowin_pack exits 0
 //
@@ -243,13 +243,13 @@
 // -- LUT4 15,744, DFF 5,065, BSRAM 18, IOB 11, Fmax 86.18 MHz, and a
 // 7,261,470-byte bitstream -- which is the proof (K6) that the new files
 // touched nothing here.
-// Restamped 2026-11-02 WITH a fresh place-and-route run, for Paket 8:
-// hcpu_codex_alu.v, hcpu_decode.v and hcpu_top.v changed, and the stamp was
-// already stale at 807d55b -- rtl/ had changed since 2026-10-01 without a run.
-// The figures at the top of this header are that run's; its bitstream,
-// sha256 38956d8842bd1bb191477dbc3f4094afa5c833fdb2645dd97b25453891947abd,
-// is the one that ran test_bsm on the board.
-// RTL FINGERPRINT: c9fdd83e97fe9b275681bd40208a5311110ecb194d79aac95fb7570134569caa
+// Restamped 2026-11-02 WITH a fresh place-and-route run for Paket 8 (LUT4
+// 15,453, DFF 5,166, Fmax 120.63 MHz, sha256 38956d88...), and restamped again
+// 2026-11-05 WITH a fresh place-and-route run after 1aed5e1f (CTHETA=0x4E,
+// HDOT=0x52, GAP-02 in hcpu_hisab.v): LUT4 15,367, DFF 5,166, BSRAM 18, IOB 11,
+// Fmax 54.86 MHz, bitstream sha256 3f9c62d9425983bfb1e807917b776a92ccd02652619b1fb8ab93bb8419e804bc.
+// The figures at the top of this header are the 2026-11-05 run's.
+// RTL FINGERPRINT: a866810782d7b2dbaaf331481e5806ec09d86ac031c1a50906b171ecca5d5291
 //
 // The numbers above are pinned to the RTL they describe by a hash of the
 // source, not by a date and not by whoever remembers to look. Change any

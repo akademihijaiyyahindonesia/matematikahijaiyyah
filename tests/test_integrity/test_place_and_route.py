@@ -49,9 +49,9 @@ CRYSTAL_MHZ = 27.0
 # the check that one more level of hierarchy added no function; the wrapper's
 # own header carries the controlled before/after that separates yosys remapping
 # from logic.
-UTILISATION = {"LUT4": (15453, 20736), "DFF": (5166, 15552),
+UTILISATION = {"LUT4": (15367, 20736), "DFF": (5166, 15552),
                "BSRAM": (18, 46), "IOB": (11, 384)}
-MEASURED_FMAX_MHZ = 120.63
+MEASURED_FMAX_MHZ = 54.86
 
 # The commit the fitting result was taken from, re-run to confirm it still
 # reproduces there: LUT4 6,753 (78%), Fmax 97.94 MHz.

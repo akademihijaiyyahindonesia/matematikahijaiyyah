@@ -20,15 +20,15 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 | jenis | jumlah |
 |---|---:|
 | `EXECUTES` | 623 |
-| `READS` | 20 |
+| `READS` | 22 |
 | `OBSERVES` | 49 |
-| `WRITES` | 136 |
-| `MODIFIES` | 308 |
+| `WRITES` | 138 |
+| `MODIFIES` | 310 |
 | `CALLS` | 93 |
 | `RETURNS` | 182 |
 | `RESUMES` | 47 |
 | `TRAPS` | 20 |
-| **total** | **1478** |
+| **total** | **1484** |
 
 ## Node tujuan edge
 
@@ -39,7 +39,7 @@ Dihasilkan `src/hijaiyyah/nui/execution_graph.py` dari eksekusi di `src/hijaiyya
 | `mem:` | 8 |
 | `mmio:` | 19 |
 | `opcode:` | 78 |
-| `pc:` | 131 |
+| `pc:` | 132 |
 | `reg:` | 16 |
 | `trap:` | 4 |
 

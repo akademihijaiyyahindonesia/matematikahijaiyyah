@@ -201,7 +201,7 @@
   "opcodes": {
    "PARITY": 74,
    "MISMATCH": 0,
-   "UNKNOWN": 29
+   "UNKNOWN": 31
   },
   "print_ladder": {
    "22": {
@@ -364,11 +364,13 @@
      "CHASH",
      "CSIGN",
      "CSUB",
+     "CTHETA",
      "EMITS",
      "HALT_ERR",
      "HCHK",
      "HDCMP",
      "HDES",
+     "HDOT",
      "HEXMT",
      "HPROJ",
      "HSER",

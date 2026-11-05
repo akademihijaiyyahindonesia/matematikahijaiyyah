@@ -68,7 +68,7 @@ def test_every_colour_is_counted_and_none_is_forced() -> None:
                         .read_text(encoding="utf-8"))
     assert s["programs"] == report["counts"] == {"PARITY": 73, "MISMATCH": 2, "UNKNOWN": 28}
     assert sum(s["opcodes"].values()) == len(OpCode)
-    assert s["opcodes"] == {"PARITY": 74, "MISMATCH": 0, "UNKNOWN": 29}
+    assert s["opcodes"] == {"PARITY": 74, "MISMATCH": 0, "UNKNOWN": 31}
     assert s["stop_probes"] == {"PARITY": 0, "MISMATCH": 3, "UNKNOWN": 3}
     assert s["loader_cases"]["findings"] == 0
 

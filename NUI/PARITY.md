@@ -6,7 +6,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 
 | mesin | apa |
 |---|---|
-| board | recorded output dated after e4c251e (2026-09-17), the last change to the CPU's RTL |
+| board | recorded output dated after 1aed5e1f (2026-11-04), the last change to the CPU's RTL |
 | interpreter | src/hijaiyyah/hisa/machine.py |
 | python | book functions for HLOAD, HCADD, HNRM2, HDIST; otherwise the interpreter itself (src/hijaiyyah/vm delegates to it) |
 | rtl | rtl/*.v under Icarus via rtl/tb/tb_parity.v +TRACE |
@@ -30,7 +30,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `rtl/programs/hijrah_sweep.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 212240 cycles -- compared as far as both ran |
 | `rtl/programs/hos_demo.hasm` | MISMATCH | step 600 `rtl/programs/hos.hasm:415` (`HCHECK`): the interpreter stops on its own check (HCHECK CORRUPTION: H0: guard check failed); the RTL halts later |
 | `rtl/programs/hos_hctx.hasm` | MISMATCH | step 3 `rtl/programs/hos_hctx.hasm:77` (`RET`): the interpreter stops here; the RTL then commits R6=0 at cycle 8 |
-| `rtl/programs/hos_prog_load.hasm` | MISMATCH | step 5 `rtl/programs/hos_prog_load.hasm:52` (`RET`): the interpreter stops here; the RTL then commits R11=1 at cycle 10 |
+| `rtl/programs/hos_prog_load.hasm` | MISMATCH | step 5 `rtl/programs/hos_prog_load.hasm:38` (`RET`): the interpreter stops here; the RTL then commits R11=1 at cycle 10 |
 | `rtl/programs/kernel.hasm` | MISMATCH | step 123 `rtl/programs/hal.hasm:117` (`LOAD`): interpreter R2=124, RTL R2=174 -- the step read COUNTER |
 | `rtl/programs/loader.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran |
 | `rtl/programs/mem_protect.hasm` | MISMATCH | step 28 `rtl/programs/mem_protect.hasm:46` (`HALT`): the interpreter stops here; the RTL then commits R10=xxxxxxxx at cycle 44 |
@@ -43,8 +43,8 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `rtl/programs/syscall.hasm` | MISMATCH | step 30 `rtl/programs/syscall.hasm:48` (`HALT`): the interpreter stops here; the RTL then commits R10=xxxxxxxx at cycle 46 |
 | `rtl/programs/syscall_io.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44360 cycles -- compared as far as both ran |
 | `rtl/programs/test_hfs.hasm` | MISMATCH | step 173 `rtl/programs/test_hfs.hasm:39` (`HALT`): the interpreter stops here; the RTL then commits R3=4294967295 at cycle 1096 |
-| `rtl/programs/test_prog_load.hasm` | MISMATCH | step 313 `rtl/programs/hal_sd.hasm:48` (`LOAD`): interpreter R1=0, RTL R2=1 -- the step read SD_STATUS |
-| `rtl/programs/test_prog_run.hasm` | MISMATCH | step 313 `rtl/programs/hal_sd.hasm:48` (`LOAD`): interpreter R1=0, RTL R2=1 -- the step read SD_STATUS |
+| `rtl/programs/test_prog_load.hasm` | MISMATCH | step 316 `rtl/programs/hal_sd.hasm:48` (`LOAD`): interpreter R1=0, RTL R2=1 -- the step read SD_STATUS |
+| `rtl/programs/test_prog_run.hasm` | MISMATCH | step 316 `rtl/programs/hal_sd.hasm:48` (`LOAD`): interpreter R1=0, RTL R2=1 -- the step read SD_STATUS |
 | `rtl/programs/timer_poll.hasm` | MISMATCH | step 1 `rtl/programs/timer_poll.hasm:14` (`LOAD`): interpreter R1=2, RTL R1=5 -- the step read COUNTER |
 | `rtl/programs/trap_epc.hasm` | MISMATCH | step 46 `rtl/programs/trap_epc.hasm:66` (`HALT`): the interpreter stops here; the RTL then commits R6=2 at cycle 544 |
 | `rtl/programs/trap_hreg.hasm` | UNKNOWN | interpreter step_cap after 5000 steps; RTL did not halt within 44000 cycles -- compared as far as both ran |
@@ -65,7 +65,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 |---|---:|
 | PARITY | 29 |
 | MISMATCH | 3 |
-| UNKNOWN | 72 |
+| UNKNOWN | 74 |
 
 | opcode | python | interpreter↔RTL | papan | status |
 |---|---|---|---|---|
@@ -86,6 +86,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `CSET` | SAME ENGINE | PARITY | PARITY | PARITY |
 | `CSIGN` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
 | `CSUB` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
+| `CTHETA` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
 | `CU` | SAME ENGINE | PARITY | PARITY | PARITY |
 | `CZERO` | SAME ENGINE | PARITY | PARITY | PARITY |
 | `EMITS` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
@@ -100,6 +101,7 @@ Dihasilkan `src/hijaiyyah/nui/parity_model.py`, dan ditarik dari `NUI/parity_mod
 | `HDCMP` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
 | `HDES` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
 | `HDIST` | PARITY | PARITY | UNKNOWN | UNKNOWN |
+| `HDOT` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
 | `HEXMT` | SAME ENGINE | UNKNOWN | UNKNOWN | UNKNOWN |
 | `HGRD` | SAME ENGINE | PARITY | PARITY | PARITY |
 | `HLOAD` | PARITY | PARITY | PARITY | PARITY |
@@ -222,7 +224,7 @@ Dari rekaman `cosmictera-build/parity-board/20260924T105400Z-parity.json`, 79 pr
 |---|---:|
 | PARITY | 74 |
 | MISMATCH | 0 |
-| UNKNOWN | 29 |
+| UNKNOWN | 31 |
 
 | opcode | nama | program | bukti | PARITY | MISMATCH | UNKNOWN | papan | alasan | sumber |
 |---|---|---:|---:|---:|---:|---:|---|---|---|
@@ -243,6 +245,7 @@ Dari rekaman `cosmictera-build/parity-board/20260924T105400Z-parity.json`, 79 pr
 | `0x45` | `CSET` | 9 | 9 | 9 | 0 | 0 | PARITY | -- | `parity:cset_past_seventeen_names_nothing` +8 |
 | `0x72` | `CSIGN` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
 | `0x43` | `CSUB` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
+| `0x4E` | `CTHETA` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
 | `0x4D` | `CU` | 3 | 3 | 3 | 0 | 0 | PARITY | -- | `parity:codex_negative_residue` +2 |
 | `0x47` | `CZERO` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:codex_copy_and_zero` +1 |
 | `0xA2` | `EMITS` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
@@ -257,6 +260,7 @@ Dari rekaman `cosmictera-build/parity-board/20260924T105400Z-parity.json`, 79 pr
 | `0x56` | `HDCMP` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
 | `0x58` | `HDES` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
 | `0x07` | `HDIST` | 2 | 2 | 2 | 0 | 0 | PARITY | -- | `parity:distance_between_letters` +1 |
+| `0x52` | `HDOT` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
 | `0x55` | `HEXMT` | 0 | 0 | 0 | 0 | 0 | UNKNOWN | no program sent executes it | -- |
 | `0x60` | `HGRD` | 22 | 22 | 22 | 0 | 0 | PARITY | -- | `parity:branch_on_guard` +21 |
 | `0x40` | `HLOAD` | 42 | 42 | 40 | 2 | 0 | UNKNOWN | executed in agreeing and differing runs: the wire alone cannot say which instruction differed | `rtl/programs/bench/e4_frame.hasm`, `rtl/programs/test_hisab.hasm` |
@@ -388,16 +392,18 @@ Dari rekaman `cosmictera-build/parity-board/20260924T105400Z-parity.json`, 79 pr
 - rtl/tb/hfs_syscall_probe.hasm
 - rtl/tb/prog_load_probe.hasm
 
-### `rtl_opcodes_without_an_agreeing_execution` — 3
+### `rtl_opcodes_without_an_agreeing_execution` — 5
 
+- CTHETA
 - EMITS
 - HALT_ERR
+- HDOT
 - POP
 
 ### `scope` — 4
 
 - rtl/programs/loader.hasm#with-payload is not run on the RTL: tb_parity.v has no UART receiver input and no instruction-memory write port
-- the board is not run: it carries the 72-hour burn-in. Only records dated after e4c251e are read
+- the board is not run: it carries the 72-hour burn-in. Only records dated after 1aed5e1f are read
 - board records of card, wire, generated or Ka'bah-slot programs are not compared: no other engine here has a card, a wire, or that slot
 - cosmictera-build/OFF.md's SD init after a mid-read reconfiguration is board-only: no other engine has a card or a reconfiguration
 

@@ -9,7 +9,7 @@ Lapis 4 dibekukan bukan karena semuanya hijau, melainkan karena tiap warna punya
 | | PARITY / MISMATCH / UNKNOWN |
 |---|---|
 | program, korpus P2 | PARITY 73 / MISMATCH 2 / UNKNOWN 28 |
-| opcode, kolom perangkat keras P3 | PARITY 74 / MISMATCH 0 / UNKNOWN 29 |
+| opcode, kolom perangkat keras P3 | PARITY 74 / MISMATCH 0 / UNKNOWN 31 |
 | probe HALT/RET, P5 | PARITY 0 / MISMATCH 3 / UNKNOWN 3 |
 
 | tangga PRINT, P4 | diharapkan | lari 1 | lari 2 | lari 3 |
@@ -39,7 +39,7 @@ Loader, P6: 19 kasus di papan, 15 ditolak, 4 diterima, **0 temuan**; 2 kasus han
 - `register_and_ram_after_a_stop` (3): `stop-probe:halt-then-register`, `stop-probe:halt-then-store`, `stop-probe:ret-then-register` — no port of the board carries a GPR or a data-RAM word
 - `rtl_record_window` (3): `stop-probe:ret-then-print`, `stop-probe:halt-then-print`, `stop-probe:ret-then-print-sentinel` — the RTL record closes when halted rises and the board's wire does not, so these differences from it are unknown
 - `opcodes_with_mixed_evidence` (5): `HALT`, `HCRC`, `HLOAD`, `HPACK`, `PRINT`
-- `opcodes_no_sent_program_executes` (24): `CDOT`, `CHASH`, `CSIGN`, `CSUB`, `EMITS`, `HALT_ERR`, `HCHK`, `HDCMP`, `HDES`, `HEXMT`, `HPROJ`, `HSER`, `JGF`, `JGP`, `JNP`, `POP`, `PRINTH`, `VDIST`, `VNORM`, `VPROJ_K`, `VPROJ_N`, `VPROJ_Q`, `VPROJ_T`, `VSCL`
+- `opcodes_no_sent_program_executes` (26): `CDOT`, `CHASH`, `CSIGN`, `CSUB`, `CTHETA`, `EMITS`, `HALT_ERR`, `HCHK`, `HDCMP`, `HDES`, `HDOT`, `HEXMT`, `HPROJ`, `HSER`, `JGF`, `JGP`, `JNP`, `POP`, `PRINTH`, `VDIST`, `VNORM`, `VPROJ_K`, `VPROJ_N`, `VPROJ_Q`, `VPROJ_T`, `VSCL`
 - `programs_not_sent` (24): `rtl/programs/burn_in.hasm`, `rtl/programs/flags_board.hasm`, `rtl/programs/flags_ctx.hasm`, `rtl/programs/hal.hasm`, `rtl/programs/hal_sd.hasm`, `rtl/programs/hijrah_sweep.hasm`, `rtl/programs/hos.hasm`, `rtl/programs/hos_hctx.hasm`, `rtl/programs/hos_hfs_disk.hasm`, `rtl/programs/hos_prog_load.hasm`, `rtl/programs/kernel.hasm`, `rtl/programs/loader.hasm`, `rtl/programs/sd_writer.hasm`, `rtl/programs/sdio_probe.hasm`, `rtl/programs/sdio_verify.hasm`, `rtl/programs/sdio_write.hasm`, `rtl/programs/shell.hasm`, `rtl/programs/syscall_io.hasm`, `rtl/programs/test_prog_load.hasm`, `rtl/programs/test_prog_run.hasm`, `rtl/programs/trap_hreg.hasm`, `rtl/tb/hfs_persist_probe.hasm`, `rtl/tb/hfs_syscall_probe.hasm`, `rtl/tb/prog_load_probe.hasm`
 
 ## Selisih alat yang diketahui — bukan selisih perangkat keras

@@ -340,7 +340,7 @@
   "counts": {
    "MISMATCH": 0,
    "PARITY": 74,
-   "UNKNOWN": 29
+   "UNKNOWN": 31
   },
   "expected_sha256": "905cd6111790a0d6354edd23156d5dc8e329c2066147e295bd62bf2827939fd5",
   "opcodes": {
@@ -767,6 +767,21 @@
     "unknown": 0,
     "unknown_sent": 0
    },
+   "CTHETA": {
+    "agreeing_programs": [],
+    "board": "UNKNOWN",
+    "differing_programs": [],
+    "evidence": 0,
+    "mismatch": 0,
+    "name": "CTHETA",
+    "opcode": "0x4E",
+    "parity": 0,
+    "programs": 0,
+    "reason": "no program sent executes it",
+    "undecided_programs": [],
+    "unknown": 0,
+    "unknown_sent": 0
+   },
    "CU": {
     "agreeing_programs": [
      "parity:codex_negative_residue",
@@ -1156,6 +1171,21 @@
     "parity": 2,
     "programs": 2,
     "reason": "",
+    "undecided_programs": [],
+    "unknown": 0,
+    "unknown_sent": 0
+   },
+   "HDOT": {
+    "agreeing_programs": [],
+    "board": "UNKNOWN",
+    "differing_programs": [],
+    "evidence": 0,
+    "mismatch": 0,
+    "name": "HDOT",
+    "opcode": "0x52",
+    "parity": 0,
+    "programs": 0,
+    "reason": "no program sent executes it",
     "undecided_programs": [],
     "unknown": 0,
     "unknown_sent": 0
@@ -2773,7 +2803,7 @@
   "record": "20260924T105400Z"
  },
  "engines": {
-  "board": "recorded output dated after e4c251e (2026-09-17), the last change to the CPU's RTL",
+  "board": "recorded output dated after 1aed5e1f (2026-11-04), the last change to the CPU's RTL",
   "interpreter": "src/hijaiyyah/hisa/machine.py",
   "python": "book functions for HLOAD, HCADD, HNRM2, HDIST; otherwise the interpreter itself (src/hijaiyyah/vm delegates to it)",
   "rtl": "rtl/*.v under Icarus via rtl/tb/tb_parity.v +TRACE"
@@ -3062,18 +3092,18 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 210,
+     "pc": 515,
      "reads_mmio": [
       "SD_STATUS"
      ],
-     "step": 313,
+     "step": 316,
      "value": 0,
      "where": "rtl/programs/hal_sd.hasm:48"
     },
     "kind": "GPR",
     "program": "rtl/programs/test_prog_load.hasm",
     "rtl": {
-     "cycle": 622,
+     "cycle": 626,
      "key": 2,
      "value": 1
     }
@@ -3083,18 +3113,18 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 218,
+     "pc": 523,
      "reads_mmio": [
       "SD_STATUS"
      ],
-     "step": 313,
+     "step": 316,
      "value": 0,
      "where": "rtl/programs/hal_sd.hasm:48"
     },
     "kind": "GPR",
     "program": "rtl/programs/test_prog_run.hasm",
     "rtl": {
-     "cycle": 622,
+     "cycle": 626,
      "key": 2,
      "value": 1
     }
@@ -3528,6 +3558,18 @@
    "status": "UNKNOWN",
    "witness": null
   },
+  "CTHETA": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "no run in the corpus executes it at a step both engines reached and agreed on",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
+  },
   "CU": {
    "agreeing_programs": [
     "parity:codex_negative_residue",
@@ -3905,7 +3947,7 @@
    ],
    "python": "SAME ENGINE",
    "rtl": "MISMATCH",
-   "source": "rtl/hcpu_controller.v:75, rtl/hcpu_writeback.v:33",
+   "source": "rtl/hcpu_controller.v:75, rtl/hcpu_writeback.v:35",
    "status": "MISMATCH",
    "witness": {
     "change": "halted",
@@ -4036,6 +4078,18 @@
     "step": 2,
     "where": "<parity:distance_between_letters>:3"
    }
+  },
+  "HDOT": {
+   "agreeing_programs": [],
+   "board": "UNKNOWN",
+   "board_programs": [],
+   "in_rtl": true,
+   "mismatches": [],
+   "python": "SAME ENGINE",
+   "reason": "no run in the corpus executes it at a step both engines reached and agreed on",
+   "rtl": "UNKNOWN",
+   "status": "UNKNOWN",
+   "witness": null
   },
   "HEXMT": {
    "agreeing_programs": [],
@@ -4440,6 +4494,8 @@
     "rtl/programs/syscall.hasm",
     "rtl/programs/syscall_io.hasm",
     "rtl/programs/test_hfs.hasm",
+    "rtl/programs/test_prog_load.hasm",
+    "rtl/programs/test_prog_run.hasm",
     "rtl/programs/trap_epc.hasm",
     "rtl/programs/trap_flags.hasm",
     "rtl/programs/trap_hreg.hasm",
@@ -5325,7 +5381,7 @@
    "mismatches": [],
    "python": "SAME ENGINE",
    "rtl": "PARITY",
-   "source": "rtl/hcpu_top.v:324",
+   "source": "rtl/hcpu_top.v:333",
    "status": "MISMATCH",
    "witness": {
     "change": "printed 1",
@@ -5438,7 +5494,7 @@
       "reads_mmio": [],
       "step": 5,
       "stopped_here": true,
-      "where": "rtl/programs/hos_prog_load.hasm:52"
+      "where": "rtl/programs/hos_prog_load.hasm:38"
      },
      "kind": "GPR",
      "program": "rtl/programs/hos_prog_load.hasm",
@@ -5471,7 +5527,7 @@
    ],
    "python": "SAME ENGINE",
    "rtl": "MISMATCH",
-   "source": "rtl/hcpu_controller.v:75, rtl/hcpu_writeback.v:33",
+   "source": "rtl/hcpu_controller.v:75, rtl/hcpu_writeback.v:35",
    "status": "MISMATCH",
    "witness": {
     "change": "pc 0x0d1 -> 0x003",
@@ -8598,7 +8654,7 @@
      "reads_mmio": [],
      "step": 5,
      "stopped_here": true,
-     "where": "rtl/programs/hos_prog_load.hasm:52"
+     "where": "rtl/programs/hos_prog_load.hasm:38"
     },
     "kind": "GPR",
     "rtl": {
@@ -9075,7 +9131,7 @@
    "agreed_through_step": 306,
    "compared": {
     "FLAGS": 2,
-    "GPR": 600,
+    "GPR": 601,
     "HREG": 0,
     "MMIO": 1,
     "RAM": 0,
@@ -9104,7 +9160,7 @@
    "interpreter": {
     "events": {
      "FLAGS": 7,
-     "GPR": 600,
+     "GPR": 601,
      "HREG": 0,
      "MMIO": 133,
      "RAM": 0,
@@ -9134,7 +9190,7 @@
    "agreed_through_step": 306,
    "compared": {
     "FLAGS": 2,
-    "GPR": 962,
+    "GPR": 963,
     "HREG": 0,
     "MMIO": 1,
     "RAM": 0,
@@ -9163,7 +9219,7 @@
    "interpreter": {
     "events": {
      "FLAGS": 11,
-     "GPR": 962,
+     "GPR": 963,
      "HREG": 0,
      "MMIO": 263,
      "RAM": 0,
@@ -9820,7 +9876,7 @@
    "status": "PARITY"
   },
   "rtl/programs/test_prog_load.hasm": {
-   "agreed_through_step": 312,
+   "agreed_through_step": 315,
    "compared": {
     "FLAGS": 1,
     "GPR": 106,
@@ -9834,17 +9890,17 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 210,
+     "pc": 515,
      "reads_mmio": [
       "SD_STATUS"
      ],
-     "step": 313,
+     "step": 316,
      "value": 0,
      "where": "rtl/programs/hal_sd.hasm:48"
     },
     "kind": "GPR",
     "rtl": {
-     "cycle": 622,
+     "cycle": 626,
      "key": 2,
      "value": 1
     }
@@ -9860,15 +9916,15 @@
     },
     "exit": "halt",
     "exit_detail": "",
-    "steps": 329
+    "steps": 332
    },
    "reason": "",
    "rtl": {
-    "budget": 6872,
-    "cycles": 6872,
+    "budget": 6896,
+    "cycles": 6896,
     "events": {
      "FLAGS": 2,
-     "GPR": 675,
+     "GPR": 676,
      "HREG": 0,
      "MMIO": 1,
      "RAM": 0,
@@ -9879,7 +9935,7 @@
    "status": "MISMATCH"
   },
   "rtl/programs/test_prog_run.hasm": {
-   "agreed_through_step": 312,
+   "agreed_through_step": 315,
    "compared": {
     "FLAGS": 2,
     "GPR": 106,
@@ -9893,17 +9949,17 @@
     "interpreter": {
      "key": 1,
      "opcode": "LOAD",
-     "pc": 218,
+     "pc": 523,
      "reads_mmio": [
       "SD_STATUS"
      ],
-     "step": 313,
+     "step": 316,
      "value": 0,
      "where": "rtl/programs/hal_sd.hasm:48"
     },
     "kind": "GPR",
     "rtl": {
-     "cycle": 622,
+     "cycle": 626,
      "key": 2,
      "value": 1
     }
@@ -9919,15 +9975,15 @@
     },
     "exit": "halt",
     "exit_detail": "",
-    "steps": 331
+    "steps": 334
    },
    "reason": "",
    "rtl": {
-    "budget": 6888,
-    "cycles": 6888,
+    "budget": 6912,
+    "cycles": 6912,
     "events": {
      "FLAGS": 2,
-     "GPR": 676,
+     "GPR": 678,
      "HREG": 0,
      "MMIO": 1,
      "RAM": 0,
@@ -10734,13 +10790,15 @@
    "rtl/tb/prog_load_probe.hasm"
   ],
   "rtl_opcodes_without_an_agreeing_execution": [
+   "CTHETA",
    "EMITS",
    "HALT_ERR",
+   "HDOT",
    "POP"
   ],
   "scope": [
    "rtl/programs/loader.hasm#with-payload is not run on the RTL: tb_parity.v has no UART receiver input and no instruction-memory write port",
-   "the board is not run: it carries the 72-hour burn-in. Only records dated after e4c251e are read",
+   "the board is not run: it carries the 72-hour burn-in. Only records dated after 1aed5e1f are read",
    "board records of card, wire, generated or Ka'bah-slot programs are not compared: no other engine here has a card, a wire, or that slot",
    "cosmictera-build/OFF.md's SD init after a mid-read reconfiguration is board-only: no other engine has a card or a reconfiguration"
   ]

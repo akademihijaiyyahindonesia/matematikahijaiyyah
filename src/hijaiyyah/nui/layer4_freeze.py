@@ -381,7 +381,12 @@ def page(model: dict[str, Any]) -> str:
 
 
 def write() -> Path:
-    model = json.loads(json.dumps(build()))
+    fresh = json.loads(json.dumps(build()))
+    if MODEL.exists():
+        committed = json.loads(MODEL.read_text(encoding="utf-8"))
+        model = {**committed, **{k: fresh[k] for k in HELD}}
+    else:
+        model = fresh
     MODEL.write_text(json.dumps(model, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     PAGE.write_text(page(model), encoding="utf-8")
     return MODEL

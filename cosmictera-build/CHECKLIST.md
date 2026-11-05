@@ -186,7 +186,7 @@ Lima baris tebal itu baru hijau **hari ini**, dan semuanya sempat berbohong:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **Bitstream HCPU, Tang Nano 20K: 74% LUT4, 120,63 MHz** | `make -C rtl/fpga/gowin bitstream` |
+| ✅ | **Bitstream HCPU, Tang Nano 20K: 74% LUT4, 54,86 MHz** | `make -C rtl/fpga/gowin bitstream` |
 | ✅ | **Bitstream Ka'bah, Tang Nano 20K: 72% LUT4 dengan lapis 3 (HMAC-SHA256, kunci uji)** — tanpa lapis 3: 58% LUT4, 165,98 MHz | `make -C rtl/fpga/gowin kabah_bitstream` |
 | ✅ | **`CSET` (0x45) dijalankan di papan: `5 6 2 0`** | `make -C rtl/fpga/gowin bridge` lalu `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_cset.hasm` |
 | ✅ | **HFS baca mengembalikan H-Reg hidup di papan: `1 1 1 2 1`** | `make -C rtl/fpga/gowin send PORT=<port> PROG=../../programs/test_hfs.hasm` |
