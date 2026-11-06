@@ -368,8 +368,26 @@ module hcpu_hdmi_top #(
     wire [13:0] cell_addr;
     wire [11:0] layout_data;
 
+    // 14-bit screen address (0..14,399) -> 13-bit layout ROM (0..8,191).
+    // Rows 0..41 (0..6,719) map directly; footer rows 84..89 (13,440..14,399)
+    // fold to 6,720..7,679; rows 42..83 (6,720..13,439, including 8,191 and
+    // 8,192 where cell_addr[13] flips) are blanked so cell_addr[13] is never
+    // truncated into 0..6,207.
+    localparam [13:0] ROM_DIRECT_END = 14'd6720;
+    localparam [13:0] ROM_FOOT_FIRST = 14'd13440;
+    localparam [13:0] ROM_SCREEN_END = 14'd14400;
+    localparam [13:0] ROM_FOOT_SHIFT = 14'd6720;
+
+    wire        rom_direct = (cell_addr < ROM_DIRECT_END);
+    wire        rom_footer = (cell_addr >= ROM_FOOT_FIRST) && (cell_addr < ROM_SCREEN_END);
+    wire        rom_valid  = rom_direct | rom_footer;
+    wire [13:0] rom_folded = cell_addr - ROM_FOOT_SHIFT;
+    wire [12:0] rom_addr   = rom_direct ? cell_addr[12:0]
+                           : rom_footer ? rom_folded[12:0]
+                           : 13'd7680;
+
     hcpu_layout_rom #(.LAYOUT_HEX(DASH_HEX)) u_layout (
-        .clk(pixel_clk), .addr(cell_addr), .data(layout_data)
+        .clk(pixel_clk), .addr(rom_addr), .data(layout_data)
     );
 
     wire       comp_hit;
@@ -390,16 +408,18 @@ module hcpu_hdmi_top #(
     reg        hit_d;
     reg [7:0]  ch_d;
     reg [3:0]  at_d;
+    reg        rom_valid_d;
     always @(posedge pixel_clk or negedge video_rst_n) begin
         if (!video_rst_n) begin
-            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0;
+            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0; rom_valid_d <= 1'b0;
         end else begin
-            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at;
+            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at; rom_valid_d <= rom_valid;
         end
     end
 
+    wire [11:0] rom_cell  = rom_valid_d ? layout_data : 12'h020;
     wire [15:0] cell_data = hit_d ? {4'd0, at_d, ch_d}
-                                  : {4'd0, layout_data};
+                                  : {4'd0, rom_cell};
 
     wire [6:0] font_glyph;
     wire [2:0] font_row;

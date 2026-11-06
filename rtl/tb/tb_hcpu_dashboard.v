@@ -25,6 +25,9 @@
 
 module tb_hcpu_dashboard;
 
+    reg        clk = 1'b0;
+    always #5 clk = ~clk;
+
     reg [13:0] cell_addr = 14'd0;
     reg [3:0]  page = 4'd0;
     reg [11:0] snap_pc = 12'h1A3;
@@ -38,6 +41,27 @@ module tb_hcpu_dashboard;
     wire       hit;
     wire [7:0] ch;
     wire [3:0] at;
+
+    localparam [13:0] ROM_DIRECT_END = 14'd6720;
+    localparam [13:0] ROM_FOOT_FIRST = 14'd13440;
+    localparam [13:0] ROM_SCREEN_END = 14'd14400;
+    localparam [13:0] ROM_FOOT_SHIFT = 14'd6720;
+
+    wire        rom_direct = (cell_addr < ROM_DIRECT_END);
+    wire        rom_footer = (cell_addr >= ROM_FOOT_FIRST) && (cell_addr < ROM_SCREEN_END);
+    wire        rom_valid  = rom_direct | rom_footer;
+    wire [13:0] rom_folded = cell_addr - ROM_FOOT_SHIFT;
+    wire [12:0] rom_addr   = rom_direct ? cell_addr[12:0]
+                           : rom_footer ? rom_folded[12:0]
+                           : 13'd7680;
+    wire [11:0] layout_data;
+    reg         rom_valid_d = 1'b0;
+    always @(posedge clk) rom_valid_d <= rom_valid;
+    wire [11:0] rom_cell = rom_valid_d ? layout_data : 12'h020;
+
+    hcpu_layout_rom #(.LAYOUT_HEX("../hcpu_dashboard.hex")) u_rom (
+        .clk(clk), .addr(rom_addr), .data(layout_data)
+    );
 
     hcpu_compositor #(.PCW(12)) dut (
         .cell_addr(cell_addr), .page(page),
@@ -58,10 +82,11 @@ module tb_hcpu_dashboard;
         end
     endtask
 
-    task at_cell;                      // settle the combinational path
+    task at_cell;                      // settle the combinational and 1-cycle ROM path
         input [13:0] a;
         begin
             cell_addr = a;
+            @(posedge clk);
             #1;
         end
     endtask
@@ -173,17 +198,29 @@ module tb_hcpu_dashboard;
         page = 4'd0;
         snap_valid = 1'b1;
 
-        // ── THE WHOLE SCREEN: how many cells does it claim? ─────
+        // ── THE WHOLE SCREEN: how many cells does it claim, and no ROM wrap ──
         // Six fields of sixteen, the banner's sixteen, and one page digit.
-        // If a window overlapped a label or ran past its field, this number
-        // moves -- and nothing else in this bench would notice.
+        // Also check 14-bit address boundaries 8191, 8192 (no wrap to row 0),
+        // footer row 88 ("PAGE"), and last cell 14399 (row 89, col 159).
         hits = 0;
+        ok_field = 1'b1;
         for (i = 0; i < 14400; i = i + 1) begin
             at_cell(i[13:0]);
             if (hit) hits = hits + 1;
+            if (i >= 6720 && i < 13440 && rom_cell !== 12'h020)
+                ok_field = 1'b0;
         end
+        at_cell(14'd0);     if (rom_cell !== 12'h705) ok_field = 1'b0; // row 0 gold rule
+        at_cell(14'd8191);  if (rom_cell !== 12'h020 || rom_valid_d) ok_field = 1'b0;
+        at_cell(14'd8192);  if (rom_cell !== 12'h020 || rom_valid_d) ok_field = 1'b0;
+        at_cell(14'd13760); if (rom_cell !== 12'h205 || !rom_valid_d) ok_field = 1'b0; // row 86 cyan rule
+        at_cell(14'd14084); if (rom_cell !== {4'd2, "P"} || !rom_valid_d) ok_field = 1'b0; // row 88 "PAGE"
+        at_cell(14'd14085); if (rom_cell !== {4'd2, "A"} || !rom_valid_d) ok_field = 1'b0;
+        at_cell(14'd14086); if (rom_cell !== {4'd2, "G"} || !rom_valid_d) ok_field = 1'b0;
+        at_cell(14'd14087); if (rom_cell !== {4'd2, "E"} || !rom_valid_d) ok_field = 1'b0;
+        at_cell(14'd14399); if (rom_cell !== 12'h020 || !rom_valid_d || rom_addr !== 13'd7679) ok_field = 1'b0;
         $display("  sel diklaim compositor: %0d", hits);
-        check(hits == 113, "113 sel diklaim, sisanya ROM");
+        check(hits == 113 && ok_field, "113 sel diklaim, sisanya ROM (batas 8191/8192/14399 bebas wrap)");
 
         if (errors == 0)
             $display("tb_hcpu_dashboard: SEMUA LULUS (13 pemeriksaan)");

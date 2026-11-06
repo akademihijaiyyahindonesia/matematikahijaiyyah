@@ -303,8 +303,9 @@ tb_hcpu_text_render.vvp: $(TB_DIR)/tb_hcpu_text_render.v \
 tb_hcpu_telemetry.vvp: $(TB_DIR)/tb_hcpu_telemetry.v $(RTL_DIR)/hcpu_telemetry.v
 	$(IVERILOG) $(INC) -o $@ $^
 tb_hcpu_dashboard.vvp: $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v \
+                       $(RTL_DIR)/hcpu_layout_rom.v $(RTL_DIR)/hcpu_dashboard.hex \
                        $(RTL_DIR)/hcpu_dashboard_pos.vh
-	$(IVERILOG) $(INC) -o $@ $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v
+	$(IVERILOG) $(INC) -o $@ $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v $(RTL_DIR)/hcpu_layout_rom.v
 tb_hcpu_page_key.vvp: $(TB_DIR)/tb_hcpu_page_key.v $(RTL_DIR)/hcpu_page_key.v
 	$(IVERILOG) $(INC) -o $@ $^
 sim_mmio: tb_hcpu_mmio.vvp
