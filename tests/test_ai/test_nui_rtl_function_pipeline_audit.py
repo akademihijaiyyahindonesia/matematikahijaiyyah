@@ -80,9 +80,9 @@ def test_the_opcode_arms_are_read_from_the_decoder() -> None:
     decode = (ROOT / AUDIT["opcodes"]["decode"]).read_text(encoding="utf-8").splitlines()
     for name, o in R["opcodes"].items():
         assert f"`OP_{name}" in decode[o["line"] - 1], name
-    assert len(R["opcodes"]) == 53
+    assert len(R["opcodes"]) == 55
     assert R["opcodes_not_covered"] == AUDIT["opcodes"]["not_covered"]
-    assert len(R["opcodes_not_covered"]) == 27
+    assert len(R["opcodes_not_covered"]) == 29
 
 
 def test_the_global_stall_is_never_taken_by_a_live_edge() -> None:
@@ -98,8 +98,8 @@ def test_the_global_stall_is_never_taken_by_a_live_edge() -> None:
 def test_two_transitions_are_unreachable_by_the_wiring_cited() -> None:
     top = (ROOT / "rtl/hcpu_top.v").read_text(encoding="utf-8").splitlines()
     ctrl = (ROOT / "rtl/hcpu_controller.v").read_text(encoding="utf-8").splitlines()
-    assert "(1'b0)" in top[489 - 1] and ".flush" in top[489 - 1]
-    assert "(redirect_taken)" in top[842 - 1] and ".branch_taken" in top[842 - 1]
+    assert "(1'b0)" in top[510 - 1] and ".flush" in top[510 - 1]
+    assert "(redirect_taken)" in top[882 - 1] and ".branch_taken" in top[882 - 1]
     assert "if_flush = branch_taken && !global_stall" in ctrl[98 - 1]
 
 

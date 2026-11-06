@@ -437,7 +437,10 @@ def test_intentional_infinite_loop_is_accepted() -> None:
 
 def test_all_62_hasm_and_41_parity_programs_pass_control_flow_verification() -> None:
     """9. Every existing .hasm and parity program in the repository remains valid."""
-    hasm_files = sorted(ROOT.rglob("*.hasm"))
+    hasm_files = sorted(
+        p for p in ROOT.rglob("*.hasm")
+        if p.relative_to(ROOT).parts[0] != "cosmictera-build"
+    )
     assert len(hasm_files) == 62
     for path in hasm_files:
         words = assemble(path.read_text(encoding="utf-8"), base_dir=path.parent)

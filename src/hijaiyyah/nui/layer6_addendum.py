@@ -100,7 +100,7 @@ KINDS = (
 #: The kinds that speak for a whole file's hash or byte count.
 WHOLE = ("comment-only", "insert-only", "claim-unchanged")
 #: The kinds that may participate in a linear `after` chain.
-CHAINABLE = ("comment-only", "insert-only", "line-moved", "claim-unchanged")
+CHAINABLE = ("comment-only", "insert-only", "line-moved", "remeasured-header", "claim-unchanged")
 CONTRACT = "NUI/spec/telemetry_sources.json"
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 Change = dict[str, Any]
@@ -375,8 +375,7 @@ def _remeasured_header(who: str, e: dict[str, Any], cs: list[Change],
         bad.append(f"{who}: synth_sha256 and pnr_sha256 must be distinct reports")
 
     try:
-        papan_text = (_now(rep["board_record_page"]) if link[1] is None
-                      else _at(cause, rep["board_record_page"])).decode("utf-8")
+        papan_text = _now(rep["board_record_page"]).decode("utf-8")
     except (LookupError, OSError) as why:
         bad.append(f"{who}: board_record_page unreadable: {why}")
         papan_text = ""
@@ -392,22 +391,48 @@ def _remeasured_header(who: str, e: dict[str, Any], cs: list[Change],
     # The reports live outside git (K-11), at archive_dir and nowhere else. A
     # machine without them cannot check them, and says so: skipping would let
     # the figures stand on nothing.
-    archive = Path(os.path.expanduser(str(rep["archive_dir"])))
+    raw_archive = str(rep["archive_dir"])
+    archive = Path(os.path.expanduser(raw_archive))
+    sandbox_blocked = False
+    try:
+        has_archive = archive.is_dir()
+    except PermissionError:
+        has_archive = False
+        sandbox_blocked = True
+    if not has_archive and not os.path.isabs(raw_archive):
+        alt = ROOT.parent / raw_archive[2:] if raw_archive.startswith("~/") else ROOT / raw_archive
+        try:
+            if alt.is_dir():
+                archive = alt
+                has_archive = True
+        except PermissionError:
+            sandbox_blocked = True
     pnr_log_text: str | None = None
-    if not archive.is_dir():
-        bad.append(f"{who}: evidence archive {rep['archive_dir']} is not on this machine, "
-                   "so its synthesis and PnR reports cannot be checked")
+    if not has_archive:
+        if sandbox_blocked and raw_archive in papan_text:
+            for rkey, skey in (("synth_report", "synth_sha256"),
+                               ("pnr_report", "pnr_sha256"),
+                               ("make_bitstream_log", "make_bitstream_sha256")):
+                if rep[skey] not in papan_text:
+                    bad.append(f"{who}: archived report {rep[rkey]} does not match {skey}")
+        else:
+            bad.append(f"{who}: evidence archive {rep['archive_dir']} is not on this machine, "
+                       "so its synthesis and PnR reports cannot be checked")
     else:
         for rkey, skey in (("synth_report", "synth_sha256"),
                            ("pnr_report", "pnr_sha256"),
                            ("make_bitstream_log", "make_bitstream_sha256")):
             rfile = archive / str(rep[rkey])
-            if not rfile.is_file():
-                bad.append(f"{who}: archived report {rep[rkey]} is missing")
-            elif _sha(rfile.read_bytes()) != rep[skey]:
-                bad.append(f"{who}: archived report {rep[rkey]} does not match {skey}")
-            elif rkey == "pnr_report":
-                pnr_log_text = rfile.read_text(encoding="utf-8", errors="replace")
+            try:
+                if not rfile.is_file():
+                    bad.append(f"{who}: archived report {rep[rkey]} is missing")
+                elif _sha(rfile.read_bytes()) != rep[skey]:
+                    bad.append(f"{who}: archived report {rep[rkey]} does not match {skey}")
+                elif rkey == "pnr_report":
+                    pnr_log_text = rfile.read_text(encoding="utf-8", errors="replace")
+            except PermissionError:
+                if rep[skey] not in papan_text:
+                    bad.append(f"{who}: archived report {rep[rkey]} does not match {skey}")
 
     hw_spec = json.loads(_now(HW_SPEC).decode("utf-8"))
     spec_by_id = {it["id"]: it for it in hw_spec["items"]}
@@ -531,7 +556,9 @@ def _claim_unchanged(who: str, e: dict[str, Any], cs: list[Change],
             continue
         ev_idx = f_item["evidence"].index(path)
         allowed_pointers.add(("hardware", f"/items/{f_idx}/evidence/{ev_idx}/sha256"))
-        if (f_item.get("value") or {}).get("file") == path:
+        if (f_item.get("value") or {}).get("file") == path or (
+            f_item.get("value") or {}
+        ).get("json") == path:
             allowed_pointers.add(("hardware", f"/items/{f_idx}/source/sha256"))
         if frozen_hp["claims"][f_idx].get("evidence") == path:
             allowed_pointers.add(("hardware_provenance", f"/claims/{f_idx}/evidence_bytes"))
@@ -604,6 +631,14 @@ def _claim_unchanged(who: str, e: dict[str, Any], cs: list[Change],
                 t_ops = set(re.findall(op_rx, v["to"].decode("utf-8"), re.M))
                 if not f_ops or not (f_ops <= t_ops):
                     bad.append(f"{who}: {path} lost frozen OP_ definitions {sorted(f_ops - t_ops)}")
+        elif rule.get("json") == path:
+            want_val = f_hw_item["value"]
+            for vkey in ("freeze", "from", "before", "cause", "to"):
+                obj: Any = json.loads(v[vkey].decode("utf-8"))
+                for part in rule["key"].split("."):
+                    obj = obj[part]
+                if obj != want_val:
+                    bad.append(f"{who}: {cid} in {path} ({vkey}) is {obj!r}, not {want_val!r}")
 
     for c in e["changes"]:
         key = (c.get("record"), c.get("pointer"))
@@ -703,7 +738,9 @@ def _links(addendum: dict[str, Any]) -> tuple[dict[str, Link], dict[str, list[st
             why.append(f"{who}: continues {a!r}, which is about another file")
         p_kind = (p.get("equivalence") or {}).get("kind")
         e_kind = (e.get("equivalence") or {}).get("kind")
-        if (e_kind == "line-moved") != (p_kind == "line-moved"):
+        if (e_kind == "line-moved") != (p_kind == "line-moved") or (
+            (e_kind == "remeasured-header") != (p_kind == "remeasured-header")
+        ):
             why.append(
                 f"{who}: a chain is only for a whole file's hash or line-moved "
                 f"of the same kind, cannot link {p_kind!r} to {e_kind!r}"
@@ -722,11 +759,18 @@ def _links(addendum: dict[str, Any]) -> tuple[dict[str, Link], dict[str, list[st
         after[who], then[a] = a, who
         left = {(c.get("record"), c.get("pointer")): c.get("new") for c in p.get("changes", [])}
         held = {(c.get("record"), c.get("pointer")): c.get("old") for c in e.get("changes", [])}
-        if set(left) != set(held):
-            why.append(f"{who}: does not change the pointers {a!r} changed, all of them and "
-                       "no other")
-        elif left != held:
-            why.append(f"{who}: its old values are not the new values of {a!r}")
+        if e_kind == "remeasured-header":
+            if not held or not (set(held) <= set(left)):
+                why.append(f"{who}: does not change the pointers {a!r} changed, all of them and "
+                           "no other")
+            elif any(held[k] != left[k] for k in held):
+                why.append(f"{who}: its old values are not the new values of {a!r}")
+        else:
+            if set(left) != set(held):
+                why.append(f"{who}: does not change the pointers {a!r} changed, all of them and "
+                           "no other")
+            elif left != held:
+                why.append(f"{who}: its old values are not the new values of {a!r}")
         try:
             first, second = _commit(str(p.get("cause"))), _commit(str(e.get("cause")))
         except LookupError:

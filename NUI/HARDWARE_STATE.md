@@ -10,7 +10,7 @@ Dihasilkan `src/hijaiyyah/nui/hardware_state.py` dari `NUI/spec/hardware_state.j
 |---|---|---|---|---|
 | IDENTITY | apa perangkatnya? | MEASURED, SIMULATED | MEASURED, SIMULATED | 4 |
 | CAPABILITY | apa yang dirancang/dikonfigurasi dapat dilakukannya? | MEASURED, SIMULATED | MEASURED, SIMULATED | 19 |
-| OBSERVED | apa yang pernah benar-benar diukur? | MEASURED, UNKNOWN | MEASURED | 145 |
+| OBSERVED | apa yang pernah benar-benar diukur? | MEASURED, UNKNOWN | MEASURED | 147 |
 | CURRENT | apa keadaan perangkat sekarang? | LIVE, UNKNOWN | LIVE | 3 |
 
 Precedence: **LIVE > MEASURED > SIMULATED > UNKNOWN**. Pemilik: LIVE > MEASURED observed > SIMULATED capability > UNKNOWN, dan LIVE hanya bila access() menemukan sumber live terdaftar -- keberadaan data historis tidak pernah mengalahkan ketiadaan sumber live untuk kueri CURRENT.
@@ -106,7 +106,7 @@ Precedence: **LIVE > MEASURED > SIMULATED > UNKNOWN**. Pemilik: LIVE > MEASURED 
 
 ## Opcode teramati di papan — kolom P3
 
-103 opcode dari kolom perangkat keras P3: 79 dijalankan sekurangnya satu program yang dikirim ke papan (MEASURED), 24 tidak pernah (UNKNOWN). Vonis kolomnya dibawa di klaim.
+105 opcode dari kolom perangkat keras P3: 79 dijalankan sekurangnya satu program yang dikirim ke papan (MEASURED), 26 tidak pernah (UNKNOWN). Vonis kolomnya dibawa di klaim.
 
 | opcode | status | klaim | run_id |
 |---|---|---|---|
@@ -127,6 +127,7 @@ Precedence: **LIVE > MEASURED > SIMULATED > UNKNOWN**. Pemilik: LIVE > MEASURED 
 | `P3:CSET` | MEASURED | CSET di papan = kolom PARITY; 9 PARITY, 0 MISMATCH, 0 UNKNOWN dari 9 program yang dikirim | `20260924T105400Z-parity` |
 | `P3:CSIGN` | UNKNOWN | CSIGN di papan = UNKNOWN | — |
 | `P3:CSUB` | UNKNOWN | CSUB di papan = UNKNOWN | — |
+| `P3:CTHETA` | UNKNOWN | CTHETA di papan = UNKNOWN | — |
 | `P3:CU` | MEASURED | CU di papan = kolom PARITY; 3 PARITY, 0 MISMATCH, 0 UNKNOWN dari 3 program yang dikirim | `20260924T105400Z-parity` |
 | `P3:CZERO` | MEASURED | CZERO di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim | `20260924T105400Z-parity` |
 | `P3:EMITS` | UNKNOWN | EMITS di papan = UNKNOWN | — |
@@ -141,6 +142,7 @@ Precedence: **LIVE > MEASURED > SIMULATED > UNKNOWN**. Pemilik: LIVE > MEASURED 
 | `P3:HDCMP` | UNKNOWN | HDCMP di papan = UNKNOWN | — |
 | `P3:HDES` | UNKNOWN | HDES di papan = UNKNOWN | — |
 | `P3:HDIST` | MEASURED | HDIST di papan = kolom PARITY; 2 PARITY, 0 MISMATCH, 0 UNKNOWN dari 2 program yang dikirim | `20260924T105400Z-parity` |
+| `P3:HDOT` | UNKNOWN | HDOT di papan = UNKNOWN | — |
 | `P3:HEXMT` | UNKNOWN | HEXMT di papan = UNKNOWN | — |
 | `P3:HGRD` | MEASURED | HGRD di papan = kolom PARITY; 22 PARITY, 0 MISMATCH, 0 UNKNOWN dari 22 program yang dikirim | `20260924T105400Z-parity` |
 | `P3:HLOAD` | MEASURED | HLOAD di papan = kolom UNKNOWN; 40 PARITY, 2 MISMATCH, 0 UNKNOWN dari 42 program yang dikirim | `20260924T105400Z-parity` |

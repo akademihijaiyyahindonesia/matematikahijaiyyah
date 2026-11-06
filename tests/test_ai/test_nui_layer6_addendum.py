@@ -45,23 +45,26 @@ CAUSE2 = "004b9a0"
 CAUSE_P6 = "48cf0e5"
 CAUSE_P8 = "f9c8349"
 CAUSE_CTHETA = "1aed5e1"
+CAUSE_RECON = "95623b6"
 FIRST, SECOND = "Makefile — target HMAC", "Makefile — lapis 3 slot UART Ka'bah"
 TOP_CAP_1 = "hcpu_gowin_top.v — cap ulang opsi (a)"
 TOP_CAP_2 = "hcpu_gowin_top.v — cap ulang Paket 8"
+TOP_CAP_3 = "hcpu_gowin_top.v — cap ulang pasca-1aed5e1f"
 TOP_MOV_1 = "hcpu_gowin_top.v — baris turun enam"
 TOP_MOV_2 = "hcpu_gowin_top.v — baris turun sembilan belas"
 TOP_PNR = "hcpu_gowin_top.v — angka place-and-route Paket 8"
+TOP_PNR_2 = "hcpu_gowin_top.v — angka place-and-route pasca-1aed5e1f"
 HCPU_TOP_1 = "hcpu_top.v — alternatif RTL A1–A3 (P6)"
 HCPU_TOP_2 = "hcpu_top.v — CODEX_PROFILE dan calu_done (Paket 8)"
 HCPU_PKG_1 = "hcpu_pkg.vh — alternatif RTL A1–A3 (P6)"
 HCPU_PKG_2 = "hcpu_pkg.vh — CTHETA=0x4E dan HDOT=0x52"
 README_OP = "teknologi/README.md — sensus 84 opcode RTL"
+L4_FREEZE_OP = "NUI/layer4_freeze.json — sensus 105 opcode (CTHETA dan HDOT)"
 
 CHAINS = (
     (FIRST, SECOND, "rtl/fpga/gowin/Makefile", CAUSE, CAUSE2),
     (HCPU_TOP_1, HCPU_TOP_2, "rtl/hcpu_top.v", CAUSE_P6, CAUSE_P8),
     (HCPU_PKG_1, HCPU_PKG_2, "rtl/hcpu_pkg.vh", CAUSE_P6, CAUSE_CTHETA),
-    (TOP_CAP_1, TOP_CAP_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
     (TOP_MOV_1, TOP_MOV_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
 )
 
@@ -95,23 +98,35 @@ def test_the_frozen_records_are_the_objects_at_the_tag() -> None:
 
 def test_the_addendum_covers_exactly_the_drift() -> None:
     """Every pointer that moved since the freeze is named, and nothing else."""
-    chained_second_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_MOV_2}
+    chained_second_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_MOV_2, TOP_PNR_2}
+    chained_third_ids = {TOP_CAP_3}
     for name in la.FROZEN:
         drift = set(_diff(_frozen(name), _fresh(name)))
         named = [c["pointer"] for c in la.changes(name)]
         assert sorted(set(named)) == sorted(drift), name
-        twice = sorted(p for p in set(named) if named.count(p) > 1)
-        assert all(named.count(p) == 2 for p in twice), name
-        want_twice = sorted(
+        thrice = sorted(p for p in set(named) if named.count(p) == 3)
+        want_thrice = sorted(
             c["pointer"]
-            for eid in chained_second_ids
+            for eid in chained_third_ids
             for c in _entry(ADDENDUM, eid)["changes"]
             if c["record"] == name
         )
+        assert thrice == want_thrice, name
+        twice = sorted(p for p in set(named) if named.count(p) == 2)
+        want_twice = sorted(
+            set(
+                c["pointer"]
+                for eid in chained_second_ids
+                for c in _entry(ADDENDUM, eid)["changes"]
+                if c["record"] == name
+            )
+            - set(thrice)
+        )
         assert twice == want_twice, name
+        assert all(named.count(p) in (1, 2, 3) for p in set(named)), name
     assert {n: len(la.changes(n)) for n in la.FROZEN} == {
-        "hardware": 52, "telemetry_sources": 15, "hardware_provenance": 91}
-    assert len(ADDENDUM["entries"]) == 14
+        "hardware": 70, "telemetry_sources": 16, "hardware_provenance": 115}
+    assert len(ADDENDUM["entries"]) == 17
 
 
 def test_the_historical_freeze_is_not_the_current_state() -> None:
@@ -150,8 +165,11 @@ def test_every_entry_says_why_by_what_and_with_what_evidence() -> None:
         TOP_PNR: CAUSE_P8,
         HCPU_PKG_2: CAUSE_CTHETA,
         README_OP: CAUSE_CTHETA,
+        TOP_CAP_3: CAUSE_RECON,
+        TOP_PNR_2: CAUSE_RECON,
+        L4_FREEZE_OP: CAUSE_RECON,
     }
-    chained_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_MOV_2}
+    chained_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_CAP_3, TOP_MOV_2, TOP_PNR_2}
     for e in ADDENDUM["entries"]:
         assert e["cause"] == expected_causes.get(e["id"], CAUSE), e["id"]
         assert e["reason"] and e["path"] in touched(e["cause"]), e["id"]
@@ -169,8 +187,9 @@ def _show(commit: str, path: str) -> bytes:
 
 
 def test_the_chain_is_written_out_and_every_link_of_it_is_checked() -> None:
-    """Every two-step chain (Makefile, hcpu_top.v, hcpu_gowin_top.v whole-file
-    and line-moved) is verified link by link against git objects."""
+    """Every multi-step chain (Makefile, hcpu_top.v, hcpu_pkg.vh, and
+    hcpu_gowin_top.v whole-file, line-moved, and remeasured-header) is verified
+    link by link against git objects."""
     links, unlinked = la._links(ADDENDUM)
     for first_id, second_id, path, c1, c2 in CHAINS:
         first, second = _entry(ADDENDUM, first_id), _entry(ADDENDUM, second_id)
@@ -189,7 +208,21 @@ def test_the_chain_is_written_out_and_every_link_of_it_is_checked() -> None:
         assert left == held
         assert _show(c1 + "^", path) == _show(TAG, path)
         assert _show(c2 + "^", path) == _show(c1, path)
-        assert (ROOT / path).read_bytes() == _show(c2, path)
+        if path != "rtl/fpga/gowin/hcpu_gowin_top.v":
+            assert (ROOT / path).read_bytes() == _show(c2, path)
+
+    # 3-step whole-file comment-only chain on hcpu_gowin_top.v
+    c_path = "rtl/fpga/gowin/hcpu_gowin_top.v"
+    assert links[TOP_CAP_1] == (None, TOP_CAP_2)
+    assert links[TOP_CAP_2] == (TOP_CAP_1, TOP_CAP_3)
+    assert links[TOP_CAP_3] == (TOP_CAP_2, None)
+    assert unlinked[TOP_CAP_2] == unlinked[TOP_CAP_3] == []
+    assert _show(CAUSE + "^", c_path) == _show(TAG, c_path)
+    assert _show(CAUSE_P8 + "^", c_path) == _show(CAUSE, c_path)
+    assert _show(CAUSE_RECON + "^", c_path) == _show(CAUSE_P8, c_path)
+    assert (ROOT / c_path).read_bytes() == _show(CAUSE_RECON, c_path)
+    assert links[TOP_PNR] == (None, TOP_PNR_2)
+    assert links[TOP_PNR_2] == (TOP_PNR, None)
 
 
 def test_a_chain_is_never_inferred() -> None:
@@ -273,7 +306,7 @@ TOP, MAKE, PAPAN, ROW = TOP_CAP_1, FIRST, "PAPAN.md", "TELEMETRY.md"
 
 
 def _drop(a: dict[str, Any], _: pytest.MonkeyPatch) -> None:
-    e = _entry(a, TOP_CAP_2)
+    e = _entry(a, TOP_CAP_3)
     e["changes"] = [c for c in e["changes"] if c["pointer"] != "/items/3/source/sha256"]
 
 
@@ -291,7 +324,7 @@ def _sabotage_remeasured_no_report(a: dict[str, Any], mp: pytest.MonkeyPatch) ->
     _edit_file(
         mp,
         "rtl/fpga/gowin/hcpu_gowin_top.v",
-        lambda d: d.replace(b"15,453 / 20,736", b"15,450 / 20,736", 1),
+        lambda d: d.replace(b"15,367 / 20,736", b"15,360 / 20,736", 1),
     )
 
 
@@ -362,7 +395,7 @@ SABOTAGES: dict[str, tuple[str, Sabotage, str]] = {
     "a change dropped": ("hardware", _drop, "/items/3/source/sha256"),
     "an old value forged": ("hardware", lambda a, _: _first(a, TOP, "hardware").update(
         old="0" * 64), "the frozen record holds"),
-    "a new value forged": ("hardware", lambda a, _: _first(a, TOP_CAP_2, "hardware").update(
+    "a new value forged": ("hardware", lambda a, _: _first(a, TOP_CAP_3, "hardware").update(
         new="0" * 64), "/items/3/source/sha256"),
     "a pointer changed twice": ("hardware", lambda a, _: _entry(a, TOP)["changes"].append(
         dict(_first(a, TOP, "hardware"))), "changed twice"),

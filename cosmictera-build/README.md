@@ -35,10 +35,10 @@ simulasi.
 ## Angka utuh, hari ini
 
 ```
-6.347 tes Python terkumpul                  ruff bersih, mypy bersih
+6.367 tes Python terkumpul                  ruff bersih, mypy bersih
     hasil lari terakhir: catatan † di CHECKLIST.md
   408 asersi RTL di 39 testbench, 0 gagal
-   82 dari 104 opcode terimplementasi di RTL
+   84 dari 105 opcode terimplementasi di RTL
    28 huruf, 28 opcode huruf (0xE0–0xFB), semuanya di RTL
     6 penyebab trap, 6 prasyarat OS tertutup, H-Kernel 4 dari 4
     3 bitstream muat & terrout (HCPU 74%, Ka'bah 58%, HDMI 73% LUT4)

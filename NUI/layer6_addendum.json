@@ -1323,6 +1323,383 @@
      "new": "H-ISA = 84"
     }
    ]
+  },
+  {
+   "id": "hcpu_gowin_top.v — cap ulang pasca-1aed5e1f",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "95623b6",
+   "after": "hcpu_gowin_top.v — cap ulang Paket 8",
+   "reason": "95623b6 mencap ulang kepala `rtl/fpga/gowin/hcpu_gowin_top.v` sesudah place-and-route pasca-`1aed5e1f` (`CTHETA=0x4E`, `HDOT=0x52`, dan `GAP-02` di `hcpu_hisab.v`): komentar kepala diperbarui untuk mencatat hasil pengukuran baru dan sidik jari `a866810782d7…`, sementara seluruh baris kode Verilog di dalam berkas ini tetap identik (`comment-only`, 35.688 → 35.764 byte)",
+   "equivalence": {
+    "kind": "comment-only"
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/3/source/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/3/evidence/0/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/source/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/4/evidence/0/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/source/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/5/evidence/0/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/source/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/evidence/0/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/14/source/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/14/evidence/0/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/17/source/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "telemetry_sources",
+     "pointer": "/rtl_signals/sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/4/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/5/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/14/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/61/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/62/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/63/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/64/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/65/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/evidence_bytes",
+     "old": 35688,
+     "new": 35764
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/66/evidence_sha256",
+     "old": "7e42e6890d253fb6698d45aef0c060ec0343926ecfe5beb5c5d753ddc3cac709",
+     "new": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f"
+    }
+   ]
+  },
+  {
+   "id": "hcpu_gowin_top.v — angka place-and-route pasca-1aed5e1f",
+   "path": "rtl/fpga/gowin/hcpu_gowin_top.v",
+   "cause": "95623b6",
+   "after": "hcpu_gowin_top.v — angka place-and-route Paket 8",
+   "reason": "95623b6 mengukur ulang slot HCPU pasca-`1aed5e1f` (`CTHETA=0x4E`, `HDOT=0x52`, dan `GAP-02` di `hcpu_hisab.v`) dengan `make -C rtl/fpga/gowin bitstream` pada Tang Nano 20K (`GW2AR-LV18QN88C8/I7`): LUT4 15.453 → 15.367 (baris 48), DFF tetap 5.166 / 15.552 (baris 49), BSRAM tetap 18 / 46 (baris 50), dan Fmax pasca-routing 120.63 → 54.86 MHz (baris 53). Klaim tetap berkelas `SIMULATED` (`PNR/build-derived`, K-18)",
+   "equivalence": {
+    "kind": "remeasured-header",
+    "rtl_fingerprint": "a866810782d7b2dbaaf331481e5806ec09d86ac031c1a50906b171ecca5d5291",
+    "sources": {
+     "rtl/fpga/gowin/hcpu_gowin_top.v": "6c521441c8e9b4900279f608ef901190af96a3c557f432e273083153803d605f",
+     "rtl/fpga/gowin/hcpu_gowin.cst": "eaa86f79a1fc2e41ace6f65c0e4b70a82b5415514e0893f5a84534e90776623c",
+     "rtl/hcpu_codex_alu.v": "3c4f0231462b19e436791ec65b6b9ef4caa70990af3d9b14551fe81058c8fc7c",
+     "rtl/hcpu_decode.v": "10a30632b4e4b73319ddcada30a9131ecb6ab60d7796d291ef77afe581c67dac",
+     "rtl/hcpu_top.v": "b903847fe23fc6d6d9178be82e5d2b55094705d46fa095101c41e78831b649fd",
+     "rtl/hcpu_sdio.v": "2d51149fa4ae369bd258f658f1f2035b6eb0ae0067bb2087eec69afa6557f851",
+     "rtl/hcpu_mmio.v": "7a160118c87cb088930d37a79362e3cdb6ecf01726e95f441589a63eee46318b",
+     "rtl/hcpu_pkg.vh": "7422d98c4e014073f3c950177cc398846766099af6f6b4ceae1a04734602b2fc",
+     "rtl/hcpu_execute.v": "7d07cf6e8d43fe28e25036ee70816ab06ca274bd226d31dcb9ea69802fc7bb19",
+     "rtl/hcpu_hisab.v": "f82a562c47623e6ac02d6c0b7661978827b858d96c823deb62f49337cb1bc1b9"
+    },
+    "target": {
+     "board": "Tang Nano 20K",
+     "device": "GW2AR-LV18QN88C8/I7",
+     "family": "GW2A-18C",
+     "cst_path": "rtl/fpga/gowin/hcpu_gowin.cst",
+     "cst_sha256": "eaa86f79a1fc2e41ace6f65c0e4b70a82b5415514e0893f5a84534e90776623c",
+     "makefile_path": "rtl/fpga/gowin/Makefile",
+     "yosys_flags": "-nodsp",
+     "use_dsp": 0,
+     "codex_profile": 2,
+     "constraint_mhz": 12.0
+    },
+    "toolchain": {
+     "yosys": "Yosys 0.68+138 (git sha1 56cf2cf41-dirty)",
+     "nextpnr": "nextpnr-himbaechel (Version nextpnr-0.11.1-19-g8dbcee5c)",
+     "gowin_pack": "Apycula 0.34.dev1+g332809527 gowin_pack (GW2A-18C)",
+     "command": "make -C rtl/fpga/gowin bitstream"
+    },
+    "reports": {
+     "archive_dir": "cosmictera-build/pnr-post-1aed5e1f/20261106",
+     "synth_report": "stage-b/synth.txt",
+     "synth_sha256": "b355b04e65c20dce9428bbcd589fc601c6f6a63e8bfb2c7b9d895d8db67722d8",
+     "pnr_report": "stage-b/pnr12.txt",
+     "pnr_sha256": "b7ea812862a88801e00d3161aacadc4d6003a1e8883d597b7eaa8bd1b57e506d",
+     "make_bitstream_log": "stage-b/make_bitstream.txt",
+     "make_bitstream_sha256": "8f02496dc4dd9581f406de86c38e4ebddd6b7bed02b29ee5bcf69d74cc9db640",
+     "bitstream_sha256": "3f9c62d9425983bfb1e807917b776a92ccd02652619b1fb8ab93bb8419e804bc",
+     "bitstream_bytes": 7261470,
+     "board_record_page": "rtl/fpga/gowin/hcpu_gowin_top.v",
+     "board_record_section": "^// Restamped 2026-11-02"
+    },
+    "items": {
+     "fpga_lut4": {
+      "old_line": 48,
+      "new_line": 48,
+      "old_value": "15,453 / 20,736",
+      "new_value": "15,367 / 20,736",
+      "pnr_pattern": "LUT4:\\s+15367/\\s+20736\\s+74%"
+     },
+     "fpga_dff": {
+      "old_line": 49,
+      "new_line": 49,
+      "old_value": "5,166 / 15,552",
+      "new_value": "5,166 / 15,552",
+      "pnr_pattern": "DFF:\\s+5166/\\s+15552\\s+33%"
+     },
+     "fpga_bsram": {
+      "old_line": 50,
+      "new_line": 50,
+      "old_value": "18 /     46",
+      "new_value": "18 /     46",
+      "pnr_pattern": "BSRAM:\\s+18/\\s+46\\s+39%"
+     },
+     "fpga_fmax": {
+      "old_line": 53,
+      "new_line": 53,
+      "old_value": "120.63 MHz",
+      "new_value": "54.86 MHz",
+      "pnr_pattern": "Max frequency for clock 'u_core\\.clk_27m': 54\\.86 MHz \\(PASS at 12\\.00 MHz\\)"
+     }
+    }
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/3/value",
+     "old": "15,453 / 20,736",
+     "new": "15,367 / 20,736"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/6/value",
+     "old": "120.63 MHz",
+     "new": "54.86 MHz"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/3/claim",
+     "old": "sumber daya FPGA = 15,453 / 20,736",
+     "new": "sumber daya FPGA = 15,367 / 20,736"
+    },
+    {
+     "record": "hardware_provenance",
+     "pointer": "/claims/6/claim",
+     "old": "sumber daya FPGA = 120.63 MHz",
+     "new": "sumber daya FPGA = 54.86 MHz"
+    }
+   ]
+  },
+  {
+   "id": "NUI/layer4_freeze.json — sensus 105 opcode (CTHETA dan HDOT)",
+   "path": "NUI/layer4_freeze.json",
+   "cause": "95623b6",
+   "reason": "95623b6 memperbarui `NUI/layer4_freeze.json` sesudah pemisahan `CTHETA=0x4E` dan `HDOT=0x52` pada `1aed5e1f` (`status.opcodes.UNKNOWN` 29 → 31, `opcodes_no_sent_program_executes` 12 → 14), sementara `status.opcodes.PARITY = 74`, bukti rekaman papan P0–P6, dan `bitstream_sha256 = 84fdc912…` tetap identik",
+   "equivalence": {
+    "kind": "claim-unchanged",
+    "claims": [
+     "isa_board",
+     "isa_board_unknown",
+     "bitstream_last_measured"
+    ],
+    "anchor_lines": [
+     "\"tag\": \"layer4-freeze-2026-09-26\",",
+     "\"bitstream_sha256\": \"84fdc91232465c9600e1f7cc59dba891f309c69cf2441c448d684baaf4a7e261\",",
+     "\"PARITY\": 74,"
+    ]
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/10/source/sha256",
+     "old": "86d8e241d314d48e99e56cb124f49afb6f6004bb0d7f374b04573429ce666557",
+     "new": "1cdf31cd3579d202bea321ae638e4c55136b0405bea4d2c1d06f8fcaff2ac068"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/10/evidence/0/sha256",
+     "old": "86d8e241d314d48e99e56cb124f49afb6f6004bb0d7f374b04573429ce666557",
+     "new": "1cdf31cd3579d202bea321ae638e4c55136b0405bea4d2c1d06f8fcaff2ac068"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/11/evidence/0/sha256",
+     "old": "86d8e241d314d48e99e56cb124f49afb6f6004bb0d7f374b04573429ce666557",
+     "new": "1cdf31cd3579d202bea321ae638e4c55136b0405bea4d2c1d06f8fcaff2ac068"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/27/source/sha256",
+     "old": "86d8e241d314d48e99e56cb124f49afb6f6004bb0d7f374b04573429ce666557",
+     "new": "1cdf31cd3579d202bea321ae638e4c55136b0405bea4d2c1d06f8fcaff2ac068"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/27/evidence/0/sha256",
+     "old": "86d8e241d314d48e99e56cb124f49afb6f6004bb0d7f374b04573429ce666557",
+     "new": "1cdf31cd3579d202bea321ae638e4c55136b0405bea4d2c1d06f8fcaff2ac068"
+    }
+   ]
   }
  ],
  "chain": "Keputusan pemilik, 5 Oktober 2026 (diperluas 2 November 2026 untuk Jalur A), sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781` dan commit Paket 8 `f9c8349` mencap ulang `hcpu_gowin_top.v` serta memperbarui `hcpu_top.v`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai di penyebab pendahulunya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh (`comment-only`, `insert-only`, `claim-unchanged`) dan pergeseran nomor baris linear (`line-moved`) yang berantai. Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak"

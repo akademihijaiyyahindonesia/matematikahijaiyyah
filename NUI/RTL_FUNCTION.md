@@ -759,7 +759,7 @@ Tanpa reset dan tidak pernah ditulis, jadi x di setiap tepi hidup: `u_mmio.u_sdi
 
 | aturan | subsistem | baris RTL | arti | tepi | program |
 |---|---|---|---|---|---|
-| `print.reset` | print | `hcpu_top.v` 287, 288, 289, 290, 291, 292, 293, 294, 295, 296 | rst_n rendah: P_IDLE, uart_start dan print_active 0, semua pencacah dan str_addr nol | 53 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| `print.reset` | print | `hcpu_top.v` 296, 297, 298, 299, 300, 301, 302, 303, 304, 305 | rst_n rendah: P_IDLE, uart_start dan print_active 0, semua pencacah dan str_addr nol | 53 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
 | `print.pulse_clear` | print | `hcpu_top.v` 298 | tiap tepi hidup: uart_start turun lagi -- denyut satu siklus ke pemancar | 178 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
 | `print.idle` | print | `hcpu_top.v` 301, 302, 303, 304, 309 | P_IDLE tanpa PRINT atau EMITS yang diterima: print_active dan emits_busy 0 | 178 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
 | `print.print_accept` | print | `hcpu_top.v` 304, 305, 306, 307, 308 | P_IDLE, ex_is_print dan EX tidak tertahan: nilai diambil, pipeline ditahan, P_CONV | 0 | — |
@@ -857,25 +857,25 @@ Tanpa reset dan tidak pernah ditulis, jadi x di setiap tepi hidup: `u_mmio.u_sdi
 | `sdio.idle_init` | sdio | `hcpu_sdio.v` 325, 333, 334, 335, 336, 337, 338, 339 | S_IDLE, start dengan op 1: init, S_POWERUP | 0 | — |
 | `sdio.idle_not_init` | sdio | `hcpu_sdio.v` 325, 340, 344, 345 | S_IDLE, start baca/tulis sebelum init: E_NOT_INIT, S_FAIL | 0 | — |
 | `sdio.idle_transfer` | sdio | `hcpu_sdio.v` 325, 346, 347, 348, 349 | S_IDLE, start baca/tulis sesudah init: S_CMD_SETUP | 0 | — |
-| `sdio.s_powerup` | sdio | `hcpu_sdio.v` 355 | arm S_POWERUP: dimasuki bila state bernilai S_POWERUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_cmd_setup` | sdio | `hcpu_sdio.v` 372 | arm S_CMD_SETUP: dimasuki bila state bernilai S_CMD_SETUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_cmd_send` | sdio | `hcpu_sdio.v` 399 | arm S_CMD_SEND: dimasuki bila state bernilai S_CMD_SEND di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_cmd_gap` | sdio | `hcpu_sdio.v` 444 | arm S_CMD_GAP: dimasuki bila state bernilai S_CMD_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_resp_wait` | sdio | `hcpu_sdio.v` 459 | arm S_RESP_WAIT: dimasuki bila state bernilai S_RESP_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_resp_recv` | sdio | `hcpu_sdio.v` 487 | arm S_RESP_RECV: dimasuki bila state bernilai S_RESP_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_resp_done` | sdio | `hcpu_sdio.v` 500 | arm S_RESP_DONE: dimasuki bila state bernilai S_RESP_DONE di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_dat_wait` | sdio | `hcpu_sdio.v` 564 | arm S_DAT_WAIT: dimasuki bila state bernilai S_DAT_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_dat_recv` | sdio | `hcpu_sdio.v` 579 | arm S_DAT_RECV: dimasuki bila state bernilai S_DAT_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_dat_crc` | sdio | `hcpu_sdio.v` 597 | arm S_DAT_CRC: dimasuki bila state bernilai S_DAT_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_gap` | sdio | `hcpu_sdio.v` 619 | arm S_WR_GAP: dimasuki bila state bernilai S_WR_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_start` | sdio | `hcpu_sdio.v` 634 | arm S_WR_START: dimasuki bila state bernilai S_WR_START di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_data` | sdio | `hcpu_sdio.v` 642 | arm S_WR_DATA: dimasuki bila state bernilai S_WR_DATA di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_crc` | sdio | `hcpu_sdio.v` 664 | arm S_WR_CRC: dimasuki bila state bernilai S_WR_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_end` | sdio | `hcpu_sdio.v` 677 | arm S_WR_END: dimasuki bila state bernilai S_WR_END di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_ack` | sdio | `hcpu_sdio.v` 691 | arm S_WR_ACK: dimasuki bila state bernilai S_WR_ACK di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_wr_busy` | sdio | `hcpu_sdio.v` 719 | arm S_WR_BUSY: dimasuki bila state bernilai S_WR_BUSY di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_finish` | sdio | `hcpu_sdio.v` 731 | arm S_FINISH: dimasuki bila state bernilai S_FINISH di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
-| `sdio.s_fail` | sdio | `hcpu_sdio.v` 740 | arm S_FAIL: dimasuki bila state bernilai S_FAIL di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_powerup` | sdio | `hcpu_sdio.v` 455 | arm S_POWERUP: dimasuki bila state bernilai S_POWERUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_cmd_setup` | sdio | `hcpu_sdio.v` 472 | arm S_CMD_SETUP: dimasuki bila state bernilai S_CMD_SETUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_cmd_send` | sdio | `hcpu_sdio.v` 499 | arm S_CMD_SEND: dimasuki bila state bernilai S_CMD_SEND di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_cmd_gap` | sdio | `hcpu_sdio.v` 544 | arm S_CMD_GAP: dimasuki bila state bernilai S_CMD_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_resp_wait` | sdio | `hcpu_sdio.v` 559 | arm S_RESP_WAIT: dimasuki bila state bernilai S_RESP_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_resp_recv` | sdio | `hcpu_sdio.v` 587 | arm S_RESP_RECV: dimasuki bila state bernilai S_RESP_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_resp_done` | sdio | `hcpu_sdio.v` 600 | arm S_RESP_DONE: dimasuki bila state bernilai S_RESP_DONE di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_dat_wait` | sdio | `hcpu_sdio.v` 670 | arm S_DAT_WAIT: dimasuki bila state bernilai S_DAT_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_dat_recv` | sdio | `hcpu_sdio.v` 685 | arm S_DAT_RECV: dimasuki bila state bernilai S_DAT_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_dat_crc` | sdio | `hcpu_sdio.v` 703 | arm S_DAT_CRC: dimasuki bila state bernilai S_DAT_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_gap` | sdio | `hcpu_sdio.v` 725 | arm S_WR_GAP: dimasuki bila state bernilai S_WR_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_start` | sdio | `hcpu_sdio.v` 740 | arm S_WR_START: dimasuki bila state bernilai S_WR_START di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_data` | sdio | `hcpu_sdio.v` 748 | arm S_WR_DATA: dimasuki bila state bernilai S_WR_DATA di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_crc` | sdio | `hcpu_sdio.v` 770 | arm S_WR_CRC: dimasuki bila state bernilai S_WR_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_end` | sdio | `hcpu_sdio.v` 783 | arm S_WR_END: dimasuki bila state bernilai S_WR_END di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_ack` | sdio | `hcpu_sdio.v` 797 | arm S_WR_ACK: dimasuki bila state bernilai S_WR_ACK di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_wr_busy` | sdio | `hcpu_sdio.v` 825 | arm S_WR_BUSY: dimasuki bila state bernilai S_WR_BUSY di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_finish` | sdio | `hcpu_sdio.v` 837 | arm S_FINISH: dimasuki bila state bernilai S_FINISH di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
+| `sdio.s_fail` | sdio | `hcpu_sdio.v` 846 | arm S_FAIL: dimasuki bila state bernilai S_FAIL di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya | 0 | — |
 | `sdio.default` | sdio | `hcpu_sdio.v` 749 | state di luar kedua puluh nama: S_IDLE | 0 | — |
 | `uart_tx.reset` | uart_tx | `hcpu_uart_tx.v` 40, 41, 42, 43, 44, 45 | rst_n rendah: S_IDLE, pencacah, indeks bit, dan penggeser nol; tx_out 1 (diam tinggi) | 53 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
 | `uart_tx.idle_wait` | uart_tx | `hcpu_uart_tx.v` 48, 49, 50 | S_IDLE tanpa tx_start: tx_out 1, keadaan tetap | 178 | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |

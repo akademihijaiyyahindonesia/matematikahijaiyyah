@@ -58,12 +58,12 @@ def test_the_page_is_drawn_from_the_model() -> None:
 def test_every_claim_has_one_kind_its_status_allows(model: dict[str, Any]) -> None:
     ctx, objects = hs.context(), _objects(model)
     ids = [e["id"] for e in model["claims"]]
-    assert len(ids) == len(set(ids)) == 171 == 68 + 103
+    assert len(ids) == len(set(ids)) == 173 == 68 + 105
     assert set(ids) == set(objects)
     for e in model["claims"]:
         assert hs.check_entry(e, objects[e["id"]], ctx) == [], e["id"]
     assert {k: model["counts"][k] for k in hs.CATEGORIES} == {
-        "IDENTITY": 4, "CAPABILITY": 19, "OBSERVED": 145, "CURRENT": 3}
+        "IDENTITY": 4, "CAPABILITY": 19, "OBSERVED": 147, "CURRENT": 3}
 
 
 @BOTH

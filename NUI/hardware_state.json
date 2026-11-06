@@ -9,10 +9,10 @@
  "counts": {
   "IDENTITY": 4,
   "CAPABILITY": 19,
-  "OBSERVED": 145,
+  "OBSERVED": 147,
   "CURRENT": 3,
-  "claims": 171,
-  "observed_opcodes": 103,
+  "claims": 173,
+  "observed_opcodes": 105,
   "observed_opcodes_measured": 79
  },
  "claims": [
@@ -612,6 +612,13 @@
    "verification": "verified"
   },
   {
+   "id": "P3:CTHETA",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
+   "verification": "verified"
+  },
+  {
    "id": "P3:CU",
    "category": "OBSERVED",
    "status": "MEASURED",
@@ -707,6 +714,13 @@
    "category": "OBSERVED",
    "status": "MEASURED",
    "source_kind": "historical_board_evidence",
+   "verification": "verified"
+  },
+  {
+   "id": "P3:HDOT",
+   "category": "OBSERVED",
+   "status": "UNKNOWN",
+   "source_kind": "unknown",
    "verification": "verified"
   },
   {
@@ -1590,6 +1604,28 @@
    "failed_checks": []
   },
   {
+   "id": "P3:CTHETA",
+   "hardware": "opcode",
+   "claim": "CTHETA di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.CTHETA"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
    "id": "P3:CU",
    "hardware": "opcode",
    "claim": "CU di papan = kolom PARITY; 3 PARITY, 0 MISMATCH, 0 UNKNOWN dari 3 program yang dikirim",
@@ -1894,6 +1930,28 @@
    "evidence_sha256": "f35ec747475ed066e69d58bff792fe5b4e65df6e0b610215d2bd5a86bbcab5b6",
    "status": "MEASURED",
    "reason": null,
+   "verification": "verified",
+   "failed_checks": []
+  },
+  {
+   "id": "P3:HDOT",
+   "hardware": "opcode",
+   "claim": "HDOT di papan = UNKNOWN",
+   "source": {
+    "path": "NUI/parity_model.json",
+    "key": "board_corpus.opcodes.HDOT"
+   },
+   "source_kind": "unknown",
+   "evidence_kind": "none",
+   "run_id": null,
+   "run_identity": null,
+   "observed_at": null,
+   "evidence": null,
+   "evidence_lines": null,
+   "evidence_bytes": null,
+   "evidence_sha256": null,
+   "status": "UNKNOWN",
+   "reason": "no program sent executes it",
    "verification": "verified",
    "failed_checks": []
   },

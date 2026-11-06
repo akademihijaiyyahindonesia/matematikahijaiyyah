@@ -30,7 +30,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **6.347 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
+| ✅ | **6.367 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
 | ⬜ | lari penuh keluar 1 — hasilnya di † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 178 berkas | `make typecheck` |
@@ -42,7 +42,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 6.347 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 6.367 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -272,7 +272,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 6.347 tes terkumpul; hasilnya di † atas
+python3 -m pytest -q             # 6.367 tes terkumpul; hasilnya di † atas
 make -C rtl/tb all               # 408 asersi, 39 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```
@@ -281,51 +281,7 @@ make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 
 ## Lari terakhir
 
-Lari terakhir, 3 November 2026: **6.300 lulus, 2 dilewati, 45 gagal, 0 error dari
-6.347 terkumpul**. Yang gagal:
-`tests/test_ai/test_nui_board_parity.py::test_the_frozen_expectations_are_what_the_engines_give_today`,
-`tests/test_ai/test_nui_execution.py::test_the_committed_model_is_what_the_repository_produces`,
-`tests/test_ai/test_nui_layer4_freeze.py::test_every_colour_is_counted_and_none_is_forced`,
-`tests/test_ai/test_nui_layer4_freeze.py::test_what_the_records_say_is_what_the_freeze_wrote_down`,
-`tests/test_ai/test_nui_layer7.py::test_not_covered_stops_under_its_own_name`,
-`tests/test_ai/test_nui_layer7.py::test_opaque_state_and_subsystems_without_a_function_are_not_covered`,
-`tests/test_ai/test_nui_layer7.py::test_the_command_line_reports_and_acts_on_nothing`,
-`tests/test_ai/test_nui_layer7.py::test_the_hisab_discrepancy_is_known_not_merely_not_covered`,
-`tests/test_ai/test_nui_parity.py::test_board_records_postdate_the_last_change_to_the_cpu_rtl`,
-`tests/test_ai/test_nui_parity.py::test_the_committed_model_is_what_the_repository_produces`,
-`tests/test_ai/test_nui_parity.py::test_the_hardware_column_is_recomputed_from_the_record_not_written_down`,
-`tests/test_ai/test_nui_rtl_function.py::test_a_pin_holds_whichever_line_ending_the_checkout_wrote`,
-`tests/test_ai/test_nui_rtl_function.py::test_the_function_is_the_rtl_at_every_cycle_of_its_bench`,
-`tests/test_ai/test_nui_rtl_function.py::test_the_model_reads_back_exactly`,
-`tests/test_ai/test_nui_rtl_function_dataram.py::test_the_function_as_written_now_agrees_with_the_rtl`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_a_result_wider_than_the_rtl_is_not_covered`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_a_rule_the_audit_does_not_cover_stops_the_step`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_a_sampling_the_trace_does_not_hold_is_red`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_an_op_the_case_does_not_name_is_not_covered`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_hisab_is_an_outside_result`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_alu_is_the_interpreters_handler`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_alu_reads_its_ops_and_outputs_from_the_rtl`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_function_is_the_rtl_at_every_edge`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_memory_map_is_the_composed_function`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_ram_is_the_composed_function`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_run_now_is_the_committed_one`,
-`tests/test_ai/test_nui_rtl_function_hcpu.py::test_the_transmitter_is_the_composed_function`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_a_register_left_out_of_the_boundary_is_red`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_an_unelaborated_register_not_named_so_is_red`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_every_line_the_spec_cites_says_what_it_names`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_the_audit_run_now_is_the_committed_one`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_the_measurement_is_sound`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_the_state_boundary_is_the_rtls_own`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_the_unreachable_are_unreachable_by_the_lines_cited`,
-`tests/test_ai/test_nui_rtl_function_hcpu_audit.py::test_what_is_named_outside_a_function_is_as_the_rtl_says`,
-`tests/test_ai/test_nui_rtl_function_loader.py::test_every_boundary_of_both_benches_is_the_rtls`,
-`tests/test_ai/test_nui_rtl_function_mmio.py::test_every_register_and_output_is_the_rtls_at_every_cycle`,
-`tests/test_ai/test_nui_rtl_function_pipeline.py::test_every_edge_every_output_and_the_open_loop_are_the_rtls`,
-`tests/test_ai/test_nui_rtl_function_pipeline_audit.py::test_the_audit_run_now_is_the_committed_one`,
-`tests/test_ai/test_nui_rtl_function_pipeline_audit.py::test_the_measurement_is_sound`,
-`tests/test_ai/test_nui_rtl_function_pipeline_audit.py::test_the_opcode_arms_are_read_from_the_decoder`,
-`tests/test_ai/test_nui_rtl_function_pipeline_audit.py::test_two_transitions_are_unreachable_by_the_wiring_cited`,
-`tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`,
-`tests/test_integrity/test_subroutine.py::test_decode_clears_them_on_every_bubble[id_is_call]`,
-`tests/test_integrity/test_subroutine.py::test_decode_clears_them_on_every_bubble[id_is_ret]`.
+Lari terakhir, 6 November 2026: **6.364 lulus, 2 dilewati, 1 gagal, 0 error dari
+6.367 terkumpul**. Yang gagal:
+`tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`.
 Yang error: tidak ada.

@@ -48,7 +48,7 @@ def runs() -> list[dict[str, Any]]:
 
 
 def test_every_edge_of_every_run_is_the_rtls() -> None:
-    assert (M["runs"], M["cycles"], len(M["ram_programs"])) == (107, 826030, 20)
+    assert (M["runs"], M["cycles"], len(M["ram_programs"])) == (107, 826078, 22)
     assert M["one_step_mismatches"] == M["open_loop_mismatches"] == []
     assert M["output_mismatches"] == []
     assert [b for b in rf.check(MODEL) if "hcpu_dataram" in b] == []
@@ -72,7 +72,7 @@ def test_the_oracle_is_the_lapis4_corpus_read_not_copied(runs: list[dict[str, An
 def test_what_the_harness_observes_is_what_the_function_takes() -> None:
     fired = {r["id"]: r["fired"] for r in M["rules"]}
     assert M["harness_trace_mismatches"] == []
-    assert M["harness_ram_writes"] == fired["write"] == 26578
+    assert M["harness_ram_writes"] == fired["write"] == 26580
 
 
 def test_the_frozen_lapis4_verdicts_are_quoted_not_rejudged() -> None:

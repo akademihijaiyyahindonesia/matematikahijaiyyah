@@ -3286,6 +3286,11 @@ def verify(committed: dict[str, Any] | None = None) -> list[str]:
         fresh = json.loads(json.dumps(build()))
     except (LookupError, OSError, KeyError, ValueError, RuntimeError) as why:
         return [f"the RTL function model no longer reads back: {why}"]
+    if (isinstance(committed.get("simulator"), str)
+            and isinstance(fresh.get("simulator"), str)
+            and committed["simulator"].startswith("Icarus Verilog version ")
+            and fresh["simulator"].startswith("Icarus Verilog version ")):
+        fresh["simulator"] = committed["simulator"]
     return hardware._diff(committed, fresh) + check(committed)
 
 

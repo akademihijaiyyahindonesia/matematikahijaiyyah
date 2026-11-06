@@ -3390,16 +3390,16 @@
     "subsystem": "print",
     "file": "rtl/hcpu_top.v",
     "lines": [
-     287,
-     288,
-     289,
-     290,
-     291,
-     292,
-     293,
-     294,
-     295,
-     296
+     296,
+     297,
+     298,
+     299,
+     300,
+     301,
+     302,
+     303,
+     304,
+     305
     ],
     "means": "rst_n rendah: P_IDLE, uart_start dan print_active 0, semua pencacah dan str_addr nol"
    },
@@ -4047,7 +4047,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     355
+     455
     ],
     "means": "arm S_POWERUP: dimasuki bila state bernilai S_POWERUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4056,7 +4056,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     372
+     472
     ],
     "means": "arm S_CMD_SETUP: dimasuki bila state bernilai S_CMD_SETUP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4065,7 +4065,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     399
+     499
     ],
     "means": "arm S_CMD_SEND: dimasuki bila state bernilai S_CMD_SEND di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4074,7 +4074,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     444
+     544
     ],
     "means": "arm S_CMD_GAP: dimasuki bila state bernilai S_CMD_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4083,7 +4083,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     459
+     559
     ],
     "means": "arm S_RESP_WAIT: dimasuki bila state bernilai S_RESP_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4092,7 +4092,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     487
+     587
     ],
     "means": "arm S_RESP_RECV: dimasuki bila state bernilai S_RESP_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4101,7 +4101,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     500
+     600
     ],
     "means": "arm S_RESP_DONE: dimasuki bila state bernilai S_RESP_DONE di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4110,7 +4110,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     564
+     670
     ],
     "means": "arm S_DAT_WAIT: dimasuki bila state bernilai S_DAT_WAIT di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4119,7 +4119,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     579
+     685
     ],
     "means": "arm S_DAT_RECV: dimasuki bila state bernilai S_DAT_RECV di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4128,7 +4128,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     597
+     703
     ],
     "means": "arm S_DAT_CRC: dimasuki bila state bernilai S_DAT_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4137,7 +4137,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     619
+     725
     ],
     "means": "arm S_WR_GAP: dimasuki bila state bernilai S_WR_GAP di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4146,7 +4146,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     634
+     740
     ],
     "means": "arm S_WR_START: dimasuki bila state bernilai S_WR_START di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4155,7 +4155,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     642
+     748
     ],
     "means": "arm S_WR_DATA: dimasuki bila state bernilai S_WR_DATA di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4164,7 +4164,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     664
+     770
     ],
     "means": "arm S_WR_CRC: dimasuki bila state bernilai S_WR_CRC di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4173,7 +4173,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     677
+     783
     ],
     "means": "arm S_WR_END: dimasuki bila state bernilai S_WR_END di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4182,7 +4182,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     691
+     797
     ],
     "means": "arm S_WR_ACK: dimasuki bila state bernilai S_WR_ACK di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4191,7 +4191,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     719
+     825
     ],
     "means": "arm S_WR_BUSY: dimasuki bila state bernilai S_WR_BUSY di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4200,7 +4200,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     731
+     837
     ],
     "means": "arm S_FINISH: dimasuki bila state bernilai S_FINISH di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },
@@ -4209,7 +4209,7 @@
     "subsystem": "sdio",
     "file": "rtl/hcpu_sdio.v",
     "lines": [
-     740
+     846
     ],
     "means": "arm S_FAIL: dimasuki bila state bernilai S_FAIL di tepi yang mengambilnya -- cakupan per arm, bukan per cabang di dalamnya"
    },

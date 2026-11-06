@@ -6,7 +6,7 @@ Dihasilkan `src/hijaiyyah/nui/layer6_addendum.py` dari `NUI/layer6_addendum.json
 
 Catatan beku Lapis 6.1–6.3 — model, halaman, dan spec-nya — tetap byte demi byte objek di tag `layer6-freeze-2026-09-29-final`. Adendum ini catatan baru di sampingnya, bukan bangkitan ulang: **freeze historis ≠ keadaan repositori sekarang**. Keadaan sekarang adalah catatan beku dengan perubahan di bawah ini, dan harus sama dengan yang dibangun buktinya hari ini.
 
-**14 entri, 158 perubahan**: `hardware` 52, `telemetry_sources` 15, `hardware_provenance` 91.
+**17 entri, 201 perubahan**: `hardware` 70, `telemetry_sources` 16, `hardware_provenance` 115.
 
 ## Bukti kesetaraan
 
@@ -306,6 +306,76 @@ Paket 8 (`f9c8349`) mengukur ulang slot HCPU (`USE_DSP=0`, `CODEX_PROFILE=2`: sq
 | `hardware` | `isa_rtl` | `/items/9/source/sha256` | `960f357c1436…` | `6c8a721921bc…` |
 | `hardware` | `isa_rtl` | `/items/9/evidence/0/sha256` | `960f357c1436…` | `6c8a721921bc…` |
 | `hardware_provenance` | `6.1:isa_rtl` | `/claims/9/claim` | `H-ISA = 82` | `H-ISA = 84` |
+
+## hcpu_gowin_top.v — cap ulang pasca-1aed5e1f
+
+`rtl/fpga/gowin/hcpu_gowin_top.v` · penyebab `95623b6` · bukti kesetaraan **comment-only** · melanjutkan entri **hcpu_gowin_top.v — cap ulang Paket 8**
+
+95623b6 mencap ulang kepala `rtl/fpga/gowin/hcpu_gowin_top.v` sesudah place-and-route pasca-`1aed5e1f` (`CTHETA=0x4E`, `HDOT=0x52`, dan `GAP-02` di `hcpu_hisab.v`): komentar kepala diperbarui untuk mencatat hasil pengukuran baru dan sidik jari `a866810782d7…`, sementara seluruh baris kode Verilog di dalam berkas ini tetap identik (`comment-only`, 35.688 → 35.764 byte).
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `fpga_lut4` | `/items/3/source/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_lut4` | `/items/3/evidence/0/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_dff` | `/items/4/source/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_dff` | `/items/4/evidence/0/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_bsram` | `/items/5/source/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_bsram` | `/items/5/evidence/0/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_fmax` | `/items/6/source/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `fpga_fmax` | `/items/6/evidence/0/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `clock_pll` | `/items/14/source/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `clock_pll` | `/items/14/evidence/0/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware` | `uart` | `/items/17/source/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `telemetry_sources` | — | `/rtl_signals/sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.1:fpga_dff` | `/claims/4/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.1:fpga_dff` | `/claims/4/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.1:fpga_bsram` | `/claims/5/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.1:fpga_bsram` | `/claims/5/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.1:clock_pll` | `/claims/14/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.1:clock_pll` | `/claims/14/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.2:tele_pc` | `/claims/61/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.2:tele_pc` | `/claims/61/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.2:tele_instr` | `/claims/62/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.2:tele_instr` | `/claims/62/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.2:tele_halted` | `/claims/63/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.2:tele_halted` | `/claims/63/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.2:tele_guard` | `/claims/64/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.2:tele_guard` | `/claims/64/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.2:tele_cycles` | `/claims/65/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.2:tele_cycles` | `/claims/65/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+| `hardware_provenance` | `6.2:tele_flags` | `/claims/66/evidence_bytes` | `35688` | `35764` |
+| `hardware_provenance` | `6.2:tele_flags` | `/claims/66/evidence_sha256` | `7e42e6890d25…` | `6c521441c8e9…` |
+
+## hcpu_gowin_top.v — angka place-and-route pasca-1aed5e1f
+
+`rtl/fpga/gowin/hcpu_gowin_top.v` · penyebab `95623b6` · bukti kesetaraan **remeasured-header**, sidik jari `a866810782d7…`, laporan `b7ea812862a8…` · melanjutkan entri **hcpu_gowin_top.v — angka place-and-route Paket 8**
+
+95623b6 mengukur ulang slot HCPU pasca-`1aed5e1f` (`CTHETA=0x4E`, `HDOT=0x52`, dan `GAP-02` di `hcpu_hisab.v`) dengan `make -C rtl/fpga/gowin bitstream` pada Tang Nano 20K (`GW2AR-LV18QN88C8/I7`): LUT4 15.453 → 15.367 (baris 48), DFF tetap 5.166 / 15.552 (baris 49), BSRAM tetap 18 / 46 (baris 50), dan Fmax pasca-routing 120.63 → 54.86 MHz (baris 53). Klaim tetap berkelas `SIMULATED` (`PNR/build-derived`, K-18).
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `fpga_lut4` | `/items/3/value` | `15,453 / 20,736` | `15,367 / 20,736` |
+| `hardware` | `fpga_fmax` | `/items/6/value` | `120.63 MHz` | `54.86 MHz` |
+| `hardware_provenance` | `6.1:fpga_lut4` | `/claims/3/claim` | `sumber daya FPGA = 15,453 / 20,736` | `sumber daya FPGA = 15,367 / 20,736` |
+| `hardware_provenance` | `6.1:fpga_fmax` | `/claims/6/claim` | `sumber daya FPGA = 120.63 MHz` | `sumber daya FPGA = 54.86 MHz` |
+
+## NUI/layer4_freeze.json — sensus 105 opcode (CTHETA dan HDOT)
+
+`NUI/layer4_freeze.json` · penyebab `95623b6` · bukti kesetaraan **claim-unchanged**, klaim `isa_board`, `isa_board_unknown`, `bitstream_last_measured`
+
+95623b6 memperbarui `NUI/layer4_freeze.json` sesudah pemisahan `CTHETA=0x4E` dan `HDOT=0x52` pada `1aed5e1f` (`status.opcodes.UNKNOWN` 29 → 31, `opcodes_no_sent_program_executes` 12 → 14), sementara `status.opcodes.PARITY = 74`, bukti rekaman papan P0–P6, dan `bitstream_sha256 = 84fdc912…` tetap identik.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `isa_board` | `/items/10/source/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
+| `hardware` | `isa_board` | `/items/10/evidence/0/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
+| `hardware` | `isa_board_unknown` | `/items/11/evidence/0/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
+| `hardware` | `bitstream_last_measured` | `/items/27/source/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
+| `hardware` | `bitstream_last_measured` | `/items/27/evidence/0/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
 
 ## Mengulang
 

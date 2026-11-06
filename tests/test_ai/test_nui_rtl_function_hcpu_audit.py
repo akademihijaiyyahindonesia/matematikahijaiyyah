@@ -92,7 +92,7 @@ def test_only_rst_n_and_imem_data_move() -> None:
 
 def test_the_state_boundary_is_the_rtls_own() -> None:
     b = R["boundary"]
-    assert (b["files"], b["registers"], b["undeclared"], b["missing"]) == (21, 171, [], [])
+    assert (b["files"], b["registers"], b["undeclared"], b["missing"]) == (21, 185, [], [])
     for sub in H["subsystems"]:
         for f, names in sub["files"].items():
             parsed = set(rf._nb_targets(ROOT / f))
@@ -106,10 +106,17 @@ def test_a_functions_state_is_the_boundarys_less_what_is_named_outside() -> None
     bundles = [n for names in MODS["pipeline"]["state"].values() for n in names]
     stages = (pipe["rtl/hcpu_fetch.v"] + pipe["rtl/hcpu_decode.v"]
               + pipe["rtl/hcpu_execute.v"] + pipe["rtl/hcpu_memory.v"])
-    assert sorted(set(stages) - {"ra_stack[]", "stack[]"}) == sorted(bundles)
+    outside_regs = {k.split(":", 1)[1] for k in subs["pipeline"]["outside_function"]}
+    assert sorted(set(stages) - (outside_regs | {"stack[]"})) == sorted(bundles)
     assert "halted" in MODS["pipeline"]["state_also"]
     assert "larik tumpukan" in MODS["pipeline"]["state_also"]
-    assert list(subs["pipeline"]["outside_function"]) == ["rtl/hcpu_execute.v:ra_stack[]"]
+    assert list(subs["pipeline"]["outside_function"]) == [
+        "rtl/hcpu_execute.v:ra_stack[]",
+        "rtl/hcpu_decode.v:id_hreg_ovf_s1",
+        "rtl/hcpu_decode.v:id_hreg_ovf_s2",
+        "rtl/hcpu_execute.v:ex_hreg_ovf",
+        "rtl/hcpu_memory.v:mem_hreg_ovf",
+    ]
     mmio = subs["mmio"]["files"]
     own = [k for k in MODS["hcpu_mmio"]["state"] if "." not in k]
     assert own == mmio["rtl/hcpu_mmio.v"]
@@ -122,12 +129,12 @@ def test_a_functions_state_is_the_boundarys_less_what_is_named_outside() -> None
 def test_what_is_named_outside_a_function_is_as_the_rtl_says() -> None:
     top = (ROOT / "rtl/hcpu_top.v").read_text(encoding="utf-8").splitlines()
     execute = (ROOT / "rtl/hcpu_execute.v").read_text(encoding="utf-8").splitlines()
-    assert ".pc_we" in top[645 - 1] and "1'b0" in top[645 - 1]
-    assert "PIPELINE_GUARD(0)" in top[662 - 1]
-    assert "ra_stack" in execute[331 - 1]
-    assert "priv_fault = in_user" in execute[310 - 1]
-    assert "mem_fault = in_user" in execute[317 - 1]
-    assert rf._nb_targets(ROOT / "rtl/hcpu_execute.v")["ra_stack[]"] > 331
+    assert ".pc_we" in top[677 - 1] and "1'b0" in top[677 - 1]
+    assert "PIPELINE_GUARD(0)" in top[694 - 1]
+    assert "ra_stack" in execute[358 - 1]
+    assert "priv_fault = in_user" in execute[337 - 1]
+    assert "mem_fault = in_user" in execute[344 - 1]
+    assert rf._nb_targets(ROOT / "rtl/hcpu_execute.v")["ra_stack[]"] > 358
     assert "branch_call" in MODEL["pipeline_audit"]["not_covered"]
     assert "branch_ret" in MODEL["pipeline_audit"]["not_covered"]
 
@@ -142,7 +149,7 @@ def test_what_the_bench_never_runs_is_named_with_its_reason() -> None:
     ids = [t["id"] for t in rf.hcpu_transitions(H)]
     assert [t["id"] for t in R["transitions"]] == ids
     assert R["not_covered"] == list(rf.hcpu_declared(H))
-    assert (len(ids), len(ids) - len(R["not_covered"])) == (162, 47)
+    assert (len(ids), len(ids) - len(R["not_covered"])) == (163, 47)
     fired = {t["id"]: t["fired"] for t in R["transitions"]}
     assert all(fired[i] == 0 for i in R["not_covered"])
     assert all(fired[i] > 0 for i in ids if i not in R["not_covered"])
@@ -201,13 +208,13 @@ def test_the_read_path_runs_and_is_never_selected() -> None:
 def test_the_unreachable_are_unreachable_by_the_lines_cited() -> None:
     top = (ROOT / "rtl/hcpu_top.v").read_text(encoding="utf-8").splitlines()
     execute = (ROOT / "rtl/hcpu_execute.v").read_text(encoding="utf-8").splitlines()
-    assert ".src_illegal" in top[798 - 1] and "1'b0" in top[798 - 1]
-    assert "reg [2:0] print_state" in top[247 - 1]
-    assert [ln.split("=")[1].strip(" ;") for ln in top[261:266] + top[278:281]] == [
+    assert ".src_illegal" in top[838 - 1] and "1'b0" in top[838 - 1]
+    assert "reg [2:0] print_state" in top[256 - 1]
+    assert [ln.split("=")[1].strip(" ;") for ln in top[270:275] + top[287:290]] == [
         f"3'd{i}" for i in range(8)]
-    arms = "\n".join(execute[202 - 1:207])
-    assert "calu_op" in arms and all(f"3'd{i}" in arms for i in range(6))
-    assert "3'd6" not in arms and "3'd7" not in arms
+    arms = "\n".join(execute[206 - 1:213])
+    assert "calu_op" in arms and all(f"3'd{i}" in arms for i in range(7))
+    assert "3'd7" not in arms
 
 
 def test_every_line_the_spec_cites_says_what_it_names() -> None:
@@ -216,7 +223,7 @@ def test_every_line_the_spec_cites_says_what_it_names() -> None:
         if t["id"].startswith("sdio.s_"):
             assert f"{t['id'][5:].upper()}:" in sdio[t["lines"][0] - 1], t["id"]
         if t["subsystem"] == "print":
-            assert all(286 <= n <= 390 for n in t["lines"]), t["id"]
+            assert all(295 <= n <= 399 for n in t["lines"]), t["id"]
 
 
 # -- R3: each part of the audit, broken, is red ---------------------------------------------
