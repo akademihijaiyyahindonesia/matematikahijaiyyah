@@ -132,17 +132,17 @@
 //      (red_dvi, green_dvi, blue_dvi, de_dvi, hsync_dvi, vsync_dvi).
 //
 //     IOB           16 /    384    4%
-//     LUT4      14,164 / 20,736   68%
-//     ALU        2,678 / 15,552   17%
-//     DFF        5,520 / 15,552   35%
+//     LUT4      14,193 / 20,736   68%
+//     ALU        2,698 / 15,552   17%
+//     DFF        5,521 / 15,552   35%
 //     BSRAM         24 /     46   52%
 //     MULT9X9       14 /     96   14%
 //     MULT36X36      1 /     12    8%
-//     Fmax      101.13 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//                97.51 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
-//     Bitstream  7,261,470 bytes, sha256 a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f
+//     Fmax      102.05 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//                90.44 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
+//     Bitstream  7,261,470 bytes, sha256 1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54
 //
-// RTL FINGERPRINT: abfe1f5d03a5c56d9c9b29b98a57eff81595db0ba88873f180b0c36e29fab116
+// RTL FINGERPRINT: 234130eed36dcfcf8d602d4af25fe8ef0782c56dc432ab32a973db50a43c5d8b
 //
 `include "hcpu_pkg.vh"
 
@@ -394,10 +394,14 @@ module hcpu_hdmi_top #(
     wire [7:0] comp_ch;
     wire [3:0] comp_at;
 
+    // tele_guard from hcpu_gowin_core is 1 when all six guards hold (OK) and
+    // 0 on fault; hcpu_compositor encodes 0 as OK (green) and 1 as FAULT (red).
+    wire comp_guard_fault = ~snap_guard;
+
     hcpu_compositor #(.PCW(`CODE_ADDR_W)) u_comp (
         .cell_addr(cell_addr), .page(page),
         .snap_pc(snap_pc), .snap_instr(snap_instr), .snap_halted(snap_halted),
-        .snap_guard(snap_guard), .snap_cycles(snap_cycles),
+        .snap_guard(comp_guard_fault), .snap_cycles(snap_cycles),
         .snap_flags(snap_flags), .snap_valid(snap_valid),
         .hit(comp_hit), .ch(comp_ch), .at(comp_at)
     );

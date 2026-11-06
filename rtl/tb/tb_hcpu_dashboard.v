@@ -33,7 +33,8 @@ module tb_hcpu_dashboard;
     reg [11:0] snap_pc = 12'h1A3;
     reg [31:0] snap_instr = 32'hDEADBEEF;
     reg        snap_halted = 1'b0;
-    reg        snap_guard = 1'b0;
+    reg        tele_guard = 1'b1;
+    wire       snap_guard = ~tele_guard;
     reg [31:0] snap_cycles = 32'h0012_3456;
     reg [7:0]  snap_flags = 8'h5C;
     reg        snap_valid = 1'b1;
@@ -135,24 +136,32 @@ module tb_hcpu_dashboard;
         at_cell(`DASH_FLAGS_ADDR + 3); if (ch !== "C") ok_field = 1'b0;
         check(ok_field, "FLAGS tercetak 5C");
 
-        // ── STATE, and the colour that travels with it ──────────
+        // ── STATE and GUARD, and the colour that travels with them ──
         ok_field = 1'b1;
         at_cell(`DASH_STATE_ADDR + 0);
         if (ch !== "R" || at !== 4'd3) ok_field = 1'b0;      // GREEN
         at_cell(`DASH_STATE_ADDR + 6); if (ch !== "G") ok_field = 1'b0;
-        check(ok_field, "STATE RUNNING, hijau");
+        at_cell(`DASH_GUARD_ADDR + 0);
+        if (ch !== "O" || at !== 4'd3) ok_field = 1'b0;      // GUARD: OK, GREEN
+        at_cell(`DASH_GUARD_ADDR + 1); if (ch !== "K") ok_field = 1'b0;
+        at_cell(`DASH_GUARD_ADDR + 2); if (ch !== " ") ok_field = 1'b0;
+        check(ok_field, "STATE RUNNING dan GUARD OK, hijau");
 
         snap_halted = 1'b1;
-        snap_guard  = 1'b1;
+        tele_guard  = 1'b0;
         ok_field = 1'b1;
         at_cell(`DASH_STATE_ADDR + 0);
         if (ch !== "H" || at !== 4'd5) ok_field = 1'b0;      // RED
         at_cell(`DASH_STATE_ADDR + 5); if (ch !== "D") ok_field = 1'b0;
         at_cell(`DASH_GUARD_ADDR + 0);
-        if (ch !== "F" || at !== 4'd5) ok_field = 1'b0;
+        if (ch !== "F" || at !== 4'd5) ok_field = 1'b0;      // GUARD: FAULT, RED
+        at_cell(`DASH_GUARD_ADDR + 1); if (ch !== "A") ok_field = 1'b0;
+        at_cell(`DASH_GUARD_ADDR + 2); if (ch !== "U") ok_field = 1'b0;
+        at_cell(`DASH_GUARD_ADDR + 3); if (ch !== "L") ok_field = 1'b0;
+        at_cell(`DASH_GUARD_ADDR + 4); if (ch !== "T") ok_field = 1'b0;
         check(ok_field, "HALTED dan FAULT, merah");
         snap_halted = 1'b0;
-        snap_guard  = 1'b0;
+        tele_guard  = 1'b1;
 
         // ── the page digit owns ONE cell ────────────────────────
         page = 4'd3;

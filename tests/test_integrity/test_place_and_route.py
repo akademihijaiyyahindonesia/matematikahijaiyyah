@@ -292,16 +292,16 @@ def test_the_hdmi_wrapper_records_its_routed_result() -> None:
     # 1-cycle DVI pipeline registers).
     assert rows == {
         "IOB": (16, 384),
-        "LUT4": (14164, 20736),
-        "ALU": (2678, 15552),
-        "DFF": (5520, 15552),
+        "LUT4": (14193, 20736),
+        "ALU": (2698, 15552),
+        "DFF": (5521, 15552),
         "BSRAM": (24, 46),
         "MULT9X9": (14, 96),
         "MULT36X36": (1, 12),
     }
-    assert re.search(r"^//\s+Fmax\s+101\.13 MHz", hdmi, re.M)
-    assert re.search(r"^//\s+97\.51 MHz\s+pixel_clk", hdmi, re.M)
-    assert "a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f" in hdmi
+    assert re.search(r"^//\s+Fmax\s+102\.05 MHz", hdmi, re.M)
+    assert re.search(r"^//\s+90\.44 MHz\s+pixel_clk", hdmi, re.M)
+    assert "1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54" in hdmi
 
 def test_the_kabah_hdmi_wrapper_records_its_own_fingerprint() -> None:
     """Built for the first time on 11 September, and held like the others."""
