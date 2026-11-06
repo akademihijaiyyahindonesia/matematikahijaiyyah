@@ -46,7 +46,9 @@ CAUSE_P6 = "48cf0e5"
 CAUSE_P8 = "f9c8349"
 CAUSE_CTHETA = "1aed5e1"
 CAUSE_RECON = "95623b6"
+CAUSE_HDMI = "73fc457"
 FIRST, SECOND = "Makefile — target HMAC", "Makefile — lapis 3 slot UART Ka'bah"
+MAKE_HDMI = "Makefile — Opsi A HDMI tanpa -nodsp"
 TOP_CAP_1 = "hcpu_gowin_top.v — cap ulang opsi (a)"
 TOP_CAP_2 = "hcpu_gowin_top.v — cap ulang Paket 8"
 TOP_CAP_3 = "hcpu_gowin_top.v — cap ulang pasca-1aed5e1f"
@@ -62,7 +64,6 @@ README_OP = "teknologi/README.md — sensus 84 opcode RTL"
 L4_FREEZE_OP = "NUI/layer4_freeze.json — sensus 105 opcode (CTHETA dan HDOT)"
 
 CHAINS = (
-    (FIRST, SECOND, "rtl/fpga/gowin/Makefile", CAUSE, CAUSE2),
     (HCPU_TOP_1, HCPU_TOP_2, "rtl/hcpu_top.v", CAUSE_P6, CAUSE_P8),
     (HCPU_PKG_1, HCPU_PKG_2, "rtl/hcpu_pkg.vh", CAUSE_P6, CAUSE_CTHETA),
     (TOP_MOV_1, TOP_MOV_2, "rtl/fpga/gowin/hcpu_gowin_top.v", CAUSE, CAUSE_P8),
@@ -99,7 +100,7 @@ def test_the_frozen_records_are_the_objects_at_the_tag() -> None:
 def test_the_addendum_covers_exactly_the_drift() -> None:
     """Every pointer that moved since the freeze is named, and nothing else."""
     chained_second_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_MOV_2, TOP_PNR_2}
-    chained_third_ids = {TOP_CAP_3}
+    chained_third_ids = {TOP_CAP_3, MAKE_HDMI}
     for name in la.FROZEN:
         drift = set(_diff(_frozen(name), _fresh(name)))
         named = [c["pointer"] for c in la.changes(name)]
@@ -125,8 +126,8 @@ def test_the_addendum_covers_exactly_the_drift() -> None:
         assert twice == want_twice, name
         assert all(named.count(p) in (1, 2, 3) for p in set(named)), name
     assert {n: len(la.changes(n)) for n in la.FROZEN} == {
-        "hardware": 70, "telemetry_sources": 16, "hardware_provenance": 115}
-    assert len(ADDENDUM["entries"]) == 17
+        "hardware": 74, "telemetry_sources": 16, "hardware_provenance": 115}
+    assert len(ADDENDUM["entries"]) == 18
 
 
 def test_the_historical_freeze_is_not_the_current_state() -> None:
@@ -157,6 +158,7 @@ def test_every_entry_says_why_by_what_and_with_what_evidence() -> None:
                               cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     expected_causes = {
         SECOND: CAUSE2,
+        MAKE_HDMI: CAUSE_HDMI,
         HCPU_TOP_1: CAUSE_P6,
         HCPU_PKG_1: CAUSE_P6,
         HCPU_TOP_2: CAUSE_P8,
@@ -169,7 +171,9 @@ def test_every_entry_says_why_by_what_and_with_what_evidence() -> None:
         TOP_PNR_2: CAUSE_RECON,
         L4_FREEZE_OP: CAUSE_RECON,
     }
-    chained_ids = {SECOND, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_CAP_3, TOP_MOV_2, TOP_PNR_2}
+    chained_ids = {
+        SECOND, MAKE_HDMI, HCPU_TOP_2, HCPU_PKG_2, TOP_CAP_2, TOP_CAP_3, TOP_MOV_2, TOP_PNR_2
+    }
     for e in ADDENDUM["entries"]:
         assert e["cause"] == expected_causes.get(e["id"], CAUSE), e["id"]
         assert e["reason"] and e["path"] in touched(e["cause"]), e["id"]
@@ -211,6 +215,17 @@ def test_the_chain_is_written_out_and_every_link_of_it_is_checked() -> None:
         if path != "rtl/fpga/gowin/hcpu_gowin_top.v":
             assert (ROOT / path).read_bytes() == _show(c2, path)
 
+    # 3-step whole-file insert-only chain on rtl/fpga/gowin/Makefile
+    m_path = "rtl/fpga/gowin/Makefile"
+    assert links[FIRST] == (None, SECOND)
+    assert links[SECOND] == (FIRST, MAKE_HDMI)
+    assert links[MAKE_HDMI] == (SECOND, None)
+    assert unlinked[SECOND] == unlinked[MAKE_HDMI] == []
+    assert _show(CAUSE + "^", m_path) == _show(TAG, m_path)
+    assert _show(CAUSE2 + "^", m_path) == _show(CAUSE, m_path)
+    assert _show(CAUSE_HDMI + "^", m_path) == _show(CAUSE2, m_path)
+    assert (ROOT / m_path).read_bytes() == _show(CAUSE_HDMI, m_path)
+
     # 3-step whole-file comment-only chain on hcpu_gowin_top.v
     c_path = "rtl/fpga/gowin/hcpu_gowin_top.v"
     assert links[TOP_CAP_1] == (None, TOP_CAP_2)
@@ -229,14 +244,14 @@ def test_a_chain_is_never_inferred() -> None:
     """Without `after` the second entry is a pointer changed twice, and the
     record is refused before it is built."""
     addendum = copy.deepcopy(ADDENDUM)
-    del _entry(addendum, SECOND)["after"]
-    assert SECOND not in la._links(addendum)[0]
+    del _entry(addendum, MAKE_HDMI)["after"]
+    assert MAKE_HDMI not in la._links(addendum)[0]
     assert sum("is changed twice" in p for p in la.problems("hardware", addendum)) == 4
     with pytest.raises(LookupError, match="the frozen record holds"):
         la.current("hardware", addendum=addendum)
 
     named = copy.deepcopy(ADDENDUM)
-    _entry(named, SECOND)["after"] = "Makefile — nothing"
+    _entry(named, MAKE_HDMI)["after"] = "Makefile — nothing"
     bad = la.problems("hardware", named)
     assert sum("is changed twice" in p for p in bad) == 4
     assert any("which is no entry written before it" in p for p in bad)
@@ -250,11 +265,11 @@ def test_a_chain_is_never_inferred() -> None:
 
 def test_a_chain_does_not_fork_and_does_not_reach_forward() -> None:
     addendum = copy.deepcopy(ADDENDUM)
-    third = copy.deepcopy(_entry(addendum, SECOND))
+    third = copy.deepcopy(_entry(addendum, MAKE_HDMI))
     third["id"] = "Makefile — a second continuation"
     addendum["entries"].append(third)
     links, unlinked = la._links(addendum)
-    assert links[FIRST] == (None, SECOND) and third["id"] not in links
+    assert links[SECOND] == (FIRST, MAKE_HDMI) and third["id"] not in links
     assert any("is already continued by" in p for p in unlinked[third["id"]])
     assert any("is already continued by" in p for p in la.problems("hardware", addendum))
 

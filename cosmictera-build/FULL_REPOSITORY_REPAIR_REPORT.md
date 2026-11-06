@@ -151,16 +151,23 @@ Pemeriksaan dan audit menyeluruh dilakukan terhadap **seluruh 6.367 tes** di baw
 | **Terminology** (`test_terminology.py`) | 1 gagal, 12 berhasil | **0 gagal, 13 berhasil** |
 | **HBC Loader** (`test_hbc_loader.py`) | 1 gagal, 35 berhasil | **0 gagal, 36 berhasil** |
 | **Sensus Build & Sabotase** (`test_build_list.py`) | 29 gagal, 29 berhasil | **0 gagal, 58 berhasil** |
-| **Place & Route** (`test_place_and_route.py`) | 1 gagal (HDMI historis), 25 berhasil | **1 gagal (HDMI historis), 25 berhasil** |
-| **Seluruh Suite Repositori (6.367 tes)** | 62 gagal | **1 gagal (historis HDMI), 6.364 berhasil, 2 dilewati, 0 error** |
+| **Place & Route** (`test_place_and_route.py` & `test_hdmi_wrappers.py`) | 1 gagal (HDMI historis), 24 berhasil | **0 gagal, 25 berhasil (Opsi A HDMI)** |
+| **Seluruh Suite Repositori (6.367 tes)** | 62 gagal | **0 gagal, 6.365 berhasil, 2 dilewati, 0 error** |
 | **Pemeriksaan NUI `--verify` (Lapis 3, 3.5, 4, 6)** | 4 modul gagal | **Seluruh modul bersih (`[]`)** |
 | **Lint & Typecheck** (`ruff check src/`, `mypy src/hijaiyyah`) | 1 peringatan di test | **Bersih (`All checks passed!`, `178 source files`)** |
 
-## 10. Kegagalan yang Masih Tersisa
+## 10. Penutupan Kegagalan Historis HDMI (Opsi A Disetujui Pemilik)
 
-Hanya tersisa **1 kegagalan historis yang disengaja dan diterima oleh keputusan pemilik**:
-- `tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`
-  - **Alasan**: Investigasi dan pembaruan wrapper standalone HDMI (`rtl/fpga/gowin/hcpu_hdmi_top.v`) telah dibekukan atas keputusan pemilik pada 17 September 2026 (tercatat di `cosmictera-build/OFF.md` dan `cosmictera-build/CHECKLIST.md`). Tidak ada kegagalan lain di seluruh repositori.
+Berdasarkan keputusan pemilik (6 November 2026 — Implementasi Opsi A HDMI), pengecualian kegagalan historis pada `tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint` resmi dicabut dan diselesaikan sepenuhnya:
+- **Hard-DSP (`USE_DSP=1`)**: `rtl/fpga/gowin/hcpu_hdmi_top.v` menggunakan `hcpu_gowin_core #(.USE_DSP(1))` dan `rtl/fpga/gowin/Makefile` menambahkan override khusus-target `hdmi_synth: YOSYS_FLAGS =` (tanpa mengubah `YOSYS_FLAGS ?= -nodsp` untuk target lainnya), memanfaatkan `14 / 96 MULT9X9` dan `1 / 12 MULT36X36` serta menurunkan penggunaan LUT4 sebesar `2.327 LUT4` (`16.491` → `14.164 / 20.736 (68%)`).
+- **Pinout Candidate B**: `rtl/fpga/gowin/hcpu_hdmi.cst` diselaraskan ke pin fisik Candidate B (`33, 35, 37, 39`, `IO_TYPE=LVCMOS33D DRIVE=8`).
+- **Urutan Reset Bertahap & Pipeline DVI 1-Siklus**: `rtl/fpga/gowin/hcpu_hdmi_top.v` menerapkan kualifikasi `pll_locked` `2,0 ms`, pelepasan bertahap `clkdiv_rst_n` → `oser_rst` → `video_rst_n`, serta register 1-siklus (`red_dvi`, `green_dvi`, `blue_dvi`, `de_dvi`, `hsync_dvi`, `vsync_dvi`).
+- **Hasil Place & Route dan Bitstream**:
+  - Sidik jari RTL (`HDMI_FINGERPRINTED`): `abfe1f5d03a5c56d9c9b29b98a57eff81595db0ba88873f180b0c36e29fab116`
+  - Sumber daya: `LUT4 14.164 / 20.736 (68%)`, `ALU 2.678 / 15.552 (17%)`, `DFF 5.520 / 15.552 (35%)`, `BSRAM 24 / 46 (52%)`, `MULT9X9 14 / 96 (14%)`, `MULT36X36 1 / 12 (8%)`, `IOB 16 / 384 (4%)`
+  - Fmax pasca-routing: `101,13 MHz u_hcpu.clk_27m` dan `97,51 MHz pixel_clk` (**PASS** pada constraint `12,00 MHz`)
+  - Bitstream `rtl/fpga/gowin/hcpu_hdmi_top.fs`: `7.261.470 byte`, SHA-256 `a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f`
+- **Status Akhir Kegagalan**: **0 gagal** di seluruh 6.367 pengujian (`6.365 berhasil, 2 dilewati, 0 gagal, 0 error`).
 
 ## 11. Status Manifes SHA-256
 
@@ -171,5 +178,6 @@ Pemeriksaan `shasum -a 256 -c COSMICTERA_USSS_STAGE1_5_SHA256_MANIFEST.txt` pada
 
 - **Branch**: `reconcile/post-1aed5e1f`
 - **Commit Tahap 1 (Penyebab Adendum Layer 6)**: `95623b65d8f2509b420b52618f6e7b05989c072f`
-- **Commit Tahap 2 (Rekonsiliasi Penuh 61 Kegagalan & Laporan Audit)**: tercatat sebagai `HEAD` terbaru pada branch `reconcile/post-1aed5e1f` di atas `95623b65d8f2509b420b52618f6e7b05989c072f`.
+- **Commit Tahap 2 (Rekonsiliasi 61 Kegagalan)**: `f6ff1df4`
+- **Commit Tahap 3 (Implementasi Opsi A HDMI & Penutupan Kegagalan Historis)**: `73fc4570` beserta sinkronisasi adendum Layer 6 `Makefile` di atasnya.
 - **Status Baseline**: Branch `stage-1-5-security-integration` tetap berada pada `ea3c5b22445ed322b8e10348f930b4fa75731885` dan belum di-merge.

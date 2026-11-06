@@ -1700,6 +1700,42 @@
      "new": "1cdf31cd3579d202bea321ae638e4c55136b0405bea4d2c1d06f8fcaff2ac068"
     }
    ]
+  },
+  {
+   "id": "Makefile — Opsi A HDMI tanpa -nodsp",
+   "path": "rtl/fpga/gowin/Makefile",
+   "cause": "73fc457",
+   "after": "Makefile — lapis 3 slot UART Ka'bah",
+   "reason": "73fc457 menambahkan satu baris override khusus-target `hdmi_synth: YOSYS_FLAGS =` (beserta satu baris komentar penjelasan) di atas `hdmi_synth` supaya sintesis wrapper HDMI Opsi A berjalan tanpa `-nodsp` (`USE_DSP=1`), tanpa mengubah `YOSYS_FLAGS ?= -nodsp` untuk target lain — 2 baris ditambahkan, tidak ada baris yang dihapus atau diubah. Baris 24 dan 25 yang dibaca `fpga_device` dan `fpga_family` tidak berubah dan tidak bergeser; yang berubah hash utuh berkasnya",
+   "equivalence": {
+    "kind": "insert-only"
+   },
+   "changes": [
+    {
+     "record": "hardware",
+     "pointer": "/items/1/source/sha256",
+     "old": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f",
+     "new": "282ed72d9018fc57f189c782b002a1a87922fa1734cf53bf802f5baad3691979"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/1/evidence/0/sha256",
+     "old": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f",
+     "new": "282ed72d9018fc57f189c782b002a1a87922fa1734cf53bf802f5baad3691979"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/2/source/sha256",
+     "old": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f",
+     "new": "282ed72d9018fc57f189c782b002a1a87922fa1734cf53bf802f5baad3691979"
+    },
+    {
+     "record": "hardware",
+     "pointer": "/items/2/evidence/0/sha256",
+     "old": "7a2b150d62476493aa85eab2128aa38605e98e70925a7a07cfa8d4d148d4d26f",
+     "new": "282ed72d9018fc57f189c782b002a1a87922fa1734cf53bf802f5baad3691979"
+    }
+   ]
   }
  ],
  "chain": "Keputusan pemilik, 5 Oktober 2026 (diperluas 2 November 2026 untuk Jalur A), sesudah commit lapis 3 Ka'bah `004b9a0` menambah baris ke `Makefile` yang sudah pernah ditambah `4bff781` dan commit Paket 8 `f9c8349` mencap ulang `hcpu_gowin_top.v` serta memperbarui `hcpu_top.v`: perubahan kedua pada satu berkas tidak diterima karena ia perubahan kedua, melainkan hanya sebagai entri yang menyebut, di `after`, satu entri yang dilanjutkannya — dan tiap mata rantainya diperiksa. Entri yang disebut ditulis lebih dulu dan tentang berkas yang sama; ia dilanjutkan oleh satu entri saja, rantai tidak bercabang; pointer yang diubah persis sama, dan nilai lama di sini adalah nilai baru di sana; commit penyebabnya keturunan commit penyebab entri itu; berkas tepat sebelum penyebabnya ber-hash nilai di penyebab pendahulunya, jadi tidak ada yang menyentuh berkas di antara keduanya; dan bukti kesetaraannya sendiri berlaku sejak penyebab entri itu. Entri yang dilanjutkan lalu menjawab untuk berkas di commit penyebabnya saja, dan entri terakhir rantai untuk berkas sekarang. Hanya hash berkas utuh (`comment-only`, `insert-only`, `claim-unchanged`) dan pergeseran nomor baris linear (`line-moved`) yang berantai. Pointer yang diubah dua kali tanpa mata rantai itu tetap ditolak"

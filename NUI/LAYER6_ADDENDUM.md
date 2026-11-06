@@ -6,7 +6,7 @@ Dihasilkan `src/hijaiyyah/nui/layer6_addendum.py` dari `NUI/layer6_addendum.json
 
 Catatan beku Lapis 6.1–6.3 — model, halaman, dan spec-nya — tetap byte demi byte objek di tag `layer6-freeze-2026-09-29-final`. Adendum ini catatan baru di sampingnya, bukan bangkitan ulang: **freeze historis ≠ keadaan repositori sekarang**. Keadaan sekarang adalah catatan beku dengan perubahan di bawah ini, dan harus sama dengan yang dibangun buktinya hari ini.
 
-**17 entri, 201 perubahan**: `hardware` 70, `telemetry_sources` 16, `hardware_provenance` 115.
+**18 entri, 205 perubahan**: `hardware` 74, `telemetry_sources` 16, `hardware_provenance` 115.
 
 ## Bukti kesetaraan
 
@@ -376,6 +376,19 @@ Paket 8 (`f9c8349`) mengukur ulang slot HCPU (`USE_DSP=0`, `CODEX_PROFILE=2`: sq
 | `hardware` | `isa_board_unknown` | `/items/11/evidence/0/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
 | `hardware` | `bitstream_last_measured` | `/items/27/source/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
 | `hardware` | `bitstream_last_measured` | `/items/27/evidence/0/sha256` | `86d8e241d314…` | `1cdf31cd3579…` |
+
+## Makefile — Opsi A HDMI tanpa -nodsp
+
+`rtl/fpga/gowin/Makefile` · penyebab `73fc457` · bukti kesetaraan **insert-only** · melanjutkan entri **Makefile — lapis 3 slot UART Ka'bah**
+
+73fc457 menambahkan satu baris override khusus-target `hdmi_synth: YOSYS_FLAGS =` (beserta satu baris komentar penjelasan) di atas `hdmi_synth` supaya sintesis wrapper HDMI Opsi A berjalan tanpa `-nodsp` (`USE_DSP=1`), tanpa mengubah `YOSYS_FLAGS ?= -nodsp` untuk target lain — 2 baris ditambahkan, tidak ada baris yang dihapus atau diubah. Baris 24 dan 25 yang dibaca `fpga_device` dan `fpga_family` tidak berubah dan tidak bergeser; yang berubah hash utuh berkasnya.
+
+| catatan | butir | pointer | lama | sekarang |
+|---|---|---|---|---|
+| `hardware` | `fpga_device` | `/items/1/source/sha256` | `7a2b150d6247…` | `282ed72d9018…` |
+| `hardware` | `fpga_device` | `/items/1/evidence/0/sha256` | `7a2b150d6247…` | `282ed72d9018…` |
+| `hardware` | `fpga_family` | `/items/2/source/sha256` | `7a2b150d6247…` | `282ed72d9018…` |
+| `hardware` | `fpga_family` | `/items/2/evidence/0/sha256` | `7a2b150d6247…` | `282ed72d9018…` |
 
 ## Mengulang
 
