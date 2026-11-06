@@ -267,6 +267,12 @@ $(RTL_DIR)/hcpu_dashboard.hex $(RTL_DIR)/hcpu_dashboard_pos.vh: \
 		$(RTL_DIR)/scripts/gen_dashboard.py
 	$(PYTHON) $< >/dev/null
 
+# Option A (owner, 5 November 2026): the HDMI slot instantiates
+# hcpu_gowin_core #(.USE_DSP(1)) and synthesises without -nodsp so the
+# 14-lane 8x8 MAC in hcpu_codex_alu and 32x32 multiply in hcpu_mul map to
+# hard MULT9X9/MULT36X36 DSP blocks, freeing LUT4 headroom for the M5.2B
+# display pipeline. Apycula 0.30+ in oss-cad-suite packs MULT9X9 cleanly.
+hdmi_synth: YOSYS_FLAGS =
 hdmi_synth: program.hex $(RTL_DIR)/hcpu_dashboard.hex $(RTL_DIR)/hcpu_dashboard_pos.vh
 	yosys -p "read_verilog -I $(RTL_DIR) $(HDMI_SOURCES); \
 	          synth_gowin $(YOSYS_FLAGS) -top $(HDMI_TOP) -json hdmi.json"

@@ -114,7 +114,35 @@
 // user_mode, shell, kernel, branch_trap_race and the shadow sweep, the number
 // of cycles an EXCEPTION was held by it is zero.
 //
-// RTL FINGERPRINT: 8a9015981096ad2c96fde4393c17d8f107fec62fcb3f833e2bad319141664157
+// ── RE-MEASURED, 5 November 2026, Option A (USE_DSP=1, Candidate B, Staged Reset) ──
+//
+// `make PROGRAM=../../programs/loader.hasm hdmi_bitstream` -- yosys 0.68+138
+// (without -nodsp) -> nextpnr-himbaechel 0.11.1-19 -> gowin_pack (Apycula 0.34),
+// GW2AR-LV18QN88C8/I7, loader baked in. Owner decision (Option A): align
+// hcpu_hdmi_top.v and hcpu_hdmi.cst with the physical HDMI configuration
+// proven on Unified SoC Stage 1.5 + USSS:
+//   1. Hard-DSP: hcpu_gowin_core #(.USE_DSP(1)) maps the 14-lane 8x8 MAC in
+//      hcpu_codex_alu and 32x32 multiply in hcpu_mul to 14 x MULT9X9 and
+//      1 x MULT36X36 hard DSP blocks, saving 2,327 LUT4 (16,491 -> 14,164)
+//      so the M5.2B display pipeline places and routes with 6,572 LUT4 spare.
+//   2. Candidate B TMDS pins: 33, 35, 37, 39 with IO_TYPE=LVCMOS33D DRIVE=8
+//      and standard Gowin/Sipeed lane order (_2 -> 35, _1 -> 37, _O -> 39).
+//   3. Staged reset release (2.0 ms pll_locked qualification -> clkdiv_rst_n
+//      -> oser_rst -> video_rst_n) and 1-cycle DVI pipeline registers
+//      (red_dvi, green_dvi, blue_dvi, de_dvi, hsync_dvi, vsync_dvi).
+//
+//     IOB           16 /    384    4%
+//     LUT4      14,164 / 20,736   68%
+//     ALU        2,678 / 15,552   17%
+//     DFF        5,520 / 15,552   35%
+//     BSRAM         24 /     46   52%
+//     MULT9X9       14 /     96   14%
+//     MULT36X36      1 /     12    8%
+//     Fmax      101.13 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//                97.51 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
+//     Bitstream  7,261,470 bytes, sha256 a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f
+//
+// RTL FINGERPRINT: abfe1f5d03a5c56d9c9b29b98a57eff81595db0ba88873f180b0c36e29fab116
 //
 `include "hcpu_pkg.vh"
 
@@ -154,15 +182,85 @@ module hcpu_hdmi_top #(
     wire serial_clk;
     wire pixel_clk;
     wire pll_locked;
-    // Not btn_rst_n & pll_locked. btn_rst_n is pin 87 = MODE1, which this
-    // board holds low -- measured, it is what deadlocked the CPU before
-    // hcpu_gowin_top.v's reset was made edge-sensitive. Gating on its level
-    // pinned video_rst_n at 0, and because it also gates CLKDIV.RESETN below,
-    // the pixel clock was never generated at all: the monitor saw no signal
-    // rather than a bad picture. PLL lock is the condition that actually
-    // matters here; the button's reset job belongs to the CPU, which now
-    // handles it internally.
-    wire video_rst_n = pll_locked;
+
+    // ── Staged reset sequencer (aligned with Unified SoC Stage 1.5) ──
+    // 1. Synchronize raw rPLL lock into clk_27m and qualify for 2.0 ms
+    //    (54,000 cycles at 27.000 MHz).
+    // 2. Release clkdiv_rst_n (CLKDIV.RESETN) first so pixel_clk (74.25 MHz)
+    //    oscillates cleanly before OSER10 or video timing leave reset.
+    // 3. Wait 16 reference clocks, then release oser_rst synchronously in
+    //    pixel_clk for DVI_TX_Top.
+    // 4. Wait 32 reference clocks, then release video_rst_n synchronously in
+    //    pixel_clk for video timing and the M5.2B display pipeline.
+    localparam integer LOCK_QUAL_CYCLES   = 54_000;
+    localparam integer CLKDIV_WAIT_CYCLES = 16;
+    localparam integer TIMING_WAIT_CYCLES = 32;
+    localparam integer QUAL_W = $clog2(LOCK_QUAL_CYCLES + 1);
+    localparam integer WAIT_W = $clog2(TIMING_WAIT_CYCLES + 1);
+
+    reg pll_s1 = 1'b0, pll_s2 = 1'b0;
+    always @(posedge clk_27m) begin
+        pll_s1 <= pll_locked;
+        pll_s2 <= pll_s1;
+    end
+
+    reg [QUAL_W-1:0] qual_cnt       = {QUAL_W{1'b0}};
+    reg [WAIT_W-1:0] seq_cnt        = {WAIT_W{1'b0}};
+    reg              pll_qual_27m   = 1'b0;
+    reg              clkdiv_rst_n   = 1'b0;
+    reg              oser_rel_27m   = 1'b0;
+    reg              timing_rel_27m = 1'b0;
+
+    always @(posedge clk_27m) begin
+        if (!pll_s2) begin
+            qual_cnt       <= {QUAL_W{1'b0}};
+            seq_cnt        <= {WAIT_W{1'b0}};
+            pll_qual_27m   <= 1'b0;
+            clkdiv_rst_n   <= 1'b0;
+            oser_rel_27m   <= 1'b0;
+            timing_rel_27m <= 1'b0;
+        end else if (!pll_qual_27m) begin
+            if (qual_cnt >= LOCK_QUAL_CYCLES - 1) begin
+                pll_qual_27m <= 1'b1;
+                clkdiv_rst_n <= 1'b1;
+                seq_cnt      <= {WAIT_W{1'b0}};
+            end else begin
+                qual_cnt <= qual_cnt + 1'b1;
+            end
+        end else begin
+            if (seq_cnt < TIMING_WAIT_CYCLES[WAIT_W-1:0])
+                seq_cnt <= seq_cnt + 1'b1;
+            if (seq_cnt >= CLKDIV_WAIT_CYCLES[WAIT_W-1:0] - 1'b1)
+                oser_rel_27m <= 1'b1;
+            if (seq_cnt >= TIMING_WAIT_CYCLES[WAIT_W-1:0] - 1'b1)
+                timing_rel_27m <= 1'b1;
+        end
+    end
+
+    reg oser_rst_s1 = 1'b1, oser_rst_s2 = 1'b1;
+    always @(posedge pixel_clk or negedge oser_rel_27m) begin
+        if (!oser_rel_27m) begin
+            oser_rst_s1 <= 1'b1;
+            oser_rst_s2 <= 1'b1;
+        end else begin
+            oser_rst_s1 <= 1'b0;
+            oser_rst_s2 <= oser_rst_s1;
+        end
+    end
+    wire oser_rst = oser_rst_s2;
+
+    reg vid_rst_s1 = 1'b0, vid_rst_s2 = 1'b0;
+    always @(posedge pixel_clk or negedge timing_rel_27m) begin
+        if (!timing_rel_27m) begin
+            vid_rst_s1 <= 1'b0;
+            vid_rst_s2 <= 1'b0;
+        end else begin
+            vid_rst_s1 <= 1'b1;
+            vid_rst_s2 <= vid_rst_s1;
+        end
+    end
+    wire video_rst_n = vid_rst_s2;
+
     wire hcpu_uart_txd;
     wire [5:0] hcpu_led;
 
@@ -177,7 +275,10 @@ module hcpu_hdmi_top #(
     // has no telemetry ports -- it cannot have any, because a top level must
     // find a pin for every output and this sideband is eighty-four bits wide.
     // hcpu_gowin_top.v carries the measurement that forced the split.
-    hcpu_gowin_core u_hcpu (
+    // USE_DSP=1 maps the 14-lane 8x8 MAC in hcpu_codex_alu and 32x32 multiply
+    // in hcpu_mul to GW2AR-18C hard MULT9X9/MULT36X36 blocks, freeing the
+    // LUT4 headroom required for the M5.2B display pipeline to place and route.
+    hcpu_gowin_core #(.USE_DSP(1)) u_hcpu (
         .clk_27m(clk_27m), .btn_rst_n(btn_rst_n), .uart_rxd(uart_rxd),
         .uart_txd(hcpu_uart_txd), .led(hcpu_led),
         .sd_clk(sd_clk), .sd_cmd(sd_cmd), .sd_dat(sd_dat),
@@ -188,7 +289,7 @@ module hcpu_hdmi_top #(
 
     TMDS_rPLL u_tmds_rpll (.clkin(clk_27m), .clkout(serial_clk), .lock(pll_locked));
     CLKDIV u_clkdiv (
-        .RESETN(video_rst_n), .HCLKIN(serial_clk), .CLKOUT(pixel_clk), .CALIB(1'b1)
+        .RESETN(clkdiv_rst_n), .HCLKIN(serial_clk), .CLKOUT(pixel_clk), .CALIB(1'b1)
     );
     defparam u_clkdiv.DIV_MODE = "5";
     defparam u_clkdiv.GSREN = "false";
@@ -320,10 +421,35 @@ module hcpu_hdmi_top #(
         .red(red), .green(green), .blue(blue)
     );
 
+    reg [7:0] red_dvi   = 8'h00;
+    reg [7:0] green_dvi = 8'h00;
+    reg [7:0] blue_dvi  = 8'h00;
+    reg       de_dvi    = 1'b0;
+    reg       hsync_dvi = 1'b0;
+    reg       vsync_dvi = 1'b0;
+
+    always @(posedge pixel_clk or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            red_dvi   <= 8'h00;
+            green_dvi <= 8'h00;
+            blue_dvi  <= 8'h00;
+            de_dvi    <= 1'b0;
+            hsync_dvi <= 1'b0;
+            vsync_dvi <= 1'b0;
+        end else begin
+            red_dvi   <= red;
+            green_dvi <= green;
+            blue_dvi  <= blue;
+            de_dvi    <= de;
+            hsync_dvi <= hsync;
+            vsync_dvi <= vsync;
+        end
+    end
+
     DVI_TX_Top u_dvi_tx (
-        .I_rst_n(video_rst_n), .I_serial_clk(serial_clk), .I_rgb_clk(pixel_clk),
-        .I_rgb_vs(vsync), .I_rgb_hs(hsync), .I_rgb_de(de),
-        .I_rgb_r(red), .I_rgb_g(green), .I_rgb_b(blue),
+        .I_rst_n(~oser_rst), .I_serial_clk(serial_clk), .I_rgb_clk(pixel_clk),
+        .I_rgb_vs(vsync_dvi), .I_rgb_hs(hsync_dvi), .I_rgb_de(de_dvi),
+        .I_rgb_r(red_dvi), .I_rgb_g(green_dvi), .I_rgb_b(blue_dvi),
         .tmds_clk_serial(tmds_clk_serial), .tmds_data_serial(tmds_data_serial)
     );
 

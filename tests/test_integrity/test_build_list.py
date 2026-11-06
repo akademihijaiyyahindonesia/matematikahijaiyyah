@@ -866,6 +866,15 @@ def _not_failed(docs: Docs, col: _Collection) -> str:
     return sorted(col.nodes - set(re.findall(_NODE, _record(docs)["rest"])))[0]
 
 
+def _with_one_failure(docs: Docs, col: _Collection) -> tuple[Docs, str]:
+    """Ensure a valid 1-failure control exists even when the live record has 0 failures."""
+    existing = re.findall(_NODE, _record(docs)["rest"].split("Yang error:")[0])
+    if existing:
+        return docs, existing[0]
+    node = _not_failed(docs, col)
+    return _with_record(docs, p=-1, f=1, gagal=f"`{node}`."), node
+
+
 def _sabotages() -> list[tuple[str, str, Callable[[Inputs], tuple[Inputs, Inputs]]]]:
     def same(change: Callable[[Docs, _Collection], Inputs]) -> Callable[[Inputs], tuple[
             Inputs, Inputs]]:
@@ -876,18 +885,35 @@ def _sabotages() -> list[tuple[str, str, Callable[[Inputs], tuple[Inputs, Inputs
         return {r: re.sub(rf"(?<![\d.]){re.escape(old)}(?!\d)", new, t)
                 for r, t in docs.items()}, col
 
+    def failure_without_name(real: Inputs) -> tuple[Inputs, Inputs]:
+        docs, col = real
+        control, _ = _with_one_failure(docs, col)
+        return (control, col), (_with_record(control, gagal="tidak ada."), col)
+
+    def unknown_failure_name(real: Inputs) -> tuple[Inputs, Inputs]:
+        docs, col = real
+        control, first = _with_one_failure(docs, col)
+        return (control, col), (_swap(control, _CHECKLIST, f"`{first}`", f"`{first}_gone`"), col)
+
     def double_counted(real: Inputs) -> tuple[Inputs, Inputs]:
         docs, col = real
-        node = f"`{_first_failed(docs)}`"
-        return real, (_with_record(docs, p=-1, e=1, error=node), col)
+        control, first = _with_one_failure(docs, col)
+        node = f"`{first}`"
+        return (control, col), (_with_record(control, p=-1, e=1, error=node), col)
+
+    def duplicate_failure_name(real: Inputs) -> tuple[Inputs, Inputs]:
+        docs, col = real
+        control, first = _with_one_failure(docs, col)
+        failed = _record(control)["rest"].split("Yang error:")[0].split("Yang gagal:")[1].strip()
+        return (control, col), (_with_record(control, p=-1, f=1, gagal=f"{failed} `{first}`"), col)
 
     def error_as_failure(real: Inputs) -> tuple[Inputs, Inputs]:
         docs, col = real
         node = f"`{_not_failed(docs, col)}`"
         control = _with_record(docs, p=-1, e=1, error=node)
-        failed = _record(control)["rest"].split("Yang error:")[0].split("Yang gagal:")[1]
-        return (control, col), (_with_record(control, gagal=f"{failed.strip()} {node}",
-                                             error="tidak ada."), col)
+        failed = _record(control)["rest"].split("Yang error:")[0].split("Yang gagal:")[1].strip()
+        gagal_list = f"`{node}`." if failed.startswith("tidak ada") else f"{failed} {node}"
+        return (control, col), (_with_record(control, gagal=gagal_list, error="tidak ada."), col)
 
     def moved_record(docs: Docs, col: _Collection) -> Inputs:
         record = _record(docs).group(0)
@@ -956,18 +982,12 @@ def _sabotages() -> list[tuple[str, str, Callable[[Inputs], tuple[Inputs, Inputs
          same(lambda d, c: ({**d, "cosmictera-build/ON.md": d["cosmictera-build/ON.md"]
                              + "\n\n" + _record(d).group(0) + "\n"}, c))),
         ("S9c the record leaves CHECKLIST.md", "G6", same(moved_record)),
-        ("S10a a failure without its name", "G6",
-         same(lambda d, c: (_with_record(d, gagal="tidak ada."), c))),
-        ("S10b a name the collection does not hold", "G6",
-         same(lambda d, c: (_swap(d, _CHECKLIST, f"`{_first_failed(d)}`",
-                                  f"`{_first_failed(d)}_gone`"), c))),
+        ("S10a a failure without its name", "G6", failure_without_name),
+        ("S10b a name the collection does not hold", "G6", unknown_failure_name),
         ("S10c one test both failed and errored", "G6", double_counted),
         ("S10e a name under a list that counts 0", "G6",
          same(lambda d, c: (_with_record(d, error=f"`{_not_failed(d, c)}`."), c))),
-        ("S10f one failure named twice", "G6",
-         same(lambda d, c: (_with_record(d, p=-1, f=1, gagal=_record(d)["rest"].split(
-             "Yang error:")[0].split("Yang gagal:")[1].strip() + f" `{_first_failed(d)}`"),
-                            c))),
+        ("S10f one failure named twice", "G6", duplicate_failure_name),
         ("S10d an error written as a failure", "G6", error_as_failure),
     ]
 

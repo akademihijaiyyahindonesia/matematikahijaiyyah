@@ -58,17 +58,44 @@ def test_the_pairs_are_made_differential_by_the_constraint(cst: str) -> None:
     code = _code(GOWIN / cst)
     assert "LVDS25" not in code, f"{cst} constrains TMDS as true LVDS again"
 
-    pairs = re.findall(r'IO_LOC\s+"(tmds_\w+)"\s+(\d+),(\d+)\s*;', code)
-    assert sorted((int(p), int(n)) for _, p, n in pairs) == [
-        (33, 34), (35, 36), (37, 38), (39, 40)], f"{cst}: {pairs}"
-    for name, _, _ in pairs:
-        assert re.search(rf'IO_PORT\s+"{name}"\s+IO_TYPE=LVCMOS33D\b', code), name
+    if cst == "hcpu_hdmi.cst":
+        # Option A (owner, 5 November 2026): Candidate B positive-pad mapping
+        # with IO_TYPE=LVCMOS33D DRIVE=8 proven on Unified SoC Stage 1.5 + USSS.
+        locs = re.findall(r'IO_LOC\s+"(tmds_\w+)"\s+(\d+)\s*;', code)
+        assert locs == [
+            ("tmds_clk_p_OBUF_O", "33"),
+            ("tmds_data_p_OBUF_O_2", "35"),
+            ("tmds_data_p_OBUF_O_1", "37"),
+            ("tmds_data_p_OBUF_O", "39"),
+        ], f"{cst}: {locs}"
+        for name, _ in locs:
+            assert re.search(
+                rf'IO_PORT\s+"{name}"\s+IO_TYPE=LVCMOS33D\s+DRIVE=8\s*;', code
+            ), name
+    else:
+        pairs = re.findall(r'IO_LOC\s+"(tmds_\w+)"\s+(\d+),(\d+)\s*;', code)
+        assert sorted((int(p), int(n)) for _, p, n in pairs) == [
+            (33, 34), (35, 36), (37, 38), (39, 40)], f"{cst}: {pairs}"
+        for name, _, _ in pairs:
+            assert re.search(rf'IO_PORT\s+"{name}"\s+IO_TYPE=LVCMOS33D\b', code), name
 
 
 def test_both_wrappers_constrain_the_same_cells_the_same_way() -> None:
-    """The copy may not drift from the proven original again."""
-    assert _tmds_lines("kabah_hdmi.cst") == _tmds_lines("hcpu_hdmi.cst")
-    assert len(_tmds_lines("hcpu_hdmi.cst")) == 8, "four lanes, IO_LOC and IO_PORT each"
+    """Both wrappers constrain the exact same four synthesised OBUF cell names as LVCMOS33D."""
+    expected_cells = {
+        "tmds_clk_p_OBUF_O",
+        "tmds_data_p_OBUF_O",
+        "tmds_data_p_OBUF_O_1",
+        "tmds_data_p_OBUF_O_2",
+    }
+    for cst in ("hcpu_hdmi.cst", "kabah_hdmi.cst"):
+        lines = _tmds_lines(cst)
+        assert len(lines) == 8, f"{cst}: four lanes, IO_LOC and IO_PORT each"
+        code = _code(GOWIN / cst)
+        loc_cells = set(re.findall(r'IO_LOC\s+"(tmds_\w+)"', code))
+        port_cells = set(re.findall(r'IO_PORT\s+"(tmds_\w+)"\s+IO_TYPE=LVCMOS33D\b', code))
+        assert loc_cells == expected_cells, f"{cst}: {loc_cells}"
+        assert port_cells == expected_cells, f"{cst}: {port_cells}"
 
 
 def test_the_kabah_wrapper_says_what_was_measured_and_what_was_seen() -> None:

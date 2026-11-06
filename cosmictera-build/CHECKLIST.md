@@ -31,7 +31,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 | | apa | perintah |
 |---|---|---|
 | ✅ | **6.367 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
-| ⬜ | lari penuh keluar 1 — hasilnya di † | `python3 -m pytest -q` |
+| ✅ | lari penuh keluar 0 — hasilnya di † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
 | ✅ | mypy bersih, 178 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
@@ -281,7 +281,6 @@ make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 
 ## Lari terakhir
 
-Lari terakhir, 6 November 2026: **6.364 lulus, 2 dilewati, 1 gagal, 0 error dari
-6.367 terkumpul**. Yang gagal:
-`tests/test_integrity/test_place_and_route.py::test_the_hdmi_wrapper_records_its_own_fingerprint`.
+Lari terakhir, 6 November 2026: **6.365 lulus, 2 dilewati, 0 gagal, 0 error dari
+6.367 terkumpul**. Yang gagal: tidak ada.
 Yang error: tidak ada.

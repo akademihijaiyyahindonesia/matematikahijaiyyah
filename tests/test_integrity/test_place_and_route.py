@@ -287,11 +287,21 @@ def test_the_hdmi_wrapper_records_its_routed_result() -> None:
     rows = {name: (int(used.replace(",", "")), int(total.replace(",", "")))
             for name, used, total in re.findall(
                 r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", hdmi, re.M)}
-    # The HDMI slot instantiates hcpu_gowin_top, so it carries the SD
-    # controller too: +746 LUT4, +525 DFF and the buffer's BSRAM block.
-    assert rows == {"IOB": (15, 384), "LUT4": (15994, 20736),
-                    "DFF": (5134, 15552), "BSRAM": (18, 46)}
-    assert re.search(r"^//\s+Fmax\s+115\.43 MHz", hdmi, re.M)
+    # Re-measured 2026-11-05 under Option A (USE_DSP=1 without -nodsp,
+    # Candidate B TMDS pins 33/35/37/39 DRIVE=8, staged reset sequencer and
+    # 1-cycle DVI pipeline registers).
+    assert rows == {
+        "IOB": (16, 384),
+        "LUT4": (14164, 20736),
+        "ALU": (2678, 15552),
+        "DFF": (5520, 15552),
+        "BSRAM": (24, 46),
+        "MULT9X9": (14, 96),
+        "MULT36X36": (1, 12),
+    }
+    assert re.search(r"^//\s+Fmax\s+101\.13 MHz", hdmi, re.M)
+    assert re.search(r"^//\s+97\.51 MHz\s+pixel_clk", hdmi, re.M)
+    assert "a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f" in hdmi
 
 def test_the_kabah_hdmi_wrapper_records_its_own_fingerprint() -> None:
     """Built for the first time on 11 September, and held like the others."""
