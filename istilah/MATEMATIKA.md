@@ -80,13 +80,13 @@ Metrik-Vektorial VTM · NMV · AGM · ITM · EXM` — dan tiap huruf punya modul
 | | kepanjangan | pertanyaannya | modul | bab |
 |---|---|---|---|---|
 | **VTM** | Vektronometry | bagaimana huruf diukur sebagai vektor | `algebra/vektronometry.py` | II-A, hal 17–21 |
-| **NMV** | Normivektor | apa yang membedakan dua huruf | `algebra/normivektor.py` | II-B, hal 22–24 |
+| **NMV** | Normvektor | apa yang membedakan dua huruf | `algebra/normvektor.py` | II-B, hal 22–24 |
 | **AGM** | Aggregametric | bagaimana banyak huruf dijumlahkan | `algebra/aggregametric.py` | II-C, hal 25–28 |
 | **ITM** | Intrametric | jarak di dalam satu huruf | `algebra/intrametric.py` | II-D, hal 29–31 |
 | **EXM** | Exometric | jarak antar huruf | `algebra/exometric.py` | II-E, hal 32–36 |
 
-> **Ejaannya `Normivektor`, bukan `Normvektor`.** Kode memakai bentuk pertama
-> dua belas kali (`algebra/normivektor.py`, `cosmictera/CODEX.md`); `AGENTS.md`
+> **Ejaannya `Normvektor`, bukan `Normvektor`.** Kode memakai bentuk pertama
+> dua belas kali (`algebra/normvektor.py`, `cosmictera/CODEX.md`); `AGENTS.md`
 > baris 101 memakai bentuk kedua satu kali. Kode sumbernya, prosa yang
 > menyimpang — dan ini dicatat, bukan dirapikan sepihak.
 

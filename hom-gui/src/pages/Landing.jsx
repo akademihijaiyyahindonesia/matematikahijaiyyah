@@ -93,7 +93,7 @@ const operations = [
   },
   {
     code: 'NMV',
-    name: 'Normivektor',
+    name: 'Normvektor',
     tagline: 'Norm-Difference Diagnostics',
     color: 'hom-gold',
     borderColor: 'border-hom-gold/30',
@@ -103,7 +103,7 @@ const operations = [
     question: 'How do two letters differ?',
     identity: '‖Δ‖² = ΔΘ² + ‖ΔN‖² + ‖ΔK‖² + ‖ΔQ‖²',
     description:
-      'Normivektor computes the structured difference between any two letters — not just "how much" they differ (scalar distance), but precisely "where" the difference lies (which geometric layer). The norm of the difference vector decomposes into four orthogonal contributions, enabling layer-by-layer diagnostics. This is discrete finite difference, not continuous calculus.',
+      'Normvektor computes the structured difference between any two letters — not just "how much" they differ (scalar distance), but precisely "where" the difference lies (which geometric layer). The norm of the difference vector decomposes into four orthogonal contributions, enabling layer-by-layer diagnostics. This is discrete finite difference, not continuous calculus.',
     capabilities: [
       'Total difference operator Δ(h₁, h₂) ∈ ℤ¹⁴',
       'Per-layer decomposition: Θ, N, K, Q contributions',
@@ -533,7 +533,7 @@ export default function Landing() {
                   },
                   {
                     id: 8,
-                    result: 'Normivektor Identity',
+                    result: 'Normvektor Identity',
                     tex: '\\|\\Delta\\|^2 = \\Delta_\\Theta^2 + \\|\\Delta_N\\|^2 + \\|\\Delta_K\\|^2 + \\|\\Delta_Q\\|^2',
                     label: 'VF',
                     labelColor: 'text-hom-gold',
@@ -603,17 +603,17 @@ export default function Landing() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="p-3 rounded-lg bg-hom-accent/5 border border-hom-accent/15 text-center">
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-hom-accent/10 border border-hom-accent/20 text-hom-accent">DP</span>
-              <div className="text-[10px] text-hom-muted mt-2">{t('Decomposition Property')}</div>
+              <div className="text-[10px] text-hom-muted mt-2">{t('Design Property')}</div>
               <div className="text-[10px] text-hom-text/60">{t('Structural splitting of invariants')}</div>
             </div>
             <div className="p-3 rounded-lg bg-hom-green/5 border border-hom-green/15 text-center">
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-hom-green/10 border border-hom-green/20 text-hom-green">CC</span>
-              <div className="text-[10px] text-hom-muted mt-2">{t('Computational Check')}</div>
+              <div className="text-[10px] text-hom-muted mt-2">{t('Computationally Confirmed')}</div>
               <div className="text-[10px] text-hom-text/60">{t('Verified exhaustively on all 28 letters')}</div>
             </div>
             <div className="p-3 rounded-lg bg-hom-gold/5 border border-hom-gold/15 text-center">
               <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-hom-gold/10 border border-hom-gold/20 text-hom-gold">VF</span>
-              <div className="text-[10px] text-hom-muted mt-2">{t('Verified Formal')}</div>
+              <div className="text-[10px] text-hom-muted mt-2">{t('Verified Formally')}</div>
               <div className="text-[10px] text-hom-text/60">{t('Proven theorem with formal proof')}</div>
             </div>
           </div>
@@ -956,14 +956,14 @@ export default function Landing() {
 
             <div className="grid grid-cols-5 gap-2">
               <NodeBox
-                label={t('Normivektor')}
+                label={t('Normvektor')}
                 color={colors.red}
                 borderColor={`${colors.red}50`}
                 bgColor={`${colors.red}0a`}
                 glow
               />
               <NodeBox
-                label={t('Vectronometry')}
+                label={t('Vektronometry')}
                 color={colors.accent}
                 borderColor={`${colors.accent}50`}
                 bgColor={`${colors.accent}0a`}
@@ -1368,8 +1368,8 @@ npm run dev
                 </div>
               </div>
 
-              {/* Right Icon (PT) */}
-              <img src={import.meta.env.BASE_URL + 'icon-PT.png'} alt="PT icon" className="h-16 md:h-24 w-auto object-contain opacity-100 hover:scale-110 transition-transform duration-300 drop-shadow-lg" />
+              {/* Right Icon (HMCL) */}
+              <img src={import.meta.env.BASE_URL + 'icon-PT.png'} alt="HMCL Logo" className="h-16 md:h-24 w-auto object-contain opacity-100 hover:scale-110 transition-transform duration-300 drop-shadow-lg" />
             </div>
           </div>
 

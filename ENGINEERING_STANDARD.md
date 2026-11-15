@@ -246,7 +246,13 @@ hijaiyyah-mathematics/
 │       │   ├── model.py            ← physics vs. baseline embedding, sum-pooled
 │       │   ├── train.py            ← `python3 -m hijaiyyah.nui.train`
 │       │   ├── claims.py           ← tests external "Codex NUI" doc claims against sealed data
-│       │   └── pattern_language.py ← tests order effects on GF(2) exomatrix composition
+│       │   ├── pattern_language.py ← tests order effects on GF(2) exomatrix composition
+│       │   └── autonomous/         ← Layers 8–11 autonomous diagnostics, reasoning, engineering, universal intelligence
+│       │       ├── __init__.py
+│       │       ├── layer8_diagnostics.py
+│       │       ├── layer9_reasoning.py
+│       │       ├── layer10_engineering.py
+│       │       └── layer11_universal.py
 │       │
 │       └── gui/
 │           ├── __init__.py

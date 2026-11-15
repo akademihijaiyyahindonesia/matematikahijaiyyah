@@ -1,0 +1,99 @@
+{
+  "baseline_bitstream_sha256": "723ce67f0098157042a1bd389071d41fb28cee9a1eeb3282424f8ef4c7fdae18",
+  "negtest_bitstream": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/cosmictera_unified_soc_usss_negtest.fs",
+  "negtest_bitstream_sha256": "0d7207a67e4434e644d0ec08176f4dc1bfbbd01b879125144082145e33ab3604",
+  "mode": "SRAM_ONLY",
+  "elapsed_sec": 5.792,
+  "uart_bytes": 76,
+  "uart_sha256": "90e3c88ad5a061583cd5ac960f75c7cf8dc8f6a39325600949ccbf44f7644f72",
+  "uart_hex": "36 0A 31 0A 31 30 0A 31 36 0A 31 30 0A 35 32 0A 31 30 0A 35 32 0A 31 30 0A 31 32 38 0A 32 36 0A 31 31 32 0A 32 36 0A 32 34 0A 32 36 0A 33 31 32 0A 36 0A 31 0A 39 0A 37 0A 0A 43 59 43 4C 45 53 3D 30 30 30 32 30 31 37 31 0D 0A 0A",
+  "uart_lines": [
+    "6",
+    "1",
+    "10",
+    "16",
+    "10",
+    "52",
+    "10",
+    "52",
+    "10",
+    "128",
+    "26",
+    "112",
+    "26",
+    "24",
+    "26",
+    "312",
+    "6",
+    "1",
+    "9",
+    "7",
+    "CYCLES=00020171"
+  ],
+  "scenarios": {
+    "S0_POWER_ON_BIST_AUTH_OK": {
+      "status_bits_4_0": 6,
+      "expected_status": 6,
+      "reason_mask": 1,
+      "expected_reason": 1,
+      "pass": true
+    },
+    "S1_HMAC_TAG_MISMATCH_REJECT": {
+      "status_bits_4_0": 10,
+      "expected_status": 10,
+      "reason_mask": 16,
+      "expected_reason": 16,
+      "pass": true
+    },
+    "S2_TIMESTAMP_EXPIRED_REJECT": {
+      "status_bits_4_0": 10,
+      "expected_status": 10,
+      "reason_mask": 52,
+      "expected_reason": 52,
+      "pass": true
+    },
+    "S3_NONCE_REUSED_REJECT": {
+      "status_bits_4_0": 10,
+      "expected_status": 10,
+      "reason_mask": 52,
+      "expected_reason": 52,
+      "pass": true
+    },
+    "S4_UNAUTHORIZED_PORT_REJECT": {
+      "status_bits_4_0": 10,
+      "expected_status": 10,
+      "reason_mask": 128,
+      "expected_reason": 128,
+      "pass": true
+    },
+    "S5_OUT_OF_ALPHABET_SYMBOL_REJECT": {
+      "status_bits_4_0": 26,
+      "expected_status": 26,
+      "reason_mask": 112,
+      "expected_reason": 112,
+      "pass": true
+    },
+    "S6_KEY_UNPROVISIONED_BLOCKED_ERROR": {
+      "status_bits_4_0": 26,
+      "expected_status": 26,
+      "reason_mask": 24,
+      "expected_reason": 24,
+      "pass": true
+    },
+    "S7_SECURITY_ABORT_HALTS_KABAH": {
+      "status_bits_4_0": 26,
+      "expected_status": 26,
+      "reason_mask": 312,
+      "expected_reason": 304,
+      "pass": false
+    },
+    "S8_VALID_REQUEST_AFTER_FAULT_AUTH_OK": {
+      "status_bits_4_0": 6,
+      "expected_status": 6,
+      "reason_mask": 1,
+      "expected_reason": 1,
+      "pass": true
+    }
+  },
+  "all_pass": false
+}

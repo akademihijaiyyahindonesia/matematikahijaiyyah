@@ -1,0 +1,26 @@
+flowchart TB
+    subgraph TOP1["1. hcpu_gowin_top.v (UART Compute Top)"]
+        G_CORE["hcpu_gowin_core<br/>4Kx32 IMEM + u_report_tx + hcpu_top"]
+        H_TOP["hcpu_top (rtl/hcpu_top.v)<br/>u_fetch, u_decode, u_forward, u_execute, u_memory,<br/>u_writeback, u_regfile, u_rom, u_guard, u_codex_alu,<br/>u_hisab, u_uart, u_mmio (u_rx, u_timer, u_sdio),<br/>u_trap, u_dataram, u_controller"]
+        G_CORE --> H_TOP
+    end
+
+    subgraph TOP2["2. hcpu_hdmi_top.v (Integrated HCPU + HDMI)"]
+        HDMI_C["u_hcpu (hcpu_gowin_core) + u_tmds_rpll + u_clkdiv<br/>+ u_timing + u_page + u_tele + u_layout + u_comp<br/>+ u_font + u_render + u_dvi_tx"]
+    end
+
+    subgraph TOP3["3. cosmictera_boot_top.v (Stage 1.4 Boot Display Top)"]
+        BOOT_C["u_tmds_rpll + u_clkdiv + u_reset_seq + u_subsys_bridge<br/>+ u_timing + u_page + u_uptime + u_events + u_logo_rom (8 BSRAM)<br/>+ u_text_rom (3 BSRAM) + u_font (1 BSRAM) + u_comp + u_render + u_dvi_tx"]
+    end
+
+    subgraph TOP4["4. hijaiyyah_kabah_gowin_top.v (Ka'bah FPGA Top)"]
+        KAB_C["hijaiyyah_kabah_top (u_des, u_gate, u_count, u_sponge,<br/>u_impulse, u_core [sbox_router, sbox, linear, round_constants])<br/>+ optional hijaiyyah_hmac (Layer 3)"]
+    end
+
+    subgraph TOP5["5. hijaiyyah_portal8888_gowin_top.v (Portal 8888 Top)"]
+        P88_C["hijaiyyah_portal8888 (u_timestamp, u_ingress,<br/>u_frame_sha256, u_hmac, key_mem[512], frame_mem[9216])"]
+    end
+
+    subgraph TOP6["6. user_project_wrapper.v (Caravel Sky130 MPW Top)"]
+        MPW_C["hcpu_wishbone_wrapper -> hcpu_top + 4Kx32 IMEM"]
+    end

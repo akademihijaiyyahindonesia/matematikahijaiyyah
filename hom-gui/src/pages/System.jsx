@@ -1,229 +1,155 @@
 /* ═══════════════════════════════════════════════════════════════
-   KOMPONEN PIPELINE HYBIT — STATUS IMPLEMENTASI
-   HOM v1.2.0 · Commit 8fa0c12
+   HIJAIYYAH SCIENTIFIC COMPUTING ENVIRONMENT — SYSTEM OVERVIEW
+   HOM v1.2.0 · Commit 920f3e61 · HM-28-v1.0-HC18D
+   Palette: Midnight #071426 · Surface #10243A · Cyan #26C6DA · Gold #D6AF57 · Text #EAF2FA
    ═══════════════════════════════════════════════════════════════ */
 
 const STATUS = {
-  OP:   { label: 'Operasional',    icon: '✅', color: '#00c853', bg: 'rgba(0,200,83,0.08)',  border: 'rgba(0,200,83,0.35)' },
-  SPEC: { label: 'Terspesifikasi', icon: '📐', color: '#d4af37', bg: 'rgba(212,175,55,0.08)', border: 'rgba(212,175,55,0.35)' },
-  DES:  { label: 'Terdesain',      icon: '📝', color: '#b388ff', bg: 'rgba(179,136,255,0.08)',border: 'rgba(179,136,255,0.35)' },
-  ASP:  { label: 'Aspirasional',   icon: '🎯', color: '#ff5252', bg: 'rgba(255,82,82,0.08)',  border: 'rgba(255,82,82,0.35)' },
+  OP:   { label: 'Operasional',    icon: '●', color: '#2ECC71', bg: 'rgba(46,204,113,0.10)',  border: '#1C3552' },
+  SPEC: { label: 'Terspesifikasi', icon: '◐', color: '#D6AF57', bg: 'rgba(214,175,87,0.10)',  border: '#1C3552' },
+  ASP:  { label: 'Aspirasional',   icon: '○', color: '#26C6DA', bg: 'rgba(38,198,218,0.10)',  border: '#1C3552' },
 };
 
-/* ─── Reusable Components ─── */
+const METRIC_CARDS = [
+  { label: 'Canonical Letters', value: '28 / 28', sub: 'HM-28 dataset', color: '#26C6DA' },
+  { label: 'Hybit Dimensions',  value: '18D',     sub: '504 integer values', color: '#D6AF57' },
+  { label: 'H-ISA Catalog',     value: '105',     sub: '84 RTL · 21 SW-only', color: '#26C6DA' },
+  { label: 'Canonical Guards',  value: '6',       sub: 'G1–G4 · T1–T2', color: '#2ECC71' },
+];
+
+const PIPELINE_STAGES = [
+  { num: '01', name: 'HC / .hcell', sub: 'Orthographic & EBNF Source' },
+  { num: '02', name: 'CellIR',      sub: 'DAG/CFG & Two-Layer Proof' },
+  { num: '03', name: '4-B′',        sub: 'Static Control Flow & Mask' },
+  { num: '04', name: 'HPG1 v2',     sub: '7-Word Header & CHECKSUM32' },
+  { num: '05', name: 'HVM / HCPU',  sub: '3-Way Parity Execution' },
+];
 
 function SectionTitle({ children, sub }) {
   return (
-    <div className="mb-6">
-      <h2 className="text-xl md:text-2xl font-bold text-hom-text tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+    <div className="mb-5">
+      <h2 className="text-lg md:text-xl font-bold text-[#EAF2FA] tracking-tight font-sans">
         {children}
       </h2>
-      {sub && <p className="text-xs text-hom-muted mt-1 font-mono">{sub}</p>}
+      {sub && <p className="text-xs text-[#8AA0B8] mt-1 font-mono">{sub}</p>}
     </div>
-  );
-}
-
-function PipelineNode({ name, sub, status, tests, glow }) {
-  const s = STATUS[status];
-  return (
-    <div
-      className="relative rounded-xl border p-4 backdrop-blur-xl transition-all duration-500 hover:scale-[1.03] hover:-translate-y-0.5 group"
-      style={{
-        borderColor: s.border,
-        backgroundColor: s.bg,
-        boxShadow: glow
-          ? `0 6px 24px rgba(0,0,0,0.4), 0 0 20px ${s.border}`
-          : '0 6px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
-      }}
-    >
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-base">{s.icon}</span>
-        <span className="text-sm font-bold font-mono" style={{ color: s.color }}>{name}</span>
-      </div>
-      {sub && <div className="text-[10px] text-hom-muted leading-tight">{sub}</div>}
-      {tests && (
-        <div className="mt-2 text-[9px] font-mono px-2 py-0.5 rounded-full inline-block border"
-          style={{ color: '#00c853', borderColor: 'rgba(0,200,83,0.3)', backgroundColor: 'rgba(0,200,83,0.08)' }}>
-          {tests} tests
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Arrow({ direction = 'down', length = 32, color = 'rgba(255,255,255,0.15)' }) {
-  if (direction === 'right') {
-    return (
-      <div className="flex items-center justify-center px-1" style={{ minWidth: 28 }}>
-        <svg width={length} height="14">
-          <defs>
-            <linearGradient id="arGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={color} />
-            </linearGradient>
-          </defs>
-          <line x1="0" y1="7" x2={length - 6} y2="7" stroke="url(#arGrad)" strokeWidth="2" />
-          <polygon points={`${length - 8},3 ${length},7 ${length - 8},11`} fill={color} />
-        </svg>
-      </div>
-    );
-  }
-  return (
-    <div className="flex justify-center" style={{ height: length }}>
-      <svg width="14" height={length}>
-        <defs>
-          <linearGradient id="adGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={color} />
-          </linearGradient>
-        </defs>
-        <line x1="7" y1="0" x2="7" y2={length - 6} stroke="url(#adGrad)" strokeWidth="2" />
-        <polygon points={`3,${length - 8} 7,${length} 11,${length - 8}`} fill={color} />
-      </svg>
-    </div>
-  );
-}
-
-function InstructionChip({ name, color = '#00d4ff' }) {
-  return (
-    <span
-      className="inline-block text-[10px] font-mono font-bold px-2 py-1 rounded-lg border mr-1.5 mb-1.5 transition-all hover:scale-105"
-      style={{ color, borderColor: `${color}50`, backgroundColor: `${color}10`, textShadow: `0 0 8px ${color}40` }}
-    >
-      {name}
-    </span>
   );
 }
 
 function StatusBadge({ status }) {
   const s = STATUS[status];
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full border"
-      style={{ color: s.color, borderColor: s.border, backgroundColor: s.bg }}>
-      {s.icon} {s.label}
+    <span
+      className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-0.5 rounded border"
+      style={{ color: s.color, borderColor: s.border, backgroundColor: s.bg }}
+    >
+      <span>{s.icon}</span>
+      <span>{s.label}</span>
     </span>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════ */
+function InstructionChip({ name, color = '#26C6DA' }) {
+  return (
+    <span
+      className="inline-block text-[11px] font-mono font-semibold px-2.5 py-1 rounded border mr-1.5 mb-1.5"
+      style={{ color, borderColor: '#1C3552', backgroundColor: '#071426' }}
+    >
+      {name}
+    </span>
+  );
+}
 
 export default function System() {
   return (
-    <div className="space-y-10 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto text-[#EAF2FA]">
 
-      {/* ─── HEADER ─── */}
-      <div className="text-center py-6">
-        <h1 className="text-3xl md:text-4xl font-black tracking-widest text-hom-accent mb-2" style={{ fontFamily: "'Orbitron', sans-serif", textShadow: '0 0 20px rgba(0,212,255,0.3)' }}>
-          Hybit Computational Architecture
-        </h1>
-        <p className="text-sm text-hom-muted font-mono">STATUS IMPLEMENTASI · HOM v1.2.0 · Commit 8fa0c12</p>
-        <div className="flex flex-wrap justify-center gap-3 mt-4">
-          {Object.entries(STATUS).map(([k, s]) => (
-            <span key={k} className="inline-flex items-center gap-1.5 text-[11px] font-mono px-3 py-1 rounded-full border"
-              style={{ color: s.color, borderColor: s.border, backgroundColor: s.bg }}>
-              {s.icon} {s.label}
-            </span>
-          ))}
+      {/* ─── TOP SCIENTIFIC HEADER ─── */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-[#1C3552] pb-5">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#EAF2FA] font-sans">
+            System Overview
+          </h1>
+          <p className="text-sm text-[#8AA0B8] mt-1 font-sans">
+            Hijaiyyah Scientific Computing Environment · HOM v1.2.0 · HM-28-v1.0-HC18D
+          </p>
+        </div>
+        <div className="mt-3 md:mt-0">
+          <span className="inline-flex items-center gap-2 text-xs font-mono font-bold px-3.5 py-1.5 rounded border border-[#1C3552] bg-[#10243A] text-[#2ECC71]">
+            ● SYSTEM READY
+          </span>
         </div>
       </div>
 
-      {/* ═══════════ JALUR KODE (Code Path) ═══════════ */}
-      <section className="rounded-2xl border border-hom-border/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-        <SectionTitle sub="Code Path">JALUR KODE</SectionTitle>
-
-        {/* Flow: HC → HCC → HASM → .hbc → HVM */}
-        <div className="flex flex-col items-center gap-0">
-          {/* Row 1: Source tools */}
-          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-0 w-full justify-center">
-            <PipelineNode name="HC Language" sub="Bahasa pemrograman codex v1.0" status="OP" tests="27" glow />
-            <Arrow direction="right" color="#00c853" length={40} />
-            <PipelineNode name="HCC Compiler" sub="6-tahap: Lexer → Parser → Semantic → Ψ → Codegen → Assemble" status="OP" tests="16" glow />
-            <Arrow direction="right" color="#d4af37" length={40} />
-            <PipelineNode name="HASM Assembler" sub="4-pass: Label → Encode → Pool → Header" status="SPEC" tests="16" />
-          </div>
-
-          <Arrow color="rgba(255,255,255,0.15)" length={28} />
-
-          {/* Row 2: File formats */}
-          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-0 w-full justify-center">
-            <div className="rounded-lg border border-hom-accent/30 bg-hom-accent/5 px-5 py-2 text-center">
-              <div className="text-sm font-mono font-bold text-hom-accent">.hc</div>
-              <div className="text-[9px] text-hom-muted">UTF-8 source</div>
+      {/* ═══════════ 4 PRIMARY METRIC CARDS ═══════════ */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {METRIC_CARDS.map((card) => (
+          <div
+            key={card.label}
+            className="rounded-lg border border-[#1C3552] bg-[#10243A] p-5"
+          >
+            <div className="text-[11px] uppercase tracking-wider font-semibold text-[#8AA0B8]">
+              {card.label}
             </div>
-            <Arrow direction="right" color="rgba(255,255,255,0.15)" length={60} />
-            <div className="rounded-lg border border-hom-accent/30 bg-hom-accent/5 px-5 py-2 text-center">
-              <div className="text-sm font-mono font-bold text-hom-accent">.hasm</div>
-              <div className="text-[9px] text-hom-muted">Assembly H-ISA</div>
+            <div
+              className="text-3xl font-bold font-mono mt-2 mb-1"
+              style={{ color: card.color }}
+            >
+              {card.value}
             </div>
-            <Arrow direction="right" color="rgba(255,255,255,0.15)" length={60} />
-            <div className="rounded-lg border border-hom-gold/30 bg-hom-gold/5 px-5 py-2 text-center">
-              <div className="text-sm font-mono font-bold text-hom-gold">.hbc</div>
-              <div className="text-[9px] text-hom-muted">Bytecode "HBYT"</div>
+            <div className="text-xs font-mono text-[#EAF2FA]">
+              {card.sub}
             </div>
           </div>
+        ))}
+      </section>
 
-          <Arrow color="rgba(255,255,255,0.15)" length={28} />
+      {/* ═══════════ 5-STAGE COMPUTATIONAL PIPELINE ═══════════ */}
+      <section className="rounded-lg border border-[#1C3552] bg-[#10243A] p-6">
+        <SectionTitle sub="End-to-End Formal Verification & Silicon Execution Path (.hcell → CellIR → 4-B′ → HPG1 v2 → HVM/HCPU)">
+          Computational Pipeline
+        </SectionTitle>
 
-          {/* Row 3: HVM */}
-          <div className="w-full max-w-lg">
-            <PipelineNode name="HVM — Hybit Virtual Machine" sub="Loader │ Interpreter │ Hybit Engine │ Guard System │ HCHECK" status="OP" tests="34" glow />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          {PIPELINE_STAGES.map((st) => (
+            <div
+              key={st.num}
+              className="rounded border border-[#1C3552] bg-[#071426] p-4 flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-mono font-bold text-[#D6AF57]">{st.num}</span>
+                <span className="text-[10px] font-mono text-[#2ECC71]">● READY</span>
+              </div>
+              <div className="text-base font-bold text-[#EAF2FA] font-sans">{st.name}</div>
+              <div className="text-[11px] text-[#8AA0B8] mt-1">{st.sub}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ═══════════ JALUR DATA (Data Path) ═══════════ */}
-      <section className="rounded-2xl border border-hom-border/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-        <SectionTitle sub="Data Path">JALUR DATA</SectionTitle>
+      {/* ═══════════ H-ISA INSTRUCTION CATALOG (105 OPCODES) ═══════════ */}
+      <section className="rounded-lg border border-[#1C3552] bg-[#10243A] p-6">
+        <SectionTitle sub="Synchronized with src/hijaiyyah/hisa/opcodes.py: 105 unique opcodes · 84 RTL-implemented · 21 software-only · 17 aliases">
+          H-ISA Instruction Architecture
+        </SectionTitle>
 
-        <div className="flex flex-col items-center gap-0">
-          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-0 w-full justify-center">
-            <PipelineNode name="Font KFGQPC" sub="SHA-256 sealed · Kanonik" status="OP" glow />
-            <Arrow direction="right" color="#00c853" length={40} />
-            <PipelineNode name="Ψ-Compiler" sub="Rasterisasi → CSGI → MainPath → Q₉₀ → N-K-Q" status="OP" tests="13" glow />
-            <Arrow direction="right" color="#d4af37" length={40} />
-            <div className="rounded-lg border border-hom-gold/30 bg-hom-gold/5 px-5 py-2 text-center">
-              <div className="text-sm font-mono font-bold text-hom-gold">.hgeo</div>
-              <div className="text-[9px] text-hom-muted">Geometry JSON</div>
-            </div>
-            <Arrow direction="right" color="#00c853" length={40} />
-            <PipelineNode name="HAR Registry" sub="HAR-001 Hijaiyyah (CERTIFIED)" status="OP" tests="15" glow />
-          </div>
-
-          <Arrow color="rgba(255,255,255,0.15)" length={28} />
-
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full justify-center">
-            <PipelineNode name="CSGI" sub="Canonical Skeleton Graph Interface" status="OP" glow />
-            <div className="text-center">
-              <div className="text-[10px] text-hom-muted font-mono mb-1">feeds into</div>
-              <Arrow direction="right" color="rgba(255,255,255,0.15)" length={40} />
-            </div>
-            <PipelineNode name="HAR-001 Hijaiyyah" sub="28 × 18 matrix · CERTIFIED · 252 bytes ROM" status="OP" glow />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ INSTRUKSI H-ISA ═══════════ */}
-      <section className="rounded-2xl border border-hom-border/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-        <SectionTitle sub="44 opcode unik · 28 di RTL · 18 tests">INSTRUKSI H-ISA</SectionTitle>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { cat: 'Aritmetika', color: '#00d4ff', ops: ['HCADD','HCSUB','HCMUL','HCDIV','HCMOD'] },
-            { cat: 'Vektor', color: '#00c853', ops: ['HCPROJ','HCNRM','HCDST','HCCOS','HCDOT'] },
-            { cat: 'Guard', color: '#ff5252', ops: ['HGRD','HGRDR','HGRDX'] },
-            { cat: 'MV-Operasi', color: '#d4af37', ops: ['HVTM','HNMV','HAGM','HITM','HEXM'] },
-            { cat: 'Kontrol', color: '#b388ff', ops: ['HLT','NOP','JMP','JZ','JNZ'] },
-            { cat: 'Memori', color: '#448aff', ops: ['HLOAD','HSTR','HPUSH','HPOP'] },
-            { cat: 'I/O', color: '#ff9800', ops: ['HPRINT','HREAD','HLOG'] },
-            { cat: 'Khusus', color: '#e91e63', ops: ['HCHECK','HSEAL'] },
+            { cat: 'System & Scalars (RTL)', color: '#26C6DA', ops: ['NOP','HALT','MOV','MOVI','HNRM2','HDIST','ERET','SYSCALL','FRD','FWR','HALT_ERR'] },
+            { cat: 'Arithmetic & Bitwise (RTL)', color: '#2ECC71', ops: ['ADD','ADDI','SUB','MUL','AND','OR','XOR','NOT','SHL','SHR','ANDI','ORI','XORI','SHLI','SHRI'] },
+            { cat: 'Control Flow & Memory (RTL)', color: '#D6AF57', ops: ['CMP','CMPI','JMP','JEQ','JNE','JGD','JNGD','CALL','RET','LOAD','STORE','PUSH','POP'] },
+            { cat: 'Codex & HISAB (RTL)', color: '#26C6DA', ops: ['HLOAD','HCADD','CGET','CSET','CMOV','CZERO','CEQ','CRHO','CU','CTHETA','CMOD4','HPACK','HCRC','HDOT'] },
+            { cat: 'Guards, I/O & Letters (RTL)', color: '#2ECC71', ops: ['HGRD','PRINT','EMITS','L_ALIF..L_YA (28 opcodes 0xE0–0xFB)'] },
+            { cat: 'Software-Only (21 in HVM)', color: '#D6AF57', ops: ['JGP','JGF','JNP','CSUB','CDOT','VNORM','VDIST','HEXMT','HDCMP','HSER','HDES','VSCL','HCHK','CHASH','CSIGN','HPROJ','VPROJ_T','VPROJ_N','VPROJ_K','VPROJ_Q','PRINTH'] },
           ].map((group) => (
-            <div key={group.cat} className="rounded-xl border p-4"
-              style={{ borderColor: `${group.color}30`, backgroundColor: `${group.color}06` }}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-3"
-                style={{ color: group.color, fontFamily: "'Orbitron', sans-serif", textShadow: `0 0 10px ${group.color}40` }}>
+            <div
+              key={group.cat}
+              className="rounded border border-[#1C3552] bg-[#071426] p-4"
+            >
+              <div
+                className="text-xs font-mono font-bold uppercase tracking-wider mb-3"
+                style={{ color: group.color }}
+              >
                 {group.cat}
               </div>
               <div className="flex flex-wrap">
@@ -236,304 +162,95 @@ export default function System() {
         </div>
       </section>
 
-      {/* ═══════════ VALIDASI & INTEGRITAS ═══════════ */}
-      <section className="rounded-2xl border border-hom-border/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-        <SectionTitle sub="Multi-layer verification">VALIDASI & INTEGRITAS</SectionTitle>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { name: 'Guard System', sub: 'G1–G4, T1–T2 · 25 ops O(1)', tests: '168/168', status: 'OP' },
-            { name: 'HCHECK', sub: 'Periodik full-scan runtime', tests: '7', status: 'OP' },
-            { name: 'HISAB Protocol', sub: 'Pertukaran codex · 3-level validation', tests: '17', status: 'OP' },
-            { name: 'SHA-256 Seal', sub: 'Integritas dataset · immutable', tests: '3', status: 'OP' },
-            { name: 'Injectivity', sub: '378 pasangan unik v₁₈', tests: '2', status: 'OP' },
-            { name: 'Exometric R1–R5', sub: 'Audit 140 checks · cascading', tests: '140/140', status: 'OP' },
-          ].map((item) => (
-            <div key={item.name} className="rounded-xl border border-hom-green/30 bg-hom-green/5 p-4 hover:scale-[1.02] transition-all"
-              style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm">✅</span>
-                <span className="text-sm font-bold text-hom-green font-mono">{item.name}</span>
+      {/* ═══════════ FORMAL VERIFICATION & SYSTEM SUBSYSTEMS ═══════════ */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-lg border border-[#1C3552] bg-[#10243A] p-6">
+          <SectionTitle sub="Mathematical & Structural Integrity">
+            Formal Verification Suite
+          </SectionTitle>
+          <div className="space-y-3 text-xs font-mono">
+            {[
+              ['Canonical Guards (G1–G4, T1–T2)', '168 / 168 PASS (+ 2H* ≤ Θ̂ check)'],
+              ['Static 4-B′ & HPG1 v2 CHECKSUM32', '80-opcode bitmap · depth ≤ 28 · K-8/K-10'],
+              ['Master Table SHA-256 Seals', '5 / 5 verified (JSON, 252B, 504B, RTL, .hb)'],
+              ['Pairwise Injectivity (v₁₈)', '378 / 378 unique pairs'],
+              ['Exomatrix R1–R5 Audit', '140 / 140 relations verified'],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between border-b border-[#1C3552] pb-2">
+                <span className="text-[#8AA0B8]">{k}</span>
+                <span className="text-[#2ECC71] font-bold">{v}</span>
               </div>
-              <div className="text-[10px] text-hom-muted mb-2">{item.sub}</div>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-hom-green/30 bg-hom-green/10 text-hom-green">
-                {item.tests} PASS
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ═══════════ LEVEL SISTEM (Designed) ═══════════ */}
-      <section className="rounded-2xl border border-hom-border/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-        <SectionTitle sub="Designed · Blueprint phase">LEVEL SISTEM</SectionTitle>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { name: 'HOS', sub: 'Hybit Operating System · 7-layer · Shell + Services + HAR Manager + Guard Monitor', desc: 'Sistem operasi native untuk ekosistem hybit' },
-            { name: 'HFS', sub: 'Hybit File System · guard-on-write · Metadata-aware', desc: 'File system dengan validasi guard otomatis pada setiap write' },
-            { name: 'H-Kernel', sub: 'Process / Memory / IO / Guard Daemon', desc: 'Kernel dengan 18-wide alignment dan pengelolaan proses hybit' },
-          ].map((item) => (
-            <div key={item.name} className="rounded-xl border border-hom-purple/30 bg-hom-purple/5 p-5 hover:scale-[1.02] transition-all"
-              style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm">📝</span>
-                <span className="text-lg font-bold text-hom-purple font-mono">{item.name}</span>
-              </div>
-              <div className="text-[11px] text-hom-text/80 mb-2">{item.sub}</div>
-              <div className="text-[10px] text-hom-muted italic">{item.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ═══════════ REALISASI FISIK ═══════════ */}
-      <section className="rounded-2xl border border-hom-green/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), 0 0 30px rgba(0,200,83,0.05)' }}>
-        <SectionTitle sub="Silicon RTL (Operasional) & Photonic (Aspirational)">REALISASI FISIK: HCPU</SectionTitle>
-
-        {/* Silicon Phase 2.0 Block */}
-        <div className="rounded-xl border border-hom-green/30 bg-hom-green/5 p-6 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">✅</span>
-            <span className="text-xl font-bold text-hom-green font-mono">HCPU Phase 2.0</span>
-            <span className="text-xs text-hom-muted ml-2">— Silicon RTL Architecture</span>
-            <span className="ml-auto text-[9px] font-mono px-2 py-0.5 rounded-full border border-hom-green/30 bg-hom-green/10 text-hom-green">
-              SYNTHESIS-READY
-            </span>
-          </div>
-          
-          <div className="mt-4 space-y-6">
-            {/* Row 1: Pipeline & Memory */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl border border-hom-green/20 bg-hom-panel/40">
-                <div className="text-[10px] uppercase tracking-widest text-hom-muted mb-3 font-bold border-b border-hom-green/10 pb-2">
-                  5-Stage Pipeline Arsitektur
-                </div>
-                <div className="space-y-2 text-xs font-mono">
-                  <div className="flex gap-2"><span className="text-hom-accent w-6">IF</span><span className="text-hom-text/80">Instruction Fetch (BRAM sync, 2-phase)</span></div>
-                  <div className="flex gap-2"><span className="text-hom-gold w-6">ID</span><span className="text-hom-text/80">Decode, GPR Read, Hazard Detection</span></div>
-                  <div className="flex gap-2"><span className="text-hom-green w-6">EX</span><span className="text-hom-text/80">18-wide Vector ALU, HISAB, Branch Eval</span></div>
-                  <div className="flex gap-2"><span className="text-hom-purple w-6">MEM</span><span className="text-hom-text/80">Data Memory Access (Combinational)</span></div>
-                  <div className="flex gap-2"><span className="text-hom-red w-6">WB</span><span className="text-hom-text/80">GPR Write-back (Synchronous)</span></div>
-                </div>
-              </div>
-              
-              <div className="p-4 rounded-xl border border-hom-green/20 bg-hom-panel/40">
-                <div className="text-[10px] uppercase tracking-widest text-hom-muted mb-3 font-bold border-b border-hom-green/10 pb-2">
-                  Memory & Hazard Resolution
-                </div>
-                <div className="space-y-2 text-xs text-hom-text/80 leading-relaxed">
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">Load-Use Hazard</strong>: Deteksi di ID stage, memicu 1-cycle stall + memori bypass otomatis.</span></div>
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">Store-Load Interlock</strong>: Mencegah bacaan invalid pada alamat memori yang sama.</span></div>
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">Data Forwarding</strong>: Rute EX→ID dan MEM→ID meminimalisasi pipeline bubbles.</span></div>
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">BRAM Sync</strong>: Pengawalan <code className="text-[10px] text-hom-accent px-1 bg-hom-panel rounded">imem_ce</code> untuk anti-loss instruksi saat ter-stall.</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: Target Fabrikasi & Hisab */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl border border-hom-green/20 bg-hom-panel/40">
-                <div className="text-[10px] uppercase tracking-widest text-hom-muted mb-3 font-bold border-b border-hom-green/10 pb-2">
-                  Target Integrasi MPW & FPGA
-                </div>
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between"><span className="text-hom-muted">Status Validasi</span><span className="text-hom-green font-mono font-bold">204/204 PASS (Zero Bug)</span></div>
-                  <div className="flex justify-between"><span className="text-hom-muted">Chip Fabrikasi</span><span className="text-hom-accent font-mono">SkyWater SKY130 (Caravel)</span></div>
-                  <div className="flex justify-between"><span className="text-hom-muted">Protokol Akses</span><span className="text-hom-text/80 font-mono">Wishbone B4 Slave (8-register maps)</span></div>
-                  <div className="flex justify-between"><span className="text-hom-muted">Target FPGA</span><span className="text-hom-gold font-mono">Xilinx Arty A7-35T (100MHz)</span></div>
-                  <div className="flex justify-between"><span className="text-hom-muted">Sintesis Logic</span><span className="text-hom-text/80 font-mono">Single Clock Domain (0 CDC)</span></div>
-                  <div className="flex justify-between"><span className="text-hom-muted">Estimasi Resource</span><span className="text-hom-text/80 font-mono">LUT &lt; 85%, DSP48E1 &lt; 50%</span></div>
-                </div>
-              </div>
-              
-              <div className="p-4 rounded-xl border border-hom-green/20 bg-hom-panel/40">
-                <div className="text-[10px] uppercase tracking-widest text-hom-muted mb-3 font-bold border-b border-hom-green/10 pb-2">
-                  HISAB & EXM In-Silico Subsystem
-                </div>
-                <div className="space-y-2 text-xs text-hom-text/80 leading-relaxed">
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">Nibble-Pack Serializer</strong>: <code className="text-[10px] text-hom-accent px-1 bg-hom-panel rounded">HPACK</code> mentransformasi vektor 18D menjadi standarisasi byte di hardware.</span></div>
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">IEEE 802.3 CRC32</strong>: Hardware digest generator kombinasional O(1) untuk lapis integritas frame HISAB.</span></div>
-                  <div className="flex items-start gap-2"><span className="text-hom-green mt-0.5">▸</span><span><strong className="text-hom-text">Guard Checker</strong>: Aturan geometri mutlak (EXM R1-R5) diproses mandiri di <code className="text-[10px] px-1 bg-hom-panel rounded">hcpu_guard.v</code>.</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Row 3: ASCII Block Diagram */}
-            <div className="mt-6 p-5 rounded-xl border border-hom-green/20 bg-[#0a0a0f] overflow-x-auto shadow-inner hide-scrollbar">
-              <div className="text-[10px] uppercase tracking-widest text-hom-green/80 flex items-center gap-2 mb-4 font-bold border-b border-hom-green/10 pb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-hom-green animate-pulse"></span>
-                RTL Topology Schematic
-              </div>
-              <pre className="text-[10px] sm:text-xs text-hom-green font-mono leading-tight whitespace-pre">
-{`                    ┌──────────────────────────────────────────────────────┐
-                    │                    HCPU Top-Level                    │
-  ┌──────────┐      │  ┌───────┐  ┌───────┐  ┌─────────┐  ┌───────┐        │
-  │   Code   │◄─────┤  │ FETCH │─►│DECODE │─►│ EXECUTE │─►│MEMORY │──►WB   │
-  │   ROM    │      │  └───┬───┘  └───┬───┘  └────┬────┘  └───┬───┘        │
-  └──────────┘      │      │          │    ┌──────┤            │           │
-                    │      │    ┌─────┴──┐│┌─────┴────┐ ┌─────┴─────┐      │
-                    │      │    │RegFile ││├ ScalarALU│ │  DataRAM  │      │
-                    │      │    │18 GPR  │││ (32-bit) │ │  (16 KB)  │      │
-                    │      │    │16 H-Reg│││ MOV/ADD/ │ │  LOAD/    │      │
-                    │      │    │ FLAGS  │││ SUB/MUL/ │ │  STORE    │      │
-                    │      │    └────────┘││ CMP      │ ├───────────┤      │
-                    │      │              │├──────────┤ │  Stack    │      │
-                    │      │              ││ CodexALU │ │ (256×32)  │      │
-                    │ ┌────┴────┐         ││ HCADD    │ │ PUSH/POP  │      │
-                    │ │  Ctrl   │         ││ HNRM2    │ └───────────┘      │
-                    │ │ pc_stall│         ││ HDIST    │                    │
-                    │ │ id_flush│         │├──────────┤  ┌──────────────┐  │
-                    │ │ if_flush│         ││  Guard   │  │  UART TX     │  │
-                    │ │ ex_stall│         ││ G1–G4    │  │  8N1 115200  │─┼──► TXD
-                    │ └────┬────┘         ││ T1–T2    │  └──────────────┘  │
-                    │      │       ┌──────┤└──────────┘                    │
-                    │      │       │ FWD  │ ┌──────────┐                   │
-                    │      └───────┤EX→ID │ │Master ROM│                   │
-                    │              │MEM→ID│─┤28×144-bit│                   │
-                    │              └──────┘ └──────────┘                   │
-                    └──────────────────────────────────────────────────────┘`}
-              </pre>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="rounded-xl border border-hom-red/20 bg-hom-red/5 p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🎯</span>
-            <span className="text-xl font-bold text-hom-red font-mono">HCPU</span>
-            <span className="text-xs text-hom-muted ml-2">— Arsitektur Prosesor Fotonik</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-hom-muted mb-2 font-bold">Pemetaan DoF Foton</div>
-              <div className="space-y-1.5">
-                {[
-                  { dof: 'Fase (Phase)', map: 'Θ̂ — Inḥinā\'', color: '#d4af37' },
-                  { dof: 'WDM (Wavelength)', map: 'N — Nuqṭah', color: '#ff5252' },
-                  { dof: 'TDM (Time-slot)', map: 'K — Khaṭṭ', color: '#00c853' },
-                  { dof: 'OAM (Orbital)', map: 'Q — Qaws', color: '#b388ff' },
-                  { dof: 'Polarisasi', map: 'H* — Identitas huruf', color: '#00d4ff' },
-                ].map((item) => (
-                  <div key={item.dof} className="flex items-center gap-2 text-xs">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-hom-text/80 font-mono">{item.dof}</span>
-                    <span className="text-hom-muted">→</span>
-                    <span style={{ color: item.color }} className="font-mono">{item.map}</span>
-                  </div>
-                ))}
+        <div className="rounded-lg border border-[#1C3552] bg-[#10243A] p-6">
+          <SectionTitle sub="Silicon RTL (Gowin GW2AR-18C · Tang Nano 20K · 27 MHz)">
+            HCPU Phase 2.0 & System Stack
+          </SectionTitle>
+          <div className="space-y-3 text-xs font-mono">
+            {[
+              ['HCPU Pipeline', '5-Stage (IF · ID · EX · MEM · WB) · CODEX_PROFILE=2'],
+              ['FPGA Resource Utilization', '15,453 LUT4 (74%) · 5,166 DFF (33%) · 18 BSRAM'],
+              ['Hardware Burn-In', '72 Hours PASS · 168.62M cycles · 0 board errors'],
+              ['HOS & HFS (HFS1 v1)', 'Syscalls 1–9 · SD card sectors 1–3 & 16–20'],
+              ['HOM Desktop Environment', '15 modular workbenches + System Overview sidebar'],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between border-b border-[#1C3552] pb-2">
+                <span className="text-[#8AA0B8]">{k}</span>
+                <span className="text-[#EAF2FA]">{v}</span>
               </div>
-            </div>
-
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-hom-muted mb-2 font-bold">Spesifikasi</div>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-hom-muted">Margin keamanan</span>
-                  <span className="text-hom-green font-mono font-bold">22.5× (EH)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-hom-muted">Material</span>
-                  <span className="text-hom-text/80 font-mono">Nd:YAG, Ce:YIG, YSZ, Er:YSO</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-hom-muted">Dimensi register</span>
-                  <span className="text-hom-accent font-mono">18-wide (576 byte/reg)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-hom-muted">DoF tersedia</span>
-                  <span className="text-hom-gold font-mono">20–32× (foton tunggal)</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════ RINGKASAN STATUS ═══════════ */}
-      <section className="rounded-2xl border border-hom-accent/30 bg-hom-panel/30 backdrop-blur-xl p-6 md:p-8"
-        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3), 0 0 25px rgba(0,212,255,0.08)' }}>
-        <SectionTitle sub="Aggregate overview">RINGKASAN STATUS</SectionTitle>
+      {/* ═══════════ COMPONENT STATUS MATRIX ═══════════ */}
+      <section className="rounded-lg border border-[#1C3552] bg-[#10243A] p-6">
+        <SectionTitle sub="Aggregate implementation status across software and hardware layers">
+          System Component Matrix
+        </SectionTitle>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { status: 'OP', count: 16 },
-            { status: 'SPEC', count: 6 },
-            { status: 'DES', count: 3 },
-            { status: 'ASP', count: 1 },
-          ].map((item) => {
-            const s = STATUS[item.status];
-            return (
-              <div key={item.status} className="rounded-xl border p-5 text-center transition-all hover:scale-[1.03]"
-                style={{ borderColor: s.border, backgroundColor: s.bg, boxShadow: `0 4px 16px rgba(0,0,0,0.2), 0 0 15px ${s.border}` }}>
-                <div className="text-3xl font-bold font-mono" style={{ color: s.color }}>{item.count}</div>
-                <div className="flex items-center justify-center gap-1.5 mt-2">
-                  <span className="text-sm">{s.icon}</span>
-                  <span className="text-[10px] font-mono" style={{ color: s.color }}>{s.label}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Detailed component table */}
-        <div className="overflow-x-auto rounded-xl border border-hom-border/20">
+        <div className="overflow-x-auto rounded border border-[#1C3552]">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="bg-hom-panel/60 border-b border-hom-border/30">
-                <th className="text-left py-3 px-4 text-[10px] uppercase tracking-wider text-hom-accent font-bold">Status</th>
-                <th className="text-left py-3 px-4 text-[10px] uppercase tracking-wider text-hom-accent font-bold">Komponen</th>
+              <tr className="bg-[#071426] border-b border-[#1C3552]">
+                <th className="text-left py-3 px-4 text-xs font-mono uppercase text-[#26C6DA]">Status</th>
+                <th className="text-left py-3 px-4 text-xs font-mono uppercase text-[#26C6DA]">Components</th>
               </tr>
             </thead>
             <tbody>
               {[
-                { status: 'OP', components: 'HCPU RTL, HC, HCC, HVM, CSGI, H-ISA, Guard, HCHECK, HISAB, HAR, Ψ-Compiler, MasterTable, ROM, SHA-256, Injectivity, .hc' },
-                { status: 'SPEC', components: 'HASM, .hbc, .hgeo, HCC codegen, HCHECK full, HAR extended' },
-                { status: 'DES', components: 'HOS, HFS, H-Kernel' },
-                { status: 'ASP', components: 'HCPU (fotonik)' },
-              ].map((row) => {
-                const s = STATUS[row.status];
-                return (
-                  <tr key={row.status} className="border-b border-hom-border/10 hover:bg-hom-accent/[0.03] transition-colors">
-                    <td className="py-3 px-4">
-                      <StatusBadge status={row.status} />
-                    </td>
-                    <td className="py-3 px-4 text-xs text-hom-text/80 font-mono">{row.components}</td>
-                  </tr>
-                );
-              })}
+                {
+                  status: 'OP',
+                  components: 'HCPU RTL (84 opcodes), .hcell, CellIR, 4-B′ Verifier, HPG1 v2 (CHECKSUM32), HC v1.0, HCC, HASM, .hbc, HVM, HOS, HFS, H-Kernel, CSGI, Guard (G1–G4, T1–T2), HCHECK, HISAB, HAR, Ψ-Compiler, MasterTable, ROM, SHA-256, HOM Desktop GUI (Sidebar + 15 Workbenches)',
+                },
+                {
+                  status: 'SPEC',
+                  components: '21 software-only H-ISA opcodes executed in HVM (CDOT, CSUB, HEXMT, HDCMP, HSER, HDES, VSCL, HCHK, CHASH, CSIGN, HPROJ, VPROJ_*, PRINTH, JGP/JGF/JNP)',
+                },
+                {
+                  status: 'ASP',
+                  components: 'HCPU Photonic (DoF Phase/WDM/TDM/OAM/Polarization exploration)',
+                },
+              ].map((row) => (
+                <tr key={row.status} className="border-b border-[#1C3552]">
+                  <td className="py-3 px-4 align-top">
+                    <StatusBadge status={row.status} />
+                  </td>
+                  <td className="py-3 px-4 text-xs text-[#EAF2FA] font-mono leading-relaxed">
+                    {row.components}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
-
-        {/* Total bar */}
-        <div className="mt-6 rounded-xl border border-hom-accent/30 bg-hom-accent/5 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-mono text-hom-accent font-bold">TOTAL KOMPONEN</span>
-            <span className="text-lg font-bold font-mono text-hom-accent">26</span>
-          </div>
-          <div className="h-3 bg-hom-bg/50 rounded-full overflow-hidden flex">
-            <div className="h-full bg-[#00c853] transition-all" style={{ width: '61%' }} title="16 Operasional" />
-            <div className="h-full bg-[#d4af37] transition-all" style={{ width: '23%' }} title="6 Terspesifikasi" />
-            <div className="h-full bg-[#b388ff] transition-all" style={{ width: '12%' }} title="3 Terdesain" />
-            <div className="h-full bg-[#ff5252] transition-all" style={{ width: '4%' }} title="1 Aspirasional" />
-          </div>
-          <div className="flex justify-between mt-1.5 text-[9px] font-mono text-hom-muted">
-            <span className="text-[#00c853]">61% Operasional</span>
-            <span className="text-[#d4af37]">23% Spesifikasi</span>
-            <span className="text-[#b388ff]">12% Desain</span>
-            <span className="text-[#ff5252]">4% Aspirasi</span>
-          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <div className="text-center py-4 text-[10px] text-hom-muted font-mono">
-        PIPELINE HYBIT · HOM v1.2.0 · HM-28-v1.2-HC18D · © 2026 Maulana Amratulloh
+      <div className="text-center py-4 text-xs text-[#8AA0B8] font-mono">
+        HIJAIYYAH SCIENTIFIC COMPUTING ENVIRONMENT · HOM v1.2.0 · HM-28-v1.0-HC18D · © 2026 Maulana Amratulloh
       </div>
     </div>
   );

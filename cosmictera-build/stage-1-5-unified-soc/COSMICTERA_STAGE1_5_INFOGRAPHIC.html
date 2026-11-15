@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>COSMICTERA CT-01-REV13 — Infografik Lengkap Prototipe Unified SoC Stage 1.5</title>
+<style>
+  :root {
+    --bg: #060c16;
+    --panel: #091322;
+    --panel-alt: #0a1526;
+    --border: #1e3a5f;
+    --cyan: #30c0d0;
+    --green: #30d070;
+    --gold: #f0c860;
+    --yellow: #e0b040;
+    --red: #e05050;
+    --white: #d8e4f0;
+    --dim: #7890a8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    padding: 24px;
+    line-height: 1.45;
+  }
+  .container {
+    max-width: 1440px;
+    margin: 0 auto;
+    border: 2px solid var(--border);
+    background: linear-gradient(180deg, #07101e 0%, #060c16 100%);
+    box-shadow: 0 0 40px rgba(48, 192, 208, 0.12);
+  }
+  .crown-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #d69b2c 0%, #f0c860 50%, #30c0d0 100%);
+  }
+  header {
+    padding: 20px 28px;
+    background: var(--panel);
+    border-bottom: 2px solid var(--green);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .title-block h1 {
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .title-block p {
+    font-size: 13px;
+    color: var(--cyan);
+    margin-top: 4px;
+  }
+  .badge {
+    border: 1px solid var(--green);
+    background: #0d1e36;
+    padding: 8px 16px;
+    color: var(--green);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px 28px 0 28px;
+  }
+  .kpi-card {
+    background: var(--panel-alt);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cyan);
+    padding: 14px 16px;
+  }
+  .kpi-card.gold { border-top-color: var(--gold); }
+  .kpi-card.green { border-top-color: var(--green); }
+  .kpi-label { font-size: 11px; color: var(--dim); text-transform: uppercase; }
+  .kpi-val { font-size: 22px; font-weight: 700; color: var(--white); margin: 4px 0; }
+  .kpi-sub { font-size: 12px; color: var(--green); }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 16px;
+    padding: 20px 28px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+  }
+  .panel h2 {
+    font-size: 14px;
+    color: var(--cyan);
+    border-bottom: 1px solid #162c48;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .bar-group { margin-bottom: 12px; }
+  .bar-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  .bar-track {
+    height: 10px;
+    background: #050a12;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; background: var(--green); }
+  .bar-fill.cyan { background: var(--cyan); }
+  .bar-fill.gold { background: var(--gold); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  th, td {
+    padding: 7px 8px;
+    border-bottom: 1px solid #14263f;
+    text-align: left;
+  }
+  th { color: var(--gold); font-weight: 600; background: #0c1a2e; }
+  td.ok { color: var(--green); font-weight: 700; }
+  td.num { color: var(--cyan); }
+  .arch-flow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .arch-box {
+    background: #08111f;
+    border: 1px solid var(--cyan);
+    padding: 12px;
+    font-size: 12px;
+  }
+  .arch-box.gold { border-color: var(--gold); }
+  .arch-box.green { border-color: var(--green); }
+  .arch-box h3 { font-size: 13px; color: var(--gold); margin-bottom: 6px; }
+  .arch-box ul { list-style: none; color: var(--white); }
+  .arch-box li { margin-bottom: 4px; font-size: 11.5px; }
+  footer {
+    padding: 12px 28px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--dim);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="crown-bar"></div>
+  <header>
+    <div class="title-block">
+      <h1>COSMICTERA CT-01-REV13 — PROTOTIPE UNIFIED SoC STAGE 1.5</h1>
+      <p>Target: Tang Nano 20K (Gowin GW2AR-LV18QN88C8/I7) &bull; Cabang: stage-1-5-unified-soc (HEAD = ea3c5b22)</p>
+    </div>
+    <div class="badge">STATUS: 33/33 RTL PASS &bull; P&amp;R 0 ERROR &bull; 0 UNROUTED NET</div>
+  </header>
+
+  <section class="kpi-row">
+    <div class="kpi-card green">
+      <div class="kpi-label">Post-Pack LUT4 (nextpnr)</div>
+      <div class="kpi-val">14.695 / 20.736 (70,87%)</div>
+      <div class="kpi-sub">LULUS &bull; -3.805 LUT4 di bawah target 18.500 (-3.552 dari 88%)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">BSRAM 18-Kbit &amp; DSP</div>
+      <div class="kpi-val">38 / 46 BSRAM (82,61%)</div>
+      <div class="kpi-sub">18 HCPU + 20 Boot Display &bull; 1 MULT36X36 + 14 MULT9X9</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Timing Closure (Post-Route Fmax)</div>
+      <div class="kpi-val">120,88 MHz / 75,83 MHz</div>
+      <div class="kpi-sub">clk_27m: +28,76 ns slack (4,48x) &bull; pixel_clk: +0,28 ns slack</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Golden Frame &amp; UART Parity</div>
+      <div class="kpi-val">0 / 194.048 Pixel Diff</div>
+      <div class="kpi-sub">UART 23-Byte ("112\r\nCYCLES=00001B89\r\n\n") &bull; GAP-02=0x3F</div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel">
+      <h2>1. Arsitektur Integrasi Unified SoC Stage 1.5 (Tahap A–C)</h2>
+      <div class="arch-flow">
+        <div class="arch-box">
+          <h3>HCPU Subsystem (27 MHz)</h3>
+          <ul>
+            <li>&bull; Modul: <code>hcpu_gowin_core</code></li>
+            <li>&bull; 18 BSRAM (IMEM + DataRAM + SDIO)</li>
+            <li>&bull; HMCL Layer A1 DSP (<code>USE_DSP=1</code>)</li>
+            <li>&bull; HISA <code>CTHETA=0x4E</code>, <code>HDOT=0x52</code></li>
+            <li>&bull; Guard-HISAB <code>GAP-02=0x3F</code></li>
+            <li>&bull; UART 115.200 (Pin 69/70) &amp; SDIO</li>
+          </ul>
+        </div>
+        <div class="arch-box green">
+          <h3>Shared &amp; CDC Bridge</h3>
+          <ul>
+            <li>&bull; Clock Bersama: <code>clk_27m</code> (Pin 4)</li>
+            <li>&bull; Edge Reset Bersama: <code>btn_rst_n</code> (Pin 87)</li>
+            <li>&bull; Toggle-Handshake CDC 87-Bit</li>
+            <li>&bull; <code>hcpu_tele_pc</code> (12b) + <code>instr</code> (32b)</li>
+            <li>&bull; <code>cycles</code> (32b) + <code>flags</code> (8b) + <code>G/HLT</code></li>
+            <li>&bull; 16-Entry Ecosystem Status Matrix</li>
+          </ul>
+        </div>
+        <div class="arch-box gold">
+          <h3>Boot Display BSRAM (74,25 MHz)</h3>
+          <ul>
+            <li>&bull; HDMI 1280x720@60Hz (Pins 33..40)</li>
+            <li>&bull; Tombol Inspektor <code>P0..P12</code> (Pin 88)</li>
+            <li>&bull; 6 ROM BSRAM Sinkron Baru (11 SP)</li>
+            <li>&bull; Hero Logo 512x184 RLE (8 SPX9)</li>
+            <li>&bull; Font 8x8 ASCII + Custom (1 SPX9)</li>
+            <li>&bull; 3-Stage Pipeline (0 Pergeseran Piksel)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>2. Perbandingan Resource Terhadap Baseline Standalone</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Metrik</th>
+            <th>HCPU Standalone</th>
+            <th>Display Stage 1.4</th>
+            <th>Display Stage 1.5</th>
+            <th>Penjumlahan Naif</th>
+            <th>Unified SoC 1.5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pre-Pack LUT1–4</td>
+            <td>12.767</td>
+            <td>3.892</td>
+            <td class="num">1.268 (-67,4%)</td>
+            <td>16.659</td>
+            <td class="ok">12.047 (-27,7%)</td>
+          </tr>
+          <tr>
+            <td>Post-Pack LUT4</td>
+            <td>15.377 (74,16%)</td>
+            <td>5.438 (26,22%)</td>
+            <td class="num">1.804 (8,70%)</td>
+            <td>20.815 (100,38%)</td>
+            <td class="ok">14.695 (70,87%)</td>
+          </tr>
+          <tr>
+            <td>Post-Pack ALU</td>
+            <td>2.225 (14,31%)</td>
+            <td>1.546 (9,94%)</td>
+            <td class="num">536 (3,45%)</td>
+            <td>3.771 (24,25%)</td>
+            <td class="ok">2.600 (16,72%)</td>
+          </tr>
+          <tr>
+            <td>Post-Pack DFF</td>
+            <td>5.166 (33,22%)</td>
+            <td>655 (4,21%)</td>
+            <td class="num">427 (2,75%)</td>
+            <td>5.821 (37,43%)</td>
+            <td class="ok">5.572 (35,83%)</td>
+          </tr>
+          <tr>
+            <td>BSRAM (18 Kbit)</td>
+            <td>18 / 46 (39,13%)</td>
+            <td>9 / 46 (19,57%)</td>
+            <td class="num">20 / 46 (43,48%)</td>
+            <td>27 / 46 (58,70%)</td>
+            <td class="ok">38 / 46 (82,61%)</td>
+          </tr>
+          <tr>
+            <td>Fmax clk_27m</td>
+            <td>54,69 MHz</td>
+            <td>60,18 MHz</td>
+            <td class="num">142,92 MHz</td>
+            <td>—</td>
+            <td class="ok">120,88 MHz</td>
+          </tr>
+          <tr>
+            <td>Fmax pixel_clk</td>
+            <td>—</td>
+            <td>60,18 MHz</td>
+            <td class="num">96,53 MHz</td>
+            <td>—</td>
+            <td class="ok">75,83 MHz</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>3. Utilisasi Perangkat Keras GW2AR-LV18QN88C8/I7</h2>
+      <div class="bar-group">
+        <div class="bar-header"><span>LUT4 (Post-Pack)</span><span>14.695 / 20.736 (70,87%) — Batas 88%: 18.247</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width: 70.87%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-header"><span>LUT1–4 (Pre-Pack Yosys)</span><span>12.047 / 20.736 (58,10%)</span></div>
+        <div class="bar-track"><div class="bar-fill cyan" style="width: 58.10%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-header"><span>BSRAM 18-Kbit (18 HCPU + 20 Display)</span><span>38 / 46 (82,61%)</span></div>
+        <div class="bar-track"><div class="bar-fill gold" style="width: 82.61%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-header"><span>DFF Flip-Flops (1.137 Constrained LUTFF)</span><span>5.572 / 15.552 (35,83%)</span></div>
+        <div class="bar-track"><div class="bar-fill cyan" style="width: 35.83%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-header"><span>ALU Carry Elements</span><span>2.600 / 15.552 (16,72%)</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width: 16.72%"></div></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar-header"><span>DSP Hardware (1 MULT36X36 + 14 MULT9X9)</span><span>14,58% MULT9X9 / 8,33% MULT36X36</span></div>
+        <div class="bar-track"><div class="bar-fill gold" style="width: 14.58%"></div></div>
+      </div>
+
+      <h2 style="margin-top: 18px;">4. Peta 6 ROM BSRAM Baru pada Boot Display Stage 1.5</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Berkas ROM (.hex)</th>
+            <th>Organisasi</th>
+            <th>BSRAM</th>
+            <th>Fungsi Optimasi Stage 1.5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>boot_text_rom.hex</code></td>
+            <td>4.096 &times; 12-bit</td>
+            <td class="num">3 SP</td>
+            <td>Grid teks dasar 25 baris + timestamp statis EV01..EV05</td>
+          </tr>
+          <tr>
+            <td><code>boot_comp_rom.hex</code></td>
+            <td>4.096 &times; 12-bit</td>
+            <td class="num">3 SP</td>
+            <td>60 slice string dinamis &amp; 12 halaman inspektor P1–P12</td>
+          </tr>
+          <tr>
+            <td><code>boot_cell_tag_rom.hex</code></td>
+            <td>4.096 &times; 8-bit</td>
+            <td class="num">2 SP</td>
+            <td>Tag override sel sinkron (menggantikan dekoder 160&times;90)</td>
+          </tr>
+          <tr>
+            <td><code>boot_bg_x_rom.hex</code></td>
+            <td>2.048 &times; 8-bit</td>
+            <td class="num">1 SP</td>
+            <td>Bendera border &amp; kartu UI horizontal (x = 0..1279)</td>
+          </tr>
+          <tr>
+            <td><code>boot_bg_y_rom.hex</code></td>
+            <td>1.024 &times; 8-bit</td>
+            <td class="num">1 SP</td>
+            <td>Zona warna scanline vertikal (y = 0..719)</td>
+          </tr>
+          <tr>
+            <td><code>boot_emblem_rom.hex</code></td>
+            <td>4.096 &times; 4-bit</td>
+            <td class="num">1 SP</td>
+            <td>Piksel Header Mini-Emblem 24&times;24 (x = 28..51, y = 18..41)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>Bitstream Prototipe: cosmictera_unified_soc_stage1_5.fs (SHA-256: 02c0a44f...a3c4)</span>
+    <span>Keamanan Perangkat Keras: SRAM &amp; External Flash TIDAK Diprogram (Prototipe Offline Terisolasi)</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,902 @@
+{
+  "p9_1794160808698_a4e63bca": {
+    "task_id": "p9_1794160808698_a4e63bca",
+    "session_id": "sess-b073e4060d3e",
+    "created_at": 1794160808.698894,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794160808.735067,
+    "metadata": {
+      "elapsed_ms": 36.3,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "29fc274d01127d0664c858f3957959e0b2a7f4fc8754193dc81386a8eadd84db"
+  },
+  "p9_1794160818777_29b224b9": {
+    "task_id": "p9_1794160818777_29b224b9",
+    "session_id": "sess-b073e4060d3e",
+    "created_at": 1794160818.777944,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794160818.838002,
+    "metadata": {
+      "elapsed_ms": 60.12,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "e530e5f0c21c2b596ea1edda78c1abbd54804b3b48cd92cd213e578255f85b07"
+  },
+  "p9_1794160831427_842db040": {
+    "task_id": "p9_1794160831427_842db040",
+    "session_id": "sess-b073e4060d3e",
+    "created_at": 1794160831.427383,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794160831.485504,
+    "metadata": {
+      "elapsed_ms": 58.17,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "44bcb6db87c34095ed6543a007bb5eddfa6b5eb5b86519461ede927360cb09cd"
+  },
+  "p9_1794161309298_86262ec3": {
+    "task_id": "p9_1794161309298_86262ec3",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794161309.298822,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794161309.329281,
+    "metadata": {
+      "elapsed_ms": 30.66,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "bb4698fefbb92f72db2439037239e0455c27cd512439cae6050d0e96f04be426"
+  },
+  "p9_1794161389495_510280bc": {
+    "task_id": "p9_1794161389495_510280bc",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794161389.495713,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794161389.546323,
+    "metadata": {
+      "elapsed_ms": 50.66,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "7e95e93fa2182a84caea6693402c575c8a15a2f1ab79cd801f3eba3dcafe2d16"
+  },
+  "p9_1794161825914_8660436b": {
+    "task_id": "p9_1794161825914_8660436b",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794161825.9143412,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794161825.972682,
+    "metadata": {
+      "elapsed_ms": 58.39,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "334f43ee0974365a8ad53ca3fb236a8796ded7363b14f354bfd77f56d8433a9f"
+  },
+  "p9_1794161908286_76968221": {
+    "task_id": "p9_1794161908286_76968221",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794161908.286151,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794161908.329459,
+    "metadata": {
+      "elapsed_ms": 43.35,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "70f029dc4ed7ff1c23fdc36cdeb779e04a6fe4764a036e89b79f5fae27177531"
+  },
+  "p9_1794161977529_08462c97": {
+    "task_id": "p9_1794161977529_08462c97",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794161977.529095,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794161977.59021,
+    "metadata": {
+      "elapsed_ms": 61.16,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "407f9334550c5ea2461d66ce499dd88a9f1491c54e2006cedac54e2a964f2f59"
+  },
+  "p9_1794162035817_1e3e6c51": {
+    "task_id": "p9_1794162035817_1e3e6c51",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794162035.8177578,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794162035.885021,
+    "metadata": {
+      "elapsed_ms": 67.31,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "a59cc57add1785a765e15652d06c199ff53fa79c42f5bb3b7421dfe0c557717c"
+  },
+  "p9_1794162101959_313a97cd": {
+    "task_id": "p9_1794162101959_313a97cd",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794162101.9598432,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794162102.010937,
+    "metadata": {
+      "elapsed_ms": 51.14,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "1982bbaa1a796b06084b9ef207a9667363b7bc82f084c4b131a39eceba8ada42"
+  },
+  "p9_1794162197490_e29aa92e": {
+    "task_id": "p9_1794162197490_e29aa92e",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794162197.490122,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794162197.561346,
+    "metadata": {
+      "elapsed_ms": 71.26,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "0f8f67f957ac861870bba49bee760b5ff5c337ff52fa0fbb3bff5467d92e5f8c"
+  },
+  "p9_1794162287009_5ea22a5d": {
+    "task_id": "p9_1794162287009_5ea22a5d",
+    "session_id": "sess-fe8ca4569e24",
+    "created_at": 1794162287.010039,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794162287.0636318,
+    "metadata": {
+      "elapsed_ms": 53.63,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "0143069c03adaf44c5a13375efec6d99fd2bd17985ef6ba3a33e76ac541cfbff"
+  },
+  "p9_1794162635829_cb9185fd": {
+    "task_id": "p9_1794162635829_cb9185fd",
+    "session_id": "sess-3203bd2dbbff",
+    "created_at": 1794162635.8295958,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "PROGRAM_EXECUTION",
+    "status": "COMPLETED",
+    "updated_at": 1794162649.8037708,
+    "metadata": {
+      "elapsed_ms": 13974.37,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "fd62414b7705c0fb4923b201ab4c2a189ad401b21f381d7a164266204be19b13"
+  },
+  "p9_1794162690554_8948bef3": {
+    "task_id": "p9_1794162690554_8948bef3",
+    "session_id": "sess-3203bd2dbbff",
+    "created_at": 1794162690.554452,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "PROGRAM_EXECUTION",
+    "status": "COMPLETED",
+    "updated_at": 1794162703.4170308,
+    "metadata": {
+      "elapsed_ms": 12862.62,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "56a39e5c188b6c0b587e7917e1f6e144268d971a78c91e35111c6cf1eac7247c"
+  },
+  "p9_1794203176204_074853e0": {
+    "task_id": "p9_1794203176204_074853e0",
+    "session_id": "sess-009f093882a6",
+    "created_at": 1794203176.204733,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794203176.261354,
+    "metadata": {
+      "elapsed_ms": 56.92,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "737f70f5a361424836fa708529115f7a855af9fe0412b0bd83df45a186dc23f6"
+  },
+  "p9_1794203257060_f166d66d": {
+    "task_id": "p9_1794203257060_f166d66d",
+    "session_id": "sess-009f093882a6",
+    "created_at": 1794203257.060676,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794203257.123492,
+    "metadata": {
+      "elapsed_ms": 62.88,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "d5105150dd2b004e2412c091ce052cc72348ddddc736b9832b954075ca97b7b2"
+  },
+  "p9_1794203389598_22b705e1": {
+    "task_id": "p9_1794203389598_22b705e1",
+    "session_id": "sess-009f093882a6",
+    "created_at": 1794203389.598469,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794203389.676759,
+    "metadata": {
+      "elapsed_ms": 78.34,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "5d3fdff37e40cdd6d673990c9b989ba06870be4c7f9ee02abd3ca4b194466b0c"
+  },
+  "p9_1794215895124_34498d5c": {
+    "task_id": "p9_1794215895124_34498d5c",
+    "session_id": "sess-1c15c0fd5782",
+    "created_at": 1794215895.124301,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794215895.186499,
+    "metadata": {
+      "elapsed_ms": 62.35,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "c4be72b42b975c682d594ac0d174a146b926707b3b426bb3eb6713fd42184ed5"
+  },
+  "p9_1794216214045_34498d5c": {
+    "task_id": "p9_1794216214045_34498d5c",
+    "session_id": "sess-1c15c0fd5782",
+    "created_at": 1794216214.045098,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794216214.104418,
+    "metadata": {
+      "elapsed_ms": 59.38,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "1d8fba212dacf53348d6f035afcffed914c7a57bbfb56059077b77c237af1626"
+  },
+  "p9_1794224032155_a4e63bca": {
+    "task_id": "p9_1794224032155_a4e63bca",
+    "session_id": "sess-13fac4c5992f",
+    "created_at": 1794224032.155583,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794224032.212726,
+    "metadata": {
+      "elapsed_ms": 57.27,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "fe373ae39a28b02120940b0d22a171a9fee6f0830030a90d0f14552460ca104d"
+  },
+  "p9_1794224512443_a85bad84": {
+    "task_id": "p9_1794224512443_a85bad84",
+    "session_id": "sess-13fac4c5992f",
+    "created_at": 1794224512.44336,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794224512.499261,
+    "metadata": {
+      "elapsed_ms": 55.96,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "353bd64b7c9203e74291a1b46b4744786eaf2b7a7957b373f9d8926a935c96f5"
+  },
+  "p9_1794224602368_10e62378": {
+    "task_id": "p9_1794224602368_10e62378",
+    "session_id": "sess-13fac4c5992f",
+    "created_at": 1794224602.368371,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794224602.423255,
+    "metadata": {
+      "elapsed_ms": 54.95,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "1c2d1b4d8bf685c1aca56f831c6ababc685d0ab27f69a77f03cb7313f70b7fa3"
+  },
+  "p9_1794226242282_c77c578c": {
+    "task_id": "p9_1794226242282_c77c578c",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794226242.28292,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794226242.3428512,
+    "metadata": {
+      "elapsed_ms": 60.15,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "901f7aa89833c8f89332ca1c8408a93b7fd71163e69769790a74e5559fca683a"
+  },
+  "p9_1794226267490_87b74c81": {
+    "task_id": "p9_1794226267490_87b74c81",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794226267.490567,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794226267.549105,
+    "metadata": {
+      "elapsed_ms": 58.6,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "2c83c219ceeae69b1c52bd36e8aebf4591eb511bba6ef8c346a6d0fd02ce581c"
+  },
+  "p9_1794226311564_bca189c8": {
+    "task_id": "p9_1794226311564_bca189c8",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794226311.564608,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794226311.6367302,
+    "metadata": {
+      "elapsed_ms": 72.26,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "8cd56bd44a69a465cacbb1c9d2c0a4a2b0e547a538edd30bc6541df7d0becb5d"
+  },
+  "p9_1794226348175_b1199566": {
+    "task_id": "p9_1794226348175_b1199566",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794226348.175946,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794226348.229334,
+    "metadata": {
+      "elapsed_ms": 53.45,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "b1b35a6803d8ab1f054e1fbbc788826c874937b673dc1973427467c9e70d03eb"
+  },
+  "p9_1794226564114_3f89f80d": {
+    "task_id": "p9_1794226564114_3f89f80d",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794226564.11476,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794226564.168014,
+    "metadata": {
+      "elapsed_ms": 53.29,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "6b6f863ccc1c6b1b097545125ec37d5314578c4d7d63af691ea2d9890aba4752"
+  },
+  "p9_1794226567189_3f89f80d": {
+    "task_id": "p9_1794226567189_3f89f80d",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794226567.189994,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794226567.2354062,
+    "metadata": {
+      "elapsed_ms": 45.51,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "dcef1f9add4db7e8fca5ee017ccc85f1851f412bb0af42653208db11d527069d"
+  },
+  "p9_1794227136499_6c76f12c": {
+    "task_id": "p9_1794227136499_6c76f12c",
+    "session_id": "sess-c51b32c9a851",
+    "created_at": 1794227136.499827,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794227136.548335,
+    "metadata": {
+      "elapsed_ms": 48.57,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "9496e10018eab49f5d009d86752c6ee5ef12d65d4a320a584a1cc06e8f6002e4"
+  },
+  "p9_1794235328431_3f89f80d": {
+    "task_id": "p9_1794235328431_3f89f80d",
+    "session_id": "sess-0303084884a9",
+    "created_at": 1794235328.4320471,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794235328.476177,
+    "metadata": {
+      "elapsed_ms": 44.27,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "12b68ea37c4e19c3a7f6950df34a00ea34c97c01c0d5f5d3e4f386a5ac4dec8f"
+  },
+  "p9_1794240590940_e66243fd": {
+    "task_id": "p9_1794240590940_e66243fd",
+    "session_id": "sess-e93b7bb181f6",
+    "created_at": 1794240590.940363,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "SYSTEM_DIAGNOSTICS",
+    "status": "COMPLETED",
+    "updated_at": 1794240592.230604,
+    "metadata": {
+      "elapsed_ms": 1290.4,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "954f9cb7c2d06b7968e88e3d36711444c7dc61080181c8e8841b5393dfc2437a"
+  },
+  "p9_1794240636776_c6993acf": {
+    "task_id": "p9_1794240636776_c6993acf",
+    "session_id": "sess-e93b7bb181f6",
+    "created_at": 1794240636.776167,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794240636.828223,
+    "metadata": {
+      "elapsed_ms": 52.16,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "50199b7fe4733361a4ea1a5be7545a176cb25868db409d27c1fb889075e9e87e"
+  },
+  "p9_1794242048010_4c5c6ebe": {
+    "task_id": "p9_1794242048010_4c5c6ebe",
+    "session_id": "sess-c43ac53deb5b",
+    "created_at": 1794242048.010603,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "SYSTEM_DIAGNOSTICS",
+    "status": "COMPLETED",
+    "updated_at": 1794242048.924039,
+    "metadata": {
+      "elapsed_ms": 913.6,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "49e8a58cd385a818cfe8765fa6900e0a69534dbd62388d69588c1d22e4ec4343"
+  },
+  "p9_1794312879083_456a9e46": {
+    "task_id": "p9_1794312879083_456a9e46",
+    "session_id": "sess-f5fe54cd1817",
+    "created_at": 1794312879.083597,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794312879.1498299,
+    "metadata": {
+      "elapsed_ms": 66.55,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "9c60d039aa7ad7d18ac1386478346880f5adad114663f5be96700206ebe13eee"
+  },
+  "p9_1794312898024_0bf03727": {
+    "task_id": "p9_1794312898024_0bf03727",
+    "session_id": "sess-f5fe54cd1817",
+    "created_at": 1794312898.0241642,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794312898.0938969,
+    "metadata": {
+      "elapsed_ms": 69.85,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "c04df73d7902946214a4f3362365ab2cf99d55ba7fb5e231f2bc26a0f94403c4"
+  },
+  "p9_1794312905694_452cfd4e": {
+    "task_id": "p9_1794312905694_452cfd4e",
+    "session_id": "sess-f5fe54cd1817",
+    "created_at": 1794312905.694815,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794312905.7571352,
+    "metadata": {
+      "elapsed_ms": 62.41,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "a5100299a2a9ec477e475ce30d954c995a2473f516712753911fe25a9e181a6c"
+  },
+  "p9_1794312922325_01fdd043": {
+    "task_id": "p9_1794312922325_01fdd043",
+    "session_id": "sess-f5fe54cd1817",
+    "created_at": 1794312922.325186,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794312922.378795,
+    "metadata": {
+      "elapsed_ms": 53.7,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "e73a1c3ea5e9b86254443de96b9dd91200d7e9940b65644ec05adb9550330264"
+  },
+  "p9_1794312938049_4e107669": {
+    "task_id": "p9_1794312938049_4e107669",
+    "session_id": "sess-f5fe54cd1817",
+    "created_at": 1794312938.050074,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794312938.116394,
+    "metadata": {
+      "elapsed_ms": 66.42,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "1141aaa51323a828b6b31e21e52f0e4f9ad644d5570736e26332893b5643a0d1"
+  },
+  "p9_1794312966413_96dfc3a5": {
+    "task_id": "p9_1794312966413_96dfc3a5",
+    "session_id": "sess-f5fe54cd1817",
+    "created_at": 1794312966.413841,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794312966.4968011,
+    "metadata": {
+      "elapsed_ms": 83.06,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "7a26d8d3d042dd77ea35ec79036dafb7f90a1251130011d6baebda2b369b390d"
+  },
+  "p9_1794556632770_3f173c86": {
+    "task_id": "p9_1794556632770_3f173c86",
+    "session_id": "sess-26f299d815d7",
+    "created_at": 1794556632.770535,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794556632.8316329,
+    "metadata": {
+      "elapsed_ms": 61.32,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "fbc1f2e6e67d3c64e20b9836d01c4fabea7d036ecbd4bed79fed7c7d60149c09"
+  },
+  "p9_1794556645524_739b9d66": {
+    "task_id": "p9_1794556645524_739b9d66",
+    "session_id": "sess-26f299d815d7",
+    "created_at": 1794556645.52448,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794556645.580986,
+    "metadata": {
+      "elapsed_ms": 56.59,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "e36177bdfc173a521c9e8d29331db1acf0dc53f6737414179ddc112591f20354"
+  },
+  "p9_1794556662755_739b9d66": {
+    "task_id": "p9_1794556662755_739b9d66",
+    "session_id": "sess-26f299d815d7",
+    "created_at": 1794556662.755605,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794556662.810461,
+    "metadata": {
+      "elapsed_ms": 54.97,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "258f07929d579e7e61617120de9fbc590c1487bcc878c882da03dc6f52b9a922"
+  },
+  "p9_1794556672030_739b9d66": {
+    "task_id": "p9_1794556672030_739b9d66",
+    "session_id": "sess-26f299d815d7",
+    "created_at": 1794556672.0300958,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794556672.082483,
+    "metadata": {
+      "elapsed_ms": 52.47,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "c6d84cc52dab2b16dcd644fb2b9e84b9012aba457be125ca9bef00ba5839bb54"
+  },
+  "p9_1794556673267_739b9d66": {
+    "task_id": "p9_1794556673267_739b9d66",
+    "session_id": "sess-26f299d815d7",
+    "created_at": 1794556673.2672179,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "GENERAL_CONVERSATION",
+    "status": "COMPLETED",
+    "updated_at": 1794556673.3232791,
+    "metadata": {
+      "elapsed_ms": 56.14,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "7ae4034c9492eea1384be145be273f8a3d004754fa393e95d8bb7b216d9cd494"
+  },
+  "p9_1794556680290_a6c91758": {
+    "task_id": "p9_1794556680290_a6c91758",
+    "session_id": "sess-26f299d815d7",
+    "created_at": 1794556680.290945,
+    "stages_visited": [
+      "UNDERSTAND",
+      "PLAN",
+      "SELECT_MODEL",
+      "LEARN"
+    ],
+    "current_stage": "LEARN",
+    "intent": "SYSTEM_DIAGNOSTICS",
+    "status": "COMPLETED",
+    "updated_at": 1794556681.381897,
+    "metadata": {
+      "elapsed_ms": 1091.01,
+      "permission_decision": "ALLOW_READ_ONLY"
+    },
+    "checkpoint_sha256": "e26cbd8653fe584880f7986ac0e195765175b0df546ce5805821482c8e953905"
+  }
+}

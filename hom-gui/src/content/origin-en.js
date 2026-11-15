@@ -283,9 +283,9 @@ The Origin Protocol documents that the 28 Hijaiyyah letters — as a domain — 
 
 Chapter I builds the foundation: each letter is decomposed into an 18-dimensional vector codex through three geometric primitives. The 28 letters yield codices that are all unique.
 
-Chapter II analyzes the structure: five metric frameworks — Vektronometry, Exomatrix, Intrametric, Aggregametric, Normivector — extract patterns and relations from the 18Dimensions.
+Chapter II analyzes the structure: five metric frameworks — Vektronometry, Exomatrix, Intrametric, Aggregametric, Normvektor — extract patterns and relations from the 18Dimensions.
 
-Chapter III builds the computational paradigm: Hybit (Hijaiyyah Hyperdimensional Bit Integration) — from formal language (HijaiyyahLanguage-18EBNF) to instruction set (H-ISA), from virtual machine (HCVM) to processing unit (HCPU).
+Chapter III builds the computational paradigm: Hybit (Hijaiyyah Hyperdimensional Bit Integration Technology) — from formal language (HijaiyyahLanguage-18EBNF) to instruction set (H-ISA), from virtual machine (HCVM) to processing unit (HCPU).
 
 One unbroken chain: letterform → codex → metrics → computational architecture.
 

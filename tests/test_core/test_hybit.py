@@ -221,7 +221,7 @@ def test_the_name_expands_and_the_expansion_is_true() -> None:
 
     source = Path(__import__("hijaiyyah.core.hybit", fromlist=["_"]).__file__)
     text = source.read_text(encoding="utf-8")
-    assert "Hijaiyyah Hyperdimensional Bit Integration" in text, (
+    assert "Hijaiyyah Hyperdimensional Bit Integration Technology" in text, (
         "hybit.py no longer records what the name expands to")
 
     dimensions = len(MASTER_TABLE.all_entries()[0].vector)

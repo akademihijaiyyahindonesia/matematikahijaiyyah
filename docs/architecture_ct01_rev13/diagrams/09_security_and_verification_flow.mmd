@@ -1,0 +1,24 @@
+flowchart LR
+    INPUT["Incoming Data / Instruction / Frame<br/>(H-ISA Program, SD Sector, or Portal 8888 Frame)"]
+
+    subgraph L_MATH["Layer 1: Algebraic & Structural Guard Gate"]
+        G_CHK["hcpu_guard.v / guards.py<br/>G1 (A_N), G2 (A_K), G3 (A_Q), G4 (rho>=0)<br/>T1 (Ks->Qc), T2 (Kc->Qc), H* (Ka<=Theta/2)"]
+        MOD4_G["Mod-4 Residue Gate<br/>Theta_hat mod 4"]
+    end
+
+    subgraph L_JAMRAH["Layer 2: Jamrah 3-Stage Filtering & Sponge"]
+        JAM["hijaiyyah_jamrah_gate.v<br/>Stage 1 Sughra -> Stage 2 Wusta -> Stage 3 Aqabah"]
+        KAB["hijaiyyah_kabah_top.v<br/>1600-bit State (64x5x5), 24 Rounds,<br/>S-Box + Linear + Ramal Impulse"]
+    end
+
+    subgraph L_AUTH["Layer 3: Cryptographic Authentication & Replay Defense"]
+        P88["hijaiyyah_portal8888.v<br/>ingress_parse_v1 -> hijaiyyah_timestamp<br/>-> hijaiyyah_sha256_stream -> hijaiyyah_hmac"]
+        KEY_M["Write-Only Key Memory (5x64B = 512B)<br/>provision_locked latch (no readback port)<br/>+ 9,216B Frame Replay Buffer"]
+    end
+
+    subgraph L_MEM["Layer 4: Runtime Privilege & Memory Isolation"]
+        TRAP_P["hcpu_trap.v + hcpu_mmio.v<br/>User vs Supervisor Mode<br/>MEM_BASE / MEM_LIMIT Bounds Check"]
+    end
+
+    INPUT --> L_MATH --> L_JAMRAH --> L_AUTH --> L_MEM
+    KEY_M --> P88

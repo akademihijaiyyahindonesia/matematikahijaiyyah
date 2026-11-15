@@ -104,7 +104,7 @@ def test_the_five_bab_two_operations_are_all_present() -> None:
     pointers rot is worse than no dictionary.
     """
     text = (DICT / "MATEMATIKA.md").read_text(encoding="utf-8")
-    for abbr, module in (("VTM", "vektronometry"), ("NMV", "normivektor"),
+    for abbr, module in (("VTM", "vektronometry"), ("NMV", "normvektor"),
                          ("AGM", "aggregametric"), ("ITM", "intrametric"),
                          ("EXM", "exometric")):
         assert f"**{abbr}**" in text, f"{abbr} is missing from MATEMATIKA.md"
@@ -118,8 +118,8 @@ def test_the_spelling_follows_the_code_not_the_prose() -> None:
     without. Code is the source and prose is what drifted, so the dictionary
     records the code's spelling and says so."""
     text = (DICT / "MATEMATIKA.md").read_text(encoding="utf-8")
-    assert "Normivektor" in text
-    assert not re.search(r"\bNormvektor\b(?!`)", text.replace("`Normvektor`", "")), (
+    assert "Normvektor" in text
+    assert not re.search(r"\bNormivektor\b(?!`)", text.replace("`Normivektor`", "")), (
         "MATEMATIKA.md uses the spelling the code does not"
     )
 

@@ -283,9 +283,9 @@ Origin Protocol mendokumentasikan bahwa 28 huruf Hijaiyyah — sebagai domain �
 
 Bab I membangun fondasi: setiap huruf didekomposisi menjadi codex vektor 18-dimensi melalui tiga primitif geometris. 28 huruf menghasilkan codex yang semuanya unik.
 
-Bab II menganalisis struktur: lima kerangka metrik — Vectronometry, Exomatrix, Intrametric, Aggregametric, Normivector — mengekstrak pola dan relasi dari 18Dimensi.
+Bab II menganalisis struktur: lima kerangka metrik — Vektronometry, Exomatrix, Intrametric, Aggregametric, Normvektor — mengekstrak pola dan relasi dari 18Dimensi.
 
-Bab III membangun paradigma komputasi: Hybit (Hijaiyyah Hyperdimensional Bit Integration) — dari bahasa formal (HijaiyyahLanguage-18EBNF) hingga instruction set (H-ISA), dari virtual machine (HCVM) hingga processing unit (HCPU).
+Bab III membangun paradigma komputasi: Hybit (Hijaiyyah Hyperdimensional Bit Integration Technology) — dari bahasa formal (HijaiyyahLanguage-18EBNF) hingga instruction set (H-ISA), dari virtual machine (HCVM) hingga processing unit (HCPU).
 
 Satu rantai tanpa putus: bentuk huruf → codex → metrik → arsitektur komputasi.
 

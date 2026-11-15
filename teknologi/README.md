@@ -11,7 +11,7 @@ Folder ini menjawab pertanyaan lain: **apa yang sudah jadi barang.**
 
 Namanya sendiri sudah menyebutkan isinya. **Hybit — Hijaiyyah
 Hyperdimensional Bit Integration**: 28 huruf sebagai sumber, ℕ₀¹⁸ sebagai
-ruangnya, bit sebagai satuan yang digeneralisasi, dan *integration* dalam dua
+ruangnya, bit sebagai satuan yang digeneralisasi, *integration* dalam dua
 arti sekaligus — ketertutupan monoid `(V, +)`, dan cara ia masuk silikon
 bit-serial, satu kawat dan satu bit keadaan per clock. Kepanjangan itu dicatat
 di `src/hijaiyyah/core/hybit.py`, dan dijaga `test_hybit.py`: kata

@@ -132,49 +132,37 @@
 //      (red_dvi, green_dvi, blue_dvi, de_dvi, hsync_dvi, vsync_dvi).
 //
 //     IOB           16 /    384    4%
-//     LUT4      14,193 / 20,736   68%
-//     ALU        2,698 / 15,552   17%
-//     DFF        5,521 / 15,552   35%
-//     BSRAM         24 /     46   52%
+//     LUT4      15,349 / 20,736   74%
+//     ALU        2,952 / 15,552   18%
+//     DFF        6,178 / 15,552   39%
+//     BSRAM         33 /     46   71%
 //     MULT9X9       14 /     96   14%
 //     MULT36X36      1 /     12    8%
-//     Fmax      102.05 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
-//                90.44 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
-//     Bitstream  7,261,470 bytes, sha256 1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54
+//     Fmax      119.60 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+//                86.01 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
+//     Bitstream  7,261,470 bytes, sha256 7fe32ef6d41e6f371ea6ed1e1c5e648e9bcd8c98384476fdfcb42d8d92c199ab
 //
-// RTL FINGERPRINT: 234130eed36dcfcf8d602d4af25fe8ef0782c56dc432ab32a973db50a43c5d8b
+// RTL FINGERPRINT: 5e8402deb52b82a4757f348009c9b9a53e0a09fa2d940eb2976e7c36cc4ce01d
 //
 `include "hcpu_pkg.vh"
 
 module hcpu_hdmi_top #(
-    // ── where the two memory images live, stated once per build ──
-    // NOT copied next to this file. $readmemh resolves against the working
-    // directory, and the two builds run from different ones -- so the path is
-    // a parameter and each build says where the single copy is, rather than
-    // each build getting a copy of its own. Two files that must stay
-    // byte-identical are two files that will not.
-    parameter FONT_HEX = "../../hcpu_font8x8.hex",
-    parameter DASH_HEX = "../../hcpu_dashboard.hex"
+    parameter FONT_HEX             = "../../hcpu_font8x8.hex",
+    parameter DASH_HEX             = "../../hcpu_dashboard.hex",
+    parameter DASH_LOWER_HEX       = "../../hcpu_dashboard_lower.hex",
+    parameter HOLO_HEX             = "../../hcpu_nui_holo.hex",
+    parameter [0:0] BTN_ACTIVE_HIGH = 1'b1,
+    parameter integer BTN_DEB_CLKS  = 270_000,    // 10.0 ms at 27.000 MHz
+    parameter integer BTN_LONG_CLKS = 27_000_000  // 1.0 s at 27.000 MHz
 ) (
     input wire        clk_27m,
-    input wire        btn_rst_n,
-    input wire        mode_key,
+    input wire        btn_rst_n,   // Pin 87: S2 (KEY_S2 / PIN87_MODE1_KEY2) -> RESET / RECOVERY
+    input wire        mode_key,    // Pin 88: S1 (KEY_S1 / PIN88_MODE0_KEY1) -> STOP / PAUSE
     input wire        uart_rxd,
     output wire       uart_txd,
     output wire [5:0] led,
-    // Only the P half is a port. The N half is not driven by logic at all:
-    // LVCMOS33D in the .cst makes one IOB drive both pads of the pair, which
-    // is how the Tang Nano boards do TMDS. See the note above the assigns.
     output wire       tmds_clk_p,
     output wire [2:0] tmds_data_p,
-
-    // ── the card, reaching this slot for the first time ─────────
-    // hcpu_gowin_top has carried an SD controller since H-ISA v1.2, and this
-    // wrapper instantiated it with the pins left dangling: the controller was
-    // present and could never see a card. The owner connected them on 15
-    // September 2026 so the monitor can report storage that is actually
-    // there. hcpu_hdmi.cst has to name these six pins or nextpnr places them
-    // wherever it likes -- which is the same as not having them.
     output wire       sd_clk,
     inout  wire       sd_cmd,
     inout  wire [3:0] sd_dat
@@ -184,14 +172,6 @@ module hcpu_hdmi_top #(
     wire pll_locked;
 
     // ── Staged reset sequencer (aligned with Unified SoC Stage 1.5) ──
-    // 1. Synchronize raw rPLL lock into clk_27m and qualify for 2.0 ms
-    //    (54,000 cycles at 27.000 MHz).
-    // 2. Release clkdiv_rst_n (CLKDIV.RESETN) first so pixel_clk (74.25 MHz)
-    //    oscillates cleanly before OSER10 or video timing leave reset.
-    // 3. Wait 16 reference clocks, then release oser_rst synchronously in
-    //    pixel_clk for DVI_TX_Top.
-    // 4. Wait 32 reference clocks, then release video_rst_n synchronously in
-    //    pixel_clk for video timing and the M5.2B display pipeline.
     localparam integer LOCK_QUAL_CYCLES   = 54_000;
     localparam integer CLKDIV_WAIT_CYCLES = 16;
     localparam integer TIMING_WAIT_CYCLES = 32;
@@ -261,30 +241,362 @@ module hcpu_hdmi_top #(
     end
     wire video_rst_n = vid_rst_s2;
 
-    wire hcpu_uart_txd;
-    wire [5:0] hcpu_led;
+    // ========================================================================
+    // PHYSICAL BUTTON CONTROL (S1 PIN 88, S2 PIN 87) & FAULT RECOVERY FSM
+    //   RAW BUTTON -> 2-FF SYNCHRONIZER -> DEBOUNCE -> EDGE DETECTOR -> FSM
+    // ========================================================================
+    // Tang Nano 20K (3921 schematic):
+    //   - S1 (Pin 88, mode_key)  : idle LOW (0) via board pull-down, HIGH (1) when pressed
+    //   - S2 (Pin 87, btn_rst_n) : idle LOW (0) via board pull-down, HIGH (1) when pressed
+    //   - UPDATE (near HDMI)     : BL616 USB debugger DFU button (not wired to FPGA GPIO)
+    localparam integer BDEB_W  = (BTN_DEB_CLKS  > 1) ? $clog2(BTN_DEB_CLKS  + 1) : 2;
+    localparam integer BLONG_W = (BTN_LONG_CLKS > 1) ? $clog2(BTN_LONG_CLKS + 1) : 2;
 
-    wire [`CODE_ADDR_W-1:0] tele_pc;
-    wire [`ILEN-1:0]        tele_instr;
+    wire s1_raw = BTN_ACTIVE_HIGH ? mode_key  : ~mode_key;
+    wire s2_raw = BTN_ACTIVE_HIGH ? btn_rst_n : ~btn_rst_n;
+
+    reg s1_meta = 1'b0, s1_sync = 1'b0;
+    reg s2_meta = 1'b0, s2_sync = 1'b0;
+    always @(posedge clk_27m) begin
+        s1_meta <= s1_raw;
+        s1_sync <= s1_meta;
+        s2_meta <= s2_raw;
+        s2_sync <= s2_meta;
+    end
+
+    reg [BDEB_W-1:0]  s1_deb_cnt = {BDEB_W{1'b0}};
+    reg               s1_deb     = 1'b0;
+    reg [BDEB_W-1:0]  s2_deb_cnt = {BDEB_W{1'b0}};
+    reg               s2_deb     = 1'b0;
+
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            s1_deb_cnt <= {BDEB_W{1'b0}};
+            s1_deb     <= 1'b0;
+            s2_deb_cnt <= {BDEB_W{1'b0}};
+            s2_deb     <= 1'b0;
+        end else begin
+            if (s1_sync != s1_deb) begin
+                if (s1_deb_cnt >= BTN_DEB_CLKS[BDEB_W-1:0] - 1'b1) begin
+                    s1_deb     <= s1_sync;
+                    s1_deb_cnt <= {BDEB_W{1'b0}};
+                end else begin
+                    s1_deb_cnt <= s1_deb_cnt + 1'b1;
+                end
+            end else begin
+                s1_deb_cnt <= {BDEB_W{1'b0}};
+            end
+
+            if (s2_sync != s2_deb) begin
+                if (s2_deb_cnt >= BTN_DEB_CLKS[BDEB_W-1:0] - 1'b1) begin
+                    s2_deb     <= s2_sync;
+                    s2_deb_cnt <= {BDEB_W{1'b0}};
+                end else begin
+                    s2_deb_cnt <= s2_deb_cnt + 1'b1;
+                end
+            end else begin
+                s2_deb_cnt <= {BDEB_W{1'b0}};
+            end
+        end
+    end
+
+    reg               s1_deb_d    = 1'b0;
+    reg               s2_deb_d    = 1'b0;
+    reg [BLONG_W-1:0] s1_hold_cnt = {BLONG_W{1'b0}};
+    reg [BLONG_W-1:0] s2_hold_cnt = {BLONG_W{1'b0}};
+    reg               s1_long_lat = 1'b0;
+    reg               s2_long_lat = 1'b0;
+
+    wire s1_rise = s1_deb & ~s1_deb_d;
+    wire s1_fall = ~s1_deb & s1_deb_d;
+    wire s2_rise = s2_deb & ~s2_deb_d;
+    wire s2_fall = ~s2_deb & s2_deb_d;
+    wire s1_long_pulse = s1_deb && !s1_long_lat && (s1_hold_cnt >= BTN_LONG_CLKS[BLONG_W-1:0] - 1'b1);
+    wire s2_long_pulse = s2_deb && !s2_long_lat && (s2_hold_cnt >= BTN_LONG_CLKS[BLONG_W-1:0] - 1'b1);
+
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            s1_deb_d    <= 1'b0;
+            s2_deb_d    <= 1'b0;
+            s1_hold_cnt <= {BLONG_W{1'b0}};
+            s2_hold_cnt <= {BLONG_W{1'b0}};
+            s1_long_lat <= 1'b0;
+            s2_long_lat <= 1'b0;
+        end else begin
+            s1_deb_d <= s1_deb;
+            s2_deb_d <= s2_deb;
+            if (!s1_deb) begin
+                s1_hold_cnt <= {BLONG_W{1'b0}};
+                s1_long_lat <= 1'b0;
+            end else begin
+                if (s1_hold_cnt < BTN_LONG_CLKS[BLONG_W-1:0])
+                    s1_hold_cnt <= s1_hold_cnt + 1'b1;
+                if (s1_long_pulse)
+                    s1_long_lat <= 1'b1;
+            end
+            if (!s2_deb) begin
+                s2_hold_cnt <= {BLONG_W{1'b0}};
+                s2_long_lat <= 1'b0;
+            end else begin
+                if (s2_hold_cnt < BTN_LONG_CLKS[BLONG_W-1:0])
+                    s2_hold_cnt <= s2_hold_cnt + 1'b1;
+                if (s2_long_pulse)
+                    s2_long_lat <= 1'b1;
+            end
+        end
+    end
+
+    // Canonical Control & Fault FSM States:
+    localparam [2:0] CTRL_RUNNING       = 3'd0,
+                     CTRL_STOPPED       = 3'd1,
+                     CTRL_PAUSED        = 3'd2,
+                     CTRL_RESETTING     = 3'd3,
+                     CTRL_FAULT         = 3'd4,
+                     CTRL_FAULT_LATCHED = 3'd5,
+                     CTRL_READY         = 3'd6;
+
+    // Button Event Codes:
+    localparam [2:0] EV_BTN_NONE        = 3'd0,
+                     EV_BTN_USER_STOP   = 3'd1,
+                     EV_BTN_USER_RESUME = 3'd2,
+                     EV_BTN_USER_RESET  = 3'd3,
+                     EV_BTN_FAULT_REC   = 3'd4,
+                     EV_BTN_FLT_LATCHED = 3'd5,
+                     EV_BTN_S1_S2_STOP  = 3'd6;
+
+    // Fault Source Codes:
+    localparam [2:0] FLT_NONE           = 3'd0,
+                     FLT_GUARD          = 3'd1, // HGRD evaluated & FLAG_G == 0
+                     FLT_HALTERR        = 3'd2, // Illegal opcode / invalid ROM index halt
+                     FLT_EXT_ACTIVE     = 3'd3; // Persistent external / injected fault
+
+    // Recovery Result Codes:
+    localparam [2:0] REC_IDLE           = 3'd0,
+                     REC_IN_PROGRESS    = 3'd1,
+                     REC_OK_READY       = 3'd2,
+                     REC_FAIL_ACTIVE    = 3'd3;
+
+    // Simulation hook for testing persistent fault sources (Scenarios 3, 6, 7, 8)
+    reg sim_fault_source_active = 1'b0;
+
+    reg [2:0] ctrl_state      = CTRL_RUNNING;
+    reg [2:0] pre_btn_state   = CTRL_RUNNING;
+    reg [2:0] post_btn_state  = CTRL_RUNNING;
+    reg [2:0] last_btn_event  = EV_BTN_NONE;
+    reg [2:0] fault_code      = FLT_NONE;
+    reg       fault_latched   = 1'b0;
+    reg [2:0] recovery_result = REC_IDLE;
+    reg [7:0] s1_press_cnt    = 8'd0;
+    reg [7:0] s2_press_cnt    = 8'd0;
+    reg [7:0] recovery_cnt    = 8'd0;
+    reg [4:0] rst_seq_cnt     = 5'd0;
+    reg       core_rst_trig   = 1'b0; // 1 -> 0 falling edge triggers hcpu_gowin_core reset
+
+    // Forward declarations for HCPU telemetry signals (raw from u_hcpu + freeze-latched on S1 STOP/PAUSE)
+    wire        hcpu_uart_txd;
+    wire [5:0]  hcpu_led;
+    wire [`CODE_ADDR_W-1:0] raw_tele_pc;
+    wire [`ILEN-1:0]        raw_tele_instr;
     wire                    tele_halted;
     wire                    tele_guard;
-    wire [31:0]             tele_cycles;
-    wire [7:0]              tele_flags;
+    wire [31:0]             raw_tele_cycles;
+    wire [7:0]              raw_tele_flags;
 
-    // The CORE, not the board slot. hcpu_gowin_top is a pin-level wrapper and
-    // has no telemetry ports -- it cannot have any, because a top level must
-    // find a pin for every output and this sideband is eighty-four bits wide.
-    // hcpu_gowin_top.v carries the measurement that forced the split.
-    // USE_DSP=1 maps the 14-lane 8x8 MAC in hcpu_codex_alu and 32x32 multiply
-    // in hcpu_mul to GW2AR-18C hard MULT9X9/MULT36X36 blocks, freeing the
-    // LUT4 headroom required for the M5.2B display pipeline to place and route.
+    wire cpu_run_enable = (ctrl_state == CTRL_RUNNING)
+                       || (ctrl_state == CTRL_RESETTING)
+                       || (ctrl_state == CTRL_READY);
+
+    reg [`CODE_ADDR_W-1:0] tele_pc_lat     = {`CODE_ADDR_W{1'b0}};
+    reg [`ILEN-1:0]        tele_instr_lat  = {`ILEN{1'b0}};
+    reg [31:0]             tele_cycles_lat = 32'd0;
+    reg [7:0]              tele_flags_lat  = 8'd0;
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            tele_pc_lat     <= {`CODE_ADDR_W{1'b0}};
+            tele_instr_lat  <= {`ILEN{1'b0}};
+            tele_cycles_lat <= 32'd0;
+            tele_flags_lat  <= 8'd0;
+        end else if (cpu_run_enable) begin
+            tele_pc_lat     <= raw_tele_pc;
+            tele_instr_lat  <= raw_tele_instr;
+            tele_cycles_lat <= raw_tele_cycles;
+            tele_flags_lat  <= raw_tele_flags;
+        end
+    end
+    wire [`CODE_ADDR_W-1:0] tele_pc     = cpu_run_enable ? raw_tele_pc     : tele_pc_lat;
+    wire [`ILEN-1:0]        tele_instr  = cpu_run_enable ? raw_tele_instr  : tele_instr_lat;
+    wire [31:0]             tele_cycles = cpu_run_enable ? raw_tele_cycles : tele_cycles_lat;
+    wire [7:0]              tele_flags  = cpu_run_enable ? raw_tele_flags  : tele_flags_lat;
+    wire                    hcpu_uart_rxd = cpu_run_enable ? uart_rxd : 1'b1;
+
+    // Track whether OP_HGRD (0x43) or OP_HALT (0xFF)/OP_RET (0x2F) executed in the current run:
+    // At reset, u_regfile.flags resets to 0x00 (FLAG_G = 0) and loader.hasm never executes HGRD.
+    // Treating FLAG_G=0 before HGRD executes as a fault caused the false GUARD: FAULT lockup.
+    reg       rtm_seen_hgrd        = 1'b0;
+    reg [2:0] rtm_hgrd_pipe_cnt    = 3'd0;
+    reg       rtm_seen_normal_halt = 1'b0;
+
+    wire [7:0] rtm_cur_op = tele_instr[31:24];
+    wire       hw_guard_evaluated = rtm_seen_hgrd && (rtm_hgrd_pipe_cnt == 3'd0);
+    wire       hw_guard_fault     = hw_guard_evaluated && (~tele_guard);
+    wire       hw_halterr_fault   = tele_halted && (~rtm_seen_normal_halt);
+    wire       any_fault_active   = hw_guard_fault | hw_halterr_fault | sim_fault_source_active;
+
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            ctrl_state      <= CTRL_RUNNING;
+            pre_btn_state   <= CTRL_RUNNING;
+            post_btn_state  <= CTRL_RUNNING;
+            last_btn_event  <= EV_BTN_NONE;
+            fault_code      <= FLT_NONE;
+            fault_latched   <= 1'b0;
+            recovery_result <= REC_IDLE;
+            s1_press_cnt    <= 8'd0;
+            s2_press_cnt    <= 8'd0;
+            recovery_cnt    <= 8'd0;
+            rst_seq_cnt     <= 5'd0;
+            core_rst_trig   <= 1'b0;
+        end else begin
+            // Default: keep core_rst_trig HIGH so a 1->0 pulse triggers hcpu_gowin_core's edge detector
+            core_rst_trig <= 1'b1;
+
+            // 1. Hardware fault detection (never masked or faked)
+            if (sim_fault_source_active) begin
+                fault_latched <= 1'b1;
+                fault_code    <= FLT_EXT_ACTIVE;
+            end else if (hw_guard_fault && (ctrl_state != CTRL_RESETTING)) begin
+                fault_latched <= 1'b1;
+                fault_code    <= FLT_GUARD;
+            end else if (hw_halterr_fault && (ctrl_state != CTRL_RESETTING)) begin
+                fault_latched <= 1'b1;
+                fault_code    <= FLT_HALTERR;
+            end
+
+            // 2. Highest priority application control: S1 (STOP / PAUSE)
+            if (s1_rise) begin
+                s1_press_cnt  <= s1_press_cnt + 8'd1;
+                pre_btn_state <= ctrl_state;
+                if (s2_deb) begin
+                    // Simultaneous S1 + S2: S1 STOP priority wins
+                    ctrl_state     <= CTRL_STOPPED;
+                    post_btn_state <= CTRL_STOPPED;
+                    last_btn_event <= EV_BTN_S1_S2_STOP;
+                end else if ((ctrl_state == CTRL_STOPPED) && !fault_latched && !any_fault_active) begin
+                    // Pressing S1 again from clean STOPPED resumes execution
+                    ctrl_state     <= CTRL_RUNNING;
+                    post_btn_state <= CTRL_RUNNING;
+                    last_btn_event <= EV_BTN_USER_RESUME;
+                end else begin
+                    // S1 from RUNNING, HALTED, FAULT, or FAULT_LATCHED -> PAUSED/STOPPED
+                    ctrl_state     <= CTRL_PAUSED;
+                    post_btn_state <= CTRL_STOPPED;
+                    last_btn_event <= EV_BTN_USER_STOP;
+                end
+            end else if (s1_fall && (ctrl_state == CTRL_PAUSED)) begin
+                ctrl_state     <= CTRL_STOPPED;
+                post_btn_state <= CTRL_STOPPED;
+            end else if (s2_rise) begin
+                // 3. S2 (RESET / RECOVERY)
+                s2_press_cnt  <= s2_press_cnt + 8'd1;
+                pre_btn_state <= ctrl_state;
+                if (s1_deb) begin
+                    // S1 is held: S1 STOP priority wins
+                    ctrl_state     <= CTRL_STOPPED;
+                    post_btn_state <= CTRL_STOPPED;
+                    last_btn_event <= EV_BTN_S1_S2_STOP;
+                end else if (sim_fault_source_active) begin
+                    // Fault cause is STILL ACTIVE: refuse to clear fault, latch FAULT LATCHED!
+                    ctrl_state      <= CTRL_FAULT_LATCHED;
+                    post_btn_state  <= CTRL_FAULT_LATCHED;
+                    last_btn_event  <= EV_BTN_FLT_LATCHED;
+                    fault_latched   <= 1'b1;
+                    fault_code      <= FLT_EXT_ACTIVE;
+                    recovery_result <= REC_FAIL_ACTIVE;
+                end else begin
+                    // Fault source is no longer active (or normal reset from STOPPED/RUNNING):
+                    // Execute hardware reset sequence!
+                    ctrl_state      <= CTRL_RESETTING;
+                    post_btn_state  <= CTRL_READY;
+                    last_btn_event  <= (fault_latched || (ctrl_state == CTRL_FAULT) || (ctrl_state == CTRL_FAULT_LATCHED))
+                                       ? EV_BTN_FAULT_REC : EV_BTN_USER_RESET;
+                    recovery_result <= REC_IN_PROGRESS;
+                    rst_seq_cnt     <= 5'd0;
+                end
+            end else begin
+                // 4. Autonomous state transitions when no button edge occurs
+                case (ctrl_state)
+                    CTRL_RUNNING: begin
+                        if (any_fault_active || fault_latched) begin
+                            ctrl_state <= CTRL_FAULT;
+                        end
+                    end
+                    CTRL_PAUSED: begin
+                        if (!s1_deb)
+                            ctrl_state <= CTRL_STOPPED;
+                    end
+                    CTRL_STOPPED: begin
+                        // Remain safely stopped until S2 recovery or S1 resume (if no fault)
+                    end
+                    CTRL_FAULT: begin
+                        // Remain in FAULT until S1 stops or S2 recovers
+                    end
+                    CTRL_FAULT_LATCHED: begin
+                        // Remain in FAULT LATCHED until fault source clears and S2 recovers
+                    end
+                    CTRL_RESETTING: begin
+                        rst_seq_cnt <= rst_seq_cnt + 5'd1;
+                        // Drive 1 -> 0 falling edge on core_rst_trig at cycle 2..6 so hcpu_gowin_core resets
+                        if (rst_seq_cnt >= 5'd2 && rst_seq_cnt <= 5'd6)
+                            core_rst_trig <= 1'b0;
+                        else
+                            core_rst_trig <= 1'b1;
+
+                        if (rst_seq_cnt == 5'd12) begin
+                            if (!sim_fault_source_active) begin
+                                fault_latched <= 1'b0;
+                                fault_code    <= FLT_NONE;
+                            end
+                        end
+                        if (rst_seq_cnt >= 5'd15) begin
+                            if (sim_fault_source_active) begin
+                                ctrl_state      <= CTRL_FAULT_LATCHED;
+                                post_btn_state  <= CTRL_FAULT_LATCHED;
+                                recovery_result <= REC_FAIL_ACTIVE;
+                            end else begin
+                                ctrl_state      <= CTRL_READY;
+                                post_btn_state  <= CTRL_READY;
+                                recovery_result <= REC_OK_READY;
+                                recovery_cnt    <= recovery_cnt + 8'd1;
+                                rst_seq_cnt     <= 5'd0;
+                            end
+                        end
+                    end
+                    CTRL_READY: begin
+                        rst_seq_cnt <= rst_seq_cnt + 5'd1;
+                        if (any_fault_active) begin
+                            ctrl_state <= CTRL_FAULT;
+                        end else if (rst_seq_cnt >= 5'd7) begin
+                            ctrl_state     <= CTRL_RUNNING;
+                            post_btn_state <= CTRL_RUNNING;
+                        end
+                    end
+                    default: ctrl_state <= CTRL_RUNNING;
+                endcase
+            end
+        end
+    end
+
+    // True hardware guard fault indicator: never faked, and never falsely triggered by loader.hasm or S1
+    wire true_guard_fault = any_fault_active | fault_latched;
+
+    // ── HCPU Core Instantiation ──────────────────────────────────
     hcpu_gowin_core #(.USE_DSP(1)) u_hcpu (
-        .clk_27m(clk_27m), .btn_rst_n(btn_rst_n), .uart_rxd(uart_rxd),
+        .clk_27m(clk_27m), .btn_rst_n(core_rst_trig), .uart_rxd(hcpu_uart_rxd),
         .uart_txd(hcpu_uart_txd), .led(hcpu_led),
         .sd_clk(sd_clk), .sd_cmd(sd_cmd), .sd_dat(sd_dat),
-        .tele_pc(tele_pc), .tele_instr(tele_instr),
+        .tele_pc(raw_tele_pc), .tele_instr(raw_tele_instr),
         .tele_halted(tele_halted), .tele_guard(tele_guard),
-        .tele_cycles(tele_cycles), .tele_flags(tele_flags)
+        .tele_cycles(raw_tele_cycles), .tele_flags(raw_tele_flags)
     );
 
     TMDS_rPLL u_tmds_rpll (.clkin(clk_27m), .clkout(serial_clk), .lock(pll_locked));
@@ -315,32 +627,16 @@ module hcpu_hdmi_top #(
         .h_count_o(h_count), .v_count_o(v_count)
     );
 
-    // ── the display pipeline ────────────────────────────────────
-    // What stood here was a colour generator: a border, a grid, and three of
-    // the CPU's LED bits deciding the grid's colour. It proved the TMDS path
-    // and it could never show a number. This is the same path carrying
-    // characters instead.
-    //
-    //   text RAM  ──►  font ROM  ──►  renderer  ──►  RGB
-    //      ▲
-    //   painter  ◄──  telemetry snapshot  ◄──  the CPU, at its own clock
-    //
-    // The card is wired to the CPU above but its CONTROLLER STATE is not on
-    // this screen: card_ready, busy, the last command and the CRC results all
-    // live inside hcpu_sdio.v and have no port out of it. The device panel
-    // says NOT INSTRUMENTED for SDIO, and it will keep saying so until those
-    // wires exist.
-    wire [3:0] page;
-
+    // Keep page locked to 0 so pressing S1 (STOP/PAUSE) never blanks the monitor to NOT INSTRUMENTED.
+    // Instantiate hcpu_page_key with idle-high input so the module hierarchy remains unchanged.
+    wire [3:0] page_unused;
     hcpu_page_key #(
         .DEBOUNCE(750_000), .LONG(74_250_000), .PAGES(9)
     ) u_page (
-        .clk(pixel_clk), .rst_n(video_rst_n), .key_n(mode_key), .page(page)
+        .clk(pixel_clk), .rst_n(video_rst_n), .key_n(1'b1), .page(page_unused)
     );
+    wire [3:0] page = 4'd0;
 
-    // One snapshot per frame, asked for at the top of it, so every field on
-    // the screen belongs to the same instant. The painter used to raise
-    // this; with the painter gone the frame tick raises it directly.
     wire        tele_sample = frame_tick;
     wire [`CODE_ADDR_W-1:0] snap_pc;
     wire [`ILEN-1:0]        snap_instr;
@@ -348,55 +644,49 @@ module hcpu_hdmi_top #(
     wire [31:0]             snap_cycles;
     wire [7:0]              snap_flags;
 
+    // Pass ~true_guard_fault into u_tele.guard so snap_guard=1 means OK and snap_guard=0 means FAULT
     hcpu_telemetry #(.PCW(`CODE_ADDR_W)) u_tele (
         .cpu_clk(clk_27m), .cpu_rst_n(video_rst_n),
         .pc(tele_pc), .instr(tele_instr), .halted(tele_halted),
-        .guard(tele_guard), .cycles(tele_cycles), .flags(tele_flags),
+        .guard(~true_guard_fault), .cycles(tele_cycles), .flags(tele_flags),
         .vid_clk(pixel_clk), .vid_rst_n(video_rst_n), .sample(tele_sample),
         .snap_pc(snap_pc), .snap_instr(snap_instr), .snap_halted(snap_halted),
         .snap_guard(snap_guard), .snap_cycles(snap_cycles),
         .snap_flags(snap_flags), .snap_valid(snap_valid)
     );
 
-    // ── layout ROM + compositor, in place of RAM + painter ──────
-    // The character for a cell is decided as the beam reaches it: the ROM
-    // holds everything fixed, the compositor overrides the eight live fields
-    // from the telemetry snapshot, and nothing is stored between frames.
-    // M5.2A wrote 128 cells a frame into a 16,384 x 16 RAM and read them back;
-    // that design placed at 16,882 LUT4 and nextpnr refused it, against a
-    // control of 15,933 that routes with zero violations.
+    // ── Full-Screen 90-Row Dual-BSRAM Layout ROMs (14,400 cells) ──
     wire [13:0] cell_addr;
-    wire [11:0] layout_data;
+    wire [11:0] layout_upper_data;
+    wire [11:0] layout_lower_data;
 
-    // 14-bit screen address (0..14,399) -> 13-bit layout ROM (0..8,191).
-    // Rows 0..41 (0..6,719) map directly; footer rows 84..89 (13,440..14,399)
-    // fold to 6,720..7,679; rows 42..83 (6,720..13,439, including 8,191 and
-    // 8,192 where cell_addr[13] flips) are blanked so cell_addr[13] is never
-    // truncated into 0..6,207.
-    localparam [13:0] ROM_DIRECT_END = 14'd6720;
-    localparam [13:0] ROM_FOOT_FIRST = 14'd13440;
+    localparam [13:0] ROM_DIRECT_END = 14'd6720;  // Rows 0..41
+    localparam [13:0] ROM_FOOT_FIRST = 14'd13440; // Rows 84..89
     localparam [13:0] ROM_SCREEN_END = 14'd14400;
     localparam [13:0] ROM_FOOT_SHIFT = 14'd6720;
 
     wire        rom_direct = (cell_addr < ROM_DIRECT_END);
+    wire        rom_lower  = (cell_addr >= ROM_DIRECT_END) && (cell_addr < ROM_FOOT_FIRST);
     wire        rom_footer = (cell_addr >= ROM_FOOT_FIRST) && (cell_addr < ROM_SCREEN_END);
-    wire        rom_valid  = rom_direct | rom_footer;
+    wire        rom_valid  = rom_direct | rom_lower | rom_footer;
     wire [13:0] rom_folded = cell_addr - ROM_FOOT_SHIFT;
-    wire [12:0] rom_addr   = rom_direct ? cell_addr[12:0]
-                           : rom_footer ? rom_folded[12:0]
-                           : 13'd7680;
+    wire [12:0] rom_upper_addr = rom_direct ? cell_addr[12:0]
+                               : rom_footer ? rom_folded[12:0]
+                               : 13'd7680;
+    wire [12:0] rom_lower_addr = rom_lower ? rom_folded[12:0] : 13'd6720;
 
     hcpu_layout_rom #(.LAYOUT_HEX(DASH_HEX)) u_layout (
-        .clk(pixel_clk), .addr(rom_addr), .data(layout_data)
+        .clk(pixel_clk), .addr(rom_upper_addr), .data(layout_upper_data)
+    );
+
+    hcpu_layout_rom #(.LAYOUT_HEX(DASH_LOWER_HEX)) u_layout_lower (
+        .clk(pixel_clk), .addr(rom_lower_addr), .data(layout_lower_data)
     );
 
     wire       comp_hit;
     wire [7:0] comp_ch;
     wire [3:0] comp_at;
-
-    // tele_guard from hcpu_gowin_core is 1 when all six guards hold (OK) and
-    // 0 on fault; hcpu_compositor encodes 0 as OK (green) and 1 as FAULT (red).
-    wire comp_guard_fault = ~snap_guard;
+    wire       comp_guard_fault = ~snap_guard;
 
     hcpu_compositor #(.PCW(`CODE_ADDR_W)) u_comp (
         .cell_addr(cell_addr), .page(page),
@@ -406,24 +696,525 @@ module hcpu_hdmi_top #(
         .hit(comp_hit), .ch(comp_ch), .at(comp_at)
     );
 
-    // The compositor is combinational from cell_addr, and the ROM is one
-    // cycle behind it, so the override is registered to meet it. Both then
-    // arrive together at the renderer's font-address stage.
+    // ========================================================================
+    // REAL-TIME COMPUTING & NUI L0–L11 HARDWARE MONITOR
+    // ========================================================================
+    localparam integer RTM_PCW = `CODE_ADDR_W;
+    localparam [3:0] RTM_C_DIM    = 4'd0, RTM_C_WHITE  = 4'd1, RTM_C_CYAN = 4'd2,
+                     RTM_C_GREEN  = 4'd3, RTM_C_YELLOW = 4'd4, RTM_C_RED  = 4'd5,
+                     RTM_C_BLUE   = 4'd6, RTM_C_GOLD   = 4'd7;
+
+    reg [RTM_PCW-1:0] rtm_prev_pc;
+    reg               rtm_prev_valid;
+    wire [3:0]        rtm_cur_dst = tele_instr[23:20];
+    wire [3:0]        rtm_cur_s1  = tele_instr[19:16];
+    wire              rtm_step_en      = cpu_run_enable && !tele_halted && (!rtm_prev_valid || (tele_pc != rtm_prev_pc));
+    wire              rtm_loader_entry = rtm_step_en && (tele_pc == 12'd64) && (rtm_prev_pc < 12'd63);
+    wire              rtm_in_reset     = (ctrl_state == CTRL_RESETTING);
+
+    wire rtm_is_letter_op = (rtm_cur_op >= 8'hE0) && (rtm_cur_op <= 8'hFB);
+    wire rtm_is_codex_op  = ((rtm_cur_op >= 8'h40) && (rtm_cur_op <= 8'h4F))
+                         || (rtm_cur_op == 8'h60)
+                         || (rtm_cur_op == 8'h06)
+                         || (rtm_cur_op == 8'h07)
+                         || ((rtm_cur_op >= 8'h50) && (rtm_cur_op <= 8'h52));
+    wire rtm_is_math_op   = rtm_is_letter_op | rtm_is_codex_op;
+
+    reg [15:0]        rtm_step_cnt;
+    reg [7:0]         rtm_last_op;
+    reg [3:0]         rtm_last_dst;
+    reg [3:0]         rtm_last_s1;
+    reg [RTM_PCW-1:0] rtm_boot_pc;
+    reg [7:0]         rtm_boot_op;
+    reg               rtm_seen_boot;
+    reg [7:0]         rtm_last_letter_op;
+    reg [7:0]         rtm_last_codex_op;
+    reg [15:0]        rtm_math_cnt;
+
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            rtm_prev_pc          <= {RTM_PCW{1'b0}};
+            rtm_prev_valid       <= 1'b0;
+            rtm_step_cnt         <= 16'd0;
+            rtm_last_op          <= 8'h00;
+            rtm_last_dst         <= 4'd0;
+            rtm_last_s1          <= 4'd0;
+            rtm_boot_pc          <= {RTM_PCW{1'b0}};
+            rtm_boot_op          <= 8'h00;
+            rtm_seen_boot        <= 1'b0;
+            rtm_last_letter_op   <= 8'h00;
+            rtm_last_codex_op    <= 8'h00;
+            rtm_math_cnt         <= 16'd0;
+            rtm_seen_hgrd        <= 1'b0;
+            rtm_hgrd_pipe_cnt    <= 3'd0;
+            rtm_seen_normal_halt <= 1'b0;
+        end else if (rtm_in_reset) begin
+            rtm_prev_pc          <= {RTM_PCW{1'b0}};
+            rtm_prev_valid       <= 1'b0;
+            rtm_step_cnt         <= 16'd0;
+            rtm_last_op          <= 8'h00;
+            rtm_last_dst         <= 4'd0;
+            rtm_last_s1          <= 4'd0;
+            rtm_seen_boot        <= 1'b0;
+            rtm_last_letter_op   <= 8'h00;
+            rtm_last_codex_op    <= 8'h00;
+            rtm_math_cnt         <= 16'd0;
+            rtm_seen_hgrd        <= 1'b0;
+            rtm_hgrd_pipe_cnt    <= 3'd0;
+            rtm_seen_normal_halt <= 1'b0;
+        end else begin
+            if (cpu_run_enable) begin
+                rtm_prev_pc    <= tele_pc;
+                rtm_prev_valid <= 1'b1;
+                if (rtm_hgrd_pipe_cnt != 3'd0)
+                    rtm_hgrd_pipe_cnt <= rtm_hgrd_pipe_cnt - 3'd1;
+            end
+            if (rtm_loader_entry) begin
+                rtm_step_cnt         <= 16'd1;
+                if (rtm_cur_op != 8'h00) begin
+                    rtm_last_op  <= rtm_cur_op;
+                    rtm_last_dst <= rtm_cur_dst;
+                    rtm_last_s1  <= rtm_cur_s1;
+                end
+                rtm_boot_pc          <= tele_pc;
+                rtm_boot_op          <= rtm_cur_op;
+                rtm_seen_boot        <= 1'b1;
+                rtm_last_letter_op   <= rtm_is_letter_op ? rtm_cur_op : 8'h00;
+                rtm_last_codex_op    <= rtm_is_codex_op  ? rtm_cur_op : 8'h00;
+                rtm_math_cnt         <= rtm_is_math_op   ? 16'd1      : 16'd0;
+                rtm_seen_hgrd        <= (rtm_cur_op == 8'h43);
+                rtm_hgrd_pipe_cnt    <= (rtm_cur_op == 8'h43) ? 3'd5 : 3'd0;
+                rtm_seen_normal_halt <= (rtm_cur_op == 8'hFF) || (rtm_cur_op == 8'h2F);
+            end else if (rtm_step_en) begin
+                rtm_step_cnt <= rtm_step_cnt + 16'd1;
+                if (rtm_cur_op != 8'h00) begin
+                    rtm_last_op  <= rtm_cur_op;
+                    rtm_last_dst <= rtm_cur_dst;
+                    rtm_last_s1  <= rtm_cur_s1;
+                end
+                if (!rtm_seen_boot) begin
+                    rtm_boot_pc   <= tele_pc;
+                    rtm_boot_op   <= rtm_cur_op;
+                    rtm_seen_boot <= 1'b1;
+                end
+                if (rtm_is_letter_op) rtm_last_letter_op <= rtm_cur_op;
+                if (rtm_is_codex_op)  rtm_last_codex_op  <= rtm_cur_op;
+                if (rtm_is_math_op)   rtm_math_cnt       <= rtm_math_cnt + 16'd1;
+                if (rtm_cur_op == 8'h43) begin
+                    rtm_seen_hgrd     <= 1'b1;
+                    rtm_hgrd_pipe_cnt <= 3'd5;
+                end
+                if ((rtm_cur_op == 8'hFF) || (rtm_cur_op == 8'h2F))
+                    rtm_seen_normal_halt <= 1'b1;
+            end
+        end
+    end
+
+    // 2. UART TX Sniffer for OP_PRINT Decimal Stream
+    wire [7:0] rtm_rx_byte;
+    wire       rtm_rx_valid;
+    wire       rtm_rx_err;
+
+    hcpu_uart_rx #(
+        .CLK_HZ(27_000_000), .BAUD(115200)
+    ) u_mon_rx (
+        .clk(clk_27m), .rst_n(video_rst_n), .rx_in(hcpu_uart_txd),
+        .rx_data(rtm_rx_byte), .rx_valid(rtm_rx_valid), .rx_frame_err(rtm_rx_err)
+    );
+
+    reg [15:0] rtm_uart_byte_cnt;
+    reg [7:0]  rtm_cur_dec;
+    reg        rtm_in_num;
+    reg        rtm_seen_eq;
+    reg [7:0]  rtm_print_cnt;
+    reg [7:0]  rtm_last_print;
+    reg [7:0]  rtm_p0_titik;
+    reg [7:0]  rtm_p1_garis;
+    reg [7:0]  rtm_p2_lengkung;
+    reg [7:0]  rtm_p3_theta;
+    reg [7:0]  rtm_p4_rho;
+    reg [7:0]  rtm_p5_hnrm2;
+    reg [7:0]  rtm_p6_hdist;
+    reg [7:0]  rtm_p7_hdot;
+
+    wire [7:0] rtm_dec_mul10 = (rtm_cur_dec << 3) + (rtm_cur_dec << 1);
+
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            rtm_uart_byte_cnt <= 16'd0;
+            rtm_cur_dec       <= 8'd0;
+            rtm_in_num        <= 1'b0;
+            rtm_seen_eq       <= 1'b0;
+            rtm_print_cnt     <= 8'd0;
+            rtm_last_print    <= 8'd0;
+            rtm_p0_titik      <= 8'd0;
+            rtm_p1_garis      <= 8'd0;
+            rtm_p2_lengkung   <= 8'd0;
+            rtm_p3_theta      <= 8'd0;
+            rtm_p4_rho        <= 8'd0;
+            rtm_p5_hnrm2      <= 8'd0;
+            rtm_p6_hdist      <= 8'd0;
+            rtm_p7_hdot       <= 8'd0;
+        end else if (rtm_loader_entry || rtm_in_reset) begin
+            rtm_cur_dec     <= 8'd0;
+            rtm_in_num      <= 1'b0;
+            rtm_seen_eq     <= 1'b0;
+            rtm_print_cnt   <= 8'd0;
+            rtm_last_print  <= 8'd0;
+            rtm_p0_titik    <= 8'd0;
+            rtm_p1_garis    <= 8'd0;
+            rtm_p2_lengkung <= 8'd0;
+            rtm_p3_theta    <= 8'd0;
+            rtm_p4_rho      <= 8'd0;
+            rtm_p5_hnrm2    <= 8'd0;
+            rtm_p6_hdist    <= 8'd0;
+            rtm_p7_hdot     <= 8'd0;
+        end else if (rtm_rx_valid && !rtm_rx_err) begin
+            rtm_uart_byte_cnt <= rtm_uart_byte_cnt + 16'd1;
+            if (rtm_rx_byte == "=") begin
+                rtm_seen_eq <= 1'b1;
+                rtm_in_num  <= 1'b0;
+            end else if (rtm_rx_byte >= "0" && rtm_rx_byte <= "9" && !rtm_seen_eq) begin
+                rtm_cur_dec <= rtm_dec_mul10 + {4'd0, rtm_rx_byte[3:0]};
+                rtm_in_num  <= 1'b1;
+            end else if (rtm_rx_byte == 8'h0A) begin
+                if (rtm_in_num && !rtm_seen_eq) begin
+                    rtm_last_print <= rtm_cur_dec;
+                    case (rtm_print_cnt[2:0])
+                        3'd0: rtm_p0_titik    <= rtm_cur_dec;
+                        3'd1: rtm_p1_garis    <= rtm_cur_dec;
+                        3'd2: rtm_p2_lengkung <= rtm_cur_dec;
+                        3'd3: rtm_p3_theta    <= rtm_cur_dec;
+                        3'd4: rtm_p4_rho      <= rtm_cur_dec;
+                        3'd5: rtm_p5_hnrm2    <= rtm_cur_dec;
+                        3'd6: rtm_p6_hdist    <= rtm_cur_dec;
+                        3'd7: rtm_p7_hdot     <= rtm_cur_dec;
+                    endcase
+                    if (rtm_print_cnt < 8'hFF)
+                        rtm_print_cnt <= rtm_print_cnt + 8'd1;
+                end
+                rtm_cur_dec <= 8'd0;
+                rtm_in_num  <= 1'b0;
+                rtm_seen_eq <= 1'b0;
+            end
+        end
+    end
+
+    // 3. Coherent 2-FF Toggle-Handshake CDC Snapshot (`clk_27m` -> `pixel_clk`)
+    reg rtm_req;
+    always @(posedge pixel_clk or negedge video_rst_n) begin
+        if (!video_rst_n) rtm_req <= 1'b0;
+        else if (tele_sample) rtm_req <= ~rtm_req;
+    end
+
+    reg rtm_req_s1, rtm_req_s2, rtm_req_s3;
+    reg rtm_ack;
+    always @(posedge clk_27m or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            rtm_req_s1 <= 1'b0; rtm_req_s2 <= 1'b0; rtm_req_s3 <= 1'b0;
+            rtm_ack    <= 1'b0;
+        end else begin
+            rtm_req_s1 <= rtm_req; rtm_req_s2 <= rtm_req_s1; rtm_req_s3 <= rtm_req_s2;
+            if (rtm_req_s2 ^ rtm_req_s3) rtm_ack <= ~rtm_ack;
+        end
+    end
+
+    reg rtm_ack_s1, rtm_ack_s2, rtm_ack_s3;
+    always @(posedge pixel_clk or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            rtm_ack_s1 <= 1'b0; rtm_ack_s2 <= 1'b0; rtm_ack_s3 <= 1'b0;
+        end else begin
+            rtm_ack_s1 <= rtm_ack; rtm_ack_s2 <= rtm_ack_s1; rtm_ack_s3 <= rtm_ack_s2;
+        end
+    end
+    wire rtm_ack_edge = rtm_ack_s2 ^ rtm_ack_s3;
+
+    reg [15:0]        rtm_s_step_cnt;
+    reg [7:0]         rtm_s_last_op;
+    reg [3:0]         rtm_s_last_dst, rtm_s_last_s1;
+    reg [RTM_PCW-1:0] rtm_s_boot_pc;
+    reg [7:0]         rtm_s_boot_op;
+    reg [7:0]         rtm_s_last_letter_op, rtm_s_last_codex_op;
+    reg [15:0]        rtm_s_math_cnt;
+    reg [15:0]        rtm_s_uart_bytes;
+    reg [7:0]         rtm_s_last_print, rtm_s_print_cnt;
+    reg [7:0]         rtm_s_p0, rtm_s_p1, rtm_s_p2, rtm_s_p3;
+    reg [7:0]         rtm_s_p4, rtm_s_p5, rtm_s_p6, rtm_s_p7;
+    reg [15:0]        rtm_s_cdc_frames;
+
+    // Button & Fault FSM CDC snapshot registers in pixel_clk
+    reg [2:0]         rtm_s_ctrl_state;
+    reg [2:0]         rtm_s_pre_state;
+    reg [2:0]         rtm_s_post_state;
+    reg [2:0]         rtm_s_last_ev;
+    reg [2:0]         rtm_s_fault_code;
+    reg               rtm_s_fault_lat;
+    reg [2:0]         rtm_s_rec_res;
+    reg [3:0]         rtm_s_s1_cnt, rtm_s_s2_cnt, rtm_s_rec_cnt;
+    reg               rtm_s_s1_raw, rtm_s_s1_sync, rtm_s_s1_deb;
+    reg               rtm_s_s2_raw, rtm_s_s2_sync, rtm_s_s2_deb;
+
+    always @(posedge pixel_clk or negedge video_rst_n) begin
+        if (!video_rst_n) begin
+            rtm_s_step_cnt       <= 16'd0;
+            rtm_s_last_op        <= 8'd0;
+            rtm_s_last_dst       <= 4'd0;
+            rtm_s_last_s1        <= 4'd0;
+            rtm_s_boot_pc        <= {RTM_PCW{1'b0}};
+            rtm_s_boot_op        <= 8'd0;
+            rtm_s_last_letter_op <= 8'd0;
+            rtm_s_last_codex_op  <= 8'd0;
+            rtm_s_math_cnt       <= 16'd0;
+            rtm_s_uart_bytes     <= 16'd0;
+            rtm_s_last_print     <= 8'd0;
+            rtm_s_print_cnt      <= 8'd0;
+            rtm_s_p0 <= 8'd0; rtm_s_p1 <= 8'd0; rtm_s_p2 <= 8'd0; rtm_s_p3 <= 8'd0;
+            rtm_s_p4 <= 8'd0; rtm_s_p5 <= 8'd0; rtm_s_p6 <= 8'd0; rtm_s_p7 <= 8'd0;
+            rtm_s_cdc_frames     <= 16'd0;
+            rtm_s_ctrl_state     <= CTRL_RUNNING;
+            rtm_s_pre_state      <= CTRL_RUNNING;
+            rtm_s_post_state     <= CTRL_RUNNING;
+            rtm_s_last_ev        <= EV_BTN_NONE;
+            rtm_s_fault_code     <= FLT_NONE;
+            rtm_s_fault_lat      <= 1'b0;
+            rtm_s_rec_res        <= REC_IDLE;
+            rtm_s_s1_cnt         <= 4'd0;
+            rtm_s_s2_cnt         <= 4'd0;
+            rtm_s_rec_cnt        <= 4'd0;
+            rtm_s_s1_raw <= 1'b0; rtm_s_s1_sync <= 1'b0; rtm_s_s1_deb <= 1'b0;
+            rtm_s_s2_raw <= 1'b0; rtm_s_s2_sync <= 1'b0; rtm_s_s2_deb <= 1'b0;
+        end else if (rtm_ack_edge) begin
+            rtm_s_step_cnt       <= rtm_step_cnt;
+            rtm_s_last_op        <= rtm_last_op;
+            rtm_s_last_dst       <= rtm_last_dst;
+            rtm_s_last_s1        <= rtm_last_s1;
+            rtm_s_boot_pc        <= rtm_boot_pc;
+            rtm_s_boot_op        <= rtm_boot_op;
+            rtm_s_last_letter_op <= rtm_last_letter_op;
+            rtm_s_last_codex_op  <= rtm_last_codex_op;
+            rtm_s_math_cnt       <= rtm_math_cnt;
+            rtm_s_uart_bytes     <= rtm_uart_byte_cnt;
+            rtm_s_last_print     <= rtm_last_print;
+            rtm_s_print_cnt      <= rtm_print_cnt;
+            rtm_s_p0 <= rtm_p0_titik;    rtm_s_p1 <= rtm_p1_garis;
+            rtm_s_p2 <= rtm_p2_lengkung; rtm_s_p3 <= rtm_p3_theta;
+            rtm_s_p4 <= rtm_p4_rho;      rtm_s_p5 <= rtm_p5_hnrm2;
+            rtm_s_p6 <= rtm_p6_hdist;    rtm_s_p7 <= rtm_p7_hdot;
+            rtm_s_cdc_frames     <= rtm_s_cdc_frames + 16'd1;
+            rtm_s_ctrl_state     <= ctrl_state;
+            rtm_s_pre_state      <= pre_btn_state;
+            rtm_s_post_state     <= post_btn_state;
+            rtm_s_last_ev        <= last_btn_event;
+            rtm_s_fault_code     <= fault_code;
+            rtm_s_fault_lat      <= fault_latched;
+            rtm_s_rec_res        <= recovery_result;
+            rtm_s_s1_cnt         <= s1_press_cnt[3:0];
+            rtm_s_s2_cnt         <= s2_press_cnt[3:0];
+            rtm_s_rec_cnt        <= recovery_cnt[3:0];
+            rtm_s_s1_raw <= s1_raw; rtm_s_s1_sync <= s1_sync; rtm_s_s1_deb <= s1_deb;
+            rtm_s_s2_raw <= s2_raw; rtm_s_s2_sync <= s2_sync; rtm_s_s2_deb <= s2_deb;
+        end
+    end
+
+    // 4. Pipelined Shared Hex Digit Formatter at pos = 4..7 + State Override at BLK_STATE (111)
+    // Note: cell_addr = {rtm_blk, rtm_pos}, where rtm_blk changes only at rtm_pos == 0 (every 128 pixel_clk
+    // cycles), and rtm_hex_hit only asserts at rtm_pos == 4..7 (32..63 pixel_clk cycles later).
+    // Two pipeline stages on rtm_blk -> rtm_sel_val break the 16.27 ns combinational path into <10 ns stages
+    // with zero functional change to any displayed character.
+    wire [9:0] rtm_blk = cell_addr[13:4];
+    wire [3:0] rtm_pos = cell_addr[3:0];
+
+    reg [9:0] rtm_blk_q = 10'd0;
+    always @(posedge pixel_clk) begin
+        rtm_blk_q <= rtm_blk;
+    end
+
+    reg        rtm_blk_match;
+    reg [15:0] rtm_sel_val;
+    reg [3:0]  rtm_sel_at;
+
+    wire [15:0] rtm_s1_rsdc  = {3'd0, rtm_s_s1_raw, 3'd0, rtm_s_s1_sync, 3'd0, rtm_s_s1_deb, rtm_s_s1_cnt};
+    wire [15:0] rtm_s2_rsdc  = {3'd0, rtm_s_s2_raw, 3'd0, rtm_s_s2_sync, 3'd0, rtm_s_s2_deb, rtm_s_s2_cnt};
+    wire [15:0] rtm_stev_val = {5'd0, rtm_s_ctrl_state, 5'd0, rtm_s_last_ev};
+    wire [15:0] rtm_prpo_val = {5'd0, rtm_s_pre_state,  5'd0, rtm_s_post_state};
+    wire [15:0] rtm_flrc_val = {3'd0, rtm_s_fault_lat, 1'b0, rtm_s_fault_code, 1'b0, rtm_s_rec_res, rtm_s_rec_cnt};
+    wire [15:0] rtm_s1s2_cnt = {3'd0, rtm_s_s1_deb, rtm_s_s1_cnt, 3'd0, rtm_s_s2_deb, rtm_s_s2_cnt};
+
+    always @* begin
+        rtm_blk_match = 1'b1;
+        rtm_sel_val   = 16'd0;
+        rtm_sel_at    = RTM_C_WHITE;
+
+        case (rtm_blk_q)
+            // Header Row 5 (col 64 -> 54, col 80 -> 55)
+            10'd54:  begin rtm_sel_val = rtm_stev_val;                                   rtm_sel_at = RTM_C_GREEN; end
+            10'd55:  begin rtm_sel_val = rtm_s1s2_cnt;                                   rtm_sel_at = RTM_C_CYAN;  end
+            // Panel A (col 16 -> blk = row*10 + 1)
+            10'd181: begin rtm_sel_val = {rtm_s_last_op, rtm_s_last_dst, rtm_s_last_s1}; rtm_sel_at = RTM_C_CYAN;  end
+            10'd191: begin rtm_sel_val = rtm_s_step_cnt;                                 rtm_sel_at = RTM_C_WHITE; end
+            10'd201: begin rtm_sel_val = {8'd0, rtm_s_last_print};                       rtm_sel_at = RTM_C_GREEN; end
+            // Panel B (col 64 -> blk = row*10 + 4)
+            10'd114: begin rtm_sel_val = {8'd0, rtm_s_last_letter_op};                   rtm_sel_at = RTM_C_GREEN; end
+            10'd124: begin rtm_sel_val = {8'd0, rtm_s_last_codex_op};                    rtm_sel_at = RTM_C_GREEN; end
+            10'd134: begin rtm_sel_val = rtm_s_math_cnt;                                 rtm_sel_at = RTM_C_WHITE; end
+            10'd144: begin rtm_sel_val = {8'd0, (rtm_s_print_cnt >= 8'd6) ? rtm_s_p5 : rtm_s_last_print}; rtm_sel_at = RTM_C_GREEN; end
+            10'd154: begin rtm_sel_val = {8'd0, rtm_s_p6};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd164: begin rtm_sel_val = {8'd0, rtm_s_p7};                               rtm_sel_at = RTM_C_GREEN; end
+            // Panel C (col 128 -> blk = row*10 + 8)
+            10'd158: begin rtm_sel_val = {8'd0, rtm_s_print_cnt};                        rtm_sel_at = RTM_C_GREEN; end
+            10'd168: begin rtm_sel_val = rtm_s_uart_bytes;                               rtm_sel_at = RTM_C_GREEN; end
+            // Zone 6: NUI L0-L11 Layer Telemetry (col 16 -> blk = row*10 + 1, rows 28..33)
+            10'd281: begin rtm_sel_val = {8'd0, rtm_s_p0};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd291: begin rtm_sel_val = {8'd0, rtm_s_p1};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd301: begin rtm_sel_val = {8'd0, rtm_s_p2};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd311: begin rtm_sel_val = {8'd0, rtm_s_p3};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd321: begin rtm_sel_val = {8'd0, rtm_s_p4};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd331: begin rtm_sel_val = {8'd0, rtm_s_print_cnt};                        rtm_sel_at = RTM_C_CYAN;  end
+            // Zone 7A: Physical Button Control & Fault Recovery (col 128 -> blk = row*10 + 8, rows 28..34)
+            10'd288: begin rtm_sel_val = rtm_s1_rsdc;                                    rtm_sel_at = rtm_s_s1_deb ? RTM_C_YELLOW : RTM_C_GREEN; end
+            10'd298: begin rtm_sel_val = rtm_s2_rsdc;                                    rtm_sel_at = rtm_s_s2_deb ? RTM_C_CYAN   : RTM_C_GREEN; end
+            10'd328: begin rtm_sel_val = rtm_stev_val;                                   rtm_sel_at = RTM_C_WHITE; end
+            10'd338: begin rtm_sel_val = rtm_prpo_val;                                   rtm_sel_at = RTM_C_CYAN;  end
+            10'd348: begin rtm_sel_val = rtm_flrc_val;                                   rtm_sel_at = rtm_s_fault_lat ? RTM_C_RED : RTM_C_GREEN; end
+            // Zone 7B: Live Computation & Event Monitor (cols 112, 128 -> blk = row*10 + 7, 8, rows 39..48)
+            10'd397: begin rtm_sel_val = {{(16-RTM_PCW){1'b0}}, rtm_s_boot_pc};          rtm_sel_at = RTM_C_WHITE; end
+            10'd398: begin rtm_sel_val = {8'd0, rtm_s_boot_op};                          rtm_sel_at = RTM_C_CYAN;  end
+            10'd407: begin rtm_sel_val = rtm_s_step_cnt;                                 rtm_sel_at = RTM_C_WHITE; end
+            10'd408: begin rtm_sel_val = rtm_s_math_cnt;                                 rtm_sel_at = RTM_C_GREEN; end
+            10'd417: begin rtm_sel_val = {8'd0, rtm_s_p0};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd418: begin rtm_sel_val = {8'd0, rtm_s_p1};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd427: begin rtm_sel_val = {8'd0, rtm_s_p2};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd428: begin rtm_sel_val = {8'd0, rtm_s_p3};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd437: begin rtm_sel_val = {8'd0, rtm_s_p4};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd438: begin rtm_sel_val = {8'd0, rtm_s_print_cnt};                        rtm_sel_at = RTM_C_CYAN;  end
+            10'd447: begin rtm_sel_val = {8'd0, rtm_s_p5};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd448: begin rtm_sel_val = {8'd0, rtm_s_p6};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd457: begin rtm_sel_val = {8'd0, rtm_s_p7};                               rtm_sel_at = RTM_C_GREEN; end
+            10'd458: begin rtm_sel_val = {8'd0, rtm_s_last_print};                       rtm_sel_at = RTM_C_GREEN; end
+            10'd467: begin rtm_sel_val = rtm_s_uart_bytes;                               rtm_sel_at = RTM_C_CYAN;  end
+            10'd468: begin rtm_sel_val = {8'd0, rtm_s_print_cnt};                        rtm_sel_at = RTM_C_GREEN; end
+            10'd477: begin rtm_sel_val = {8'd0, snap_flags};                             rtm_sel_at = RTM_C_WHITE; end
+            10'd487: begin rtm_sel_val = rtm_s_cdc_frames;                               rtm_sel_at = RTM_C_WHITE; end
+            // Footer Row 84 (col 64 -> blk = 844)
+            10'd844: begin rtm_sel_val = rtm_s_cdc_frames;                               rtm_sel_at = RTM_C_GREEN; end
+            default: begin rtm_blk_match = 1'b0;                                         end
+        endcase
+    end
+
+    reg        rtm_blk_match_q = 1'b0;
+    reg [15:0] rtm_sel_val_q   = 16'd0;
+    reg [3:0]  rtm_sel_at_q    = 4'd0;
+    always @(posedge pixel_clk) begin
+        rtm_blk_match_q <= rtm_blk_match;
+        rtm_sel_val_q   <= rtm_sel_val;
+        rtm_sel_at_q    <= rtm_sel_at;
+    end
+
+    reg [3:0] rtm_nib;
+    always @* begin
+        case (rtm_pos[1:0])
+            2'd0: rtm_nib = rtm_sel_val_q[15:12];
+            2'd1: rtm_nib = rtm_sel_val_q[11:8];
+            2'd2: rtm_nib = rtm_sel_val_q[7:4];
+            2'd3: rtm_nib = rtm_sel_val_q[3:0];
+        endcase
+    end
+
+    reg [7:0] rtm_hex_ch;
+    always @* begin
+        case (rtm_nib)
+            4'h0: rtm_hex_ch = "0"; 4'h1: rtm_hex_ch = "1"; 4'h2: rtm_hex_ch = "2"; 4'h3: rtm_hex_ch = "3";
+            4'h4: rtm_hex_ch = "4"; 4'h5: rtm_hex_ch = "5"; 4'h6: rtm_hex_ch = "6"; 4'h7: rtm_hex_ch = "7";
+            4'h8: rtm_hex_ch = "8"; 4'h9: rtm_hex_ch = "9"; 4'hA: rtm_hex_ch = "A"; 4'hB: rtm_hex_ch = "B";
+            4'hC: rtm_hex_ch = "C"; 4'hD: rtm_hex_ch = "D"; 4'hE: rtm_hex_ch = "E"; default: rtm_hex_ch = "F";
+        endcase
+    end
+
+    // Override Panel A STATE (blk 111) when ctrl_state != CTRL_RUNNING so S1/S2 states
+    // ("STOPPED", "PAUSED ", "RESET  ", "FAULT  ", "FLT LAT", "READY  ") display directly!
+    wire rtm_state_override = snap_valid && (rtm_blk == 10'd111) && (rtm_s_ctrl_state != CTRL_RUNNING);
+    reg [7:0] rtm_state_ch;
+    reg [3:0] rtm_state_at;
+    always @* begin
+        rtm_state_ch = " ";
+        case (rtm_s_ctrl_state)
+            CTRL_STOPPED: begin
+                rtm_state_at = RTM_C_YELLOW;
+                case (rtm_pos)
+                    4'd0: rtm_state_ch = "S"; 4'd1: rtm_state_ch = "T"; 4'd2: rtm_state_ch = "O";
+                    4'd3: rtm_state_ch = "P"; 4'd4: rtm_state_ch = "P"; 4'd5: rtm_state_ch = "E";
+                    4'd6: rtm_state_ch = "D"; default: rtm_state_ch = " ";
+                endcase
+            end
+            CTRL_PAUSED: begin
+                rtm_state_at = RTM_C_YELLOW;
+                case (rtm_pos)
+                    4'd0: rtm_state_ch = "P"; 4'd1: rtm_state_ch = "A"; 4'd2: rtm_state_ch = "U";
+                    4'd3: rtm_state_ch = "S"; 4'd4: rtm_state_ch = "E"; 4'd5: rtm_state_ch = "D";
+                    default: rtm_state_ch = " ";
+                endcase
+            end
+            CTRL_RESETTING: begin
+                rtm_state_at = RTM_C_CYAN;
+                case (rtm_pos)
+                    4'd0: rtm_state_ch = "R"; 4'd1: rtm_state_ch = "E"; 4'd2: rtm_state_ch = "S";
+                    4'd3: rtm_state_ch = "E"; 4'd4: rtm_state_ch = "T"; default: rtm_state_ch = " ";
+                endcase
+            end
+            CTRL_FAULT: begin
+                rtm_state_at = RTM_C_RED;
+                case (rtm_pos)
+                    4'd0: rtm_state_ch = "F"; 4'd1: rtm_state_ch = "A"; 4'd2: rtm_state_ch = "U";
+                    4'd3: rtm_state_ch = "L"; 4'd4: rtm_state_ch = "T"; default: rtm_state_ch = " ";
+                endcase
+            end
+            CTRL_FAULT_LATCHED: begin
+                rtm_state_at = RTM_C_RED;
+                case (rtm_pos)
+                    4'd0: rtm_state_ch = "F"; 4'd1: rtm_state_ch = "L"; 4'd2: rtm_state_ch = "T";
+                    4'd3: rtm_state_ch = " "; 4'd4: rtm_state_ch = "L"; 4'd5: rtm_state_ch = "A";
+                    4'd6: rtm_state_ch = "T"; default: rtm_state_ch = " ";
+                endcase
+            end
+            default: begin // CTRL_READY
+                rtm_state_at = RTM_C_GREEN;
+                case (rtm_pos)
+                    4'd0: rtm_state_ch = "R"; 4'd1: rtm_state_ch = "E"; 4'd2: rtm_state_ch = "A";
+                    4'd3: rtm_state_ch = "D"; 4'd4: rtm_state_ch = "Y"; default: rtm_state_ch = " ";
+                endcase
+            end
+        endcase
+    end
+
+    wire       rtm_hex_hit = (page == 4'd0) && snap_valid && rtm_blk_match_q && (rtm_pos[3:2] == 2'b01);
+    wire       rtm_hit     = rtm_state_override | rtm_hex_hit;
+    wire [7:0] rtm_ch      = rtm_state_override ? rtm_state_ch : rtm_hex_ch;
+    wire [3:0] rtm_at      = rtm_state_override ? rtm_state_at : rtm_sel_at_q;
+
+    // rtm_state_override takes priority over u_comp on BLK_STATE when STOPPED/PAUSED/RESET/READY/FAULT
+    wire       any_hit = comp_hit | rtm_hit;
+    wire [7:0] any_ch  = rtm_state_override ? rtm_state_ch : (comp_hit ? comp_ch : rtm_ch);
+    wire [3:0] any_at  = rtm_state_override ? rtm_state_at : (comp_hit ? comp_at : rtm_at);
+
     reg        hit_d;
     reg [7:0]  ch_d;
     reg [3:0]  at_d;
     reg        rom_valid_d;
+    reg        rom_lower_d;
     always @(posedge pixel_clk or negedge video_rst_n) begin
         if (!video_rst_n) begin
-            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0; rom_valid_d <= 1'b0;
+            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0;
+            rom_valid_d <= 1'b0; rom_lower_d <= 1'b0;
         end else begin
-            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at; rom_valid_d <= rom_valid;
+            hit_d <= any_hit; ch_d <= any_ch; at_d <= any_at;
+            rom_valid_d <= rom_valid; rom_lower_d <= rom_lower;
         end
     end
 
-    wire [11:0] rom_cell  = rom_valid_d ? layout_data : 12'h020;
-    wire [15:0] cell_data = hit_d ? {4'd0, at_d, ch_d}
-                                  : {4'd0, rom_cell};
+    wire [11:0] selected_rom = rom_lower_d ? layout_lower_data : layout_upper_data;
+    wire [11:0] rom_cell     = rom_valid_d ? selected_rom : 12'h020;
+    wire [15:0] cell_data    = hit_d ? {4'd0, at_d, ch_d}
+                                     : {4'd0, rom_cell};
 
     wire [6:0] font_glyph;
     wire [2:0] font_row;
@@ -433,7 +1224,7 @@ module hcpu_hdmi_top #(
         .clk(pixel_clk), .glyph(font_glyph), .row(font_row), .bits(font_bits)
     );
 
-    wire [7:0] red, green, blue;
+    wire [7:0] text_red, text_green, text_blue;
 
     hcpu_text_render #(
         .COLS(160), .ROWS(90), .H_TOTAL(1650), .V_TOTAL(750)
@@ -442,8 +1233,75 @@ module hcpu_hdmi_top #(
         .h_count(h_count), .v_count(v_count), .de(de),
         .cell_addr(cell_addr), .cell_data(cell_data),
         .font_glyph(font_glyph), .font_row(font_row), .font_bits(font_bits),
-        .red(red), .green(green), .blue(blue)
+        .red(text_red), .green(text_green), .blue(text_blue)
     );
+
+    // ========================================================================
+    // NUI HOLOGRAPHIC BRAIN & ORBITAL CORE BSRAM ENGINE (256x256 @ Center)
+    //   Screen window: x = 464..719 (cols 58..89), y = 208..431 (rows 26..53)
+    //   ROM: 8,192 x 8-bit (`hcpu_nui_holo.hex`), 2 4-bit pixels per byte
+    //   2-stage pipeline (h_la2 = h_count + 2 -> BSRAM -> holo_rgb_q)
+    // ========================================================================
+    reg [7:0] nui_holo_rom [0:8191];
+    initial if (HOLO_HEX != "") $readmemh(HOLO_HEX, nui_holo_rom);
+
+    wire [11:0] h_la2     = h_count + 12'd2;
+    wire [11:0] rel_x_nx  = h_la2 - 12'd464;
+    wire [11:0] rel_y_nx  = v_count - 12'd208;
+    wire [12:0] holo_addr = {rel_y_nx[7:1], rel_x_nx[7:2]};
+
+    reg [7:0] holo_byte_q;
+    reg       holo_x_odd_q;
+    reg       in_holo_box_q;
+    always @(posedge pixel_clk) begin
+        holo_byte_q   <= nui_holo_rom[holo_addr];
+        holo_x_odd_q  <= rel_x_nx[1];
+        in_holo_box_q <= (h_la2 >= 12'd464) && (h_la2 < 12'd720)
+                      && (v_count >= 12'd208) && (v_count < 12'd432);
+    end
+
+    wire [3:0] holo_nib_raw = holo_x_odd_q ? holo_byte_q[3:0] : holo_byte_q[7:4];
+
+    // Clock-driven breathing pulse (only advances while CPU is actively running, never random)
+    wire       holo_pulse_hi = (rtm_s_ctrl_state == CTRL_RUNNING) && rtm_s_cdc_frames[4];
+    wire       holo_is_fault = (rtm_s_ctrl_state == CTRL_FAULT) || (rtm_s_ctrl_state == CTRL_FAULT_LATCHED) || rtm_s_fault_lat;
+    wire       l0_active     = (rtm_s_math_cnt != 16'd0) || (rtm_s_print_cnt != 8'd0);
+
+    reg [23:0] holo_rgb;
+    always @* begin
+        case (holo_nib_raw)
+            4'd1:  holo_rgb = 24'h0a1a3a; // Deep Holographic Indigo aura
+            4'd2:  holo_rgb = holo_pulse_hi ? 24'h143e8c : 24'h103478; // Dark Electric Blue brain mesh
+            4'd3:  holo_rgb = holo_is_fault ? 24'h902838 : (holo_pulse_hi ? 24'h2078f0 : 24'h1864d8); // Electric Blue lobe filament
+            4'd4:  holo_rgb = holo_is_fault ? 24'hd04050 : (holo_pulse_hi ? 24'h38c0ff : 24'h20a8f8); // Bright Cyan-Blue gyri ridge
+            4'd5:  holo_rgb = holo_is_fault ? 24'hff5868 : 24'h50f0ff; // Neon Cyan holographic rim & beam
+            4'd6:  holo_rgb = 24'hc8fcff; // White-Cyan synaptic node core
+            4'd7:  holo_rgb = 24'h0e6838; // Deep Emerald Green bevel & orbit shadow
+            4'd8:  holo_rgb = l0_active ? 24'h28d870 : 24'h1cb860; // Emerald Green orbital ring
+            4'd9:  holo_rgb = 24'h48ff98; // Bright Neon Emerald circuit pad
+            4'd10: holo_rgb = 24'h885810; // Deep Bronze-Gold orbit shadow
+            4'd11: holo_rgb = l0_active ? 24'hf0b030 : 24'hd89820; // Metallic Gold orbital ring
+            4'd12: holo_rgb = 24'hffe058; // Bright Gold orbital spark
+            4'd13: holo_rgb = 24'h788898; // Brushed Chrome Steel crease
+            4'd14: holo_rgb = 24'hc0d0e0; // Chrome Silver 'NUI' body
+            4'd15: holo_rgb = 24'hf4f8ff; // Pure Specular Chrome White 'NUI' highlight
+            default: holo_rgb = 24'h060c16;
+        endcase
+    end
+
+    reg [23:0] holo_rgb_q   = 24'h060c16;
+    reg        holo_valid_q = 1'b0;
+    always @(posedge pixel_clk) begin
+        holo_rgb_q   <= holo_rgb;
+        holo_valid_q <= in_holo_box_q && (holo_nib_raw != 4'd0);
+    end
+
+    wire text_is_bg = (text_red == 8'h06) && (text_green == 8'h0c) && (text_blue == 8'h16);
+    wire show_holo  = holo_valid_q && text_is_bg;
+
+    wire [7:0] red   = show_holo ? holo_rgb_q[23:16] : text_red;
+    wire [7:0] green = show_holo ? holo_rgb_q[15:8]  : text_green;
+    wire [7:0] blue  = show_holo ? holo_rgb_q[7:0]   : text_blue;
 
     reg [7:0] red_dvi   = 8'h00;
     reg [7:0] green_dvi = 8'h00;
@@ -477,25 +1335,9 @@ module hcpu_hdmi_top #(
         .tmds_clk_serial(tmds_clk_serial), .tmds_data_serial(tmds_data_serial)
     );
 
-    // No TLVDS_TBUF here, and the board is what settled it. Instantiating one
-    // per lane looked right and did not survive: yosys still inserts its own
-    // OBUF on every top-level output, so the netlist became
-    // TLVDS_TBUF -> OBUF -> pad, which is not a thing -- TLVDS_TBUF *is* the
-    // pad buffer. nextpnr then dropped all four TLVDS_TBUF cells and left
-    // eight plain single-ended OBUFs driving pins 33..40. Measured in
-    // hdmi_pnr.json: zero TLVDS cells placed. The monitor saw no TMDS at all,
-    // and OEN polarity never entered into it.
-    //
-    // The pairs are made differential by the constraint instead: one IOB per
-    // lane, IO_TYPE=LVCMOS33D, with both pads named in a single IO_LOC
-    // ("33,34"). That is how the Tang Nano boards drive TMDS -- pseudo
-    // differential from a pair of LVCMOS33 drivers, not true LVDS -- so the
-    // N half needs no logic and no port.
     assign tmds_clk_p  = tmds_clk_serial;
     assign tmds_data_p = tmds_data_serial;
 
     assign uart_txd = hcpu_uart_txd;
-    // `mode` is gone: the button drives the page counter now, and the page
-    // is shown on the screen rather than on an LED.
-    assign led = {hcpu_led[5], page[0], hcpu_led[3:1], ~pll_locked};
+    assign led = {hcpu_led[5], (ctrl_state == CTRL_STOPPED || ctrl_state == CTRL_PAUSED), hcpu_led[3:1], ~pll_locked};
 endmodule

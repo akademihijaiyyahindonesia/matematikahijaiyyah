@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <rect width="100%" height="100%" fill="#060C16"/>
+  <rect x="20" y="20" width="1360" height="820" rx="8" fill="#0A1424" stroke="#1E3A5F" stroke-width="2"/>
+  <rect x="20" y="20" width="1360" height="64" rx="8" fill="#0F2342" stroke="#00E5FF" stroke-width="1.5"/>
+  <text x="45" y="58" fill="#00E5FF" font-family="monospace" font-size="22" font-weight="bold">03 — CT-01-REV13 13-LAYER RECONCILIATION MAP</text>
+  <text x="1060" y="56" fill="#90CAF9" font-family="monospace" font-size="14">COSMICTERA CT-01-REV13 v1.1 | HEAD 8c70989b</text>
+  <rect x="45" y="105" width="1310" height="215" rx="6" fill="#0E294B" stroke="#00E5FF" stroke-width="2"/>
+  <text x="65" y="137" fill="#00E5FF" font-family="monospace" font-size="18" font-weight="bold">CANONICAL 11-LAYER REPOSITORY TAXONOMY</text>
+  <rect x="65" y="150" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="173" fill="#FFFFFF" font-family="monospace" font-size="14">L1 Core Math [VF] &amp; L2 Codex 8 Engines [VF]</text>
+  <rect x="745" y="150" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="173" fill="#B2FF59" font-family="monospace" font-size="14">src/hijaiyyah/core/ &amp; codex/</text>
+  <rect x="65" y="196" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="219" fill="#FFFFFF" font-family="monospace" font-size="14">L3 Crypto [DP/CC], L4 Quantum/Physics [CC]</text>
+  <rect x="745" y="196" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="219" fill="#B2FF59" font-family="monospace" font-size="14">crypto/, portal8888/, quantum/</text>
+  <rect x="65" y="242" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="265" fill="#FFFFFF" font-family="monospace" font-size="14">L5 H-ISA/HVM [VF/DP] &amp; L6 HCPU RTL [DP]</text>
+  <rect x="745" y="242" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="265" fill="#B2FF59" font-family="monospace" font-size="14">hisa/, hvm/, rtl/hcpu_*.v</text>
+  <rect x="65" y="288" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="311" fill="#FFFFFF" font-family="monospace" font-size="14">L7 HOS/HFS/HPG-1 [DP/CC] &amp; L8 HC Compiler [CC]</text>
+  <rect x="745" y="288" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="311" fill="#B2FF59" font-family="monospace" font-size="14">hos/, hfs/, hpg1/, language/</text>
+  <rect x="65" y="334" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="357" fill="#FFFFFF" font-family="monospace" font-size="14">L9 NUI L0-L11 [DP], L10 Display [DP], L11 CLI/API</text>
+  <rect x="745" y="334" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="357" fill="#B2FF59" font-family="monospace" font-size="14">nui/, rtl/fpga/gowin/, cli/</text>
+  <line x1="700" y1="320" x2="700" y2="345" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="345" width="1310" height="215" rx="6" fill="#0F382A" stroke="#00E676" stroke-width="2"/>
+  <text x="65" y="377" fill="#00E676" font-family="monospace" font-size="18" font-weight="bold">CT-01-REV13 13-LAYER AUDIT TAXONOMY</text>
+  <rect x="65" y="390" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="413" fill="#FFFFFF" font-family="monospace" font-size="14">REV13 L1–L4: Vektor 18D, Guard, Kubus, 8 Codex</text>
+  <rect x="745" y="390" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="413" fill="#B2FF59" font-family="monospace" font-size="14">Maps 1:1 to Canonical L1–L2</text>
+  <rect x="65" y="436" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="459" fill="#FFFFFF" font-family="monospace" font-size="14">REV13 L5–L8: Crypto, HISAB, H-ISA v1.2, HCPU RTL</text>
+  <rect x="745" y="436" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="459" fill="#B2FF59" font-family="monospace" font-size="14">Maps 1:1 to Canonical L3, L5, L6</text>
+  <rect x="65" y="482" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="505" fill="#FFFFFF" font-family="monospace" font-size="14">REV13 L9–L13: HOS/HFS, HC, NUI, HDMI, Caravel MPW</text>
+  <rect x="745" y="482" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="505" fill="#B2FF59" font-family="monospace" font-size="14">Maps 1:1 to Canonical L6–L11</text>
+  <line x1="700" y1="560" x2="700" y2="585" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="585" width="1310" height="215" rx="6" fill="#3B2314" stroke="#FFB300" stroke-width="2"/>
+  <text x="65" y="617" fill="#FFB300" font-family="monospace" font-size="18" font-weight="bold">NUI 12-LAYER INTERNAL STACK (NUI/LAYERS.md)</text>
+  <rect x="65" y="630" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="653" fill="#FFFFFF" font-family="monospace" font-size="14">NUI L0 Facts, L1 Repo Graph, L2 Program, L3 Trace</text>
+  <rect x="745" y="630" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="653" fill="#B2FF59" font-family="monospace" font-size="14">Orthogonal subsystem inside L9</text>
+  <rect x="65" y="676" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="699" fill="#FFFFFF" font-family="monospace" font-size="14">NUI L4 Parity, L5 Ubuntu Lima, L6 HW, L7 Autonomous</text>
+  <rect x="745" y="676" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="699" fill="#B2FF59" font-family="monospace" font-size="14">Verified with 1,015 AI tests</text>
+  <rect x="65" y="722" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="745" fill="#FFFFFF" font-family="monospace" font-size="14">NUI L8 Diagnostics, L9 KB, L10 Eng, L11 Universal</text>
+  <rect x="745" y="722" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="745" fill="#B2FF59" font-family="monospace" font-size="14">L9 Query Contract + L8/10/11 AT</text>
+  <text x="45" y="828" fill="#78909C" font-family="monospace" font-size="13">Source-Traceable Forensic Architecture Reconstruction | Official R2 Labels: VF (Verified Formally) | CC (Computationally Confirmed) | DP (Design Property) | EH | AT</text>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <rect width="100%" height="100%" fill="#060C16"/>
+  <rect x="20" y="20" width="1360" height="820" rx="8" fill="#0A1424" stroke="#1E3A5F" stroke-width="2"/>
+  <rect x="20" y="20" width="1360" height="64" rx="8" fill="#0F2342" stroke="#00E5FF" stroke-width="1.5"/>
+  <text x="45" y="58" fill="#00E5FF" font-family="monospace" font-size="22" font-weight="bold">08 — NUI (NATURAL UNIVERSAL INTELLIGENCE) 12-LAYER ARCHITECTURE</text>
+  <text x="1060" y="56" fill="#90CAF9" font-family="monospace" font-size="14">COSMICTERA CT-01-REV13 v1.1 | HEAD 8c70989b</text>
+  <rect x="45" y="105" width="1310" height="215" rx="6" fill="#0E294B" stroke="#00E5FF" stroke-width="2"/>
+  <text x="65" y="137" fill="#00E5FF" font-family="monospace" font-size="18" font-weight="bold">NUI LAYERS 0–4: REPO, PROGRAM, TRACE & PARITY [DP]</text>
+  <rect x="65" y="150" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="173" fill="#FFFFFF" font-family="monospace" font-size="14">L0 Facts (27 facts) &amp; L1 Repo Graph (1,828 nodes, 4,689 edges)</text>
+  <rect x="745" y="150" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="173" fill="#B2FF59" font-family="monospace" font-size="14">facts.py, repository_graph.py</text>
+  <rect x="65" y="196" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="219" fill="#FFFFFF" font-family="monospace" font-size="14">L2 Program Index (62 HASM, 1,541 Py, 128 Verilog, 277 CALLs)</text>
+  <rect x="745" y="196" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="219" fill="#B2FF59" font-family="monospace" font-size="14">program_index.py, program_summary.py</text>
+  <rect x="65" y="242" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="265" fill="#FFFFFF" font-family="monospace" font-size="14">L3 Execution Model (63 runs) &amp; L4 Parity (107 runs, P0–P6 freeze)</text>
+  <rect x="745" y="242" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="265" fill="#B2FF59" font-family="monospace" font-size="14">execution_graph.py, parity_model.py</text>
+  <line x1="700" y1="320" x2="700" y2="345" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="345" width="1310" height="215" rx="6" fill="#0F382A" stroke="#00E676" stroke-width="2"/>
+  <text x="65" y="377" fill="#00E676" font-family="monospace" font-size="18" font-weight="bold">NUI LAYERS 5–7: LINUX, HARDWARE & AUTONOMOUS OPS [DP]</text>
+  <rect x="65" y="390" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="413" fill="#FFFFFF" font-family="monospace" font-size="14">L5 Linux Integration: 11 Read-Only Collectors via limactl</text>
+  <rect x="745" y="390" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="413" fill="#B2FF59" font-family="monospace" font-size="14">layer5.py, layer5_freeze.py (Ubuntu 24.04)</text>
+  <rect x="65" y="436" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="459" fill="#FFFFFF" font-family="monospace" font-size="14">L6 Hardware Intelligence: 34 Inventory + 27 Telemetry + RTL Func</text>
+  <rect x="745" y="436" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="459" fill="#B2FF59" font-family="monospace" font-size="14">hardware_state.py, rtl_function.py</text>
+  <rect x="65" y="482" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="505" fill="#FFFFFF" font-family="monospace" font-size="14">L7 Autonomous Contract: Read/Verify/Decide + ISOLATE/RESTART cron</text>
+  <rect x="745" y="482" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="505" fill="#B2FF59" font-family="monospace" font-size="14">layer7.py, layer7_decision.py, layer7_linux.py</text>
+  <line x1="700" y1="560" x2="700" y2="585" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="585" width="1310" height="215" rx="6" fill="#3B2314" stroke="#FFB300" stroke-width="2"/>
+  <text x="65" y="617" fill="#FFB300" font-family="monospace" font-size="18" font-weight="bold">NUI LAYERS 8–11 & USR SEMANTIC SPEC [DP KB / CC / AT]</text>
+  <rect x="65" y="630" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="653" fill="#FFFFFF" font-family="monospace" font-size="14">L9 Knowledge Base (knowledge.py): 7 Domains &amp; 7 Query Contracts</text>
+  <rect x="745" y="630" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="653" fill="#B2FF59" font-family="monospace" font-size="14">HC, HISA, RTL, OFF, PAPAN, NUI, HOST</text>
+  <rect x="65" y="676" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="699" fill="#FFFFFF" font-family="monospace" font-size="14">USR Specification (usr.py): ACTION, OBJECT, TARGET, CONTEXT, STATE</text>
+  <rect x="745" y="676" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="699" fill="#B2FF59" font-family="monospace" font-size="14">Validated in NUI/spec/; non-executing</text>
+  <rect x="65" y="722" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="745" fill="#FFFFFF" font-family="monospace" font-size="14">L8 Diagnostics, L10 Engineering, L11 Universal Chain</text>
+  <rect x="745" y="722" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="745" fill="#B2FF59" font-family="monospace" font-size="14">Explicitly marked AT where unimplemented</text>
+  <text x="45" y="828" fill="#78909C" font-family="monospace" font-size="13">Source-Traceable Forensic Architecture Reconstruction | Official R2 Labels: VF (Verified Formally) | CC (Computationally Confirmed) | DP (Design Property) | EH | AT</text>
+</svg>

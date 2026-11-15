@@ -1,0 +1,26 @@
+flowchart TB
+    MT["Sealed 28x18D Master Table & 5x5 ExoMatrix<br/>src/hijaiyyah/core/master_table.py [VF]"]
+
+    subgraph CODEX8["8 Codex Algebraic Engines (src/hijaiyyah/codex/ + rtl/programs/*.hasm)"]
+        C_JIM["Codex JIM (codex/jim.py)<br/>GL(5, GF(2)) Orbit & Periodicity [VF]"]
+        C_YA["Codex YA (codex/ya.py)<br/>Polynomial Ring F_2[x]/(x^5+x^2+1) [VF]"]
+        C_WAU["Codex WAU (codex/wau.py)<br/>27-State Phase-Space Trajectory [VF]"]
+        C_AYIN["Codex 'AYIN (codex/ayin.py)<br/>Projective PG(2, F_5) Incidence [VF]"]
+        C_ALIF["Codex ALIF (codex/alif.py)<br/>Spectral Decomposition [VF]"]
+        C_BA["Codex BA (codex/ba.py)<br/>Information Entropy & Capacity [VF]"]
+        C_DAL["Codex DAL (codex/dal.py)<br/>Graph Laplacian & Algebraic Connectivity [VF]"]
+        C_ZAY["Codex ZAY (codex/zay.py)<br/>Differential Propagator & Wallace Tree [VF]"]
+    end
+
+    subgraph CRYPTO_ENG["Cryptographic & Verification Engines"]
+        KABAH["Ka'bah 1600-bit Sponge Engine<br/>hijaiyyah_kabah_top.v + crypto/kabah.py [DP/CC]"]
+        JAMRAH["Jamrah 3-Stage Gate (Sughra/Wusta/Aqabah)<br/>hijaiyyah_jamrah_gate.v + jamrah_gate.hasm [DP]"]
+        HIJRAH["Hijrah Walk Engine (Makkah->Madinah)<br/>crypto/hijrah.py + hijrah_walk.hasm [DP]"]
+    end
+
+    MT --> CODEX8
+    C_JIM -->|"S-Box & Linear Layer"| KABAH
+    C_YA -->|"GF(2^5) Field Arithmetic"| KABAH
+    C_WAU -->|"State Transitions"| HIJRAH
+    MT -->|"G1-G4 + T1-T2 Invariants"| JAMRAH
+    JAMRAH -->|"Gate Verdict"| KABAH

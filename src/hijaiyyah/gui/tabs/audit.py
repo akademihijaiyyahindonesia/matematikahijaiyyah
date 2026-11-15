@@ -26,10 +26,35 @@ from ...algebra import exometric as exo
 from ...algebra import intrametric as geo
 from ...algebra import vektronometry as vec
 from ...core.codex_entry import CodexEntry
-from ...core.guards import compute_rho, compute_U, guard_check
+from ...core.guards import compute_rho, compute_U, full_guard_check, guard_check
 from ...core.master_table import MasterTable
 from ..theme import THEME
 from ..widgets import OutputWriter, make_text
+
+
+def evaluate_letter_guards(v: List[int]) -> Dict[str, Any]:
+    """
+    Evaluate the 6 canonical guards (G1-G4, T1-T2) via core.guards.full_guard_check,
+    plus the additional non-geometric consistency check 2*H* <= Theta_hat.
+    """
+    guards = full_guard_check(v)
+    u_val = compute_U(v)
+    rho_val = v[0] - u_val
+    hstar_ok = (2 * v[17]) <= v[0]
+    return {
+        "theta": v[0],
+        "U": u_val,
+        "rho": rho_val,
+        "Hstar": v[17],
+        "G1": guards["G1"],
+        "G2": guards["G2"],
+        "G3": guards["G3"],
+        "G4": guards["G4"],
+        "T1": guards["T1"],
+        "T2": guards["T2"],
+        "all_guards_pass": guards["all_pass"],
+        "hstar_consistency": hstar_ok,
+    }
 
 
 class AuditTab:
@@ -97,7 +122,7 @@ class AuditTab:
 
         ttk.Button(
             toolbar,
-            text="G1–G4 Guards (28 letters)",
+            text="G1–G4 & T1–T2 Guards (28 letters)",
             command=self._run_guard_audit,
         ).pack(side=tk.LEFT, padx=2)
 
@@ -221,7 +246,7 @@ class AuditTab:
             ),
             (
                 "",
-                "Guard Check G1–G4 (28 letters)",
+                "Guard Check G1–G4, T1–T2 (28 letters)",
                 lambda: self._check_guards(entries),
             ),
             (
@@ -368,7 +393,7 @@ class AuditTab:
                 failed.append(e.char)
         if failed:
             return False, f"Guard FAIL: {', '.join(failed)}"
-        return True, "All 28 letters pass 4 guards (112 checks)"
+        return True, "All 28 letters pass 6 canonical guards (G1–G4, T1–T2: 168 checks)"
 
     def _check_turning(self, entries: List[CodexEntry]) -> Tuple[bool, str]:
         for e in entries:
@@ -527,64 +552,75 @@ class AuditTab:
     # ══════════════════════════════════════════════════════════════
 
     def _run_guard_audit(self) -> None:
-        """Display G1–G4 guard check for all 28 letters."""
+        """Display canonical G1–G4 & T1–T2 guard check for all 28 letters."""
         if self._out is None:
             return
 
         entries = self._table.all_entries()
         self._out.clear()
 
-        self._out.writeln("STRUCTURAL GUARD AUDIT — G1–G4", "title")
-        self._out.writeln("═" * 60)
+        self._out.writeln("CANONICAL GUARD AUDIT — G1–G4 & T1–T2", "title")
+        self._out.writeln("═" * 72)
         self._out.writeln()
-        self._out.writeln("  Four structural guards on every v₁₈ vector:", "dim")
+        self._out.writeln("  Six canonical guards on every v₁₈ vector:", "dim")
         self._out.writeln()
         self._out.writeln("  G1: Aₙ = Na + Nb + Nd              (Bab I §1.32)", "formula")
         self._out.writeln("  G2: Aₖ = Kp + Kx + Ks + Ka + Kc   (Bab I §1.32)", "formula")
         self._out.writeln("  G3: AQ = Qp + Qx + Qs + Qa + Qc   (Bab I §1.32)", "formula")
         self._out.writeln("  G4: ρ = Θ̂ − U ≥ 0                 (Bab I §1.23)", "formula")
+        self._out.writeln("  T1: Ks > 0 ⇒ Qc ≥ 1               (Bab III §3.3.1)", "formula")
+        self._out.writeln("  T2: Kc > 0 ⇒ Qc ≥ 1               (Bab III §3.3.1)", "formula")
         self._out.writeln()
-        self._out.writeln("  Complexity: O(1) per letter — 15 additions + 4 comparisons", "dim")
+        self._out.writeln(
+            "  Additional consistency check (non-geometric indicator H*, not a 7th guard): 2H* ≤ Θ̂",
+            "dim",
+        )
         self._out.writeln()
-        self._out.writeln("─" * 60, "dim")
+        self._out.writeln("─" * 72, "dim")
         self._out.writeln(
             f"  {'#':<4} {'Ch':<4} {'Name':<8} {'Θ̂':<4} {'U':<4} {'ρ':<5} "
-            f"{'G1':<5} {'G2':<5} {'G3':<5} {'G4':<5} {'Status'}",
+            f"{'G1':<4} {'G2':<4} {'G3':<4} {'G4':<4} {'T1':<4} {'T2':<4} {'2H*≤Θ̂':<7} {'Status'}",
             "field",
         )
-        self._out.writeln("  " + "─" * 56, "dim")
+        self._out.writeln("  " + "─" * 70, "dim")
 
         all_ok = True
+        all_hstar_ok = True
         for i, e in enumerate(entries, 1):
             v = list(e.vector)
-            U = compute_U(v)
-            rho = v[0] - U
-
-            g1 = rho >= 0
-            g2 = v[14] == v[1] + v[2] + v[3]
-            g3 = v[15] == v[4] + v[5] + v[6] + v[7] + v[8]
-            g4 = v[16] == v[9] + v[10] + v[11] + v[12] + v[13]
-            ok = g1 and g2 and g3 and g4
+            res = evaluate_letter_guards(v)
+            ok = res["all_guards_pass"]
+            hstar_ok = res["hstar_consistency"]
 
             if not ok:
                 all_ok = False
+            if not hstar_ok:
+                all_hstar_ok = False
 
             guards = ""
-            for g in (g1, g2, g3, g4):
-                guards += f"{'✓':<5}" if g else f"{'✗':<5}"
+            for key in ("G1", "G2", "G3", "G4", "T1", "T2"):
+                guards += f"{'✓':<4}" if res[key] else f"{'✗':<4}"
+            hstar_cell = f"{'✓':<7}" if hstar_ok else f"{'✗':<7}"
 
-            tag = "pass" if ok else "fail"
+            tag = "pass" if (ok and hstar_ok) else "fail"
             status = "PASS" if ok else "FAIL"
             self._out.writeln(
-                f"  {i:<4} {e.char:<4} {e.name:<8} {v[0]:<4} {U:<4} {rho:<5} {guards}{status}",
+                f"  {i:<4} {e.char:<4} {e.name:<8} {res['theta']:<4} {res['U']:<4} "
+                f"{res['rho']:<5} {guards}{hstar_cell}{status}",
                 tag,
             )
 
         self._out.writeln()
         tag = "pass" if all_ok else "fail"
         self._out.writeln(
-            f"  Result: {'ALL 28 PASS ✓ (112 individual checks)' if all_ok else 'FAILURES DETECTED ✗'}",
+            f"  Canonical Guards (G1–G4, T1–T2): "
+            f"{'ALL 28 PASS ✓ (168 individual checks)' if all_ok else 'FAILURES DETECTED ✗'}",
             tag,
+        )
+        self._out.writeln(
+            f"  Additional Check (2H* ≤ Θ̂, non-geometric): "
+            f"{'ALL 28 PASS ✓' if all_hstar_ok else 'FAILURES DETECTED ✗'}",
+            "pass" if all_hstar_ok else "warn",
         )
 
     # ══════════════════════════════════════════════════════════════

@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph INT_HW["Hardware Internal Interfaces"]
+        I_IMEM["IMEM Bus: imem_addr[11:0], imem_ce, imem_data[31:0]<br/>+ Loader Write (0xFF3/0xFF7): imem_we, imem_waddr[11:0], imem_wdata[31:0]"]
+        I_DRAM["DRAM / MMIO Bus: addr[11:0], re, we, wdata[31:0], rdata[31:0]<br/>RAM: 0x000-0xFDF | SDIO: 0xFE0-0xFE6 | Core: 0xFF0-0xFFF"]
+        I_TELE["HCPU Telemetry Bus (84b / 87b CDC):<br/>tele_pc[11:0], tele_instr[31:0], tele_cycles[31:0],<br/>tele_flags[7:0], tele_halted, tele_guard"]
+        I_WB["Caravel Wishbone B4 Slave (0x3000_0000):<br/>wbs_adr_i[31:0], wbs_dat_i/o[31:0], wbs_cyc/stb/we/ack"]
+    end
+
+    subgraph INT_PIN["Physical Pin & Wire Interfaces (Tang Nano 20K)"]
+        P_CLK["Clock & Input Pins:<br/>clk_27m (Pin 4), btn_rst_n (Pin 88 S1), key_page (Pin 87 S2)"]
+        P_UART["UART Serial:<br/>uart_txd (Pin 69), uart_rxd (Pin 70) @ 115,200 8N1"]
+        P_SD["MicroSD 1-Bit SDIO:<br/>sd_clk (Pin 83), sd_cmd (Pin 82), sd_dat0 (Pin 84)"]
+        P_HDMI["HDMI TMDS (Candidate B):<br/>Clk=33/34, D0=35/36, D1=37/38, D2=39/40 (ELVDS_OBUF)"]
+        P_LED["On-Board LEDs (Active-Low):<br/>led[5:0] -> Pins 15, 16, 17, 18, 19, 20"]
+    end
+
+    subgraph INT_SW["Software & Protocol Bridges"]
+        S_HISAB["HISAB v1.0 Frame Protocol:<br/>Header 'HB' (0x48,0x42,0x01,type) + 9B Nibble Payload + 1B Guard + 4B CRC32"]
+        S_LIMA["NUI Layer 5 Host Bridge:<br/>limactl shell cosmictera-layer5 -- <allowlisted_argv>"]
+    end
+
+    INT_HW <--> INT_PIN
+    INT_PIN <--> INT_SW

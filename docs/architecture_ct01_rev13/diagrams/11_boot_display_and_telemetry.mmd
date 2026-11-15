@@ -1,0 +1,24 @@
+flowchart LR
+    subgraph CLK27["27.0 MHz Crystal Domain (clk_27m)"]
+        EXT_IN["External HCPU Telemetry Input Ports<br/>ext_telem_enable, ext_telem_pc[11:0],<br/>ext_telem_opcode[7:0], ext_telem_flags[7:0],<br/>ext_telem_cycles[31:0], ext_telem_halted"]
+        BRIDGE["cosmictera_boot_subsys_bridge.v<br/>16-Stage Hardware BIST Sequencer<br/>+ 87-bit Toggle-Handshake CDC Source"]
+        PLL["TMDS_rPLL<br/>FBDIV=54, IDIV=3, ODIV=2<br/>27 MHz -> 371.25 MHz"]
+    end
+
+    subgraph CLK74["74.25 MHz Pixel Domain (clk_pixel via CLKDIV /5)"]
+        CDC_RX["2-FF Synchronizer + 87-bit Snapshot Latch<br/>in cosmictera_boot_subsys_bridge.v"]
+        TIMING["hcpu_video_timing.v<br/>1280x720 @ 60 Hz (1650x750 total)"]
+        PAGE_K["hcpu_page_key.v (P0..P12)<br/>+ cosmictera_boot_uptime.v<br/>+ cosmictera_boot_events.v"]
+        ROMS["3 BSRAM Asset ROMs (12 BSRAM Total)<br/>u_logo_rom (8 BSRAM, 3 Logos)<br/>u_text_rom (3 BSRAM, P0-P12 Text)<br/>u_font (1 BSRAM, 8x16 Font)"]
+        COMP["cosmictera_boot_compositor.v<br/>16-Entry Page 0 Grid + P1-P12 Inspector<br/>+ Footer (Y=664..708) + Verification Badges"]
+        RENDER["cosmictera_boot_render.v<br/>2-Stage Registered RGB888 Pipeline"]
+    end
+
+    subgraph CLK371["371.25 MHz Serial Domain (clk_serial)"]
+        DVI["DVI_TX_Top (ELVDS_OBUF)<br/>TMDS Clk (Pins 33/34)<br/>TMDS D0..D2 (Pins 35..40)"]
+    end
+
+    EXT_IN --> BRIDGE -->|"CDC Toggle + 87b Bus"| CDC_RX
+    PLL -->|"371.25 MHz"| DVI
+    PLL -->|"CLKDIV /5 -> 74.25 MHz"| TIMING
+    CDC_RX & TIMING & PAGE_K & ROMS --> COMP --> RENDER --> DVI

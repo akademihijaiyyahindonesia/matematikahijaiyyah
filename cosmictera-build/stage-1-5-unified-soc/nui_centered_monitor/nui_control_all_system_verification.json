@@ -1,0 +1,1235 @@
+{
+  "total_scenarios": 16,
+  "passed_scenarios": 16,
+  "subsystems_verified": [
+    "HCPU_HISA",
+    "HYBIT_18D_MATH",
+    "HC_HASM_HBC",
+    "HVM_HCVM",
+    "HOS_HFS",
+    "HAR_HPG1",
+    "HMCL",
+    "HISAB",
+    "KABAH_JAMRAH",
+    "USSS",
+    "HDMI_MONITOR"
+  ],
+  "layers_verified": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "L7",
+    "L8",
+    "L9",
+    "L10",
+    "L11"
+  ],
+  "honest_layer_statuses": {
+    "L0": "RUNNING (SILICON + HOST)",
+    "L1": "COMPLETE (1828N / 4689E)",
+    "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+    "L3": "COMPLETE (63 SCENARIOS)",
+    "L4": "COMPLETE (74/105 P3)",
+    "L5": "READY (9/11 COLLECTORS)",
+    "L6": "RUNNING (CDC + RTL F1-F5)",
+    "L7": "READY (ALLOW / DENY / STOP)",
+    "L8": "AT (MANUAL)",
+    "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+    "L10": "AT (NOT IMPLEMENTED)",
+    "L11": "AT (ATOM LINKED)"
+  },
+  "results": [
+    {
+      "command_id": "CMD-01",
+      "input_stage": {
+        "command_id": "CMD-01",
+        "source": "UART_LOADER",
+        "raw_operation": "EXEC_HASM",
+        "target_subsystem": "HCPU_HISA",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Execute H-ISA test_bsm.hasm program on HCPU (Ba + Sin + Mim -> 112)",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L2",
+          "L3",
+          "L4",
+          "L6",
+          "L7"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "HALTED",
+        "pc": 9,
+        "cycles": 9,
+        "output": [
+          112
+        ],
+        "flags": 1,
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(UART_LOADER)->UND(EXEC_HASM)->CRD->EXE(HCPU_HISA)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "HALTED"
+      }
+    },
+    {
+      "command_id": "CMD-02",
+      "input_stage": {
+        "command_id": "CMD-02",
+        "source": "NUI_HOST_API",
+        "raw_operation": "COMPUTE_BSM_112_10_9",
+        "target_subsystem": "HYBIT_18D_MATH",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Compute L0 5-feature embedding & Bab II BSM (112, 10, 9) for Jim (0xE4) & Kha (0xE6)",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L4",
+          "L6",
+          "L9"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "jim_opcode": "0xE4",
+        "kha_opcode": "0xE6",
+        "l0_jim_5features": [
+          1,
+          1,
+          1,
+          3,
+          3
+        ],
+        "l0_kha_5features": [
+          1,
+          1,
+          1,
+          3,
+          3
+        ],
+        "l0_jim_plus_kha_5features": [
+          2,
+          2,
+          2,
+          6,
+          6
+        ],
+        "l0_total_letters": 28,
+        "hisa_outputs": [
+          2,
+          2,
+          2,
+          6,
+          6,
+          112,
+          10,
+          9
+        ],
+        "exomatrix_shape": [
+          5,
+          5
+        ],
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(COMPUTE_BSM_112_10_9)->CRD->EXE(HYBIT_18D_MATH)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-03",
+      "input_stage": {
+        "command_id": "CMD-03",
+        "source": "NUI_HOST_API",
+        "raw_operation": "COMPILE_ASSEMBLE_PACK",
+        "target_subsystem": "HC_HASM_HBC",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Compile HC source -> HASM -> HBC bytecode -> execute on H-ISA",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L1",
+          "L2",
+          "L3",
+          "L4"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "compiled_words": 6,
+        "hbc_bytes": 56,
+        "roundtrip_exact": true,
+        "output": [
+          12
+        ],
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(COMPILE_ASSEMBLE_PACK)->CRD->EXE(HC_HASM_HBC)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-04",
+      "input_stage": {
+        "command_id": "CMD-04",
+        "source": "NUI_HOST_API",
+        "raw_operation": "RUN_PARITY_CHECK",
+        "target_subsystem": "HVM_HCVM",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Verify software/hardware parity between HVM/HISAMachine and RTL (74/105 P3)",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L2",
+          "L3",
+          "L4"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "test_bsm_output": [
+          112
+        ],
+        "parity_match": true,
+        "matched_opcodes": 0,
+        "total_opcodes": 106,
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(RUN_PARITY_CHECK)->CRD->EXE(HVM_HCVM)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-05",
+      "input_stage": {
+        "command_id": "CMD-05",
+        "source": "NUI_HOST_API",
+        "raw_operation": "RUN_HOST_KERNEL_FS",
+        "target_subsystem": "HOS_HFS",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Run HOS kernel & HFS verification in host/simulation mode",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L2",
+          "L3",
+          "L5",
+          "L7"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK (HOST/SIMULATION \u2014 NOT INSTRUMENTED ON HDMI SLOT)",
+        "kernel_hasm_words": 387,
+        "test_hfs_words": 418,
+        "hfs_sim_output": [
+          1,
+          1,
+          1,
+          2,
+          1
+        ],
+        "hdmi_slot_instrumentation": "NOT INSTRUMENTED",
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(RUN_HOST_KERNEL_FS)->CRD->EXE(HOS_HFS)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK (HOST/SIMULATION \u2014 NOT INSTRUMENTED ON HDMI SLOT)"
+      }
+    },
+    {
+      "command_id": "CMD-06",
+      "input_stage": {
+        "command_id": "CMD-06",
+        "source": "NUI_HOST_API",
+        "raw_operation": "BUILD_HAR_HPG1_CONTAINER",
+        "target_subsystem": "HAR_HPG1",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Build HAR registry & HPG-1 container for canonical Jim (0xE4)",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L2",
+          "L9"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "har_entries": 28,
+        "jim_char": "\u062c",
+        "hpg1_words": 9,
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(BUILD_HAR_HPG1_CONTAINER)->CRD->EXE(HAR_HPG1)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-07",
+      "input_stage": {
+        "command_id": "CMD-07",
+        "source": "NUI_HOST_API",
+        "raw_operation": "EVALUATE_COHERENCE",
+        "target_subsystem": "HMCL",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Evaluate HMCL NUI feature-space coherence across 28 Hijaiyyah letters",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L4",
+          "L9"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK (HOST COLLECTIVE & COHERENCE)",
+        "coherence_keys": [
+          "verified"
+        ],
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(EVALUATE_COHERENCE)->CRD->EXE(HMCL)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK (HOST COLLECTIVE & COHERENCE)"
+      }
+    },
+    {
+      "command_id": "CMD-08",
+      "input_stage": {
+        "command_id": "CMD-08",
+        "source": "NUI_HOST_API",
+        "raw_operation": "HPACK_HCRC32",
+        "target_subsystem": "HISAB",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Verify HISAB HPACK (0x50) and HCRC32 (0x51) on H-ISA",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L4",
+          "L6"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "jim_digest_crc32": 1232958059,
+        "hisa_hpack_hcrc": [
+          69680,
+          103072278
+        ],
+        "hisa_executed": true,
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(HPACK_HCRC32)->CRD->EXE(HISAB)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-09",
+      "input_stage": {
+        "command_id": "CMD-09",
+        "source": "NUI_HOST_API",
+        "raw_operation": "SPONGE_CUBE_DIGEST",
+        "target_subsystem": "KABAH_JAMRAH",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Run Ka'bah sponge cube_digest permutation",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L4",
+          "L6"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK (6-GUARD HW / FULL SPONGE ON SEPARATE SLOT)",
+        "cube_digest": "b'\\x98\\xe5\\xd0\\x83\\x15\\xd2I\\xedc&\\xf3\\xee\\xea]\\x03\\x98\\xbf\\xb0\\xc5\\xd6\\xc1\\x8d\\x04\\x04\\xf3\\xe4\\xfc\\xa7#-y<'",
+        "digest_hex": "04dfe3ce477ff039e352b51533bd3b53",
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(SPONGE_CUBE_DIGEST)->CRD->EXE(KABAH_JAMRAH)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK (6-GUARD HW / FULL SPONGE ON SEPARATE SLOT)"
+      }
+    },
+    {
+      "command_id": "CMD-10",
+      "input_stage": {
+        "command_id": "CMD-10",
+        "source": "NUI_HOST_API",
+        "raw_operation": "VERIFY_6GUARD_AND_BOUNDS",
+        "target_subsystem": "USSS",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Verify USSS 6-Guard passes valid Jim (0xE4) and catches corrupted A_N",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L4",
+          "L6",
+          "L7"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "valid_jim_guards": {
+          "G1": true,
+          "G2": true,
+          "G3": true,
+          "G4": true,
+          "T1": true,
+          "T2": true,
+          "all_pass": true
+        },
+        "valid_jim_guards_all_pass": true,
+        "corrupted_vector_caught": true,
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22032
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(VERIFY_6GUARD_AND_BOUNDS)->CRD->EXE(USSS)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5610 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-11",
+      "input_stage": {
+        "command_id": "CMD-11",
+        "source": "NUI_HOST_API",
+        "raw_operation": "UPDATE_TELEMETRY_FRAME",
+        "target_subsystem": "HDMI_MONITOR",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Update CosmicTera HDMI 1280x720 Control Center telemetry frame & query L9 KB",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L6",
+          "L7",
+          "L9"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "OK",
+        "resolution": "1280x720@60Hz",
+        "cdc_frames": 22033,
+        "l9_query_domains": [
+          "HC",
+          "HISA",
+          "RTL",
+          "PAPAN",
+          "NUI"
+        ],
+        "jim_opcode_verified": "0xe4",
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 0,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22033
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "ALLOW"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(UPDATE_TELEMETRY_FRAME)->CRD->EXE(HDMI_MONITOR)->MON->DEC(ALLOW)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=0 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5611 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "OK"
+      }
+    },
+    {
+      "command_id": "CMD-12",
+      "input_stage": {
+        "command_id": "CMD-12",
+        "source": "PHYSICAL_BTN_S1",
+        "raw_operation": "STOP_PAUSE_S1",
+        "target_subsystem": "HCPU_HISA",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Operator presses physical button S1 (Pin 88) -> STOP/PAUSE",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "HIGHEST_STOP"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L2",
+          "L3",
+          "L4",
+          "L6",
+          "L7"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "STOPPED",
+        "event": "EV_BTN_USER_STOP",
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "STOPPED",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 1,
+        "s2_count": 0,
+        "recovery_count": 0,
+        "cdc_frames": 22033
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "HOLD_USER_STOP"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "STOPPED",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(PHYSICAL_BTN_S1)->UND(STOP_PAUSE_S1)->CRD->EXE(HCPU_HISA)->MON->DEC(HOLD_USER_STOP)->FB",
+        "hdmi_zone7_stev": "STATE=STOPPED S1=1 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5611 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "STOPPED"
+      }
+    },
+    {
+      "command_id": "CMD-13",
+      "input_stage": {
+        "command_id": "CMD-13",
+        "source": "UART_LOADER",
+        "raw_operation": "EXEC_HASM",
+        "target_subsystem": "HCPU_HISA",
+        "pre_cpu_state": "STOPPED"
+      },
+      "understanding_stage": {
+        "intent": "Attempt HCPU execution while STOPPED by S1",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L6",
+          "L7"
+        ],
+        "authority_check": "BLOCKED_BY_CPU_STATE_STOPPED"
+      },
+      "execution_stage": {
+        "executed": false,
+        "status": "BLOCKED",
+        "reason": "HCPU is STOPPED; S2 recovery or S1 resume required first"
+      },
+      "monitoring_stage": {
+        "cpu_state": "STOPPED",
+        "guard_ok": true,
+        "fault_latched": false
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED",
+        "action": "STOP",
+        "next_step": "AWAIT_S1_OR_S2"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "STOPPED",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(UART_LOADER)->UND(EXEC_HASM)->CRD->EXE(HCPU_HISA)->MON->DEC(STOP)->FB",
+        "hdmi_zone7_stev": "STATE=STOPPED S1=1 S2=0 REC=0",
+        "hdmi_zone10_footer": "CDC:5611 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "BLOCKED"
+      }
+    },
+    {
+      "command_id": "CMD-14",
+      "input_stage": {
+        "command_id": "CMD-14",
+        "source": "PHYSICAL_BTN_S2",
+        "raw_operation": "RESET_RECOVERY_S2",
+        "target_subsystem": "HCPU_HISA",
+        "pre_cpu_state": "STOPPED"
+      },
+      "understanding_stage": {
+        "intent": "Operator presses S2 (Pin 87) while fault source is still active",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L2",
+          "L3",
+          "L4",
+          "L6",
+          "L7"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "FAULT_LATCHED",
+        "event": "EV_BTN_FLT_LATCHED",
+        "recovery_result": "REC_FAIL_ACTIVE",
+        "guard_ok": false
+      },
+      "monitoring_stage": {
+        "cpu_state": "FAULT_LATCHED",
+        "guard_ok": false,
+        "fault_latched": true,
+        "fault_code": 3,
+        "s1_count": 1,
+        "s2_count": 1,
+        "recovery_count": 0,
+        "cdc_frames": 22033
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "STOP_FAULT_LATCHED"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "FAULT_LATCHED",
+        "hdmi_zone2_guard": "FAULT",
+        "hdmi_zone5_loop": "IN(PHYSICAL_BTN_S2)->UND(RESET_RECOVERY_S2)->CRD->EXE(HCPU_HISA)->MON->DEC(STOP_FAULT_LATCHED)->FB",
+        "hdmi_zone7_stev": "STATE=FAULT_LATCHED S1=1 S2=1 REC=0",
+        "hdmi_zone10_footer": "CDC:5611 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "FAULT_LATCHED"
+      }
+    },
+    {
+      "command_id": "CMD-15",
+      "input_stage": {
+        "command_id": "CMD-15",
+        "source": "PHYSICAL_BTN_S2",
+        "raw_operation": "RESET_RECOVERY_S2",
+        "target_subsystem": "HCPU_HISA",
+        "pre_cpu_state": "FAULT_LATCHED"
+      },
+      "understanding_stage": {
+        "intent": "Operator presses S2 (Pin 87) after fault source clears -> clean recovery",
+        "subsystem_recognized": true,
+        "operation_supported": true,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L2",
+          "L3",
+          "L4",
+          "L6",
+          "L7"
+        ],
+        "authority_check": "AUTHORIZED_VIA_USSS_AND_L7",
+        "honest_layer_states": {
+          "L0": "RUNNING (SILICON + HOST)",
+          "L1": "COMPLETE (1828N / 4689E)",
+          "L2": "COMPLETE (60 HASM / 100 VERILOG)",
+          "L3": "COMPLETE (63 SCENARIOS)",
+          "L4": "COMPLETE (74/105 P3)",
+          "L5": "READY (9/11 COLLECTORS)",
+          "L6": "RUNNING (CDC + RTL F1-F5)",
+          "L7": "READY (ALLOW / DENY / STOP)",
+          "L8": "AT (MANUAL)",
+          "L9": "COMPLETE (HC/HISA/RTL/OFF/PAPAN/NUI/HOST)",
+          "L10": "AT (NOT IMPLEMENTED)",
+          "L11": "AT (ATOM LINKED)"
+        }
+      },
+      "execution_stage": {
+        "executed": true,
+        "status": "RUNNING",
+        "event": "EV_BTN_FAULT_REC",
+        "recovery_result": "REC_OK_READY",
+        "guard_ok": true
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false,
+        "fault_code": 0,
+        "s1_count": 1,
+        "s2_count": 2,
+        "recovery_count": 1,
+        "cdc_frames": 22033
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS_6GUARD",
+        "l7_contract_verdict": "PASS",
+        "l7_decision_verdict": "ALLOW",
+        "l7_record_sha256": "703a3daa8006267c27eba33a086f6941f89714f1da947f5bf78efba463749f93",
+        "action": "RECOVERED_READY"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(PHYSICAL_BTN_S2)->UND(RESET_RECOVERY_S2)->CRD->EXE(HCPU_HISA)->MON->DEC(RECOVERED_READY)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=1 S2=2 REC=1",
+        "hdmi_zone10_footer": "CDC:5611 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "RUNNING"
+      }
+    },
+    {
+      "command_id": "CMD-16",
+      "input_stage": {
+        "command_id": "CMD-16",
+        "source": "NUI_HOST_API",
+        "raw_operation": "BYPASS_GUARD_FOR_DASHBOARD",
+        "target_subsystem": "USSS",
+        "pre_cpu_state": "RUNNING"
+      },
+      "understanding_stage": {
+        "intent": "Attempt unsupported operation / USSS bypass",
+        "subsystem_recognized": true,
+        "operation_supported": false,
+        "priority": "NORMAL"
+      },
+      "coordination_stage": {
+        "layer_route": [
+          "L0",
+          "L4",
+          "L6",
+          "L7"
+        ],
+        "authority_check": "REJECTED_UNSUPPORTED_OPERATION",
+        "l7_decision": "STOP / REPORT",
+        "usss_bypass_attempted": true
+      },
+      "execution_stage": {
+        "executed": false,
+        "status": "REJECTED",
+        "reason": "Unsupported operation 'BYPASS_GUARD_FOR_DASHBOARD' on 'USSS'"
+      },
+      "monitoring_stage": {
+        "cpu_state": "RUNNING",
+        "guard_ok": true,
+        "fault_latched": false
+      },
+      "decision_stage": {
+        "gate": "L7_FAIL_CLOSED + USSS",
+        "action": "REJECTED",
+        "l7_verdict": "STOP / REPORT",
+        "next_step": "HOLD_SAFE_STATE"
+      },
+      "feedback_stage": {
+        "hdmi_zone1_header": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | BUILD:CT-NUI-CAS-V1.3",
+        "hdmi_zone2_state": "RUNNING",
+        "hdmi_zone2_guard": "OK",
+        "hdmi_zone5_loop": "IN(NUI_HOST_API)->UND(BYPASS_GUARD_FOR_DASHBOARD)->CRD->EXE(USSS)->MON->DEC(REJECTED)->FB",
+        "hdmi_zone7_stev": "STATE=RUNNING S1=1 S2=2 REC=1",
+        "hdmi_zone10_footer": "CDC:5611 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61",
+        "summary": "REJECTED"
+      }
+    }
+  ]
+}

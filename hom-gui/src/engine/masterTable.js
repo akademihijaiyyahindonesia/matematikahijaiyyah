@@ -36,11 +36,27 @@ const raw = [
   { char: 'ي', name: 'Ya',      v18: [3,0,0,2,0,0,0,0,0,1,1,0,0,0,2,0,2,0] },
 ];
 
+const SLUGS = [
+  'alif','ba','ta','tsa','jim','ha','kha','dal','dhal','ra','zay','sin','syin','shad',
+  'dhad','tha','zha','ain','ghain','fa','qaf','kaf','lam','mim','nun','waw','haa','ya'
+];
+
 export const MASTER_TABLE = raw.map((entry, idx) => ({
   ...entry,
   id: idx + 1,
+  slug: SLUGS[idx],
   v14: entry.v18.slice(0, 14),
 }));
+
+export function getLetterBySlugOrChar(param) {
+  if (!param) return null;
+  const decoded = decodeURIComponent(param).toLowerCase();
+  return (
+    MASTER_TABLE.find(
+      (l) => l.char === param || l.slug === decoded || String(l.id) === decoded || l.name.toLowerCase() === decoded
+    ) || null
+  );
+}
 
 export function getLetterByChar(char) {
   return MASTER_TABLE.find((l) => l.char === char) || null;

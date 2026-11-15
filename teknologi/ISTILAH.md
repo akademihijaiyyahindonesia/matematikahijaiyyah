@@ -23,7 +23,7 @@ itu: sebuah nama yang muncul di keduanya membuat suite merah.
 
 | Istilah | Kepanjangan | Fungsi | Di mana | Label |
 |---|---|---|---|---|
-| **Hybit** | Hijaiyyah Hyperdimensional Bit Integration | Satuan informasi terstruktur: elemen V ⊂ ℕ₀¹⁸ yang memenuhi G1–G4 dan T1–T2. `(V, +)` monoid komutatif terbatas | `core/hybit.py` | CC |
+| **Hybit** | Hijaiyyah Hyperdimensional Bit Integration Technology | Satuan informasi terstruktur: elemen V ⊂ ℕ₀¹⁸ yang memenuhi G1–G4 dan T1–T2. `(V, +)` monoid komutatif terbatas | `core/hybit.py` | CC |
 | **H\*** | — (nama slot) | Komponen ke-17, satu-satunya yang tidak dibatasi guard mana pun | `core/constants.py`, `hcpu_pkg.vh` | DP |
 
 ## Bahasa dan perkakas

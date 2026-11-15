@@ -1,0 +1,24 @@
+flowchart TB
+    subgraph LANG["Language & Compiler Layer"]
+        HC_SRC["HC (Hybit Code) Source (.hc)<br/>src/hijaiyyah/language/{lexer,parser,evaluator}.py [CC]"]
+        HC_CG["HC -> H-ISA Compiler<br/>src/hijaiyyah/compiler/codegen.py [CC]"]
+        HASM["H-ASM Assembler<br/>src/hijaiyyah/hisa/assembler.py [VF/DP]"]
+    end
+
+    subgraph SYS_SW["Operating System, Filesystem & Package Stack"]
+        HOS_K["HOS Microkernel & Scheduler<br/>src/hijaiyyah/hos/ + rtl/programs/{kernel,hos,shell}.hasm [DP/CC]"]
+        HFS_S["HFS Storage & Superblock Engine<br/>src/hijaiyyah/hfs/ + rtl/programs/hfs_sd.hasm [DP/CC]"]
+        HAR_C["HAR Audited Container Format<br/>src/hijaiyyah/har/ + rtl/scripts/build_container.py [DP]"]
+        HPG_G["HPG-1 Graphics & Framebuffer Engine<br/>src/hijaiyyah/hpg1/ + rtl/programs/hpg1_scene.hasm [CC]"]
+        HCVM_V["HCVM Vector / Bytecode Virtual Machine<br/>src/hijaiyyah/hcvm/ + rtl/programs/hcvm.hasm [CC]"]
+    end
+
+    subgraph EXEC_T["Execution Targets"]
+        PY_MACH["Python Reference Machine<br/>HISAMachine (hisa/machine.py) + HVM (hvm/vm.py) [VF]"]
+        HW_HCPU["Physical HCPU + SDIO + Loader<br/>loader.hasm + boot_sd.hasm on Tang Nano 20K [DP]"]
+    end
+
+    HC_SRC --> HC_CG --> HASM
+    HASM --> HOS_K & HFS_S & HAR_C & HPG_G & HCVM_V
+    HOS_K & HFS_S & HAR_C --> PY_MACH & HW_HCPU
+    HPG_G & HCVM_V --> PY_MACH & HW_HCPU

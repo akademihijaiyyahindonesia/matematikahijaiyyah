@@ -1,0 +1,30 @@
+flowchart TB
+    subgraph CANON["Canonical 11-Layer Architecture (docs/ARCHITECTURE.md + cosmictera/SYSTEM.md)"]
+        L1["L1: Core Mathematical Layer (core/master_table, guards, exomatrix) [VF]"]
+        L2["L2: Codex Algebra Layer (codex/jim, ya, wau,ayin, alif, ba, dal, zay) [VF]"]
+        L3["L3: Cryptographic & Security Layer (Ka'bah, Jamrah, Hijrah, Portal8888) [DP/CC]"]
+        L4["L4: Quantum & Physics Simulation Layer (quantum/, physics/, analytics/) [CC]"]
+        L5["L5: H-ISA & Virtual Machine Layer (hisa/, hvm/, hcvm/, hisab/) [VF/DP]"]
+        L6["L6: HCPU Hardware RTL Layer (rtl/hcpu_*.v, rtl/fpga/gowin/*) [DP]"]
+        L7["L7: System Software Layer (HOS, HFS, HPG-1, HAR, loader.hasm) [DP/CC]"]
+        L8["L8: Language & Compiler Layer (HC language/, compiler/codegen.py) [CC]"]
+        L9["L9: NUI & AI Layer (src/hijaiyyah/nui/* L0-L11, ai/) [DP/CC]"]
+        L10["L10: Visualization & Display Layer (visual/, HDMI 720p Stage 1.4) [DP/CC]"]
+        L11["L11: CLI, API & Host Tooling Layer (cli/, api/, rtl/scripts/) [DP/CC]"]
+    end
+
+    subgraph AUDIT13["CT-01-REV13 13-Layer Taxonomy (COSMICTERA_CT01_REV13_AUDIT.md)"]
+        A01["REV13 L1-L2: Fondasi Huruf & Vektor 18D + Guard G1-G4/T1-T2 -> Maps to L1"]
+        A03["REV13 L3-L4: Eksomatriks/Kubus + 8 Mesin Codex -> Maps to L1 & L2"]
+        A05["REV13 L5-L6: Kriptografi Ka'bah/Jamrah/Hijrah + HISAB/Portal8888 -> Maps to L3 & L5"]
+        A07["REV13 L7-L8: H-ISA v1.2 + HCPU 5-Stage Pipeline -> Maps to L5 & L6"]
+        A09["REV13 L9-L10: HOS/HFS/HPG-1/HCVM/HAR + Bahasa HC -> Maps to L7 & L8"]
+        A11["REV13 L11-L13: NUI L0-L11 + HDMI Display + Caravel MPW -> Maps to L9, L10, L6"]
+    end
+
+    L1 --> A01
+    L2 --> A03
+    L3 --> A05
+    L6 --> A07
+    L7 --> A09
+    L9 --> A11

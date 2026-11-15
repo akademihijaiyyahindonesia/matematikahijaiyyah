@@ -30,10 +30,10 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 
 | | apa | perintah |
 |---|---|---|
-| ✅ | **6.367 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
+| ✅ | **6.399 tes terkumpul** † | `python3 -m pytest --collect-only -q` |
 | ✅ | lari penuh keluar 0 — hasilnya di † | `python3 -m pytest -q` |
 | ✅ | ruff bersih | `make lint` |
-| ✅ | mypy bersih, 178 berkas | `make typecheck` |
+| ✅ | mypy bersih, 185 berkas | `make typecheck` |
 | ✅ | Master Table utuh | `make verify` |
 | ✅ | Citra ROM terbangkitkan | `make rom` |
 | ✅ | ROM cocok dengan tabel | `python3 rtl/scripts/cross_verify_rom.py` |
@@ -42,7 +42,7 @@ Kelimanya terpasang di `~/opt/oss-cad-suite`. Satu perintah memeriksa semuanya:
 † Cacah **terkumpul** kini dijaga; cacah **lulus** tidak bisa. Catatan ini
 pernah berbunyi "satu-satunya angka yang tidak dijaga ... tidak bisa diperiksa
 tanpa menjalankan pytest di dalam pytest", dan separuhnya keliru:
-`pytest --collect-only -q` mencacah 6.367 dalam ±12 detik tanpa menjalankan satu
+`pytest --collect-only -q` mencacah 6.399 dalam ±12 detik tanpa menjalankan satu
 tes pun. Selama tak dijaga, ketiga berkas hanyut sendiri-sendiri — halaman ini
 mengatakan 4.565 sementara [ON.md](ON.md) dan [README.md](README.md) tertinggal
 di 4.454. `test_build_list.py` sekarang mencacah ulang dan menuntut ketiganya
@@ -272,7 +272,7 @@ Rekamannya di [PAPAN.md](PAPAN.md).
 ```bash
 make -C rtl/fpga/gowin tools     # 5/5 perkakas
 make lint typecheck verify rom   # bersih
-python3 -m pytest -q             # 6.367 tes terkumpul; hasilnya di † atas
+python3 -m pytest -q             # 6.399 tes terkumpul; hasilnya di † atas
 make -C rtl/tb all               # 408 asersi, 39 bench, 0 gagal
 make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 ```
@@ -281,6 +281,6 @@ make -C rtl/fpga/gowin bitstream # ← hijau di Tang Nano 20K
 
 ## Lari terakhir
 
-Lari terakhir, 6 November 2026: **6.365 lulus, 2 dilewati, 0 gagal, 0 error dari
-6.367 terkumpul**. Yang gagal: tidak ada.
+Lari terakhir, 6 November 2026: **6.397 lulus, 2 dilewati, 0 gagal, 0 error dari
+6.399 terkumpul**. Yang gagal: tidak ada.
 Yang error: tidak ada.

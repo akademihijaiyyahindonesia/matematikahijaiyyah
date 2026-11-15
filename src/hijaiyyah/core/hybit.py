@@ -1,7 +1,7 @@
 """
 Hybit: the formal unit of structured information.
 
-The name expands to **Hijaiyyah Hyperdimensional Bit Integration**, and each
+The name expands to **Hijaiyyah Hyperdimensional Bit Integration Technology**, and each
 part of it names something the code below can be checked against rather than
 a slogan:
 
@@ -10,6 +10,7 @@ a slogan:
   Bit              the unit being generalised
   Integration      closure: (V, + ) is a monoid, so hybits combine and the
                    result is still a hybit
+  Technology       the formal computational paradigm built on the codex algebra
 
 Integration is closure and nothing else here. How a hybit is carried into any
 particular substrate is not this module's business and is deliberately absent

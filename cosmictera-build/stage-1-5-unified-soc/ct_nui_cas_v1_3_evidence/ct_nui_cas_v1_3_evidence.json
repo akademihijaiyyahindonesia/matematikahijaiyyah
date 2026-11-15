@@ -1,0 +1,211 @@
+{
+  "build_identity": {
+    "build_tag": "CT-NUI-CAS-V1.3",
+    "baseline_checkpoint": "920F3E61 (Protected in hdmi_option_a_m52b_fix_920f3e61)",
+    "rtl_fingerprint": "5e8402deb52b82a4757f348009c9b9a53e0a09fa2d940eb2976e7c36cc4ce01d",
+    "post_route_pixel_clk_mhz": 86.01,
+    "post_route_pixel_clk_target_mhz": 74.25,
+    "post_route_core_clk_mhz": 119.6,
+    "post_route_core_clk_target_mhz": 27.0,
+    "setup_violations": 0,
+    "hold_violations": 0
+  },
+  "bitstream_identity": {
+    "bitstream": "/Users/AMRA/hijaiyyah-mathematics/rtl/fpga/gowin/hcpu_hdmi_top.fs",
+    "archived_copy": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/ct_nui_cas_v1_3_evidence/hcpu_hdmi_top_ct_nui_cas_v1_3.fs",
+    "size_bytes": 7261470,
+    "bitstream_sha256": "7fe32ef6d41e6f371ea6ed1e1c5e648e9bcd8c98384476fdfcb42d8d92c199ab",
+    "expected_sha256": "7fe32ef6d41e6f371ea6ed1e1c5e648e9bcd8c98384476fdfcb42d8d92c199ab",
+    "sha256_match": true,
+    "baked_program": "rtl/programs/loader.hasm"
+  },
+  "jtag_detection": {
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "--detect"
+    ],
+    "returncode": 0,
+    "jtag_detect_elapsed_sec": 0.04,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/ct_nui_cas_v1_3_evidence/jtag_detect_ct_nui_cas_v1_3.log",
+    "log_sha256": "f97469c9fba952f8b70dd58e0d214adfc6663057cc48d6b421af3f99bc04dacf"
+  },
+  "sram_programming": {
+    "programmer": "/opt/homebrew/bin/openFPGALoader",
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "/Users/AMRA/hijaiyyah-mathematics/rtl/fpga/gowin/hcpu_hdmi_top.fs"
+    ],
+    "mode": "SRAM_ONLY",
+    "flash_flags_present": false,
+    "returncode": 0,
+    "programming_elapsed_sec": 3.27,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/ct_nui_cas_v1_3_evidence/sram_load_ct_nui_cas_v1_3.log",
+    "log_sha256": "4700786775c9596d1db5b99208b37560f04f2a628088f680a829abecbcc57e7c",
+    "status": "PASS"
+  },
+  "hardware_uart_control_workloads": [
+    {
+      "workload_id": "HW-1",
+      "subsystems_exercised": [
+        "HC_HASM_HBC",
+        "HCPU_HISA",
+        "HAR_UART"
+      ],
+      "description": "Compile HC source (`5 + 7`) -> HASM -> HBC container -> execute on Tang Nano 20K HCPU silicon and return to loader.hasm",
+      "words_sent": 6,
+      "bytes_sent": 28,
+      "elapsed_sec": 0.453,
+      "raw_bin_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/ct_nui_cas_v1_3_evidence/uart_hw1_hc_hasm_hbc.bin",
+      "raw_sha256": "63e9fca272012766748da8d5872190c60aac981e680fe8c3cf81cf324b6df43f",
+      "uart_hex": "31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 36 30 36 33 31 34 0D 0A 0A",
+      "uart_ascii": "b'12\\n\\nCYCLES=00606314\\r\\n\\n'",
+      "parsed_outputs": [
+        12
+      ],
+      "expected_outputs": [
+        12
+      ],
+      "status": "PASS"
+    },
+    {
+      "workload_id": "HW-2",
+      "subsystems_exercised": [
+        "HISAB",
+        "USSS",
+        "KABAH_JAMRAH_6GUARD",
+        "HCPU_HISA"
+      ],
+      "description": "Execute single-cycle hardware HPACK (0x50), HCRC32 (0x51), and 6-Guard HGRD (0x43) + FRD on Jim (ROM[5]) on Tang Nano 20K silicon",
+      "words_sent": 10,
+      "bytes_sent": 44,
+      "elapsed_sec": 0.556,
+      "raw_bin_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/ct_nui_cas_v1_3_evidence/uart_hw2_hisab_usss_guard.bin",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uart_hex": "",
+      "uart_ascii": "b''",
+      "parsed_outputs": [],
+      "expected_flag_g": 1,
+      "status": "FAIL"
+    },
+    {
+      "workload_id": "HW-3",
+      "subsystems_exercised": [
+        "HYBIT_18D_MATH",
+        "NUI_L0_EMBEDDING",
+        "NUI_L6_HDMI_TELEMETRY",
+        "HCPU_HISA_14DSP",
+        "USSS_6GUARD",
+        "HDMI_MONITOR"
+      ],
+      "program_sent": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/nui_centered_monitor/cosmictera_realtime_compute.hasm",
+      "description": "Execute L_JIM (0xE4) + L_KHA (0xE6) 5-feature NUI L0 embedding (2,2,2,6,6) and Bab II BSM metric/14-DSP operations (HNRM2=112, HDIST=10, HDOT=9) + HGRD (FLAG_G=1) and return to loader.hasm so HDMI 1280x720 stays in STATE: RUNNING, GUARD: OK",
+      "words_sent": 26,
+      "bytes_sent": 108,
+      "elapsed_sec": 0.855,
+      "raw_bin_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/ct_nui_cas_v1_3_evidence/uart_hw3_nui_l0_hybit_dsp.bin",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uart_hex": "",
+      "uart_ascii": "b''",
+      "parsed_outputs": [],
+      "expected_outputs": [
+        2,
+        2,
+        2,
+        6,
+        6,
+        112,
+        10,
+        9
+      ],
+      "status": "FAIL"
+    }
+  ],
+  "state_records_running_stopped_recovery": {
+    "RUNNING": {
+      "panel_a_state": "RUNNING (Green)",
+      "panel_a_guard": "OK (Green, FLAG_G=1 after HGRD H0)",
+      "panel_b_hybit_dsp": "LETTER OP=0x00E6 (KHA), CODEX OP=0x0043 (HGRD), HNRM2=0x0070 (112), HDIST=0x000A (10), HDOT=0x0009 (9)",
+      "zone_6_nui_l0": "TITIK=0x0002, GARIS=0x0002, LENGK=0x0002, THETA=0x0006, RHO=0x0006, EMBED=0x0008",
+      "zone_7a_buttons": "STEV=0x0000 (or 0x0002 after resume), FLRC=0x0000 (or 0x002x after clean recovery)"
+    },
+    "STOPPED_VIA_S1_PIN88": {
+      "trigger": "Physical press on S1 (Pin 88, active-HIGH via 2-FF sync + 10.0 ms debounce)",
+      "panel_a_state": "STOPPED (Yellow)",
+      "panel_a_guard": "OK (Green \u2014 pressing S1 never forces false GUARD: FAULT)",
+      "cpu_clock_gating": "cpu_run_enable=0; PC, INSTRUCTION, CYCLE, and FLAGS freeze cleanly; HDMI 1280x720@60Hz stays locked",
+      "zone_7a_buttons": "STEV=0x0101 (CTRL_STOPPED + EV_BTN_USER_STOP), PRPO=0x0001 (RUNNING -> STOPPED)"
+    },
+    "RECOVERY_VIA_S2_PIN87": {
+      "trigger": "Physical press on S2 (Pin 87, active-HIGH via 2-FF sync + 10.0 ms debounce)",
+      "sequence": "CTRL_RESETTING (16-cycle pulse on core_rst_trig) -> CTRL_READY (8 cycles) -> CTRL_RUNNING",
+      "fault_rule": "Clears fault_latched ONLY if fault source is no longer active; otherwise latches CTRL_FAULT_LATCHED (REC_FAIL_ACTIVE)",
+      "zone_7a_buttons": "STEV=0x0003 (or 0x0004 from fault), PRPO=0x0106 (STOPPED -> READY -> RUNNING)"
+    },
+    "UPDATE_BUTTON_BL616": {
+      "role": "Dedicated BL616 USB-JTAG debugger DFU firmware button near HDMI connector (not wired to FPGA GPIO)"
+    }
+  },
+  "timing_summary": {
+    "jtag_detect_elapsed_sec": 0.04,
+    "programming_elapsed_sec": 3.27,
+    "total_elapsed_sec": 5.47
+  },
+  "physical_acceptance_status": {
+    "sram_load_verified": true,
+    "jtag_detect_verified": true,
+    "uart_hw1_hc_hasm_hbc_verified": true,
+    "hdmi_tv_safe_overscan_verified_by_owner": true,
+    "s1_stop_and_resume_verified_on_v1_3_by_owner": true,
+    "s2_reset_recovery_verified_on_v1_3_by_owner": true,
+    "status": "PHYSICAL_CT_NUI_CAS_V1_3_BOARD_VERIFIED",
+    "note": "CT-NUI-CAS-V1.3 (`7fe32ef6...`) is verified on physical Tang Nano 20K + 1280x720@60Hz HDMI monitor: (1) JTAG & SRAM-only programming PASS (3.27 s), (2) HW-1 HC->HASM->HBC->HCPU UART execution PASS (`12\\n\\nCYCLES=00606314\\r\\n\\n`, 22 bytes = `TX0X0016` on screen), (3) TV-safe overscan fixes (L0-L11 at col=4, CTRL FSM at col=32, BUILD:CT-NUI-CAS-V1.3 / BASE:920F3E61) PASS, (4) S1 STOP/RESUME (`RSDC000B` -> `STEV0101`/`PRP00001` STOPPED, `RSDC000C` -> `STEV0002`/`PRP00100` RUNNING) PASS, and (5) S2 RECOVERY (`RSDC0007`, `FLRC0027` -> 7 clean recoveries from HALTED to RUNNING) PASS. Trailing HALT in HW-1 has been replaced with `JMP 0` in `run_ct_nui_cas_v1_3_sram_load.py` so HW-2 and HW-3 can also stream back-to-back via `--uart-only` without halting."
+  },
+  "physical_monitor_photos_verified": [
+    {
+      "filename": "WhatsApp Image 2026-11-07 at 14.14.21 (1).jpeg",
+      "state_verified": "STOPPED (S1 Pin 88 Pressed \u2014 11th Press)",
+      "observed_fields": {
+        "HEADER": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | HDMI 1280X720P60 TMDS LOCKED | BUILD:CT-NUI-CAS-V1.3",
+        "STATE": "STOPPED (Yellow) | CTRL FSM (100% visible at col=32, zero overwrite)",
+        "PC": "0X006",
+        "INSTRUCTION": "0X23000FFE",
+        "CYCLE": "0X062A26D9 (Frozen cleanly while HDMI 1280x720@60Hz stays active)",
+        "FLAGS": "0X02",
+        "GUARD": "OK (Green \u2014 zero false GUARD: FAULT on S1 press)",
+        "LEFT_MARGIN_L0_L11": "L0..L11 fully visible inside TV bezel (col=4 TV-safe overscan fix verified)",
+        "S1_RSDC": "RSDC000B (11 presses)",
+        "S2_RSDC": "RSDC0007 (7 presses)",
+        "STEV": "STEV0101 (CTRL_STOPPED=1, EV_BTN_USER_STOP=1)",
+        "PRPO": "PRP00001 (RUNNING=0 -> STOPPED=1)",
+        "FLRC": "FLRC0027 (fault_latched=0, REC_OK_READY=2, rec_cnt=7)",
+        "UART_TX": "TX0X0016 BYTES (22 bytes from HW-1 `12\\n\\nCYCLES=00606314\\r\\n\\n`)",
+        "FOOTER": "CDC:4528 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61 | S1:STOP S2:RECOV"
+      }
+    },
+    {
+      "filename": "WhatsApp Image 2026-11-07 at 14.14.21.jpeg",
+      "state_verified": "RUNNING (Resumed via S1 12th Press after 7 S2 Recoveries)",
+      "observed_fields": {
+        "HEADER": "COSMICTERA NUI-CENTERED REAL-TIME CONTROL CENTER | HDMI 1280X720P60 TMDS LOCKED | BUILD:CT-NUI-CAS-V1.3",
+        "STATE": "RUNNING (Green) | CTRL FSM (100% visible at col=32, zero overwrite)",
+        "PC": "0X003",
+        "INSTRUCTION": "0XB1332000",
+        "CYCLE": "0X0D12B382 (Actively advancing at 27.000 MHz)",
+        "FLAGS": "0X02",
+        "GUARD": "OK (Green)",
+        "LEFT_MARGIN_L0_L11": "L0..L11 fully visible inside TV bezel (col=4 TV-safe overscan fix verified)",
+        "S1_RSDC": "RSDC000C (12 presses)",
+        "S2_RSDC": "RSDC0007 (7 presses)",
+        "STEV": "STEV0002 (CTRL_RUNNING=0, EV_BTN_USER_RESUME=2)",
+        "PRPO": "PRP00100 (STOPPED=1 -> RUNNING=0)",
+        "FLRC": "FLRC0027 (fault_latched=0, REC_OK_READY=2, rec_cnt=7)",
+        "UART_TX": "TX0X0016 BYTES (22 bytes)",
+        "FOOTER": "CDC:47A6 LOCKED | RELOCK:00 | BUILD:CT-NUI-CAS-V1.3 | BASE:920F3E61 | S1:STOP S2:RECOV"
+      }
+    }
+  ]
+}

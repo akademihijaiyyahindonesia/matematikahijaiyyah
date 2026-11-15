@@ -1,0 +1,24 @@
+flowchart TB
+    subgraph HOST_M["Host Machine (macOS / Linux)"]
+        LOADER_PY["UART Loader & Board Probes<br/>rtl/scripts/{burn_in,jamrah_board,hijrah_board,kabah_board}.py"]
+        P88_PY["Portal 8888 Host Framing & Key Provisioning<br/>portal8888/scripts/* + src/hijaiyyah/hisab/*"]
+        SD_IMG["HAR Container Builder<br/>rtl/scripts/build_container.py -> MicroSD Sectors"]
+    end
+
+    subgraph BOARD["Tang Nano 20K Physical Interfaces"]
+        UART_P["BL616 USB-UART Bridge<br/>Pin 70 (uart_rxd) / Pin 69 (uart_txd)<br/>115,200 baud 8N1"]
+        SD_P["On-Board MicroSD Slot<br/>Pin 83 (sd_clk), Pin 82 (sd_cmd), Pin 84 (sd_dat0)"]
+        JTAG_P["USB-JTAG (openFPGALoader -b tangnano20k)<br/>SRAM Bitstream Load (.fs)"]
+    end
+
+    subgraph FPGA_CORES["FPGA Active Core (Time-Division Multiplexed per Bitstream)"]
+        HCPU_L["HCPU + loader.hasm / boot_sd.hasm<br/>MMIO 0xFF0 (UART RX) -> 0xFFE/0xFFF (IMEM Write)<br/>MMIO 0xFE0-0xFE6 (SDIO Sector Read + Checksum)<br/>TRAP_EPC (0xFF9) + TRAP_MODE (0xFFD) + ERET"]
+        P88_C["Portal 8888 Core (hijaiyyah_portal8888.v)<br/>CMD 0x01 Key Provision (locked after 1st session)<br/>CMD 0x02 Authenticated Frame Verify (SHA-256 + HMAC)"]
+    end
+
+    LOADER_PY <-->|"115,200 8N1"| UART_P
+    P88_PY <-->|"115,200 8N1"| UART_P
+    SD_IMG -->|"Raw Sectors"| SD_P
+    UART_P <--> HCPU_L
+    UART_P <--> P88_C
+    SD_P <--> HCPU_L

@@ -1,0 +1,77 @@
+{
+  "run_id": "run2",
+  "bitstream_identity": {
+    "bitstream": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/cosmictera_unified_soc_usss.fs",
+    "size_bytes": 7261470,
+    "bitstream_sha256": "723ce67f0098157042a1bd389071d41fb28cee9a1eeb3282424f8ef4c7fdae18",
+    "expected_sha256": "723ce67f0098157042a1bd389071d41fb28cee9a1eeb3282424f8ef4c7fdae18",
+    "sha256_match": true
+  },
+  "jtag_detection": {
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "--detect"
+    ],
+    "returncode": 0,
+    "jtag_detect_elapsed_sec": 0.065,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/logs/jtag_detect_usss_run2.log",
+    "log_sha256": "f97469c9fba952f8b70dd58e0d214adfc6663057cc48d6b421af3f99bc04dacf"
+  },
+  "sram_programming": {
+    "programmer": "/opt/homebrew/bin/openFPGALoader",
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/cosmictera_unified_soc_usss.fs"
+    ],
+    "mode": "SRAM_ONLY",
+    "flash_flags_present": false,
+    "returncode": 0,
+    "programming_elapsed_sec": 3.255,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/logs/sram_load_usss_run2.log",
+    "log_sha256": "e0fcd794946d5de4f954dc56c6a3e39dec4ec384ab2f289917da182dc1a416e9",
+    "status": "PASS"
+  },
+  "uart_validation": {
+    "device": "/dev/cu.usbserial-20250303171",
+    "uart_capture_elapsed_sec": 2.003,
+    "raw_bin_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/logs/uart_usss_run2.bin",
+    "raw_sha256": "f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0",
+    "uart_bytes": 23,
+    "uart_hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 30 30 31 42 38 39 0D 0A 0A",
+    "uart_ascii": "b'112\\n\\nCYCLES=00001B89\\r\\n\\n'",
+    "expected_golden_bytes": 23,
+    "expected_golden_hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 30 30 31 42 38 39 0D 0A 0A",
+    "expected_golden_sha256": "f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0",
+    "uart_match_golden_t25": true,
+    "status": "PASS"
+  },
+  "timing_summary": {
+    "jtag_detect_elapsed_sec": 0.065,
+    "programming_elapsed_sec": 3.255,
+    "uart_capture_elapsed_sec": 2.003,
+    "total_elapsed_sec": 5.393
+  },
+  "static_timing_report_evidence": {
+    "available": true,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/logs/nextpnr_unified_soc_usss.log",
+    "log_sha256": "cb3d17ada5c839e4b0db315ea7973ed2e16c2a7e1d2292d5941a23cf1e95960c",
+    "fmax_report_lines": [
+      "Info: Max frequency for clock 'u_hcpu_core.clk_27m': 62.75 MHz (PASS at 12.00 MHz)",
+      "Info: Max frequency for clock           'pixel_clk': 83.88 MHz (PASS at 12.00 MHz)",
+      "Info: Max frequency for clock 'u_hcpu_core.clk_27m': 93.42 MHz (PASS at 12.00 MHz)",
+      "Info: Max frequency for clock           'pixel_clk': 81.35 MHz (PASS at 12.00 MHz)"
+    ]
+  },
+  "physical_verification_scope": {
+    "sram_load_verified_by_script": true,
+    "uart_23b_verified_by_script": true,
+    "hdmi_1280x720_verified_by_script": false,
+    "usss_row83_verified_by_script": false,
+    "buttons_s1_s2_verified_by_script": false,
+    "note": "UART output (23 bytes: 112 and CYCLES=00001B89) only verifies HCPU execution and UART TX. HDMI 1280x720@60Hz, Row 83 USSS panel, and S1/S2 buttons require separate physical visual evidence."
+  }
+}

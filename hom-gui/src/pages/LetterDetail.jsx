@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import useStore from '../store/useStore';
+import { getLetterBySlugOrChar } from '../engine/masterTable';
 import GlassPanel from '../components/GlassPanel';
 import VectorDisplay from '../components/VectorDisplay';
 import GuardBadge from '../components/GuardBadge';
@@ -9,12 +10,13 @@ import FormulaBlock from '../components/FormulaBlock';
 
 const COMPONENT_NAMES = [
   'Θ̂', 'Nₐ', 'Nᵦ', 'Nᵈ', 'Kₚ', 'Kₓ', 'Kₛ', 'Kₐ', 'Kc',
-  'Qₚ', 'Qₓ', 'Qₛ', 'Qₐ', 'Qc', 'H*', 'A_N', 'A_K', 'A_Q',
+  'Qₚ', 'Qₓ', 'Qₛ', 'Qₐ', 'Qc', 'A_N', 'A_K', 'A_Q', 'H*',
 ];
 
 export default function LetterDetail() {
   const { letter } = useParams();
-  const char = decodeURIComponent(letter);
+  const resolved = getLetterBySlugOrChar(letter);
+  const char = resolved ? resolved.char : decodeURIComponent(letter);
   const { selectedLetter, selectLetter } = useStore();
 
   useEffect(() => {

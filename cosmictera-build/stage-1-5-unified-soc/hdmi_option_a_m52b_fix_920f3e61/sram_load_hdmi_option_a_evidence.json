@@ -1,0 +1,95 @@
+{
+  "bitstream_identity": {
+    "bitstream": "/Users/AMRA/hijaiyyah-mathematics/rtl/fpga/gowin/hcpu_hdmi_top.fs",
+    "size_bytes": 7261470,
+    "bitstream_sha256": "1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54",
+    "expected_sha256": "1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54",
+    "sha256_match": true,
+    "baked_program": "rtl/programs/loader.hasm"
+  },
+  "jtag_detection": {
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "--detect"
+    ],
+    "returncode": 0,
+    "jtag_detect_elapsed_sec": 0.036,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/hdmi_option_a_m52b_fix_920f3e61/jtag_detect_hdmi_option_a.log",
+    "log_sha256": "f97469c9fba952f8b70dd58e0d214adfc6663057cc48d6b421af3f99bc04dacf"
+  },
+  "sram_programming": {
+    "programmer": "/opt/homebrew/bin/openFPGALoader",
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "/Users/AMRA/hijaiyyah-mathematics/rtl/fpga/gowin/hcpu_hdmi_top.fs"
+    ],
+    "mode": "SRAM_ONLY",
+    "flash_flags_present": false,
+    "returncode": 0,
+    "programming_elapsed_sec": 3.273,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/hdmi_option_a_m52b_fix_920f3e61/sram_load_hdmi_option_a.log",
+    "log_sha256": "4700786775c9596d1db5b99208b37560f04f2a628088f680a829abecbcc57e7c",
+    "status": "PASS"
+  },
+  "uart_loader_validation": {
+    "device": "/dev/cu.usbserial-20250303171",
+    "program_sent": "/Users/AMRA/hijaiyyah-mathematics/rtl/programs/test_bsm.hasm",
+    "load_base": 64,
+    "words_sent": 9,
+    "bytes_sent": 40,
+    "uart_capture_elapsed_sec": 2.161,
+    "raw_bin_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/hdmi_option_a_m52b_fix_920f3e61/uart_hdmi_option_a_test_bsm.bin",
+    "raw_sha256": "9c78284a311911d487111e90bc3ad194480f3b389c765a4435df23d16cd5f634",
+    "uart_bytes": 23,
+    "uart_hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 34 36 45 46 38 43 0D 0A 0A",
+    "uart_ascii": "b'112\\n\\nCYCLES=0046EF8C\\r\\n\\n'",
+    "status": "PASS"
+  },
+  "timing_summary": {
+    "jtag_detect_elapsed_sec": 0.036,
+    "programming_elapsed_sec": 3.273,
+    "uart_capture_elapsed_sec": 2.161,
+    "total_elapsed_sec": 5.541
+  },
+  "physical_verification_scope": {
+    "sram_load_verified_by_script": true,
+    "uart_loader_verified_by_script": true,
+    "hdmi_1280x720_verified_by_owner": true,
+    "hdmi_1280x720_verified_at": "2026-11-07T01:50:49+07:00",
+    "status": "PHYSICAL_HDMI_M52B_FULL_PASS",
+    "monitor_photos": [
+      {
+        "filename": "WhatsApp Image 2026-11-07 at 01.47.15.jpeg",
+        "phase": "PRE_PROGRAM_LOADER_POLLING",
+        "observed_fields": {
+          "STATE": "RUNNING (green)",
+          "PC": "0X006",
+          "INSTRUCTION": "0X23000FF8",
+          "FLAGS": "0X02 (FLAG_Z=1, FLAG_G=0 prior to codex execution)",
+          "GUARD": "FAULT (red, FLAG_G=0 before codex load)",
+          "HDMI": "ACTIVE 1280X720",
+          "ADDRESS_WRAPPING": "NONE (rows 42..83 blanked cleanly, footer rule row 86 and PAGE row 88 rendered at bottom)"
+        }
+      },
+      {
+        "filename": "WhatsApp Image 2026-11-07 at 01.47.15 (1).jpeg",
+        "phase": "POST_PROGRAM_TEST_BSM_HALTED",
+        "observed_fields": {
+          "STATE": "HALTED (red)",
+          "PC": "0X048",
+          "INSTRUCTION": "0X00000000",
+          "CYCLE": "0X0046EF8C",
+          "FLAGS": "0X03 (FLAG_Z=1, FLAG_G=1)",
+          "GUARD": "OK (green)",
+          "HDMI": "ACTIVE 1280X720",
+          "ADDRESS_WRAPPING": "NONE (rows 42..83 blanked cleanly, footer rule row 86 and PAGE row 88 rendered at bottom)"
+        }
+      }
+    ],
+    "note": "Physical HDMI 1280x720@60Hz M5.2B display confirmed on Tang Nano 20K with bitstream 1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54: zero address wrapping across rows 42..83, bottom footer rendered on rows 86..88, and GUARD: OK (green) upon completion of test_bsm.hasm (PC=0x048, CYCLE=0x0046EF8C, FLAGS=0x03)."
+  }
+}

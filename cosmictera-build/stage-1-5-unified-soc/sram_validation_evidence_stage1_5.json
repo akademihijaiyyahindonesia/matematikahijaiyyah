@@ -1,0 +1,27 @@
+{
+  "bitstream": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/cosmictera_unified_soc_stage1_5.fs",
+  "bitstream_sha256": "02c0a44f28dfa35f41389ed34217b9ea22bdfdf42e13911aefb93e948392a3c4",
+  "programmer": "/opt/homebrew/bin/openFPGALoader",
+  "mode": "SRAM_ONLY",
+  "jtag_detect_log": "empty\nJtag frequency : requested 6.00MHz    -> real 6.00MHz   \nindex 0:\n\tidcode 0x81b\n\tmanufacturer Gowin\n\tfamily GW2A\n\tmodel  GW2A(R)-18(C)\n\tirlength 8",
+  "runs": {
+    "run_1": {
+      "elapsed_sec": 5.272,
+      "byte_length": 23,
+      "hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 30 30 31 42 38 39 0D 0A 0A",
+      "ascii_repr": "b'112\\n\\nCYCLES=00001B89\\r\\n\\n'",
+      "uart_sha256": "f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0",
+      "sram_log_sha256": "ecaa04edb616b0902b1a16d233f609ce874870849acced0579eef30521465293",
+      "status": "PASS_EXACT_T25_WIRE_23B"
+    },
+    "run_2": {
+      "elapsed_sec": 5.269,
+      "byte_length": 23,
+      "hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 30 30 31 42 38 39 0D 0A 0A",
+      "ascii_repr": "b'112\\n\\nCYCLES=00001B89\\r\\n\\n'",
+      "uart_sha256": "f26ae51f816d0be360d4cf004f25bd6dcee5243c2627ddc8bd086bdc686427e0",
+      "sram_log_sha256": "ecaa04edb616b0902b1a16d233f609ce874870849acced0579eef30521465293",
+      "status": "PASS_EXACT_T25_WIRE_23B"
+    }
+  }
+}

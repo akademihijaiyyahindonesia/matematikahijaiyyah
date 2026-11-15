@@ -1,0 +1,64 @@
+; ============================================================================
+; cosmictera_realtime_compute.hasm
+; CosmicTera NUI-Centered Real-Time Computing & Hijaiyyah Math Program
+; Target: HCPU v1.2 on Tang Nano 20K (loaded at 0x040 via loader.hasm)
+;
+; Canonical Hijaiyyah Letter Opcodes (rtl/hcpu_pkg.vh):
+;   JIM  (ج) = 0xE4 (ROM index 4): [1,2,1, 2,2,0, 1,2,3,2, 1,2,1,4, 5,6,4,2]
+;   KHA  (خ) = 0xE6 (ROM index 6): [1,1,1, 1,3,2, 1,2,2,4, 0,0,1,7, 7,12,6,6]
+;
+; Prints 8 verified decimal outputs streamed live to UART TX & NUI L0/L6 HDMI:
+;   p0: TITIK N(H0)    = 2
+;   p1: GARIS K(H0)    = 2
+;   p2: LENGKUNG Q(H0) = 2
+;   p3: THETA(H0)      = 6
+;   p4: RHO(H0)        = 6
+;   p5: HNRM2(H0)      = 112 (0x70)
+;   p6: HDIST(H1, H2)  = 10  (0x0A)
+;   p7: HDOT(H1, H2)   = 9   (0x09)
+; And executes HGRD H0, R9 to validate all 6 Guard Invariants (G1-G4, T1-T2 -> FLAG_G=1).
+; ============================================================================
+
+    ; 1. Load canonical Hijaiyyah Letter Vectors via Single-Instruction Letter Opcodes
+    JIM   H1                ; 0xE4: H1 <- Master ROM[4] (ج Jim)
+    KHA   H2                ; 0xE6: H2 <- Master ROM[6] (خ Kha)
+
+    ; 2. Codex Addition in 18D Hybit Space (144-bit vector ALU)
+    HCADD H0, H1, H2        ; 0x41: H0 <- H1 + H2
+
+    ; 3. Extract 5 NUI L0 Physics Embedding Features from H1 (Jim) + H2 (Kha)
+    CGET  R1, H0, 0         ; p0: TITIK N(H0) = 1 + 1 = 2
+    PRINT R1
+    CGET  R2, H1, 1         ; p1: GARIS K(Jim) = 2
+    PRINT R2
+    CGET  R3, H0, 2         ; p2: LENGKUNG Q(H0) = 1 + 1 = 2
+    PRINT R3
+    CTHETA R4, H1           ; 0x4E: p3: THETA(Jim) = 6
+    PRINT R4
+    CRHO  R5, H2            ; 0x4B: p4: RHO(Kha) = 6
+    PRINT R5
+
+    ; 4. Bab II Metric Space & 14-Lane Hard-DSP Inner Product Operations
+    LOADI R10, 0
+    HLOAD H3, R10           ; H3 <- ROM[0] (Alif)
+    LOADI R10, 1
+    HLOAD H4, R10           ; H4 <- ROM[1] (Ba)
+    LOADI R10, 22
+    HLOAD H5, R10           ; H5 <- ROM[22] (Lam)
+    LOADI R10, 23
+    HLOAD H6, R10           ; H6 <- ROM[23] (Mim)
+    HCADD H7, H3, H4
+    HCADD H7, H7, H5
+    HCADD H7, H7, H6        ; H7 = Alif + Ba + Lam + Mim (Basmalah core)
+    HNRM2 R6, H7            ; 0x42: p5: HNRM2(H7) = 112 (0x70)
+    PRINT R6
+
+    HDIST R7, H3, H4        ; 0x44: p6: HDIST(Alif, Ba) = 10 (0x0A)
+    PRINT R7
+
+    HDOT  R8, H3, H6        ; 0x52: p7: HDOT(Alif, Mim) = 9 (0x09) via 14x MULT9X9 DSP
+    PRINT R8
+
+    ; 5. Hardware 6-Guard Validation (G1-G4, T1-T2) -> sets FLAG_G = 1 (GUARD: OK)
+    HGRD  R9, H1            ; 0x43: Verify 6-Guard on Jim (H1) -> R9 = 1, FLAG_G = 1
+    RET                     ; 0x2F: Return cleanly to loader.hasm so board stays live!

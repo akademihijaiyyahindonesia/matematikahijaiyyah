@@ -121,7 +121,7 @@ akan dirombak dari hasil commit-commit ini.
 ## 2. Nama adalah fungsi kerja
 
 Tidak ada nama yang asal di proyek ini: tiap nama menyebut fungsi kerjanya.
-Kepanjangan Hybit — **Hijaiyyah Hyperdimensional Bit Integration** — adalah
+Kepanjangan Hybit — **Hijaiyyah Hyperdimensional Bit Integration Technology** — adalah
 pola kerjanya:
 
 | Kata | Fungsi | Tempatnya |
@@ -130,6 +130,7 @@ pola kerjanya:
 | Hyperdimensional | ruang ℕ₀¹⁸ — kata ini menyebut sebuah angka, dan angka itu 18 | `tests/test_core/test_hybit.py` |
 | Bit | satuan yang digeneralisasi; hybit berjalan di atas bit, tidak menggantikannya | `CONTRIBUTING.md` |
 | Integration | ketertutupan monoid (V, +): hybit ditambah hybit tetap hybit | `src/hijaiyyah/core/hybit.py` |
+| Technology | tumpukan komputasi formal dari aljabar codex, bahasa HC, dan H-ISA hingga mesin | `teknologi/README.md` |
 
 Cara hybit masuk ke silikon dicatat di `teknologi/README.md`. Sengaja tidak
 dicatat di `src/hijaiyyah/core/hybit.py`, karena lapisan itu tidak boleh

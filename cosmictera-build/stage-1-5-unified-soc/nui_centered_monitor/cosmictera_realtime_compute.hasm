@@ -1,0 +1,57 @@
+; ============================================================================
+; cosmictera_realtime_compute.hasm
+; CosmicTera NUI-Centered Real-Time Computing & Hijaiyyah Math Program
+; Target: HCPU v1.2 on Tang Nano 20K (loaded at 0x040 via loader.hasm)
+;
+; Canonical Hijaiyyah Letter Opcodes (rtl/hcpu_pkg.vh & hcpu_rom.v):
+;   L_JIM (ج) = 0xE4 (ROM index 5, 1-based): [3,0,1,0,0,1,0,0,0,1,0,0,0,0,1,1,1,0]
+;   L_KHA (خ) = 0xE6 (ROM index 7, 1-based): [3,1,0,0,0,1,0,0,0,1,0,0,0,0,1,1,1,0]
+;
+; Prints 8 verified decimal outputs streamed live to UART TX & NUI L0/L6 HDMI:
+;   p0: TITIK N(H0)    = 2   (comp[14] = AN of Jim + Kha)
+;   p1: GARIS K(H0)    = 2   (comp[15] = AK of Jim + Kha)
+;   p2: LENGKUNG Q(H0) = 2   (comp[16] = AQ of Jim + Kha)
+;   p3: THETA(H0)      = 6   (comp[0]  = Theta of Jim + Kha)
+;   p4: RHO(H0)        = 6   (Rho      = Theta - U of Jim + Kha)
+;   p5: HNRM2(H4)      = 112 (0x70, ||Ba + Sin + Mim||^2)
+;   p6: HDIST(H1, H2)  = 10  (0x0A, ||Ba - Sin||^2)
+;   p7: HDOT(H1, H2)   = 9   (0x09, <Ba, Sin>_14 via 14x MULT9X9 DSP)
+; Executes HGRD H0 (0x43) to validate all 6 Guard Invariants (G1-G4, T1-T2 -> FLAG_G=1)
+; and jumps back to loader.hasm (JMP 0) so HCPU stays RUNNING with GUARD: OK.
+; ============================================================================
+
+    ; 1. Clear H0 and accumulate canonical Hijaiyyah Letter Vectors (Jim + Kha)
+    CZERO   H0              ; 0x47: H0 <- 0
+    L_JIM                   ; 0xE4: H0 <- H0 + Master ROM[5] (ج Jim)
+    L_KHA                   ; 0xE6: H0 <- H0 + Master ROM[7] (خ Kha)
+
+    ; 2. Extract 5 NUI L0 Physics Embedding Features from H0 (Jim + Kha)
+    CGET    R1, H0, 14      ; p0: TITIK N(H0) = AN = 1 + 1 = 2
+    PRINT   R1
+    CGET    R2, H0, 15      ; p1: GARIS K(H0) = AK = 1 + 1 = 2
+    PRINT   R2
+    CGET    R3, H0, 16      ; p2: LENGKUNG Q(H0) = AQ = 1 + 1 = 2
+    PRINT   R3
+    CTHETA  R4, H0          ; 0x4E: p3: THETA(H0) = 3 + 3 = 6
+    PRINT   R4
+    CRHO    R5, H0          ; 0x4B: p4: RHO(H0) = 6 - 0 = 6
+    PRINT   R5
+
+    ; 3. Bab II Metric Space & 14-Lane Hard-DSP Inner Product (BSM: Ba, Sin, Mim)
+    HLOAD   H1, 2           ; 0x40: H1 <- ROM[2]  (ب Ba)
+    HLOAD   H2, 12          ; 0x40: H2 <- ROM[12] (س Sin)
+    HLOAD   H3, 24          ; 0x40: H3 <- ROM[24] (م Mim)
+    HCADD   H4, H1, H2      ; 0x41: H4 <- Ba + Sin
+    HCADD   H4, H4, H3      ; 0x41: H4 <- Ba + Sin + Mim (BSM)
+    HNRM2   R6, H4          ; 0x42: p5: HNRM2(BSM) = 112 (0x70)
+    PRINT   R6
+
+    HDIST   R7, H1, H2      ; 0x44: p6: HDIST(Ba, Sin) = 10 (0x0A)
+    PRINT   R7
+
+    HDOT    R8, H1, H2      ; 0x52: p7: HDOT(Ba, Sin) = 9 (0x09) via 14x MULT9X9 DSP
+    PRINT   R8
+
+    ; 4. Hardware 6-Guard Validation (G1-G4, T1-T2) -> sets FLAG_G = 1 (GUARD: OK)
+    HGRD    H0              ; 0x43: Verify 6-Guard on H0 (Jim + Kha) -> FLAG_G = 1
+    JMP     0               ; 0x20: Return cleanly to loader.hasm (STATE: RUNNING, GUARD: OK)

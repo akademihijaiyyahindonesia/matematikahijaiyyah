@@ -1,0 +1,27 @@
+flowchart LR
+    subgraph D1["Domain 1: Canonical Mathematical Core"]
+        M_MT["Master Table (28 Letters x 18D)<br/>src/hijaiyyah/core/master_table.py [VF]"]
+        M_GD["Structural Guards G1-G4, T1-T2, H*<br/>src/hijaiyyah/core/guards.py [VF]"]
+        M_EXO["ExoMatrix 5x5 + Cube 3D + QT-4/5/6<br/>exomatrix.py, cube.py [VF]"]
+    end
+
+    subgraph D2["Domain 2: HCPU & H-ISA Execution Stack"]
+        H_ISA["H-ISA v1.2 (105 Spec / 84 RTL Opcodes, 32-bit Word)<br/>assembler.py + machine.py [VF/DP]"]
+        H_RTL["RTL HCPU 5-Stage Pipeline<br/>rtl/hcpu_top.v (20 modules) [DP]"]
+        H_SW["HOS + HFS + HPG-1 + HCVM + HAR + HC<br/>rtl/programs/*.hasm + src/hijaiyyah/* [DP/CC]"]
+    end
+
+    subgraph D3["Domain 3: Security, Crypto & Verification"]
+        S_KAB["Ka'bah 1600-bit Sponge + Jamrah + Hijrah<br/>src/hijaiyyah/crypto/* + rtl/hijaiyyah_* [DP/CC]"]
+        S_P88["Portal 8888 Auth + HISAB v1.0 Bridge<br/>portal8888/rtl/* + src/hijaiyyah/hisab/* [CC]"]
+    end
+
+    subgraph D4["Domain 4: NUI & Display Observability"]
+        N_LAY["NUI Layers 0-11 (Facts, Graph, Parity, Lima, HW, L7)<br/>src/hijaiyyah/nui/* [DP L0-L7]"]
+        N_BOOT["CosmicTera Boot UI Stage 1.4 (P0-P12)<br/>cosmictera_boot_top.v [DP]"]
+    end
+
+    D1 ==>|"Sealed Constants & Invariants (R1)"| D2
+    D1 ==>|"S-Box, Round Constants, Guards"| D3
+    D2 ==>|"Execution Traces & Parity Models"| D4
+    D3 ==>|"BIST & Integrity Verdicts"| D4

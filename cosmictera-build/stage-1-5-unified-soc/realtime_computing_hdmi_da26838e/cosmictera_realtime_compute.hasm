@@ -1,0 +1,109 @@
+; cosmictera_realtime_compute.hasm — Multi-Stage Real-Time Computing & NUI L0 Suite
+; Target: Tang Nano 20K (HCPU + 14x MULT9X9 Hard-DSP + M5.2B 5-Panel HDMI Monitor)
+;
+; Executes three hardware stages in sequence and emits 8 decimal values over
+; UART (115200 8N1) that are simultaneously captured on the wire and by the
+; on-chip `hcpu_realtime_monitor` UART sniffer in `hcpu_hdmi_top.v`:
+;
+;   Stage 1 — NUI Layer 0 Physics Embedding (Jim + Kha in H0):
+;     Print #1 (R3) = 2    -> Panel D: L0 TITIK     (Na + Nb + Nd)
+;     Print #2 (R4) = 2    -> Panel D: L0 GARIS     (Kp + Kx + Ks + Ka + Kc)
+;     Print #3 (R5) = 2    -> Panel D: L0 LENGKUNG  (Qp + Qx + Qs + Qa + Qc)
+;     Print #4 (R6) = 6    -> Panel D: L0 THETA     (Theta-hat)
+;     Print #5 (R8) = 6    -> Panel D: L0 RHO (T-U) (Theta-hat - U)
+;
+;   Stage 2 — Bab II Metrik Vektorial Hijaiyyah (Ba + Sin + Mim = "بسم" in H4):
+;     Print #6 (R11) = 112 -> Panel B: HNRM2 NMV    (||v14("بسم")||^2)
+;     Print #7 (R12) = 10  -> Panel B: HDIST ITM    (d2^2(Ba, Sin))
+;     Print #8 (R13) = 9   -> Panel B: HDOT 14DSP   (<v14(Ba), v14(Sin)> on 14x MULT9X9)
+;
+;   Stage 3 — HISAB Hardware Engine & Six-Guard Final Audit:
+;     Executes HPACK (0x50), HCRC (0x51), and HGRD (0x60) on H4, leaving
+;     FLAG_G = 1, FLAG_Z = 1 (FLAGS = 0x03, GUARD = OK) at HALT.
+
+        ; ── Stage 1: NUI Layer 0 Physics Embedding (Jim + Kha) ──────────
+        CZERO H0
+        L_JIM
+        L_KHA
+        HGRD  H0
+
+        ; titik = H0[1] + H0[2] + H0[3] -> R3 (= 2)
+        CGET  R1, H0, 1
+        CGET  R2, H0, 2
+        ADD   R1, R1, R2
+        CGET  R2, H0, 3
+        ADD   R3, R1, R2
+
+        ; garis = H0[4] + H0[5] + H0[6] + H0[7] + H0[8] -> R4 (= 2)
+        CGET  R1, H0, 4
+        CGET  R2, H0, 5
+        ADD   R1, R1, R2
+        CGET  R2, H0, 6
+        ADD   R1, R1, R2
+        CGET  R2, H0, 7
+        ADD   R1, R1, R2
+        CGET  R2, H0, 8
+        ADD   R4, R1, R2
+
+        ; lengkung = H0[9] + H0[10] + H0[11] + H0[12] + H0[13] -> R5 (= 2)
+        CGET  R1, H0, 9
+        CGET  R2, H0, 10
+        ADD   R1, R1, R2
+        CGET  R2, H0, 11
+        ADD   R1, R1, R2
+        CGET  R2, H0, 12
+        ADD   R1, R1, R2
+        CGET  R2, H0, 13
+        ADD   R5, R1, R2
+
+        ; theta -> R6 (= 6), U -> R7 (= 0), rho -> R8 (= 6), mod4 -> R9 (= 2)
+        CTHETA R6, H0
+        CU     R7, H0
+        CRHO   R8, H0
+        CMOD4  R9, H0
+
+        ; Store L0 embedding vector to Data RAM 0x100..0x104
+        MOVI  R10, 0
+        STORE R3, R10, 0x100
+        STORE R4, R10, 0x101
+        STORE R5, R10, 0x102
+        STORE R6, R10, 0x103
+        STORE R8, R10, 0x104
+
+        ; Emit L0 embedding features (#1..#5)
+        PRINT R3
+        PRINT R4
+        PRINT R5
+        PRINT R6
+        PRINT R8
+
+        ; ── Stage 2: Metrik Vektorial Hijaiyyah ("بسم") & Hard-DSP ──────
+        HLOAD H1, 2        ; Ba  (ب)
+        HLOAD H2, 12       ; Sin (س)
+        HLOAD H3, 24       ; Mim (م)
+        CMOV  H4, H1
+        HCADD H4, H4, H2   ; Ba + Sin
+        HCADD H4, H4, H3   ; Ba + Sin + Mim = Cod18("بسم")
+        HGRD  H4
+
+        HNRM2 R11, H4      ; ||v14("بسم")||^2 = 112
+        HDIST R12, H1, H2  ; d2^2(Ba, Sin)    = 10
+        HDOT  R13, H1, H2  ; <Ba, Sin>_14     = 9 (via 14x MULT9X9 DSP)
+
+        STORE R11, R10, 0x105
+        STORE R12, R10, 0x106
+        STORE R13, R10, 0x107
+
+        ; Emit Bab II vector metrics (#6..#8)
+        PRINT R11
+        PRINT R12
+        PRINT R13
+
+        ; ── Stage 3: HISAB Protocol Engine & Final Guard Check ──────────
+        HPACK R12, H4      ; Nibble-pack H4 into R12..R14
+        HCRC  R15, H4      ; 1-cycle hardware CRC32 of H4 frame
+        STORE R15, R10, 0x108
+
+        CMP   R11, R11     ; Set FLAG_Z = 1
+        HGRD  H4           ; Set FLAG_G = 1 (FLAGS = 0x03, GUARD = OK)
+        HALT

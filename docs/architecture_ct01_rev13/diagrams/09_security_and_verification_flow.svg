@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <rect width="100%" height="100%" fill="#060C16"/>
+  <rect x="20" y="20" width="1360" height="820" rx="8" fill="#0A1424" stroke="#1E3A5F" stroke-width="2"/>
+  <rect x="20" y="20" width="1360" height="64" rx="8" fill="#0F2342" stroke="#00E5FF" stroke-width="1.5"/>
+  <text x="45" y="58" fill="#00E5FF" font-family="monospace" font-size="22" font-weight="bold">09 — MULTI-LAYER SECURITY, GUARD & CRYPTOGRAPHIC VERIFICATION FLOW</text>
+  <text x="1060" y="56" fill="#90CAF9" font-family="monospace" font-size="14">COSMICTERA CT-01-REV13 v1.1 | HEAD 8c70989b</text>
+  <rect x="45" y="105" width="1310" height="215" rx="6" fill="#0E294B" stroke="#00E5FF" stroke-width="2"/>
+  <text x="65" y="137" fill="#00E5FF" font-family="monospace" font-size="18" font-weight="bold">STAGE 1 & 2: MATHEMATICAL GUARDS & JAMRAH GATE [VF / DP]</text>
+  <rect x="65" y="150" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="173" fill="#FFFFFF" font-family="monospace" font-size="14">Hardware Guard Unit (hcpu_guard.v): G1–G4, T1–T2, H*</text>
+  <rect x="745" y="150" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="173" fill="#B2FF59" font-family="monospace" font-size="14">Single-cycle combinational check on 144b H-Reg</text>
+  <rect x="65" y="196" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="219" fill="#FFFFFF" font-family="monospace" font-size="14">Jamrah 3-Stage Gate (hijaiyyah_jamrah_gate.v)</text>
+  <rect x="745" y="196" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="219" fill="#B2FF59" font-family="monospace" font-size="14">Sughra, Wusta, Aqabah invariant filtering</text>
+  <rect x="65" y="242" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="265" fill="#FFFFFF" font-family="monospace" font-size="14">HISAB CRC32 + Guard Bitmask (hcpu_hisab.v)</text>
+  <rect x="745" y="242" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="265" fill="#B2FF59" font-family="monospace" font-size="14">14-byte LETTER frame integrity</text>
+  <line x1="700" y1="320" x2="700" y2="345" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="345" width="1310" height="215" rx="6" fill="#0F382A" stroke="#00E676" stroke-width="2"/>
+  <text x="65" y="377" fill="#00E676" font-family="monospace" font-size="18" font-weight="bold">STAGE 3: KA'BAH SPONGE & PORTAL 8888 AUTH [DP / CC]</text>
+  <rect x="65" y="390" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="413" fill="#FFFFFF" font-family="monospace" font-size="14">Ka'bah 1600-bit Sponge (hijaiyyah_kabah_top.v)</text>
+  <rect x="745" y="390" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="413" fill="#B2FF59" font-family="monospace" font-size="14">Note: raw core rank 1276/1600; paired with Layer-3 HMAC</text>
+  <rect x="65" y="436" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="459" fill="#FFFFFF" font-family="monospace" font-size="14">Portal 8888 (hijaiyyah_portal8888.v): SHA-256 + HMAC-SHA256</text>
+  <rect x="745" y="436" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="459" fill="#B2FF59" font-family="monospace" font-size="14">ingress_parse_v1 + hijaiyyah_timestamp anti-replay</text>
+  <rect x="65" y="482" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="505" fill="#FFFFFF" font-family="monospace" font-size="14">Write-Only Key Storage (5x64B) + provision_locked</text>
+  <rect x="745" y="482" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="505" fill="#B2FF59" font-family="monospace" font-size="14">Zero key readback ports; 9,216B replay buffer</text>
+  <line x1="700" y1="560" x2="700" y2="585" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="585" width="1310" height="215" rx="6" fill="#3B2314" stroke="#FFB300" stroke-width="2"/>
+  <text x="65" y="617" fill="#FFB300" font-family="monospace" font-size="18" font-weight="bold">STAGE 4: RUNTIME PRIVILEGE & MEMORY PROTECTION [DP]</text>
+  <rect x="65" y="630" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="653" fill="#FFFFFF" font-family="monospace" font-size="14">Supervisor vs User Mode (hcpu_trap.v)</text>
+  <rect x="745" y="630" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="653" fill="#B2FF59" font-family="monospace" font-size="14">Blocks user access to 0xFE0–0xFFF MMIO window</text>
+  <rect x="65" y="676" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="699" fill="#FFFFFF" font-family="monospace" font-size="14">Hardware Base &amp; Limit Bounds (MEM_BASE / MEM_LIMIT)</text>
+  <rect x="745" y="676" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="699" fill="#B2FF59" font-family="monospace" font-size="14">Raises synchronous mem_fault trap on violation</text>
+  <rect x="65" y="722" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="745" fill="#FFFFFF" font-family="monospace" font-size="14">NUI Layer 5 &amp; Layer 7 Fail-Closed Gate</text>
+  <rect x="745" y="722" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="745" fill="#B2FF59" font-family="monospace" font-size="14">Read-only allowlist + ALLOW/DENY/STOP_REPORT</text>
+  <text x="45" y="828" fill="#78909C" font-family="monospace" font-size="13">Source-Traceable Forensic Architecture Reconstruction | Official R2 Labels: VF (Verified Formally) | CC (Computationally Confirmed) | DP (Design Property) | EH | AT</text>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <rect width="100%" height="100%" fill="#060C16"/>
+  <rect x="20" y="20" width="1360" height="820" rx="8" fill="#0A1424" stroke="#1E3A5F" stroke-width="2"/>
+  <rect x="20" y="20" width="1360" height="64" rx="8" fill="#0F2342" stroke="#00E5FF" stroke-width="1.5"/>
+  <text x="45" y="58" fill="#00E5FF" font-family="monospace" font-size="22" font-weight="bold">02 — FOUR ARCHITECTURAL DOMAINS & EPISTEMIC BOUNDARIES</text>
+  <text x="1060" y="56" fill="#90CAF9" font-family="monospace" font-size="14">COSMICTERA CT-01-REV13 v1.1 | HEAD 8c70989b</text>
+  <rect x="45" y="105" width="1310" height="215" rx="6" fill="#0E294B" stroke="#00E5FF" stroke-width="2"/>
+  <text x="65" y="137" fill="#00E5FF" font-family="monospace" font-size="18" font-weight="bold">DOMAIN 1: MATHEMATICAL CORE [VF]</text>
+  <rect x="65" y="150" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="173" fill="#FFFFFF" font-family="monospace" font-size="14">28-Letter 18D Master Table (Sealed SHA-256)</text>
+  <rect x="745" y="150" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="173" fill="#B2FF59" font-family="monospace" font-size="14">src/hijaiyyah/core/master_table.py</text>
+  <rect x="65" y="196" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="219" fill="#FFFFFF" font-family="monospace" font-size="14">Guards G1–G4, T1–T2, H*=Ka&lt;=Theta/2</text>
+  <rect x="745" y="196" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="219" fill="#B2FF59" font-family="monospace" font-size="14">src/hijaiyyah/core/guards.py</text>
+  <rect x="65" y="242" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="265" fill="#FFFFFF" font-family="monospace" font-size="14">ExoMatrix 5x5, Cube 27-cell, Wallace/Manifold</text>
+  <rect x="745" y="242" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="265" fill="#B2FF59" font-family="monospace" font-size="14">src/hijaiyyah/core/*.py</text>
+  <line x1="700" y1="320" x2="700" y2="345" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="345" width="1310" height="215" rx="6" fill="#0F382A" stroke="#00E676" stroke-width="2"/>
+  <text x="65" y="377" fill="#00E676" font-family="monospace" font-size="18" font-weight="bold">DOMAIN 2: HCPU & SOFTWARE STACK [DP/CC]</text>
+  <rect x="65" y="390" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="413" fill="#FFFFFF" font-family="monospace" font-size="14">H-ISA v1.2 (103 Spec / 72 RTL Opcodes) + HISAMachine + HVM</text>
+  <rect x="745" y="390" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="413" fill="#B2FF59" font-family="monospace" font-size="14">src/hijaiyyah/hisa/ &amp; hvm/</text>
+  <rect x="65" y="436" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="459" fill="#FFFFFF" font-family="monospace" font-size="14">HCPU 5-Stage RTL Pipeline + MMIO + SDIO + Trap</text>
+  <rect x="745" y="436" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="459" fill="#B2FF59" font-family="monospace" font-size="14">rtl/hcpu_*.v (20 modules)</text>
+  <rect x="65" y="482" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="505" fill="#FFFFFF" font-family="monospace" font-size="14">HOS + HFS + HPG-1 + HCVM + HAR + HC Compiler</text>
+  <rect x="745" y="482" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="505" fill="#B2FF59" font-family="monospace" font-size="14">rtl/programs/*.hasm &amp; src/</text>
+  <line x1="700" y1="560" x2="700" y2="585" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="585" width="1310" height="215" rx="6" fill="#2D1E3E" stroke="#CE93D8" stroke-width="2"/>
+  <text x="65" y="617" fill="#CE93D8" font-family="monospace" font-size="18" font-weight="bold">DOMAIN 3 & 4: CRYPTO, NUI & DISPLAY [DP/CC]</text>
+  <rect x="65" y="630" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="653" fill="#FFFFFF" font-family="monospace" font-size="14">Ka'bah 1600b + Jamrah + Hijrah + Portal 8888</text>
+  <rect x="745" y="630" width="585" height="36" rx="4" fill="#081220" stroke="#CE93D8" stroke-width="1"/>
+  <text x="760" y="653" fill="#B2FF59" font-family="monospace" font-size="14">rtl/hijaiyyah_* &amp; portal8888/</text>
+  <rect x="65" y="676" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="699" fill="#FFFFFF" font-family="monospace" font-size="14">NUI 12-Layer Architecture (43 Modules, 1,015 Tests)</text>
+  <rect x="745" y="676" width="585" height="36" rx="4" fill="#081220" stroke="#CE93D8" stroke-width="1"/>
+  <text x="760" y="699" fill="#B2FF59" font-family="monospace" font-size="14">src/hijaiyyah/nui/*</text>
+  <rect x="65" y="722" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="745" fill="#FFFFFF" font-family="monospace" font-size="14">Stage 1.4 HDMI 720p Boot Display (P0–P12)</text>
+  <rect x="745" y="722" width="585" height="36" rx="4" fill="#081220" stroke="#CE93D8" stroke-width="1"/>
+  <text x="760" y="745" fill="#B2FF59" font-family="monospace" font-size="14">cosmictera_boot_top.v</text>
+  <text x="45" y="828" fill="#78909C" font-family="monospace" font-size="13">Source-Traceable Forensic Architecture Reconstruction | Official R2 Labels: VF (Verified Formally) | CC (Computationally Confirmed) | DP (Design Property) | EH | AT</text>
+</svg>

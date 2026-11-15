@@ -1,0 +1,11 @@
+flowchart LR
+    H28["28 Hijaiyyah Letters<br/>Alif (1, 0xE0) .. Ya (28, 0xFB)<br/>hcpu_rom.v (6-bit: 1..28 + 31..36 neg)"]
+    V18["18D Hybit Codex Vector v(h) in Z>=0^18<br/>[Theta_hat, Na,Nb,Nd, Kp,Kx,Ks,Ka,Kc,<br/>Qp,Qx,Qs,Qa,Qc, A_N,A_K,A_Q, H*]<br/>144-bit Packed H-Reg"]
+    GUARDS["Structural & Topological Guards<br/>G1: A_N = Na+Nb+Nd<br/>G2: A_K = Kp+Kx+Ks+Ka+Kc<br/>G3: A_Q = Qp+Qx+Qs+Qa+Qc<br/>G4: rho = Theta_hat - U >= 0 (U=Qx+Qs+Qa+4Qc)<br/>T1: Ks>0 => Qc>=1 | T2: Kc>0 => Qc>=1<br/>HMCL A1: H* = Ka & 2*H* <= Theta_hat"]
+    MOD4["Mod-4 Residue Gate<br/>Theta_hat mod 4 in {0,1,2,3}<br/>CMOD4 (0x4F) & JGD (0x29)/JNGD (0x2A)"]
+    EXO["5x5 Binary ExoMatrix M(h)<br/>GF(2) & GF(5) Linear Operator<br/>27-Cell 3D Cube + QT-4/5/6"]
+
+    H28 ==>|"hcpu_rom.v / master_table.py"| V18
+    V18 ==>|"hcpu_guard.v / guards.py"| GUARDS
+    V18 ==>|"Bit [1:0] of Theta_hat"| MOD4
+    H28 ==>|"exomatrix.py / cube.py"| EXO

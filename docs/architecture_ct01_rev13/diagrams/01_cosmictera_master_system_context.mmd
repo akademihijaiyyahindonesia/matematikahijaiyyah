@@ -1,0 +1,31 @@
+flowchart TB
+    subgraph HOST["Host Domain (macOS arm64 / Ubuntu 24.04 Lima VM)"]
+        PY_CORE["Python Mathematical & Runtime Stack<br/>src/hijaiyyah/* (23 packages, 3,294+ tests)<br/>[VF / CC]"]
+        NUI_SYS["NUI L0-L11 Intelligence Stack<br/>src/hijaiyyah/nui/* (43 modules, 1,015 tests)<br/>[DP L0-L7 / AT L8-L11]"]
+        PORTAL_CLI["Host Serial / Board Scripts<br/>rtl/scripts/*.py, portal8888/scripts/*.py<br/>115,200 8N1 UART [DP]"]
+    end
+
+    subgraph FPGA["Physical FPGA Domain — Sipeed Tang Nano 20K (GW2AR-LV18QN88C8/I7)"]
+        SLOT_HCPU["Bitstream Slot A: hcpu_gowin_top / hcpu_hdmi_top<br/>HCPU 5-Stage + 4Kx32 IMEM + 4Kx32 DRAM + MMIO<br/>15,453 LUT4 (74%), 18 BSRAM, 0 DSP @ 27 MHz [DP]"]
+        SLOT_BOOT["Bitstream Slot B: cosmictera_boot_top (Stage 1.4)<br/>1280x720@60Hz HDMI + 16-Stage BIST + P0-P12 UI<br/>2,526 LUT4 (12.18%), 12 BSRAM @ 27/74.25/371.25 MHz [DP]"]
+        SLOT_KABAH["Bitstream Slot C: hijaiyyah_kabah_gowin_top<br/>Ka'bah 1600-bit Sponge + Jamrah Gate + Layer-3 HMAC<br/>15,030 LUT4 (72%), 4,132 DFF [CC / DP without HMAC]"]
+        SLOT_PORTAL["Bitstream Slot D: hijaiyyah_portal8888_gowin_top<br/>Portal 8888 Hardware Auth + 5x64B Key + 9,216B Replay<br/>[CC — RTL 11/11 TB pass]"]
+    end
+
+    subgraph ASIC["MPW Silicon Target Domain — SkyWater SKY130 Caravel"]
+        MPW_WRAP["user_project_wrapper -> hcpu_wishbone_wrapper -> hcpu_top<br/>Wishbone B4 Slave (0x3000_0000) + 38 LA + 15 IO Pads<br/>[CC — RTL + 8/8 TB pass; OpenLane GDSII AT]"]
+    end
+
+    subgraph EXT["External Physical Peripherals"]
+        TV_LG["LG HDMI Display<br/>1280x720p @ 60 Hz TMDS<br/>Candidate B CST Verified [DP]"]
+        SD_CARD["MicroSD Card Slot<br/>SDIO 1-bit Bus (Pin 83/82/84)<br/>CMD0/8/55/ACMD41/17/24 [DP]"]
+    end
+
+    PY_CORE <-->|"Trace / Parity / Facts"| NUI_SYS
+    NUI_SYS -->|"limactl shell (Read-Only Gate)"| HOST
+    PORTAL_CLI <-->|"UART 115,200 8N1 (Pin 70 RX / Pin 69 TX)"| SLOT_HCPU
+    PORTAL_CLI <-->|"UART 115,200 8N1"| SLOT_KABAH
+    PORTAL_CLI <-->|"UART 115,200 8N1"| SLOT_PORTAL
+    SLOT_HCPU <-->|"SD_CLK / SD_CMD / SD_DAT0"| SD_CARD
+    SLOT_BOOT -->|"TMDS 371.25 MHz (Pins 33-40)"| TV_LG
+    SLOT_HCPU -.->|"Stage 1.4 Option 2 Target: 87-bit tele_* Bus [AT]"| SLOT_BOOT

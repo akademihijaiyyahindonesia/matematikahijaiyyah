@@ -782,7 +782,6 @@ class IDETab:
             undo=True,
             padx=10,
             pady=10,
-            tabs=("4c",),
         )
 
         # Scrollbars

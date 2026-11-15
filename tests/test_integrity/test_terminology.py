@@ -133,3 +133,47 @@ def test_the_opcode_count_the_inventory_prints_is_the_count() -> None:
     m = re.search(r"^\| Opcode H-ISA \| (\d+) \|", readme, re.M)
     assert m and int(m.group(1)) == len(opcodes), (
         f"the inventory says {m.group(1) if m else None}, the package defines {len(opcodes)}")
+
+
+
+def test_epistemic_label_expansions_are_canonical() -> None:
+    """cosmictera/RULES.md (R2) and README.md define the five epistemic labels:
+    VF = Verified Formally, CC = Computationally Confirmed, DP = Design Property,
+    EH = Engineering Hypothesis, AT = Aspirational Target.
+    """
+    rules_md = _read("cosmictera/RULES.md")
+    readme_md = _read("README.md")
+    for canonical in (
+        "Verified Formally",
+        "Computationally Confirmed",
+        "Design Property",
+        "Engineering Hypothesis",
+        "Aspirational Target",
+    ):
+        assert canonical in rules_md, f"cosmictera/RULES.md missing {canonical}"
+        assert canonical in readme_md, f"README.md missing {canonical}"
+
+    checked_files = [
+        "nui-desktop/backend/master_control.py",
+        "nui-desktop/backend/operational_intelligence.py",
+        "nui-desktop/backend/persona_and_context.py",
+        "hom-gui/src/pages/Landing.jsx",
+        "hom-gui/src/store/useLocale.js",
+        "COSMICTERA_MASTER_SYSTEM_ARCHITECTURE_CT01_REV13.md",
+        "docs/architecture_ct01_rev13/COSMICTERA_MASTER_SYSTEM_ARCHITECTURE_CT01_REV13.md",
+    ]
+    forbidden = (
+        "Verified Fact ", "Verified Fact)", "*Verified Fact*", "Verified Fact,",
+        "Canonical Claim",
+        "Demonstrated Prototype",
+        "Code Complete",
+        "Experimental Hardware",
+        "Empirical Hypothesis",
+        "Analogical/Theological",
+        "Computational Check",
+    )
+    for rel in checked_files:
+        if (ROOT / rel).exists():
+            content = _read(rel)
+            for bad in forbidden:
+                assert bad not in content, f"{rel} still contains non-canonical expansion {bad!r}"

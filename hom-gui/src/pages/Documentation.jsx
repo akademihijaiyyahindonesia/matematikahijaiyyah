@@ -9,7 +9,7 @@ const readmeContent = `
 
 | **VTM** | **NMV** | **AGM** | **ITM** | **EXM** |
 | :---: | :---: | :---: | :---: | :---: |
-| Vektronometry | Normivektor | Aggregametric | Intrametric | Exometric |
+| Vektronometry | Normvektor | Aggregametric | Intrametric | Exometric |
 | *Composition metrics* | *Norm-difference diagnostics* | *String accumulation* | *Distance geometry* | *Consistency audit* |
 
 ---
@@ -65,7 +65,7 @@ const readmeContent = `
 **HOM (Hijaiyyah Operating Machine)** adalah implementasi perangkat lunak utama dari **Matematika Hijaiyyah**, yang mencakup:
 
 - **dataset formal** 28 huruf × 18 komponen integer,
-- **Sistem Operasi Metrik-Vektorial** — lima operasi formal (Vektronometry, Normivektor, Aggregametric, Intrametric, Exometric),
+- **Sistem Operasi Metrik-Vektorial** — lima operasi formal (Vektronometry, Normvektor, Aggregametric, Intrametric, Exometric),
 - **bahasa pemrograman HC** (Hijaiyyah Codex) dengan compiler **HCC**,
 - **hybit bytecode** (.hbc) dan assembler **HASM**,
 - **mesin virtual HVM** (Hybit Virtual Machine) dengan guard system dan HCHECK,
@@ -120,7 +120,7 @@ Seluruh terminologi Bab II diperbarui sesuai revisi terkini:
 |---|---|---|
 | **Judul Bab II** | Lima Bidang Matematika Hijaiyyah | **Sistem Operasi Metrik-Vektorial Hijaiyah** |
 | **Operasi 1** | Vectronometry | **Vektronometry (VTM)** |
-| **Operasi 2** | Kalkulus Diferensial / Differential | **Normivektor (NMV)** |
+| **Operasi 2** | Kalkulus Diferensial / Differential | **Normvektor (NMV)** |
 | **Operasi 3** | Kalkulus Integral / Integral | **Aggregametric (AGM)** |
 | **Operasi 4** | Geometri Kodeks / Geometry | **Intrametric (ITM)** |
 | **Operasi 5** | Analisis Eksomatriks / Exomatrix | **Exometric (EXM)** |
@@ -178,7 +178,7 @@ $ python -m pytest tests/test_full_verification.py -v
 |---|---|---|---|
 | 1 | **Validasi intrinsik O(1)** | Setiap unit membawa bukti validitasnya sendiri | VF |
 | 2 | **Preservasi constraint pada agregasi** | h₁* + h₂* ∈ 𝒱 dan semua identitas dipertahankan | VF |
-| 3 | **Diagnostik per-lapisan** | Perbedaan didekomposisi ke 4 kontribusi bermakna via **Normivektor** | VF+CC |
+| 3 | **Diagnostik per-lapisan** | Perbedaan didekomposisi ke 4 kontribusi bermakna via **Normvektor** | VF+CC |
 | 4 | **Hukum kekekalan turning** | Guard G4 = constraint geometris lintas-lapisan | VF+CC |
 
 ---
@@ -294,7 +294,7 @@ Lima operasi formal berbasis **vektor, norma, dan metrik** — **683/683 PASS**:
 | Operasi | Kode | Pertanyaan Sentral | Identitas Kunci |
 |---|---|---|---|
 | **Vektronometry** | VTM | Terbuat dari apa? | rN + rK + rQ = 1 |
-| **Normivektor** | NMV | Bagaimana bedanya? | ‖Δ‖² = ΔΘ² + ‖ΔN‖² + ‖ΔK‖² + ‖ΔQ‖² |
+| **Normvektor** | NMV | Bagaimana bedanya? | ‖Δ‖² = ΔΘ² + ‖ΔN‖² + ‖ΔK‖² + ‖ΔQ‖² |
 | **Aggregametric** | AGM | Berapa totalnya? | Σᵤᵥ = Σᵤ + Σᵥ |
 | **Intrametric** | ITM | Seberapa jauh? | d² = ‖h₁‖² + ‖h₂‖² − 2⟨h₁,h₂⟩ |
 | **Exometric** | EXM | Konsisten internal? | R1–R5; Φ > ‖v₁₄‖² |
@@ -441,7 +441,7 @@ Lima operasi formal berbasis **vektor, norma, dan metrik** — **683/683 PASS**:
 | Operasi MV | Instruksi H-ISA |
 |---|---|
 | **VTM** (Vektronometry) | HPROJ, HDCMP, HNRM2 |
-| **NMV** (Normivektor) | HDIST, HNRM2 (pada Δ) |
+| **NMV** (Normvektor) | HDIST, HNRM2 (pada Δ) |
 | **AGM** (Aggregametric) | HCADD |
 | **ITM** (Intrametric) | HDIST |
 | **EXM** (Exometric) | HGRD, HEXMT |
@@ -589,8 +589,8 @@ fn main() {
     // ── VTM: Vektronometry ──
     println("Norm²:", h.norm2());
 
-    // ── NMV: Normivektor ──
-    let delta = hm::normivektor::diff(load('ت'), load('ب'));
+    // ── NMV: Normvektor ──
+    let delta = hm::normvektor::diff(load('ت'), load('ب'));
     println("‖Δ‖²:", delta.norm2());
 
     // ── AGM: Aggregametric ──

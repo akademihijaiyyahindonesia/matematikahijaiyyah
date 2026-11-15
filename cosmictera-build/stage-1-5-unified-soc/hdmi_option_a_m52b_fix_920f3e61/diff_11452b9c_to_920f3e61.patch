@@ -1,0 +1,370 @@
+diff --git a/rtl/fpga/gowin/cosmictera_display_top.v b/rtl/fpga/gowin/cosmictera_display_top.v
+index fd49670a..01b27972 100644
+--- a/rtl/fpga/gowin/cosmictera_display_top.v
++++ b/rtl/fpga/gowin/cosmictera_display_top.v
+@@ -92,8 +92,21 @@ module cosmictera_display_top #(
+     wire [13:0] cell_addr;
+     wire [11:0] layout_data;
+ 
++    localparam [13:0] ROM_DIRECT_END = 14'd6720;
++    localparam [13:0] ROM_FOOT_FIRST = 14'd13440;
++    localparam [13:0] ROM_SCREEN_END = 14'd14400;
++    localparam [13:0] ROM_FOOT_SHIFT = 14'd6720;
++
++    wire        rom_direct = (cell_addr < ROM_DIRECT_END);
++    wire        rom_footer = (cell_addr >= ROM_FOOT_FIRST) && (cell_addr < ROM_SCREEN_END);
++    wire        rom_valid  = rom_direct | rom_footer;
++    wire [13:0] rom_folded = cell_addr - ROM_FOOT_SHIFT;
++    wire [12:0] rom_addr   = rom_direct ? cell_addr[12:0]
++                           : rom_footer ? rom_folded[12:0]
++                           : 13'd7680;
++
+     hcpu_layout_rom #(.LAYOUT_HEX(LAYOUT_HEX)) u_layout (
+-        .clk(pixel_clk), .addr(cell_addr), .data(layout_data)
++        .clk(pixel_clk), .addr(rom_addr), .data(layout_data)
+     );
+ 
+     // Tied off, and that is the honest wiring of a node with no CPU. Every
+@@ -115,15 +128,17 @@ module cosmictera_display_top #(
+     reg        hit_d;
+     reg [7:0]  ch_d;
+     reg [3:0]  at_d;
++    reg        rom_valid_d;
+     always @(posedge pixel_clk or negedge video_rst_n) begin
+         if (!video_rst_n) begin
+-            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0;
++            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0; rom_valid_d <= 1'b0;
+         end else begin
+-            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at;
++            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at; rom_valid_d <= rom_valid;
+         end
+     end
+ 
+-    wire [15:0] cell_data = hit_d ? {4'd0, at_d, ch_d} : {4'd0, layout_data};
++    wire [11:0] rom_cell  = rom_valid_d ? layout_data : 12'h020;
++    wire [15:0] cell_data = hit_d ? {4'd0, at_d, ch_d} : {4'd0, rom_cell};
+ 
+     wire [6:0] font_glyph;
+     wire [2:0] font_row;
+diff --git a/rtl/fpga/gowin/hcpu_hdmi_top.v b/rtl/fpga/gowin/hcpu_hdmi_top.v
+index 65370431..a4c0b7ca 100644
+--- a/rtl/fpga/gowin/hcpu_hdmi_top.v
++++ b/rtl/fpga/gowin/hcpu_hdmi_top.v
+@@ -132,17 +132,17 @@
+ //      (red_dvi, green_dvi, blue_dvi, de_dvi, hsync_dvi, vsync_dvi).
+ //
+ //     IOB           16 /    384    4%
+-//     LUT4      14,164 / 20,736   68%
+-//     ALU        2,678 / 15,552   17%
+-//     DFF        5,520 / 15,552   35%
++//     LUT4      14,193 / 20,736   68%
++//     ALU        2,698 / 15,552   17%
++//     DFF        5,521 / 15,552   35%
+ //     BSRAM         24 /     46   52%
+ //     MULT9X9       14 /     96   14%
+ //     MULT36X36      1 /     12    8%
+-//     Fmax      101.13 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
+-//                97.51 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
+-//     Bitstream  7,261,470 bytes, sha256 a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f
++//     Fmax      102.05 MHz  u_hcpu.clk_27m (PASS at the 12.00 MHz constraint)
++//                90.44 MHz  pixel_clk      (PASS at the 12.00 MHz constraint)
++//     Bitstream  7,261,470 bytes, sha256 1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54
+ //
+-// RTL FINGERPRINT: abfe1f5d03a5c56d9c9b29b98a57eff81595db0ba88873f180b0c36e29fab116
++// RTL FINGERPRINT: 234130eed36dcfcf8d602d4af25fe8ef0782c56dc432ab32a973db50a43c5d8b
+ //
+ `include "hcpu_pkg.vh"
+ 
+@@ -368,18 +368,40 @@ module hcpu_hdmi_top #(
+     wire [13:0] cell_addr;
+     wire [11:0] layout_data;
+ 
++    // 14-bit screen address (0..14,399) -> 13-bit layout ROM (0..8,191).
++    // Rows 0..41 (0..6,719) map directly; footer rows 84..89 (13,440..14,399)
++    // fold to 6,720..7,679; rows 42..83 (6,720..13,439, including 8,191 and
++    // 8,192 where cell_addr[13] flips) are blanked so cell_addr[13] is never
++    // truncated into 0..6,207.
++    localparam [13:0] ROM_DIRECT_END = 14'd6720;
++    localparam [13:0] ROM_FOOT_FIRST = 14'd13440;
++    localparam [13:0] ROM_SCREEN_END = 14'd14400;
++    localparam [13:0] ROM_FOOT_SHIFT = 14'd6720;
++
++    wire        rom_direct = (cell_addr < ROM_DIRECT_END);
++    wire        rom_footer = (cell_addr >= ROM_FOOT_FIRST) && (cell_addr < ROM_SCREEN_END);
++    wire        rom_valid  = rom_direct | rom_footer;
++    wire [13:0] rom_folded = cell_addr - ROM_FOOT_SHIFT;
++    wire [12:0] rom_addr   = rom_direct ? cell_addr[12:0]
++                           : rom_footer ? rom_folded[12:0]
++                           : 13'd7680;
++
+     hcpu_layout_rom #(.LAYOUT_HEX(DASH_HEX)) u_layout (
+-        .clk(pixel_clk), .addr(cell_addr), .data(layout_data)
++        .clk(pixel_clk), .addr(rom_addr), .data(layout_data)
+     );
+ 
+     wire       comp_hit;
+     wire [7:0] comp_ch;
+     wire [3:0] comp_at;
+ 
++    // tele_guard from hcpu_gowin_core is 1 when all six guards hold (OK) and
++    // 0 on fault; hcpu_compositor encodes 0 as OK (green) and 1 as FAULT (red).
++    wire comp_guard_fault = ~snap_guard;
++
+     hcpu_compositor #(.PCW(`CODE_ADDR_W)) u_comp (
+         .cell_addr(cell_addr), .page(page),
+         .snap_pc(snap_pc), .snap_instr(snap_instr), .snap_halted(snap_halted),
+-        .snap_guard(snap_guard), .snap_cycles(snap_cycles),
++        .snap_guard(comp_guard_fault), .snap_cycles(snap_cycles),
+         .snap_flags(snap_flags), .snap_valid(snap_valid),
+         .hit(comp_hit), .ch(comp_ch), .at(comp_at)
+     );
+@@ -390,16 +412,18 @@ module hcpu_hdmi_top #(
+     reg        hit_d;
+     reg [7:0]  ch_d;
+     reg [3:0]  at_d;
++    reg        rom_valid_d;
+     always @(posedge pixel_clk or negedge video_rst_n) begin
+         if (!video_rst_n) begin
+-            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0;
++            hit_d <= 1'b0; ch_d <= 8'h20; at_d <= 4'd0; rom_valid_d <= 1'b0;
+         end else begin
+-            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at;
++            hit_d <= comp_hit; ch_d <= comp_ch; at_d <= comp_at; rom_valid_d <= rom_valid;
+         end
+     end
+ 
++    wire [11:0] rom_cell  = rom_valid_d ? layout_data : 12'h020;
+     wire [15:0] cell_data = hit_d ? {4'd0, at_d, ch_d}
+-                                  : {4'd0, layout_data};
++                                  : {4'd0, rom_cell};
+ 
+     wire [6:0] font_glyph;
+     wire [2:0] font_row;
+diff --git a/rtl/scripts/gen_dashboard.py b/rtl/scripts/gen_dashboard.py
+index 91f3ec13..1d155d9c 100644
+--- a/rtl/scripts/gen_dashboard.py
++++ b/rtl/scripts/gen_dashboard.py
+@@ -237,12 +237,23 @@ def build_node() -> Screen:
+     return s
+ 
+ 
++def _fold_rom(s: Screen) -> str:
++    """Pack a 160x90 screen into 8,192 ROM cells (rows 0..41 + rows 84..89)."""
++    kept: list[tuple[int, int]] = []
++    for row in list(range(ROM_ROWS_DIRECT)) + list(range(FOOT_FIRST, ROWS)):
++        for col in range(COLS):
++            kept.append(s.cells[row * COLS + col])
++    while len(kept) < ROM_DEPTH:
++        kept.append((0x20, DIM))
++    return "".join(f"{(a << 8) | ch:03x}\n" for ch, a in kept)
++
++
+ def main(argv: list[str]) -> int:
+     root = Path(__file__).resolve().parents[2]
+     screen, fields = build()
+ 
+     hex_path = root / "rtl" / "hcpu_dashboard.hex"
+-    hex_path.write_text(screen.hex(), encoding="ascii")
++    hex_path.write_text(_fold_rom(screen), encoding="ascii")
+ 
+     lines = [
+         "// hcpu_dashboard_pos.vh - GENERATED by rtl/scripts/gen_dashboard.py.",
+@@ -261,18 +272,11 @@ def main(argv: list[str]) -> int:
+     # screen and absent here, which is what turns a 196,608-bit ROM that did
+     # not fit into a 98,304-bit one that does.
+     node = build_node()
+-    kept: list[tuple[int, int]] = []
+-    for row in list(range(ROM_ROWS_DIRECT)) + list(range(FOOT_FIRST, ROWS)):
+-        for col in range(COLS):
+-            kept.append(node.cells[row * COLS + col])
+-    while len(kept) < ROM_DEPTH:
+-        kept.append((0x20, DIM))
+     node_path = root / "rtl" / "hcpu_display.hex"
+-    node_path.write_text(
+-        "".join(f"{(a << 8) | ch:03x}\n" for ch, a in kept), encoding="ascii")
++    node_path.write_text(_fold_rom(node), encoding="ascii")
+ 
+-    print(f"{hex_path.relative_to(root)}: {DEPTH} sel")
+-    print(f"{node_path.relative_to(root)}: {DEPTH} sel (display node)")
++    print(f"{hex_path.relative_to(root)}: {ROM_DEPTH} sel")
++    print(f"{node_path.relative_to(root)}: {ROM_DEPTH} sel (display node)")
+     print(f"{vh_path.relative_to(root)}: {len(fields)} field hidup")
+     for name, (col, row, width) in sorted(fields.items()):
+         print(f"  {name:8s} kolom {col:3d} baris {row:2d} lebar {width:2d} "
+diff --git a/rtl/tb/Makefile b/rtl/tb/Makefile
+index 4d862813..822d984d 100644
+--- a/rtl/tb/Makefile
++++ b/rtl/tb/Makefile
+@@ -303,8 +303,9 @@ tb_hcpu_text_render.vvp: $(TB_DIR)/tb_hcpu_text_render.v \
+ tb_hcpu_telemetry.vvp: $(TB_DIR)/tb_hcpu_telemetry.v $(RTL_DIR)/hcpu_telemetry.v
+ 	$(IVERILOG) $(INC) -o $@ $^
+ tb_hcpu_dashboard.vvp: $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v \
++                       $(RTL_DIR)/hcpu_layout_rom.v $(RTL_DIR)/hcpu_dashboard.hex \
+                        $(RTL_DIR)/hcpu_dashboard_pos.vh
+-	$(IVERILOG) $(INC) -o $@ $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v
++	$(IVERILOG) $(INC) -o $@ $(TB_DIR)/tb_hcpu_dashboard.v $(RTL_DIR)/hcpu_compositor.v $(RTL_DIR)/hcpu_layout_rom.v
+ tb_hcpu_page_key.vvp: $(TB_DIR)/tb_hcpu_page_key.v $(RTL_DIR)/hcpu_page_key.v
+ 	$(IVERILOG) $(INC) -o $@ $^
+ sim_mmio: tb_hcpu_mmio.vvp
+diff --git a/rtl/tb/tb_hcpu_dashboard.v b/rtl/tb/tb_hcpu_dashboard.v
+index 428dfd81..85282cf7 100644
+--- a/rtl/tb/tb_hcpu_dashboard.v
++++ b/rtl/tb/tb_hcpu_dashboard.v
+@@ -25,12 +25,16 @@
+ 
+ module tb_hcpu_dashboard;
+ 
++    reg        clk = 1'b0;
++    always #5 clk = ~clk;
++
+     reg [13:0] cell_addr = 14'd0;
+     reg [3:0]  page = 4'd0;
+     reg [11:0] snap_pc = 12'h1A3;
+     reg [31:0] snap_instr = 32'hDEADBEEF;
+     reg        snap_halted = 1'b0;
+-    reg        snap_guard = 1'b0;
++    reg        tele_guard = 1'b1;
++    wire       snap_guard = ~tele_guard;
+     reg [31:0] snap_cycles = 32'h0012_3456;
+     reg [7:0]  snap_flags = 8'h5C;
+     reg        snap_valid = 1'b1;
+@@ -39,6 +43,27 @@ module tb_hcpu_dashboard;
+     wire [7:0] ch;
+     wire [3:0] at;
+ 
++    localparam [13:0] ROM_DIRECT_END = 14'd6720;
++    localparam [13:0] ROM_FOOT_FIRST = 14'd13440;
++    localparam [13:0] ROM_SCREEN_END = 14'd14400;
++    localparam [13:0] ROM_FOOT_SHIFT = 14'd6720;
++
++    wire        rom_direct = (cell_addr < ROM_DIRECT_END);
++    wire        rom_footer = (cell_addr >= ROM_FOOT_FIRST) && (cell_addr < ROM_SCREEN_END);
++    wire        rom_valid  = rom_direct | rom_footer;
++    wire [13:0] rom_folded = cell_addr - ROM_FOOT_SHIFT;
++    wire [12:0] rom_addr   = rom_direct ? cell_addr[12:0]
++                           : rom_footer ? rom_folded[12:0]
++                           : 13'd7680;
++    wire [11:0] layout_data;
++    reg         rom_valid_d = 1'b0;
++    always @(posedge clk) rom_valid_d <= rom_valid;
++    wire [11:0] rom_cell = rom_valid_d ? layout_data : 12'h020;
++
++    hcpu_layout_rom #(.LAYOUT_HEX("../hcpu_dashboard.hex")) u_rom (
++        .clk(clk), .addr(rom_addr), .data(layout_data)
++    );
++
+     hcpu_compositor #(.PCW(12)) dut (
+         .cell_addr(cell_addr), .page(page),
+         .snap_pc(snap_pc), .snap_instr(snap_instr), .snap_halted(snap_halted),
+@@ -58,10 +83,11 @@ module tb_hcpu_dashboard;
+         end
+     endtask
+ 
+-    task at_cell;                      // settle the combinational path
++    task at_cell;                      // settle the combinational and 1-cycle ROM path
+         input [13:0] a;
+         begin
+             cell_addr = a;
++            @(posedge clk);
+             #1;
+         end
+     endtask
+@@ -110,24 +136,32 @@ module tb_hcpu_dashboard;
+         at_cell(`DASH_FLAGS_ADDR + 3); if (ch !== "C") ok_field = 1'b0;
+         check(ok_field, "FLAGS tercetak 5C");
+ 
+-        // ── STATE, and the colour that travels with it ──────────
++        // ── STATE and GUARD, and the colour that travels with them ──
+         ok_field = 1'b1;
+         at_cell(`DASH_STATE_ADDR + 0);
+         if (ch !== "R" || at !== 4'd3) ok_field = 1'b0;      // GREEN
+         at_cell(`DASH_STATE_ADDR + 6); if (ch !== "G") ok_field = 1'b0;
+-        check(ok_field, "STATE RUNNING, hijau");
++        at_cell(`DASH_GUARD_ADDR + 0);
++        if (ch !== "O" || at !== 4'd3) ok_field = 1'b0;      // GUARD: OK, GREEN
++        at_cell(`DASH_GUARD_ADDR + 1); if (ch !== "K") ok_field = 1'b0;
++        at_cell(`DASH_GUARD_ADDR + 2); if (ch !== " ") ok_field = 1'b0;
++        check(ok_field, "STATE RUNNING dan GUARD OK, hijau");
+ 
+         snap_halted = 1'b1;
+-        snap_guard  = 1'b1;
++        tele_guard  = 1'b0;
+         ok_field = 1'b1;
+         at_cell(`DASH_STATE_ADDR + 0);
+         if (ch !== "H" || at !== 4'd5) ok_field = 1'b0;      // RED
+         at_cell(`DASH_STATE_ADDR + 5); if (ch !== "D") ok_field = 1'b0;
+         at_cell(`DASH_GUARD_ADDR + 0);
+-        if (ch !== "F" || at !== 4'd5) ok_field = 1'b0;
++        if (ch !== "F" || at !== 4'd5) ok_field = 1'b0;      // GUARD: FAULT, RED
++        at_cell(`DASH_GUARD_ADDR + 1); if (ch !== "A") ok_field = 1'b0;
++        at_cell(`DASH_GUARD_ADDR + 2); if (ch !== "U") ok_field = 1'b0;
++        at_cell(`DASH_GUARD_ADDR + 3); if (ch !== "L") ok_field = 1'b0;
++        at_cell(`DASH_GUARD_ADDR + 4); if (ch !== "T") ok_field = 1'b0;
+         check(ok_field, "HALTED dan FAULT, merah");
+         snap_halted = 1'b0;
+-        snap_guard  = 1'b0;
++        tele_guard  = 1'b1;
+ 
+         // ── the page digit owns ONE cell ────────────────────────
+         page = 4'd3;
+@@ -173,17 +207,29 @@ module tb_hcpu_dashboard;
+         page = 4'd0;
+         snap_valid = 1'b1;
+ 
+-        // ── THE WHOLE SCREEN: how many cells does it claim? ─────
++        // ── THE WHOLE SCREEN: how many cells does it claim, and no ROM wrap ──
+         // Six fields of sixteen, the banner's sixteen, and one page digit.
+-        // If a window overlapped a label or ran past its field, this number
+-        // moves -- and nothing else in this bench would notice.
++        // Also check 14-bit address boundaries 8191, 8192 (no wrap to row 0),
++        // footer row 88 ("PAGE"), and last cell 14399 (row 89, col 159).
+         hits = 0;
++        ok_field = 1'b1;
+         for (i = 0; i < 14400; i = i + 1) begin
+             at_cell(i[13:0]);
+             if (hit) hits = hits + 1;
++            if (i >= 6720 && i < 13440 && rom_cell !== 12'h020)
++                ok_field = 1'b0;
+         end
++        at_cell(14'd0);     if (rom_cell !== 12'h705) ok_field = 1'b0; // row 0 gold rule
++        at_cell(14'd8191);  if (rom_cell !== 12'h020 || rom_valid_d) ok_field = 1'b0;
++        at_cell(14'd8192);  if (rom_cell !== 12'h020 || rom_valid_d) ok_field = 1'b0;
++        at_cell(14'd13760); if (rom_cell !== 12'h205 || !rom_valid_d) ok_field = 1'b0; // row 86 cyan rule
++        at_cell(14'd14084); if (rom_cell !== {4'd2, "P"} || !rom_valid_d) ok_field = 1'b0; // row 88 "PAGE"
++        at_cell(14'd14085); if (rom_cell !== {4'd2, "A"} || !rom_valid_d) ok_field = 1'b0;
++        at_cell(14'd14086); if (rom_cell !== {4'd2, "G"} || !rom_valid_d) ok_field = 1'b0;
++        at_cell(14'd14087); if (rom_cell !== {4'd2, "E"} || !rom_valid_d) ok_field = 1'b0;
++        at_cell(14'd14399); if (rom_cell !== 12'h020 || !rom_valid_d || rom_addr !== 13'd7679) ok_field = 1'b0;
+         $display("  sel diklaim compositor: %0d", hits);
+-        check(hits == 113, "113 sel diklaim, sisanya ROM");
++        check(hits == 113 && ok_field, "113 sel diklaim, sisanya ROM (batas 8191/8192/14399 bebas wrap)");
+ 
+         if (errors == 0)
+             $display("tb_hcpu_dashboard: SEMUA LULUS (13 pemeriksaan)");
+diff --git a/tests/test_integrity/test_place_and_route.py b/tests/test_integrity/test_place_and_route.py
+index 0debf1eb..d0b9c738 100644
+--- a/tests/test_integrity/test_place_and_route.py
++++ b/tests/test_integrity/test_place_and_route.py
+@@ -292,16 +292,16 @@ def test_the_hdmi_wrapper_records_its_routed_result() -> None:
+     # 1-cycle DVI pipeline registers).
+     assert rows == {
+         "IOB": (16, 384),
+-        "LUT4": (14164, 20736),
+-        "ALU": (2678, 15552),
+-        "DFF": (5520, 15552),
++        "LUT4": (14193, 20736),
++        "ALU": (2698, 15552),
++        "DFF": (5521, 15552),
+         "BSRAM": (24, 46),
+         "MULT9X9": (14, 96),
+         "MULT36X36": (1, 12),
+     }
+-    assert re.search(r"^//\s+Fmax\s+101\.13 MHz", hdmi, re.M)
+-    assert re.search(r"^//\s+97\.51 MHz\s+pixel_clk", hdmi, re.M)
+-    assert "a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f" in hdmi
++    assert re.search(r"^//\s+Fmax\s+102\.05 MHz", hdmi, re.M)
++    assert re.search(r"^//\s+90\.44 MHz\s+pixel_clk", hdmi, re.M)
++    assert "1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54" in hdmi
+ 
+ def test_the_kabah_hdmi_wrapper_records_its_own_fingerprint() -> None:
+     """Built for the first time on 11 September, and held like the others."""

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <rect width="100%" height="100%" fill="#060C16"/>
+  <rect x="20" y="20" width="1360" height="820" rx="8" fill="#0A1424" stroke="#1E3A5F" stroke-width="2"/>
+  <rect x="20" y="20" width="1360" height="64" rx="8" fill="#0F2342" stroke="#00E5FF" stroke-width="1.5"/>
+  <text x="45" y="58" fill="#00E5FF" font-family="monospace" font-size="22" font-weight="bold">13 — END-TO-END DATA & CONTROL FLOW (8 CANONICAL FLOWS)</text>
+  <text x="1060" y="56" fill="#90CAF9" font-family="monospace" font-size="14">COSMICTERA CT-01-REV13 v1.1 | HEAD 8c70989b</text>
+  <rect x="45" y="105" width="1310" height="215" rx="6" fill="#0E294B" stroke="#00E5FF" stroke-width="2"/>
+  <text x="65" y="137" fill="#00E5FF" font-family="monospace" font-size="18" font-weight="bold">FLOWS 1–4: MATH, COMPILER, PIPELINE & OS TRAPS</text>
+  <rect x="65" y="150" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="173" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 1 (Math -&gt; ROM): 28 Letters -&gt; 18D Sealed Table -&gt; hcpu_rom.v</text>
+  <rect x="745" y="150" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="173" fill="#B2FF59" font-family="monospace" font-size="14">Zero drift between Python &amp; Verilog (R1)</text>
+  <rect x="65" y="196" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="219" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 2 (HC -&gt; H-ISA): .hc -&gt; codegen.py -&gt; .hasm -&gt; assembler.py</text>
+  <rect x="745" y="196" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="219" fill="#B2FF59" font-family="monospace" font-size="14">Produces 32-bit instruction words</text>
+  <rect x="65" y="242" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="265" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 3 (5-Stage Pipeline) &amp; Flow 4 (Trap/OS Context Switch)</text>
+  <rect x="745" y="242" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="265" fill="#B2FF59" font-family="monospace" font-size="14">Resolved branch-trap EPC race &amp; fetch shadow</text>
+  <line x1="700" y1="320" x2="700" y2="345" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="345" width="1310" height="215" rx="6" fill="#0F382A" stroke="#00E676" stroke-width="2"/>
+  <text x="65" y="377" fill="#00E676" font-family="monospace" font-size="18" font-weight="bold">FLOWS 5–6: STORAGE (SDIO/HFS/HAR) & SECURITY (KA'BAH/PORTAL)</text>
+  <rect x="65" y="390" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="413" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 5 (SDIO/HFS): MMIO 0xFE0–0xFE6 -&gt; 512B Sector + Checksum</text>
+  <rect x="745" y="390" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="413" fill="#B2FF59" font-family="monospace" font-size="14">Loads HAR containers from MicroSD</text>
+  <rect x="65" y="436" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="459" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 6 (Crypto): Jamrah 3-Stage -&gt; Ka'bah 1600b -&gt; HMAC-SHA256</text>
+  <rect x="745" y="436" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="459" fill="#B2FF59" font-family="monospace" font-size="14">Hardware-enforced frame authentication</text>
+  <line x1="700" y1="560" x2="700" y2="585" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="585" width="1310" height="215" rx="6" fill="#3B2314" stroke="#FFB300" stroke-width="2"/>
+  <text x="65" y="617" fill="#FFB300" font-family="monospace" font-size="18" font-weight="bold">FLOWS 7–8: HDMI TELEMETRY & NUI FAIL-CLOSED LOOP</text>
+  <rect x="65" y="630" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="653" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 7 (HDMI 720p): 27 MHz Bridge -&gt; 87b CDC -&gt; 74.25 MHz Render</text>
+  <rect x="745" y="630" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="653" fill="#B2FF59" font-family="monospace" font-size="14">Displays 16 subsystems on Page 0 + P1–P12</text>
+  <rect x="65" y="676" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="699" fill="#FFFFFF" font-family="monospace" font-size="14">Flow 8 (NUI L0–L7): Repo/Exec/Parity + Lima VM -&gt; L7 Decision</text>
+  <rect x="745" y="676" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="699" fill="#B2FF59" font-family="monospace" font-size="14">Deterministic SHA-256 audited records</text>
+  <text x="45" y="828" fill="#78909C" font-family="monospace" font-size="13">Source-Traceable Forensic Architecture Reconstruction | Official R2 Labels: VF (Verified Formally) | CC (Computationally Confirmed) | DP (Design Property) | EH | AT</text>
+</svg>

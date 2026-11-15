@@ -116,6 +116,13 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
+markers = [
+    "unit: unit test for isolated logic",
+    "live_fs: live filesystem operation test",
+    "integration: end-to-end backend/API integration test",
+    "mock: simulated or mock transport test",
+    "live_net: live network and DNS probe test",
+]
 
 [tool.mypy]
 # 3.12, not the 3.11 the package supports at runtime. mypy applies

@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph IF_STAGE["Stage 1: Fetch (hcpu_fetch.v)"]
+        PC_REG["PC Register (12-bit / 32-bit)<br/>+ fetch_valid shadow tracking"]
+        IMEM["Instruction Memory (4096 x 32-bit)<br/>Synchronous BSRAM (imem_addr, imem_ce)"]
+    end
+
+    subgraph ID_STAGE["Stage 2: Decode & Regfile (hcpu_decode.v + hcpu_regfile.v)"]
+        DEC["Instruction Decoder (84 RTL Opcodes)<br/>Load-Use & Store-Load Hazard Detect"]
+        RF["Register File<br/>18x 32-bit GPR (R0-R17)<br/>16x 144-bit H-Reg (H0-H15 + ovf)<br/>FLAGS (8-bit write-through)"]
+        FWD["Forwarding Unit (hcpu_forward.v)<br/>EX->ID & MEM->ID Bypass (GPR + H-Reg)"]
+    end
+
+    subgraph EX_STAGE["Stage 3: Execute & Co-Engines (hcpu_execute.v)"]
+        ALU_S["Scalar 32-bit ALU + Branch Unit<br/>32-entry Hardware Return Stack (RA_DEPTH=32)"]
+        ROM_MT["Master Table ROM (hcpu_rom.v)<br/>6-bit Addr: 28 Letters (1..28) + 6 Neg (31..36)"]
+        GUARD_U["Guard Unit (hcpu_guard.v)<br/>G1-G4, T1-T2, H*, U, signed rho"]
+        CALU["Codex Vector ALU (hcpu_codex_alu.v)<br/>Profile 0 (ASIC), 1 (DSP), 2 (No-DSP Squarer+14c HDOT)"]
+        HISAB_U["HISAB Engine (hcpu_hisab.v -> u_guard)<br/>Canonical Guard + HPACK (9B+Guard) & HCRC"]
+    end
+
+    subgraph MEM_STAGE["Stage 4: Memory & MMIO (hcpu_memory.v + hcpu_mmio.v)"]
+        MMIO_DEC["MMIO Decoder (0xFE0-0xFFF)<br/>UART RX (0xFF0), Timer (0xFF4), Trap CSRs (0xFF8-0xFFD),<br/>IMEM Loader (0xFF3/0xFF7), Bounds (0xFFE/0xFFF), SDIO (0xFE0-0xFE6)"]
+        DRAM["Data RAM (hcpu_dataram.v)<br/>4096 x 32-bit RAM + 256-deep HW Stack (STACK_DEPTH=256)"]
+        TRAP_U["Trap Unit (hcpu_trap.v)<br/>6 Causes, User/Supervisor Mode, Base/Limit"]
+    end
+
+    subgraph WB_STAGE["Stage 5: Writeback (hcpu_writeback.v)"]
+        WB_MUX["Writeback Multiplexer<br/>wb_gpr_we, wb_hreg_we, wb_flags_we, wb_halt"]
+    end
+
+    IF_STAGE --> ID_STAGE
+    ID_STAGE --> FWD --> EX_STAGE
+    ROM_MT <--> EX_STAGE
+    GUARD_U <--> EX_STAGE
+    CALU <--> EX_STAGE
+    HISAB_U <--> EX_STAGE
+    EX_STAGE --> MEM_STAGE
+    MEM_STAGE --> WB_STAGE
+    WB_STAGE -->|"Write-Through"| RF
+    TRAP_U -->|"redirect_taken"| IF_STAGE

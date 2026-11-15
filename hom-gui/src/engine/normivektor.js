@@ -1,4 +1,8 @@
-// NMV — Normivektor: norm-difference operations
+// NMV — Normvektor: norm-difference operations
+
+export function computeNormvektor(v18a, v18b) {
+  return computeNormivektor(v18a, v18b);
+}
 
 export function computeNormivektor(v18a, v18b) {
   const delta = v18a.slice(0, 14).map((x, i) => x - v18b[i]);

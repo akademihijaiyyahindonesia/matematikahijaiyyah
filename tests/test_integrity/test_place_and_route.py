@@ -287,21 +287,20 @@ def test_the_hdmi_wrapper_records_its_routed_result() -> None:
     rows = {name: (int(used.replace(",", "")), int(total.replace(",", "")))
             for name, used, total in re.findall(
                 r"^//\s+(\w+)\s+([\d,]+)\s*/\s*([\d,]+)\s+\d+%", hdmi, re.M)}
-    # Re-measured 2026-11-05 under Option A (USE_DSP=1 without -nodsp,
-    # Candidate B TMDS pins 33/35/37/39 DRIVE=8, staged reset sequencer and
-    # 1-cycle DVI pipeline registers).
+    # Re-measured 2026-11-07 for CosmicTera NUI Control All System &
+    # Physical Button (S1/S2/UPDATE) Fault Recovery Monitor (post-route Fmax).
     assert rows == {
         "IOB": (16, 384),
-        "LUT4": (14193, 20736),
-        "ALU": (2698, 15552),
-        "DFF": (5521, 15552),
-        "BSRAM": (24, 46),
+        "LUT4": (15349, 20736),
+        "ALU": (2952, 15552),
+        "DFF": (6178, 15552),
+        "BSRAM": (33, 46),
         "MULT9X9": (14, 96),
         "MULT36X36": (1, 12),
     }
-    assert re.search(r"^//\s+Fmax\s+102\.05 MHz", hdmi, re.M)
-    assert re.search(r"^//\s+90\.44 MHz\s+pixel_clk", hdmi, re.M)
-    assert "1fd4c35b698f5385c60b3922dc5ce16c2e2c3edabcc2048b8626a5d1de462f54" in hdmi
+    assert re.search(r"^//\s+Fmax\s+119\.60 MHz", hdmi, re.M)
+    assert re.search(r"^//\s+86\.01 MHz\s+pixel_clk", hdmi, re.M)
+    assert "7fe32ef6d41e6f371ea6ed1e1c5e648e9bcd8c98384476fdfcb42d8d92c199ab" in hdmi
 
 def test_the_kabah_hdmi_wrapper_records_its_own_fingerprint() -> None:
     """Built for the first time on 11 September, and held like the others."""

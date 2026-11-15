@@ -1,0 +1,64 @@
+{
+  "bitstream_identity": {
+    "bitstream": "/Users/AMRA/hijaiyyah-mathematics/rtl/fpga/gowin/hcpu_hdmi_top.fs",
+    "size_bytes": 7261470,
+    "bitstream_sha256": "a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f",
+    "expected_sha256": "a416ada780a50dc8262f4effc8cad61eaff8af4787fadb5f6211acca5f5b413f",
+    "sha256_match": true,
+    "baked_program": "rtl/programs/loader.hasm"
+  },
+  "jtag_detection": {
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "--detect"
+    ],
+    "returncode": 0,
+    "jtag_detect_elapsed_sec": 0.037,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/hdmi_option_a_11452b9c/jtag_detect_hdmi_option_a.log",
+    "log_sha256": "f97469c9fba952f8b70dd58e0d214adfc6663057cc48d6b421af3f99bc04dacf"
+  },
+  "sram_programming": {
+    "programmer": "/opt/homebrew/bin/openFPGALoader",
+    "command": [
+      "/opt/homebrew/bin/openFPGALoader",
+      "-b",
+      "tangnano20k",
+      "/Users/AMRA/hijaiyyah-mathematics/rtl/fpga/gowin/hcpu_hdmi_top.fs"
+    ],
+    "mode": "SRAM_ONLY",
+    "flash_flags_present": false,
+    "returncode": 0,
+    "programming_elapsed_sec": 3.244,
+    "log_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/hdmi_option_a_11452b9c/sram_load_hdmi_option_a.log",
+    "log_sha256": "4700786775c9596d1db5b99208b37560f04f2a628088f680a829abecbcc57e7c",
+    "status": "PASS"
+  },
+  "uart_loader_validation": {
+    "device": "/dev/cu.usbserial-20250303171",
+    "program_sent": "/Users/AMRA/hijaiyyah-mathematics/rtl/programs/test_bsm.hasm",
+    "load_base": 64,
+    "words_sent": 9,
+    "bytes_sent": 40,
+    "uart_capture_elapsed_sec": 2.158,
+    "raw_bin_path": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-unified-soc/hdmi_option_a_11452b9c/uart_hdmi_option_a_test_bsm.bin",
+    "raw_sha256": "71acd4b8fa3eb25e18f5ff65656d0c96350ce6163d638724751f0c493477288d",
+    "uart_bytes": 23,
+    "uart_hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 34 34 42 44 45 38 0D 0A 0A",
+    "uart_ascii": "b'112\\n\\nCYCLES=0044BDE8\\r\\n\\n'",
+    "status": "PASS"
+  },
+  "timing_summary": {
+    "jtag_detect_elapsed_sec": 0.037,
+    "programming_elapsed_sec": 3.244,
+    "uart_capture_elapsed_sec": 2.158,
+    "total_elapsed_sec": 5.508
+  },
+  "physical_verification_scope": {
+    "sram_load_verified_by_script": true,
+    "uart_loader_verified_by_script": true,
+    "hdmi_1280x720_verified_by_script": false,
+    "note": "SRAM programming and baked UART loader execution (`test_bsm.hasm` -> `112` + `CYCLES=`) are verified by script. Physical HDMI 1280x720@60Hz M5.2B display requires visual confirmation."
+  }
+}

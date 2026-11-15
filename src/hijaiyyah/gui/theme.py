@@ -1,4 +1,4 @@
-"""Theme configuration for the HOM GUI."""
+"""Theme configuration for HOM — Hijaiyyah Scientific Computing Environment (v1.2.0)."""
 
 from __future__ import annotations
 
@@ -7,37 +7,49 @@ from dataclasses import dataclass
 from tkinter import ttk
 from typing import Tuple
 
-APP_TITLE = "HOM — Hijaiyyah Operating Machine"
+APP_TITLE = "HOM — Hijaiyyah Scientific Computing Environment"
 APP_VERSION = "HM-28-v1.0-HC18D"
-MIN_SIZE = (1280, 860)
+SOFTWARE_VERSION = "v1.2.0"
+MIN_SIZE = (1280, 800)
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "Logo HOM.png")
 MATH_LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "Mathematics Hijaiyyah.png")
 
 
 @dataclass(frozen=True)
 class Theme:
-    bg: str = "#0d1117"
-    fg: str = "#e6edf3"
-    accent: str = "#161b22"
-    highlight: str = "#1f6feb"
-    success: str = "#3fb950"
-    error: str = "#f85149"
-    warning: str = "#d29922"
-    text_bg: str = "#010409"
-    header_bg: str = "#010409"
-    header_fg: str = "#e6edf3"
-    hijaiyyah_fg: str = "#58a6ff"
-    number_fg: str = "#7ee787"
-    dim_fg: str = "#8b949e"
-    border: str = "#30363d"
-    surface: str = "#161b22"
+    """
+    Hijaiyyah Scientific Computing Environment Palette:
+      - Midnight: #071426
+      - Surface:  #10243A
+      - Cyan:     #26C6DA
+      - Gold:     #D6AF57
+      - Text:     #EAF2FA
+    """
 
-    font_mono: Tuple[str, int] = ("Consolas", 11)
-    font_mono_sm: Tuple[str, int] = ("Consolas", 10)
-    font_mono_lg: Tuple[str, int] = ("Consolas", 12)
-    font_ui: Tuple[str, int] = ("Segoe UI", 10)
-    font_ui_bold: Tuple = ("Segoe UI", 11, "bold")
-    font_header: Tuple = ("Segoe UI", 14, "bold")
+    bg: str = "#071426"          # Midnight primary canvas
+    fg: str = "#EAF2FA"          # Crisp clinical text
+    accent: str = "#10243A"      # Surface card/panel background
+    surface: str = "#10243A"     # Surface card/panel background
+    surface_alt: str = "#0C1C30" # Elevated sub-panel / sidebar background
+    highlight: str = "#26C6DA"   # Cyan primary accent
+    gold: str = "#D6AF57"        # Gold secondary accent
+    success: str = "#2ECC71"     # Verified / Guard Pass green
+    error: str = "#EF5350"       # Fault / Violation red
+    warning: str = "#D6AF57"     # Gold warning / specification badge
+    text_bg: str = "#050E1B"     # Deep code/data console background
+    header_bg: str = "#050E1B"   # Top header & sidebar brand background
+    header_fg: str = "#EAF2FA"   # Header primary text
+    hijaiyyah_fg: str = "#26C6DA" # Cyan accent for symbols & titles
+    number_fg: str = "#D6AF57"   # Gold accent for numeric metrics
+    dim_fg: str = "#8AA0B8"      # Muted slate-blue secondary text
+    border: str = "#1C3552"      # Clean 1px structural border
+
+    font_mono: Tuple[str, int] = ("JetBrains Mono", 11)
+    font_mono_sm: Tuple[str, int] = ("JetBrains Mono", 10)
+    font_mono_lg: Tuple[str, int] = ("JetBrains Mono", 12)
+    font_ui: Tuple[str, int] = ("Inter", 10)
+    font_ui_bold: Tuple = ("Inter", 10, "bold")
+    font_header: Tuple = ("Inter", 14, "bold")
     font_hijaiyyah: Tuple[str, int] = ("Simplified Arabic", 18)
 
 
@@ -50,11 +62,19 @@ def configure_styles() -> None:
 
     # ── Base frames ──────────────────────────────────────────
     style.configure("TFrame", background=THEME.bg)
+    style.configure("Surface.TFrame", background=THEME.surface)
+    style.configure("Sidebar.TFrame", background=THEME.surface_alt)
     style.configure("TPanedwindow", background=THEME.bg)
     style.configure("TSeparator", background=THEME.border)
 
     # ── Labels ───────────────────────────────────────────────
-    style.configure("TLabel", background=THEME.bg, foreground=THEME.fg, font=THEME.font_mono)
+    style.configure("TLabel", background=THEME.bg, foreground=THEME.fg, font=THEME.font_ui)
+    style.configure(
+        "Surface.TLabel",
+        background=THEME.surface,
+        foreground=THEME.fg,
+        font=THEME.font_ui,
+    )
     style.configure(
         "Header.TLabel",
         background=THEME.header_bg,
@@ -80,54 +100,85 @@ def configure_styles() -> None:
         "Seal.TLabel",
         background=THEME.surface,
         foreground=THEME.success,
-        font=("Consolas", 9, "bold"),
+        font=("JetBrains Mono", 9, "bold"),
         padding=4,
     )
 
-    # ── Notebook tabs ────────────────────────────────────────
+    # ── Notebook tabs (internal sub-tabs & headless hidden shell) ─
     style.configure("TNotebook", background=THEME.bg, borderwidth=0)
     style.configure(
         "TNotebook.Tab",
-        background=THEME.accent,
+        background=THEME.surface,
         foreground=THEME.dim_fg,
-        padding=[14, 6],
-        font=THEME.font_ui,
+        padding=[14, 7],
+        font=THEME.font_ui_bold,
+        borderwidth=0,
     )
     style.map(
         "TNotebook.Tab",
         background=[("selected", THEME.highlight)],
-        foreground=[("selected", THEME.fg)],
+        foreground=[("selected", "#071426")],
     )
+
+    # Hidden notebook style for sidebar-driven main navigation
+    style.layout("Hidden.TNotebook.Tab", [])
+    style.configure("Hidden.TNotebook", background=THEME.bg, borderwidth=0, tabmargins=0)
 
     # ── Buttons ──────────────────────────────────────────────
     style.configure(
         "TButton",
-        background=THEME.accent,
+        background=THEME.surface,
         foreground=THEME.fg,
         font=THEME.font_ui,
-        padding=6,
+        padding=(10, 6),
         borderwidth=1,
+        bordercolor=THEME.border,
         relief="flat",
     )
     style.map(
         "TButton",
         background=[("active", THEME.highlight), ("pressed", THEME.highlight)],
-        foreground=[("active", "#ffffff")],
+        foreground=[("active", "#071426"), ("pressed", "#071426")],
     )
     style.configure(
         "Accent.TButton",
         background=THEME.highlight,
-        foreground="#ffffff",
+        foreground="#071426",
         font=THEME.font_ui_bold,
-        padding=8,
+        padding=(12, 7),
+        borderwidth=0,
+    )
+    style.map(
+        "Accent.TButton",
+        background=[("active", "#4DD0E1"), ("pressed", "#00ACC1")],
+        foreground=[("active", "#071426")],
+    )
+
+    # ── Checkbutton ──────────────────────────────────────────
+    style.configure(
+        "TCheckbutton",
+        background=THEME.bg,
+        foreground=THEME.fg,
+        font=THEME.font_ui,
+    )
+    style.map(
+        "TCheckbutton",
+        background=[("active", THEME.bg)],
+        foreground=[("active", THEME.highlight)],
     )
 
     # ── LabelFrame ───────────────────────────────────────────
-    style.configure("TLabelframe", background=THEME.bg, bordercolor=THEME.border, relief="groove")
+    style.configure(
+        "TLabelframe",
+        background=THEME.bg,
+        bordercolor=THEME.border,
+        relief="solid",
+        borderwidth=1,
+    )
     style.configure(
         "TLabelframe.Label",
         background=THEME.bg,
-        foreground=THEME.hijaiyyah_fg,
+        foreground=THEME.highlight,
         font=THEME.font_ui_bold,
     )
 
@@ -139,27 +190,45 @@ def configure_styles() -> None:
         fieldbackground=THEME.text_bg,
         font=THEME.font_mono_sm,
         borderwidth=0,
-        rowheight=22,
+        rowheight=24,
     )
     style.configure(
-        "Treeview.Heading", background=THEME.accent, foreground=THEME.fg, font=THEME.font_ui_bold
+        "Treeview.Heading",
+        background=THEME.surface,
+        foreground=THEME.highlight,
+        font=THEME.font_ui_bold,
+        relief="flat",
     )
     style.map(
-        "Treeview", background=[("selected", THEME.highlight)], foreground=[("selected", "#ffffff")]
+        "Treeview",
+        background=[("selected", THEME.highlight)],
+        foreground=[("selected", "#071426")],
     )
 
-    # ── Combobox ─────────────────────────────────────────────
+    # ── Combobox & Entry ─────────────────────────────────────
     style.configure(
-        "TCombobox", fieldbackground=THEME.text_bg, foreground=THEME.fg, background=THEME.accent
+        "TCombobox",
+        fieldbackground=THEME.text_bg,
+        foreground=THEME.fg,
+        background=THEME.surface,
     )
-
-    # ── Entry ────────────────────────────────────────────────
-    style.configure("TEntry", fieldbackground=THEME.text_bg, foreground=THEME.fg)
+    style.configure(
+        "TEntry",
+        fieldbackground=THEME.text_bg,
+        foreground=THEME.fg,
+        insertcolor=THEME.highlight,
+    )
 
     # ── Scrollbar ────────────────────────────────────────────
     style.configure(
-        "Vertical.TScrollbar", background=THEME.accent, troughcolor=THEME.bg, borderwidth=0
+        "Vertical.TScrollbar",
+        background=THEME.surface,
+        troughcolor=THEME.bg,
+        borderwidth=0,
     )
     style.configure(
-        "Horizontal.TScrollbar", background=THEME.accent, troughcolor=THEME.bg, borderwidth=0
+        "Horizontal.TScrollbar",
+        background=THEME.surface,
+        troughcolor=THEME.bg,
+        borderwidth=0,
     )

@@ -1,0 +1,29 @@
+flowchart TB
+    subgraph NUI_FOUND["Layers 0-4: Deterministic Repository, Program, Execution & Parity Intelligence [DP]"]
+        NL0["L0: Verified Facts (facts.py, 27 facts in 7 domains)"]
+        NL1["L1: Repository Graph (repository_index/graph.py, 1,828 nodes, 4,689 edges)"]
+        NL2["L2: Program Understanding (program_index/graph/summary.py, 62 HASM, 128 Verilog)"]
+        NL3["L3: Execution Understanding (execution_trace/graph.py, 63 runs, 1,478 edges)"]
+        NL4["L4: SW/HW Parity (parity_model.py, board_parity.py, layer4_freeze.py, 107 runs)"]
+    end
+
+    subgraph NUI_SYS["Layers 5-7: Host Observation, Hardware Provenance & Fail-Closed Autonomous Ops [DP]"]
+        NL5["L5: Ubuntu Linux Layer (layer5.py, layer5_freeze.py)<br/>11 Read-Only Collectors via limactl -> cosmictera-layer5"]
+        NL6["L6: Hardware Understanding (hardware.py, telemetry_sources.py,<br/>hardware_provenance/state/correlation.py, rtl_function.py)"]
+        NL7["L7: Autonomous Operations (layer7.py, layer7_decision.py, layer7_linux.py)<br/>evaluate -> expect -> confirm -> ALLOW/DENY/STOP_REPORT"]
+    end
+
+    subgraph NUI_UPPER["Layers 8-11 & Semantic USR: Diagnostics, Knowledge Base & Universal Compute [CC/AT]"]
+        NL8["L8: Autonomous Diagnostics (Manual board scripts + burn_in_report.py) [CC/AT]"]
+        NL9["L9: Knowledge Base & Query Contract (knowledge.py, off_db.py, registry.py)<br/>7 Domains: HC, HISA, RTL, OFF, PAPAN, NUI, HOST [DP for KB / AT for Inference]"]
+        NL10["L10: Engineering Synthesis (Handwritten generators only) [AT]"]
+        NL11["L11: Universal Computation (atom.py address unification proven; full chain AT)"]
+        USR_S["Semantic USR Layer (usr.py, NUI/spec/*.json)<br/>5 Fields: ACTION, OBJECT, TARGET, CONTEXT, STATE [CC]"]
+    end
+
+    NL0 --> NL1 --> NL2 --> NL3 --> NL4
+    NL4 --> NL6
+    NL5 --> NL7
+    NL6 --> NL7
+    NL0 & NL1 & NL2 & NL3 & NL4 & NL5 & NL6 --> NL9
+    USR_S -.-> NL9

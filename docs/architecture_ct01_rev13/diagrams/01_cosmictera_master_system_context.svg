@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <rect width="100%" height="100%" fill="#060C16"/>
+  <rect x="20" y="20" width="1360" height="820" rx="8" fill="#0A1424" stroke="#1E3A5F" stroke-width="2"/>
+  <rect x="20" y="20" width="1360" height="64" rx="8" fill="#0F2342" stroke="#00E5FF" stroke-width="1.5"/>
+  <text x="45" y="58" fill="#00E5FF" font-family="monospace" font-size="22" font-weight="bold">01 — COSMICTERA CT-01-REV13 MASTER SYSTEM CONTEXT</text>
+  <text x="1060" y="56" fill="#90CAF9" font-family="monospace" font-size="14">COSMICTERA CT-01-REV13 v1.1 | HEAD 8c70989b</text>
+  <rect x="45" y="105" width="1310" height="215" rx="6" fill="#0E294B" stroke="#00E5FF" stroke-width="2"/>
+  <text x="65" y="137" fill="#00E5FF" font-family="monospace" font-size="18" font-weight="bold">HOST DOMAIN (macOS / Ubuntu Lima VM)</text>
+  <rect x="65" y="150" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="173" fill="#FFFFFF" font-family="monospace" font-size="14">src/hijaiyyah/* (23 Python Subpackages)</text>
+  <rect x="745" y="150" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="173" fill="#B2FF59" font-family="monospace" font-size="14">VF / CC — 3,294+ pytest</text>
+  <rect x="65" y="196" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="219" fill="#FFFFFF" font-family="monospace" font-size="14">src/hijaiyyah/nui/* (43 Modules, L0–L11)</text>
+  <rect x="745" y="196" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="219" fill="#B2FF59" font-family="monospace" font-size="14">DP L0–L7 / AT L8–L11</text>
+  <rect x="65" y="242" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="265" fill="#FFFFFF" font-family="monospace" font-size="14">rtl/scripts/*.py + openFPGALoader Host Tools</text>
+  <rect x="745" y="242" width="585" height="36" rx="4" fill="#081220" stroke="#00E5FF" stroke-width="1"/>
+  <text x="760" y="265" fill="#B2FF59" font-family="monospace" font-size="14">DP — UART 115200 8N1 &amp; JTAG</text>
+  <line x1="700" y1="320" x2="700" y2="345" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="345" width="1310" height="215" rx="6" fill="#0F382A" stroke="#00E676" stroke-width="2"/>
+  <text x="65" y="377" fill="#00E676" font-family="monospace" font-size="18" font-weight="bold">PHYSICAL FPGA DOMAIN — Tang Nano 20K (GW2AR-18C)</text>
+  <rect x="65" y="390" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="413" fill="#FFFFFF" font-family="monospace" font-size="14">Slot A: hcpu_gowin_top / hcpu_hdmi_top</text>
+  <rect x="745" y="390" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="413" fill="#B2FF59" font-family="monospace" font-size="14">DP — 15,453 LUT4 (74%), 18 BSRAM</text>
+  <rect x="65" y="436" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="459" fill="#FFFFFF" font-family="monospace" font-size="14">Slot B: cosmictera_boot_top (Stage 1.4)</text>
+  <rect x="745" y="436" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="459" fill="#B2FF59" font-family="monospace" font-size="14">DP — 2,526 LUT4 (12.18%), 12 BSRAM</text>
+  <rect x="65" y="482" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="505" fill="#FFFFFF" font-family="monospace" font-size="14">Slot C: hijaiyyah_kabah_gowin_top</text>
+  <rect x="745" y="482" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="505" fill="#B2FF59" font-family="monospace" font-size="14">DP (no HMAC) / CC (with HMAC 72%)</text>
+  <rect x="65" y="528" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="551" fill="#FFFFFF" font-family="monospace" font-size="14">Slot D: hijaiyyah_portal8888_gowin_top</text>
+  <rect x="745" y="528" width="585" height="36" rx="4" fill="#081220" stroke="#00E676" stroke-width="1"/>
+  <text x="760" y="551" fill="#B2FF59" font-family="monospace" font-size="14">CC — 5x64B Key + 9,216B Replay</text>
+  <line x1="700" y1="560" x2="700" y2="585" stroke="#00E5FF" stroke-width="3"/>
+  <rect x="45" y="585" width="1310" height="215" rx="6" fill="#3B2314" stroke="#FFB300" stroke-width="2"/>
+  <text x="65" y="617" fill="#FFB300" font-family="monospace" font-size="18" font-weight="bold">EXTERNAL PERIPHERALS & MPW SILICON TARGET</text>
+  <rect x="65" y="630" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="653" fill="#FFFFFF" font-family="monospace" font-size="14">LG TV HDMI 1280x720@60Hz (CST Candidate B)</text>
+  <rect x="745" y="630" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="653" fill="#B2FF59" font-family="monospace" font-size="14">DP — Verified on Physical TV</text>
+  <rect x="65" y="676" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="699" fill="#FFFFFF" font-family="monospace" font-size="14">MicroSD Slot (SDIO CMD0/8/55/41/17/24)</text>
+  <rect x="745" y="676" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="699" fill="#B2FF59" font-family="monospace" font-size="14">DP — 72h Burn-In Verified</text>
+  <rect x="65" y="722" width="660" height="36" rx="4" fill="#060C16" stroke="#2B4C7E" stroke-width="1"/>
+  <text x="80" y="745" fill="#FFFFFF" font-family="monospace" font-size="14">Caravel Sky130 user_project_wrapper (Wishbone)</text>
+  <rect x="745" y="722" width="585" height="36" rx="4" fill="#081220" stroke="#FFB300" stroke-width="1"/>
+  <text x="760" y="745" fill="#B2FF59" font-family="monospace" font-size="14">CC — 8/8 TB Pass (GDSII AT)</text>
+  <text x="45" y="828" fill="#78909C" font-family="monospace" font-size="13">Source-Traceable Forensic Architecture Reconstruction | Official R2 Labels: VF (Verified Formally) | CC (Computationally Confirmed) | DP (Design Property) | EH | AT</text>
+</svg>

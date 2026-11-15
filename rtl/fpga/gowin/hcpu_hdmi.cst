@@ -1,10 +1,15 @@
 // Tang Nano 20K HDMI wrapper constraints.
 IO_LOC "clk_27m" 4;
 IO_PORT "clk_27m" IO_TYPE=LVCMOS33;
+// S1 (Pin 88 = PIN88_MODE0_KEY1) and S2 (Pin 87 = PIN87_MODE1_KEY2):
+// On the Tang Nano 20K (3921 schematic), both pins have external pull-down
+// resistors to GND for boot mode strapping (MODE0=0, MODE1=0) and connect
+// to +3.3V through 1 kOhm when pressed (active-HIGH). PULL_MODE=DOWN aligns
+// the FPGA pad pull with the board's external pull-down.
 IO_LOC "btn_rst_n" 87;
-IO_PORT "btn_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "btn_rst_n" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
 IO_LOC "mode_key" 88;
-IO_PORT "mode_key" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "mode_key" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
 IO_LOC "uart_rxd" 70;
 IO_PORT "uart_rxd" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC "uart_txd" 69;

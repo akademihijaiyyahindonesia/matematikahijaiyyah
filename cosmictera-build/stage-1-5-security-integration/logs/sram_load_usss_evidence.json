@@ -1,0 +1,11 @@
+{
+  "bitstream": "/Users/AMRA/hijaiyyah-mathematics/cosmictera-build/stage-1-5-security-integration/cosmictera_unified_soc_usss.fs",
+  "bitstream_sha256": "723ce67f0098157042a1bd389071d41fb28cee9a1eeb3282424f8ef4c7fdae18",
+  "programmer": "/opt/homebrew/bin/openFPGALoader",
+  "mode": "SRAM_ONLY",
+  "elapsed_sec": 5.26,
+  "uart_bytes": 23,
+  "uart_hex": "31 31 32 0A 0A 43 59 43 4C 45 53 3D 30 30 30 30 31 42 38 39 0D 0A 0A",
+  "uart_ascii": "b'112\\n\\nCYCLES=00001B89\\r\\n\\n'",
+  "uart_match_golden_t25": true
+}
